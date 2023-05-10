@@ -1,15 +1,25 @@
-import { DataNode } from '.'
+import clone from 'just-clone'
 
-export const updateObjectPath = (data: DataNode, path: (string | number)[], newValue: unknown) => {
-  let d = data
-  path.forEach((part, index) => {
-    if (index === path.length - 1) {
-      const idx =
-        typeof part === 'number'
-          ? index
-          : (d.value as DataNode[]).findIndex((node) => node.key === part)
-      const currentValue = (d.value as DataNode[])[idx].value
-      //   const
+export const updateDataObject = (
+  data: object,
+  path: (string | number)[],
+  newValue: unknown,
+  action: 'update' | 'delete'
+) => {
+  const newData = clone(data)
+
+  let d = newData
+  let currentValue
+  for (let i = 0; i < path.length; i++) {
+    const part = path[i]
+    if (i === path.length - 1) {
+      currentValue = (d as any)[part]
+      // @ts-ignore
+      if (action === 'update') d[part] = newValue
+      // @ts-ignore
+      if (action === 'delete') delete d[part]
     }
-  })
+    d = (d as any)[part]
+  }
+  return { currentData: data, newData, currentValue, newValue }
 }

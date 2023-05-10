@@ -1,15 +1,18 @@
 import { useState } from 'react'
+import { updateDataObject } from './utilityMethods'
 
 type UpdateMethod = (props: {
   newData: object
-  currData: object
+  currentData: object
   newValue: unknown
-  currValue: unknown
+  currentValue: unknown
   name: string
   path: string[]
 }) => void | false
 
 type FilterMethod = (input: { name: string; path: string[]; value: unknown }) => boolean
+
+type DataType = 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null' | 'invalid'
 
 interface EditorProps {
   data: object
@@ -30,14 +33,16 @@ interface EditorProps {
   keySort?: boolean // OR Comparator Method
 }
 
+type OnChangeMethod = <T>(value: T, path: string[]) => Promise<string | void>
+
 const JsonEditor: React.FC<EditorProps> = ({
   data: srcData,
   schema,
   rootName = 'root',
   onUpdate,
-  onEdit,
-  onDelete,
-  onAdd,
+  onEdit = onUpdate,
+  onDelete = onUpdate,
+  onAdd = onUpdate,
   onCopy,
   theme,
   style,
@@ -47,16 +52,27 @@ const JsonEditor: React.FC<EditorProps> = ({
   restrictDelete = false,
   restrictAdd = false,
 }) => {
-  const [data, setData] = useState<DataNode>(buildDataStructure(srcData, rootName))
+  const [data, setData] = useState<object>(srcData)
 
-  const Component = NodeTypeComponentMap[data.type]
-
-  const onUpdateAll = async () => {}
-
-  const onChange = async (value: DataNode, path: string[]) => {
-    // Calculate new data object
-    // Run onEdit method
-    // If not return false, update local state from new Data
+  const onChange: OnChangeMethod = async (value, path) => {
+    const { currentData, newData, currentValue, newValue } = updateDataObject(
+      data,
+      path,
+      value,
+      'update'
+    )
+    if (onEdit) {
+      const result = await onEdit({
+        currentData,
+        newData,
+        currentValue,
+        newValue,
+        name: path.slice(-1)[0],
+        path,
+      })
+      if (result !== false) setData(newData)
+      if (result === false) return 'Update unsuccessful'
+    } else setData(newData)
   }
 
   const onRemove = () => {}
@@ -65,167 +81,137 @@ const JsonEditor: React.FC<EditorProps> = ({
 
   const collapseFilter = () => {}
 
+  const otherProps = {
+    name: rootName,
+    onChange,
+    onRemove,
+    onAddNew,
+    collapseFilter,
+  }
+
   return (
     <div className="fg-editor-container">
-      <Component data={data} />
+      {getComponent(data, [], otherProps)}
       <pre>{JSON.stringify(data, null, 2)}</pre>
     </div>
   )
 }
 
 interface ComponentProps {
-  //   path: string[]
-  //   name: string
-  onChange: () => {}
-  onRemove: () => {}
+  data: unknown
+  path: string[]
+  name: string
+  onChange: OnChangeMethod
+  onRemove?: () => {}
 }
 
 interface ObjectComponentProps extends ComponentProps {
-  data: ObjectNode
-  onAddNew: () => {}
+  data: object
+  onAddNew?: () => {}
 }
 
 interface StringComponentProps extends ComponentProps {
-  data: StringNode
+  data: string
 }
 
-export const ObjectComponent: React.FC<ObjectComponentProps> = ({ data, onChange, onRemove }) => {
-  const { path, value, key } = data
-
+export const ObjectNode: React.FC<ObjectComponentProps> = ({ data, path, ...props }) => {
   return (
-    <p>
-      <strong>{key}</strong>:<br />
-      {value.map((node) => {
-        if (node.type === 'string')
-          return <StringComponent data={node} onChange={onChange} onRemove={onRemove} />
-        else
-          return (
-            <span>
-              TO-DO: {data.type}
-              <br />
-            </span>
-          )
-      })}
-    </p>
-  )
-}
-
-const StringComponent: React.FC<StringComponentProps> = ({ data, onChange, onRemove }) => {
-  const [isEditing, setIsEditing] = useState(false)
-  return (
-    <div className="fg-component">
-      {isEditing ? (
-        // Type selector
-        // Input form
-        <p>Editing</p>
-      ) : (
-        <p onDoubleClick={() => setIsEditing(true)}>{`${data.key}: ${data.value}`}</p>
-      )}
-      {/* Buttons */}
+    <div className="fg-object-elements">
+      <strong>{props.name}</strong>
+      {Object.entries(data)
+        // TO-DO: Sort keys if "keySort" prop specified
+        .map(([key, value]) => getComponent(value, [...path, key], { ...props, name: key }, key))}
     </div>
   )
 }
 
-type DataType = 'object' | 'array' | 'string' | 'float' | 'integer' | 'boolean' | 'null' | 'invalid'
+const ValueNode: React.FC<StringComponentProps> = ({ data, name, path, onChange }) => {
+  const [isEditing, setIsEditing] = useState(false)
+  const [value, setValue] = useState(data)
+  const [error, setError] = useState<string | null>(null)
+  const [dataType, setDataType] = useState<DataType>('string')
 
-interface BaseNode {
-  key: string | number
-  type: DataType
-  path: (string | number)[]
-  isValid?: boolean
-}
-
-export interface ObjectNode extends BaseNode {
-  type: 'object'
-  //   indexMap: Record<string, number>
-  value: DataNode[]
-}
-
-export interface ArrayNode extends BaseNode {
-  type: 'array'
-  value: DataNode[]
-}
-
-export interface StringNode extends BaseNode {
-  type: 'string'
-  value: string
-}
-export interface FloatNode extends BaseNode {
-  type: 'float'
-  value: number
-}
-
-export interface IntNode extends BaseNode {
-  type: 'integer'
-  value: number
-}
-
-export interface BoolNode extends BaseNode {
-  type: 'boolean'
-  value: boolean
-}
-
-export interface NullNode extends BaseNode {
-  type: 'null'
-  value: null
-}
-
-export interface InvalidNode extends BaseNode {
-  type: 'invalid'
-  value: unknown
-}
-
-export type DataNode =
-  | ObjectNode
-  | ArrayNode
-  | StringNode
-  | FloatNode
-  | IntNode
-  | BoolNode
-  | NullNode
-  | InvalidNode
-
-const buildDataStructure = (value: unknown, key: string | number, path = []): DataNode => {
-  if (value === null) return { key, type: 'null', path, value: value }
-  if (typeof value === 'string') return { key, type: 'string', path, value }
-  if (typeof value === 'boolean') return { key, type: 'boolean', path, value }
-  if (typeof value === 'number' && value % 1 === 0) return { key, type: 'integer', path, value }
-  if (typeof value === 'number' && value % 1 !== 0) return { key, type: 'float', path, value }
-  if (Array.isArray(value))
-    return {
-      key,
-      type: 'array',
-      path,
-      value: (value as unknown[]).map((val, index) =>
-        buildDataStructure(val, index, [...path, index] as any)
-      ),
-    }
-  if (typeof value === 'object') {
-    const entries = Object.entries(value as object)
-    return {
-      key,
-      type: 'object',
-      path,
-      //   indexMap: entries.reduce((acc, ) => {}, {}),
-      value: entries.map(([key, val]) =>
-        // TO DO -- sort keys
-        buildDataStructure(val, key, [...path, key] as any)
-      ),
-    }
+  const handleUpdate = () => {
+    setIsEditing(false)
+    onChange(value, path).then((result) => {
+      if (result) {
+        setError(result)
+        setTimeout(() => setError(null), 3000)
+        console.log('Error', result)
+      }
+    })
   }
 
-  return { key, value, path, type: 'invalid' }
+  return (
+    <div className="fg-component fg-string-component">
+      <span>{name}: </span>
+      {isEditing ? (
+        // Type selector
+        <span>
+          <input
+            className="fg-text-input"
+            type="text"
+            name={path.join('.')}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            autoFocus
+            onFocus={(e) => e.target.select()}
+          />
+        </span>
+      ) : (
+        <>
+          <span onDoubleClick={() => setIsEditing(true)}>{data}</span>
+          {error && <span className="fg-error-slug">{error}</span>}
+        </>
+      )}
+      {isEditing ? (
+        <InputButtons
+          onAccept={handleUpdate}
+          onCancel={() => {
+            setIsEditing(false)
+            setValue(data)
+          }}
+        />
+      ) : (
+        <EditButtons />
+      )}
+    </div>
+  )
 }
 
-const NodeTypeComponentMap: { [key in DataType]: React.FC<any> } = {
-  object: ObjectComponent,
-  array: ObjectComponent,
-  string: ObjectComponent,
-  float: ObjectComponent,
-  integer: ObjectComponent,
-  boolean: ObjectComponent,
-  null: ObjectComponent,
-  invalid: ObjectComponent,
+const OtherComponent: React.FC<{ data: unknown; path: string[] }> = () => {
+  return <span>OTHER</span>
+}
+
+const EditButtons: React.FC = () => (
+  <span>
+    <em> Edit buttons</em>
+  </span>
+)
+
+const InputButtons: React.FC<{ onAccept: Function; onCancel: () => void }> = ({
+  onAccept,
+  onCancel,
+}) => (
+  <span>
+    <em>
+      {' '}
+      <span onClick={() => onAccept()}>Accept</span> / <span onClick={onCancel}>Cancel</span>
+    </em>
+  </span>
+)
+
+const getComponent = (value: unknown, path: string[], props: any, key?: string) => {
+  if (value === null) return <OtherComponent key={key} data={null} path={path} {...props} />
+  if (typeof value === 'string') return <ValueNode key={key} data={value} path={path} {...props} />
+  if (typeof value === 'boolean')
+    return <OtherComponent key={key} data={value} path={path} {...props} />
+  if (typeof value === 'number')
+    return <OtherComponent key={key} data={value} path={path} {...props} />
+  if (Array.isArray(value)) return <OtherComponent key={key} data={value} path={path} {...props} />
+  if (typeof value === 'object') return <ObjectNode key={key} data={value} path={path} {...props} />
+
+  return <OtherComponent data={null} path={path} />
 }
 
 export default JsonEditor

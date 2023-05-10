@@ -10,6 +10,8 @@
     "@types/node": "^16.18.27",
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.2.4",
+    "just-clone": "^6.2.0",
+    "just-compare": "^2.3.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",

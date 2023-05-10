@@ -33,16 +33,15 @@ const initBasic = {
   firstName: 'Carl',
   lastName: 'Smith',
   likes: 'Ice Cream',
+  nested: { a: 'A ONE', b: 'two' },
 }
 
 function App() {
   const [data, setData] = useState<object>(initBasic)
+  // console.log('outer data', data)
   return (
     <div className="App">
-      {/* <header className="App-header">
-        <p>Demo</p>
-      </header> */}
-      <JsonEditor data={data} rootName="My Root" onUpdate={({ newData }) => setData(newData)} />
+      <JsonEditor data={data} rootName="My Root" onUpdate={({ newData }) => false} />
       {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
     </div>
   )
