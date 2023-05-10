@@ -40,10 +40,10 @@ const JsonEditor: React.FC<EditorProps> = ({
   schema,
   rootName = 'root',
   onUpdate,
-  onEdit = onUpdate,
-  onDelete = onUpdate,
-  onAdd = onUpdate,
-  onCopy,
+  onEdit: srcEdit = onUpdate,
+  onDelete: srcDelete = onUpdate,
+  onAdd: srcAdd = onUpdate,
+  onCopy: srcCopy,
   theme,
   style,
   indent = 4,
@@ -54,15 +54,15 @@ const JsonEditor: React.FC<EditorProps> = ({
 }) => {
   const [data, setData] = useState<object>(srcData)
 
-  const onChange: OnChangeMethod = async (value, path) => {
+  const onEdit: OnChangeMethod = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
       path,
       value,
       'update'
     )
-    if (onEdit) {
-      const result = await onEdit({
+    if (srcEdit) {
+      const result = await srcEdit({
         currentData,
         newData,
         currentValue,
@@ -75,17 +75,17 @@ const JsonEditor: React.FC<EditorProps> = ({
     } else setData(newData)
   }
 
-  const onRemove = () => {}
+  const onDelete = () => {}
 
-  const onAddNew = () => {}
+  const onAdd = () => {}
 
   const collapseFilter = () => {}
 
   const otherProps = {
     name: rootName,
-    onChange,
-    onRemove,
-    onAddNew,
+    onEdit,
+    onDelete,
+    onAdd,
     collapseFilter,
   }
 
@@ -97,43 +97,52 @@ const JsonEditor: React.FC<EditorProps> = ({
   )
 }
 
-interface ComponentProps {
+interface NodeProps {
   data: unknown
   path: string[]
   name: string
-  onChange: OnChangeMethod
-  onRemove?: () => {}
+  onEdit: OnChangeMethod
+  onDelete?: () => {}
 }
 
-interface ObjectComponentProps extends ComponentProps {
+interface ObjectNodeProps extends NodeProps {
   data: object
-  onAddNew?: () => {}
+  onAdd?: () => {}
 }
 
-interface StringComponentProps extends ComponentProps {
+interface ValueNodeProps extends NodeProps {
   data: string
 }
 
-export const ObjectNode: React.FC<ObjectComponentProps> = ({ data, path, ...props }) => {
+export const ObjectNode: React.FC<ObjectNodeProps> = ({ data, path, ...props }) => {
+  const [collapsed, setCollapsed] = useState(false)
+
   return (
-    <div className="fg-object-elements">
+    <div className="fg-component fb-object-component">
+      <span onClick={() => setCollapsed(!collapsed)}>X</span>
       <strong>{props.name}</strong>
-      {Object.entries(data)
-        // TO-DO: Sort keys if "keySort" prop specified
-        .map(([key, value]) => getComponent(value, [...path, key], { ...props, name: key }, key))}
+      {!collapsed && (
+        <div className="fg-object-elements">
+          {Object.entries(data)
+            // TO-DO: Sort keys if "keySort" prop specified
+            .map(([key, value]) =>
+              getComponent(value, [...path, key], { ...props, name: key }, key)
+            )}
+        </div>
+      )}
     </div>
   )
 }
 
-const ValueNode: React.FC<StringComponentProps> = ({ data, name, path, onChange }) => {
+const ValueNode: React.FC<ValueNodeProps> = ({ data, name, path, onEdit }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState(data)
   const [error, setError] = useState<string | null>(null)
   const [dataType, setDataType] = useState<DataType>('string')
 
-  const handleUpdate = () => {
+  const handleEdit = () => {
     setIsEditing(false)
-    onChange(value, path).then((result) => {
+    onEdit(value, path).then((result) => {
       if (result) {
         setError(result)
         setTimeout(() => setError(null), 3000)
@@ -145,28 +154,17 @@ const ValueNode: React.FC<StringComponentProps> = ({ data, name, path, onChange 
   return (
     <div className="fg-component fg-string-component">
       <span>{name}: </span>
-      {isEditing ? (
-        // Type selector
-        <span>
-          <input
-            className="fg-text-input"
-            type="text"
-            name={path.join('.')}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            autoFocus
-            onFocus={(e) => e.target.select()}
-          />
-        </span>
-      ) : (
-        <>
-          <span onDoubleClick={() => setIsEditing(true)}>{data}</span>
-          {error && <span className="fg-error-slug">{error}</span>}
-        </>
-      )}
+      <StringValue
+        value={value}
+        setValue={setValue}
+        isEditing={isEditing}
+        setIsEditing={setIsEditing}
+        path={path}
+        error={error}
+      />
       {isEditing ? (
         <InputButtons
-          onAccept={handleUpdate}
+          onAccept={handleEdit}
           onCancel={() => {
             setIsEditing(false)
             setValue(data)
@@ -176,6 +174,32 @@ const ValueNode: React.FC<StringComponentProps> = ({ data, name, path, onChange 
         <EditButtons />
       )}
     </div>
+  )
+}
+
+const StringValue: React.FC<{
+  value: string
+  setValue: Function
+  isEditing: boolean
+  setIsEditing: Function
+  path: string[]
+  error: string | null
+}> = ({ value, setValue, isEditing, path, setIsEditing, error }) => {
+  return isEditing ? (
+    <input
+      className="fg-text-input"
+      type="text"
+      name={path.join('.')}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      autoFocus
+      onFocus={(e) => e.target.select()}
+    />
+  ) : (
+    <>
+      <span onDoubleClick={() => setIsEditing(true)}>{value}</span>
+      {error && <span className="fg-error-slug">{error}</span>}
+    </>
   )
 }
 

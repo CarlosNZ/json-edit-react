@@ -41,7 +41,7 @@ function App() {
   // console.log('outer data', data)
   return (
     <div className="App">
-      <JsonEditor data={data} rootName="My Root" onUpdate={({ newData }) => false} />
+      <JsonEditor data={data} rootName="My Root" onUpdate={({ newData }) => setData(newData)} />
       {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
     </div>
   )
