@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
-import { DataType, ObjectNodeProps, ValueNodeProps, InputProps, SimpleDataTypes } from './types'
+import {
+  DataType,
+  ObjectNodeProps,
+  ValueNodeProps,
+  InputProps,
+  SimpleDataTypes,
+  DataTypes,
+} from './types'
 import './style.css'
 import { Icon } from './Icons'
 
@@ -182,7 +189,7 @@ export const ValueNode: React.FC<ValueNodeProps> = ({ data, name, path, onEdit, 
             onChange={(e) => setDataType(e.target.value as DataType)}
             value={dataType}
           >
-            {SimpleDataTypes.map((type) => (
+            {DataTypes.map((type) => (
               <option value={type} key={type}>
                 {type}
               </option>
@@ -290,6 +297,15 @@ export const NullValue: React.FC<InputProps> = ({ value, setValue, isEditing, se
   )
 }
 
+export const ObjectValue: React.FC<InputProps> = ({ value, setValue, isEditing, setIsEditing }) => {
+  setValue('TEST')
+  return isEditing ? null : (
+    <span onDoubleClick={() => setIsEditing(true)} className="fg-value-null">
+      {String(value)}
+    </span>
+  )
+}
+
 export const OtherComponent: React.FC<{ data: unknown; path: string[] }> = () => {
   return <span>OTHER</span>
 }
@@ -385,6 +401,8 @@ const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
       return <BooleanValue {...inputProps} />
     case 'null':
       return <NullValue {...inputProps} />
+    case 'object':
+      return <ObjectValue {...inputProps} />
     default:
       return <p>Other types</p>
   }
