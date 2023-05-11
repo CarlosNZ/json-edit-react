@@ -1,0 +1,48 @@
+.fg-editor-container {
+  --bg-color: none;
+  --main-font: monospace;
+  --main-color: darkslategrey;
+  --secondary-color: grey;
+  --parenthetical-color: black;
+  --string-color: orange;
+  --number-color: blue;
+  --boolean-color: green;
+  --null-color: red;
+  --alt-bg-color: grey;
+
+  background-color: var(--bg-color);
+  font-family: var(--main-font);
+  font-size: 1.2em;
+}
+
+.fg-component {
+}
+
+.fb-object-component {
+}
+
+.fg-object-header-row {
+  display: flex;
+}
+
+.fg-object-inner {
+}
+
+.fg-object-element {
+  margin-left: 20px;
+}
+
+.fg-value-component {
+}
+
+.fg-value-main-row {
+}
+
+.fg-value-error-row {
+}
+
+.fg-error-slug {
+}
+
+.fg-text-input {
+}
