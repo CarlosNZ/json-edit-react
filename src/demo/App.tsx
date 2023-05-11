@@ -33,7 +33,10 @@ const initBasic = {
   firstName: 'Carl',
   lastName: 'Smith',
   likes: 'Ice Cream',
-  nested: { a: 'A ONE', b: 'two' },
+  age: 99,
+  nested: { a: 'A ONE', b: true },
+  oneMore: false,
+  Nothing: null,
 }
 
 function App() {

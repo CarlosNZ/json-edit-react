@@ -1,18 +1,10 @@
 .fg-editor-container {
-  --bg-color: none;
-  --main-font: monospace;
-  --main-color: darkslategrey;
-  --secondary-color: grey;
-  --parenthetical-color: black;
-  --string-color: orange;
-  --number-color: blue;
-  --boolean-color: green;
-  --null-color: red;
-  --alt-bg-color: grey;
-
-  background-color: var(--bg-color);
-  font-family: var(--main-font);
+  background-color: var(--fg-bg-color);
+  font-family: var(--fg-main-font);
   font-size: 1.2em;
+  color: var(--fg-main-color);
+  padding: 1em;
+  min-width: 40%;
 }
 
 .fg-component {
@@ -36,6 +28,7 @@
 }
 
 .fg-value-main-row {
+  display: flex;
 }
 
 .fg-value-error-row {
@@ -45,4 +38,56 @@
 }
 
 .fg-text-input {
+}
+
+.fg-input-component {
+}
+
+.fg-edit-buttons {
+  display: flex;
+  opacity: 0;
+}
+
+.fg-edit-buttons:hover {
+  opacity: 1;
+}
+
+.fg-input-component:hover + .fg-edit-buttons {
+  opacity: 1;
+}
+
+.fg-input-buttons {
+}
+
+.fg-rotate-90 {
+  transform: rotate(-90deg);
+}
+
+.fg-icon-chevron {
+  fill: var(--fg-icon-chevron-color);
+}
+
+.fg-icon-edit {
+  fill: none;
+  stroke: var(--fg-icon-edit-color);
+}
+
+.fg-icon-delete {
+  fill: var(--fg-icon-delete-color);
+}
+
+.fg-icon-add {
+  fill: none;
+  stroke: var(--fg-icon-add-color);
+}
+
+.fg-icon-copy {
+  fill: var(--fg-icon-copy-color);
+}
+
+.fg-icon-ok {
+  fill: var(--fg-icon-ok-color);
+}
+.fg-icon-cancel {
+  fill: var(--fg-icon-cancel-color);
 }

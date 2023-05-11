@@ -15,13 +15,19 @@ export interface EditorProps {
   style?: object // UPDATE
   indent?: number
   collapse?: boolean | number | FilterMethod
+  showCount?: boolean | FilterMethod
   restrictEdit?: FilterMethod | boolean
   restrictDelete?: FilterMethod | boolean
   restrictAdd?: FilterMethod | boolean
+  restrictKeyEdit?: FilterMethod | boolean
   keySort?: boolean // OR Comparator Method
+  defaultKeyName?: string
+  defaultValue?: unknown
 }
 
-export const DataTypes = ['object', 'array', 'string', 'number', 'boolean', 'null'] as const
+export const SimpleDataTypes = ['string', 'number', 'boolean', 'null']
+export const ComplexDataTypes = ['object', 'array']
+export const DataTypes = [...SimpleDataTypes, ...ComplexDataTypes] as const
 
 export type DataType = (typeof DataTypes)[number] | 'invalid'
 
@@ -51,21 +57,21 @@ interface BaseNodeProps {
   path: string[]
   name: string
   onEdit: OnChangeMethod
-  onDelete?: OnChangeMethod
+  onDelete: OnChangeMethod
 }
 
 export interface ObjectNodeProps extends BaseNodeProps {
   data: object
-  onAdd?: OnChangeMethod
+  onAdd: OnChangeMethod
 }
 
 export interface ValueNodeProps extends BaseNodeProps {
-  data: string
+  data: string | number | boolean | null
 }
 
 export interface InputProps {
-  value: string
-  setValue: React.Dispatch<React.SetStateAction<string>>
+  value: string | number | boolean | null
+  setValue: React.Dispatch<React.SetStateAction<string | number | boolean | null>>
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void

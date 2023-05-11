@@ -6,6 +6,15 @@ export const updateDataObject = (
   newValue: unknown,
   action: 'update' | 'delete'
 ) => {
+  if (path.length === 0) {
+    return {
+      currentData: data,
+      newData: newValue as object,
+      currentValue: data,
+      newValue: newValue,
+    }
+  }
+
   const newData = clone(data)
 
   let d = newData
@@ -21,5 +30,10 @@ export const updateDataObject = (
     }
     d = (d as any)[part]
   }
-  return { currentData: data, newData, currentValue, newValue }
+  return {
+    currentData: data,
+    newData,
+    currentValue,
+    newValue: action === 'update' ? newValue : undefined,
+  }
 }
