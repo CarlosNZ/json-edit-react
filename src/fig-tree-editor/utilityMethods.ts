@@ -1,11 +1,18 @@
 import clone from 'just-clone'
 
+export const isCollection = (value: unknown) => value !== null && typeof value == 'object'
+
 export const updateDataObject = (
   data: object,
   path: (string | number)[],
   newValue: unknown,
   action: 'update' | 'delete'
 ) => {
+  console.log('Data', data)
+  console.log('path', path)
+  console.log('newValue', newValue)
+  console.log('action', action)
+
   if (path.length === 0) {
     return {
       currentData: data,

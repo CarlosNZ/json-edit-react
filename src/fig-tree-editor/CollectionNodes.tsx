@@ -4,13 +4,18 @@ import { EditButtons, InputButtons } from './ButtonPanels'
 import { ObjectNodeProps } from './types'
 import { Icon } from './Icons'
 import './style.css'
+import { isCollection } from './utilityMethods'
 
-export const ObjectNode: React.FC<ObjectNodeProps> = ({ data, path, name, ...props }) => {
+export const CollectionNode: React.FC<ObjectNodeProps> = ({ data, path, name, ...props }) => {
   const { onEdit, onAdd, onDelete } = props
   const [isEditing, setIsEditing] = useState(false)
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
   const [error, setError] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState(false)
+
+  const collectionType = Array.isArray(data) ? 'array' : 'object'
+  const brackets =
+    collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
   const handleEdit = () => {
     try {
@@ -31,13 +36,22 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({ data, path, name, ...pro
   }
 
   const handleAdd = (key: string) => {
-    onAdd('NEW VALUE', [...path, key]).then((result: any) => {
-      if (result) {
-        setError(result)
-        setTimeout(() => setError(null), 3000)
-        console.log('Error', result)
-      }
-    })
+    if (collectionType === 'array') {
+      onAdd(null, [...path, (data as any[]).length]).then((result: any) => {
+        if (result) {
+          setError(result)
+          setTimeout(() => setError(null), 3000)
+          console.log('Error', result)
+        }
+      })
+    } else
+      onAdd(null, [...path, key]).then((result: any) => {
+        if (result) {
+          setError(result)
+          setTimeout(() => setError(null), 3000)
+          console.log('Error', result)
+        }
+      })
   }
 
   const handleDelete =
@@ -60,7 +74,7 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({ data, path, name, ...pro
 
   return (
     <div className="fg-component fb-object-component">
-      <div className="fg-object-header-row">
+      <div className="fg-collection-header-row">
         <div
           onClick={() => {
             if (!isEditing) setCollapsed(!collapsed)
@@ -68,11 +82,9 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({ data, path, name, ...pro
         >
           <Icon name="chevron" rotate={collapsed} />
         </div>
-        <div>
-          <strong>{`${name} {`}</strong>
-        </div>
-        <div>Item count</div>
-        {collapsed && <div>{'}'}</div>}
+        <div className="fg-collection-name">{`${name} ${brackets.open}`}</div>
+        <div className="fg-collection-item-count">{`${Object.keys(data).length} items`}</div>
+        {collapsed && <div>{brackets.close}</div>}
         {isEditing ? (
           <InputButtons onOk={handleEdit} onCancel={handleCancel} />
         ) : (
@@ -83,16 +95,17 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({ data, path, name, ...pro
             }}
             handleAdd={handleAdd}
             handleDelete={handleDelete}
+            type={collectionType}
           />
         )}
       </div>
 
       {!collapsed && (
-        <div className="fg-object-inner">
+        <div className="fg-collection-inner">
           {isEditing ? (
             <textarea
               rows={10}
-              className="fg-object-text-area"
+              className="fg-collection-text-area"
               name={path.join('.')}
               value={stringifiedValue}
               onChange={(e) => setStringifiedValue(e.target.value)}
@@ -104,36 +117,34 @@ export const ObjectNode: React.FC<ObjectNodeProps> = ({ data, path, name, ...pro
               {Object.entries(data)
                 // TO-DO: Sort keys if "keySort" prop specified
                 .map(([key, value]) => (
-                  <div className="fg-object-element" key={key}>
-                    {getComponent(value, [...path, key], { ...props, name: key }, key)}
+                  <div className="fg-collection-element" key={key}>
+                    {isCollection(value) ? (
+                      <CollectionNode
+                        key={key}
+                        data={value}
+                        path={[...path, key]}
+                        name={key}
+                        {...props}
+                      />
+                    ) : (
+                      <ValueNodeWrapper
+                        key={key}
+                        data={value}
+                        path={[...path, key]}
+                        name={key}
+                        {...props}
+                      />
+                    )}
                   </div>
                 ))}
             </>
           )}
-          <div>{'}'}</div>
-          <div className="fg-value-error-row">
+          <div>{brackets.close}</div>
+          <div className="fg-collection-error-row">
             {error && <span className="fg-error-slug">{error}</span>}
           </div>
         </div>
       )}
     </div>
   )
-}
-
-export const OtherComponent: React.FC<{ data: unknown; path: string[] }> = () => {
-  return <span>OTHER</span>
-}
-
-const getComponent = (value: unknown, path: string[], props: any, key?: string) => {
-  if (value === null) return <ValueNodeWrapper key={key} data={null} path={path} {...props} />
-  if (typeof value === 'string')
-    return <ValueNodeWrapper key={key} data={value} path={path} {...props} />
-  if (typeof value === 'boolean')
-    return <ValueNodeWrapper key={key} data={value} path={path} {...props} />
-  if (typeof value === 'number')
-    return <ValueNodeWrapper key={key} data={value} path={path} {...props} />
-  if (Array.isArray(value)) return <OtherComponent key={key} data={value} path={path} {...props} />
-  if (typeof value === 'object') return <ObjectNode key={key} data={value} path={path} {...props} />
-
-  return <OtherComponent data={null} path={path} />
 }

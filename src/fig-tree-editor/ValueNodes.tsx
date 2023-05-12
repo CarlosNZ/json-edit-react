@@ -94,6 +94,14 @@ export const NullValue: React.FC<InputProps> = ({ value, setValue, isEditing, se
   )
 }
 
-export const ObjectValue: React.FC<InputProps> = ({ isEditing, setIsEditing }) => {
-  return <span>{'{ }'}</span>
+export const ObjectValue: React.FC<InputProps> = () => {
+  return <span className="fg-value-object">{'{ }'}</span>
+}
+
+export const ArrayValue: React.FC<InputProps> = () => {
+  return <span className="fg-value-array">{'[ ]'}</span>
+}
+
+export const InvalidValue: React.FC<InputProps> = () => {
+  return <span className="fg-value-invalid">Invalid value</span>
 }

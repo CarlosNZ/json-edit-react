@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { ObjectNode } from './CollectionNodes'
-import { updateDataObject } from './utilityMethods'
+import { CollectionNode } from './CollectionNodes'
+import { isCollection, updateDataObject } from './utilityMethods'
 import { EditorProps, OnChangeMethod } from './types'
 import './style.css'
 import { useTheme, defaultTheme } from './theme'
@@ -107,10 +107,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   return (
     <div className="fg-editor-container">
       {Array.isArray(data) && <p>Array component</p>}
-      {typeof data === 'object' && data !== null && (
-        <ObjectNode data={data} path={[]} {...otherProps} />
-      )}
-      {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
+      {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>
   )
 }

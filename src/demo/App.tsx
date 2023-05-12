@@ -33,10 +33,12 @@ const initBasic = {
   firstName: 'Carl',
   lastName: 'Smith',
   likes: 'Ice Cream',
+  anArray: [1, 2, 3],
   age: 99,
   nested: { a: 'A ONE', b: true },
   oneMore: false,
   Nothing: null,
+  function: () => true,
 }
 
 function App() {

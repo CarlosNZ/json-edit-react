@@ -1,7 +1,7 @@
 .fg-editor-container {
   background-color: var(--fg-bg-color);
   font-family: var(--fg-main-font);
-  font-size: 1.2em;
+  font-size: 1.1em;
   color: var(--fg-main-color);
   padding: 1em;
   min-width: 40%;
@@ -13,14 +13,14 @@
 .fb-object-component {
 }
 
-.fg-object-header-row {
+.fg-collection-header-row {
   display: flex;
 }
 
-.fg-object-inner {
+.fg-collection-inner {
 }
 
-.fg-object-element {
+.fg-collection-element {
   margin-left: 20px;
 }
 

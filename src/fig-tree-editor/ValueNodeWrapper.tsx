@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
-import { StringValue, NumberValue, BooleanValue, NullValue, ObjectValue } from './ValueNodes'
+import {
+  StringValue,
+  NumberValue,
+  BooleanValue,
+  NullValue,
+  ObjectValue,
+  InvalidValue,
+  ArrayValue,
+} from './ValueNodes'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { DataType, ValueNodeProps, InputProps, DataTypes } from './types'
 import './style.css'
@@ -22,7 +30,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
 
   const handleEdit = () => {
     setIsEditing(false)
-    const newValue = dataType === 'object' ? {} : value
+    const newValue = dataType === 'object' ? {} : dataType === 'array' ? [] : value
     onEdit(newValue, path).then((result: any) => {
       if (result) {
         setError(result)
@@ -67,7 +75,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
         {isEditing ? (
           <InputButtons onOk={handleEdit} onCancel={handleCancel} />
         ) : (
-          <EditButtons startEdit={() => setIsEditing(true)} handleDelete={handleDelete} />
+          dataType !== 'invalid' && (
+            <EditButtons startEdit={() => setIsEditing(true)} handleDelete={handleDelete} />
+          )
         )}
         {isEditing && (
           <select
@@ -99,7 +109,6 @@ const getDataType = (value: unknown) => {
 }
 
 const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
-  console.log(inputProps.value, dataType)
   switch (dataType) {
     case 'string':
       return <StringValue {...inputProps} />
@@ -111,7 +120,9 @@ const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
       return <NullValue {...inputProps} />
     case 'object':
       return <ObjectValue {...inputProps} />
+    case 'array':
+      return <ArrayValue {...inputProps} />
     default:
-      return <p>Other types</p>
+      return <InvalidValue {...inputProps} />
   }
 }

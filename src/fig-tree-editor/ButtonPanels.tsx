@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { Icon } from './Icons'
 import './style.css'
+import { CollectionDataType } from './types'
 
 export const EditButtons: React.FC<{
   startEdit?: () => void
   handleDelete?: () => void
   handleCopy?: () => void
   handleAdd?: (value: string) => void
-}> = ({ startEdit, handleDelete, handleAdd, handleCopy }) => {
+  type?: CollectionDataType
+}> = ({ startEdit, handleDelete, handleAdd, handleCopy, type }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [newKey, setNewKey] = useState('Enter new key')
 
@@ -36,11 +38,16 @@ export const EditButtons: React.FC<{
         </span>
       )}
       {handleAdd && (
-        <span onClick={() => setIsAdding(true)}>
+        <span
+          onClick={() => {
+            if (type === 'object') setIsAdding(true)
+            else handleAdd('IGNORE')
+          }}
+        >
           <Icon name="add" />
         </span>
       )}
-      {isAdding && handleAdd && (
+      {isAdding && handleAdd && type === 'object' && (
         <>
           <input
             className="fg-input-new-key"

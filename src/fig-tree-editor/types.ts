@@ -25,10 +25,11 @@ export interface EditorProps {
   defaultValue?: unknown
 }
 
-export const SimpleDataTypes = ['string', 'number', 'boolean', 'null']
-export const ComplexDataTypes = ['object', 'array']
-export const DataTypes = [...SimpleDataTypes, ...ComplexDataTypes] as const
+export const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
+export const CollectionDataTypes = ['object', 'array'] as const
+export const DataTypes = [...ValueDataTypes, ...CollectionDataTypes] as const
 
+export type CollectionDataType = (typeof CollectionDataTypes)[number]
 export type DataType = (typeof DataTypes)[number] | 'invalid'
 
 /**
@@ -40,11 +41,11 @@ export type UpdateMethod = (props: {
   currentData: object
   newValue: unknown
   currentValue: unknown
-  name: string
-  path: string[]
+  name: string | number
+  path: (string | number)[]
 }) => void | false
 
-export type OnChangeMethod = <T>(value: T, path: string[]) => Promise<string | void>
+export type OnChangeMethod = <T>(value: T, path: (string | number)[]) => Promise<string | void>
 
 export type FilterMethod = (input: { name: string; path: string[]; value: unknown }) => boolean
 
