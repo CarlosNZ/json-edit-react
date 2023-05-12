@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import clone from 'just-clone'
-import { CollectionNode } from './CollectionNodes'
+import { CollectionNode } from './CollectionNode'
 import { EditorProps, FilterMethod, OnChangeMethod } from './types'
 import './style.css'
 import { useTheme, defaultTheme } from './theme'
@@ -21,7 +21,8 @@ const JsonEditor: React.FC<EditorProps> = ({
   restrictEdit = false,
   restrictDelete = false,
   restrictAdd = false,
-  keySort,
+  keySort = false,
+  showArrayIndices = true,
   defaultValue = null,
 }) => {
   const [data, setData] = useState<object>(srcData)
@@ -92,6 +93,9 @@ const JsonEditor: React.FC<EditorProps> = ({
   }
 
   const collapseFilter = getFilterMethod(collapse)
+  const restrictEditFilter = getFilterMethod(restrictEdit)
+  const restrictDeleteFilter = getFilterMethod(restrictDelete)
+  const restrictAddFilter = getFilterMethod(restrictAdd)
 
   const otherProps = {
     name: rootName,
@@ -99,7 +103,12 @@ const JsonEditor: React.FC<EditorProps> = ({
     onDelete,
     onAdd,
     collapseFilter,
+    restrictEditFilter,
+    restrictDeleteFilter,
+    restrictAddFilter,
     enableClipboard,
+    keySort,
+    showArrayIndices,
     style,
     indent,
   }

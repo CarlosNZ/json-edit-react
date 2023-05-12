@@ -22,13 +22,14 @@ export interface EditorProps {
   restrictDelete?: boolean | FilterMethod
   restrictAdd?: boolean | FilterMethod
   restrictKeyEdit?: boolean | FilterMethod
-  keySort?: boolean // OR Comparator Method
+  keySort?: boolean | CompareMethod
+  showArrayIndices?: boolean
   defaultKeyName?: string
   defaultValue?: unknown
 }
 
-export const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
-export const CollectionDataTypes = ['object', 'array'] as const
+const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
+const CollectionDataTypes = ['object', 'array'] as const
 export const DataTypes = [...ValueDataTypes, ...CollectionDataTypes] as const
 
 export type CollectionDataType = (typeof CollectionDataTypes)[number]
@@ -56,7 +57,7 @@ export type FilterMethod = (input: {
   key: CollectionKey
   path: CollectionKey[]
   level: number
-  value: CollectionData
+  value: unknown
   size: number
 }) => boolean
 
@@ -65,6 +66,8 @@ export type CopyMethod = (input: {
   path: CollectionKey[]
   value: unknown
 }) => void
+
+export type CompareMethod = (a: string, b: string) => number
 
 /**
  * NODES
@@ -77,6 +80,10 @@ interface BaseNodeProps {
   onEdit: OnChangeMethod
   onDelete: OnChangeMethod
   enableClipboard: boolean | CopyMethod
+  restrictEditFilter: FilterMethod
+  restrictDeleteFilter: FilterMethod
+  restrictAddFilter: FilterMethod
+  showArrayIndices: boolean
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -84,6 +91,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   indent: number
   collapseFilter: FilterMethod
   onAdd: OnChangeMethod
+  keySort: boolean | CompareMethod
 }
 
 export interface ValueNodeProps extends BaseNodeProps {

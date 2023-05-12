@@ -3,18 +3,28 @@ import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { CollectionNodeProps } from './types'
 import { Icon } from './Icons'
-import { isCollection } from './'
+import { isCollection } from '.'
 import './style.css'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name, ...props }) => {
-  const { onEdit, onAdd, onDelete } = props
+  const {
+    onEdit,
+    onAdd,
+    onDelete,
+    restrictEditFilter,
+    restrictDeleteFilter,
+    restrictAddFilter,
+    keySort,
+    showArrayIndices,
+  } = props
   const [isEditing, setIsEditing] = useState(false)
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
   const [error, setError] = useState<string | null>(null)
+
   const collectionSize = Object.keys(data).length
-  const [collapsed, setCollapsed] = useState(
-    props.collapseFilter({ key: name, path, level: path.length, value: data, size: collectionSize })
-  )
+  const filterProps = { key: name, path, level: path.length, value: data, size: collectionSize }
+
+  const [collapsed, setCollapsed] = useState(props.collapseFilter(filterProps))
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
@@ -75,6 +85,18 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
     setStringifiedValue(JSON.stringify(data, null, 2))
   }
 
+  const canEdit = !restrictEditFilter(filterProps)
+  const canDelete = !restrictDeleteFilter(filterProps)
+  const canAdd = !restrictAddFilter(filterProps)
+
+  const keyValueArray = Object.entries(data).map(([key, value]) => [
+    collectionType === 'array' ? Number(key) : key,
+    value,
+  ])
+
+  if (keySort && collectionType === 'object')
+    keyValueArray.sort(typeof keySort === 'function' ? (a, b) => keySort(a[0], b[0]) : undefined)
+
   return (
     <div className="fg-component fb-collection-component">
       <div className="fg-collection-header-row">
@@ -86,7 +108,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           <Icon name="chevron" rotate={collapsed} />
         </div>
         <div className="fg-collection-name">
-          {name} <span className="fg-brackets">{brackets.open}</span>
+          {name}: <span className="fg-brackets">{brackets.open}</span>
         </div>
         <div className="fg-collection-item-count">{`${collectionSize} items`}</div>
         {collapsed && <div className="fg-brackets">{brackets.close}</div>}
@@ -94,12 +116,16 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           <InputButtons onOk={handleEdit} onCancel={handleCancel} />
         ) : (
           <EditButtons
-            startEdit={() => {
-              setIsEditing(true)
-              setCollapsed(false)
-            }}
-            handleAdd={handleAdd}
-            handleDelete={handleDelete}
+            startEdit={
+              canEdit
+                ? () => {
+                    setIsEditing(true)
+                    setCollapsed(false)
+                  }
+                : undefined
+            }
+            handleAdd={canAdd ? handleAdd : undefined}
+            handleDelete={canDelete ? handleDelete : undefined}
             enableClipboard={props.enableClipboard}
             type={collectionType}
             data={data}
@@ -124,7 +150,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
               ></textarea>
             ) : (
               <>
-                {Object.entries(data)
+                {keyValueArray
                   // TO-DO: Sort keys if "keySort" prop specified
                   .map(([key, value]) => (
                     <div className="fg-collection-element" key={key}>
@@ -143,6 +169,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
                           path={[...path, key]}
                           name={key}
                           {...props}
+                          showArrayIndices={collectionType === 'object' ? true : showArrayIndices}
                         />
                       )}
                     </div>

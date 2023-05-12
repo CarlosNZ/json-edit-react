@@ -82,12 +82,21 @@ function App() {
         data={data}
         rootName="preferences"
         onUpdate={({ newData }) => setData(newData)}
-        collapse={2}
-        enableClipboard={({ value, key, path }) => {
-          console.log('You copied', JSON.stringify(value))
-          console.log('Key', key)
-          console.log('Path', path)
+        onDelete={({ currentValue, newValue }) => {
+          console.log('Data', currentValue, newValue)
+          return false
         }}
+        collapse={2}
+        // enableClipboard={({ value, path, key }) => {
+        //   console.log(value)
+        //   console.log('Path', path)
+        //   console.log('key', key)
+        // }}
+        restrictEdit={({ key }) => key === 'server'}
+        restrictDelete={({ value }) => {
+          return value === null
+        }}
+        // keySort={true}
       />
       {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
     </div>

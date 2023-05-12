@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   StringValue,
   NumberValue,
@@ -19,6 +19,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   onEdit,
   onDelete,
   enableClipboard,
+  restrictEditFilter,
+  restrictDeleteFilter,
+  showArrayIndices,
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState(data)
@@ -56,6 +59,11 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     })
   }
 
+  const filterProps = { key: name, path, level: path.length, value: data, size: 1 }
+
+  const canEdit = !restrictEditFilter(filterProps)
+  const canDelete = !restrictDeleteFilter(filterProps)
+
   const inputProps = {
     value,
     setValue,
@@ -69,17 +77,19 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   return (
     <div className="fg-component fg-value-component">
       <div className="fg-value-main-row">
-        <label htmlFor={path.join('.')} className="fg-object-key">
-          {name}:{' '}
-        </label>
+        {showArrayIndices && (
+          <label htmlFor={path.join('.')} className="fg-object-key">
+            {name}:{' '}
+          </label>
+        )}
         <div className="fg-input-component">{getInputComponent(dataType, inputProps)}</div>
         {isEditing ? (
           <InputButtons onOk={handleEdit} onCancel={handleCancel} />
         ) : (
           dataType !== 'invalid' && (
             <EditButtons
-              startEdit={() => setIsEditing(true)}
-              handleDelete={handleDelete}
+              startEdit={canEdit ? () => setIsEditing(true) : undefined}
+              handleDelete={canDelete ? handleDelete : undefined}
               data={data}
               enableClipboard={enableClipboard}
               name={name}
