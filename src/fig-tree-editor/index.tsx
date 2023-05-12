@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ObjectNode } from './NodeComponents'
+import { ObjectNode } from './CollectionNodes'
 import { updateDataObject } from './utilityMethods'
 import { EditorProps, OnChangeMethod } from './types'
 import './style.css'
