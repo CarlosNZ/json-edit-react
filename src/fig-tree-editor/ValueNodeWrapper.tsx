@@ -18,6 +18,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   path,
   onEdit,
   onDelete,
+  enableClipboard,
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState(data)
@@ -76,7 +77,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
           <InputButtons onOk={handleEdit} onCancel={handleCancel} />
         ) : (
           dataType !== 'invalid' && (
-            <EditButtons startEdit={() => setIsEditing(true)} handleDelete={handleDelete} />
+            <EditButtons
+              startEdit={() => setIsEditing(true)}
+              handleDelete={handleDelete}
+              data={data}
+              enableClipboard={enableClipboard}
+              name={name}
+              path={path}
+            />
           )
         )}
         {isEditing && (

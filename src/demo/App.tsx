@@ -66,6 +66,10 @@ const initPrefs = {
     defaultLanguageCode: 'en_fiji',
     googleAnalyticsId: 'G-8RQHL40GLG',
     siteHost: 'conforma-demo.msupply.org:50006',
+    arrayWithObjects: [
+      { one: 1, two: 'second' },
+      { one: 99, two: 'third' },
+    ],
   },
 }
 
@@ -74,7 +78,17 @@ function App() {
   // console.log('outer data', data)
   return (
     <div className="App">
-      <JsonEditor data={data} rootName="preferences" onUpdate={({ newData }) => setData(newData)} />
+      <JsonEditor
+        data={data}
+        rootName="preferences"
+        onUpdate={({ newData }) => setData(newData)}
+        collapse={2}
+        enableClipboard={({ value, key, path }) => {
+          console.log('You copied', JSON.stringify(value))
+          console.log('Key', key)
+          console.log('Path', path)
+        }}
+      />
       {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
     </div>
   )

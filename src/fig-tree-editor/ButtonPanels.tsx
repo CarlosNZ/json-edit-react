@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { Icon } from './Icons'
 import './style.css'
-import { CollectionDataType } from './types'
+import { CollectionDataType, CollectionKey, CopyMethod } from './types'
 
 export const EditButtons: React.FC<{
   startEdit?: () => void
   handleDelete?: () => void
-  handleCopy?: () => void
-  handleAdd?: (value: string) => void
+  enableClipboard: boolean | CopyMethod
+  handleAdd?: (newKey: string) => void
   type?: CollectionDataType
-}> = ({ startEdit, handleDelete, handleAdd, handleCopy, type }) => {
+  data: unknown
+  path: CollectionKey[]
+  name: CollectionKey
+}> = ({ startEdit, handleDelete, handleAdd, enableClipboard, type, data, path, name }) => {
   const [isAdding, setIsAdding] = useState(false)
   const [newKey, setNewKey] = useState('Enter new key')
 
@@ -20,25 +23,30 @@ export const EditButtons: React.FC<{
     } else if (e.key === 'Escape') setIsAdding(false)
   }
 
+  const handleCopy = () => {
+    if (enableClipboard) navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+    if (typeof enableClipboard === 'function') enableClipboard({ value: data, path, key: name })
+  }
+
   return (
     <div className="fg-edit-buttons">
-      {handleCopy && (
-        <span onClick={handleCopy} className="fg-icon-wrapper">
+      {enableClipboard && (
+        <div onClick={handleCopy} className="fg-icon-wrapper">
           <Icon name="copy" />
-        </span>
+        </div>
       )}
       {startEdit && (
-        <span onClick={startEdit} className="fg-icon-wrapper">
+        <div onClick={startEdit} className="fg-icon-wrapper">
           <Icon name="edit" />
-        </span>
+        </div>
       )}
       {handleDelete && (
-        <span onClick={handleDelete} className="fg-icon-wrapper">
+        <div onClick={handleDelete} className="fg-icon-wrapper">
           <Icon name="delete" />
-        </span>
+        </div>
       )}
       {handleAdd && (
-        <span
+        <div
           onClick={() => {
             if (type === 'object') setIsAdding(true)
             else handleAdd('IGNORE')
@@ -46,7 +54,7 @@ export const EditButtons: React.FC<{
           className="fg-icon-wrapper"
         >
           <Icon name="add" />
-        </span>
+        </div>
       )}
       {isAdding && handleAdd && type === 'object' && (
         <>
@@ -82,11 +90,11 @@ export const InputButtons: React.FC<{ onOk: () => void; onCancel: () => void }> 
   onCancel,
 }) => (
   <div className="fg-input-buttons">
-    <span onClick={onOk}>
+    <div onClick={onOk} className="fg-icon-wrapper">
       <Icon name="ok" />
-    </span>
-    <span onClick={onCancel}>
+    </div>
+    <div onClick={onCancel} className="fg-icon-wrapper">
       <Icon name="cancel" />
-    </span>
+    </div>
   </div>
 )

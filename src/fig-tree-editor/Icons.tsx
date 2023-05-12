@@ -58,7 +58,7 @@ export const Icon: React.FC<IconProps> = ({
     case 'add':
       return (
         <svg
-          viewBox="0 0 24 24"
+          viewBox="0 -0.5 24 25"
           width={size}
           height={size}
           className="fg-icon-add"
@@ -75,7 +75,7 @@ export const Icon: React.FC<IconProps> = ({
     case 'copy':
       return (
         <svg
-          viewBox="0 0 24 24"
+          viewBox="-2 -2.5 22 22"
           width={size}
           height={size}
           className="fg-icon-copy"
@@ -92,7 +92,7 @@ export const Icon: React.FC<IconProps> = ({
     case 'ok':
       return (
         <svg
-          viewBox="0 0 20 20"
+          viewBox="-2 -2 23 23"
           width={size}
           height={size}
           className="fg-icon-ok"
@@ -107,7 +107,7 @@ export const Icon: React.FC<IconProps> = ({
     case 'cancel':
       return (
         <svg
-          viewBox="0 0 24 24"
+          viewBox="0 0.8 23 22"
           width={size}
           height={size}
           className="fg-icon-cancel"

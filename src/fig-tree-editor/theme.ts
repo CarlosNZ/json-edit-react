@@ -14,12 +14,12 @@ export const defaultTheme = {
   altBgColor: 'grey',
   iconColor: 'turquoise',
   iconChevronColor: 'rgb(0, 43, 54)',
-  iconEditColor: 'yellow',
-  iconDeleteColor: 'red',
-  iconAddColor: 'darkgreen',
-  iconCopyColor: 'brown',
+  iconEditColor: 'rgb(42, 161, 152)',
+  iconDeleteColor: 'rgb(203, 75, 22)',
+  iconAddColor: 'rgb(42, 161, 152)',
+  iconCopyColor: 'rgb(38, 139, 210)',
   iconOkColor: 'green',
-  iconCancelColor: 'darkred',
+  iconCancelColor: 'rgb(203, 75, 22)',
 }
 
 export type ThemeProps = typeof defaultTheme

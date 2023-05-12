@@ -1,17 +1,20 @@
 import { useState } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
-import { ObjectNodeProps } from './types'
+import { CollectionNodeProps } from './types'
 import { Icon } from './Icons'
+import { isCollection } from './'
 import './style.css'
-import { isCollection } from './utilityMethods'
 
-export const CollectionNode: React.FC<ObjectNodeProps> = ({ data, path, name, ...props }) => {
+export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name, ...props }) => {
   const { onEdit, onAdd, onDelete } = props
   const [isEditing, setIsEditing] = useState(false)
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
   const [error, setError] = useState<string | null>(null)
-  const [collapsed, setCollapsed] = useState(false)
+  const collectionSize = Object.keys(data).length
+  const [collapsed, setCollapsed] = useState(
+    props.collapseFilter({ key: name, path, level: path.length, value: data, size: collectionSize })
+  )
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
@@ -83,10 +86,10 @@ export const CollectionNode: React.FC<ObjectNodeProps> = ({ data, path, name, ..
           <Icon name="chevron" rotate={collapsed} />
         </div>
         <div className="fg-collection-name">
-          {name} <span className="fg-brackets">{brackets.open}&nbsp;</span>
+          {name} <span className="fg-brackets">{brackets.open}</span>
         </div>
-        <div className="fg-collection-item-count">{`${Object.keys(data).length} items`}</div>
-        {collapsed && <div className="fg-brackets">&nbsp;{brackets.close}</div>}
+        <div className="fg-collection-item-count">{`${collectionSize} items`}</div>
+        {collapsed && <div className="fg-brackets">{brackets.close}</div>}
         {isEditing ? (
           <InputButtons onOk={handleEdit} onCancel={handleCancel} />
         ) : (
@@ -97,14 +100,18 @@ export const CollectionNode: React.FC<ObjectNodeProps> = ({ data, path, name, ..
             }}
             handleAdd={handleAdd}
             handleDelete={handleDelete}
+            enableClipboard={props.enableClipboard}
             type={collectionType}
+            data={data}
+            name={name}
+            path={path}
           />
         )}
       </div>
 
       {!collapsed && (
         <>
-          <div className="fg-collection-inner">
+          <div className="fg-collection-inner" style={{ marginLeft: `${props.indent}em` }}>
             {isEditing ? (
               <textarea
                 rows={10}

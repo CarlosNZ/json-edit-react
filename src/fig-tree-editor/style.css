@@ -1,8 +1,8 @@
 .fg-editor-container {
   background-color: var(--fg-bg-color);
   font-family: var(--fg-main-font);
-  /* font-size: 1.1em; */
-  font-size: 14px;
+  font-size: 1.1em;
+  /* font-size: 14px; */
   color: var(--fg-main-color);
   padding: 1em;
   min-width: 40%;
@@ -20,7 +20,7 @@
 .fg-value-main-row {
   display: flex;
   min-height: 1.6em;
-  gap: 0.5em;
+  gap: 0.3em;
   align-items: center;
 }
 
@@ -39,7 +39,6 @@
 }
 
 .fg-collection-inner {
-  margin-left: 2em;
 }
 
 .fg-collection-element {
@@ -84,7 +83,8 @@
 .fg-error-slug {
 }
 
-.fg-text-input {
+.fg-input-text {
+  height: 1.6em;
 }
 
 .fg-input-component {

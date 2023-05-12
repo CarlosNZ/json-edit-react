@@ -2,6 +2,8 @@
  * MAIN
  */
 
+import { ThemeProps } from './theme'
+
 export interface EditorProps {
   data: object
   schema?: object
@@ -10,16 +12,16 @@ export interface EditorProps {
   onEdit?: UpdateMethod
   onDelete?: UpdateMethod
   onAdd?: UpdateMethod
-  onCopy?: (value: unknown) => void
-  theme?: any // UPDATE
-  style?: object // UPDATE
+  enableClipboard?: boolean | CopyMethod
+  theme?: Partial<ThemeProps> // UPDATE
+  style?: React.CSSProperties
   indent?: number
   collapse?: boolean | number | FilterMethod
   showCount?: boolean | FilterMethod
-  restrictEdit?: FilterMethod | boolean
-  restrictDelete?: FilterMethod | boolean
-  restrictAdd?: FilterMethod | boolean
-  restrictKeyEdit?: FilterMethod | boolean
+  restrictEdit?: boolean | FilterMethod
+  restrictDelete?: boolean | FilterMethod
+  restrictAdd?: boolean | FilterMethod
+  restrictKeyEdit?: boolean | FilterMethod
   keySort?: boolean // OR Comparator Method
   defaultKeyName?: string
   defaultValue?: unknown
@@ -32,6 +34,9 @@ export const DataTypes = [...ValueDataTypes, ...CollectionDataTypes] as const
 export type CollectionDataType = (typeof CollectionDataTypes)[number]
 export type DataType = (typeof DataTypes)[number] | 'invalid'
 
+export type CollectionKey = string | number
+type CollectionData = object | unknown[]
+
 /**
  * METHODS
  */
@@ -41,13 +46,25 @@ export type UpdateMethod = (props: {
   currentData: object
   newValue: unknown
   currentValue: unknown
-  name: string | number
-  path: (string | number)[]
+  name: CollectionKey
+  path: CollectionKey[]
 }) => void | false
 
 export type OnChangeMethod = <T>(value: T, path: (string | number)[]) => Promise<string | void>
 
-export type FilterMethod = (input: { name: string; path: string[]; value: unknown }) => boolean
+export type FilterMethod = (input: {
+  key: CollectionKey
+  path: CollectionKey[]
+  level: number
+  value: CollectionData
+  size: number
+}) => boolean
+
+export type CopyMethod = (input: {
+  key: CollectionKey
+  path: CollectionKey[]
+  value: unknown
+}) => void
 
 /**
  * NODES
@@ -55,14 +72,17 @@ export type FilterMethod = (input: { name: string; path: string[]; value: unknow
 
 interface BaseNodeProps {
   data: unknown
-  path: string[]
-  name: string
+  path: CollectionKey[]
+  name: CollectionKey
   onEdit: OnChangeMethod
   onDelete: OnChangeMethod
+  enableClipboard: boolean | CopyMethod
 }
 
-export interface ObjectNodeProps extends BaseNodeProps {
-  data: object
+export interface CollectionNodeProps extends BaseNodeProps {
+  data: CollectionData
+  indent: number
+  collapseFilter: FilterMethod
   onAdd: OnChangeMethod
 }
 
@@ -77,5 +97,5 @@ export interface InputProps {
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void
   handleCancel: () => void
-  path: string[]
+  path: CollectionKey[]
 }
