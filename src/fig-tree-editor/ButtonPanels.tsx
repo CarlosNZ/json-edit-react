@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Icon } from './Icons'
 import './style.css'
 import { CollectionDataType, CollectionKey, CopyMethod } from './types'
@@ -13,8 +13,13 @@ export const EditButtons: React.FC<{
   path: CollectionKey[]
   name: CollectionKey
 }> = ({ startEdit, handleDelete, handleAdd, enableClipboard, type, data, path, name }) => {
+  const NEW_KEY_PROMPT = 'Enter new key'
   const [isAdding, setIsAdding] = useState(false)
-  const [newKey, setNewKey] = useState('Enter new key')
+  const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
+
+  useEffect(() => {
+    if (!isAdding) setNewKey(NEW_KEY_PROMPT)
+  }, [isAdding])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && handleAdd) {

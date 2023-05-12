@@ -51,14 +51,14 @@ export const NumberValue: React.FC<InputProps> = ({
       type="number"
       name={path.join('.')}
       value={value as number}
-      onChange={(e) => setValue(e.target.value)}
+      onChange={(e) => setValue(Number(e.target.value))}
       autoFocus
       onFocus={(e) => e.target.select()}
       onKeyDown={handleKeyPress}
     />
   ) : (
     <span onDoubleClick={() => setIsEditing(true)} className="fg-value-number">
-      {value}
+      {value as number}
     </span>
   )
 }
@@ -85,21 +85,19 @@ export const BooleanValue: React.FC<InputProps> = ({
   )
 }
 
-export const NullValue: React.FC<InputProps> = ({ value, setValue, isEditing, setIsEditing }) => {
-  setValue(null)
-  return isEditing ? null : (
+export const NullValue: React.FC<InputProps> = ({ value, setValue, isEditing, setIsEditing }) =>
+  isEditing ? null : (
     <span onDoubleClick={() => setIsEditing(true)} className="fg-value-null">
       {String(value)}
     </span>
   )
-}
 
 export const ObjectValue: React.FC<InputProps> = () => {
   return <span className="fg-value-object">{'{ }'}</span>
 }
 
-export const ArrayValue: React.FC<InputProps> = () => {
-  return <span className="fg-value-array">{'[ ]'}</span>
+export const ArrayValue: React.FC<InputProps> = ({ value }) => {
+  return <span className="fg-value-array">{`[${value === null ? '' : value}]`}</span>
 }
 
 export const InvalidValue: React.FC<InputProps> = () => {

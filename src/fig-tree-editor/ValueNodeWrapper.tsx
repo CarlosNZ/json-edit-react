@@ -9,7 +9,7 @@ import {
   ArrayValue,
 } from './ValueNodes'
 import { EditButtons, InputButtons } from './ButtonPanels'
-import { DataType, ValueNodeProps, InputProps, DataTypes } from './types'
+import { DataType, ValueNodeProps, InputProps, DataTypes, CollectionData } from './types'
 import './style.css'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
@@ -24,7 +24,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   showArrayIndices,
 }) => {
   const [isEditing, setIsEditing] = useState(false)
-  const [value, setValue] = useState(data)
+  const [value, setValue] = useState<typeof data | CollectionData>(data)
   const [error, setError] = useState<string | null>(null)
   const [dataType, setDataType] = useState<DataType>(getDataType(data))
 
@@ -32,9 +32,15 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     setValue(data)
   }, [data])
 
+  const handleChangeDataType = (type: DataType) => {
+    setValue(convertValue(value, type))
+    setDataType(type)
+  }
+
   const handleEdit = () => {
     setIsEditing(false)
-    const newValue = dataType === 'object' ? {} : dataType === 'array' ? [] : value
+    const newValue =
+      dataType === 'object' ? {} : dataType === 'array' ? (value !== null ? [value] : []) : value
     onEdit(newValue, path).then((result: any) => {
       if (result) {
         setError(result)
@@ -100,7 +106,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
         {isEditing && (
           <select
             name={`${name}-type-select`}
-            onChange={(e) => setDataType(e.target.value as DataType)}
+            onChange={(e) => handleChangeDataType(e.target.value as DataType)}
             value={dataType}
           >
             {DataTypes.map((type) => (
@@ -142,5 +148,25 @@ const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
       return <ArrayValue {...inputProps} />
     default:
       return <InvalidValue {...inputProps} />
+  }
+}
+
+const convertValue = (value: unknown, type: DataType) => {
+  switch (type) {
+    case 'string':
+      return String(value)
+    case 'number':
+      const n = Number(value)
+      return isNaN(n) ? 0 : n
+    case 'boolean':
+      return !!value
+    case 'null':
+      return null
+    case 'object':
+      return {}
+    case 'array':
+      return [value]
+    default:
+      return String(value)
   }
 }

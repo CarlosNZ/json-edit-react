@@ -43,6 +43,7 @@ const initBasic = {
 
 const initPrefs = {
   server: {
+    isItTrue: true,
     thumbnailMaxWidth: 300,
     thumbnailMaxHeight: 300,
     hoursSchedule: [
@@ -74,18 +75,19 @@ const initPrefs = {
 }
 
 function App() {
-  const [data, setData] = useState<object>(initPrefs)
+  const [data, setData] = useState<object>(initBasic)
   // console.log('outer data', data)
   return (
     <div className="App">
       <JsonEditor
         data={data}
         rootName="preferences"
+        // onEdit={({ newValue }) => console.log('NEW VALUE', newValue)}
         onUpdate={({ newData }) => setData(newData)}
-        onDelete={({ currentValue, newValue }) => {
-          console.log('Data', currentValue, newValue)
-          return false
-        }}
+        // onDelete={({ currentValue, newValue }) => {
+        //   console.log('Data', currentValue, newValue)
+        //   return false
+        // }}
         collapse={2}
         // enableClipboard={({ value, path, key }) => {
         //   console.log(value)

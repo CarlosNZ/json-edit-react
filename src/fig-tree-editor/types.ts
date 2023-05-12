@@ -36,7 +36,7 @@ export type CollectionDataType = (typeof CollectionDataTypes)[number]
 export type DataType = (typeof DataTypes)[number] | 'invalid'
 
 export type CollectionKey = string | number
-type CollectionData = object | unknown[]
+export type CollectionData = object | unknown[]
 
 /**
  * METHODS
@@ -99,7 +99,7 @@ export interface ValueNodeProps extends BaseNodeProps {
 }
 
 export interface InputProps {
-  value: string | number | boolean | null
+  value: unknown
   setValue: React.Dispatch<React.SetStateAction<string | number | boolean | null>>
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>

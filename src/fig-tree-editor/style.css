@@ -68,6 +68,7 @@
 .fg-value-null {
   color: var(--fg-null-color);
   font-variant: small-caps;
+  font-weight: bold;
   /* background-color: var(--fg-alt-bg-color); */
 }
 
