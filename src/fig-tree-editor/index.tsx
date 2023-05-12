@@ -37,7 +37,6 @@ const JsonEditor: React.FC<EditorProps> = ({
       value,
       'update'
     )
-    console.log({ currentData, newData, currentValue, newValue })
     if (srcEdit) {
       const result = await srcEdit({
         currentData,

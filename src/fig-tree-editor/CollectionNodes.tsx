@@ -73,7 +73,7 @@ export const CollectionNode: React.FC<ObjectNodeProps> = ({ data, path, name, ..
   }
 
   return (
-    <div className="fg-component fb-object-component">
+    <div className="fg-component fb-collection-component">
       <div className="fg-collection-header-row">
         <div
           onClick={() => {
@@ -82,9 +82,11 @@ export const CollectionNode: React.FC<ObjectNodeProps> = ({ data, path, name, ..
         >
           <Icon name="chevron" rotate={collapsed} />
         </div>
-        <div className="fg-collection-name">{`${name} ${brackets.open}`}</div>
+        <div className="fg-collection-name">
+          {name} <span className="fg-brackets">{brackets.open}&nbsp;</span>
+        </div>
         <div className="fg-collection-item-count">{`${Object.keys(data).length} items`}</div>
-        {collapsed && <div>{brackets.close}</div>}
+        {collapsed && <div className="fg-brackets">&nbsp;{brackets.close}</div>}
         {isEditing ? (
           <InputButtons onOk={handleEdit} onCancel={handleCancel} />
         ) : (
@@ -101,49 +103,52 @@ export const CollectionNode: React.FC<ObjectNodeProps> = ({ data, path, name, ..
       </div>
 
       {!collapsed && (
-        <div className="fg-collection-inner">
-          {isEditing ? (
-            <textarea
-              rows={10}
-              className="fg-collection-text-area"
-              name={path.join('.')}
-              value={stringifiedValue}
-              onChange={(e) => setStringifiedValue(e.target.value)}
-              autoFocus
-              onFocus={(e) => e.target.select()}
-            ></textarea>
-          ) : (
-            <>
-              {Object.entries(data)
-                // TO-DO: Sort keys if "keySort" prop specified
-                .map(([key, value]) => (
-                  <div className="fg-collection-element" key={key}>
-                    {isCollection(value) ? (
-                      <CollectionNode
-                        key={key}
-                        data={value}
-                        path={[...path, key]}
-                        name={key}
-                        {...props}
-                      />
-                    ) : (
-                      <ValueNodeWrapper
-                        key={key}
-                        data={value}
-                        path={[...path, key]}
-                        name={key}
-                        {...props}
-                      />
-                    )}
-                  </div>
-                ))}
-            </>
-          )}
-          <div>{brackets.close}</div>
-          <div className="fg-collection-error-row">
-            {error && <span className="fg-error-slug">{error}</span>}
+        <>
+          <div className="fg-collection-inner">
+            {isEditing ? (
+              <textarea
+                rows={10}
+                className="fg-collection-text-area"
+                name={path.join('.')}
+                value={stringifiedValue}
+                onChange={(e) => setStringifiedValue(e.target.value)}
+                autoFocus
+                onFocus={(e) => e.target.select()}
+              ></textarea>
+            ) : (
+              <>
+                {Object.entries(data)
+                  // TO-DO: Sort keys if "keySort" prop specified
+                  .map(([key, value]) => (
+                    <div className="fg-collection-element" key={key}>
+                      {isCollection(value) ? (
+                        <CollectionNode
+                          key={key}
+                          data={value}
+                          path={[...path, key]}
+                          name={key}
+                          {...props}
+                        />
+                      ) : (
+                        <ValueNodeWrapper
+                          key={key}
+                          data={value}
+                          path={[...path, key]}
+                          name={key}
+                          {...props}
+                        />
+                      )}
+                    </div>
+                  ))}
+              </>
+            )}
+
+            <div className="fg-collection-error-row">
+              {error && <span className="fg-error-slug">{error}</span>}
+            </div>
           </div>
-        </div>
+          <div className="fg-brackets">{brackets.close}</div>
+        </>
       )}
     </div>
   )

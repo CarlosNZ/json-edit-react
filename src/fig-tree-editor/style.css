@@ -1,37 +1,84 @@
 .fg-editor-container {
   background-color: var(--fg-bg-color);
   font-family: var(--fg-main-font);
-  font-size: 1.1em;
+  /* font-size: 1.1em; */
+  font-size: 14px;
   color: var(--fg-main-color);
   padding: 1em;
   min-width: 40%;
+  /* letter-spacing: 0.06em; */
+  font-weight: 400;
 }
 
 .fg-component {
 }
 
-.fb-object-component {
+.fb-collection-component {
+}
+
+.fg-collection-header-row,
+.fg-value-main-row {
+  display: flex;
+  min-height: 1.6em;
+  gap: 0.5em;
+  align-items: center;
 }
 
 .fg-collection-header-row {
   display: flex;
 }
 
+.fg-brackets {
+  color: var(--fg-bracket-color);
+  font-weight: bold;
+}
+
+.fg-collection-item-count {
+  font-style: italic;
+  color: var(--fg-parenthetical-color);
+}
+
 .fg-collection-inner {
+  margin-left: 2em;
 }
 
 .fg-collection-element {
-  margin-left: 20px;
 }
 
 .fg-value-component {
 }
 
 .fg-value-main-row {
-  display: flex;
 }
 
 .fg-value-error-row {
+}
+
+.fg-value-string {
+  color: var(--fg-string-color);
+}
+
+.fg-value-number {
+  color: var(--fg-number-color);
+}
+
+.fg-value-boolean {
+  color: var(--fg-boolean-color);
+}
+
+.fg-value-null {
+  color: var(--fg-null-color);
+  font-variant: small-caps;
+  /* background-color: var(--fg-alt-bg-color); */
+}
+
+.fg-value-object {
+}
+
+.fg-value-array {
+}
+
+.fg-value-invalid {
 }
 
 .fg-error-slug {
@@ -43,8 +90,14 @@
 .fg-input-component {
 }
 
-.fg-edit-buttons {
+.fg-edit-buttons,
+.fg-input-buttons {
   display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.fg-edit-buttons {
   opacity: 0;
 }
 
@@ -52,11 +105,19 @@
   opacity: 1;
 }
 
-.fg-input-component:hover + .fg-edit-buttons {
+.fg-collection-header-row:hover > .fg-edit-buttons {
+  opacity: 1;
+}
+
+.fg-value-main-row:hover > .fg-edit-buttons {
   opacity: 1;
 }
 
 .fg-input-buttons {
+}
+
+.fg-icon-wrapper {
+  height: 1.2em;
 }
 
 .fg-rotate-90 {

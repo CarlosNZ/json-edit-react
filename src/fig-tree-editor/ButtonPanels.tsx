@@ -23,17 +23,17 @@ export const EditButtons: React.FC<{
   return (
     <div className="fg-edit-buttons">
       {handleCopy && (
-        <span onClick={handleCopy}>
+        <span onClick={handleCopy} className="fg-icon-wrapper">
           <Icon name="copy" />
         </span>
       )}
       {startEdit && (
-        <span onClick={startEdit}>
+        <span onClick={startEdit} className="fg-icon-wrapper">
           <Icon name="edit" />
         </span>
       )}
       {handleDelete && (
-        <span onClick={handleDelete}>
+        <span onClick={handleDelete} className="fg-icon-wrapper">
           <Icon name="delete" />
         </span>
       )}
@@ -43,6 +43,7 @@ export const EditButtons: React.FC<{
             if (type === 'object') setIsAdding(true)
             else handleAdd('IGNORE')
           }}
+          className="fg-icon-wrapper"
         >
           <Icon name="add" />
         </span>

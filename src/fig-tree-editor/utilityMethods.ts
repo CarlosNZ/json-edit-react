@@ -8,11 +8,6 @@ export const updateDataObject = (
   newValue: unknown,
   action: 'update' | 'delete'
 ) => {
-  console.log('Data', data)
-  console.log('path', path)
-  console.log('newValue', newValue)
-  console.log('action', action)
-
   if (path.length === 0) {
     return {
       currentData: data,
