@@ -140,9 +140,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         <>
           <div className="fg-collection-inner" style={{ marginLeft: `${props.indent}em` }}>
             {isEditing ? (
-              <>
+              <div className="fg-collection-text-edit">
                 <textarea
-                  rows={10}
+                  rows={stringifiedValue.split('\n').length + 1}
                   className="fg-collection-text-area"
                   name={path.join('.')}
                   value={stringifiedValue}
@@ -150,8 +150,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
                   autoFocus
                   onFocus={(e) => e.target.select()}
                 />
-                <InputButtons onOk={handleEdit} onCancel={handleCancel} />
-              </>
+                <div className="fg-collection-input-button-row">
+                  <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
+                </div>
+              </div>
             ) : (
               <>
                 {keyValueArray

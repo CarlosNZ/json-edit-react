@@ -1,3 +1,7 @@
+:root {
+  --fg-form-border: 1px solid #ededf0;
+  --fg-form-border-focus: 1px solid #e2e2e2;
+}
 .fg-editor-container {
   background-color: var(--fg-bg-color);
   font-family: var(--fg-main-font);
@@ -13,6 +17,32 @@
   margin-bottom: 1em;
 }
 
+.fg-editor-container textarea {
+  width: 90%;
+  border: var(--fg-form-border);
+  border-radius: 0.3em;
+  outline: none;
+}
+
+.fg-editor-container textarea:focus {
+  border: var(--fg-form-border-focus);
+}
+
+.fg-editor-container input {
+  border: var(--fg-form-border);
+  border-radius: 0.3em;
+  outline: none;
+  font-family: var(--fg-main-font);
+}
+
+.fg-editor-container input:focus {
+  border: var(--fg-form-border-focus);
+}
+
+.fg-editor-container select {
+  /* color: red; */
+}
+
 .fg-component {
 }
 
@@ -22,7 +52,7 @@
 .fg-collection-header-row,
 .fg-value-main-row {
   display: flex;
-  min-height: 1.6em;
+  min-height: 1.7em;
   gap: 0.3em;
   align-items: center;
 }
@@ -44,6 +74,19 @@
 .fg-collection-inner {
 }
 
+.fg-collection-text-edit {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.fg-collection-input-button-row {
+  width: 90%;
+  display: flex;
+  justify-content: end;
+}
+
 .fg-collection-element {
 }
 
@@ -58,6 +101,16 @@
 
 .fg-value-string {
   color: var(--fg-string-color);
+}
+
+textarea.fg-input-text {
+  resize: none;
+  margin: 0;
+  padding: 0;
+  height: 1.4em;
+  padding-top: 0.2em;
+  padding-left: 0.5em;
+  min-width: 6em;
 }
 
 .fg-value-number {
@@ -87,8 +140,13 @@
 .fg-error-slug {
 }
 
-.fg-input-text {
+.fg-input-text,
+.fg-input-number {
   height: 1.6em;
+}
+
+.fg-input-number {
+  min-width: 3em;
 }
 
 .fg-input-component {

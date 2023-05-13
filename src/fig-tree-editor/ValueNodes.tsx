@@ -16,16 +16,16 @@ export const StringValue: React.FC<InputProps> = ({
   }
 
   return isEditing ? (
-    <input
+    <textarea
+      cols={(value as string).length + 4}
       className="fg-input-text"
-      type="text"
+      // type="text"
       name={path.join('.')}
       value={value as string}
       onChange={(e) => setValue(e.target.value)}
       autoFocus
       onFocus={(e) => e.target.select()}
       onKeyDown={handleKeyPress}
-      style={{ width: 100 }}
     />
   ) : (
     <span onDoubleClick={() => setIsEditing(true)} className="fg-value-string">{`"${value}"`}</span>
@@ -46,16 +46,21 @@ export const NumberValue: React.FC<InputProps> = ({
     else if (e.key === 'Escape') handleCancel()
   }
 
+  const validateNumber = (input: string) => {
+    return input.replace(/[^0-9.-]/g, '')
+  }
+
   return isEditing ? (
     <input
       className="fg-input-number"
-      type="number"
+      type="text"
       name={path.join('.')}
       value={value as number}
-      onChange={(e) => setValue(Number(e.target.value))}
+      onChange={(e) => setValue(validateNumber(e.target.value))}
       autoFocus
       onFocus={(e) => e.target.select()}
       onKeyDown={handleKeyPress}
+      style={{ width: `${String(value).length / 1.5 + 2}em` }}
     />
   ) : (
     <span onDoubleClick={() => setIsEditing(true)} className="fg-value-number">
@@ -86,11 +91,13 @@ export const BooleanValue: React.FC<InputProps> = ({
   )
 }
 
-export const NullValue: React.FC<InputProps> = ({ value, setValue, isEditing, setIsEditing }) =>
-  isEditing ? null : (
-    <span onDoubleClick={() => setIsEditing(true)} className="fg-value-null">
+export const NullValue: React.FC<InputProps> = ({ value, isEditing, setIsEditing }) =>
+  isEditing ? (
+    <div className="fg-input-null">null</div>
+  ) : (
+    <div onDoubleClick={() => setIsEditing(true)} className="fg-value-null">
       {String(value)}
-    </span>
+    </div>
   )
 
 export const ObjectValue: React.FC<InputProps> = () => {

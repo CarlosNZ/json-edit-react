@@ -90,16 +90,20 @@ export const EditButtons: React.FC<{
   )
 }
 
-export const InputButtons: React.FC<{ onOk: () => void; onCancel: () => void }> = ({
-  onOk,
-  onCancel,
-}) => (
-  <div className="fg-input-buttons">
-    <div onClick={onOk} className="fg-icon-wrapper">
-      <Icon name="ok" />
+export const InputButtons: React.FC<{
+  onOk: () => void
+  onCancel: () => void
+  isCollection?: boolean
+}> = ({ onOk, onCancel, isCollection = false }) => {
+  const size = isCollection ? '2em' : undefined
+  return (
+    <div className="fg-input-buttons">
+      <div onClick={onOk} className="fg-icon-wrapper">
+        <Icon name="ok" size={size} />
+      </div>
+      <div onClick={onCancel} className="fg-icon-wrapper">
+        <Icon name="cancel" size={size} />
+      </div>
     </div>
-    <div onClick={onCancel} className="fg-icon-wrapper">
-      <Icon name="cancel" />
-    </div>
-  </div>
-)
+  )
+}

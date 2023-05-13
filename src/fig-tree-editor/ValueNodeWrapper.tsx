@@ -39,8 +39,22 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
 
   const handleEdit = () => {
     setIsEditing(false)
-    const newValue =
-      dataType === 'object' ? {} : dataType === 'array' ? (value !== null ? [value] : []) : value
+    let newValue
+    switch (dataType) {
+      case 'object':
+        newValue = {}
+        break
+      case 'array':
+        newValue = value !== null ? [value] : []
+        break
+      case 'number':
+        const n = Number(value)
+        if (isNaN(n)) newValue = 0
+        else newValue = n
+        break
+      default:
+        newValue = value
+    }
     onEdit(newValue, path).then((result: any) => {
       if (result) {
         setError(result)
