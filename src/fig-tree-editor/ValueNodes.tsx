@@ -2,7 +2,7 @@ import { InputProps } from './types'
 import './style.css'
 import { useState } from 'react'
 
-export const StringValue: React.FC<InputProps> = ({
+export const StringValue: React.FC<InputProps & { value: string }> = ({
   value,
   setValue,
   isEditing,
@@ -13,8 +13,6 @@ export const StringValue: React.FC<InputProps> = ({
 }) => {
   const [scrollHeight, setScrollHeight] = useState(20)
   const [maxColumns, setMaxColumns] = useState(10)
-  const [rowNum, setRowNum] = useState(1)
-  const [scrollWidth, setScrollWidth] = useState(121)
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) handleEdit()
@@ -29,46 +27,32 @@ export const StringValue: React.FC<InputProps> = ({
       </span>
     ))
 
-  const cols = Math.max(...(value as string).split('\n').map((line) => line.length)) + 4
-
-  // const rows = scrollHeight > 30 ? 5 : 1
+  const cols = Math.max(...value.split('\n').map((line) => line.length)) + 4
 
   return isEditing ? (
     <textarea
       cols={maxColumns}
       className="fg-input-text"
       name={path.join('.')}
-      value={value as string}
+      value={value}
       onChange={(e) => {
-        console.log(e.target.scrollWidth)
-        // console.log(e.target.clientHeight)
-        // setScrollHeight(e.target.scrollHeight)
-        if (e.target.scrollWidth === scrollWidth && scrollWidth > 300) setRowNum(5)
-        if (e.target.scrollWidth > scrollWidth) setScrollWidth(e.target.scrollWidth)
+        setScrollHeight(e.target.scrollHeight)
         if (cols > maxColumns) setMaxColumns(cols)
         setValue(e.target.value)
       }}
       autoFocus
       onFocus={(e) => e.target.select()}
-      rows={rowNum}
-      style={{ height: 'unset' }}
+      style={{ height: scrollHeight - 3 }}
       onKeyDown={handleKeyPress}
     />
   ) : (
     <span onDoubleClick={() => setIsEditing(true)} className="fg-value-string">
-      "{breakString(value as string)}"
+      "{breakString(value)}"
     </span>
   )
 }
 
-const calculateTextAreaHeight = (newVal: string, currVal: string, scrollHeight: number) => {
-  if (newVal.length > currVal.length) return scrollHeight
-  else return 20
-}
-
-const calculateTextAreaWidth = () => {}
-
-export const NumberValue: React.FC<InputProps> = ({
+export const NumberValue: React.FC<InputProps & { value: number }> = ({
   value,
   setValue,
   isEditing,
@@ -91,7 +75,7 @@ export const NumberValue: React.FC<InputProps> = ({
       className="fg-input-number"
       type="text"
       name={path.join('.')}
-      value={value as number}
+      value={value}
       onChange={(e) => setValue(validateNumber(e.target.value))}
       autoFocus
       onFocus={(e) => e.target.select()}
@@ -100,12 +84,12 @@ export const NumberValue: React.FC<InputProps> = ({
     />
   ) : (
     <span onDoubleClick={() => setIsEditing(true)} className="fg-value-number">
-      {value as number}
+      {value}
     </span>
   )
 }
 
-export const BooleanValue: React.FC<InputProps> = ({
+export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   value,
   setValue,
   isEditing,
@@ -117,7 +101,7 @@ export const BooleanValue: React.FC<InputProps> = ({
       className="fg-input-boolean"
       type="checkbox"
       name={path.join('.')}
-      checked={value as boolean}
+      checked={value}
       onChange={() => setValue(!value)}
     />
   ) : (

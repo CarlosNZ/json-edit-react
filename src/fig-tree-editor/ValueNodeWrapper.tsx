@@ -147,13 +147,14 @@ const getDataType = (value: unknown) => {
 }
 
 const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
+  const value = inputProps.value
   switch (dataType) {
     case 'string':
-      return <StringValue {...inputProps} />
+      return <StringValue {...inputProps} value={value as string} />
     case 'number':
-      return <NumberValue {...inputProps} />
+      return <NumberValue {...inputProps} value={value as number} />
     case 'boolean':
-      return <BooleanValue {...inputProps} />
+      return <BooleanValue {...inputProps} value={value as boolean} />
     case 'null':
       return <NullValue {...inputProps} />
     case 'object':

@@ -113,6 +113,11 @@ textarea.fg-input-text {
   min-width: 6em;
 }
 
+input[type='checkbox'] {
+  /* color: green;
+  outline: 1px solid red; */
+}
+
 .fg-value-number {
   color: var(--fg-number-color);
 }
