@@ -31,6 +31,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey)) handleEdit()
+    else if (e.key === 'Escape') handleCancel()
+  }
+
   const handleEdit = () => {
     try {
       const value = JSON.parse(stringifiedValue)
@@ -149,6 +154,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
                   onChange={(e) => setStringifiedValue(e.target.value)}
                   autoFocus
                   onFocus={(e) => e.target.select()}
+                  onKeyDown={handleKeyPress}
                 />
                 <div className="fg-collection-input-button-row">
                   <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />

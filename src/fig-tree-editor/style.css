@@ -140,7 +140,7 @@ textarea.fg-input-text {
 .fg-error-slug {
 }
 
-.fg-input-text,
+/* .fg-input-text, */
 .fg-input-number {
   height: 1.6em;
 }
