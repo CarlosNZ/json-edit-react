@@ -25,6 +25,7 @@ export const StringValue: React.FC<InputProps> = ({
       autoFocus
       onFocus={(e) => e.target.select()}
       onKeyDown={handleKeyPress}
+      style={{ width: 100 }}
     />
   ) : (
     <span onDoubleClick={() => setIsEditing(true)} className="fg-value-string">{`"${value}"`}</span>

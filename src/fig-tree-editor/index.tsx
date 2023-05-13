@@ -111,6 +111,7 @@ const JsonEditor: React.FC<EditorProps> = ({
     showArrayIndices,
     style,
     indent,
+    defaultValue,
   }
 
   return (

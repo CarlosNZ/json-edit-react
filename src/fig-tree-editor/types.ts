@@ -24,7 +24,6 @@ export interface EditorProps {
   restrictKeyEdit?: boolean | FilterMethod
   keySort?: boolean | CompareMethod
   showArrayIndices?: boolean
-  defaultKeyName?: string
   defaultValue?: unknown
 }
 
@@ -92,6 +91,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   collapseFilter: FilterMethod
   onAdd: OnChangeMethod
   keySort: boolean | CompareMethod
+  defaultValue: unknown
 }
 
 export interface ValueNodeProps extends BaseNodeProps {

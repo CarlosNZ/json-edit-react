@@ -16,6 +16,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
     restrictAddFilter,
     keySort,
     showArrayIndices,
+    defaultValue,
   } = props
   const [isEditing, setIsEditing] = useState(false)
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
@@ -34,6 +35,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
     try {
       const value = JSON.parse(stringifiedValue)
       setIsEditing(false)
+      setError(null)
       onEdit(value, path).then((result: any) => {
         if (result) {
           setError(result)
@@ -50,7 +52,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
 
   const handleAdd = (key: string) => {
     if (collectionType === 'array') {
-      onAdd(null, [...path, (data as any[]).length]).then((result: any) => {
+      onAdd(defaultValue, [...path, (data as any[]).length]).then((result: any) => {
         if (result) {
           setError(result)
           setTimeout(() => setError(null), 3000)
@@ -58,7 +60,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         }
       })
     } else
-      onAdd(null, [...path, key]).then((result: any) => {
+      onAdd(defaultValue, [...path, key]).then((result: any) => {
         if (result) {
           setError(result)
           setTimeout(() => setError(null), 3000)
@@ -82,6 +84,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
 
   const handleCancel = () => {
     setIsEditing(false)
+    setError(null)
     setStringifiedValue(JSON.stringify(data, null, 2))
   }
 
@@ -112,9 +115,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         </div>
         <div className="fg-collection-item-count">{`${collectionSize} items`}</div>
         {collapsed && <div className="fg-brackets">{brackets.close}</div>}
-        {isEditing ? (
-          <InputButtons onOk={handleEdit} onCancel={handleCancel} />
-        ) : (
+        {!isEditing && (
           <EditButtons
             startEdit={
               canEdit
@@ -139,15 +140,18 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         <>
           <div className="fg-collection-inner" style={{ marginLeft: `${props.indent}em` }}>
             {isEditing ? (
-              <textarea
-                rows={10}
-                className="fg-collection-text-area"
-                name={path.join('.')}
-                value={stringifiedValue}
-                onChange={(e) => setStringifiedValue(e.target.value)}
-                autoFocus
-                onFocus={(e) => e.target.select()}
-              ></textarea>
+              <>
+                <textarea
+                  rows={10}
+                  className="fg-collection-text-area"
+                  name={path.join('.')}
+                  value={stringifiedValue}
+                  onChange={(e) => setStringifiedValue(e.target.value)}
+                  autoFocus
+                  onFocus={(e) => e.target.select()}
+                />
+                <InputButtons onOk={handleEdit} onCancel={handleCancel} />
+              </>
             ) : (
               <>
                 {keyValueArray

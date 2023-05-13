@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 
 export const defaultTheme = {
+  minWidth: '40%',
+  maxWidth: '600px',
   bgColor: '#f6f6f6',
   mainFont: 'monospace',
   mainColor: 'rgb(0, 43, 54)',
@@ -41,6 +43,8 @@ export const useTheme = (theme: Partial<ThemeProps>) => {
 }
 
 const themeVariableMap: { [Property in keyof ThemeProps]: string } = {
+  minWidth: '--fg-min-width',
+  maxWidth: '--fg-max-width',
   bgColor: '--fg-bg-color',
   mainFont: '--fg-main-font',
   mainColor: '--fg-main-color',

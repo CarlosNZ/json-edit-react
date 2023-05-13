@@ -95,10 +95,11 @@ function App() {
         //   console.log('key', key)
         // }}
         restrictEdit={({ key }) => key === 'server'}
-        restrictDelete={({ value }) => {
-          return value === null
-        }}
+        // restrictDelete={({ value }) => {
+        //   return value === null
+        // }}
         // keySort={true}
+        defaultValue={'New'}
       />
       {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
     </div>
