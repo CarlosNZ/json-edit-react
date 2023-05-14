@@ -45,8 +45,9 @@ const JsonEditor: React.FC<EditorProps> = ({
         name: path.slice(-1)[0],
         path,
       })
-      if (result !== false) setData(newData)
+      if (result === undefined) setData(newData)
       if (result === false) return 'Update unsuccessful'
+      return result // Error string
     } else setData(newData)
   }
 

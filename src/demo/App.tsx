@@ -84,7 +84,7 @@ function App() {
         rootName="preferences"
         // onEdit={({ newValue }) => console.log('NEW VALUE', newValue)}
         onUpdate={({ newData }) => {
-          return false
+          return 'Cannot update!'
           // setData(newData)
         }}
         // onDelete={({ currentValue, newValue }) => {

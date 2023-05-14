@@ -189,7 +189,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
               </>
             )}
 
-            <div className="fg-collection-error-row">
+            <div className={isEditing ? 'fg-collection-error-row' : 'fg-collection-error-row-edit'}>
               {error && <span className="fg-error-slug">{error}</span>}
             </div>
           </div>

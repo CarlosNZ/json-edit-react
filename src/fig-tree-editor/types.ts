@@ -37,6 +37,8 @@ export type DataType = (typeof DataTypes)[number] | 'invalid'
 export type CollectionKey = string | number
 export type CollectionData = object | unknown[]
 
+type ErrorString = string
+
 /**
  * METHODS
  */
@@ -48,9 +50,7 @@ export type UpdateMethod = (props: {
   currentValue: unknown
   name: CollectionKey
   path: CollectionKey[]
-}) => void | false
-
-export type OnChangeMethod = (value: unknown, path: (string | number)[]) => Promise<string | void>
+}) => void | ErrorString | false
 
 export type FilterMethod = (input: {
   key: CollectionKey
@@ -67,6 +67,9 @@ export type CopyMethod = (input: {
 }) => void
 
 export type CompareMethod = (a: string, b: string) => number
+
+// Internal update
+export type OnChangeMethod = (value: unknown, path: (string | number)[]) => Promise<string | void>
 
 /**
  * NODES

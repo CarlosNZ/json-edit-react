@@ -96,10 +96,14 @@
   bottom: 0;
 }
 
+.fg-collection-error-row-edit {
+}
+
 .fg-error-slug {
   font-size: 0.8em;
   color: red;
   font-weight: bold;
+  margin-left: 1em;
 }
 
 .fg-value-component {
