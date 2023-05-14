@@ -67,8 +67,9 @@ const JsonEditor: React.FC<EditorProps> = ({
         name: path.slice(-1)[0],
         path,
       })
-      if (result !== false) setData(newData)
-      if (result === false) return 'Update unsuccessful'
+      if (result === undefined) setData(newData)
+      if (result === false) return 'Delete unsuccessful'
+      return result // Error string
     } else setData(newData)
   }
 
@@ -88,8 +89,9 @@ const JsonEditor: React.FC<EditorProps> = ({
         name: path.slice(-1)[0],
         path,
       })
-      if (result !== false) setData(newData)
+      if (result === undefined) setData(newData)
       if (result === false) return 'Adding node unsuccessful'
+      return result // Error string
     } else setData(newData)
   }
 
