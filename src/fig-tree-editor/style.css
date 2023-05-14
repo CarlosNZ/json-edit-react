@@ -158,6 +158,8 @@ input[type='checkbox'] {
 }
 
 .fg-value-invalid {
+  opacity: 0.5;
+  font-style: italic;
 }
 
 /* .fg-input-text, */
