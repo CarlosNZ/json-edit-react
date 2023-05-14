@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'

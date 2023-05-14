@@ -14,7 +14,7 @@ export interface EditorProps {
   onDelete?: UpdateMethod
   onAdd?: UpdateMethod
   enableClipboard?: boolean | CopyMethod
-  theme?: Partial<ThemeProps> // UPDATE
+  theme?: Partial<ThemeProps>
   style?: React.CSSProperties
   indent?: number
   collapse?: boolean | number | FilterMethod

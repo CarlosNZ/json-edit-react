@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Icon } from './Icons'
 import './style.css'
 import { CollectionDataType, CollectionKey, CopyMethod } from './types'

@@ -1,6 +1,6 @@
+import React, { useState } from 'react'
 import { InputProps } from './types'
 import './style.css'
-import { useState } from 'react'
 
 export const StringValue: React.FC<InputProps & { value: string }> = ({
   value,

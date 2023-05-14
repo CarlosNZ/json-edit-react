@@ -1,45 +1,25 @@
 {
   "name": "fig-tree-editor",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "@testing-library/jest-dom": "^5.16.5",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.27",
-    "@types/react": "^18.2.6",
-    "@types/react-dom": "^18.2.4",
-    "just-clone": "^6.2.0",
-    "just-compare": "^2.3.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
-  },
+  "version": "0.9.0",
+  "description": "React component for editing/viewing JSON/object data",
+  "main": "index.js",
+  "repository": "https://github.com/CarlosNZ/fig-tree-editor.git",
+  "author": "Carl Smith <5456533+CarlosNZ@users.noreply.github.com>",
+  "license": "MIT",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "demo": "cd demo && yarn start"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "peerDependencies": {
+    "@types/react": "^18.2.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "just-clone": "^6.2.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.6"
   }
 }
