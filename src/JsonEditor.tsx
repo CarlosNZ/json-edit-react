@@ -7,7 +7,7 @@ import { useTheme, defaultTheme } from './theme'
 
 const JsonEditor: React.FC<EditorProps> = ({
   data: srcData,
-  schema,
+  // schema,
   rootName = 'root',
   onUpdate,
   onEdit: srcEdit = onUpdate,

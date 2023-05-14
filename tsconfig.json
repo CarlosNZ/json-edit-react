@@ -1,21 +1,15 @@
 {
   "compilerOptions": {
-    "outDir": "lib/esm",
-    "module": "esnext",
-    "target": "es5",
-    "lib": ["es6", "dom", "es2016", "es2017"],
+    "strict": true,
     "jsx": "react",
     "declaration": true,
-    "moduleResolution": "node",
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
     "esModuleInterop": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "allowSyntheticDefaultImports": true
+    "outDir": "build",
+    "target": "es6",
+    "module": "es6",
+    "moduleResolution": "node"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "build"]
+  // "include": ["src"]
+  "files": ["src/index.ts"]
 }

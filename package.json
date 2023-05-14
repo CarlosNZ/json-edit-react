@@ -7,7 +7,8 @@
   "author": "Carl Smith <5456533+CarlosNZ@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
-    "demo": "cd demo && yarn start"
+    "demo": "cd demo && yarn start",
+    "build": "rimraf ./build && tsc"
   },
   "peerDependencies": {
     "@types/react": "^18.2.6",
@@ -20,6 +21,9 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.6"
+    "@types/node": "^20.1.4",
+    "@types/react": "^18.2.6",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.4"
   }
 }
