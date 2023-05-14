@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
-import { CollectionNodeProps } from './types'
+import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
 import { Icon } from './Icons'
 import { isCollection } from '.'
 import './style.css'
@@ -36,17 +36,19 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
     else if (e.key === 'Escape') handleCancel()
   }
 
+  const showError = (errorString: ErrorString) => {
+    setError(errorString)
+    setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
+    console.log('Error', errorString)
+  }
+
   const handleEdit = () => {
     try {
       const value = JSON.parse(stringifiedValue)
       setIsEditing(false)
       setError(null)
-      onEdit(value, path).then((result) => {
-        if (result) {
-          setError(result)
-          setTimeout(() => setError(null), 3000)
-          console.log('Error', result)
-        }
+      onEdit(value, path).then((error) => {
+        if (error) showError(error)
       })
     } catch {
       setError('Invalid JSON')
@@ -57,32 +59,23 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
 
   const handleAdd = (key: string) => {
     if (collectionType === 'array') {
-      onAdd(defaultValue, [...path, (data as unknown[]).length]).then((result) => {
-        if (result) {
-          setError(result)
-          setTimeout(() => setError(null), 3000)
-          console.log('Error', result)
-        }
+      onAdd(defaultValue, [...path, (data as unknown[]).length]).then((error) => {
+        if (error) showError(error)
       })
-    } else
-      onAdd(defaultValue, [...path, key]).then((result) => {
-        if (result) {
-          setError(result)
-          setTimeout(() => setError(null), 3000)
-          console.log('Error', result)
-        }
-      })
+    } else if (key in data) {
+      showError('Key already exists')
+      return
+    }
+    onAdd(defaultValue, [...path, key]).then((error) => {
+      if (error) showError(error)
+    })
   }
 
   const handleDelete =
     path.length > 0
       ? () => {
           onDelete(data, path).then((result) => {
-            if (result) {
-              setError(result)
-              setTimeout(() => setError(null), 3000)
-              console.log('Error', result)
-            }
+            if (result) showError(result)
           })
         }
       : undefined

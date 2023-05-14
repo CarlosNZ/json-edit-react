@@ -9,7 +9,15 @@ import {
   ArrayValue,
 } from './ValueNodes'
 import { EditButtons, InputButtons } from './ButtonPanels'
-import { DataType, ValueNodeProps, InputProps, DataTypes, CollectionData } from './types'
+import {
+  DataType,
+  ValueNodeProps,
+  InputProps,
+  DataTypes,
+  CollectionData,
+  ErrorString,
+  ERROR_DISPLAY_TIME,
+} from './types'
 import './style.css'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
@@ -39,6 +47,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     setDataType(type)
   }
 
+  const logError = (errorString: ErrorString) => {
+    setError(errorString)
+    setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
+    console.log('Error', errorString)
+  }
+
   const handleEdit = () => {
     setIsEditing(false)
     let newValue
@@ -57,12 +71,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
       default:
         newValue = value
     }
-    onEdit(newValue, path).then((result) => {
-      if (result) {
-        setError(result)
-        setTimeout(() => setError(null), 2000)
-        console.log('Error', result)
-      }
+    onEdit(newValue, path).then((error) => {
+      if (error) logError(error)
     })
   }
 
@@ -72,12 +82,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   }
 
   const handleDelete = () => {
-    onDelete(value, path).then((result) => {
-      if (result) {
-        setError(result)
-        setTimeout(() => setError(null), 3000)
-        console.log('Error', result)
-      }
+    onDelete(value, path).then((error) => {
+      if (error) logError(error)
     })
   }
 

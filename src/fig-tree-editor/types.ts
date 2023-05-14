@@ -4,6 +4,7 @@
 
 import { ThemeProps } from './theme'
 
+export const ERROR_DISPLAY_TIME = 3000 // ms
 export interface EditorProps {
   data: object
   schema?: object
@@ -37,7 +38,7 @@ export type DataType = (typeof DataTypes)[number] | 'invalid'
 export type CollectionKey = string | number
 export type CollectionData = object | unknown[]
 
-type ErrorString = string
+export type ErrorString = string
 
 /**
  * METHODS
