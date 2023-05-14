@@ -29,8 +29,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   const [dataType, setDataType] = useState<DataType>(getDataType(data))
 
   useEffect(() => {
+    if (!error) return
     setValue(data)
-  }, [data])
+    setDataType(getDataType(data))
+  }, [data, error])
 
   const handleChangeDataType = (type: DataType) => {
     setValue(convertValue(value, type))
@@ -58,7 +60,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     onEdit(newValue, path).then((result) => {
       if (result) {
         setError(result)
-        setTimeout(() => setError(null), 3000)
+        setTimeout(() => setError(null), 2000)
         console.log('Error', result)
       }
     })
@@ -106,7 +108,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
         {isEditing ? (
           <InputButtons onOk={handleEdit} onCancel={handleCancel} />
         ) : (
-          dataType !== 'invalid' && (
+          dataType !== 'invalid' &&
+          !error && (
             <EditButtons
               startEdit={canEdit ? () => setIsEditing(true) : undefined}
               handleDelete={canDelete ? handleDelete : undefined}
@@ -130,9 +133,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
             ))}
           </select>
         )}
-      </div>
-      <div className="fg-value-error-row">
-        {error && <span className="fg-error-slug">{error}</span>}
+        {!isEditing && error && <span className="fg-error-slug">{error}</span>}
       </div>
     </div>
   )

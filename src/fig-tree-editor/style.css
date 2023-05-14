@@ -72,6 +72,7 @@
 }
 
 .fg-collection-inner {
+  position: relative;
 }
 
 .fg-collection-text-edit {
@@ -90,13 +91,26 @@
 .fg-collection-element {
 }
 
+.fg-collection-error-row {
+  position: absolute;
+  bottom: 0;
+}
+
+.fg-error-slug {
+  font-size: 0.8em;
+  color: red;
+  font-weight: bold;
+}
+
 .fg-value-component {
+  position: relative;
 }
 
 .fg-value-main-row {
 }
 
 .fg-value-error-row {
+  position: absolute;
 }
 
 .fg-value-string {
@@ -140,9 +154,6 @@ input[type='checkbox'] {
 }
 
 .fg-value-invalid {
-}
-
-.fg-error-slug {
 }
 
 /* .fg-input-text, */
