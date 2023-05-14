@@ -9,10 +9,8 @@
   /* font-size: 20px; */
   color: var(--fg-main-color);
   padding: 1em;
-  min-width: var(--fg-min-width);
   /* letter-spacing: 0.06em; */
   font-weight: 400;
-  max-width: var(--fg-max-width);
   margin-top: 1em;
   margin-bottom: 1em;
 }

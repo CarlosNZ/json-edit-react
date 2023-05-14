@@ -75,7 +75,22 @@ const initPrefs = {
 }
 
 function App() {
-  const [data, setData] = useState<object>(initBasic)
+  const [data, setData] = useState<object>({
+    one: 1,
+    two: 'TWO',
+    three: true,
+    four: null,
+    five: 6.5,
+    six: 10,
+    seven: [1, 'string', false, ['a', 'b']],
+    eight: {
+      one: 'ONE',
+      two: [1, 'string', false, ['a', 'b']],
+      three: { a: 'A', b: 'B' },
+      four: () => true,
+    },
+    nine: undefined,
+  })
   // console.log('outer data', data)
   return (
     <div className="App">
@@ -103,6 +118,8 @@ function App() {
         // }}
         // keySort={true}
         defaultValue={'New'}
+        // maxWidth="300px"
+        // minWidth="unset"
       />
       {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
     </div>

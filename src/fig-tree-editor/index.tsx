@@ -24,6 +24,8 @@ const JsonEditor: React.FC<EditorProps> = ({
   keySort = false,
   showArrayIndices = true,
   defaultValue = null,
+  minWidth = '40%',
+  maxWidth = '600px',
 }) => {
   const [data, setData] = useState<object>(srcData)
 
@@ -118,7 +120,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   }
 
   return (
-    <div className="fg-editor-container" style={style}>
+    <div className="fg-editor-container" style={{ ...style, minWidth, maxWidth }}>
       {Array.isArray(data) && <p>Array component</p>}
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>

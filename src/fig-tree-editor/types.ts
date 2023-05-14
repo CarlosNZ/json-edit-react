@@ -4,7 +4,7 @@
 
 import { ThemeProps } from './theme'
 
-export const ERROR_DISPLAY_TIME = 3000 // ms
+export const ERROR_DISPLAY_TIME = 2500 // ms
 export interface EditorProps {
   data: object
   schema?: object
@@ -26,6 +26,8 @@ export interface EditorProps {
   keySort?: boolean | CompareMethod
   showArrayIndices?: boolean
   defaultValue?: unknown
+  minWidth?: string
+  maxWidth?: string
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
