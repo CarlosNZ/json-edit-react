@@ -41,7 +41,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       const value = JSON.parse(stringifiedValue)
       setIsEditing(false)
       setError(null)
-      onEdit(value, path).then((result: any) => {
+      onEdit(value, path).then((result) => {
         if (result) {
           setError(result)
           setTimeout(() => setError(null), 3000)
@@ -57,7 +57,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
 
   const handleAdd = (key: string) => {
     if (collectionType === 'array') {
-      onAdd(defaultValue, [...path, (data as any[]).length]).then((result: any) => {
+      onAdd(defaultValue, [...path, (data as unknown[]).length]).then((result) => {
         if (result) {
           setError(result)
           setTimeout(() => setError(null), 3000)
@@ -65,7 +65,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         }
       })
     } else
-      onAdd(defaultValue, [...path, key]).then((result: any) => {
+      onAdd(defaultValue, [...path, key]).then((result) => {
         if (result) {
           setError(result)
           setTimeout(() => setError(null), 3000)
@@ -77,7 +77,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const handleDelete =
     path.length > 0
       ? () => {
-          onDelete(data, path).then((result: any) => {
+          onDelete(data, path).then((result) => {
             if (result) {
               setError(result)
               setTimeout(() => setError(null), 3000)

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import clone from 'just-clone'
 import { CollectionNode } from './CollectionNode'
-import { EditorProps, FilterMethod, OnChangeMethod } from './types'
+import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
 import './style.css'
 import { useTheme, defaultTheme } from './theme'
 
@@ -125,7 +125,7 @@ const JsonEditor: React.FC<EditorProps> = ({
 export const isCollection = (value: unknown) => value !== null && typeof value == 'object'
 
 const updateDataObject = (
-  data: object,
+  data: CollectionData,
   path: (string | number)[],
   newValue: unknown,
   action: 'update' | 'delete'
@@ -133,7 +133,7 @@ const updateDataObject = (
   if (path.length === 0) {
     return {
       currentData: data,
-      newData: newValue as object,
+      newData: newValue as CollectionData,
       currentValue: data,
       newValue: newValue,
     }
@@ -141,18 +141,16 @@ const updateDataObject = (
 
   const newData = clone(data)
 
-  let d = newData
+  let d = newData as Record<number | string, unknown>
   let currentValue
   for (let i = 0; i < path.length; i++) {
     const part = path[i]
     if (i === path.length - 1) {
-      currentValue = (d as any)[part]
-      // @ts-ignore
+      currentValue = d[part]
       if (action === 'update') d[part] = newValue
-      // @ts-ignore
       if (action === 'delete') delete d[part]
     }
-    d = (d as any)[part]
+    d = d[part] as Record<number | string, unknown>
   }
   return {
     currentData: data,

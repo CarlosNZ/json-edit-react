@@ -55,7 +55,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
       default:
         newValue = value
     }
-    onEdit(newValue, path).then((result: any) => {
+    onEdit(newValue, path).then((result) => {
       if (result) {
         setError(result)
         setTimeout(() => setError(null), 3000)
@@ -70,7 +70,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   }
 
   const handleDelete = () => {
-    onDelete(value, path).then((result: any) => {
+    onDelete(value, path).then((result) => {
       if (result) {
         setError(result)
         setTimeout(() => setError(null), 3000)

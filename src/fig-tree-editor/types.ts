@@ -50,7 +50,7 @@ export type UpdateMethod = (props: {
   path: CollectionKey[]
 }) => void | false
 
-export type OnChangeMethod = <T>(value: T, path: (string | number)[]) => Promise<string | void>
+export type OnChangeMethod = (value: unknown, path: (string | number)[]) => Promise<string | void>
 
 export type FilterMethod = (input: {
   key: CollectionKey
