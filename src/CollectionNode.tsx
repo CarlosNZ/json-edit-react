@@ -3,7 +3,7 @@ import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
 import { Icon } from './Icons'
-import { isCollection } from '.'
+import { isCollection } from './JsonEditor'
 import './style.css'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name, ...props }) => {
