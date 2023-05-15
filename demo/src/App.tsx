@@ -1,5 +1,8 @@
 import './App.css'
-import JsonEditor from './fig-tree-editor/src'
+// Built package
+// import JsonEditor from 'fig-tree-editor'
+// Copy of source
+// import JsonEditor from './fig-tree-editor/src'
 import { useState } from 'react'
 
 const initData = {
