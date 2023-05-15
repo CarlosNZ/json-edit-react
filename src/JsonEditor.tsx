@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import clone from 'just-clone'
-import { CollectionNode } from './CollectionNode'
+import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
 import './style.css'
 import { useTheme, defaultTheme } from './theme'
@@ -126,8 +126,6 @@ const JsonEditor: React.FC<EditorProps> = ({
     </div>
   )
 }
-
-export const isCollection = (value: unknown) => value !== null && typeof value == 'object'
 
 const updateDataObject = (
   data: CollectionData,
