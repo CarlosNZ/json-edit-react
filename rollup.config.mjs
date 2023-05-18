@@ -1,11 +1,8 @@
 import typescript from '@rollup/plugin-typescript'
 import dts from 'rollup-plugin-dts'
-import babel from '@rollup/plugin-babel'
 import sizes from 'rollup-plugin-sizes'
 import peerDepsExternal from 'rollup-plugin-peer-deps-external'
-// import css from 'rollup-plugin-css-porter'
 import styles from 'rollup-plugin-styles'
-// import postcss from 'rollup-plugin-postcss'
 import { terser } from 'rollup-plugin-terser'
 
 export default [
@@ -25,10 +22,8 @@ export default [
       styles(),
       peerDepsExternal({ includeDependencies: true }),
       typescript({ module: 'ESNext' }),
-      // babel({
-      //   presets: ['@babel/preset-react'],
-      // }),
       sizes(),
+      // terser(),
     ],
     external: [],
   },
