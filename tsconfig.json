@@ -1,15 +1,22 @@
 {
   "compilerOptions": {
     "strict": true,
-    "jsx": "react",
+    "jsx": "react-jsx",
     "declaration": true,
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "declarationDir": "build/dts",
+    "lib": ["dom", "es6"],
     "esModuleInterop": true,
     "outDir": "build",
-    "target": "es6",
-    "module": "es6",
-    "moduleResolution": "node"
+    "rootDir": "src",
+    "target": "ESNext",
+    "module": "ESNext",
+    "allowJs": true,
+    "removeComments": true,
+    "noImplicitAny": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true
   },
   // "include": ["src"]
   "files": ["src/index.ts"]
+  // "include": ["src/types.ts"]
 }

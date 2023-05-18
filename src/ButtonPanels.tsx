@@ -28,7 +28,8 @@ export const EditButtons: React.FC<{
     } else if (e.key === 'Escape') setIsAdding(false)
   }
 
-  const handleCopy = () => {
+  const handleCopy = (e: any) => {
+    console.log('Shift', e.getModifierState('Shift'))
     if (enableClipboard) navigator.clipboard.writeText(JSON.stringify(data, null, 2))
     if (typeof enableClipboard === 'function') enableClipboard({ value: data, path, key: name })
   }

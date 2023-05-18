@@ -4437,6 +4437,11 @@ fb-watchman@^2.0.0:
   dependencies:
     bser "2.1.1"
 
+"fig-tree-editor@file:./package":
+  version "0.9.0"
+  dependencies:
+    just-clone "^6.2.0"
+
 file-entry-cache@^6.0.1:
   version "6.0.1"
   resolved "https://registry.npmjs.org/file-entry-cache/-/file-entry-cache-6.0.1.tgz"
