@@ -5,4 +5,3 @@ console.log('Relaunching...')
 
 execSync('cp -R ../src/* ./src/fig-tree-editor/src')
 execSync('cp ../package.json ./src/fig-tree-editor')
-// execSync('rimraf ./src/fig-tree-editor/src/test ./src/fig-tree-evaluator/src/dev')

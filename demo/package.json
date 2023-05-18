@@ -34,7 +34,7 @@
     "watch": [
       "../src"
     ],
-    "ext": "js, json, ts, css",
+    "ext": "js, json, ts, tsx, css",
     "delay": 200
   },
   "browserslist": {

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Icon } from './Icons'
 import './style.css'
-import { CollectionDataType, CollectionKey, CopyMethod } from './types'
+import { CollectionDataType, CollectionKey, CopyMethod, CopyType } from './types'
 
 export const EditButtons: React.FC<{
   startEdit?: () => void
@@ -28,10 +28,20 @@ export const EditButtons: React.FC<{
     } else if (e.key === 'Escape') setIsAdding(false)
   }
 
-  const handleCopy = (e: any) => {
-    console.log('Shift', e.getModifierState('Shift'))
-    if (enableClipboard) navigator.clipboard.writeText(JSON.stringify(data, null, 2))
-    if (typeof enableClipboard === 'function') enableClipboard({ value: data, path, key: name })
+  const handleCopy = (e: React.MouseEvent<HTMLElement>) => {
+    let type: CopyType = 'value'
+    if (enableClipboard) {
+      switch (e.getModifierState('Shift')) {
+        case true:
+          navigator.clipboard.writeText(stringifyPath(path))
+          type = 'path'
+          break
+        case false:
+          navigator.clipboard.writeText(JSON.stringify(data, null, 2))
+      }
+    }
+    if (typeof enableClipboard === 'function')
+      enableClipboard({ value: data, path, key: name, type })
   }
 
   return (
@@ -108,3 +118,9 @@ export const InputButtons: React.FC<{
     </div>
   )
 }
+
+const stringifyPath = (path: (string | number)[]): string =>
+  path.reduce((str: string, part) => {
+    if (typeof part === 'number') return `${str}[${part}]`
+    else return str === '' ? part : `${str}.${part}`
+  }, '')
