@@ -63,10 +63,12 @@ export type FilterMethod = (input: {
   size: number
 }) => boolean
 
+export type CopyType = 'path' | 'value'
 export type CopyMethod = (input: {
   key: CollectionKey
   path: CollectionKey[]
   value: unknown
+  type: CopyType
 }) => void
 
 export type CompareMethod = (a: string, b: string) => number
