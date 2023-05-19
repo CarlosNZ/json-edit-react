@@ -65,7 +65,8 @@ export const EditButtons: React.FC<{
         <div
           onClick={() => {
             if (type === 'object') setIsAdding(true)
-            else handleAdd('IGNORE')
+            // For arrays, we don't need to add a key
+            else handleAdd('')
           }}
           className="fg-icon-wrapper"
         >

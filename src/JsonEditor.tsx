@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import clone from 'just-clone'
+import assign from 'object-property-assigner'
+import extract from 'object-property-extractor'
 import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
 import './style.css'
@@ -80,7 +82,7 @@ const JsonEditor: React.FC<EditorProps> = ({
       data,
       path,
       value,
-      'update'
+      'add'
     )
     if (srcAdd) {
       const result = await srcAdd({
@@ -131,7 +133,7 @@ const updateDataObject = (
   data: CollectionData,
   path: (string | number)[],
   newValue: unknown,
-  action: 'update' | 'delete'
+  action: 'update' | 'delete' | 'add'
 ) => {
   if (path.length === 0) {
     return {
@@ -144,17 +146,12 @@ const updateDataObject = (
 
   const newData = clone(data)
 
-  let d = newData as Record<number | string, unknown>
-  let currentValue
-  for (let i = 0; i < path.length; i++) {
-    const part = path[i]
-    if (i === path.length - 1) {
-      currentValue = d[part]
-      if (action === 'update') d[part] = newValue
-      if (action === 'delete') delete d[part]
-    }
-    d = d[part] as Record<number | string, unknown>
-  }
+  const currentValue = action !== 'add' ? extract(newData, path) : undefined
+  console.log(newData)
+  console.log(path)
+  console.log(newValue)
+  assign(newData, path, newValue, { remove: action === 'delete' })
+
   return {
     currentData: data,
     newData,

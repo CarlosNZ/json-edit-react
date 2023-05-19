@@ -1,3 +1,4 @@
+import React from 'react'
 import './App.css'
 import { JsonEditor } from './fig-tree-editor/src'
 // import { Jsonditor } from 'fig-tree-editor'
@@ -118,7 +119,7 @@ function App() {
         //   return value === null
         // }}
         // keySort={true}
-        defaultValue={'New'}
+        defaultValue={666}
         // maxWidth="300px"
         // minWidth="unset"
       />

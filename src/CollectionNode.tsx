@@ -66,10 +66,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
     } else if (key in data) {
       showError('Key already exists')
       return
-    }
-    onAdd(defaultValue, [...path, key]).then((error) => {
-      if (error) showError(error)
-    })
+    } else
+      onAdd(defaultValue, [...path, key]).then((error) => {
+        if (error) showError(error)
+      })
   }
 
   const handleDelete =
