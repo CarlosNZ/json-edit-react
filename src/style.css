@@ -1,6 +1,7 @@
 :root {
   --fg-form-border: 1px solid #ededf0;
   --fg-form-border-focus: 1px solid #e2e2e2;
+  --fg-expand-transition-time: 0.5s;
 }
 .fg-editor-container {
   background-color: var(--fg-bg-color);
@@ -71,6 +72,11 @@
 
 .fg-collection-inner {
   position: relative;
+}
+
+.fg-collapsed {
+  display: none;
+  transition: display 1s;
 }
 
 .fg-collection-text-edit {
@@ -175,8 +181,13 @@ input[type='checkbox'] {
 .fg-edit-buttons,
 .fg-input-buttons {
   display: flex;
+  gap: 0.4em;
   align-items: center;
   cursor: pointer;
+}
+
+.fg-edit-buttons {
+  margin-left: 0.5em;
 }
 
 .fg-edit-buttons {
@@ -199,15 +210,64 @@ input[type='checkbox'] {
 }
 
 .fg-icon-wrapper {
-  height: 1.2em;
+  height: 1.4em;
+  opacity: 1;
+  transition: 0.2s;
+}
+
+.fg-icon-wrapper:active {
+  position: relative;
+  top: 0.07em;
+}
+
+.fg-icon-wrapper:hover {
+  opacity: 0.75;
+  transition: 0.2s;
+}
+
+.fg-copy-pulse {
+  position: relative;
+}
+
+.fg-copy-pulse:hover {
+}
+
+.fg-copy-pulse:after {
+  content: '';
+  display: block;
+  position: absolute;
+  border-radius: 50%;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: all 0.5s;
+  box-shadow: 0 0 15px 5px var(--fg-icon-copy-color);
+}
+
+.fg-copy-pulse:active:after {
+  box-shadow: 0 0 0 0 var(--fg-icon-copy-color);
+  position: absolute;
+  border-radius: 4em;
+  left: 0;
+  top: 0;
+  opacity: 1;
+  transition: 0s;
+}
+
+.fg-copy-pulse:active {
+  top: 0.07em;
 }
 
 .fg-rotate-90 {
   transform: rotate(-90deg);
+  transition: transform var(--fg-expand-transition-time);
 }
 
 .fg-icon-chevron {
   fill: var(--fg-icon-chevron-color);
+  transition: transform var(--fg-expand-transition-time);
 }
 
 .fg-icon-edit {

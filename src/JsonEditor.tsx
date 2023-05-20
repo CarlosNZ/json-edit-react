@@ -147,9 +147,6 @@ const updateDataObject = (
   const newData = clone(data)
 
   const currentValue = action !== 'add' ? extract(newData, path) : undefined
-  console.log(newData)
-  console.log(path)
-  console.log(newValue)
   assign(newData, path, newValue, { remove: action === 'delete' })
 
   return {

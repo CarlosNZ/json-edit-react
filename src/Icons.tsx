@@ -11,7 +11,7 @@ interface IconProps {
 export const Icon: React.FC<IconProps> = ({
   name,
   border = false,
-  size = '1.2em',
+  size = '1.4em',
   rotate = false,
 }): JSX.Element => {
   const borderStyle = { border: border ? '1px solid black' : undefined }

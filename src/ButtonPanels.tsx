@@ -47,7 +47,7 @@ export const EditButtons: React.FC<{
   return (
     <div className="fg-edit-buttons" style={isAdding ? { opacity: 1 } : undefined}>
       {enableClipboard && (
-        <div onClick={handleCopy} className="fg-icon-wrapper">
+        <div onClick={handleCopy} className="fg-icon-wrapper fg-copy-pulse">
           <Icon name="copy" />
         </div>
       )}
