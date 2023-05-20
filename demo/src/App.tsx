@@ -172,21 +172,25 @@ function App() {
         <FormControl>
           <CheckboxGroup colorScheme="green">
             <VStack align="flex-start" m={4}>
-              <FormLabel>Data root name</FormLabel>
-              <Input type="text" value={rootName} onChange={(e) => setRootName(e.target.value)} />
-              <FormLabel>Indent level</FormLabel>
-              <NumberInput
-                max={8}
-                min={0}
-                value={indent}
-                onChange={(value) => setIndent(Number(value))}
-              >
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
+              <HStack>
+                <FormLabel>Data root name</FormLabel>
+                <Input type="text" value={rootName} onChange={(e) => setRootName(e.target.value)} />
+              </HStack>
+              <HStack>
+                <FormLabel>Indent level</FormLabel>
+                <NumberInput
+                  max={8}
+                  min={0}
+                  value={indent}
+                  onChange={(value) => setIndent(Number(value))}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </HStack>
               <Checkbox isChecked={allowEdit} onChange={() => setAllowEdit(!allowEdit)}>
                 Allow Editing
               </Checkbox>
