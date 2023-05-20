@@ -82,6 +82,10 @@
   gap: 0.3em;
 }
 
+.fg-collection-text-area {
+  width: 100%;
+}
+
 .fg-collection-input-button-row {
   width: 90%;
   display: flex;

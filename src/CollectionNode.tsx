@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
+import { getTextDimensions } from './textSizer'
 import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
 import { Icon } from './Icons'
 import './style.css'
@@ -27,6 +28,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const filterProps = { key: name, path, level: path.length, value: data, size: collectionSize }
 
   const [collapsed, setCollapsed] = useState(props.collapseFilter(filterProps))
+
+  useEffect(() => {
+    setStringifiedValue(JSON.stringify(data, null, 2))
+  }, [data])
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
@@ -103,6 +108,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   if (keySort && collectionType === 'object')
     keyValueArray.sort(typeof keySort === 'function' ? (a, b) => keySort(a[0], b[0]) : undefined)
 
+  const { rows } = getTextDimensions(stringifiedValue, 40)
+
   return (
     <div className="fg-component fb-collection-component">
       <div className="fg-collection-header-row">
@@ -152,8 +159,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         {isEditing ? (
           <div className="fg-collection-text-edit">
             <textarea
-              rows={stringifiedValue.split('\n').length + 1}
-              style={{ minWidth: 400 }}
+              rows={rows}
+              // style={{ minWidth: 400 }}
+              cols={40}
               className="fg-collection-text-area"
               name={path.join('.')}
               value={stringifiedValue}

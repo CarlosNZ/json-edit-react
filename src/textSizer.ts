@@ -7,7 +7,7 @@
 // output array too
 const splitRegEx = /(?=[ -])|(?<=[ -])/g
 
-const getTextDimensions = (text: string, lineLimit: number = Infinity) => {
+export const getTextDimensions = (text: string, lineLimit: number = Infinity) => {
   const lines = text.split('\n')
 
   //   const newLines: string[] = []
