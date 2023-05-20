@@ -2,6 +2,7 @@ import React from 'react'
 import { JsonEditor } from './fig-tree-editor/src'
 // import { Jsonditor } from 'fig-tree-editor'
 import { useState } from 'react'
+import useUndo from 'use-undo'
 import {
   Box,
   Center,
@@ -17,7 +18,17 @@ import {
   VStack,
   Link,
   Image,
+  CheckboxGroup,
   Spacer,
+  FormControl,
+  FormLabel,
+  Input,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  useToast,
 } from '@chakra-ui/react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 
@@ -94,7 +105,7 @@ const initPrefs = {
 }
 
 function App() {
-  const [data, setData] = useState<object>(initPrefs)
+  // const [data, setData] = useState<object>(initPrefs)
   const [rootName, setRootName] = useState('data')
   const [indent, setIndent] = useState(2)
   const [collapseLevel, setCollapseLevel] = useState(2)
@@ -106,6 +117,10 @@ function App() {
   const [sortKeys, setSortKeys] = useState(false)
   const [showIndices, setShowIndices] = useState(true)
   const [defaultNewValue, setDefaultNewValue] = useState('Some new data')
+  const toast = useToast()
+
+  const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] =
+    useUndo(initPrefs)
 
   return (
     <Flex m={2} align="flex-start" justify="center" wrap="wrap">
@@ -114,22 +129,23 @@ function App() {
         <JsonEditor
           data={data}
           rootName={rootName}
-          // onEdit={({ newValue }) => console.log('NEW VALUE', newValue)}
-          // onUpdate={({ newData }) => {
-          // return 'Cannot update!'
-          //   setData(newData)
-          // }}
-          // onDelete={({ currentValue, newValue }) => {
-          //   console.log('Data', currentValue, newValue)
-          //   return false
-          // }}
+          indent={indent}
+          onUpdate={({ newData }) => {
+            setData(newData as any)
+          }}
           collapse={collapseLevel}
-          enableClipboard={allowCopy}
-          // enableClipboard={({ value, path, key }) => {
-          //   console.log(value)
-          //   console.log('Path', path)
-          //   console.log('key', key)
-          // }}
+          enableClipboard={
+            allowCopy
+              ? ({ value, type }) =>
+                  toast({
+                    title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
+                    description: truncate(String(value)),
+                    status: 'success',
+                    duration: 5000,
+                    isClosable: true,
+                  })
+              : false
+          }
           restrictEdit={!allowEdit}
           restrictDelete={!allowDelete}
           restrictAdd={!allowAdd}
@@ -140,18 +156,71 @@ function App() {
         />
         <VStack w="100%" align="flex-end">
           <HStack w="100%" justify="space-between">
-            <Button leftIcon={<ArrowBackIcon />}>Undo</Button>
+            <Button leftIcon={<ArrowBackIcon />} onClick={() => undo()} disabled={!canUndo}>
+              Undo
+            </Button>
             <Spacer />
-            <Button rightIcon={<ArrowForwardIcon />}>Redo</Button>
+            <Button rightIcon={<ArrowForwardIcon />} onClick={() => redo()} disabled={!canRedo}>
+              Redo
+            </Button>
           </HStack>
           <Button>Reset</Button>
         </VStack>
       </VStack>
       <VStack minW={400}>
         <Heading>Options</Heading>
+        <FormControl>
+          <CheckboxGroup colorScheme="green" defaultValue={['naruto', 'kakashi']}>
+            <VStack align="flex-start" m={4}>
+              <FormLabel>Data root name</FormLabel>
+              <Input type="text" value={rootName} onChange={(e) => setRootName(e.target.value)} />
+              <FormLabel>Indent level</FormLabel>
+              <NumberInput
+                max={8}
+                min={0}
+                value={indent}
+                onChange={(value) => setIndent(Number(value))}
+              >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+              <Checkbox isChecked={allowEdit} onChange={() => setAllowEdit(!allowEdit)}>
+                Allow Editing
+              </Checkbox>
+              <Checkbox isChecked={allowDelete} onChange={() => setAllowDelete(!allowDelete)}>
+                Allow Deletion
+              </Checkbox>
+              <Checkbox isChecked={allowAdd} onChange={() => setAllowAdd(!allowAdd)}>
+                Allow Add
+              </Checkbox>
+              <Checkbox isChecked={allowCopy} onChange={() => setAllowCopy(!allowCopy)}>
+                Enable clipboard
+              </Checkbox>
+              <Checkbox isChecked={sortKeys} onChange={() => setSortKeys(!sortKeys)}>
+                Sort Object keys
+              </Checkbox>
+              <Checkbox isChecked={showIndices} onChange={() => setShowIndices(!showIndices)}>
+                Show Array indices
+              </Checkbox>
+              <FormLabel>Default new value</FormLabel>
+              <Input
+                type="text"
+                value={defaultNewValue}
+                onChange={(e) => setDefaultNewValue(e.target.value)}
+              />
+              <FormLabel>Indent level</FormLabel>
+            </VStack>
+          </CheckboxGroup>
+        </FormControl>
       </VStack>
     </Flex>
   )
 }
 
 export default App
+
+export const truncate = (string: string, length = 200) =>
+  string.length < length ? string : `${string.slice(0, length - 2).trim()}...`

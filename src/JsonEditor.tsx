@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import clone from 'just-clone'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
@@ -32,6 +32,10 @@ const JsonEditor: React.FC<EditorProps> = ({
   const [data, setData] = useState<object>(srcData)
 
   useTheme(theme)
+
+  useEffect(() => {
+    setData(srcData)
+  }, [srcData])
 
   const onEdit: OnChangeMethod = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
@@ -123,7 +127,6 @@ const JsonEditor: React.FC<EditorProps> = ({
 
   return (
     <div className="fg-editor-container" style={{ ...style, minWidth, maxWidth }}>
-      {Array.isArray(data) && <p>Array component</p>}
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>
   )

@@ -153,6 +153,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           <div className="fg-collection-text-edit">
             <textarea
               rows={stringifiedValue.split('\n').length + 1}
+              style={{ minWidth: 400 }}
               className="fg-collection-text-area"
               name={path.join('.')}
               value={stringifiedValue}

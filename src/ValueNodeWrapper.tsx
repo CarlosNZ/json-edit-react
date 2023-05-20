@@ -37,7 +37,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   const [dataType, setDataType] = useState<DataType>(getDataType(data))
 
   useEffect(() => {
-    if (!error) return
+    // if (!error) return
     setValue(data)
     setDataType(getDataType(data))
   }, [data, error])
