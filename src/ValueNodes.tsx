@@ -12,7 +12,8 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   handleCancel,
 }) => {
   const [scrollHeight, setScrollHeight] = useState(20)
-  const [maxColumns, setMaxColumns] = useState(10)
+  const cols = Math.max(...value.split('\n').map((line) => line.length)) + 4
+  const [maxColumns, setMaxColumns] = useState(cols)
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) handleEdit()
@@ -26,8 +27,6 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
         {index < arr.length - 1 ? <br /> : null}
       </span>
     ))
-
-  const cols = Math.max(...value.split('\n').map((line) => line.length)) + 4
 
   return isEditing ? (
     <textarea
