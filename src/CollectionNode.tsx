@@ -32,6 +32,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
+  const transitionTime = getComputedStyle(document.documentElement).getPropertyValue(
+    '--fg-expand-transition-time'
+  )
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey)) handleEdit()
     else if (e.key === 'Escape') handleCancel()
@@ -134,65 +138,65 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           />
         )}
       </div>
-
-      {/* {!collapsed && ( */}
-      <>
-        <div
-          className={`fg-collection-inner${collapsed ? ' fg-collapsed' : ''}`}
-          style={{ marginLeft: `${props.indent}em` }}
-        >
-          {isEditing ? (
-            <div className="fg-collection-text-edit">
-              <textarea
-                rows={stringifiedValue.split('\n').length + 1}
-                className="fg-collection-text-area"
-                name={path.join('.')}
-                value={stringifiedValue}
-                onChange={(e) => setStringifiedValue(e.target.value)}
-                autoFocus
-                onFocus={(e) => e.target.select()}
-                onKeyDown={handleKeyPress}
-              />
-              <div className="fg-collection-input-button-row">
-                <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
-              </div>
+      <div
+        className={'fg-collection-inner'}
+        style={{
+          marginLeft: `${props.indent}em`,
+          maxHeight: collapsed ? 0 : `150vh`,
+          overflowY: collapsed ? 'hidden' : 'visible',
+          // Need to use max-height for animation to work, unfortunately
+          // "height: auto" doesn't work :(
+          transition: `max-height ${transitionTime}`,
+        }}
+      >
+        {isEditing ? (
+          <div className="fg-collection-text-edit">
+            <textarea
+              rows={stringifiedValue.split('\n').length + 1}
+              className="fg-collection-text-area"
+              name={path.join('.')}
+              value={stringifiedValue}
+              onChange={(e) => setStringifiedValue(e.target.value)}
+              autoFocus
+              onFocus={(e) => e.target.select()}
+              onKeyDown={handleKeyPress}
+            />
+            <div className="fg-collection-input-button-row">
+              <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
             </div>
-          ) : (
-            <>
-              {keyValueArray
-                // TO-DO: Sort keys if "keySort" prop specified
-                .map(([key, value]) => (
-                  <div className="fg-collection-element" key={key}>
-                    {isCollection(value) ? (
-                      <CollectionNode
-                        key={key}
-                        data={value}
-                        path={[...path, key]}
-                        name={key}
-                        {...props}
-                      />
-                    ) : (
-                      <ValueNodeWrapper
-                        key={key}
-                        data={value}
-                        path={[...path, key]}
-                        name={key}
-                        {...props}
-                        showArrayIndices={collectionType === 'object' ? true : showArrayIndices}
-                      />
-                    )}
-                  </div>
-                ))}
-            </>
-          )}
-
-          <div className={isEditing ? 'fg-collection-error-row' : 'fg-collection-error-row-edit'}>
-            {error && <span className="fg-error-slug">{error}</span>}
           </div>
+        ) : (
+          <>
+            {keyValueArray.map(([key, value]) => (
+              <div className="fg-collection-element" key={key}>
+                {isCollection(value) ? (
+                  <CollectionNode
+                    key={key}
+                    data={value}
+                    path={[...path, key]}
+                    name={key}
+                    {...props}
+                  />
+                ) : (
+                  <ValueNodeWrapper
+                    key={key}
+                    data={value}
+                    path={[...path, key]}
+                    name={key}
+                    {...props}
+                    showArrayIndices={collectionType === 'object' ? true : showArrayIndices}
+                  />
+                )}
+              </div>
+            ))}
+          </>
+        )}
+
+        <div className={isEditing ? 'fg-collection-error-row' : 'fg-collection-error-row-edit'}>
+          {error && <span className="fg-error-slug">{error}</span>}
         </div>
-        <div className="fg-brackets">{brackets.close}</div>
-      </>
-      {/* )} */}
+      </div>
+      <div className="fg-brackets">{brackets.close}</div>
     </div>
   )
 }

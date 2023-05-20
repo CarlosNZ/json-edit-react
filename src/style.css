@@ -1,7 +1,7 @@
 :root {
   --fg-form-border: 1px solid #ededf0;
   --fg-form-border-focus: 1px solid #e2e2e2;
-  --fg-expand-transition-time: 0.5s;
+  --fg-expand-transition-time: 0.2s;
 }
 .fg-editor-container {
   background-color: var(--fg-bg-color);
@@ -72,11 +72,6 @@
 
 .fg-collection-inner {
   position: relative;
-}
-
-.fg-collapsed {
-  display: none;
-  transition: display 1s;
 }
 
 .fg-collection-text-edit {
@@ -196,6 +191,7 @@ input[type='checkbox'] {
 
 .fg-edit-buttons:hover {
   opacity: 1;
+  position: relative;
 }
 
 .fg-collection-header-row:hover > .fg-edit-buttons {
@@ -221,8 +217,9 @@ input[type='checkbox'] {
 }
 
 .fg-icon-wrapper:hover {
-  opacity: 0.75;
+  opacity: 0.85;
   transition: 0.2s;
+  transform: scale(1.2);
 }
 
 .fg-copy-pulse {
