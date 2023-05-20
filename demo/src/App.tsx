@@ -3,6 +3,22 @@ import './App.css'
 import { JsonEditor } from './fig-tree-editor/src'
 // import { Jsonditor } from 'fig-tree-editor'
 import { useState } from 'react'
+import {
+  Box,
+  Center,
+  Flex,
+  Heading,
+  Text,
+  Button,
+  Checkbox,
+  Select,
+  Textarea,
+  Spinner,
+  HStack,
+  VStack,
+  Link,
+  Image,
+} from '@chakra-ui/react'
 
 const initData = {
   name: 'My Name',
@@ -77,25 +93,10 @@ const initPrefs = {
 }
 
 function App() {
-  const [data, setData] = useState<object>({
-    one: 1,
-    two: 'TWO',
-    three: true,
-    four: null,
-    five: 6.5,
-    six: 10,
-    seven: [1, 'string', false, ['a', 'b']],
-    eight: {
-      one: 'ONE',
-      two: [1, 'string', false, ['a', 'b']],
-      three: { a: 'A', b: 'B' },
-      four: () => true,
-    },
-    nine: undefined,
-  })
+  const [data, setData] = useState<object>(initPrefs)
   // console.log('outer data', data)
   return (
-    <div className="App">
+    <Center className="App">
       <JsonEditor
         data={data}
         rootName="preferences"
@@ -122,9 +123,10 @@ function App() {
         defaultValue={666}
         // maxWidth="300px"
         // minWidth="unset"
+        // theme={{ stringColor: 'red' }}
       />
       {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
-    </div>
+    </Center>
   )
 }
 

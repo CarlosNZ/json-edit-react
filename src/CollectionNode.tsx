@@ -196,7 +196,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           {error && <span className="fg-error-slug">{error}</span>}
         </div>
       </div>
-      <div className="fg-brackets">{brackets.close}</div>
+      {!collapsed && <div className="fg-brackets">{brackets.close}</div>}
     </div>
   )
 }
