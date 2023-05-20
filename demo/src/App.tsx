@@ -156,21 +156,21 @@ function App() {
         />
         <VStack w="100%" align="flex-end">
           <HStack w="100%" justify="space-between">
-            <Button leftIcon={<ArrowBackIcon />} onClick={() => undo()} disabled={!canUndo}>
+            <Button leftIcon={<ArrowBackIcon />} onClick={() => undo()} isDisabled={!canUndo}>
               Undo
             </Button>
             <Spacer />
-            <Button rightIcon={<ArrowForwardIcon />} onClick={() => redo()} disabled={!canRedo}>
+            <Button rightIcon={<ArrowForwardIcon />} onClick={() => redo()} isDisabled={!canRedo}>
               Redo
             </Button>
           </HStack>
-          <Button>Reset</Button>
+          <Button onClick={() => reset(initPrefs)}>Reset</Button>
         </VStack>
       </VStack>
       <VStack minW={400}>
         <Heading>Options</Heading>
         <FormControl>
-          <CheckboxGroup colorScheme="green" defaultValue={['naruto', 'kakashi']}>
+          <CheckboxGroup colorScheme="green">
             <VStack align="flex-start" m={4}>
               <FormLabel>Data root name</FormLabel>
               <Input type="text" value={rootName} onChange={(e) => setRootName(e.target.value)} />
