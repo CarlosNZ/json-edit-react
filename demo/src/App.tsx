@@ -1,5 +1,4 @@
 import React from 'react'
-import './App.css'
 import { JsonEditor } from './fig-tree-editor/src'
 // import { Jsonditor } from 'fig-tree-editor'
 import { useState } from 'react'
@@ -18,7 +17,9 @@ import {
   VStack,
   Link,
   Image,
+  Spacer,
 } from '@chakra-ui/react'
+import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 
 const initData = {
   name: 'My Name',
@@ -94,39 +95,62 @@ const initPrefs = {
 
 function App() {
   const [data, setData] = useState<object>(initPrefs)
-  // console.log('outer data', data)
+  const [rootName, setRootName] = useState('data')
+  const [indent, setIndent] = useState(2)
+  const [collapseLevel, setCollapseLevel] = useState(2)
+  const [theme, setTheme] = useState('default')
+  const [allowEdit, setAllowEdit] = useState(true)
+  const [allowDelete, setAllowDelete] = useState(true)
+  const [allowAdd, setAllowAdd] = useState(true)
+  const [allowCopy, setAllowCopy] = useState(true)
+  const [sortKeys, setSortKeys] = useState(false)
+  const [showIndices, setShowIndices] = useState(true)
+  const [defaultNewValue, setDefaultNewValue] = useState('Some new data')
+
   return (
-    <Center className="App">
-      <JsonEditor
-        data={data}
-        rootName="preferences"
-        // onEdit={({ newValue }) => console.log('NEW VALUE', newValue)}
-        onUpdate={({ newData }) => {
+    <Flex m={2} align="flex-start" justify="center" wrap="wrap">
+      <VStack minW={400}>
+        <Heading>JSON Editor</Heading>
+        <JsonEditor
+          data={data}
+          rootName={rootName}
+          // onEdit={({ newValue }) => console.log('NEW VALUE', newValue)}
+          // onUpdate={({ newData }) => {
           // return 'Cannot update!'
-          setData(newData)
-        }}
-        // onDelete={({ currentValue, newValue }) => {
-        //   console.log('Data', currentValue, newValue)
-        //   return false
-        // }}
-        collapse={2}
-        // enableClipboard={({ value, path, key }) => {
-        //   console.log(value)
-        //   console.log('Path', path)
-        //   console.log('key', key)
-        // }}
-        restrictEdit={({ key }) => key === 'server'}
-        // restrictDelete={({ value }) => {
-        //   return value === null
-        // }}
-        // keySort={true}
-        defaultValue={666}
-        // maxWidth="300px"
-        // minWidth="unset"
-        // theme={{ stringColor: 'red' }}
-      />
-      {/* <pre>{JSON.stringify(data, null, 2)}</pre> */}
-    </Center>
+          //   setData(newData)
+          // }}
+          // onDelete={({ currentValue, newValue }) => {
+          //   console.log('Data', currentValue, newValue)
+          //   return false
+          // }}
+          collapse={collapseLevel}
+          enableClipboard={allowCopy}
+          // enableClipboard={({ value, path, key }) => {
+          //   console.log(value)
+          //   console.log('Path', path)
+          //   console.log('key', key)
+          // }}
+          restrictEdit={!allowEdit}
+          restrictDelete={!allowDelete}
+          restrictAdd={!allowAdd}
+          keySort={sortKeys}
+          defaultValue={defaultNewValue}
+          showArrayIndices={showIndices}
+          // theme={{ stringColor: 'red' }}
+        />
+        <VStack w="100%" align="flex-end">
+          <HStack w="100%" justify="space-between">
+            <Button leftIcon={<ArrowBackIcon />}>Undo</Button>
+            <Spacer />
+            <Button rightIcon={<ArrowForwardIcon />}>Redo</Button>
+          </HStack>
+          <Button>Reset</Button>
+        </VStack>
+      </VStack>
+      <VStack minW={400}>
+        <Heading>Options</Heading>
+      </VStack>
+    </Flex>
   )
 }
 
