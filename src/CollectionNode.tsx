@@ -108,7 +108,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   if (keySort && collectionType === 'object')
     keyValueArray.sort(typeof keySort === 'function' ? (a, b) => keySort(a[0], b[0]) : undefined)
 
-  const { rows } = getTextDimensions(stringifiedValue, 40)
+  const cols = Math.min(Math.max(...stringifiedValue.split('\n').map((line) => line.length)), 50)
+
+  const { rows, columns } = getTextDimensions(stringifiedValue, cols)
 
   return (
     <div className="fg-component fb-collection-component">
@@ -149,7 +151,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         className={'fg-collection-inner'}
         style={{
           marginLeft: `${props.indent}em`,
-          maxHeight: collapsed ? 0 : `150vh`,
+          maxHeight: collapsed ? 0 : `150ch`,
           overflowY: collapsed ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately
           // "height: auto" doesn't work :(
@@ -159,9 +161,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         {isEditing ? (
           <div className="fg-collection-text-edit">
             <textarea
-              rows={rows}
-              // style={{ minWidth: 400 }}
-              cols={40}
+              rows={Math.min(rows, 35)}
+              style={{ width: `${Math.max(columns + 1, 12)}ch` }}
+              cols={columns}
               className="fg-collection-text-area"
               name={path.join('.')}
               value={stringifiedValue}

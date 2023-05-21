@@ -1,7 +1,7 @@
 /**
  * MAIN
  */
-
+import { Measures } from '@react-hookz/web'
 import { ThemeProps } from './theme'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
@@ -26,8 +26,8 @@ export interface EditorProps {
   keySort?: boolean | CompareMethod
   showArrayIndices?: boolean
   defaultValue?: unknown
-  minWidth?: string
-  maxWidth?: string
+  minWidth?: string | number
+  maxWidth?: number
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const

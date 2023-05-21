@@ -18,7 +18,7 @@
 }
 
 .fg-editor-container textarea {
-  width: 90%;
+  /* width: 90%; */
   border: var(--fg-form-border);
   border-radius: 0.3em;
   outline: none;
@@ -76,14 +76,15 @@
 }
 
 .fg-collection-text-edit {
-  width: 100%;
+  /* width: 100%; */
   display: flex;
   flex-direction: column;
   gap: 0.3em;
 }
 
 .fg-collection-text-area {
-  width: 100%;
+  /* width: 100%; */
+  resize: both;
 }
 
 .fg-collection-input-button-row {
@@ -115,6 +116,7 @@
 }
 
 .fg-value-main-row {
+  display: 'flex';
 }
 
 .fg-value-error-row {

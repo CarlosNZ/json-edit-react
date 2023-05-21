@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import clone from 'just-clone'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
+import { useWindowSize } from '@react-hookz/web'
 import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
 import './style.css'
@@ -27,7 +28,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   showArrayIndices = true,
   defaultValue = null,
   minWidth = '40%',
-  maxWidth = '600px',
+  maxWidth = 600,
 }) => {
   const [data, setData] = useState<object>(srcData)
 
@@ -36,6 +37,10 @@ const JsonEditor: React.FC<EditorProps> = ({
   useEffect(() => {
     setData(srcData)
   }, [srcData])
+
+  const { width } = useWindowSize()
+
+  const maximumWidth = Math.min(maxWidth, width - 10)
 
   const onEdit: OnChangeMethod = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
@@ -126,7 +131,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   }
 
   return (
-    <div className="fg-editor-container" style={{ ...style, minWidth, maxWidth }}>
+    <div className="fg-editor-container" style={{ ...style, minWidth, maxWidth: maximumWidth }}>
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>
   )
