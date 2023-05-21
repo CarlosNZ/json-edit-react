@@ -108,7 +108,7 @@ function App() {
   // const [data, setData] = useState<object>(initPrefs)
   const [rootName, setRootName] = useState('data')
   const [indent, setIndent] = useState(2)
-  const [collapseLevel, setCollapseLevel] = useState(2)
+  const [collapseLevel, setCollapseLevel] = useState(1)
   const [theme, setTheme] = useState('default')
   const [allowEdit, setAllowEdit] = useState(true)
   const [allowDelete, setAllowDelete] = useState(true)
@@ -177,6 +177,20 @@ function App() {
                 <Input type="text" value={rootName} onChange={(e) => setRootName(e.target.value)} />
               </HStack>
               <HStack>
+                <FormLabel>Collapse level</FormLabel>
+                <NumberInput
+                  min={0}
+                  value={collapseLevel}
+                  onChange={(value) => setCollapseLevel(Number(value))}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </HStack>
+              <HStack>
                 <FormLabel>Indent level</FormLabel>
                 <NumberInput
                   max={8}
@@ -215,7 +229,6 @@ function App() {
                 value={defaultNewValue}
                 onChange={(e) => setDefaultNewValue(e.target.value)}
               />
-              <FormLabel>Indent level</FormLabel>
             </VStack>
           </CheckboxGroup>
         </FormControl>
