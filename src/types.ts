@@ -28,6 +28,7 @@ export interface EditorProps {
   defaultValue?: unknown
   minWidth?: string | number
   maxWidth?: number
+  stringTruncate?: number
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -91,6 +92,7 @@ interface BaseNodeProps {
   restrictDeleteFilter: FilterMethod
   restrictAddFilter: FilterMethod
   showArrayIndices: boolean
+  stringTruncate: number
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -114,4 +116,5 @@ export interface InputProps {
   handleEdit: () => void
   handleCancel: () => void
   path: CollectionKey[]
+  stringTruncate: number
 }

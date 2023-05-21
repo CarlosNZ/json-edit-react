@@ -3,6 +3,9 @@ import { AutogrowTextArea } from './AutogrowTextArea'
 import { InputProps } from './types'
 import './style.css'
 
+export const truncate = (string: string, length = 200) =>
+  string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
+
 export const StringValue: React.FC<InputProps & { value: string }> = ({
   value,
   setValue,
@@ -11,6 +14,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   setIsEditing,
   handleEdit,
   handleCancel,
+  stringTruncate,
 }) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) handleEdit()
@@ -30,13 +34,13 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       className="fg-input-text"
       name={path.join('.')}
       value={value}
-      setValue={setValue}
+      setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       isEditing={isEditing}
       handleKeyPress={handleKeyPress}
     />
   ) : (
     <span onDoubleClick={() => setIsEditing(true)} className="fg-value-string">
-      "{breakString(value)}"
+      "{breakString(truncate(value, stringTruncate))}"
     </span>
   )
 }

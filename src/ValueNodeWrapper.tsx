@@ -30,6 +30,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   restrictEditFilter,
   restrictDeleteFilter,
   showArrayIndices,
+  stringTruncate,
 }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState<typeof data | CollectionData>(data)
@@ -100,6 +101,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     handleEdit,
     handleCancel,
     path,
+    stringTruncate,
   }
 
   return (

@@ -7,6 +7,7 @@ import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
 import './style.css'
 import { useTheme, defaultTheme } from './theme'
+import { generateUniqueId } from './AutogrowTextArea'
 
 const JsonEditor: React.FC<EditorProps> = ({
   data: srcData,
@@ -29,6 +30,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   defaultValue = null,
   minWidth = '40%',
   maxWidth = 600,
+  stringTruncate = 250,
 }) => {
   const [data, setData] = useState<object>(srcData)
 
@@ -127,10 +129,15 @@ const JsonEditor: React.FC<EditorProps> = ({
     style,
     indent,
     defaultValue,
+    stringTruncate,
   }
 
   return (
-    <div className="fg-editor-container" style={{ ...style, minWidth, maxWidth: maximumWidth }}>
+    <div
+      id={generateUniqueId()}
+      className="fg-editor-container"
+      style={{ ...style, minWidth, maxWidth: maximumWidth }}
+    >
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>
   )

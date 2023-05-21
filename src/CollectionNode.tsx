@@ -5,6 +5,7 @@ import { getTextDimensions } from './textSizer'
 import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
 import { Icon } from './Icons'
 import './style.css'
+import { AutogrowTextArea } from './AutogrowTextArea'
 
 export const isCollection = (value: unknown) => value !== null && typeof value == 'object'
 
@@ -154,7 +155,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         className={'fg-collection-inner'}
         style={{
           marginLeft: `${props.indent}em`,
-          maxHeight: collapsed ? 0 : `150ch`,
+          maxHeight: collapsed ? 0 : `90em`,
           overflowY: collapsed ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately
           // "height: auto" doesn't work :(
@@ -163,17 +164,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       >
         {isEditing ? (
           <div className="fg-collection-text-edit">
-            <textarea
-              rows={Math.min(rows, 35)}
-              style={{ width: `${Math.max(columns + 1, 12)}ch` }}
-              cols={columns}
+            <AutogrowTextArea
               className="fg-collection-text-area"
               name={path.join('.')}
               value={stringifiedValue}
-              onChange={(e) => setStringifiedValue(e.target.value)}
-              autoFocus
-              onFocus={(e) => e.target.select()}
-              onKeyDown={handleKeyPress}
+              setValue={setStringifiedValue}
+              isEditing={isEditing}
+              handleKeyPress={handleKeyPress}
             />
             <div className="fg-collection-input-button-row">
               <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />

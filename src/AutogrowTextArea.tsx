@@ -15,7 +15,7 @@ interface TextAreaProps {
   className: string
   name: string
   value: string
-  setValue: React.Dispatch<React.SetStateAction<string | number | boolean | null>>
+  setValue: React.Dispatch<React.SetStateAction<string>>
   isEditing: boolean
   handleKeyPress: (e: React.KeyboardEvent) => void
 }
@@ -27,6 +27,9 @@ const initSize: { width: number | string; height: number | string } = {
   width: '6em',
   height: '1.4em',
 }
+
+const maxHeight = 50 // em -- Add to style.css vars
+const maxHeightInPx = 50 * 14.3 // TO-DO: Fetch this value
 
 export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   className,
@@ -53,7 +56,14 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   return (
     <div style={{ display: 'grid' }}>
       <textarea
-        style={{ width, height, gridRow: 1, gridColumn: 1 }}
+        style={{
+          width,
+          height,
+          gridRow: 1,
+          gridColumn: 1,
+          maxHeight: `${maxHeight}em`,
+          overflow: (height as number) > maxHeightInPx ? 'scroll' : 'hidden',
+        }}
         className={className}
         name={name}
         value={value}
@@ -75,6 +85,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
           opacity: 0.9,
           whiteSpace: 'pre-wrap',
           paddingRight: '0.7em',
+          maxHeight: '50em',
         }}
       >
         {value}
