@@ -45,7 +45,6 @@ export const getTextDimensions = (text: string, lineLimit: number = Infinity) =>
   return { rows: numLines, columns: longestLine }
 }
 
-// getTextDimensions('We want it to break-onthe hyphen')
 export const getMaxColumns = (maxWidth: number, indent: number) => {
   return 50
 }

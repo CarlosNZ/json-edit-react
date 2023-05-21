@@ -100,6 +100,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const canDelete = !restrictDeleteFilter(filterProps)
   const canAdd = !restrictAddFilter(filterProps)
 
+  const showLabel = showArrayIndices || !(typeof path.slice(-1)[0] === 'number')
+
   const keyValueArray = Object.entries(data).map(([key, value]) => [
     collectionType === 'array' ? Number(key) : key,
     value,
@@ -123,7 +125,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           <Icon name="chevron" rotate={collapsed} />
         </div>
         <div className="fg-collection-name">
-          {name}: <span className="fg-brackets">{brackets.open}</span>
+          {showLabel ? `${name}:` : null}
+          <span className="fg-brackets">{brackets.open}</span>
         </div>
         <div className="fg-collection-item-count">{`${collectionSize} items`}</div>
         {collapsed && <div className="fg-brackets">{brackets.close}</div>}

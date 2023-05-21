@@ -39,7 +39,6 @@ const JsonEditor: React.FC<EditorProps> = ({
   }, [srcData])
 
   const { width } = useWindowSize()
-
   const maximumWidth = Math.min(maxWidth, width - 10)
 
   const onEdit: OnChangeMethod = async (value, path) => {
