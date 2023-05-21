@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
+import { AutogrowTextArea } from './AutogrowTextArea'
 import { InputProps } from './types'
 import './style.css'
 
@@ -11,17 +12,6 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   handleEdit,
   handleCancel,
 }) => {
-  const [scrollHeight, setScrollHeight] = useState(20)
-  const cols = Math.max(...value.split('\n').map((line) => line.length)) + 4
-  const [maxColumns, setMaxColumns] = useState(cols)
-  const [textAreaId] = useState(`fg-${Math.ceil(Math.random() * 1000000)}`)
-  const [colWidth, setColWidth] = useState()
-
-  useEffect(() => {
-    if (!isEditing) return
-    setColWidth((document.getElementById(textAreaId) as any)?.cols)
-  }, [isEditing])
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) handleEdit()
     else if (e.key === 'Escape') handleCancel()
@@ -35,26 +25,14 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       </span>
     ))
 
-  // const cols2 = (document.getElementById(textAreaId) as any)?.cols
-  // console.log('Cols', colWidth)
-
   return isEditing ? (
-    <textarea
-      id={textAreaId}
-      // cols={1000}
+    <AutogrowTextArea
       className="fg-input-text"
       name={path.join('.')}
       value={value}
-      onChange={(e) => {
-        setScrollHeight(e.target.scrollHeight)
-        if (cols > maxColumns) setMaxColumns(cols)
-        setValue(e.target.value)
-      }}
-      autoFocus
-      onFocus={(e) => e.target.select()}
-      // style={{ height: scrollHeight - 3 }}
-      onKeyDown={handleKeyPress}
-      style={{ width: '100%' }}
+      setValue={setValue}
+      isEditing={isEditing}
+      handleKeyPress={handleKeyPress}
     />
   ) : (
     <span onDoubleClick={() => setIsEditing(true)} className="fg-value-string">

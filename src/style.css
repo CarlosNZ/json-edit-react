@@ -127,14 +127,18 @@
   color: var(--fg-string-color);
 }
 
-textarea.fg-input-text {
+.fg-input-text {
   resize: none;
   margin: 0;
-  padding: 0;
+  /* padding: 0; */
   height: 1.4em;
   padding-top: 0.2em;
   padding-left: 0.5em;
+  padding-right: 0.5em;
+  padding-bottom: 0.5em;
   min-width: 6em;
+  overflow: hidden;
+  max-height: 80ch;
 }
 
 input[type='checkbox'] {
