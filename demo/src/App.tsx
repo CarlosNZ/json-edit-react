@@ -108,7 +108,7 @@ function App() {
   // const [data, setData] = useState<object>(initPrefs)
   const [rootName, setRootName] = useState('data')
   const [indent, setIndent] = useState(2)
-  const [collapseLevel, setCollapseLevel] = useState(1)
+  const [collapseLevel, setCollapseLevel] = useState(2)
   const [theme, setTheme] = useState('default')
   const [allowEdit, setAllowEdit] = useState(true)
   const [allowDelete, setAllowDelete] = useState(true)

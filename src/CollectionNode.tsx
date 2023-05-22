@@ -32,8 +32,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
 
   useEffect(() => {
     setStringifiedValue(JSON.stringify(data, null, 2))
+  }, [data])
+
+  useEffect(() => {
     setCollapsed(props.collapseFilter(filterProps))
-  }, [data, props.collapseFilter])
+  }, [props.collapseFilter])
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =

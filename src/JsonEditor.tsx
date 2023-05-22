@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import clone from 'just-clone'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
@@ -33,6 +33,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   stringTruncate = 250,
 }) => {
   const [data, setData] = useState<object>(srcData)
+  const collapseFilter = useCallback(getFilterMethod(collapse), [collapse])
 
   useTheme(theme)
 
@@ -109,7 +110,7 @@ const JsonEditor: React.FC<EditorProps> = ({
     } else setData(newData)
   }
 
-  const collapseFilter = getFilterMethod(collapse)
+  // const collapseFilter = getFilterMethod(collapse)
   const restrictEditFilter = getFilterMethod(restrictEdit)
   const restrictDeleteFilter = getFilterMethod(restrictDelete)
   const restrictAddFilter = getFilterMethod(restrictAdd)

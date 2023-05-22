@@ -47,8 +47,8 @@
 }
 
 .fb-collection-component {
-  max-height: 50em;
-  overflow: scroll;
+  max-height: 90em;
+  overflow: auto;
 }
 
 .fg-collection-header-row,
