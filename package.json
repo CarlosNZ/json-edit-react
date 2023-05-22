@@ -1,5 +1,5 @@
 {
-  "name": "fig-tree-editor",
+  "name": "json-edit-react",
   "version": "0.9.0",
   "description": "React component for editing/viewing JSON/object data",
   "main": "build/index.cjs.js",
@@ -8,7 +8,7 @@
   "files": [
     "build/**/*"
   ],
-  "repository": "https://github.com/CarlosNZ/fig-tree-editor.git",
+  "repository": "https://github.com/CarlosNZ/json-edit-react.git",
   "author": "Carl Smith <5456533+CarlosNZ@users.noreply.github.com>",
   "license": "MIT",
   "scripts": {
