@@ -8,7 +8,7 @@
  *
  */
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import './style.css'
 
 interface TextAreaProps {
@@ -40,7 +40,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   handleKeyPress,
 }) => {
   const [scrollDimensions, setScrollDimensions] = useState(initSize)
-  const [uniqueId] = useState(generateUniqueId())
+  const { current: uniqueId } = useRef(generateUniqueId())
 
   useEffect(() => {
     if (!isEditing) {
