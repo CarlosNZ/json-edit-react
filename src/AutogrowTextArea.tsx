@@ -8,7 +8,7 @@
  *
  */
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef } from 'react'
 import './style.css'
 
 interface TextAreaProps {
@@ -22,54 +22,36 @@ interface TextAreaProps {
 
 export const generateUniqueId = () => `jer-${Math.ceil(Math.random() * 1000000)}`
 
-// TO-DO Get init values from CSS Vars
-const initSize: { width: number | string; height: number | string } = {
-  width: '6em',
-  height: '1.4em',
-}
-
-const maxHeight = 50 // em -- Add to style.css vars
-const maxHeightInPx = 50 * 14.3 // TO-DO: Fetch this value
-
 export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   className,
   name,
   value,
   setValue,
-  isEditing,
   handleKeyPress,
 }) => {
-  const [scrollDimensions, setScrollDimensions] = useState(initSize)
   const { current: uniqueId } = useRef(generateUniqueId())
 
-  useEffect(() => {
-    if (!isEditing) {
-      setScrollDimensions(initSize)
-      return
-    }
-    const el = document.getElementById(uniqueId)
-    setScrollDimensions({ width: el?.scrollWidth ?? 0, height: el?.scrollHeight ?? 0 })
-  }, [isEditing, value])
+  const scrollPadding = Math.min(Math.max(value.length - 40, 0) * (0.8 / 60), 0.8)
 
-  const { width, height } = scrollDimensions
+  console.log(value.length, scrollPadding)
 
   return (
     <div style={{ display: 'grid' }}>
       <textarea
         style={{
-          width,
-          height,
-          gridRow: 1,
-          gridColumn: 1,
-          maxHeight: `${maxHeight}em`,
-          overflow: (height as number) > maxHeightInPx ? 'scroll' : 'hidden',
+          height: 'auto',
+          gridArea: '1 / 1 / 2 / 2',
+          overflowY: 'auto',
         }}
+        rows={1}
         className={className}
         name={name}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         autoFocus
-        onFocus={(e) => e.target.select()}
+        onFocus={(e) => {
+          if (value.length < 40) e.target.select()
+        }}
         onKeyDown={handleKeyPress}
       />
       {/* The "dummy" replica which causes the *actual* textarea to resize: */}
@@ -78,14 +60,15 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
         className={className}
         style={{
           visibility: 'hidden',
-          gridRow: 1,
-          gridColumn: 1,
+          // visibility: 'visible',
           height: 'auto',
+          gridArea: '1 / 1 / 2 / 2',
           color: 'red',
           opacity: 0.9,
           whiteSpace: 'pre-wrap',
-          paddingRight: '0.7em',
-          maxHeight: '50em',
+          // overflowY: 'auto',
+          overflow: 'clip',
+          border: '1px solid transparent',
         }}
       >
         {value}

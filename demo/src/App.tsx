@@ -31,6 +31,7 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
+import './style.css'
 
 const initData = {
   name: 'My Name',
@@ -105,9 +106,8 @@ const initPrefs = {
 }
 
 function App() {
-  // const [data, setData] = useState<object>(initPrefs)
   const [rootName, setRootName] = useState('data')
-  const [indent, setIndent] = useState(2)
+  const [indent, setIndent] = useState(1)
   const [collapseLevel, setCollapseLevel] = useState(2)
   const [theme, setTheme] = useState('default')
   const [allowEdit, setAllowEdit] = useState(true)
@@ -116,14 +116,14 @@ function App() {
   const [allowCopy, setAllowCopy] = useState(true)
   const [sortKeys, setSortKeys] = useState(false)
   const [showIndices, setShowIndices] = useState(true)
-  const [defaultNewValue, setDefaultNewValue] = useState('Some new data')
+  const [defaultNewValue, setDefaultNewValue] = useState('New data!')
   const toast = useToast()
 
   const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] =
     useUndo(initPrefs)
 
   return (
-    <Flex m={2} align="flex-start" justify="center" wrap="wrap">
+    <Flex m={2} align="flex-start" justify="space-evenly" wrap="wrap" gap={4}>
       <VStack minW={400}>
         <Heading>JSON Editor</Heading>
         <JsonEditor
@@ -152,7 +152,7 @@ function App() {
           keySort={sortKeys}
           defaultValue={defaultNewValue}
           showArrayIndices={showIndices}
-          // theme={{ stringColor: 'red' }}
+          maxWidth={550}
         />
         <VStack w="100%" align="flex-end">
           <HStack w="100%" justify="space-between">
@@ -167,70 +167,123 @@ function App() {
           <Button onClick={() => reset(initPrefs)}>Reset</Button>
         </VStack>
       </VStack>
-      <VStack minW={400}>
+
+      <VStack flexBasis={500} backgroundColor="#f6f6f6">
         <Heading>Options</Heading>
         <FormControl>
-          <CheckboxGroup colorScheme="green">
-            <VStack align="flex-start" m={4}>
-              <HStack>
-                <FormLabel>Data root name</FormLabel>
-                <Input type="text" value={rootName} onChange={(e) => setRootName(e.target.value)} />
-              </HStack>
-              <HStack>
-                <FormLabel>Collapse level</FormLabel>
-                <NumberInput
-                  min={0}
-                  value={collapseLevel}
-                  onChange={(value) => setCollapseLevel(Number(value))}
-                >
-                  <NumberInputField />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </HStack>
-              <HStack>
-                <FormLabel>Indent level</FormLabel>
-                <NumberInput
-                  max={8}
-                  min={0}
-                  value={indent}
-                  onChange={(value) => setIndent(Number(value))}
-                >
-                  <NumberInputField />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </HStack>
-              <Checkbox isChecked={allowEdit} onChange={() => setAllowEdit(!allowEdit)}>
-                Allow Editing
-              </Checkbox>
-              <Checkbox isChecked={allowDelete} onChange={() => setAllowDelete(!allowDelete)}>
-                Allow Deletion
-              </Checkbox>
-              <Checkbox isChecked={allowAdd} onChange={() => setAllowAdd(!allowAdd)}>
-                Allow Add
-              </Checkbox>
-              <Checkbox isChecked={allowCopy} onChange={() => setAllowCopy(!allowCopy)}>
-                Enable clipboard
-              </Checkbox>
-              <Checkbox isChecked={sortKeys} onChange={() => setSortKeys(!sortKeys)}>
-                Sort Object keys
-              </Checkbox>
-              <Checkbox isChecked={showIndices} onChange={() => setShowIndices(!showIndices)}>
-                Show Array indices
-              </Checkbox>
-              <FormLabel>Default new value</FormLabel>
+          <VStack align="flex-start" m={4}>
+            <HStack className="inputRow">
+              <FormLabel className="labelWidth" textAlign="right">
+                Data root name
+              </FormLabel>
               <Input
+                className="inputWidth"
                 type="text"
-                value={defaultNewValue}
-                onChange={(e) => setDefaultNewValue(e.target.value)}
+                value={rootName}
+                onChange={(e) => setRootName(e.target.value)}
               />
-            </VStack>
-          </CheckboxGroup>
+            </HStack>
+            <HStack className="inputRow">
+              <FormLabel className="labelWidth" textAlign="right">
+                Collapse level
+              </FormLabel>
+              <NumberInput
+                className="inputWidth"
+                min={0}
+                value={collapseLevel}
+                onChange={(value) => setCollapseLevel(Number(value))}
+              >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+            </HStack>
+            <HStack className="inputRow">
+              <FormLabel className="labelWidth" textAlign="right">
+                Indent level
+              </FormLabel>
+              <NumberInput
+                className="inputWidth"
+                max={8}
+                min={0}
+                value={indent}
+                onChange={(value) => setIndent(Number(value))}
+              >
+                <NumberInputField />
+                <NumberInputStepper>
+                  <NumberIncrementStepper />
+                  <NumberDecrementStepper />
+                </NumberInputStepper>
+              </NumberInput>
+            </HStack>
+            <CheckboxGroup colorScheme="green">
+              <HStack className="inputRow">
+                <FormLabel className="labelWidth" textAlign="right">
+                  Allow editing
+                </FormLabel>
+                <Checkbox
+                  size="lg"
+                  isChecked={allowEdit}
+                  onChange={() => setAllowEdit(!allowEdit)}
+                />
+              </HStack>
+              <HStack className="inputRow">
+                <FormLabel className="labelWidth" textAlign="right">
+                  Allow deletion
+                </FormLabel>
+                <Checkbox
+                  size="lg"
+                  isChecked={allowDelete}
+                  onChange={() => setAllowDelete(!allowDelete)}
+                />
+              </HStack>
+              <HStack className="inputRow">
+                <FormLabel className="labelWidth" textAlign="right">
+                  Allow Add
+                </FormLabel>
+                <Checkbox size="lg" isChecked={allowAdd} onChange={() => setAllowAdd(!allowAdd)} />
+              </HStack>
+              <HStack className="inputRow">
+                <FormLabel className="labelWidth" textAlign="right">
+                  Enable clipboard
+                </FormLabel>
+                <Checkbox
+                  size="lg"
+                  isChecked={allowCopy}
+                  onChange={() => setAllowCopy(!allowCopy)}
+                />
+              </HStack>
+              <HStack className="inputRow">
+                <FormLabel className="labelWidth" textAlign="right">
+                  Sort Object keys
+                </FormLabel>
+                <Checkbox size="lg" isChecked={sortKeys} onChange={() => setSortKeys(!sortKeys)} />
+              </HStack>
+              <HStack className="inputRow">
+                <FormLabel className="labelWidth" textAlign="right">
+                  Show Array indices
+                </FormLabel>
+                <Checkbox
+                  size="lg"
+                  isChecked={showIndices}
+                  onChange={() => setShowIndices(!showIndices)}
+                />
+              </HStack>
+              <HStack className="inputRow">
+                <FormLabel className="labelWidth" textAlign="right">
+                  Default new value
+                </FormLabel>
+                <Input
+                  className="inputWidth"
+                  type="text"
+                  value={defaultNewValue}
+                  onChange={(e) => setDefaultNewValue(e.target.value)}
+                />
+              </HStack>
+            </CheckboxGroup>
+          </VStack>
         </FormControl>
       </VStack>
     </Flex>

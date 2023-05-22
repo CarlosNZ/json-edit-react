@@ -115,10 +115,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   if (keySort && collectionType === 'object')
     keyValueArray.sort(typeof keySort === 'function' ? (a, b) => keySort(a[0], b[0]) : undefined)
 
-  const cols = Math.min(Math.max(...stringifiedValue.split('\n').map((line) => line.length)), 50)
-
-  const { rows, columns } = getTextDimensions(stringifiedValue, cols)
-
   return (
     <div className="jer-component fb-collection-component">
       <div className="jer-collection-header-row">

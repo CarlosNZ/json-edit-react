@@ -1,2 +1,3 @@
 # json-edit-react
-React component for editing/viewing JSON/object data
+
+React component for editing or viewing JSON/object data.

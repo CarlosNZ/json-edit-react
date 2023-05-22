@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react'
 
 export const defaultTheme = {
   bgColor: '#f6f6f6',
+  borderColor: 'rgb(0, 0, 0, 0.2)',
   mainFont: 'monospace',
-  mainColor: 'rgb(0, 43, 54)',
-  secondaryColor: 'grey',
   bracketColor: 'rgb(0, 43, 54)',
   parentheticalColor: 'rgba(0, 0, 0, 0.3)',
   stringColor: 'rgb(203, 75, 22)',
@@ -12,7 +11,6 @@ export const defaultTheme = {
   booleanColor: 'green',
   nullColor: 'rgb(220, 50, 47)',
   altBgColor: 'grey',
-  iconColor: 'turquoise',
   iconChevronColor: 'rgb(0, 43, 54)',
   iconEditColor: 'rgb(42, 161, 152)',
   iconDeleteColor: 'rgb(203, 75, 22)',
@@ -42,9 +40,8 @@ export const useTheme = (theme: Partial<ThemeProps>) => {
 
 const themeVariableMap: { [Property in keyof ThemeProps]: string } = {
   bgColor: '--jer-bg-color',
+  borderColor: '--jer-border-color',
   mainFont: '--jer-main-font',
-  mainColor: '--jer-main-color',
-  secondaryColor: '--jer-secondary-color',
   bracketColor: '--jer-bracket-color',
   parentheticalColor: '--jer-parenthetical-color',
   stringColor: '--jer-string-color',
@@ -52,7 +49,6 @@ const themeVariableMap: { [Property in keyof ThemeProps]: string } = {
   booleanColor: '--jer-boolean-color',
   nullColor: '--jer-null-color',
   altBgColor: '--jer-alt-bg-color',
-  iconColor: '--jer-icon-color',
   iconChevronColor: '--jer-icon-chevron-color',
   iconEditColor: '--jer-icon-edit-color',
   iconDeleteColor: '--jer-icon-delete-color',

@@ -5,6 +5,7 @@
 }
 .jer-editor-container {
   background-color: var(--jer-bg-color);
+  border: 1px solid var(--jer-border-color);
   font-family: var(--jer-main-font);
   font-size: 1.1em;
   /* font-size: 20px; */
@@ -47,8 +48,6 @@
 }
 
 .fb-collection-component {
-  max-height: 90em;
-  overflow: auto;
 }
 
 .jer-collection-header-row,
@@ -61,6 +60,7 @@
 
 .jer-collection-header-row {
   display: flex;
+  flex-wrap: wrap;
 }
 
 .jer-brackets {
@@ -78,21 +78,19 @@
 }
 
 .jer-collection-text-edit {
-  /* width: 100%; */
   display: flex;
   flex-direction: column;
   gap: 0.3em;
 }
 
 .jer-collection-text-area {
-  /* width: 100%; */
   resize: both;
   padding-top: 0.2em;
   padding-left: 0.5em;
   padding-right: 0.5em;
-  padding-bottom: 0.5em;
+  padding-bottom: 0;
   overflow: hidden;
-  /* max-height: 80ch; */
+  max-height: 40em;
 }
 
 .jer-collection-input-button-row {
@@ -124,7 +122,8 @@
 }
 
 .jer-value-main-row {
-  display: 'flex';
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .jer-value-error-row {
@@ -139,13 +138,12 @@
   resize: none;
   margin: 0;
   height: 1.4em;
-  padding-top: 0.2em;
   padding-left: 0.5em;
   padding-right: 0.5em;
-  padding-bottom: 0.5em;
+  padding-bottom: 0;
   min-width: 6em;
   overflow: hidden;
-  /* max-height: 80ch; */
+  max-height: 30em;
 }
 
 input[type='checkbox'] {
