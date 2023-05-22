@@ -136,7 +136,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   return (
     <div
       id={generateUniqueId()}
-      className="fg-editor-container"
+      className="jer-editor-container"
       style={{ ...style, minWidth, maxWidth: maximumWidth }}
     >
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}

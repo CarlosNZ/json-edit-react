@@ -3,5 +3,5 @@ const { execSync } = require('child_process')
 
 console.log('Relaunching...')
 
-execSync('cp -R ../src/* ./src/fig-tree-editor/src')
-execSync('cp ../package.json ./src/fig-tree-editor')
+execSync('cp -R ../src/* ./src/json-edit-react/src')
+execSync('cp ../package.json ./src/json-edit-react')

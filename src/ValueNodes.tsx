@@ -31,7 +31,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
 
   return isEditing ? (
     <AutogrowTextArea
-      className="fg-input-text"
+      className="jer-input-text"
       name={path.join('.')}
       value={value}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
@@ -39,7 +39,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       handleKeyPress={handleKeyPress}
     />
   ) : (
-    <span onDoubleClick={() => setIsEditing(true)} className="fg-value-string">
+    <span onDoubleClick={() => setIsEditing(true)} className="jer-value-string">
       "{breakString(truncate(value, stringTruncate))}"
     </span>
   )
@@ -65,7 +65,7 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
 
   return isEditing ? (
     <input
-      className="fg-input-number"
+      className="jer-input-number"
       type="text"
       name={path.join('.')}
       value={value}
@@ -76,7 +76,7 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
       style={{ width: `${String(value).length / 1.5 + 2}em` }}
     />
   ) : (
-    <span onDoubleClick={() => setIsEditing(true)} className="fg-value-number">
+    <span onDoubleClick={() => setIsEditing(true)} className="jer-value-number">
       {value}
     </span>
   )
@@ -91,14 +91,14 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
 }) => {
   return isEditing ? (
     <input
-      className="fg-input-boolean"
+      className="jer-input-boolean"
       type="checkbox"
       name={path.join('.')}
       checked={value}
       onChange={() => setValue(!value)}
     />
   ) : (
-    <span onDoubleClick={() => setIsEditing(true)} className="fg-value-boolean">
+    <span onDoubleClick={() => setIsEditing(true)} className="jer-value-boolean">
       {String(value)}
     </span>
   )
@@ -106,21 +106,21 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
 
 export const NullValue: React.FC<InputProps> = ({ value, isEditing, setIsEditing }) =>
   isEditing ? (
-    <div className="fg-input-null">null</div>
+    <div className="jer-input-null">null</div>
   ) : (
-    <div onDoubleClick={() => setIsEditing(true)} className="fg-value-null">
+    <div onDoubleClick={() => setIsEditing(true)} className="jer-value-null">
       {String(value)}
     </div>
   )
 
 export const ObjectValue: React.FC<InputProps> = () => {
-  return <span className="fg-value-object">{'{ }'}</span>
+  return <span className="jer-value-object">{'{ }'}</span>
 }
 
 export const ArrayValue: React.FC<InputProps> = ({ value }) => {
-  return <span className="fg-value-array">{`[${value === null ? '' : value}]`}</span>
+  return <span className="jer-value-array">{`[${value === null ? '' : value}]`}</span>
 }
 
 export const InvalidValue: React.FC<InputProps> = () => {
-  return <span className="fg-value-invalid">Invalid value</span>
+  return <span className="jer-value-invalid">Invalid value</span>
 }

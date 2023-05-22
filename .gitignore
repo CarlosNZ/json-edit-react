@@ -38,7 +38,7 @@ typings/
 .DS_Store
 
 # Duplicated source code for GUI app
-demo/src/fig-tree-editor
+demo/src/json-edit-react
 
 # Dev playground file
 .npmrc

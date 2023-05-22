@@ -20,7 +20,7 @@ interface TextAreaProps {
   handleKeyPress: (e: React.KeyboardEvent) => void
 }
 
-export const generateUniqueId = () => `fg-${Math.ceil(Math.random() * 1000000)}`
+export const generateUniqueId = () => `jer-${Math.ceil(Math.random() * 1000000)}`
 
 // TO-DO Get init values from CSS Vars
 const initSize: { width: number | string; height: number | string } = {

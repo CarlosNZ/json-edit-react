@@ -104,14 +104,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   }
 
   return (
-    <div className="fg-component fg-value-component">
-      <div className="fg-value-main-row">
+    <div className="jer-component jer-value-component">
+      <div className="jer-value-main-row">
         {showArrayIndices && (
-          <label htmlFor={path.join('.')} className="fg-object-key">
+          <label htmlFor={path.join('.')} className="jer-object-key">
             {name}:{' '}
           </label>
         )}
-        <div className="fg-input-component">{getInputComponent(dataType, inputProps)}</div>
+        <div className="jer-input-component">{getInputComponent(dataType, inputProps)}</div>
         {isEditing ? (
           <InputButtons onOk={handleEdit} onCancel={handleCancel} />
         ) : (
@@ -140,7 +140,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
             ))}
           </select>
         )}
-        {!isEditing && error && <span className="fg-error-slug">{error}</span>}
+        {!isEditing && error && <span className="jer-error-slug">{error}</span>}
       </div>
     </div>
   )

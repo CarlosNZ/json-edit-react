@@ -43,7 +43,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
   const transitionTime = getComputedStyle(document.documentElement).getPropertyValue(
-    '--fg-expand-transition-time'
+    '--jer-expand-transition-time'
   )
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -120,8 +120,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const { rows, columns } = getTextDimensions(stringifiedValue, cols)
 
   return (
-    <div className="fg-component fb-collection-component">
-      <div className="fg-collection-header-row">
+    <div className="jer-component fb-collection-component">
+      <div className="jer-collection-header-row">
         <div
           onClick={() => {
             if (!isEditing) setCollapsed(!collapsed)
@@ -129,12 +129,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         >
           <Icon name="chevron" rotate={collapsed} />
         </div>
-        <div className="fg-collection-name">
+        <div className="jer-collection-name">
           {showLabel ? `${name}:` : null}
-          <span className="fg-brackets">{brackets.open}</span>
+          <span className="jer-brackets">{brackets.open}</span>
         </div>
-        <div className="fg-collection-item-count">{`${collectionSize} items`}</div>
-        {collapsed && <div className="fg-brackets">{brackets.close}</div>}
+        <div className="jer-collection-item-count">{`${collectionSize} items`}</div>
+        {collapsed && <div className="jer-brackets">{brackets.close}</div>}
         {!isEditing && (
           <EditButtons
             startEdit={
@@ -156,7 +156,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         )}
       </div>
       <div
-        className={'fg-collection-inner'}
+        className={'jer-collection-inner'}
         style={{
           marginLeft: `${props.indent}em`,
           maxHeight: collapsed ? 0 : `90em`,
@@ -167,23 +167,23 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         }}
       >
         {isEditing ? (
-          <div className="fg-collection-text-edit">
+          <div className="jer-collection-text-edit">
             <AutogrowTextArea
-              className="fg-collection-text-area"
+              className="jer-collection-text-area"
               name={path.join('.')}
               value={stringifiedValue}
               setValue={setStringifiedValue}
               isEditing={isEditing}
               handleKeyPress={handleKeyPress}
             />
-            <div className="fg-collection-input-button-row">
+            <div className="jer-collection-input-button-row">
               <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
             </div>
           </div>
         ) : (
           <>
             {keyValueArray.map(([key, value]) => (
-              <div className="fg-collection-element" key={key}>
+              <div className="jer-collection-element" key={key}>
                 {isCollection(value) ? (
                   <CollectionNode
                     key={key}
@@ -207,11 +207,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           </>
         )}
 
-        <div className={isEditing ? 'fg-collection-error-row' : 'fg-collection-error-row-edit'}>
-          {error && <span className="fg-error-slug">{error}</span>}
+        <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
+          {error && <span className="jer-error-slug">{error}</span>}
         </div>
       </div>
-      {!collapsed && <div className="fg-brackets">{brackets.close}</div>}
+      {!collapsed && <div className="jer-brackets">{brackets.close}</div>}
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import React from 'react'
-import { JsonEditor } from './fig-tree-editor/src'
-// import { Jsonditor } from 'fig-tree-editor'
+import { JsonEditor } from './json-edit-react/src'
+// import { Jsonditor } from 'json-edit-react
 import { useState } from 'react'
 import useUndo from 'use-undo'
 import {

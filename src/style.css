@@ -1,14 +1,14 @@
 :root {
-  --fg-form-border: 1px solid #ededf0;
-  --fg-form-border-focus: 1px solid #e2e2e2;
-  --fg-expand-transition-time: 0.2s;
+  --jer-form-border: 1px solid #ededf0;
+  --jer-form-border-focus: 1px solid #e2e2e2;
+  --jer-expand-transition-time: 0.2s;
 }
-.fg-editor-container {
-  background-color: var(--fg-bg-color);
-  font-family: var(--fg-main-font);
+.jer-editor-container {
+  background-color: var(--jer-bg-color);
+  font-family: var(--jer-main-font);
   font-size: 1.1em;
   /* font-size: 20px; */
-  color: var(--fg-main-color);
+  color: var(--jer-main-color);
   padding: 1em;
   /* letter-spacing: 0.06em; */
   font-weight: 400;
@@ -17,33 +17,33 @@
   border-radius: 0.5em;
 }
 
-.fg-editor-container textarea {
+.jer-editor-container textarea {
   /* width: 90%; */
-  border: var(--fg-form-border);
+  border: var(--jer-form-border);
   border-radius: 0.3em;
   outline: none;
 }
 
-.fg-editor-container textarea:focus {
-  border: var(--fg-form-border-focus);
+.jer-editor-container textarea:focus {
+  border: var(--jer-form-border-focus);
 }
 
-.fg-editor-container input {
-  border: var(--fg-form-border);
+.jer-editor-container input {
+  border: var(--jer-form-border);
   border-radius: 0.3em;
   outline: none;
-  font-family: var(--fg-main-font);
+  font-family: var(--jer-main-font);
 }
 
-.fg-editor-container input:focus {
-  border: var(--fg-form-border-focus);
+.jer-editor-container input:focus {
+  border: var(--jer-form-border-focus);
 }
 
-.fg-editor-container select {
+.jer-editor-container select {
   /* color: red; */
 }
 
-.fg-component {
+.jer-component {
 }
 
 .fb-collection-component {
@@ -51,40 +51,40 @@
   overflow: auto;
 }
 
-.fg-collection-header-row,
-.fg-value-main-row {
+.jer-collection-header-row,
+.jer-value-main-row {
   display: flex;
   min-height: 1.7em;
   gap: 0.3em;
   align-items: center;
 }
 
-.fg-collection-header-row {
+.jer-collection-header-row {
   display: flex;
 }
 
-.fg-brackets {
-  color: var(--fg-bracket-color);
+.jer-brackets {
+  color: var(--jer-bracket-color);
   font-weight: bold;
 }
 
-.fg-collection-item-count {
+.jer-collection-item-count {
   font-style: italic;
-  color: var(--fg-parenthetical-color);
+  color: var(--jer-parenthetical-color);
 }
 
-.fg-collection-inner {
+.jer-collection-inner {
   position: relative;
 }
 
-.fg-collection-text-edit {
+.jer-collection-text-edit {
   /* width: 100%; */
   display: flex;
   flex-direction: column;
   gap: 0.3em;
 }
 
-.fg-collection-text-area {
+.jer-collection-text-area {
   /* width: 100%; */
   resize: both;
   padding-top: 0.2em;
@@ -95,47 +95,47 @@
   /* max-height: 80ch; */
 }
 
-.fg-collection-input-button-row {
+.jer-collection-input-button-row {
   width: 90%;
   display: flex;
   justify-content: flex-end;
 }
 
-.fg-collection-element {
+.jer-collection-element {
 }
 
-.fg-collection-error-row {
+.jer-collection-error-row {
   position: absolute;
   bottom: 0;
 }
 
-.fg-collection-error-row-edit {
+.jer-collection-error-row-edit {
 }
 
-.fg-error-slug {
+.jer-error-slug {
   font-size: 0.8em;
   color: red;
   font-weight: bold;
   margin-left: 1em;
 }
 
-.fg-value-component {
+.jer-value-component {
   position: relative;
 }
 
-.fg-value-main-row {
+.jer-value-main-row {
   display: 'flex';
 }
 
-.fg-value-error-row {
+.jer-value-error-row {
   position: absolute;
 }
 
-.fg-value-string {
-  color: var(--fg-string-color);
+.jer-value-string {
+  color: var(--jer-string-color);
 }
 
-.fg-input-text {
+.jer-input-text {
   resize: none;
   margin: 0;
   height: 1.4em;
@@ -153,101 +153,101 @@ input[type='checkbox'] {
   outline: 1px solid red; */
 }
 
-.fg-value-number {
-  color: var(--fg-number-color);
+.jer-value-number {
+  color: var(--jer-number-color);
 }
 
-.fg-value-boolean {
-  color: var(--fg-boolean-color);
+.jer-value-boolean {
+  color: var(--jer-boolean-color);
 }
 
-.fg-value-null {
-  color: var(--fg-null-color);
+.jer-value-null {
+  color: var(--jer-null-color);
   font-variant: small-caps;
   font-weight: bold;
-  /* background-color: var(--fg-alt-bg-color); */
+  /* background-color: var(--jer-alt-bg-color); */
 }
 
-.fg-value-object {
+.jer-value-object {
 }
 
-.fg-value-array {
+.jer-value-array {
 }
 
-.fg-value-invalid {
+.jer-value-invalid {
   opacity: 0.5;
   font-style: italic;
 }
 
-/* .fg-input-text, */
-.fg-input-number {
+/* .jer-input-text, */
+.jer-input-number {
   height: 1.6em;
 }
 
-.fg-input-number {
+.jer-input-number {
   min-width: 3em;
 }
 
-.fg-input-component {
+.jer-input-component {
 }
 
-.fg-edit-buttons,
-.fg-input-buttons {
+.jer-edit-buttons,
+.jer-input-buttons {
   display: flex;
   gap: 0.4em;
   align-items: center;
   cursor: pointer;
 }
 
-.fg-edit-buttons {
+.jer-edit-buttons {
   margin-left: 0.5em;
 }
 
-.fg-edit-buttons {
+.jer-edit-buttons {
   opacity: 0;
 }
 
-.fg-edit-buttons:hover {
+.jer-edit-buttons:hover {
   opacity: 1;
   position: relative;
 }
 
-.fg-collection-header-row:hover > .fg-edit-buttons {
+.jer-collection-header-row:hover > .jer-edit-buttons {
   opacity: 1;
 }
 
-.fg-value-main-row:hover > .fg-edit-buttons {
+.jer-value-main-row:hover > .jer-edit-buttons {
   opacity: 1;
 }
 
-.fg-input-buttons {
+.jer-input-buttons {
 }
 
-.fg-icon-wrapper {
+.jer-icon-wrapper {
   height: 1.4em;
   opacity: 1;
   transition: 0.2s;
 }
 
-.fg-icon-wrapper:active {
+.jer-icon-wrapper:active {
   position: relative;
   top: 0.07em;
 }
 
-.fg-icon-wrapper:hover {
+.jer-icon-wrapper:hover {
   opacity: 0.85;
   transition: 0.2s;
   transform: scale(1.2);
 }
 
-.fg-copy-pulse {
+.jer-copy-pulse {
   position: relative;
 }
 
-.fg-copy-pulse:hover {
+.jer-copy-pulse:hover {
 }
 
-.fg-copy-pulse:after {
+.jer-copy-pulse:after {
   content: '';
   display: block;
   position: absolute;
@@ -258,11 +258,11 @@ input[type='checkbox'] {
   height: 100%;
   opacity: 0;
   transition: all 0.5s;
-  box-shadow: 0 0 15px 5px var(--fg-icon-copy-color);
+  box-shadow: 0 0 15px 5px var(--jer-icon-copy-color);
 }
 
-.fg-copy-pulse:active:after {
-  box-shadow: 0 0 0 0 var(--fg-icon-copy-color);
+.jer-copy-pulse:active:after {
+  box-shadow: 0 0 0 0 var(--jer-icon-copy-color);
   position: absolute;
   border-radius: 4em;
   left: 0;
@@ -271,41 +271,41 @@ input[type='checkbox'] {
   transition: 0s;
 }
 
-.fg-copy-pulse:active {
+.jer-copy-pulse:active {
   top: 0.07em;
 }
 
-.fg-rotate-90 {
+.jer-rotate-90 {
   transform: rotate(-90deg);
-  transition: transform var(--fg-expand-transition-time);
+  transition: transform var(--jer-expand-transition-time);
 }
 
-.fg-icon-chevron {
-  fill: var(--fg-icon-chevron-color);
-  transition: transform var(--fg-expand-transition-time);
+.jer-icon-chevron {
+  fill: var(--jer-icon-chevron-color);
+  transition: transform var(--jer-expand-transition-time);
 }
 
-.fg-icon-edit {
+.jer-icon-edit {
   fill: none;
-  stroke: var(--fg-icon-edit-color);
+  stroke: var(--jer-icon-edit-color);
 }
 
-.fg-icon-delete {
-  fill: var(--fg-icon-delete-color);
+.jer-icon-delete {
+  fill: var(--jer-icon-delete-color);
 }
 
-.fg-icon-add {
+.jer-icon-add {
   fill: none;
-  stroke: var(--fg-icon-add-color);
+  stroke: var(--jer-icon-add-color);
 }
 
-.fg-icon-copy {
-  fill: var(--fg-icon-copy-color);
+.jer-icon-copy {
+  fill: var(--jer-icon-copy-color);
 }
 
-.fg-icon-ok {
-  fill: var(--fg-icon-ok-color);
+.jer-icon-ok {
+  fill: var(--jer-icon-ok-color);
 }
-.fg-icon-cancel {
-  fill: var(--fg-icon-cancel-color);
+.jer-icon-cancel {
+  fill: var(--jer-icon-cancel-color);
 }

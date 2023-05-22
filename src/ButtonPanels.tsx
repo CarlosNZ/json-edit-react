@@ -46,19 +46,19 @@ export const EditButtons: React.FC<{
   }
 
   return (
-    <div className="fg-edit-buttons" style={isAdding ? { opacity: 1 } : undefined}>
+    <div className="jer-edit-buttons" style={isAdding ? { opacity: 1 } : undefined}>
       {enableClipboard && (
-        <div onClick={handleCopy} className="fg-icon-wrapper fg-copy-pulse">
+        <div onClick={handleCopy} className="jer-icon-wrapper jer-copy-pulse">
           <Icon name="copy" />
         </div>
       )}
       {startEdit && (
-        <div onClick={startEdit} className="fg-icon-wrapper">
+        <div onClick={startEdit} className="jer-icon-wrapper">
           <Icon name="edit" />
         </div>
       )}
       {handleDelete && (
-        <div onClick={handleDelete} className="fg-icon-wrapper">
+        <div onClick={handleDelete} className="jer-icon-wrapper">
           <Icon name="delete" />
         </div>
       )}
@@ -69,7 +69,7 @@ export const EditButtons: React.FC<{
             // For arrays, we don't need to add a key
             else handleAdd('')
           }}
-          className="fg-icon-wrapper"
+          className="jer-icon-wrapper"
         >
           <Icon name="add" />
         </div>
@@ -77,7 +77,7 @@ export const EditButtons: React.FC<{
       {isAdding && handleAdd && type === 'object' && (
         <>
           <input
-            className="fg-input-new-key"
+            className="jer-input-new-key"
             type="text"
             name="new-object-key"
             value={newKey}
@@ -110,11 +110,11 @@ export const InputButtons: React.FC<{
 }> = ({ onOk, onCancel, isCollection = false }) => {
   const size = isCollection ? '2em' : undefined
   return (
-    <div className="fg-input-buttons">
-      <div onClick={onOk} className="fg-icon-wrapper">
+    <div className="jer-input-buttons">
+      <div onClick={onOk} className="jer-icon-wrapper">
         <Icon name="ok" size={size} />
       </div>
-      <div onClick={onCancel} className="fg-icon-wrapper">
+      <div onClick={onCancel} className="jer-icon-wrapper">
         <Icon name="cancel" size={size} />
       </div>
     </div>
