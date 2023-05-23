@@ -114,6 +114,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   if (keySort && collectionType === 'object')
     keyValueArray.sort(typeof keySort === 'function' ? (a, b) => keySort(a[0], b[0]) : undefined)
 
+  // Used to determine the approximate height of the block, for setting the
+  // max-height in the collapsible interior
+  const numOfLines = JSON.stringify(data, null, 2).split('\n').length
+
   return (
     <div className="jer-component fb-collection-component">
       <div className="jer-collection-header-row">
@@ -154,10 +158,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         className={'jer-collection-inner'}
         style={{
           marginLeft: `${props.indent / 2}em`,
-          maxHeight: collapsed ? 0 : `90em`,
+          maxHeight: collapsed ? 0 : `${numOfLines * 1.6}em`,
           overflowY: collapsed ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately
-          // "height: auto" doesn't :(
+          // "height: auto" doesn't 😔
           transition: `max-height ${transitionTime}`,
         }}
       >
