@@ -7,7 +7,6 @@ import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
 import './style.css'
 import { useTheme } from './useTheme'
-import { generateUniqueId } from './AutogrowTextArea'
 
 const JsonEditor: React.FC<EditorProps> = ({
   data: srcData,
@@ -138,11 +137,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   }
 
   return (
-    <div
-      id={generateUniqueId()}
-      className="jer-editor-container"
-      style={{ ...style, minWidth, maxWidth: maximumWidth }}
-    >
+    <div className="jer-editor-container" style={{ ...style, minWidth, maxWidth: maximumWidth }}>
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>
   )

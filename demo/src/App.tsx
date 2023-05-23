@@ -107,7 +107,7 @@ const initPrefs = {
 
 function App() {
   const [rootName, setRootName] = useState('data')
-  const [indent, setIndent] = useState(1)
+  const [indent, setIndent] = useState(2)
   const [collapseLevel, setCollapseLevel] = useState(2)
   const [theme, setTheme] = useState<ThemeName>('default')
   const [allowEdit, setAllowEdit] = useState(true)

@@ -23,7 +23,7 @@ const defaultTheme = {
 
 export type ThemeProps = typeof defaultTheme
 export type ThemePropName = keyof Omit<ThemeProps, 'name'>
-export type ThemeName = keyof typeof themes
+export type ThemeNameKey = keyof typeof themes
 
 export const themes = {
   default: defaultTheme,

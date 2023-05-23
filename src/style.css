@@ -130,7 +130,6 @@
 
 .jer-value-main-row {
   display: flex;
-  flex-wrap: wrap;
 }
 
 .jer-value-error-row {

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
-import { getTextDimensions } from './textSizer'
 import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
 import { Icon } from './Icons'
 import './style.css'
@@ -154,11 +153,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       <div
         className={'jer-collection-inner'}
         style={{
-          marginLeft: `${props.indent}em`,
+          marginLeft: `${props.indent / 2}em`,
           maxHeight: collapsed ? 0 : `90em`,
           overflowY: collapsed ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately
-          // "height: auto" doesn't work :(
+          // "height: auto" doesn't :(
           transition: `max-height ${transitionTime}`,
         }}
       >
