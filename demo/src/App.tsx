@@ -124,8 +124,17 @@ function App() {
 
   return (
     <Flex m={2} align="flex-start" justify="space-evenly" wrap="wrap" gap={4}>
+      <HStack w="100%">
+        <VStack>
+          <HStack>
+            <Heading>json-edit-react</Heading>
+            <Text>by @CarlosNZ</Text>
+          </HStack>
+          <Text>React component for editing or viewing JSON/object data (Docs)</Text>
+        </VStack>
+      </HStack>
       <VStack minW={400}>
-        <Heading>JSON Editor</Heading>
+        <Heading>Demo</Heading>
         <JsonEditor
           data={data}
           rootName={rootName}
@@ -170,137 +179,147 @@ function App() {
         </VStack>
       </VStack>
 
-      <VStack flexBasis={500} backgroundColor="#f6f6f6">
-        <Heading>Options</Heading>
-        <FormControl>
-          <VStack align="flex-start" m={4}>
-            <HStack className="inputRow">
-              <FormLabel className="labelWidth" textAlign="right">
-                Theme
-              </FormLabel>
-              <div className="inputWidth" style={{ flexGrow: 1 }}>
-                <Select onChange={(e) => setTheme(e.target.value as ThemeName)} value={theme}>
-                  {Object.entries(themes).map(([theme, { name }]) => (
-                    <option value={theme} key={theme}>
-                      {name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            </HStack>
-            <HStack className="inputRow">
-              <FormLabel className="labelWidth" textAlign="right">
-                Data root name
-              </FormLabel>
-              <Input
-                className="inputWidth"
-                type="text"
-                value={rootName}
-                onChange={(e) => setRootName(e.target.value)}
-              />
-            </HStack>
-            <HStack className="inputRow">
-              <FormLabel className="labelWidth" textAlign="right">
-                Collapse level
-              </FormLabel>
-              <NumberInput
-                className="inputWidth"
-                min={0}
-                value={collapseLevel}
-                onChange={(value) => setCollapseLevel(Number(value))}
-              >
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
-            </HStack>
-            <HStack className="inputRow">
-              <FormLabel className="labelWidth" textAlign="right">
-                Indent level
-              </FormLabel>
-              <NumberInput
-                className="inputWidth"
-                max={8}
-                min={0}
-                value={indent}
-                onChange={(value) => setIndent(Number(value))}
-              >
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
-            </HStack>
-            <CheckboxGroup colorScheme="green">
+      <VStack flexBasis={500}>
+        <Heading textColor="jetBlack">Options</Heading>
+        <VStack backgroundColor="#f6f6f6">
+          <FormControl>
+            <VStack align="flex-start" m={4}>
               <HStack className="inputRow">
                 <FormLabel className="labelWidth" textAlign="right">
-                  Allow editing
+                  Theme
                 </FormLabel>
-                <Checkbox
-                  size="lg"
-                  isChecked={allowEdit}
-                  onChange={() => setAllowEdit(!allowEdit)}
-                />
+                <div className="inputWidth" style={{ flexGrow: 1 }}>
+                  <Select onChange={(e) => setTheme(e.target.value as ThemeName)} value={theme}>
+                    {Object.entries(themes).map(([theme, { name }]) => (
+                      <option value={theme} key={theme}>
+                        {name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
               </HStack>
               <HStack className="inputRow">
                 <FormLabel className="labelWidth" textAlign="right">
-                  Allow deletion
-                </FormLabel>
-                <Checkbox
-                  size="lg"
-                  isChecked={allowDelete}
-                  onChange={() => setAllowDelete(!allowDelete)}
-                />
-              </HStack>
-              <HStack className="inputRow">
-                <FormLabel className="labelWidth" textAlign="right">
-                  Allow Add
-                </FormLabel>
-                <Checkbox size="lg" isChecked={allowAdd} onChange={() => setAllowAdd(!allowAdd)} />
-              </HStack>
-              <HStack className="inputRow">
-                <FormLabel className="labelWidth" textAlign="right">
-                  Enable clipboard
-                </FormLabel>
-                <Checkbox
-                  size="lg"
-                  isChecked={allowCopy}
-                  onChange={() => setAllowCopy(!allowCopy)}
-                />
-              </HStack>
-              <HStack className="inputRow">
-                <FormLabel className="labelWidth" textAlign="right">
-                  Sort Object keys
-                </FormLabel>
-                <Checkbox size="lg" isChecked={sortKeys} onChange={() => setSortKeys(!sortKeys)} />
-              </HStack>
-              <HStack className="inputRow">
-                <FormLabel className="labelWidth" textAlign="right">
-                  Show Array indices
-                </FormLabel>
-                <Checkbox
-                  size="lg"
-                  isChecked={showIndices}
-                  onChange={() => setShowIndices(!showIndices)}
-                />
-              </HStack>
-              <HStack className="inputRow">
-                <FormLabel className="labelWidth" textAlign="right">
-                  Default new value
+                  Data root name
                 </FormLabel>
                 <Input
                   className="inputWidth"
                   type="text"
-                  value={defaultNewValue}
-                  onChange={(e) => setDefaultNewValue(e.target.value)}
+                  value={rootName}
+                  onChange={(e) => setRootName(e.target.value)}
                 />
               </HStack>
-            </CheckboxGroup>
-          </VStack>
-        </FormControl>
+              <HStack className="inputRow">
+                <FormLabel className="labelWidth" textAlign="right">
+                  Collapse level
+                </FormLabel>
+                <NumberInput
+                  className="inputWidth"
+                  min={0}
+                  value={collapseLevel}
+                  onChange={(value) => setCollapseLevel(Number(value))}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </HStack>
+              <HStack className="inputRow">
+                <FormLabel className="labelWidth" textAlign="right">
+                  Indent level
+                </FormLabel>
+                <NumberInput
+                  className="inputWidth"
+                  max={8}
+                  min={0}
+                  value={indent}
+                  onChange={(value) => setIndent(Number(value))}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </HStack>
+              <CheckboxGroup colorScheme="green">
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Allow editing
+                  </FormLabel>
+                  <Checkbox
+                    size="lg"
+                    isChecked={allowEdit}
+                    onChange={() => setAllowEdit(!allowEdit)}
+                  />
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Allow deletion
+                  </FormLabel>
+                  <Checkbox
+                    size="lg"
+                    isChecked={allowDelete}
+                    onChange={() => setAllowDelete(!allowDelete)}
+                  />
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Allow Add
+                  </FormLabel>
+                  <Checkbox
+                    size="lg"
+                    isChecked={allowAdd}
+                    onChange={() => setAllowAdd(!allowAdd)}
+                  />
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Enable clipboard
+                  </FormLabel>
+                  <Checkbox
+                    size="lg"
+                    isChecked={allowCopy}
+                    onChange={() => setAllowCopy(!allowCopy)}
+                  />
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Sort Object keys
+                  </FormLabel>
+                  <Checkbox
+                    size="lg"
+                    isChecked={sortKeys}
+                    onChange={() => setSortKeys(!sortKeys)}
+                  />
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Show Array indices
+                  </FormLabel>
+                  <Checkbox
+                    size="lg"
+                    isChecked={showIndices}
+                    onChange={() => setShowIndices(!showIndices)}
+                  />
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Default new value
+                  </FormLabel>
+                  <Input
+                    className="inputWidth"
+                    type="text"
+                    value={defaultNewValue}
+                    onChange={(e) => setDefaultNewValue(e.target.value)}
+                  />
+                </HStack>
+              </CheckboxGroup>
+            </VStack>
+          </FormControl>
+        </VStack>
       </VStack>
     </Flex>
   )

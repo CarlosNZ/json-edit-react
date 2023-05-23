@@ -1,9 +1,10 @@
 import { theme as base } from '@chakra-ui/react'
 
 const colors = {
-  background: '#f6f6f6',
-  // background: '#FCDC4D',
-  error: base.colors.red['500'],
+  background: '#FCDC4D',
+  midBlue: '#1079b2',
+  jetBlack: '#2B2B2B',
+  offWhite: '#f2f2f2',
   brandPrimary: {
     '50': '#FCEDE8',
     '100': '#F7CBC0',
