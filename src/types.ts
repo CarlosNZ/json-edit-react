@@ -1,10 +1,8 @@
-/**
- * MAIN
- */
-import { Measures } from '@react-hookz/web'
-import { ThemeProps } from './theme'
+import { ThemeName, ThemeProps } from './themes'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
+
+export type ThemeInput = ThemeName | Partial<ThemeProps> | [ThemeName, Partial<ThemeProps>]
 export interface EditorProps {
   data: object
   schema?: object
@@ -14,7 +12,7 @@ export interface EditorProps {
   onDelete?: UpdateMethod
   onAdd?: UpdateMethod
   enableClipboard?: boolean | CopyMethod
-  theme?: Partial<ThemeProps>
+  theme?: ThemeInput
   style?: React.CSSProperties
   indent?: number
   collapse?: boolean | number | FilterMethod

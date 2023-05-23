@@ -32,7 +32,7 @@ export const EditButtons: React.FC<{
     let type: CopyType = 'value'
     let value
     if (enableClipboard) {
-      switch (e.getModifierState('Shift')) {
+      switch (e.ctrlKey || e.metaKey) {
         case true:
           value = stringifyPath(path)
           type = 'path'

@@ -1,5 +1,5 @@
 import React from 'react'
-import { JsonEditor } from './json-edit-react/src'
+import { JsonEditor, ThemeName, themes } from './json-edit-react/src'
 // import { Jsonditor } from 'json-edit-react
 import { useState } from 'react'
 import useUndo from 'use-undo'
@@ -109,7 +109,7 @@ function App() {
   const [rootName, setRootName] = useState('data')
   const [indent, setIndent] = useState(1)
   const [collapseLevel, setCollapseLevel] = useState(2)
-  const [theme, setTheme] = useState('default')
+  const [theme, setTheme] = useState<ThemeName>('default')
   const [allowEdit, setAllowEdit] = useState(true)
   const [allowDelete, setAllowDelete] = useState(true)
   const [allowAdd, setAllowAdd] = useState(true)
@@ -129,6 +129,7 @@ function App() {
         <JsonEditor
           data={data}
           rootName={rootName}
+          theme={[theme, { borderColor: 'transparent' }]}
           indent={indent}
           onUpdate={({ newData }) => {
             setData(newData as any)
@@ -152,7 +153,8 @@ function App() {
           keySort={sortKeys}
           defaultValue={defaultNewValue}
           showArrayIndices={showIndices}
-          maxWidth={550}
+          maxWidth={600}
+          style={{ boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px' }}
         />
         <VStack w="100%" align="flex-end">
           <HStack w="100%" justify="space-between">
@@ -172,6 +174,20 @@ function App() {
         <Heading>Options</Heading>
         <FormControl>
           <VStack align="flex-start" m={4}>
+            <HStack className="inputRow">
+              <FormLabel className="labelWidth" textAlign="right">
+                Theme
+              </FormLabel>
+              <div className="inputWidth" style={{ flexGrow: 1 }}>
+                <Select onChange={(e) => setTheme(e.target.value as ThemeName)} value={theme}>
+                  {Object.entries(themes).map(([theme, { name }]) => (
+                    <option value={theme} key={theme}>
+                      {name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </HStack>
             <HStack className="inputRow">
               <FormLabel className="labelWidth" textAlign="right">
                 Data root name

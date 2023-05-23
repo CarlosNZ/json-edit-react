@@ -20,6 +20,7 @@
 
 .jer-editor-container textarea {
   /* width: 90%; */
+  color: var(--jer-input-color);
   border: var(--jer-form-border);
   border-radius: 0.3em;
   outline: none;
@@ -30,6 +31,7 @@
 }
 
 .jer-editor-container input {
+  color: var(--jer-input-color);
   border: var(--jer-form-border);
   border-radius: 0.3em;
   outline: none;
@@ -38,6 +40,11 @@
 
 .jer-editor-container input:focus {
   border: var(--jer-form-border-focus);
+}
+
+/* Input highlighted text */
+.jer-editor-container ::selection {
+  background: var(--jer-highlight-color);
 }
 
 .jer-editor-container select {
@@ -146,9 +153,14 @@
   max-height: 30em;
 }
 
-input[type='checkbox'] {
-  /* color: green;
-  outline: 1px solid red; */
+/* To prevent over-writing by UI libraries */
+.jer-type-select {
+  border: revert;
+  border-radius: revert;
+  padding: revert;
+  font-family: revert;
+  font-size: revert;
+  color: revert;
 }
 
 .jer-value-number {

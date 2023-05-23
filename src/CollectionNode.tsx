@@ -47,7 +47,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   )
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.shiftKey || e.ctrlKey)) handleEdit()
+    if (e.key === 'Enter' && (e.metaKey || e.shiftKey || e.ctrlKey)) handleEdit()
     else if (e.key === 'Escape') handleCancel()
   }
 

@@ -39,7 +39,13 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       handleKeyPress={handleKeyPress}
     />
   ) : (
-    <span onDoubleClick={() => setIsEditing(true)} className="jer-value-string">
+    <span
+      onDoubleClick={() => setIsEditing(true)}
+      onClick={(e) => {
+        if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
+      }}
+      className="jer-value-string"
+    >
       "{breakString(truncate(value, stringTruncate))}"
     </span>
   )

@@ -6,7 +6,7 @@ import { useWindowSize } from '@react-hookz/web'
 import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
 import './style.css'
-import { useTheme, defaultTheme } from './theme'
+import { useTheme } from './useTheme'
 import { generateUniqueId } from './AutogrowTextArea'
 
 const JsonEditor: React.FC<EditorProps> = ({
@@ -18,7 +18,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   onDelete: srcDelete = onUpdate,
   onAdd: srcAdd = onUpdate,
   enableClipboard = true,
-  theme = defaultTheme,
+  theme = 'default',
   style = {},
   indent = 2,
   collapse = false,
@@ -35,11 +35,15 @@ const JsonEditor: React.FC<EditorProps> = ({
   const [data, setData] = useState<object>(srcData)
   const collapseFilter = useCallback(getFilterMethod(collapse), [collapse])
 
-  useTheme(theme)
+  const { setTheme } = useTheme(theme)
 
   useEffect(() => {
     setData(srcData)
   }, [srcData])
+
+  useEffect(() => {
+    setTheme(theme)
+  }, [theme])
 
   const { width } = useWindowSize()
   const maximumWidth = Math.min(maxWidth, width - 10)

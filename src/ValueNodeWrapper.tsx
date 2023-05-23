@@ -130,6 +130,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
         {isEditing && (
           <select
             name={`${name}-type-select`}
+            className="jer-type-select"
             onChange={(e) => handleChangeDataType(e.target.value as DataType)}
             value={dataType}
           >

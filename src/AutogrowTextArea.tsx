@@ -31,10 +31,6 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
 }) => {
   const { current: uniqueId } = useRef(generateUniqueId())
 
-  const scrollPadding = Math.min(Math.max(value.length - 40, 0) * (0.8 / 60), 0.8)
-
-  console.log(value.length, scrollPadding)
-
   return (
     <div style={{ display: 'grid' }}>
       <textarea
