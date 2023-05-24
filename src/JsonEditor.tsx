@@ -33,9 +33,8 @@ const Editor: React.FC<EditorProps> = ({
   stringTruncate = 250,
 }) => {
   const [data, setData] = useState<object>(srcData)
-  const collapseFilter = useCallback(getFilterMethod(collapse), [collapse])
-
   const { styles, setTheme } = useTheme()
+  const collapseFilter = useCallback(getFilterMethod(collapse), [collapse])
 
   useEffect(() => {
     setData(srcData)
@@ -46,6 +45,7 @@ const Editor: React.FC<EditorProps> = ({
   }, [theme])
 
   const { width } = useWindowSize()
+  // So component can't overflow the current viewport
   const maximumWidth = Math.min(maxWidth, width - 10)
 
   const onEdit: OnChangeMethod = async (value, path) => {
@@ -114,7 +114,6 @@ const Editor: React.FC<EditorProps> = ({
     } else setData(newData)
   }
 
-  // const collapseFilter = getFilterMethod(collapse)
   const restrictEditFilter = getFilterMethod(restrictEdit)
   const restrictDeleteFilter = getFilterMethod(restrictDelete)
   const restrictAddFilter = getFilterMethod(restrictAdd)

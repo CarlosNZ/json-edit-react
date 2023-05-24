@@ -121,6 +121,7 @@ const defaultStyleProperties: { [Property in ThemeableElement]: keyof React.CSSP
   null: 'color',
   input: 'color',
   inputHighlight: 'backgroundColor',
+  error: 'color',
   iconCollection: 'fill',
   iconEdit: 'stroke',
   iconDelete: 'fill',

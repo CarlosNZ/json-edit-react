@@ -141,7 +141,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         <div
           className="jer-collection-item-count"
           style={styles.bracketContent}
-        >{`${collectionSize} items`}</div>
+        >{`${collectionSize} ${collectionSize === 1 ? 'item' : 'items'}`}</div>
         {collapsed && (
           <div className="jer-brackets" style={styles.bracket}>
             {brackets.close}
@@ -220,7 +220,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         )}
 
         <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
-          {error && <span className="jer-error-slug">{error}</span>}
+          {error && (
+            <span className="jer-error-slug" style={styles.error}>
+              {error}
+            </span>
+          )}
         </div>
       </div>
       {!collapsed && (

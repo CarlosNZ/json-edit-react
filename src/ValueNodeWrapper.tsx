@@ -143,7 +143,11 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
             ))}
           </select>
         )}
-        {!isEditing && error && <span className="jer-error-slug">{error}</span>}
+        {!isEditing && error && (
+          <span className="jer-error-slug" style={styles.error}>
+            {error}
+          </span>
+        )}
       </div>
     </div>
   )
