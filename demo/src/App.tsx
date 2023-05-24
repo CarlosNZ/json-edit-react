@@ -1,6 +1,5 @@
 import React from 'react'
 import { JsonEditor, ThemeName, themes } from './json-edit-react/src'
-// import { Jsonditor } from 'json-edit-react
 import { useState } from 'react'
 import useUndo from 'use-undo'
 import {

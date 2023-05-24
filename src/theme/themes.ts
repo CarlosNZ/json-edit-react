@@ -176,7 +176,7 @@ export interface DefaultTheme extends Theme {
 
 export type CompiledStyles = Record<ThemeableElement, React.CSSProperties>
 
-type ThemeName = keyof typeof themes
+export type ThemeName = keyof typeof themes
 export type ThemeInput =
   | ThemeName
   | Theme
