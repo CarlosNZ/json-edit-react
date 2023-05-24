@@ -1,5 +1,6 @@
 const defaultTheme: DefaultTheme = {
   displayName: 'Default',
+  fragments: { edit: 'rgb(42, 161, 152)' },
   styles: {
     container: {
       backgroundColor: '#f6f6f6',
@@ -15,9 +16,9 @@ const defaultTheme: DefaultTheme = {
     input: '#292929',
     inputHighlight: '#b3d8ff',
     iconCollection: 'rgb(0, 43, 54)',
-    iconEdit: 'rgb(42, 161, 152)',
+    iconEdit: 'edit',
     iconDelete: 'rgb(203, 75, 22)',
-    iconAdd: 'rgb(42, 161, 152)',
+    iconAdd: 'edit',
     iconCopy: 'rgb(38, 139, 210)',
     iconOk: 'green',
     iconCancel: 'rgb(203, 75, 22)',
@@ -69,45 +70,74 @@ export const themes: { default: DefaultTheme } & Record<string, Theme> = {
   },
   monoDark: {
     displayName: 'Black & White',
-    snippets: {
+    fragments: {
       lightText: { color: 'white' },
+      midGrey: '#5c5c5c',
     },
     styles: {
       container: ['lightText', { backgroundColor: 'black' }],
       property: 'lightText',
-      bracket: '#5c5c5c',
+      bracket: 'midGrey',
       bracketContent: '#4a4a4a',
       string: '#a8a8a8',
       number: '#666666',
       boolean: { color: '#848484', fontStyle: 'italic' },
       null: '#333333',
-      iconCollection: '5c5c5c',
-      iconEdit: '5c5c5c',
-      iconDelete: '5c5c5c',
-      iconAdd: '5c5c5c',
-      iconCopy: '5c5c5c',
-      iconOk: '5c5c5c',
-      iconCancel: '5c5c5c',
+      iconCollection: 'midGrey',
+      iconEdit: 'midGrey',
+      iconDelete: 'midGrey',
+      iconAdd: 'midGrey',
+      iconCopy: 'midGrey',
+      iconOk: 'midGrey',
+      iconCancel: 'midGrey',
     },
   },
   monoLight: {
+    fragments: { midGrey: '#a3a3a3' },
     displayName: 'White & Black',
     styles: {
       container: 'white',
       property: 'black',
-      bracket: '#a3a3a3',
+      bracket: 'midGrey',
       bracketContent: '#b5b5b5',
       string: '#575757',
       number: '#999999',
       boolean: { color: '#7b7b7b', fontStyle: 'italic' },
       null: '#cccccc',
-      iconCollection: 'a3a3a3',
-      iconEdit: 'a3a3a3',
-      iconDelete: 'a3a3a3',
-      iconAdd: 'a3a3a3',
-      iconCopy: 'a3a3a3',
-      iconOk: 'a3a3a3',
-      iconCancel: 'a3a3a3',
+      iconCollection: 'midGrey',
+      iconEdit: 'midGrey',
+      iconDelete: 'midGrey',
+      iconAdd: 'midGrey',
+      iconCopy: 'midGrey',
+      iconOk: 'midGrey',
+      iconCancel: 'midGrey',
+    },
+  },
+  candyWrapper: {
+    displayName: 'Candy Wrapper',
+    fragments: {
+      minty: { backgroundColor: '#F1FAEE' },
+      pale: { color: '#A8DADC' },
+      mid: { color: '#457B9D' },
+      dark: { color: '#1D3557' },
+      pop: { color: '#E63946' },
+      darkBlue: { color: '#2B2D42' },
+    },
+    styles: {
+      container: 'minty',
+      property: 'pop',
+      bracket: 'dark',
+      bracketContent: 'pale',
+      string: 'mid',
+      number: ['darkBlue', { fontSize: '85%' }],
+      boolean: ['mid', { fontStyle: 'italic', fontWeight: 'bold', fontSize: '80%' }],
+      null: ['#cccccc', { fontWeight: 'bold' }],
+      iconCollection: '#1D3557',
+      iconEdit: '#457B9D',
+      iconDelete: '#E63946',
+      iconAdd: '#2B2D42',
+      iconCopy: '#1D3557',
+      iconCancel: '#E63946',
     },
   },
 }
@@ -158,27 +188,32 @@ const themeableElements = [
 
 export type ThemeableElement = (typeof themeableElements)[number]
 
-export type ThemeValue = string | React.CSSProperties | Array<string | React.CSSProperties>
+export type ThemeValue = string | React.CSSProperties | Array<string | React.CSSProperties> // e.g. "#FFFFF", {backgroundColor: "grey"}, ["smaller", {fontWeight: "bold"}]
 
-export type ThemeElements = Record<ThemeableElement, ThemeValue>
+export type ThemeStyles = Record<ThemeableElement, ThemeValue>
 
-type Snippets = Record<string, React.CSSProperties>
+type Fragments = Record<string, React.CSSProperties | string>
 export interface Theme {
   displayName?: string
-  snippets?: Snippets
-  styles: Partial<ThemeElements>
+  fragments?: Fragments
+  styles: Partial<ThemeStyles>
 }
 
+// Same as "Theme", but we know every property in styles is defined
 export interface DefaultTheme extends Theme {
   displayName: 'Default'
-  styles: ThemeElements
+  styles: ThemeStyles
 }
 
+// All the fragments and shorthand defined in Theme is compiled into a single CSS
+// "Style" object before being passed to components
 export type CompiledStyles = Record<ThemeableElement, React.CSSProperties>
 
 export type ThemeName = keyof typeof themes
+
+// Value(s) passed to "setTheme" method
 export type ThemeInput =
   | ThemeName
   | Theme
-  | Partial<ThemeElements>
-  | [ThemeName, Theme | Partial<ThemeElements>]
+  | Partial<ThemeStyles>
+  | [ThemeName, Theme | Partial<ThemeStyles>]

@@ -4,7 +4,7 @@ import {
   emptyStyleObject,
   Theme,
   ThemeableElement,
-  ThemeElements,
+  ThemeStyles,
   ThemeInput,
   CompiledStyles,
   ThemeValue,
@@ -59,16 +59,16 @@ const buildStyleObject = (
   baseTheme: Theme,
   overrides: Theme = { styles: emptyStyleObject }
 ): CompiledStyles => {
-  // Replace snippets and merge properties
+  // Replace fragments and merge properties
   const [defaultStyles, baseStyles, overrideStyles] = [defaultTheme, baseTheme, overrides].map(
     (theme) => {
-      const { snippets, styles } = theme
+      const { fragments, styles } = theme
       const compiledStyles: Partial<CompiledStyles> = {}
       ;(Object.entries(styles) as [ThemeableElement, ThemeValue][]).forEach(([key, value]) => {
         const elements = Array.isArray(value) ? value : [value]
         const cssStyles = elements.reduce((acc: React.CSSProperties, curr) => {
           if (typeof curr === 'string') {
-            const style = snippets?.[curr] ?? curr
+            const style = fragments?.[curr] ?? curr
             switch (typeof style) {
               case 'string':
                 return { ...acc, [defaultStyleProperties[key as ThemeableElement]]: style }
@@ -105,8 +105,8 @@ const buildStyleObject = (
 }
 
 const isStyleObject = (
-  overrideObject: Theme | Partial<ThemeElements>
-): overrideObject is Partial<ThemeElements> => {
+  overrideObject: Theme | Partial<ThemeStyles>
+): overrideObject is Partial<ThemeStyles> => {
   return !('style' in overrideObject)
 }
 

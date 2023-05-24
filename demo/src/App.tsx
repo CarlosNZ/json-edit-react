@@ -1,5 +1,5 @@
 import React from 'react'
-import { JsonEditor, ThemeName, themes } from './json-edit-react/src'
+import { JsonEditor, ThemeName, Theme, themes } from './json-edit-react/src'
 import { useState } from 'react'
 import useUndo from 'use-undo'
 import {
@@ -189,11 +189,13 @@ function App() {
                 </FormLabel>
                 <div className="inputWidth" style={{ flexGrow: 1 }}>
                   <Select onChange={(e) => setTheme(e.target.value as ThemeName)} value={theme}>
-                    {Object.entries(themes).map(([theme, { name }]) => (
-                      <option value={theme} key={theme}>
-                        {name}
-                      </option>
-                    ))}
+                    {(Object.entries(themes) as [ThemeName, Theme][]).map(
+                      ([theme, { displayName }]) => (
+                        <option value={theme} key={theme}>
+                          {displayName}
+                        </option>
+                      )
+                    )}
                   </Select>
                 </div>
               </HStack>
