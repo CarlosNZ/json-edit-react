@@ -26,11 +26,9 @@
 }
 
 .jer-editor-container input {
-  color: var(--jer-input-color);
   border: var(--jer-form-border);
   border-radius: 0.3em;
   outline: none;
-  font-family: var(--jer-main-font);
 }
 
 .jer-editor-container input:focus {
@@ -154,18 +152,12 @@
 }
 
 .jer-value-number {
-  /* color: var(--jer-number-color); */
 }
 
 .jer-value-boolean {
-  /* color: var(--jer-boolean-color); */
 }
 
 .jer-value-null {
-  /* color: var(--jer-null-color);
-  font-variant: small-caps;
-  font-weight: bold; */
-  /* background-color: var(--jer-alt-bg-color); */
 }
 
 .jer-value-object {
