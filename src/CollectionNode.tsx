@@ -72,6 +72,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   }
 
   const handleAdd = (key: string) => {
+    setCollapsed(false)
     if (collectionType === 'array') {
       onAdd(defaultValue, [...path, (data as unknown[]).length]).then((error) => {
         if (error) showError(error)

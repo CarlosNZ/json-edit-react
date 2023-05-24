@@ -163,7 +163,7 @@ function App() {
           defaultValue={defaultNewValue}
           showArrayIndices={showIndices}
           maxWidth={600}
-          style={{ boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px' }}
+          className="block-shadow"
         />
         <VStack w="100%" align="flex-end">
           <HStack w="100%" justify="space-between">
@@ -181,7 +181,7 @@ function App() {
 
       <VStack flexBasis={500}>
         <Heading textColor="jetBlack">Options</Heading>
-        <VStack backgroundColor="#f6f6f6">
+        <VStack backgroundColor="#f6f6f6" borderRadius={10} className="block-shadow">
           <FormControl>
             <VStack align="flex-start" m={4}>
               <HStack className="inputRow">

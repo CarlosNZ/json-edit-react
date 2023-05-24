@@ -1,3 +1,8 @@
 # json-edit-react
 
-React component for editing or viewing JSON/object data.
+## A React component for editing or viewing JSON/object data
+
+<!-- Screenshot -->
+
+
+**json-edit-react** is a self-con

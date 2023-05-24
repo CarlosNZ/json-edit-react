@@ -19,6 +19,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   enableClipboard = true,
   theme = 'default',
   style = {},
+  className,
   indent = 2,
   collapse = false,
   restrictEdit = false,
@@ -137,7 +138,10 @@ const JsonEditor: React.FC<EditorProps> = ({
   }
 
   return (
-    <div className="jer-editor-container" style={{ ...style, minWidth, maxWidth: maximumWidth }}>
+    <div
+      className={'jer-editor-container ' + className}
+      style={{ ...style, minWidth, maxWidth: maximumWidth }}
+    >
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>
   )

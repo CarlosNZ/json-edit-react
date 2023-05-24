@@ -15,3 +15,7 @@
 .chakra-checkbox__control {
   margin-left: 5px;
 }
+
+.block-shadow {
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}

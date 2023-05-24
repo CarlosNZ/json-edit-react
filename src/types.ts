@@ -14,6 +14,7 @@ export interface EditorProps {
   enableClipboard?: boolean | CopyMethod
   theme?: ThemeInput
   style?: React.CSSProperties
+  className?: string
   indent?: number
   collapse?: boolean | number | FilterMethod
   showCount?: boolean | FilterMethod
