@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Icon } from './Icons'
+import { useTheme } from './theme'
 import './style.css'
 import { CollectionDataType, CollectionKey, CopyMethod, CopyType } from './types'
 
@@ -13,6 +14,7 @@ export const EditButtons: React.FC<{
   path: CollectionKey[]
   name: CollectionKey
 }> = ({ startEdit, handleDelete, handleAdd, enableClipboard, type, data, path, name }) => {
+  const { styles } = useTheme()
   const NEW_KEY_PROMPT = 'Enter new key'
   const [isAdding, setIsAdding] = useState(false)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
@@ -48,17 +50,21 @@ export const EditButtons: React.FC<{
   return (
     <div className="jer-edit-buttons" style={isAdding ? { opacity: 1 } : undefined}>
       {enableClipboard && (
-        <div onClick={handleCopy} className="jer-icon-wrapper jer-copy-pulse">
+        <div
+          onClick={handleCopy}
+          className="jer-icon-wrapper jer-copy-pulse"
+          style={styles.iconCopy}
+        >
           <Icon name="copy" />
         </div>
       )}
       {startEdit && (
-        <div onClick={startEdit} className="jer-icon-wrapper">
+        <div onClick={startEdit} className="jer-icon-wrapper" style={styles.iconEdit}>
           <Icon name="edit" />
         </div>
       )}
       {handleDelete && (
-        <div onClick={handleDelete} className="jer-icon-wrapper">
+        <div onClick={handleDelete} className="jer-icon-wrapper" style={styles.iconDelete}>
           <Icon name="delete" />
         </div>
       )}
@@ -70,6 +76,7 @@ export const EditButtons: React.FC<{
             else handleAdd('')
           }}
           className="jer-icon-wrapper"
+          style={styles.iconAdd}
         >
           <Icon name="add" />
         </div>
@@ -85,6 +92,7 @@ export const EditButtons: React.FC<{
             autoFocus
             onFocus={(e) => e.target.select()}
             onKeyDown={handleKeyPress}
+            style={{ ...styles.input }}
           />
           <InputButtons
             onOk={() => {
@@ -108,13 +116,14 @@ export const InputButtons: React.FC<{
   onCancel: () => void
   isCollection?: boolean
 }> = ({ onOk, onCancel, isCollection = false }) => {
+  const { styles } = useTheme()
   const size = isCollection ? '2em' : undefined
   return (
     <div className="jer-input-buttons">
-      <div onClick={onOk} className="jer-icon-wrapper">
+      <div onClick={onOk} className="jer-icon-wrapper" style={styles.iconOk}>
         <Icon name="ok" size={size} />
       </div>
-      <div onClick={onCancel} className="jer-icon-wrapper">
+      <div onClick={onCancel} className="jer-icon-wrapper" style={styles.iconCancel}>
         <Icon name="cancel" size={size} />
       </div>
     </div>

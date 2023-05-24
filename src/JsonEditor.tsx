@@ -5,12 +5,10 @@ import extract from 'object-property-extractor'
 import { useWindowSize } from '@react-hookz/web'
 import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
+import { useTheme, ThemeProvider } from './theme'
 import './style.css'
-import { useTheme } from './useTheme'
-import { useTheme as useTheme2 } from './theme/ThemeProvider'
-import { ThemeProvider } from './theme/ThemeProvider'
 
-const JsonEditor: React.FC<EditorProps> = ({
+const Editor: React.FC<EditorProps> = ({
   data: srcData,
   // schema,
   rootName = 'root',
@@ -37,22 +35,14 @@ const JsonEditor: React.FC<EditorProps> = ({
   const [data, setData] = useState<object>(srcData)
   const collapseFilter = useCallback(getFilterMethod(collapse), [collapse])
 
-  const { setTheme } = useTheme(theme)
-
-  const { styles, setTheme: setThemeNew } = useTheme2()
-
-  useEffect(() => {
-    setThemeNew('default')
-  }, [theme])
-
-  console.log('Styles', styles)
+  const { styles, setTheme } = useTheme()
 
   useEffect(() => {
     setData(srcData)
   }, [srcData])
 
   useEffect(() => {
-    setTheme(theme)
+    if (theme) setTheme(theme)
   }, [theme])
 
   const { width } = useWindowSize()
@@ -150,12 +140,18 @@ const JsonEditor: React.FC<EditorProps> = ({
   return (
     <div
       className={'jer-editor-container ' + className}
-      style={{ ...style, minWidth, maxWidth: maximumWidth }}
+      style={{ ...styles.container, ...style, minWidth, maxWidth: maximumWidth }}
     >
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>
   )
 }
+
+const JsonEditor: React.FC<EditorProps> = (props) => (
+  <ThemeProvider>
+    <Editor {...props} />
+  </ThemeProvider>
+)
 
 const updateDataObject = (
   data: CollectionData,

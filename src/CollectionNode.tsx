@@ -5,10 +5,12 @@ import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
 import { Icon } from './Icons'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
+import { useTheme } from './theme'
 
 export const isCollection = (value: unknown) => value !== null && typeof value == 'object'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name, ...props }) => {
+  const { styles } = useTheme()
   const {
     onEdit,
     onAdd,
@@ -126,15 +128,25 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           onClick={() => {
             if (!isEditing) setCollapsed(!collapsed)
           }}
+          style={styles.iconCollection}
         >
           <Icon name="chevron" rotate={collapsed} />
         </div>
         <div className="jer-collection-name">
-          {showLabel ? `${name}:` : null}
-          <span className="jer-brackets">{brackets.open}</span>
+          <span style={styles.property}>{showLabel ? `${name}:` : null}</span>
+          <span className="jer-brackets" style={styles.bracket}>
+            {brackets.open}
+          </span>
         </div>
-        <div className="jer-collection-item-count">{`${collectionSize} items`}</div>
-        {collapsed && <div className="jer-brackets">{brackets.close}</div>}
+        <div
+          className="jer-collection-item-count"
+          style={styles.bracketContent}
+        >{`${collectionSize} items`}</div>
+        {collapsed && (
+          <div className="jer-brackets" style={styles.bracket}>
+            {brackets.close}
+          </div>
+        )}
         {!isEditing && (
           <EditButtons
             startEdit={
@@ -211,7 +223,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           {error && <span className="jer-error-slug">{error}</span>}
         </div>
       </div>
-      {!collapsed && <div className="jer-brackets">{brackets.close}</div>}
+      {!collapsed && (
+        <div className="jer-brackets" style={styles.bracket}>
+          {brackets.close}
+        </div>
+      )}
     </div>
   )
 }

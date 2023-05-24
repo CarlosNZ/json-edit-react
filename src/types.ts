@@ -1,8 +1,6 @@
-import { ThemeNameKey, ThemeProps } from './themes'
+import { ThemeInput } from './theme'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
-
-export type ThemeInput = ThemeNameKey | Partial<ThemeProps> | [ThemeNameKey, Partial<ThemeProps>]
 export interface EditorProps {
   data: object
   schema?: object

@@ -18,6 +18,7 @@ import {
   ErrorString,
   ERROR_DISPLAY_TIME,
 } from './types'
+import { useTheme } from './theme'
 import './style.css'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
@@ -32,6 +33,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   showArrayIndices,
   stringTruncate,
 }) => {
+  const { styles } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState<typeof data | CollectionData>(data)
   const [error, setError] = useState<string | null>(null)
@@ -107,7 +109,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     <div className="jer-component jer-value-component">
       <div className="jer-value-main-row">
         {showArrayIndices && (
-          <label htmlFor={path.join('.')} className="jer-object-key">
+          <label htmlFor={path.join('.')} className="jer-object-key" style={styles.property}>
             {name}:{' '}
           </label>
         )}
