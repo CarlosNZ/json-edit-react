@@ -7,6 +7,8 @@ import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
 import './style.css'
 import { useTheme } from './useTheme'
+import { useTheme as useTheme2 } from './theme/ThemeProvider'
+import { ThemeProvider } from './theme/ThemeProvider'
 
 const JsonEditor: React.FC<EditorProps> = ({
   data: srcData,
@@ -36,6 +38,14 @@ const JsonEditor: React.FC<EditorProps> = ({
   const collapseFilter = useCallback(getFilterMethod(collapse), [collapse])
 
   const { setTheme } = useTheme(theme)
+
+  const { styles, setTheme: setThemeNew } = useTheme2()
+
+  useEffect(() => {
+    setThemeNew('default')
+  }, [theme])
+
+  console.log('Styles', styles)
 
   useEffect(() => {
     setData(srcData)
