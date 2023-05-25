@@ -54,7 +54,7 @@ function App() {
 
   useEffect(() => {
     reset(demoData[selectedData])
-  }, [selectedData])
+  }, [selectedData, reset])
 
   return (
     <Flex m={2} align="flex-start" justify="space-evenly" wrap="wrap" gap={4}>

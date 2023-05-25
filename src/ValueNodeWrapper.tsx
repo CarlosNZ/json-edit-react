@@ -110,7 +110,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
       <div className="jer-value-main-row">
         {showArrayIndices && (
-          <label htmlFor={path.join('.')} className="jer-object-key" style={styles.property}>
+          <label
+            htmlFor={path.join('.')}
+            className="jer-object-key"
+            style={{
+              ...styles.property,
+              minWidth: `${Math.min((name as string).length + 1, 5)}ch`,
+            }}
+          >
             {name}:{' '}
           </label>
         )}
