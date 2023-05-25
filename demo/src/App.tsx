@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react'
 import { JsonEditor, ThemeName, Theme, themes } from './json-edit-react/src'
+import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
+import { BiReset } from 'react-icons/bi'
 import { useState } from 'react'
 import useUndo from 'use-undo'
 import {
@@ -11,12 +13,12 @@ import {
   Button,
   Checkbox,
   Select,
-  Textarea,
   Spinner,
   HStack,
   VStack,
   Link,
   Image,
+  Icon,
   CheckboxGroup,
   Spacer,
   FormControl,
@@ -32,6 +34,7 @@ import {
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import demoData from './data'
 import './style.css'
+import { FilterMethod } from './json-edit-react/src/types'
 
 function App() {
   const [selectedData, setSelectedData] = useState('basic')
@@ -49,26 +52,64 @@ function App() {
   const toast = useToast()
 
   const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] = useUndo(
-    demoData[selectedData]
+    demoData[selectedData].data
   )
 
   useEffect(() => {
-    reset(demoData[selectedData])
+    reset(demoData[selectedData].data)
   }, [selectedData, reset])
 
+  const restrictEdit: FilterMethod | boolean = (() => {
+    const customRestrictor = demoData[selectedData]?.restrictEdit
+    if (customRestrictor) return (input) => !allowEdit || customRestrictor(input)
+    return !allowEdit
+  })()
+
+  const restrictDelete: FilterMethod | boolean = (() => {
+    const customRestrictor = demoData[selectedData]?.restrictDelete
+    if (customRestrictor) return (input) => !allowDelete || customRestrictor(input)
+    return !allowDelete
+  })()
+
   return (
-    <Flex m={2} align="flex-start" justify="space-evenly" wrap="wrap" gap={4}>
-      <HStack w="100%">
-        <VStack>
-          <HStack>
-            <Heading>json-edit-react</Heading>
-            <Text>by @CarlosNZ</Text>
+    <Flex px={8} pt={4} mb={10} align="flex-start" justify="space-evenly" wrap="wrap" gap={4}>
+      <HStack w="100%" justify="space-between" align="flex-start">
+        <VStack align="flex-start" gap={3}>
+          <HStack align="flex-end" mt={2} gap={4}>
+            <Heading as="h1" size="3xl" variant="other">
+              json-edit-<span style={{ color: '#EA3788' }}>react</span>
+            </Heading>
+            <Text pb={0.5} variant="primary">
+              by{' '}
+              <Link href="https://github.com/CarlosNZ" isExternal>
+                <strong>@CarlosNZ</strong>
+              </Link>
+            </Text>
           </HStack>
-          <Text>React component for editing or viewing JSON/object data (Docs)</Text>
+          <Heading variant="sub">
+            React component for editing or viewing JSON/object data •{' '}
+            <Link
+              href="https://github.com/CarlosNZ/json-edit-react#a-react-component-for-editing-or-viewing-jsonobject-data"
+              isExternal
+              color="accent"
+            >
+              Docs <Icon boxSize={4} as={FaExternalLinkAlt} />
+            </Link>
+          </Heading>
         </VStack>
+        <Flex align="center" gap={5}>
+          <a href="https://github.com/CarlosNZ/json-edit-react" target="_blank" rel="noreferrer">
+            <Icon boxSize="2em" as={FaGithub} color="secondary" />
+          </a>
+          <a href="https://www.npmjs.com/package/json-edit-react" target="_blank" rel="noreferrer">
+            <Icon boxSize="3em" as={FaNpm} color="secondary" />
+          </a>
+        </Flex>
       </HStack>
       <VStack minW={400}>
-        <Heading>Demo</Heading>
+        <Heading size="lg" variant="accent">
+          Demo
+        </Heading>
         <JsonEditor
           data={data}
           rootName={rootName}
@@ -90,8 +131,8 @@ function App() {
                   })
               : false
           }
-          restrictEdit={!allowEdit}
-          restrictDelete={!allowDelete}
+          restrictEdit={restrictEdit}
+          restrictDelete={restrictDelete}
           restrictAdd={!allowAdd}
           keySort={sortKeys}
           defaultValue={defaultNewValue}
@@ -99,22 +140,51 @@ function App() {
           maxWidth={650}
           className="block-shadow"
         />
-        <VStack w="100%" align="flex-end">
-          <HStack w="100%" justify="space-between">
-            <Button leftIcon={<ArrowBackIcon />} onClick={() => undo()} isDisabled={!canUndo}>
+        <VStack w="100%" align="flex-end" gap={4}>
+          <HStack w="100%" justify="space-between" mt={4}>
+            <Button
+              colorScheme="primaryScheme"
+              leftIcon={<ArrowBackIcon />}
+              onClick={() => undo()}
+              // visibility={canUndo ? 'visible' : 'hidden'}
+              isDisabled={!canUndo}
+            >
               Undo
             </Button>
             <Spacer />
-            <Button rightIcon={<ArrowForwardIcon />} onClick={() => redo()} isDisabled={!canRedo}>
+            <Button
+              colorScheme="primaryScheme"
+              rightIcon={<ArrowForwardIcon />}
+              onClick={() => redo()}
+              isDisabled={!canRedo}
+            >
               Redo
             </Button>
           </HStack>
-          <Button onClick={() => reset(demoData[selectedData])}>Reset</Button>
+          <HStack justify="space-between" w="100%">
+            <Text maxW={400} fontSize="md">
+              Undo/Redo functionality can be incorporated by using an additional hook, such as{' '}
+              <Link href="https://www.npmjs.com/package/use-undo" isExternal>
+                use-undo
+              </Link>
+            </Text>
+            <Button
+              colorScheme="accentScheme"
+              leftIcon={<BiReset />}
+              variant="outline"
+              onClick={() => reset(demoData[selectedData].data)}
+              visibility={canUndo ? 'visible' : 'hidden'}
+            >
+              Reset
+            </Button>
+          </HStack>
         </VStack>
       </VStack>
 
       <VStack flexBasis={500}>
-        <Heading textColor="jetBlack">Options</Heading>
+        <Heading size="lg" variant="accent">
+          Options
+        </Heading>
         <VStack backgroundColor="#f6f6f6" borderRadius={10} className="block-shadow">
           <FormControl>
             <VStack align="flex-start" m={4}>
@@ -140,18 +210,11 @@ function App() {
                 </FormLabel>
                 <div className="inputWidth" style={{ flexGrow: 1 }}>
                   <Select onChange={(e) => setSelectedData(e.target.value)} value={selectedData}>
-                    <option value="basic" key="basic">
-                      Basic
-                    </option>
-                    <option value="starWars" key="starWars">
-                      Star Wars
-                    </option>
-                    <option value="jsonPlaceholder" key="jsonPlaceholder">
-                      List of customers
-                    </option>
-                    <option value="vsCode" key="vsCode">
-                      VSCode settings file
-                    </option>
+                    {Object.entries(demoData).map(([key, { name }]) => (
+                      <option value={key} key={key}>
+                        {name}
+                      </option>
+                    ))}
                   </Select>
                 </div>
               </HStack>
@@ -201,68 +264,40 @@ function App() {
                   </NumberInputStepper>
                 </NumberInput>
               </HStack>
-              <CheckboxGroup colorScheme="green">
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Allow editing
-                  </FormLabel>
+              <CheckboxGroup colorScheme="primaryScheme">
+                <Flex w="100%" justify="flex-start">
+                  <Checkbox isChecked={allowEdit} onChange={() => setAllowEdit(!allowEdit)} w="50%">
+                    Allow Edit
+                  </Checkbox>
                   <Checkbox
-                    size="lg"
-                    isChecked={allowEdit}
-                    onChange={() => setAllowEdit(!allowEdit)}
-                  />
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Allow deletion
-                  </FormLabel>
-                  <Checkbox
-                    size="lg"
                     isChecked={allowDelete}
                     onChange={() => setAllowDelete(!allowDelete)}
-                  />
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
+                    w="50%"
+                  >
+                    Allow Delete
+                  </Checkbox>
+                </Flex>
+                <Flex w="100%" justify="flex-start">
+                  <Checkbox isChecked={allowAdd} onChange={() => setAllowAdd(!allowAdd)} w="50%">
                     Allow Add
-                  </FormLabel>
-                  <Checkbox
-                    size="lg"
-                    isChecked={allowAdd}
-                    onChange={() => setAllowAdd(!allowAdd)}
-                  />
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
+                  </Checkbox>
+                  <Checkbox isChecked={allowCopy} onChange={() => setAllowCopy(!allowCopy)} w="50%">
                     Enable clipboard
-                  </FormLabel>
-                  <Checkbox
-                    size="lg"
-                    isChecked={allowCopy}
-                    onChange={() => setAllowCopy(!allowCopy)}
-                  />
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
+                  </Checkbox>
+                </Flex>
+                <Flex w="100%" justify="flex-start">
+                  <Checkbox isChecked={sortKeys} onChange={() => setSortKeys(!sortKeys)} w="50%">
                     Sort Object keys
-                  </FormLabel>
+                  </Checkbox>
                   <Checkbox
-                    size="lg"
-                    isChecked={sortKeys}
-                    onChange={() => setSortKeys(!sortKeys)}
-                  />
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Show Array indices
-                  </FormLabel>
-                  <Checkbox
-                    size="lg"
                     isChecked={showIndices}
                     onChange={() => setShowIndices(!showIndices)}
-                  />
-                </HStack>
-                <HStack className="inputRow">
+                    w="50%"
+                  >
+                    Show Array indices
+                  </Checkbox>
+                </Flex>
+                <HStack className="inputRow" pt={2}>
                   <FormLabel className="labelWidth" textAlign="right">
                     Default new value
                   </FormLabel>
@@ -277,6 +312,9 @@ function App() {
             </VStack>
           </FormControl>
         </VStack>
+        <Box maxW={350} pt={4}>
+          {demoData[selectedData].description}
+        </Box>
       </VStack>
     </Flex>
   )

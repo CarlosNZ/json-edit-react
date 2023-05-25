@@ -141,6 +141,56 @@ export const themes: { default: DefaultTheme } & Record<string, Theme> = {
       iconCancel: '#E63946',
     },
   },
+  psychedelic: {
+    displayName: 'Psychedelic',
+    fragments: {
+      minty: { backgroundColor: '#F1FAEE' },
+      pale: { color: '#A8DADC' },
+      mid: { color: '#457B9D' },
+      dark: { color: '#1D3557' },
+      pop: { color: '#E63946' },
+      fluroYellow: 'rgb(242, 228, 21)',
+      fluroGreen: 'rgb(68, 255, 62)',
+      hotPink: '#f7379a',
+    },
+    styles: {
+      container: {
+        backgroundColor: 'unset',
+        background:
+          'linear-gradient(90deg, hsla(333, 100%, 53%, 1) 0%, hsla(33, 94%, 57%, 1) 100%)',
+        color: 'black',
+      },
+      property: 'black',
+      bracket: 'fluroYellow',
+      itemCount: ['pale', { opacity: 0.7 }],
+      string: 'white',
+      number: ['#33d9ff', { fontSize: '90%', fontWeight: 'bold' }],
+      boolean: ['fluroGreen', { fontWeight: 'bold', fontSize: '80%' }],
+      null: [
+        'black',
+        {
+          fontWeight: 'bold',
+          opacity: 0.3,
+          backgroundColor: 'rgb(255, 255, 255, 0.5)',
+          padding: '0 0.4em',
+          borderRadius: '0.4em',
+        },
+      ],
+      iconCollection: 'fluroYellow',
+      iconEdit: ['black'],
+      iconDelete: [
+        'hotPink',
+        {
+          backgroundColor: 'rgba(255, 255, 255, 0.4)',
+          borderRadius: '1em',
+        },
+      ],
+      iconAdd: ['white', { opacity: 0.5 }],
+      iconCopy: 'rgb(32, 84, 242)',
+      iconOk: 'fluroGreen',
+      iconCancel: 'hotPink',
+    },
+  },
 }
 
 export const emptyStyleObject: CompiledStyles = {

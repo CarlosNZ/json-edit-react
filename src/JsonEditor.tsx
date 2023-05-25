@@ -140,6 +140,8 @@ const Editor: React.FC<EditorProps> = ({
     translate,
   }
 
+  if (!styles) return null
+
   return (
     <div
       className={'jer-editor-container ' + className}
