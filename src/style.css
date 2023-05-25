@@ -160,6 +160,10 @@
 .jer-value-object {
 }
 
+.jer-object-key {
+  word-break: break-word;
+}
+
 .jer-value-array {
 }
 

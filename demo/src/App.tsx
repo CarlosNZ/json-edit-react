@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { JsonEditor, ThemeName, Theme, themes } from './json-edit-react/src'
 import { useState } from 'react'
 import useUndo from 'use-undo'
@@ -30,10 +30,11 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
-import { initData, simpleData } from './data'
+import demoData from './data'
 import './style.css'
 
 function App() {
+  const [selectedData, setSelectedData] = useState('basic')
   const [rootName, setRootName] = useState('data')
   const [indent, setIndent] = useState(4)
   const [collapseLevel, setCollapseLevel] = useState(2)
@@ -47,8 +48,13 @@ function App() {
   const [defaultNewValue, setDefaultNewValue] = useState('New data!')
   const toast = useToast()
 
-  const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] =
-    useUndo(initData)
+  const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] = useUndo(
+    demoData[selectedData]
+  )
+
+  useEffect(() => {
+    reset(demoData[selectedData])
+  }, [selectedData])
 
   return (
     <Flex m={2} align="flex-start" justify="space-evenly" wrap="wrap" gap={4}>
@@ -90,7 +96,7 @@ function App() {
           keySort={sortKeys}
           defaultValue={defaultNewValue}
           showArrayIndices={showIndices}
-          maxWidth={600}
+          maxWidth={650}
           className="block-shadow"
         />
         <VStack w="100%" align="flex-end">
@@ -103,7 +109,7 @@ function App() {
               Redo
             </Button>
           </HStack>
-          <Button onClick={() => reset(initData)}>Reset</Button>
+          <Button onClick={() => reset(demoData[selectedData])}>Reset</Button>
         </VStack>
       </VStack>
 
@@ -125,6 +131,27 @@ function App() {
                         </option>
                       )
                     )}
+                  </Select>
+                </div>
+              </HStack>
+              <HStack className="inputRow">
+                <FormLabel className="labelWidth" textAlign="right">
+                  Demo data
+                </FormLabel>
+                <div className="inputWidth" style={{ flexGrow: 1 }}>
+                  <Select onChange={(e) => setSelectedData(e.target.value)} value={selectedData}>
+                    <option value="basic" key="basic">
+                      Basic
+                    </option>
+                    <option value="starWars" key="starWars">
+                      Star Wars
+                    </option>
+                    <option value="jsonPlaceholder" key="jsonPlaceholder">
+                      List of customers
+                    </option>
+                    <option value="vsCode" key="vsCode">
+                      VSCode settings file
+                    </option>
                   </Select>
                 </div>
               </HStack>
