@@ -1,8 +1,9 @@
 // import { theme as base } from '@chakra-ui/react'
+import './styles.css'
 
 const fonts = {
-  //   body: 'system-ui, sans-serif',
-  heading: 'Poppins, sans-serif',
+  body: 'Work Sans, sans-serif',
+  heading: 'Montserrat Alternates, sans-serif',
 }
 
 export default fonts

@@ -7,11 +7,17 @@ import components from './components'
 const theme = extendTheme({
   styles: {
     global: {
-      'html, body': { bgColor: 'background', fontSize: '14px' },
+      'html, body': {
+        // background:
+        //   'radial-gradient(circle, hsla(191, 53%, 85%, 1) 0%, hsla(192, 45%, 67%, 1) 100%);',
+        backgroundColor: 'background',
+        height: '100vh',
+        fontSize: '14px',
+      },
       a: {
-        color: 'brandDark.700',
+        // color: 'brandDark.700',
         fontWeight: 600,
-        _hover: { color: 'brandDark.600', textDecoration: 'underline' },
+        _hover: { textDecoration: 'underline' },
       },
     },
   },
