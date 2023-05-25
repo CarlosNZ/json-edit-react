@@ -33,6 +33,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   showArrayIndices,
   stringTruncate,
   indent,
+  translate,
 }) => {
   const { styles } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
@@ -134,6 +135,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
               enableClipboard={enableClipboard}
               name={name}
               path={path}
+              translate={translate}
             />
           )
         )}

@@ -1,4 +1,5 @@
 import { ThemeInput } from './theme'
+import { LocalisedStrings, TranslateMethod } from './localisation'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
 export interface EditorProps {
@@ -26,6 +27,7 @@ export interface EditorProps {
   minWidth?: string | number
   maxWidth?: number
   stringTruncate?: number
+  translations?: Partial<LocalisedStrings>
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -91,6 +93,7 @@ interface BaseNodeProps {
   showArrayIndices: boolean
   stringTruncate: number
   indent: number
+  translate: TranslateMethod
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {

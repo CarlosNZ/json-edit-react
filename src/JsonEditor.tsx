@@ -6,6 +6,7 @@ import { useWindowSize } from '@react-hookz/web'
 import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
 import { useTheme, ThemeProvider } from './theme'
+import { getTranslateMethod } from './localisation'
 import './style.css'
 
 const Editor: React.FC<EditorProps> = ({
@@ -31,10 +32,12 @@ const Editor: React.FC<EditorProps> = ({
   minWidth = 250,
   maxWidth = 600,
   stringTruncate = 250,
+  translations = {},
 }) => {
   const [data, setData] = useState<object>(srcData)
   const { styles, setTheme } = useTheme()
   const collapseFilter = useCallback(getFilterMethod(collapse), [collapse])
+  const translate = useCallback(getTranslateMethod(translations), [translations])
 
   useEffect(() => {
     setData(srcData)
@@ -65,7 +68,7 @@ const Editor: React.FC<EditorProps> = ({
         path,
       })
       if (result === undefined) setData(newData)
-      if (result === false) return 'Update unsuccessful'
+      if (result === false) return translate('ERROR_UPDATE')
       return result // Error string
     } else setData(newData)
   }
@@ -87,7 +90,7 @@ const Editor: React.FC<EditorProps> = ({
         path,
       })
       if (result === undefined) setData(newData)
-      if (result === false) return 'Delete unsuccessful'
+      if (result === false) return translate('ERROR_DELETE')
       return result // Error string
     } else setData(newData)
   }
@@ -109,7 +112,7 @@ const Editor: React.FC<EditorProps> = ({
         path,
       })
       if (result === undefined) setData(newData)
-      if (result === false) return 'Adding node unsuccessful'
+      if (result === false) return translate('ERROR_ADD')
       return result // Error string
     } else setData(newData)
   }
@@ -134,6 +137,7 @@ const Editor: React.FC<EditorProps> = ({
     indent,
     defaultValue,
     stringTruncate,
+    translate,
   }
 
   return (
