@@ -114,7 +114,7 @@ const defaultStyleProperties: { [Property in ThemeableElement]: keyof React.CSSP
   container: 'backgroundColor',
   property: 'color',
   bracket: 'color',
-  bracketContent: 'color',
+  itemCount: 'color',
   string: 'color',
   number: 'color',
   boolean: 'color',

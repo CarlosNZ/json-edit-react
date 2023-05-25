@@ -141,10 +141,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
             {brackets.open}
           </span>
         </div>
-        <div
-          className="jer-collection-item-count"
-          style={styles.bracketContent}
-        >{`${collectionSize} ${collectionSize === 1 ? 'item' : 'items'}`}</div>
+        <div className="jer-collection-item-count" style={styles.itemCount}>{`${collectionSize} ${
+          collectionSize === 1 ? 'item' : 'items'
+        }`}</div>
         {collapsed && (
           <div className="jer-brackets" style={styles.bracket}>
             {brackets.close}
