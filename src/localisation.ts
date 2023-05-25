@@ -10,12 +10,11 @@ const localisedStrings = {
 }
 
 export type LocalisedStrings = typeof localisedStrings
-type TranslationKey = keyof LocalisedStrings
-export type TranslateMethod = (key: TranslationKey, count?: number) => string
+export type TranslateMethod = (key: keyof LocalisedStrings, count?: number) => string
 
 const translate = (
   translations: Partial<LocalisedStrings>,
-  key: TranslationKey,
+  key: keyof LocalisedStrings,
   count?: number
 ): string => {
   const string = key in translations ? (translations[key] as string) : localisedStrings[key]
