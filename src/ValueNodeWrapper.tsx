@@ -18,6 +18,7 @@ import {
   ErrorString,
   ERROR_DISPLAY_TIME,
 } from './types'
+import { useTheme } from './theme'
 import './style.css'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
@@ -31,7 +32,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   restrictDeleteFilter,
   showArrayIndices,
   stringTruncate,
+  indent,
 }) => {
+  const { styles } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState<typeof data | CollectionData>(data)
   const [error, setError] = useState<string | null>(null)
@@ -104,10 +107,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   }
 
   return (
-    <div className="jer-component jer-value-component">
+    <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
       <div className="jer-value-main-row">
         {showArrayIndices && (
-          <label htmlFor={path.join('.')} className="jer-object-key">
+          <label htmlFor={path.join('.')} className="jer-object-key" style={styles.property}>
             {name}:{' '}
           </label>
         )}
@@ -141,7 +144,11 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
             ))}
           </select>
         )}
-        {!isEditing && error && <span className="jer-error-slug">{error}</span>}
+        {!isEditing && error && (
+          <span className="jer-error-slug" style={styles.error}>
+            {error}
+          </span>
+        )}
       </div>
     </div>
   )

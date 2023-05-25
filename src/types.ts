@@ -1,8 +1,6 @@
-import { ThemeNameKey, ThemeProps } from './themes'
+import { ThemeInput } from './theme'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
-
-export type ThemeInput = ThemeNameKey | Partial<ThemeProps> | [ThemeNameKey, Partial<ThemeProps>]
 export interface EditorProps {
   data: object
   schema?: object
@@ -92,11 +90,11 @@ interface BaseNodeProps {
   restrictAddFilter: FilterMethod
   showArrayIndices: boolean
   stringTruncate: number
+  indent: number
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
   data: CollectionData
-  indent: number
   collapseFilter: FilterMethod
   onAdd: OnChangeMethod
   keySort: boolean | CompareMethod

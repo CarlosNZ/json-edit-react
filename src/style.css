@@ -2,17 +2,12 @@
   --jer-form-border: 1px solid #ededf0;
   --jer-form-border-focus: 1px solid #e2e2e2;
   --jer-expand-transition-time: 0.2s;
+  --jer-highlight-color: #b3d8ff;
 }
 .jer-editor-container {
-  background-color: var(--jer-bg-color);
-  border: 1px solid var(--jer-border-color);
-  font-family: var(--jer-main-font);
   font-size: 1.1em;
   /* font-size: 20px; */
-  color: var(--jer-main-color);
   padding: 1em;
-  /* letter-spacing: 0.06em; */
-  font-weight: 400;
   margin-top: 1em;
   margin-bottom: 1em;
   border-radius: 0.5em;
@@ -31,11 +26,9 @@
 }
 
 .jer-editor-container input {
-  color: var(--jer-input-color);
   border: var(--jer-form-border);
   border-radius: 0.3em;
   outline: none;
-  font-family: var(--jer-main-font);
 }
 
 .jer-editor-container input:focus {
@@ -44,7 +37,7 @@
 
 /* Input highlighted text */
 .jer-editor-container ::selection {
-  background: var(--jer-highlight-color);
+  background-color: var(--jer-highlight-color);
 }
 
 .jer-editor-container select {
@@ -71,13 +64,9 @@
 }
 
 .jer-brackets {
-  color: var(--jer-bracket-color);
-  font-weight: bold;
 }
 
 .jer-collection-item-count {
-  font-style: italic;
-  color: var(--jer-parenthetical-color);
 }
 
 .jer-collection-inner {
@@ -118,9 +107,6 @@
 }
 
 .jer-error-slug {
-  font-size: 0.8em;
-  color: red;
-  font-weight: bold;
   margin-left: 1em;
 }
 
@@ -163,18 +149,12 @@
 }
 
 .jer-value-number {
-  color: var(--jer-number-color);
 }
 
 .jer-value-boolean {
-  color: var(--jer-boolean-color);
 }
 
 .jer-value-null {
-  color: var(--jer-null-color);
-  font-variant: small-caps;
-  font-weight: bold;
-  /* background-color: var(--jer-alt-bg-color); */
 }
 
 .jer-value-object {

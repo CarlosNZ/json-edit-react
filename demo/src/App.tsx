@@ -1,6 +1,5 @@
 import React from 'react'
-import { JsonEditor, ThemeName, themes } from './json-edit-react/src'
-// import { Jsonditor } from 'json-edit-react
+import { JsonEditor, ThemeName, Theme, themes } from './json-edit-react/src'
 import { useState } from 'react'
 import useUndo from 'use-undo'
 import {
@@ -31,83 +30,12 @@ import {
   useToast,
 } from '@chakra-ui/react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
+import { initData, simpleData } from './data'
 import './style.css'
-
-const initData = {
-  name: 'My Name',
-  age: 45,
-  children: [
-    { name: 'Leo', age: 12 },
-    { name: 'Hugo', age: 9 },
-    { name: 'Bodhi', age: 5 },
-  ],
-}
-
-const initData2 = {
-  one: 1,
-  two: 'TWO',
-  three: true,
-  four: null,
-  five: 6.5,
-  six: 10,
-  seven: [1, 'string', false, ['a', 'b']],
-  eight: {
-    one: 'ONE',
-    two: [1, 'string', false, ['a', 'b']],
-    three: { a: 'A', b: 'B' },
-    four: () => true,
-  },
-  nine: undefined,
-}
-
-const initBasic = {
-  firstName: 'Carl',
-  lastName: 'Smith',
-  likes: 'Ice Cream',
-  anArray: [1, 2, 3],
-  age: 99,
-  nested: { a: 'A ONE', b: true },
-  oneMore: false,
-  Nothing: null,
-  function: () => true,
-}
-
-const initPrefs = {
-  server: {
-    isItTrue: true,
-    thumbnailMaxWidth: 300,
-    thumbnailMaxHeight: 300,
-    hoursSchedule: [
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
-    ],
-    SMTPConfig: {
-      host: 'server.msupply.foundation',
-      port: 465,
-      secure: true,
-      user: 'irims-dev@sussol.net',
-      defaultFromName: 'Conforma',
-      defaultFromEmail: 'no-reply@msupply.foundation',
-    },
-    backupFilePrefix: 'conforma_fiji_backup',
-    backupSchedule: [15],
-    maxBackupDurationDays: null,
-    testingEmail: 'fergusroachenz@gmail.com',
-  },
-  web: {
-    paginationPresets: [2, 5, 10, 20, 50],
-    defaultLanguageCode: 'en_fiji',
-    googleAnalyticsId: 'G-8RQHL40GLG',
-    siteHost: 'conforma-demo.msupply.org:50006',
-    arrayWithObjects: [
-      { one: 1, two: 'second' },
-      { one: 99, two: 'third' },
-    ],
-  },
-}
 
 function App() {
   const [rootName, setRootName] = useState('data')
-  const [indent, setIndent] = useState(2)
+  const [indent, setIndent] = useState(4)
   const [collapseLevel, setCollapseLevel] = useState(2)
   const [theme, setTheme] = useState<ThemeName>('default')
   const [allowEdit, setAllowEdit] = useState(true)
@@ -120,7 +48,7 @@ function App() {
   const toast = useToast()
 
   const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] =
-    useUndo(initPrefs)
+    useUndo(initData)
 
   return (
     <Flex m={2} align="flex-start" justify="space-evenly" wrap="wrap" gap={4}>
@@ -138,7 +66,7 @@ function App() {
         <JsonEditor
           data={data}
           rootName={rootName}
-          theme={[theme, { borderColor: 'transparent' }]}
+          theme={theme}
           indent={indent}
           onUpdate={({ newData }) => {
             setData(newData as any)
@@ -175,7 +103,7 @@ function App() {
               Redo
             </Button>
           </HStack>
-          <Button onClick={() => reset(initPrefs)}>Reset</Button>
+          <Button onClick={() => reset(initData)}>Reset</Button>
         </VStack>
       </VStack>
 
@@ -190,11 +118,13 @@ function App() {
                 </FormLabel>
                 <div className="inputWidth" style={{ flexGrow: 1 }}>
                   <Select onChange={(e) => setTheme(e.target.value as ThemeName)} value={theme}>
-                    {Object.entries(themes).map(([theme, { name }]) => (
-                      <option value={theme} key={theme}>
-                        {name}
-                      </option>
-                    ))}
+                    {(Object.entries(themes) as [ThemeName, Theme][]).map(
+                      ([theme, { displayName }]) => (
+                        <option value={theme} key={theme}>
+                          {displayName}
+                        </option>
+                      )
+                    )}
                   </Select>
                 </div>
               </HStack>
@@ -232,7 +162,7 @@ function App() {
                 </FormLabel>
                 <NumberInput
                   className="inputWidth"
-                  max={8}
+                  max={12}
                   min={0}
                   value={indent}
                   onChange={(value) => setIndent(Number(value))}

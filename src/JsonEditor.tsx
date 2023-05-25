@@ -5,10 +5,10 @@ import extract from 'object-property-extractor'
 import { useWindowSize } from '@react-hookz/web'
 import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
+import { useTheme, ThemeProvider } from './theme'
 import './style.css'
-import { useTheme } from './useTheme'
 
-const JsonEditor: React.FC<EditorProps> = ({
+const Editor: React.FC<EditorProps> = ({
   data: srcData,
   // schema,
   rootName = 'root',
@@ -20,7 +20,7 @@ const JsonEditor: React.FC<EditorProps> = ({
   theme = 'default',
   style = {},
   className,
-  indent = 2,
+  indent = 4,
   collapse = false,
   restrictEdit = false,
   restrictDelete = false,
@@ -33,19 +33,19 @@ const JsonEditor: React.FC<EditorProps> = ({
   stringTruncate = 250,
 }) => {
   const [data, setData] = useState<object>(srcData)
+  const { styles, setTheme } = useTheme()
   const collapseFilter = useCallback(getFilterMethod(collapse), [collapse])
-
-  const { setTheme } = useTheme(theme)
 
   useEffect(() => {
     setData(srcData)
   }, [srcData])
 
   useEffect(() => {
-    setTheme(theme)
+    if (theme) setTheme(theme)
   }, [theme])
 
   const { width } = useWindowSize()
+  // So component can't overflow the current viewport
   const maximumWidth = Math.min(maxWidth, width - 10)
 
   const onEdit: OnChangeMethod = async (value, path) => {
@@ -114,7 +114,6 @@ const JsonEditor: React.FC<EditorProps> = ({
     } else setData(newData)
   }
 
-  // const collapseFilter = getFilterMethod(collapse)
   const restrictEditFilter = getFilterMethod(restrictEdit)
   const restrictDeleteFilter = getFilterMethod(restrictDelete)
   const restrictAddFilter = getFilterMethod(restrictAdd)
@@ -140,12 +139,18 @@ const JsonEditor: React.FC<EditorProps> = ({
   return (
     <div
       className={'jer-editor-container ' + className}
-      style={{ ...style, minWidth, maxWidth: maximumWidth }}
+      style={{ ...styles.container, ...style, minWidth, maxWidth: maximumWidth }}
     >
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>
   )
 }
+
+const JsonEditor: React.FC<EditorProps> = (props) => (
+  <ThemeProvider>
+    <Editor {...props} />
+  </ThemeProvider>
+)
 
 const updateDataObject = (
   data: CollectionData,

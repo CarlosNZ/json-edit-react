@@ -5,10 +5,12 @@ import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
 import { Icon } from './Icons'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
+import { useTheme } from './theme'
 
 export const isCollection = (value: unknown) => value !== null && typeof value == 'object'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name, ...props }) => {
+  const { styles } = useTheme()
   const {
     onEdit,
     onAdd,
@@ -120,21 +122,34 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const numOfLines = JSON.stringify(data, null, 2).split('\n').length
 
   return (
-    <div className="jer-component fb-collection-component">
+    <div
+      className="jer-component fb-collection-component"
+      style={{ marginLeft: `${path.length === 0 ? 0 : props.indent / 2}em` }}
+    >
       <div className="jer-collection-header-row">
         <div
           onClick={() => {
             if (!isEditing) setCollapsed(!collapsed)
           }}
+          style={styles.iconCollection}
         >
           <Icon name="chevron" rotate={collapsed} />
         </div>
         <div className="jer-collection-name">
-          {showLabel ? `${name}:` : null}
-          <span className="jer-brackets">{brackets.open}</span>
+          <span style={styles.property}>{showLabel ? `${name}:` : null}</span>
+          <span className="jer-brackets" style={styles.bracket}>
+            {brackets.open}
+          </span>
         </div>
-        <div className="jer-collection-item-count">{`${collectionSize} items`}</div>
-        {collapsed && <div className="jer-brackets">{brackets.close}</div>}
+        <div
+          className="jer-collection-item-count"
+          style={styles.bracketContent}
+        >{`${collectionSize} ${collectionSize === 1 ? 'item' : 'items'}`}</div>
+        {collapsed && (
+          <div className="jer-brackets" style={styles.bracket}>
+            {brackets.close}
+          </div>
+        )}
         {!isEditing && (
           <EditButtons
             startEdit={
@@ -158,7 +173,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       <div
         className={'jer-collection-inner'}
         style={{
-          marginLeft: `${props.indent / 2}em`,
+          // marginLeft: `${props.indent / 2}em`,
           maxHeight: collapsed ? 0 : `${numOfLines * 1.6}em`,
           overflowY: collapsed ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately
@@ -208,10 +223,18 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         )}
 
         <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
-          {error && <span className="jer-error-slug">{error}</span>}
+          {error && (
+            <span className="jer-error-slug" style={styles.error}>
+              {error}
+            </span>
+          )}
         </div>
       </div>
-      {!collapsed && <div className="jer-brackets">{brackets.close}</div>}
+      {!collapsed && (
+        <div className="jer-brackets" style={styles.bracket}>
+          {brackets.close}
+        </div>
+      )}
     </div>
   )
 }

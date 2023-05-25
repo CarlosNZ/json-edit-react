@@ -1,6 +1,7 @@
 import React from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { InputProps } from './types'
+import { useTheme } from './theme'
 import './style.css'
 
 export const truncate = (string: string, length = 200) =>
@@ -16,6 +17,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   handleCancel,
   stringTruncate,
 }) => {
+  const { styles } = useTheme()
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) handleEdit()
     else if (e.key === 'Escape') handleCancel()
@@ -45,6 +47,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
       }}
       className="jer-value-string"
+      style={styles.string}
     >
       "{breakString(truncate(value, stringTruncate))}"
     </span>
@@ -60,6 +63,7 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
   handleEdit,
   handleCancel,
 }) => {
+  const { styles } = useTheme()
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleEdit()
     else if (e.key === 'Escape') handleCancel()
@@ -82,7 +86,11 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
       style={{ width: `${String(value).length / 1.5 + 2}em` }}
     />
   ) : (
-    <span onDoubleClick={() => setIsEditing(true)} className="jer-value-number">
+    <span
+      onDoubleClick={() => setIsEditing(true)}
+      className="jer-value-number"
+      style={styles.number}
+    >
       {value}
     </span>
   )
@@ -95,6 +103,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   path,
   setIsEditing,
 }) => {
+  const { styles } = useTheme()
   return isEditing ? (
     <input
       className="jer-input-boolean"
@@ -104,20 +113,26 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       onChange={() => setValue(!value)}
     />
   ) : (
-    <span onDoubleClick={() => setIsEditing(true)} className="jer-value-boolean">
+    <span
+      onDoubleClick={() => setIsEditing(true)}
+      className="jer-value-boolean"
+      style={styles.boolean}
+    >
       {String(value)}
     </span>
   )
 }
 
-export const NullValue: React.FC<InputProps> = ({ value, isEditing, setIsEditing }) =>
-  isEditing ? (
+export const NullValue: React.FC<InputProps> = ({ value, isEditing, setIsEditing }) => {
+  const { styles } = useTheme()
+  return isEditing ? (
     <div className="jer-input-null">null</div>
   ) : (
-    <div onDoubleClick={() => setIsEditing(true)} className="jer-value-null">
+    <div onDoubleClick={() => setIsEditing(true)} className="jer-value-null" style={styles.null}>
       {String(value)}
     </div>
   )
+}
 
 export const ObjectValue: React.FC<InputProps> = () => {
   return <span className="jer-value-object">{'{ }'}</span>
