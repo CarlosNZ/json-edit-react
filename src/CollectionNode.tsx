@@ -122,7 +122,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const numOfLines = JSON.stringify(data, null, 2).split('\n').length
 
   return (
-    <div className="jer-component fb-collection-component">
+    <div
+      className="jer-component fb-collection-component"
+      style={{ marginLeft: `${path.length === 0 ? 0 : props.indent / 2}em` }}
+    >
       <div className="jer-collection-header-row">
         <div
           onClick={() => {
@@ -170,7 +173,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       <div
         className={'jer-collection-inner'}
         style={{
-          marginLeft: `${props.indent / 2}em`,
+          // marginLeft: `${props.indent / 2}em`,
           maxHeight: collapsed ? 0 : `${numOfLines * 1.6}em`,
           overflowY: collapsed ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately

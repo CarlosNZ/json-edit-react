@@ -90,11 +90,11 @@ interface BaseNodeProps {
   restrictAddFilter: FilterMethod
   showArrayIndices: boolean
   stringTruncate: number
+  indent: number
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
   data: CollectionData
-  indent: number
   collapseFilter: FilterMethod
   onAdd: OnChangeMethod
   keySort: boolean | CompareMethod

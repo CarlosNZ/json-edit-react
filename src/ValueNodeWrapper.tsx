@@ -32,6 +32,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   restrictDeleteFilter,
   showArrayIndices,
   stringTruncate,
+  indent,
 }) => {
   const { styles } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
@@ -106,7 +107,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   }
 
   return (
-    <div className="jer-component jer-value-component">
+    <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
       <div className="jer-value-main-row">
         {showArrayIndices && (
           <label htmlFor={path.join('.')} className="jer-object-key" style={styles.property}>

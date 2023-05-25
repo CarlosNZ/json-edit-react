@@ -20,7 +20,7 @@ const Editor: React.FC<EditorProps> = ({
   theme = 'default',
   style = {},
   className,
-  indent = 2,
+  indent = 4,
   collapse = false,
   restrictEdit = false,
   restrictDelete = false,
