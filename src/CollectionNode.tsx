@@ -18,9 +18,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
     restrictEditFilter,
     restrictDeleteFilter,
     restrictAddFilter,
+    collapseFilter,
+    enableClipboard,
+    indent,
     keySort,
     showArrayIndices,
     defaultValue,
+    translate,
   } = props
   const [isEditing, setIsEditing] = useState(false)
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
@@ -29,15 +33,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const collectionSize = Object.keys(data).length
   const filterProps = { key: name, path, level: path.length, value: data, size: collectionSize }
 
-  const [collapsed, setCollapsed] = useState(props.collapseFilter(filterProps))
+  const [collapsed, setCollapsed] = useState(collapseFilter(filterProps))
 
   useEffect(() => {
     setStringifiedValue(JSON.stringify(data, null, 2))
   }, [data])
 
   useEffect(() => {
-    setCollapsed(props.collapseFilter(filterProps))
-  }, [props.collapseFilter])
+    setCollapsed(collapseFilter(filterProps))
+  }, [collapseFilter])
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
@@ -67,7 +71,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         if (error) showError(error)
       })
     } catch {
-      setError('Invalid JSON')
+      setError(translate('ERROR_INVALID_JSON'))
       console.log('Invalid JSON')
       return
     }
@@ -80,7 +84,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         if (error) showError(error)
       })
     } else if (key in data) {
-      showError('Key already exists')
+      showError(translate('ERROR_KEY_EXISTS'))
       return
     } else
       onAdd(defaultValue, [...path, key]).then((error) => {
@@ -124,7 +128,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   return (
     <div
       className="jer-component fb-collection-component"
-      style={{ marginLeft: `${path.length === 0 ? 0 : props.indent / 2}em` }}
+      style={{ marginLeft: `${path.length === 0 ? 0 : indent / 2}em` }}
     >
       <div className="jer-collection-header-row">
         <div
@@ -141,9 +145,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
             {brackets.open}
           </span>
         </div>
-        <div className="jer-collection-item-count" style={styles.itemCount}>{`${collectionSize} ${
-          collectionSize === 1 ? 'item' : 'items'
-        }`}</div>
+        <div className="jer-collection-item-count" style={styles.itemCount}>
+          {collectionSize === 1
+            ? translate('ITEM_SINGLE', 1)
+            : translate('ITEMS_MULTIPLE', collectionSize)}
+        </div>
         {collapsed && (
           <div className="jer-brackets" style={styles.bracket}>
             {brackets.close}
@@ -161,18 +167,18 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
             }
             handleAdd={canAdd ? handleAdd : undefined}
             handleDelete={canDelete ? handleDelete : undefined}
-            enableClipboard={props.enableClipboard}
+            enableClipboard={enableClipboard}
             type={collectionType}
             data={data}
             name={name}
             path={path}
+            translate={translate}
           />
         )}
       </div>
       <div
         className={'jer-collection-inner'}
         style={{
-          // marginLeft: `${props.indent / 2}em`,
           maxHeight: collapsed ? 0 : `${numOfLines * 1.6}em`,
           overflowY: collapsed ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately

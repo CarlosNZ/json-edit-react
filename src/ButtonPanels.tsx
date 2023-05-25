@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { Icon } from './Icons'
 import { useTheme } from './theme'
-import './style.css'
+import { TranslateMethod } from './localisation'
 import { CollectionDataType, CollectionKey, CopyMethod, CopyType } from './types'
+import './style.css'
 
-export const EditButtons: React.FC<{
+interface EditButtonProps {
   startEdit?: () => void
   handleDelete?: () => void
   enableClipboard: boolean | CopyMethod
@@ -13,9 +14,22 @@ export const EditButtons: React.FC<{
   data: unknown
   path: CollectionKey[]
   name: CollectionKey
-}> = ({ startEdit, handleDelete, handleAdd, enableClipboard, type, data, path, name }) => {
+  translate: TranslateMethod
+}
+
+export const EditButtons: React.FC<EditButtonProps> = ({
+  startEdit,
+  handleDelete,
+  handleAdd,
+  enableClipboard,
+  type,
+  data,
+  path,
+  name,
+  translate,
+}) => {
   const { styles } = useTheme()
-  const NEW_KEY_PROMPT = 'Enter new key'
+  const NEW_KEY_PROMPT = translate('KEY_NEW')
   const [isAdding, setIsAdding] = useState(false)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
 
