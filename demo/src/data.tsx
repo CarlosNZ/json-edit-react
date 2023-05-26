@@ -1779,7 +1779,13 @@ const data = {
         node. Let's see how long it lasts... 😉
       </Text>
     ),
-    data: { 'Coming soon...': true },
+    collapse: 3,
+    restrictEdit: ({ key, value, level, path, size }) => {
+      return level === 0 || key === 'Title' || key === 'Visitors'
+    },
+    restrictDelete: () => true,
+    restrictAdd: ({ level }) => level === 0,
+    data: {},
   },
   editTheme: {
     name: '🎨 Edit this theme!',

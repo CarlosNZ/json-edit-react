@@ -44,3 +44,4 @@ demo/src/json-edit-react
 .npmrc
 temp.js
 .vscode/settings.json
+demo/src/firebaseConfig.json

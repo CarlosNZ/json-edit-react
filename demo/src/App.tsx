@@ -2,22 +2,20 @@ import React, { useEffect, useRef } from 'react'
 import { JsonEditor, ThemeName, Theme, themes } from './json-edit-react/src'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
+import { AiOutlineCloudUpload } from 'react-icons/ai'
 import { useState } from 'react'
 import useUndo from 'use-undo'
 import {
   Box,
-  Center,
   Flex,
   Heading,
   Text,
   Button,
   Checkbox,
   Select,
-  Spinner,
   HStack,
   VStack,
   Link,
-  Image,
   Icon,
   CheckboxGroup,
   Spacer,
@@ -33,6 +31,7 @@ import {
 } from '@chakra-ui/react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import demoData from './data'
+import { useDatabase } from './useDatabase'
 import './style.css'
 import { FilterMethod } from './json-edit-react/src/types'
 
@@ -49,18 +48,29 @@ function App() {
   const [sortKeys, setSortKeys] = useState(false)
   const [showIndices, setShowIndices] = useState(true)
   const [defaultNewValue, setDefaultNewValue] = useState('New data!')
+  const [isSaving, setIsSaving] = useState(false)
   const previousThemeName = useRef('') // Used when resetting after theme editing
   const toast = useToast()
+
+  const { guestbook, updateGuestbook } = useDatabase()
 
   const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] = useUndo(
     demoData[selectedData].data
   )
 
   useEffect(() => {
-    if (selectedData !== 'editTheme') {
-      const newData = demoData[selectedData]
-      if (newData.collapse) setCollapseLevel(newData.collapse)
-      reset(newData.data)
+    switch (selectedData) {
+      case 'editTheme':
+        return
+      case 'liveGuestbook':
+        setCollapseLevel(demoData.liveGuestbook.collapse)
+        if (!guestbook) reset({ 'Oops!': "We couldn't load this data, sorry " })
+        else reset(guestbook)
+        return
+      default:
+        const newData = demoData[selectedData]
+        if (newData.collapse) setCollapseLevel(newData.collapse)
+        reset(newData.data)
     }
   }, [selectedData, reset])
 
@@ -99,10 +109,28 @@ function App() {
     }
   }
 
-  const handleReset = () => {
-    console.log('Theme', theme)
-    if (selectedData === 'editTheme') reset(themes[previousThemeName.current])
-    else reset(demoData[selectedData].data)
+  const handleReset = async () => {
+    switch (selectedData) {
+      case 'editTheme':
+        reset(themes[previousThemeName.current])
+        return
+      case 'liveGuestbook':
+        setIsSaving(true)
+        await updateGuestbook(data)
+        setIsSaving(false)
+        toast({
+          title: 'Whoosh!',
+          description: 'Data saved!',
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        })
+        console.log(guestbook)
+        reset(data)
+        return
+      default:
+        reset(demoData[selectedData].data)
+    }
   }
 
   return (
@@ -151,7 +179,7 @@ function App() {
           theme={theme}
           indent={indent}
           onUpdate={({ newData }) => {
-            setData(newData as any)
+            setData(newData)
             if (selectedData === 'editTheme') setTheme(newData as any)
           }}
           collapse={collapseLevel}
@@ -206,12 +234,13 @@ function App() {
             </Text>
             <Button
               colorScheme="accentScheme"
-              leftIcon={<BiReset />}
+              leftIcon={selectedData === 'liveGuestbook' ? <AiOutlineCloudUpload /> : <BiReset />}
               variant="outline"
               onClick={handleReset}
               visibility={canUndo ? 'visible' : 'hidden'}
+              isLoading={isSaving}
             >
-              Reset
+              {selectedData === 'liveGuestbook' ? 'Push to the cloud' : 'Reset'}
             </Button>
           </HStack>
         </VStack>
