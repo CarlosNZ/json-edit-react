@@ -116,7 +116,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
             className="jer-object-key"
             style={{
               ...styles.property,
-              minWidth: `${Math.min((name as string).length + 1, 5)}ch`,
+              minWidth: `${Math.min(String(name).length + 1, 5)}ch`,
             }}
           >
             {name}:{' '}

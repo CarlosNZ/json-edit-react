@@ -56,7 +56,7 @@ function App() {
   )
 
   useEffect(() => {
-    reset(demoData[selectedData].data)
+    if (selectedData !== 'editTheme') reset(demoData[selectedData].data)
   }, [selectedData, reset])
 
   const restrictEdit: FilterMethod | boolean = (() => {
@@ -70,6 +70,13 @@ function App() {
     if (customRestrictor) return (input) => !allowDelete || customRestrictor(input)
     return !allowDelete
   })()
+
+  const handleChangeData = (e) => {
+    setSelectedData(e.target.value)
+    if (e.target.value === 'editTheme') {
+      reset(themes[theme])
+    }
+  }
 
   return (
     <Flex px={8} pt={4} mb={10} align="flex-start" justify="space-evenly" wrap="wrap" gap={4}>
@@ -87,7 +94,8 @@ function App() {
             </Text>
           </HStack>
           <Heading variant="sub">
-            React component for editing or viewing JSON/object data •{' '}
+            A <span style={{ color: '#011C27' }}>React</span> component for editing or viewing
+            JSON/object data •{' '}
             <Link
               href="https://github.com/CarlosNZ/json-edit-react#a-react-component-for-editing-or-viewing-jsonobject-data"
               isExternal
@@ -117,6 +125,7 @@ function App() {
           indent={indent}
           onUpdate={({ newData }) => {
             setData(newData as any)
+            if (selectedData === 'editTheme') setTheme(newData as any)
           }}
           collapse={collapseLevel}
           enableClipboard={
@@ -209,7 +218,7 @@ function App() {
                   Demo data
                 </FormLabel>
                 <div className="inputWidth" style={{ flexGrow: 1 }}>
-                  <Select onChange={(e) => setSelectedData(e.target.value)} value={selectedData}>
+                  <Select onChange={handleChangeData} value={selectedData}>
                     {Object.entries(demoData).map(([key, { name }]) => (
                       <option value={key} key={key}>
                         {name}

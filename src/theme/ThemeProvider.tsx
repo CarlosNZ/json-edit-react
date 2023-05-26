@@ -107,7 +107,7 @@ const buildStyleObject = (
 const isStyleObject = (
   overrideObject: Theme | Partial<ThemeStyles>
 ): overrideObject is Partial<ThemeStyles> => {
-  return !('style' in overrideObject)
+  return !('styles' in overrideObject)
 }
 
 const defaultStyleProperties: { [Property in ThemeableElement]: keyof React.CSSProperties } = {

@@ -21,18 +21,19 @@ const data = {
       </Flex>
     ),
     data: {
-      string: 'This is a string value',
+      string: 'Welcome to the Editor 😀',
       number: 99,
       boolean: true,
       nothing: null,
       children: [
+        'Edit a value by clicking the "edit" icon, or double-clicking the value.',
         'You can change the type of any value',
         { nested: 'An object inside an array', basic: false, value: 6.66 },
         'You can add new values to objects or arrays',
       ],
       object: {
         name: 'Basic object data',
-        info: 'You can edit individual values, or even a whole JSON node at once.',
+        info: 'You can edit individual values, or even a whole object node at once.',
       },
       'Keyboard interaction': {
         '"Enter" to submit change': '(or Ctrl/Cmd-Enter when editing whole JSON nodes)',
@@ -1764,10 +1765,11 @@ const data = {
     name: '🎨 Edit this theme!',
     description: (
       <Text>
-        You can edit the UI theme live. See <Link>here</Link> for theming information.
+        This is the Theme object being used right now. Edit it live, and watch it change. See{' '}
+        <Link>here</Link> for theming information.
       </Text>
     ),
-    data: { 'Coming soon...': true },
+    data: {},
   },
 }
 
