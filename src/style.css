@@ -186,19 +186,26 @@
 }
 
 .jer-edit-buttons,
-.jer-input-buttons {
+.jer-confirm-buttons {
   display: flex;
-  gap: 0.4em;
   align-items: center;
   cursor: pointer;
 }
 
-.jer-edit-buttons {
-  margin-left: 0.5em;
+.jer-input-buttons {
+  gap: 0.4em;
 }
 
 .jer-edit-buttons {
+  gap: 0.4em;
+  margin-left: 0.5em;
   opacity: 0;
+}
+
+.jer-confirm-buttons {
+  gap: 0.2em;
+  margin-left: 0.4em;
+  font-size: 150%;
 }
 
 .jer-edit-buttons:hover {

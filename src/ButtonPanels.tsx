@@ -66,11 +66,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   return (
     <div className="jer-edit-buttons" style={isAdding ? { opacity: 1 } : undefined}>
       {enableClipboard && (
-        <div
-          onClick={handleCopy}
-          // className="jer-icon-wrapper jer-copy-pulse"
-          // style={styles.iconCopy}
-        >
+        <div onClick={handleCopy} className="jer-copy-pulse">
           <Icon name="copy" />
         </div>
       )}
@@ -140,12 +136,12 @@ export const InputButtons: React.FC<{
 }> = ({ onOk, onCancel, isCollection = false }) => {
   const size = isCollection ? '2em' : undefined
   return (
-    <div className="jer-input-buttons">
+    <div className="jer-confirm-buttons">
       <div onClick={onOk}>
-        <Icon name="ok" size={size} />
+        <Icon name="ok" />
       </div>
       <div onClick={onCancel}>
-        <Icon name="cancel" size={size} />
+        <Icon name="cancel" />
       </div>
     </div>
   )

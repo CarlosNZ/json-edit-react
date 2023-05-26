@@ -27,9 +27,9 @@ export const Icon: React.FC<IconProps> = ({ name, rotate }): JSX.Element => {
     case 'copy':
       return <HiOutlineClipboardCopy {...commonProps} style={styles.iconCopy} />
     case 'ok':
-      return <FiCheckCircle {...commonProps} style={styles.iconOk} />
+      return <FiCheckCircle {...commonProps} style={{ fontSize: '90%', ...styles.iconOk }} />
     case 'cancel':
-      return <TiCancel {...commonProps} style={styles.iconCancel} size="2em" />
+      return <TiCancel {...commonProps} style={{ fontSize: '130%', ...styles.iconCancel }} />
     case 'chevron':
       return (
         <FaChevronDown
