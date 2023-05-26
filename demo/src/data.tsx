@@ -3,7 +3,7 @@ import { Flex, Box, Link, Text } from '@chakra-ui/react'
 
 const data = {
   basic: {
-    name: 'Basic',
+    name: '🔰 Basic',
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>Play round with the JSON structure, and test out various options above.</Text>
@@ -20,6 +20,7 @@ const data = {
         </Box>
       </Flex>
     ),
+    collapse: 2,
     data: {
       string: 'Welcome to the Editor 😀',
       number: 99,
@@ -46,13 +47,25 @@ const data = {
   starWars: {
     name: '🚀 Star Wars',
     description: (
-      <Text>
-        A massive chunk of <em>Star Wars</em> data scraped from{' '}
-        <Link href="https://swapi.dev/" isExternal>
-          <strong>The Star Wars API</strong>
-        </Link>
-      </Text>
+      <Flex flexDir="column" gap={2}>
+        <Text>
+          A massive chunk of <em>Star Wars</em> data scraped from{' '}
+          <Link href="https://swapi.dev/" isExternal>
+            <strong>The Star Wars API</strong>
+          </Link>
+        </Text>
+        <Text>
+          Note the additional editing restrictions in addition to the toggles above. This has been
+          achieved by specifying filter functions for the <span className="code">restrictEdit</span>
+          , <span className="code">restrictDelete</span> and{' '}
+          <span className="code">restrictAdd</span> props. <Link>Learn more</Link>
+        </Text>
+      </Flex>
     ),
+    restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
+    restrictDelete: ({ value }) => typeof value === 'object' && value !== null,
+    restrictAdd: ({ value }) => !Array.isArray(value),
+    collapse: 1,
     data: {
       name: 'Luke Skywalker',
       height: 172,
@@ -1463,21 +1476,27 @@ const data = {
     },
   },
   jsonPlaceholder: {
-    name: '👥 List of users',
+    name: '👥 Client list',
     description: (
-      <Text>
-        An array of user data, taken from{' '}
-        <Link href="https://jsonplaceholder.typicode.com/users" isExternal>
-          <strong>https://jsonplaceholder.typicode.com/users</strong>
-        </Link>
-        . You'll note that the <span className="code">id</span> field is not editable, which you
-        would want if this was to save back to a database. An additional{' '}
-        <span className="code">restrictEdit()</span> function as been included which targets the{' '}
-        <span className="code">id</span> field specifically.
-      </Text>
+      <Flex flexDir="column" gap={2}>
+        <Text>
+          An array of user data, taken from{' '}
+          <Link href="https://jsonplaceholder.typicode.com/users" isExternal>
+            <strong>https://jsonplaceholder.typicode.com/users</strong>
+          </Link>
+          .
+        </Text>
+        <Text>
+          You'll note that the <span className="code">id</span> field is not editable, which would
+          be desirable if this saved back to a database. An additional{' '}
+          <span className="code">restrictEdit</span> function as been included which targets the{' '}
+          <span className="code">id</span> field specifically.
+        </Text>
+      </Flex>
     ),
     restrictEdit: ({ key }) => key === 'id',
     restrictDelete: ({ key }) => key === 'id',
+    collapse: 2,
     data: [
       {
         id: 1,
@@ -1722,6 +1741,7 @@ const data = {
         config file.
       </Text>
     ),
+    collapse: 2,
     data: {
       'editor.codeActionsOnSave': {
         'source.fixAll.eslint': true,
@@ -1764,11 +1784,23 @@ const data = {
   editTheme: {
     name: '🎨 Edit this theme!',
     description: (
-      <Text>
-        This is the Theme object being used right now. Edit it live, and watch it change. See{' '}
-        <Link>here</Link> for theming information.
-      </Text>
+      <Flex flexDir="column" gap={2}>
+        <Text>
+          You are now editing Theme object being used by the component right now — edit it live!.
+        </Text>
+        <Text>
+          Notice you are restricted from changing the structure in a way that would break the
+          required schema.
+        </Text>
+        <Text>
+          See <Link>here</Link> for theming information.
+        </Text>
+      </Flex>
     ),
+    restrictEdit: ({ key, level }) => level === 0 || ['fragments', 'styles'].includes(key),
+    restrictDelete: ({ key }) => ['displayName', 'fragments', 'styles'].includes(key),
+    restrictAdd: ({ level }) => level === 0,
+    collapse: 2,
     data: {},
   },
 }

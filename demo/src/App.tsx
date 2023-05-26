@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { JsonEditor, ThemeName, Theme, themes } from './json-edit-react/src'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
@@ -49,6 +49,7 @@ function App() {
   const [sortKeys, setSortKeys] = useState(false)
   const [showIndices, setShowIndices] = useState(true)
   const [defaultNewValue, setDefaultNewValue] = useState('New data!')
+  const previousThemeName = useRef('') // Used when resetting after theme editing
   const toast = useToast()
 
   const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] = useUndo(
@@ -56,7 +57,11 @@ function App() {
   )
 
   useEffect(() => {
-    if (selectedData !== 'editTheme') reset(demoData[selectedData].data)
+    if (selectedData !== 'editTheme') {
+      const newData = demoData[selectedData]
+      if (newData.collapse) setCollapseLevel(newData.collapse)
+      reset(newData.data)
+    }
   }, [selectedData, reset])
 
   const restrictEdit: FilterMethod | boolean = (() => {
@@ -71,11 +76,33 @@ function App() {
     return !allowDelete
   })()
 
+  const restrictAdd: FilterMethod | boolean = (() => {
+    const customRestrictor = demoData[selectedData]?.restrictAdd
+    if (customRestrictor) return (input) => !allowAdd || customRestrictor(input)
+    return !allowAdd
+  })()
+
   const handleChangeData = (e) => {
     setSelectedData(e.target.value)
     if (e.target.value === 'editTheme') {
+      previousThemeName.current = theme
+      setCollapseLevel(demoData.editTheme.collapse)
       reset(themes[theme])
     }
+  }
+
+  const handleThemeChange = (e) => {
+    setTheme(e.target.value as ThemeName)
+    if (selectedData === 'editTheme') {
+      setData(themes[e.target.value])
+      previousThemeName.current = e.target.value
+    }
+  }
+
+  const handleReset = () => {
+    console.log('Theme', theme)
+    if (selectedData === 'editTheme') reset(themes[previousThemeName.current])
+    else reset(demoData[selectedData].data)
   }
 
   return (
@@ -142,7 +169,7 @@ function App() {
           }
           restrictEdit={restrictEdit}
           restrictDelete={restrictDelete}
-          restrictAdd={!allowAdd}
+          restrictAdd={restrictAdd}
           keySort={sortKeys}
           defaultValue={defaultNewValue}
           showArrayIndices={showIndices}
@@ -173,7 +200,7 @@ function App() {
           <HStack justify="space-between" w="100%">
             <Text maxW={400} fontSize="md">
               Undo/Redo functionality can be incorporated by using an additional hook, such as{' '}
-              <Link href="https://www.npmjs.com/package/use-undo" isExternal>
+              <Link href="https://github.com/homerchen19/use-undo" isExternal>
                 use-undo
               </Link>
             </Text>
@@ -181,7 +208,7 @@ function App() {
               colorScheme="accentScheme"
               leftIcon={<BiReset />}
               variant="outline"
-              onClick={() => reset(demoData[selectedData].data)}
+              onClick={handleReset}
               visibility={canUndo ? 'visible' : 'hidden'}
             >
               Reset
@@ -202,7 +229,7 @@ function App() {
                   Theme
                 </FormLabel>
                 <div className="inputWidth" style={{ flexGrow: 1 }}>
-                  <Select onChange={(e) => setTheme(e.target.value as ThemeName)} value={theme}>
+                  <Select onChange={handleThemeChange} value={theme}>
                     {(Object.entries(themes) as [ThemeName, Theme][]).map(
                       ([theme, { displayName }]) => (
                         <option value={theme} key={theme}>
