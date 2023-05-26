@@ -123,7 +123,7 @@
 }
 
 .jer-value-string {
-  color: var(--jer-string-color);
+  line-height: 1.3em;
 }
 
 .jer-input-text {
@@ -162,6 +162,7 @@
 
 .jer-object-key {
   word-break: break-word;
+  line-height: 1.1em;
 }
 
 .jer-value-array {

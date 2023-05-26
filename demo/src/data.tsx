@@ -1494,7 +1494,7 @@ const data = {
         </Text>
       </Flex>
     ),
-    restrictEdit: ({ key }) => key === 'id',
+    restrictEdit: ({ key, level }) => key === 'id' || level === 0 || level === 1,
     restrictDelete: ({ key }) => key === 'id',
     collapse: 2,
     data: [

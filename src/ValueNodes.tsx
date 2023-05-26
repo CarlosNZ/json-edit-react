@@ -41,7 +41,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       handleKeyPress={handleKeyPress}
     />
   ) : (
-    <span
+    <div
       onDoubleClick={() => setIsEditing(true)}
       onClick={(e) => {
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
@@ -50,7 +50,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       style={styles.string}
     >
       "{breakString(truncate(value, stringTruncate))}"
-    </span>
+    </div>
   )
 }
 

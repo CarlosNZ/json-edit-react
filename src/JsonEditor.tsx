@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import clone from 'just-clone'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import { useWindowSize } from '@react-hookz/web'
@@ -173,10 +172,8 @@ const updateDataObject = (
     }
   }
 
-  const newData = clone(data)
-
-  const currentValue = action !== 'add' ? extract(newData, path) : undefined
-  assign(newData, path, newValue, { remove: action === 'delete' })
+  const currentValue = action !== 'add' ? extract(data, path) : undefined
+  const newData = { ...assign(data, path, newValue, { remove: action === 'delete' }) }
 
   return {
     currentData: data,
