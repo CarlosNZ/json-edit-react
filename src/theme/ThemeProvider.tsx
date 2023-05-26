@@ -93,12 +93,17 @@ const buildStyleObject = (
     }
   })
 
-  // Over-ride the input highlight color manually, because we can't target this
-  // inline
+  // These properties can't be targeted inline, so we update a CSS variable
+  // instead
   if (finalStyles?.inputHighlight?.backgroundColor)
     document.documentElement.style.setProperty(
       '--jer-highlight-color',
       finalStyles?.inputHighlight?.backgroundColor
+    )
+  if (finalStyles?.iconCopy?.color)
+    document.documentElement.style.setProperty(
+      '--jer-icon-copy-color',
+      finalStyles?.iconCopy?.color
     )
 
   return finalStyles as CompiledStyles
