@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from 'react'
+
+// import { Icon } from './Icons_OLD'
 import { Icon } from './Icons'
 import { useTheme } from './theme'
 import { TranslateMethod } from './localisation'
@@ -66,19 +68,25 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       {enableClipboard && (
         <div
           onClick={handleCopy}
-          className="jer-icon-wrapper jer-copy-pulse"
-          style={styles.iconCopy}
+          // className="jer-icon-wrapper jer-copy-pulse"
+          // style={styles.iconCopy}
         >
           <Icon name="copy" />
         </div>
       )}
       {startEdit && (
-        <div onClick={startEdit} className="jer-icon-wrapper" style={styles.iconEdit}>
+        <div
+          onClick={startEdit}
+          // className="jer-icon-wrapper" style={styles.iconEdit}
+        >
           <Icon name="edit" />
         </div>
       )}
       {handleDelete && (
-        <div onClick={handleDelete} className="jer-icon-wrapper" style={styles.iconDelete}>
+        <div
+          onClick={handleDelete}
+          //  className="jer-icon-wrapper" style={styles.iconDelete}
+        >
           <Icon name="delete" />
         </div>
       )}
@@ -89,8 +97,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             // For arrays, we don't need to add a key
             else handleAdd('')
           }}
-          className="jer-icon-wrapper"
-          style={styles.iconAdd}
+          // className="jer-icon-wrapper"
+          // style={styles.iconAdd}
         >
           <Icon name="add" />
         </div>

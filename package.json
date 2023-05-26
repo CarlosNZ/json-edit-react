@@ -26,7 +26,8 @@
     "@react-hookz/web": "^23.0.0",
     "just-clone": "^6.2.0",
     "object-property-assigner": "^1.0.1",
-    "object-property-extractor": "^1.0.6"
+    "object-property-extractor": "^1.0.6",
+    "react-icons": "^4.8.0"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.1",

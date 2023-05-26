@@ -17,6 +17,7 @@ import {
   VStack,
   Link,
   Icon,
+  Image,
   CheckboxGroup,
   Spacer,
   FormControl,
@@ -29,6 +30,7 @@ import {
   NumberDecrementStepper,
   useToast,
 } from '@chakra-ui/react'
+import logo from './image/logo_500.png'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import demoData from './data'
 import { useDatabase } from './useDatabase'
@@ -138,9 +140,12 @@ function App() {
       <HStack w="100%" justify="space-between" align="flex-start">
         <VStack align="flex-start" gap={3}>
           <HStack align="flex-end" mt={2} gap={4}>
-            <Heading as="h1" size="3xl" variant="other">
-              json-edit-<span style={{ color: '#EA3788' }}>react</span>
-            </Heading>
+            <Flex gap={4} align="center">
+              <img src={logo} alt="logo" style={{ maxHeight: '3.5em' }} />
+              <Heading as="h1" size="3xl" variant="other">
+                json-edit-<span style={{ color: '#EA3788' }}>react</span>
+              </Heading>
+            </Flex>
             <Text pb={0.5} variant="primary">
               by{' '}
               <Link href="https://github.com/CarlosNZ" isExternal>
