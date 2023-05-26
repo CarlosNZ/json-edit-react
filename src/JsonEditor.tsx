@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
+import clone from 'just-clone'
 import { useWindowSize } from '@react-hookz/web'
 import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
@@ -173,7 +174,7 @@ const updateDataObject = (
   }
 
   const currentValue = action !== 'add' ? extract(data, path) : undefined
-  const newData = { ...assign(data, path, newValue, { remove: action === 'delete' }) }
+  const newData = assign(clone(data), path, newValue, { remove: action === 'delete' })
 
   return {
     currentData: data,

@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@react-hookz/web": "^23.0.0",
+    "just-clone": "^6.2.0",
     "object-property-assigner": "^1.0.1",
     "object-property-extractor": "^1.0.6"
   },
