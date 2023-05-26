@@ -138,14 +138,13 @@ export const InputButtons: React.FC<{
   onCancel: () => void
   isCollection?: boolean
 }> = ({ onOk, onCancel, isCollection = false }) => {
-  const { styles } = useTheme()
   const size = isCollection ? '2em' : undefined
   return (
     <div className="jer-input-buttons">
-      <div onClick={onOk} className="jer-icon-wrapper" style={styles.iconOk}>
+      <div onClick={onOk}>
         <Icon name="ok" size={size} />
       </div>
-      <div onClick={onCancel} className="jer-icon-wrapper" style={styles.iconCancel}>
+      <div onClick={onCancel}>
         <Icon name="cancel" size={size} />
       </div>
     </div>

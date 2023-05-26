@@ -1,8 +1,7 @@
 import React from 'react'
 import { HiOutlineClipboardCopy } from 'react-icons/hi'
-import { BiEdit } from 'react-icons/bi'
+import { BiEdit, BiPlusCircle } from 'react-icons/bi'
 import { MdDeleteForever } from 'react-icons/md'
-import { GrAddCircle } from 'react-icons/gr'
 import { FiCheckCircle } from 'react-icons/fi'
 import { TiCancel } from 'react-icons/ti'
 import { FaChevronDown } from 'react-icons/fa'
@@ -10,26 +9,34 @@ import { useTheme } from './theme'
 
 interface IconProps {
   name: string
+  rotate?: boolean
 }
 
-export const Icon: React.FC<IconProps> = ({ name }): JSX.Element => {
+export const Icon: React.FC<IconProps> = ({ name, rotate }): JSX.Element => {
   const { styles } = useTheme()
+
+  const commonProps = { size: '1.4em', className: 'jer-icon' }
 
   switch (name) {
     case 'add':
-      return <GrAddCircle className="jer-icon" style={styles.iconAdd} />
+      return <BiPlusCircle {...commonProps} style={styles.iconAdd} />
     case 'edit':
-      return <BiEdit className="jer-icon" style={styles.iconEdit} />
+      return <BiEdit {...commonProps} style={styles.iconEdit} />
     case 'delete':
-      return <MdDeleteForever className="jer-icon" style={styles.iconDelete} />
+      return <MdDeleteForever {...commonProps} style={styles.iconDelete} size="1.5em" />
     case 'copy':
-      return <HiOutlineClipboardCopy className="jer-icon" style={styles.iconCopy} />
+      return <HiOutlineClipboardCopy {...commonProps} style={styles.iconCopy} />
     case 'ok':
-      return <FiCheckCircle className="jer-icon" style={styles.iconOk} />
+      return <FiCheckCircle {...commonProps} style={styles.iconOk} />
     case 'cancel':
-      return <TiCancel className="jer-icon" style={styles.iconCancel} />
+      return <TiCancel {...commonProps} style={styles.iconCancel} size="2em" />
     case 'chevron':
-      return <FaChevronDown className="jer-icon" style={styles.iconCollection} />
+      return (
+        <FaChevronDown
+          className={`${rotate ? ' jer-rotate-90' : ''}`}
+          style={styles.iconCollection}
+        />
+      )
     default:
       return <></>
   }
