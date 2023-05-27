@@ -2,10 +2,9 @@
 
 ## A React component for editing or viewing JSON/object data
 
-<img width="80" alt="screenshot" src="image/logo192.png" style="float:left;margin-right: 1em;">
+<img width="60" alt="screenshot" src="image/logo192.png">
 
-**json-edit-react** is a simple, yet highly-customisable, React component for editing or viewing JSON
- data in the browser. Features include:
+Features include:
 
  - Edit individual values, or whole objects as JSON text
  - Fine-grained control over which elements can be edited, deleted, or added to
