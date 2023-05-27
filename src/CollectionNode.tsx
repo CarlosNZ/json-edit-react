@@ -72,6 +72,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       })
     } catch {
       setError(translate('ERROR_INVALID_JSON'))
+      setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
       console.log('Invalid JSON')
       return
     }
