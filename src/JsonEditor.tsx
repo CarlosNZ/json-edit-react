@@ -184,10 +184,10 @@ const updateDataObject = (
   }
 }
 
-const getFilterMethod = (collapse: boolean | number | FilterMethod): FilterMethod => {
-  if (typeof collapse === 'boolean') return () => collapse
-  if (typeof collapse === 'number') return ({ level }) => level >= collapse
-  return collapse
+const getFilterMethod = (propValue: boolean | number | FilterMethod): FilterMethod => {
+  if (typeof propValue === 'boolean') return () => propValue
+  if (typeof propValue === 'number') return ({ level }) => level >= propValue
+  return propValue
 }
 
 export default JsonEditor
