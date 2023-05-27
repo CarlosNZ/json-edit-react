@@ -64,21 +64,17 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   return (
     <div className="jer-edit-buttons" style={isAdding ? { opacity: 1 } : undefined}>
       {enableClipboard && (
-        <div
-          onClick={handleCopy}
-          className="jer-icon-wrapper jer-copy-pulse"
-          style={styles.iconCopy}
-        >
+        <div onClick={handleCopy} className="jer-copy-pulse">
           <Icon name="copy" />
         </div>
       )}
       {startEdit && (
-        <div onClick={startEdit} className="jer-icon-wrapper" style={styles.iconEdit}>
+        <div onClick={startEdit}>
           <Icon name="edit" />
         </div>
       )}
       {handleDelete && (
-        <div onClick={handleDelete} className="jer-icon-wrapper" style={styles.iconDelete}>
+        <div onClick={handleDelete}>
           <Icon name="delete" />
         </div>
       )}
@@ -89,8 +85,6 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             // For arrays, we don't need to add a key
             else handleAdd('')
           }}
-          className="jer-icon-wrapper"
-          style={styles.iconAdd}
         >
           <Icon name="add" />
         </div>
@@ -130,15 +124,13 @@ export const InputButtons: React.FC<{
   onCancel: () => void
   isCollection?: boolean
 }> = ({ onOk, onCancel, isCollection = false }) => {
-  const { styles } = useTheme()
-  const size = isCollection ? '2em' : undefined
   return (
-    <div className="jer-input-buttons">
-      <div onClick={onOk} className="jer-icon-wrapper" style={styles.iconOk}>
-        <Icon name="ok" size={size} />
+    <div className="jer-confirm-buttons">
+      <div onClick={onOk}>
+        <Icon name="ok" />
       </div>
-      <div onClick={onCancel} className="jer-icon-wrapper" style={styles.iconCancel}>
-        <Icon name="cancel" size={size} />
+      <div onClick={onCancel}>
+        <Icon name="cancel" />
       </div>
     </div>
   )

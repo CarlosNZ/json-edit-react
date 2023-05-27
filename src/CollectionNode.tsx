@@ -135,7 +135,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           onClick={() => {
             if (!isEditing) setCollapsed(!collapsed)
           }}
-          style={styles.iconCollection}
         >
           <Icon name="chevron" rotate={collapsed} />
         </div>

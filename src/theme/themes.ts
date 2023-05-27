@@ -144,11 +144,21 @@ export const themes: { default: DefaultTheme } & Record<string, Theme> = {
   psychedelic: {
     displayName: 'Psychedelic',
     fragments: {
-      minty: { backgroundColor: '#F1FAEE' },
-      pale: { color: '#A8DADC' },
-      mid: { color: '#457B9D' },
-      dark: { color: '#1D3557' },
-      pop: { color: '#E63946' },
+      minty: {
+        backgroundColor: '#F1FAEE',
+      },
+      pale: {
+        color: '#A8DADC',
+      },
+      mid: {
+        color: '#457B9D',
+      },
+      dark: {
+        color: '#1D3557',
+      },
+      pop: {
+        color: '#E63946',
+      },
       fluroYellow: 'rgb(242, 228, 21)',
       fluroGreen: 'rgb(68, 255, 62)',
       hotPink: '#f7379a',
@@ -162,10 +172,27 @@ export const themes: { default: DefaultTheme } & Record<string, Theme> = {
       },
       property: 'black',
       bracket: 'fluroYellow',
-      itemCount: ['pale', { opacity: 0.7 }],
+      itemCount: [
+        'pale',
+        {
+          opacity: 0.7,
+        },
+      ],
       string: 'white',
-      number: ['#33d9ff', { fontSize: '90%', fontWeight: 'bold' }],
-      boolean: ['fluroGreen', { fontWeight: 'bold', fontSize: '80%' }],
+      number: [
+        '#33d9ff',
+        {
+          fontSize: '90%',
+          fontWeight: 'bold',
+        },
+      ],
+      boolean: [
+        'fluroGreen',
+        {
+          fontWeight: 'bold',
+          fontSize: '80%',
+        },
+      ],
       null: [
         'black',
         {
@@ -179,13 +206,17 @@ export const themes: { default: DefaultTheme } & Record<string, Theme> = {
       iconCollection: 'fluroYellow',
       iconEdit: ['black'],
       iconDelete: [
-        'hotPink',
+        'white',
         {
-          backgroundColor: 'rgba(255, 255, 255, 0.4)',
-          borderRadius: '1em',
+          opacity: 0.5,
         },
       ],
-      iconAdd: ['white', { opacity: 0.5 }],
+      iconAdd: [
+        'white',
+        {
+          opacity: 0.5,
+        },
+      ],
       iconCopy: 'rgb(32, 84, 242)',
       iconOk: 'fluroGreen',
       iconCancel: 'hotPink',

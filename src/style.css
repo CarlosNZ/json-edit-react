@@ -186,19 +186,26 @@
 }
 
 .jer-edit-buttons,
-.jer-input-buttons {
+.jer-confirm-buttons {
   display: flex;
-  gap: 0.4em;
   align-items: center;
   cursor: pointer;
 }
 
-.jer-edit-buttons {
-  margin-left: 0.5em;
+.jer-input-buttons {
+  gap: 0.4em;
 }
 
 .jer-edit-buttons {
+  gap: 0.4em;
+  margin-left: 0.5em;
   opacity: 0;
+}
+
+.jer-confirm-buttons {
+  gap: 0.2em;
+  margin-left: 0.4em;
+  font-size: 150%;
 }
 
 .jer-edit-buttons:hover {
@@ -274,32 +281,12 @@
   transition: transform var(--jer-expand-transition-time);
 }
 
-.jer-icon-chevron {
-  fill: var(--jer-icon-chevron-color);
-  transition: transform var(--jer-expand-transition-time);
+.jer-icon {
+  /* font-size: '2em'; */
 }
 
-.jer-icon-edit {
-  fill: none;
-  stroke: var(--jer-icon-edit-color);
-}
-
-.jer-icon-delete {
-  fill: var(--jer-icon-delete-color);
-}
-
-.jer-icon-add {
-  fill: none;
-  stroke: var(--jer-icon-add-color);
-}
-
-.jer-icon-copy {
-  fill: var(--jer-icon-copy-color);
-}
-
-.jer-icon-ok {
-  fill: var(--jer-icon-ok-color);
-}
-.jer-icon-cancel {
-  fill: var(--jer-icon-cancel-color);
+.jer-icon:hover {
+  opacity: 0.85;
+  transition: 0.3s;
+  transform: scale(1.2);
 }

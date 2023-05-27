@@ -9,23 +9,33 @@ import {
   CompiledStyles,
   ThemeValue,
 } from './themes'
+import { IconReplacements } from '../types'
 
 const defaultTheme = themes.default
 
-const initialContext = {
+interface ThemeContext {
+  styles: CompiledStyles
+  setTheme: (theme: ThemeInput) => void
+  icons: IconReplacements
+  setIcons: React.Dispatch<React.SetStateAction<IconReplacements>>
+}
+const initialContext: ThemeContext = {
   styles: emptyStyleObject,
   setTheme: (_: ThemeInput) => {},
+  icons: {},
+  setIcons: () => {},
 }
 
 const ThemeProviderContext = createContext(initialContext)
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [styles, setStyles] = useState<CompiledStyles>(emptyStyleObject)
+  const [icons, setIcons] = useState<IconReplacements>({})
 
   const setTheme = (theme: ThemeInput) => setStyles(compileStyles(theme))
 
   return (
-    <ThemeProviderContext.Provider value={{ styles, setTheme }}>
+    <ThemeProviderContext.Provider value={{ styles, setTheme, icons, setIcons }}>
       {children}
     </ThemeProviderContext.Provider>
   )
@@ -93,12 +103,17 @@ const buildStyleObject = (
     }
   })
 
-  // Over-ride the input highlight color manually, because we can't target this
-  // inline
+  // These properties can't be targeted inline, so we update a CSS variable
+  // instead
   if (finalStyles?.inputHighlight?.backgroundColor)
     document.documentElement.style.setProperty(
       '--jer-highlight-color',
       finalStyles?.inputHighlight?.backgroundColor
+    )
+  if (finalStyles?.iconCopy?.color)
+    document.documentElement.style.setProperty(
+      '--jer-icon-copy-color',
+      finalStyles?.iconCopy?.color
     )
 
   return finalStyles as CompiledStyles
@@ -122,11 +137,11 @@ const defaultStyleProperties: { [Property in ThemeableElement]: keyof React.CSSP
   input: 'color',
   inputHighlight: 'backgroundColor',
   error: 'color',
-  iconCollection: 'fill',
-  iconEdit: 'stroke',
-  iconDelete: 'fill',
-  iconAdd: 'stroke',
-  iconCopy: 'fill',
-  iconOk: 'fill',
-  iconCancel: 'fill',
+  iconCollection: 'color',
+  iconEdit: 'color',
+  iconDelete: 'color',
+  iconAdd: 'color',
+  iconCopy: 'color',
+  iconOk: 'color',
+  iconCancel: 'color',
 }

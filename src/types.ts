@@ -1,8 +1,10 @@
 import { ThemeInput } from './theme'
 import { LocalisedStrings, TranslateMethod } from './localisation'
+import React from 'react'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
-export interface EditorProps {
+
+export interface JsonEditorProps {
   data: object
   schema?: object
   rootName?: string
@@ -12,7 +14,7 @@ export interface EditorProps {
   onAdd?: UpdateMethod
   enableClipboard?: boolean | CopyMethod
   theme?: ThemeInput
-  style?: React.CSSProperties
+  icons?: IconReplacements
   className?: string
   indent?: number
   collapse?: boolean | number | FilterMethod
@@ -41,6 +43,16 @@ export type CollectionKey = string | number
 export type CollectionData = object | unknown[]
 
 export type ErrorString = string
+
+export interface IconReplacements {
+  add?: JSX.Element
+  edit?: JSX.Element
+  delete?: JSX.Element
+  copy?: JSX.Element
+  ok?: JSX.Element
+  cancel?: JSX.Element
+  chevron?: JSX.Element
+}
 
 /**
  * METHODS
