@@ -29,7 +29,7 @@ import {
   NumberDecrementStepper,
   useToast,
 } from '@chakra-ui/react'
-import logo from './image/logo_500.png'
+import logo from './image/logo_400.png'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import demoData from './data'
 import { useDatabase } from './useDatabase'
