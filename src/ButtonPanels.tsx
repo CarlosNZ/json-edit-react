@@ -123,7 +123,7 @@ export const InputButtons: React.FC<{
   onOk: () => void
   onCancel: () => void
   isCollection?: boolean
-}> = ({ onOk, onCancel, isCollection = false }) => {
+}> = ({ onOk, onCancel }) => {
   return (
     <div className="jer-confirm-buttons">
       <div onClick={onOk}>

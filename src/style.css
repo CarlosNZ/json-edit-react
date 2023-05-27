@@ -93,6 +93,7 @@
   width: 90%;
   display: flex;
   justify-content: flex-end;
+  font-size: 150%;
 }
 
 .jer-collection-element {
@@ -205,7 +206,6 @@
 .jer-confirm-buttons {
   gap: 0.2em;
   margin-left: 0.4em;
-  font-size: 150%;
 }
 
 .jer-edit-buttons:hover {
