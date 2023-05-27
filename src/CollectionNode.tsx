@@ -136,7 +136,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
             if (!isEditing) setCollapsed(!collapsed)
           }}
         >
-          <Icon name="chevron" rotate={collapsed} style={styles.iconCollection} />
+          <Icon name="chevron" rotate={collapsed} />
         </div>
         <div className="jer-collection-name">
           <span style={styles.property}>{showLabel ? `${name}:` : null}</span>

@@ -13,29 +13,41 @@ interface IconProps {
 }
 
 export const Icon: React.FC<IconProps> = ({ name, rotate }): JSX.Element => {
-  const { styles } = useTheme()
+  const { styles, icons } = useTheme()
 
   const commonProps = { size: '1.4em', className: 'jer-icon' }
 
   switch (name) {
     case 'add':
-      return <BiPlusCircle {...commonProps} style={styles.iconAdd} />
+      return icons?.add ?? <BiPlusCircle {...commonProps} style={styles.iconAdd} />
     case 'edit':
-      return <BiEdit {...commonProps} style={styles.iconEdit} />
+      return icons?.edit ?? <BiEdit {...commonProps} style={styles.iconEdit} />
     case 'delete':
-      return <MdDeleteForever {...commonProps} style={styles.iconDelete} size="1.5em" />
+      return (
+        icons?.delete ?? <MdDeleteForever {...commonProps} style={styles.iconDelete} size="1.5em" />
+      )
     case 'copy':
-      return <HiOutlineClipboardCopy {...commonProps} style={styles.iconCopy} />
+      return icons?.copy ?? <HiOutlineClipboardCopy {...commonProps} style={styles.iconCopy} />
     case 'ok':
-      return <FiCheckCircle {...commonProps} style={{ fontSize: '90%', ...styles.iconOk }} />
+      return (
+        icons?.ok ?? (
+          <FiCheckCircle {...commonProps} style={{ fontSize: '90%', ...styles.iconOk }} />
+        )
+      )
     case 'cancel':
-      return <TiCancel {...commonProps} style={{ fontSize: '130%', ...styles.iconCancel }} />
+      return (
+        icons?.cancel ?? (
+          <TiCancel {...commonProps} style={{ fontSize: '130%', ...styles.iconCancel }} />
+        )
+      )
     case 'chevron':
       return (
-        <FaChevronDown
-          className={`${rotate ? ' jer-rotate-90' : ''}`}
-          style={styles.iconCollection}
-        />
+        icons?.chevron ?? (
+          <FaChevronDown
+            className={`${rotate ? ' jer-rotate-90' : ''}`}
+            style={styles.iconCollection}
+          />
+        )
       )
     default:
       return <></>

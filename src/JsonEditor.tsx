@@ -4,12 +4,12 @@ import extract from 'object-property-extractor'
 import clone from 'just-clone'
 import { useWindowSize } from '@react-hookz/web'
 import { CollectionNode, isCollection } from './CollectionNode'
-import { CollectionData, EditorProps, FilterMethod, OnChangeMethod } from './types'
+import { CollectionData, JsonEditorProps, FilterMethod, OnChangeMethod } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { getTranslateMethod } from './localisation'
 import './style.css'
 
-const Editor: React.FC<EditorProps> = ({
+const Editor: React.FC<JsonEditorProps> = ({
   data: srcData,
   // schema,
   rootName = 'root',
@@ -19,7 +19,7 @@ const Editor: React.FC<EditorProps> = ({
   onAdd: srcAdd = onUpdate,
   enableClipboard = true,
   theme = 'default',
-  style = {},
+  icons,
   className,
   indent = 4,
   collapse = false,
@@ -35,7 +35,7 @@ const Editor: React.FC<EditorProps> = ({
   translations = {},
 }) => {
   const [data, setData] = useState<object>(srcData)
-  const { styles, setTheme } = useTheme()
+  const { styles, setTheme, setIcons } = useTheme()
   const collapseFilter = useCallback(getFilterMethod(collapse), [collapse])
   const translate = useCallback(getTranslateMethod(translations), [translations])
 
@@ -45,7 +45,8 @@ const Editor: React.FC<EditorProps> = ({
 
   useEffect(() => {
     if (theme) setTheme(theme)
-  }, [theme])
+    if (icons) setIcons(icons)
+  }, [theme, icons])
 
   const { width } = useWindowSize()
   // So component can't overflow the current viewport
@@ -133,7 +134,6 @@ const Editor: React.FC<EditorProps> = ({
     enableClipboard,
     keySort,
     showArrayIndices,
-    style,
     indent,
     defaultValue,
     stringTruncate,
@@ -145,14 +145,14 @@ const Editor: React.FC<EditorProps> = ({
   return (
     <div
       className={'jer-editor-container ' + className}
-      style={{ ...styles.container, ...style, minWidth, maxWidth: maximumWidth }}
+      style={{ ...styles.container, minWidth, maxWidth: maximumWidth }}
     >
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>
   )
 }
 
-const JsonEditor: React.FC<EditorProps> = (props) => (
+const JsonEditor: React.FC<JsonEditorProps> = (props) => (
   <ThemeProvider>
     <Editor {...props} />
   </ThemeProvider>

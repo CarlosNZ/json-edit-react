@@ -17,7 +17,6 @@ import {
   VStack,
   Link,
   Icon,
-  Image,
   CheckboxGroup,
   Spacer,
   FormControl,

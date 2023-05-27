@@ -9,23 +9,33 @@ import {
   CompiledStyles,
   ThemeValue,
 } from './themes'
+import { IconReplacements } from '../types'
 
 const defaultTheme = themes.default
 
-const initialContext = {
+interface ThemeContext {
+  styles: CompiledStyles
+  setTheme: (theme: ThemeInput) => void
+  icons: IconReplacements
+  setIcons: React.Dispatch<React.SetStateAction<IconReplacements>>
+}
+const initialContext: ThemeContext = {
   styles: emptyStyleObject,
   setTheme: (_: ThemeInput) => {},
+  icons: {},
+  setIcons: () => {},
 }
 
 const ThemeProviderContext = createContext(initialContext)
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [styles, setStyles] = useState<CompiledStyles>(emptyStyleObject)
+  const [icons, setIcons] = useState<IconReplacements>({})
 
   const setTheme = (theme: ThemeInput) => setStyles(compileStyles(theme))
 
   return (
-    <ThemeProviderContext.Provider value={{ styles, setTheme }}>
+    <ThemeProviderContext.Provider value={{ styles, setTheme, icons, setIcons }}>
       {children}
     </ThemeProviderContext.Provider>
   )
