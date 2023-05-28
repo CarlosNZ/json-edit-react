@@ -6,7 +6,7 @@ export const ERROR_DISPLAY_TIME = 2500 // ms
 
 export interface JsonEditorProps {
   data: object
-  schema?: object
+  // schema?: object
   rootName?: string
   onUpdate?: UpdateMethod
   onEdit?: UpdateMethod
@@ -18,7 +18,7 @@ export interface JsonEditorProps {
   className?: string
   indent?: number
   collapse?: boolean | number | FilterMethod
-  showCount?: boolean | FilterMethod
+  // showCount?: boolean | FilterMethod
   restrictEdit?: boolean | FilterMethod
   restrictDelete?: boolean | FilterMethod
   restrictAdd?: boolean | FilterMethod

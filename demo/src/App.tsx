@@ -207,7 +207,7 @@ function App() {
           showArrayIndices={showIndices}
           maxWidth={650}
           className="block-shadow"
-          stringTruncate={50}
+          stringTruncate={80}
         />
         <VStack w="100%" align="flex-end" gap={4}>
           <HStack w="100%" justify="space-between" mt={4}>

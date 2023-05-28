@@ -20,7 +20,6 @@ const Editor: React.FC<JsonEditorProps> = ({
   enableClipboard = true,
   theme = 'default',
   icons,
-  className,
   indent = 4,
   collapse = false,
   restrictEdit = false,
@@ -33,6 +32,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   maxWidth = 600,
   stringTruncate = 250,
   translations = {},
+  className,
 }) => {
   const [data, setData] = useState<object>(srcData)
   const { styles, setTheme, setIcons } = useTheme()
