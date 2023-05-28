@@ -2,15 +2,14 @@
 
 <img width="60" alt="screenshot" src="image/logo192.png" style="float:left; margin-right: 1em;">
 
-A React component for editing for viewing JSON/object data
-
+A [React](https://github.com/facebook/react) component for editing for viewing JSON/object data
 
 Features include:
 
  - edit individual values, or whole objects as JSON text
  - fine-grained control over which elements can be edited, deleted, or added to
  - customisable UI, through simple, pre-defined [themes](#themes), or specific CSS overrides
- - self-contained -- constructed with HTML/CSS, so no dependance on external UI libraries
+ - self-contained — constructed with HTML/CSS, so no dependance on external UI libraries
 
 **[Explore the Demo](https://carlosnz.github.io/json-edit-react/)**
 
@@ -30,7 +29,7 @@ Features include:
   - [Icons](#icons)
 - [Localisation](#localisation)
 - [Undo functionality](#undo-functionality)
-- [Issues, suggestions?](#issues-suggestions)
+- [Issues, bugs, suggestions?](#issues-bugs-suggestions)
 - [Roadmap](#roadmap)
 - [Changelog](#changelog)
 
@@ -61,7 +60,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 
 - Double-click a value to edit it
 - When editing a string, use `Cmd/Ctrl/Shift-Enter` to add a new line (`Enter` submits the value)
-- It's the opposite when editing a full object/array node (which you do by clicking "edit" on an object or array value) -- `Enter` for new line, and `Cmd/Ctrl/Shift-Enter` for submit
+- It's the opposite when editing a full object/array node (which you do by clicking "edit" on an object or array value) — `Enter` for new line, and `Cmd/Ctrl/Shift-Enter` for submit
 - `Escape` to cancel editing
 - When clicking the "clipboard" icon, holding down `Cmd/Ctrl` will copy the *path* to the selected node rather than its value
 
@@ -69,30 +68,30 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 
 The only *required* value is `data`. 
 
-| prop               | type                                             | default     | description                                                                                                                                                                                                                                                                                     |
-| ------------------ | ------------------------------------------------ | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`             | `object`\|`array`                                | `{ }`       | The data to be displayed / edited                                                                                                                                                                                                                                                               |
-| `rootName`         | `string`                                         | `"data"`    | A name to display in the editor as the root of the data object.                                                                                                                                                                                                                                 |
-| `onUpdate`         | `UpdateFunction`                                 |             | A function to run whenever a value is **updated** (edit, delete *or* add) in the editor. See [Update functions](#update-functions).                                                                                                                                                             |
-| `onUpdate`         | `UpdateFunction`                                 |             | A function to run whenever a value is **edited**.                                                                                                                                                                                                                                               |
-| `onDelete`         | `UpdateFunction`                                 |             | A function to run whenever a value is **deleted**.                                                                                                                                                                                                                                              |
-| `onAdd`            | `UpdateFunction`                                 |             | A function to run whenever a new property is **added**.                                                                                                                                                                                                                                         |
-| `enableClipboard`  | `boolean`\|`CopyFunction`                        | `true`      | Whether or not to enable the "Copy to clipboard" button in the UI. If a function is provided, `true` is assumed and this function will be run whenever an item is copied.                                                                                                                       |
-| `indent`           | `number`                                         | `4`         | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                              |
-| `collapse`         | `boolean`\|`number`\|`FilterFunction`            | `false`     | Defines which nodes of the JSON tree will be displayed open in the UI on load. If `boolean`, it'll be either all or none. A `number` specifies a nesting depth after which nodes will be closed. For more fine control a function can be provided -- see [Filter functions](#filter-functions). |
-| `restrictEdit`     | `boolean`\|`FilterMethod`                        | `false`     | If `false`, no editing is permitted. A function can be provided for more specificity -- see [Filter functions](#filter-functions)                                                                                                                                                               |
-| `restrictDelete`   | `boolean`\|`FilterMethod`                        | `false`     | As with `restrictEdit` but for deletion                                                                                                                                                                                                                                                         |
-| `restrictAdd`      | `boolean`\|`FilterMethod`                        | `false`     | As with `restrictEdit` but for adding new properties                                                                                                                                                                                                                                            |
-| `keySort`          | `boolean`\|`CompareFunction`                     | `false`     | If `true`, object keys will be ordered (using default JS `.sort()`). A [compare function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) can also be provided to define sorting behaviour.                                                        |
-| `showArrayIndices` | `boolean`                                        | `true`      | Whether or not to display numeric indices as keys of Array values.                                                                                                                                                                                                                              |
-| `defaultValue`     | `any`                                            | `null`      | When a new property is added, it is initialised with this value.                                                                                                                                                                                                                                |
-| `stringTruncate`   | `number`                                         | `250`       | String values longer than this many characters will be displayed truncated (with `...`). The full string will always be visible when editing.                                                                                                                                                   |
-| `translations`     | `LocalisedStrings` object                        | `{ }`       | UI strings (such as error messages) can be translated by passing an object containing localised string values (there are only a few). See [Localisation](#localisation)                                                                                                                         |
-| `theme`            | `string`\|`ThemeObject`\|`[string, ThemeObject]` | `"default"` | Either the name of one of the built-in themes, or an object specifying some or all theme properties. See [Themes](#themes).                                                                                                                                                                     |
-| `className`        | `string`                                         |             | Name of a CSS class to apply to the component. In most cases, specifying `theme` properties will be more straightforward.                                                                                                                                                                       |
-| `icons`            | `{[iconName]: JSX.Element, ... }`                | `{ }`       | If you want to replace the built-in icons with your own, specify them here. See [Themes](#themes).                                                                                                                                                                                              |  |
-| `minWidth`         | `number`\|`string` (CSS value)                   | `250`       | Minimum width for the editor container.                                                                                                                                                                                                                                                         |
-| `maxWidth`         | `number`\|`string` (CSS value)                   | `600`       | Maximum width for the editor container.                                                                                                                                                                                                                                                         |
+| prop               | type                                         | default     | description                                                                                                                                                                                                                                                                                        |
+| ------------------ | -------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`             | `object\|array`                              |             | The data to be displayed / edited                                                                                                                                                                                                                                                                  |
+| `rootName`         | `string`                                     | `"data"`    | A name to display in the editor as the root of the data object.                                                                                                                                                                                                                                    |
+| `onUpdate`         | `UpdateFunction`                             |             | A function to run whenever a value is **updated** (edit, delete *or* add) in the editor. See [Update functions](#update-functions).                                                                                                                                                                |
+| `onUpdate`         | `UpdateFunction`                             |             | A function to run whenever a value is **edited**.                                                                                                                                                                                                                                                  |
+| `onDelete`         | `UpdateFunction`                             |             | A function to run whenever a value is **deleted**.                                                                                                                                                                                                                                                 |
+| `onAdd`            | `UpdateFunction`                             |             | A function to run whenever a new property is **added**.                                                                                                                                                                                                                                            |
+| `enableClipboard`  | `boolean\|CopyFunction`                      | `true`      | Whether or not to enable the "Copy to clipboard" button in the UI. If a function is provided, `true` is assumed and this function will be run whenever an item is copied.                                                                                                                          |
+| `indent`           | `number`                                     | `4`         | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                                 |
+| `collapse`         | `boolean\|number\|FilterFunction`            | `false`     | Defines which nodes of the JSON tree will be displayed "opened" in the UI on load. If `boolean`, it'll be either all or none. A `number` specifies a nesting depth after which nodes will be closed. For more fine control a function can be provided — see [Filter functions](#filter-functions). |
+| `restrictEdit`     | `boolean\|FilterFunction`                    | `false`     | If `false`, no editing is permitted. A function can be provided for more specificity — see [Filter functions](#filter-functions)                                                                                                                                                                   |
+| `restrictDelete`   | `boolean\|FilterFunction`                    | `false`     | As with `restrictEdit` but for deletion                                                                                                                                                                                                                                                            |
+| `restrictAdd`      | `boolean\|FilterFunction`                    | `false`     | As with `restrictEdit` but for adding new properties                                                                                                                                                                                                                                               |
+| `keySort`          | `boolean\|CompareFunction`                   | `false`     | If `true`, object keys will be ordered (using default JS `.sort()`). A [compare function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) can also be provided to define sorting behaviour.                                                           |
+| `showArrayIndices` | `boolean`                                    | `true`      | Whether or not to display the index (as a property key) for array elements.                                                                                                                                                                                                                        |
+| `defaultValue`     | `any`                                        | `null`      | When a new property is added, it is initialised with this value.                                                                                                                                                                                                                                   |
+| `stringTruncate`   | `number`                                     | `250`       | String values longer than this many characters will be displayed truncated (with `...`). The full string will always be visible when editing.                                                                                                                                                      |
+| `translations`     | `LocalisedStrings` object                    | `{ }`       | UI strings (such as error messages) can be translated by passing an object containing localised string values (there are only a few). See [Localisation](#localisation)                                                                                                                            |
+| `theme`            | `string\|ThemeObject\|[string, ThemeObject]` | `"default"` | Either the name of one of the built-in themes, or an object specifying some or all theme properties. See [Themes](#themes).                                                                                                                                                                        |
+| `className`        | `string`                                     |             | Name of a CSS class to apply to the component. In most cases, specifying `theme` properties will be more straightforward.                                                                                                                                                                          |
+| `icons`            | `{[iconName]: JSX.Element, ... }`            | `{ }`       | Replace the built-in icons by specifying them here. See [Themes](#themes).                                                                                                                                                                                                                         |  |
+| `minWidth`         | `number\|string` (CSS value)                 | `250`       | Minimum width for the editor container.                                                                                                                                                                                                                                                            |
+| `maxWidth`         | `number\|string` (CSS value)                 | `600`       | Maximum width for the editor container.                                                                                                                                                                                                                                                            |
 
 ## Update functions
 
@@ -125,11 +124,11 @@ A similar callback is executed whenever an item is copied to the clipboard (if p
     type:  // Either "path" or "value" depending on whether "Cmd/Ctrl" was pressed 
 ```
 
-Since there is very little user feedback on clicking "Copy", a good idea would be to present some kind of notification in this callback.
+Since there is very little user feedback when clicking "Copy", a good idea would be to present some kind of notification in this callback.
 
 ## Filter functions
 
-You can control which nodes of the data structure can be edited, deleted, or added to by passing Filter methods. These will be called on each property in the data and the attribute will be enforced depending on whether the function returns `true` or `false` (`true` means *cannot* be edited).
+You can control which nodes of the data structure can be edited, deleted, or added to by passing Filter functions. These will be called on each property in the data and the attribute will be enforced depending on whether the function returns `true` or `false` (`true` means *cannot* be edited).
 
 The function receives the following object:
 ```js
@@ -146,7 +145,7 @@ A Filter function is available for the `collapse` prop as well, so you can have 
 
 ### Examples
 
-- A good case would be ensure your root node is not editable:
+- A good case would be ensure your root node is not directly editable:
 
 ```js
 // in <JsonEditor /> props
@@ -172,7 +171,7 @@ restrictAdd = { ({ key }) => key !== "address" && key !== "users" } // "Adding" 
 
 ## Themes
 
-There are a small selection of built-in themes (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react/)). In order to use one of these, just pass the name into the `theme` prop (although realistically, these are more to showcase the capabilities rather than legitimate use! -- I'm open to better built-in themes, so feel free to [create an issue](https://github.com/CarlosNZ/json-edit-react/issues) with suggestions). The available themes are:
+There are a small selection of built-in themes (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react/)). In order to use one of these, just pass the name into the `theme` prop (although realistically, these exist more to showcase the capabilities  — I'm open to better built-in themes, so feel free to [create an issue](https://github.com/CarlosNZ/json-edit-react/issues) with suggestions). The available themes are:
 - `default`
 - `githubDark`
 - `githubLight`
@@ -214,19 +213,19 @@ However, you can pass in your own theme object, or part thereof. The theme struc
 
 ```
 
-The `styles` property is the main one to focus on. Each key (`property`, `bracket`, `itemCount`) refers to a part of the UI. The value for each key is *either* a `string`, in which case it is interpreted as the colour (or background colour in the case of `container` and `inputHighlight`), *or* a full CSS style object for fine-grained definition. You only need to provide properties you wish override —— all unspecified ones will fallback to either the default theme, or another theme that you specify as the "base".
+The `styles` property is the main one to focus on. Each key (`property`, `bracket`, `itemCount`) refers to a part of the UI. The value for each key is *either* a `string`, in which case it is interpreted as the colour (or background colour in the case of `container` and `inputHighlight`), *or* a full CSS style object for fine-grained definition. You only need to provide properties you wish to override —— all unspecified ones will fallback to either the default theme, or another theme that you specify as the "base".
 
 For example, if you want to use the "githubDark" theme, but just change a couple of small things, you'd specify something like this:
 
 ```js
 // in <JsonEditor /> props
 theme={[
-          'githubDark',
-          {
-              iconEdit: 'grey',
-              boolean: { color: 'red', fontStyle: 'italic', fontWeight: 'bold', fontSize: '80%' },
-          },
-        ]}
+        'githubDark',
+        {
+            iconEdit: 'grey',
+            boolean: { color: 'red', fontStyle: 'italic', fontWeight: 'bold', fontSize: '80%' },
+        },
+      ]}
 ```
 
 Which would change the "Edit" icon and boolean values from this:
@@ -244,12 +243,12 @@ So, to summarise, the `theme` prop can take *either*:
 - a theme name e.g. `"candyWrapper"`
 - a theme object:
   - can be structured as above with `fragments`, `styles`, `displayName` etc., or just the `styles` part (at the root level)
-- a theme name *and* an override object in an array, i.e. `[ "<themeName>, {...overrides }]`
+- a theme name *and* an override object in an array, i.e. `[ "<themeName>, {...overrides } ]`
 
 You can play round with live editing of the themes in the [Demo app](https://carlosnz.github.io/json-edit-react/) by selecting "Edit this theme!" from the "Demo data" selector.
 ### Fragments
 
-The `fragments` property above is just convenience to allow repeated style "fragments" to be defined ones and referred to using an alias. For example, if you wanted all your icons to be blue and slightly larger and spaced out, you might define a fragment like so:
+The `fragments` property above is just convenience to allow repeated style "fragments" to be defined once and referred to using an alias. For example, if you wanted all your icons to be blue and slightly larger and spaced out, you might define a fragment like so:
 ```js
 fragments: { iconAdjust: { color: "blue", fontSize: "110%", marginRight: "0.6em" }}
 ```
@@ -265,7 +264,7 @@ Then in the theme object, just use:
 }
 ```
 
-Then when you want to tweak it later, you only need to update it in one place!
+Then, when you want to tweak it later, you only need to update it in one place!
 
 Fragments can also be mixed with additional properties, and even other fragments, like so:
 ```js
@@ -274,7 +273,7 @@ iconEdit: [ "iconAdjust", "anotherFragment", { marginLeft: "1em" } ]
 
 ### A note about sizing and scaling
 
-Within the JsonEditor component, all sizing and spacing is done in `em`s, never `px`. This makes scaling a lot easier — just change the font-size of the main container (either via the `className` prop or in the `container` prop of the theme) (or its parent), and watch the *whole* component scale accordingly. 
+Internally, all sizing and spacing is done in `em`s, never `px`. This makes scaling a lot easier — just change the font-size of the main container (either via the `className` prop or in the `container` prop of the theme) (or its parent), and watch the *whole* component scale accordingly.
 
 ### Icons
 
@@ -313,11 +312,11 @@ Localise your implementation by passing in a `translations` object to replace th
 
 ## Undo functionality
 
-Even though Undo/Redo functionality is probably important for editing JSON in the browser, this is not built-in to the component, for two main reasons:
-- It would involve too much additional UI and I didn't want this component becoming opinionated about how it should look and feel beyond the essentials (which are mostly customisable/style-able anyway)
-- It is quite straightforward to implement using existing libraries. I've used **[use-undo](https://github.com/homerchen19/use-undo)** in the [Demo](https://carlosnz.github.io/json-edit-react/), which is working very well.
+Even though Undo/Redo functionality is probably desirable in most cases, this is not built in to the component, for two main reasons:
+1. It would involve too much additional UI and I didn't want this component becoming opinionated about how it should look and feel beyond the essentials (which are mostly customisable/style-able anyway)
+2. It is quite straightforward to implement using existing libraries. I've used **[use-undo](https://github.com/homerchen19/use-undo)** in the [Demo](https://carlosnz.github.io/json-edit-react/), which is working very well.
 
-## Issues, suggestions?
+## Issues, bugs, suggestions?
 
 Please open an issue: https://github.com/CarlosNZ/json-edit-react/issues
 
@@ -325,9 +324,9 @@ Please open an issue: https://github.com/CarlosNZ/json-edit-react/issues
 
 The main features I'd like to introduce are:
 
-1. **JSON Schema validatio**n. We can currently specify a reasonable degree of control over what can be edited using [Filter functions](#filter-functions) with the restriction props, but I'd like to go a step further and be able to pass in a [JSON Schema](https://json-schema.org/) and have the data be automatically validated against it. This would allow control over data types and prevent missing properties, something that is not currently possible.
-2. **Visibility filter function** -- *hide* properties from the UI completely based on a Filter function. This should arguably be done outside the component though (filter the data upstream), so would be less of a priority (though it would be fairly simple to implement, so 🤷‍♂️)
-3. **Search** -- allow the user to narrow the list of visible keys with a simple search input. This would be useful for very large data objects, but is possibly getting a bit too much in terms of opinionated UI, so would need to ensure it can be styled easily. Perhaps it would be better if the "Search" input was handled outside this package, and we just accepted a "search" string prop?
+1. **JSON Schema validation**. We can currently specify a reasonable degree of control over what can be edited using [Filter functions](#filter-functions) with the restriction props, but I'd like to go a step further and be able to pass in a [JSON Schema](https://json-schema.org/) and have the data be automatically validated against it. This would allow control over data types and prevent missing properties, something that is not currently possible.
+2. **Visibility filter function** — *hide* properties from the UI completely based on a Filter function. This should arguably be done outside the component though (filter the data upstream), so would be less of a priority (though it would be fairly simple to implement, so 🤷‍♂️)
+3. **Search** — allow the user to narrow the list of visible keys with a simple search input. This would be useful for very large data objects, but is possibly getting a bit too much in terms of opinionated UI, so would need to ensure it can be styled easily. Perhaps it would be better if the "Search" input was handled outside this package, and we just accepted a "search" string prop?
 
 
 ## Changelog

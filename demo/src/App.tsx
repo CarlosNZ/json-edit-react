@@ -34,7 +34,7 @@ import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import demoData from './data'
 import { useDatabase } from './useDatabase'
 import './style.css'
-import { FilterMethod } from './json-edit-react/src/types'
+import { FilterFunction } from './json-edit-react/src/types'
 
 function App() {
   const [selectedData, setSelectedData] = useState('basic')
@@ -75,19 +75,19 @@ function App() {
     }
   }, [selectedData, reset])
 
-  const restrictEdit: FilterMethod | boolean = (() => {
+  const restrictEdit: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictEdit
     if (customRestrictor) return (input) => !allowEdit || customRestrictor(input)
     return !allowEdit
   })()
 
-  const restrictDelete: FilterMethod | boolean = (() => {
+  const restrictDelete: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictDelete
     if (customRestrictor) return (input) => !allowDelete || customRestrictor(input)
     return !allowDelete
   })()
 
-  const restrictAdd: FilterMethod | boolean = (() => {
+  const restrictAdd: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictAdd
     if (customRestrictor) return (input) => !allowAdd || customRestrictor(input)
     return !allowAdd

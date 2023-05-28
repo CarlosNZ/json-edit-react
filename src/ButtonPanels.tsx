@@ -1,20 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import { Icon } from './Icons'
 import { useTheme } from './theme'
-import { TranslateMethod } from './localisation'
-import { CollectionDataType, CollectionKey, CopyMethod, CopyType } from './types'
+import { TranslateFunction } from './localisation'
+import { CollectionDataType, CollectionKey, CopyFunction, CopyType } from './types'
 import './style.css'
 
 interface EditButtonProps {
   startEdit?: () => void
   handleDelete?: () => void
-  enableClipboard: boolean | CopyMethod
+  enableClipboard: boolean | CopyFunction
   handleAdd?: (newKey: string) => void
   type?: CollectionDataType
   data: unknown
   path: CollectionKey[]
   name: CollectionKey
-  translate: TranslateMethod
+  translate: TranslateFunction
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({

@@ -295,7 +295,7 @@ export type CompiledStyles = Record<ThemeableElement, React.CSSProperties>
 
 export type ThemeName = keyof typeof themes
 
-// Value(s) passed to "setTheme" method
+// Value(s) passed to "setTheme" function
 export type ThemeInput =
   | ThemeName
   | Theme

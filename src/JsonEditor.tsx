@@ -4,9 +4,9 @@ import extract from 'object-property-extractor'
 import clone from 'just-clone'
 import { useWindowSize } from '@react-hookz/web'
 import { CollectionNode, isCollection } from './CollectionNode'
-import { CollectionData, JsonEditorProps, FilterMethod, OnChangeMethod } from './types'
+import { CollectionData, JsonEditorProps, FilterFunction, OnChangeFunction } from './types'
 import { useTheme, ThemeProvider } from './theme'
-import { getTranslateMethod } from './localisation'
+import { getTranslateFunction } from './localisation'
 import './style.css'
 
 const Editor: React.FC<JsonEditorProps> = ({
@@ -36,8 +36,8 @@ const Editor: React.FC<JsonEditorProps> = ({
 }) => {
   const [data, setData] = useState<object>(srcData)
   const { styles, setTheme, setIcons } = useTheme()
-  const collapseFilter = useCallback(getFilterMethod(collapse), [collapse])
-  const translate = useCallback(getTranslateMethod(translations), [translations])
+  const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
+  const translate = useCallback(getTranslateFunction(translations), [translations])
 
   useEffect(() => {
     setData(srcData)
@@ -52,7 +52,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   // So component can't overflow the current viewport
   const maximumWidth = Math.min(maxWidth, width - 10)
 
-  const onEdit: OnChangeMethod = async (value, path) => {
+  const onEdit: OnChangeFunction = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
       path,
@@ -74,7 +74,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     } else setData(newData)
   }
 
-  const onDelete: OnChangeMethod = async (value, path) => {
+  const onDelete: OnChangeFunction = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
       path,
@@ -96,7 +96,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     } else setData(newData)
   }
 
-  const onAdd: OnChangeMethod = async (value, path) => {
+  const onAdd: OnChangeFunction = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
       path,
@@ -118,9 +118,9 @@ const Editor: React.FC<JsonEditorProps> = ({
     } else setData(newData)
   }
 
-  const restrictEditFilter = getFilterMethod(restrictEdit)
-  const restrictDeleteFilter = getFilterMethod(restrictDelete)
-  const restrictAddFilter = getFilterMethod(restrictAdd)
+  const restrictEditFilter = getFilterFunction(restrictEdit)
+  const restrictDeleteFilter = getFilterFunction(restrictDelete)
+  const restrictAddFilter = getFilterFunction(restrictAdd)
 
   const otherProps = {
     name: rootName,
@@ -184,7 +184,7 @@ const updateDataObject = (
   }
 }
 
-const getFilterMethod = (propValue: boolean | number | FilterMethod): FilterMethod => {
+const getFilterFunction = (propValue: boolean | number | FilterFunction): FilterFunction => {
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
   return propValue

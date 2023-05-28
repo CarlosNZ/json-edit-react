@@ -10,7 +10,7 @@ const localisedStrings = {
 }
 
 export type LocalisedStrings = typeof localisedStrings
-export type TranslateMethod = (key: keyof LocalisedStrings, count?: number) => string
+export type TranslateFunction = (key: keyof LocalisedStrings, count?: number) => string
 
 const translate = (
   translations: Partial<LocalisedStrings>,
@@ -21,6 +21,6 @@ const translate = (
   return count === undefined ? string : string?.replace('{{count}}', String(count))
 }
 
-export const getTranslateMethod =
+export const getTranslateFunction =
   (translations: Partial<LocalisedStrings>) => (key: keyof LocalisedStrings, count?: number) =>
     translate(translations, key, count)
