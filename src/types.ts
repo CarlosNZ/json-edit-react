@@ -72,7 +72,7 @@ export type FilterMethod = (input: {
   path: CollectionKey[]
   level: number
   value: unknown
-  size: number
+  size: number | null
 }) => boolean
 
 export type CopyType = 'path' | 'value'

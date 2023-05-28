@@ -91,7 +91,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     })
   }
 
-  const filterProps = { key: name, path, level: path.length, value: data, size: 1 }
+  const filterProps = { key: name, path, level: path.length, value: data, size: null }
 
   const canEdit = !restrictEditFilter(filterProps)
   const canDelete = !restrictDeleteFilter(filterProps)
