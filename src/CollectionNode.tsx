@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
@@ -108,9 +108,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
     setStringifiedValue(JSON.stringify(data, null, 2))
   }
 
-  const canEdit = !restrictEditFilter(filterProps)
-  const canDelete = !restrictDeleteFilter(filterProps)
-  const canAdd = !restrictAddFilter(filterProps)
+  const canEdit = useMemo(() => !restrictEditFilter(filterProps), [filterProps])
+  const canDelete = useMemo(() => !restrictDeleteFilter(filterProps), [filterProps])
+  const canAdd = useMemo(() => !restrictAddFilter(filterProps), [filterProps])
 
   const showLabel = showArrayIndices || !(typeof path.slice(-1)[0] === 'number')
 
