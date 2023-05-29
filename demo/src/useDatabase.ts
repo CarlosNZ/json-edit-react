@@ -13,7 +13,11 @@ export const useDatabase = () => {
   )
 
   const updateLiveData = async (data) => {
-    await setDoc(doc(db, 'json-edit-react', 'live_json_data'), data, { merge: true })
+    await setDoc(
+      doc(db, 'json-edit-react', 'live_json_data'),
+      { ...data, lastEdited: new Date().toISOString() },
+      { merge: true }
+    )
   }
 
   return { liveData: value?.data(), loading, error, updateLiveData }

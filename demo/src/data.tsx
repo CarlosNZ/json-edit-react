@@ -6,7 +6,7 @@ const data = {
     name: '🔰 Basic',
     description: (
       <Flex flexDir="column" gap={2}>
-        <Text>Play round with the JSON structure, and test out various options above.</Text>
+        <Text>Play around with the JSON structure, and test out various options above.</Text>
         <Text>There are a range of different demo data sets to play with.</Text>
         <Text>Incorporate into your own React project:</Text>
         <Box fontSize="sm">
@@ -26,21 +26,26 @@ const data = {
       number: 99,
       boolean: true,
       nothing: null,
-      children: [
+      Usage: [
         'Edit a value by clicking the "edit" icon, or double-clicking the value.',
         'You can change the type of any value',
-        { nested: 'An object inside an array', basic: false, value: 6.66 },
         'You can add new values to objects or arrays',
+        'You can edit individual values, or even a whole object node at once',
+        {
+          nested: 'An object inside an array',
+          basic: false,
+          value: 6.66,
+        },
       ],
-      object: {
-        name: 'Basic object data',
-        info: 'You can edit individual values, or even a whole object node at once.',
-      },
       'Keyboard interaction': {
         '"Enter" to submit change': '(or Ctrl/Cmd-Enter when editing whole JSON nodes)',
         '"Escape" to cancel': '👍',
         'To start a new line': 'Shift/Ctrl/Cmd-Enter (or just "Enter" when editing JSON nodes)',
         'When copying to clipboard': 'Hold down "Ctrl/Cmd" to copy path instead of data',
+      },
+      object: {
+        name: 'Basic object data',
+        info: 'You can edit individual values, or even a whole object node at once.',
       },
     },
   },
@@ -58,7 +63,10 @@ const data = {
           Note the additional editing restrictions in addition to the toggles above. This has been
           achieved by specifying filter functions for the <span className="code">restrictEdit</span>
           , <span className="code">restrictDelete</span> and{' '}
-          <span className="code">restrictAdd</span> props. <Link>Learn more</Link>
+          <span className="code">restrictAdd</span> props.{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#readme" isExternal>
+            Learn more
+          </Link>
         </Text>
       </Flex>
     ),
@@ -1781,7 +1789,7 @@ const data = {
     ),
     collapse: 3,
     restrictEdit: ({ key, value, level, path, size }) => {
-      return level === 0 || key === 'Title' || key === 'Visitors'
+      return level === 0 || key === 'messages' || key === 'lastEdited'
     },
     restrictDelete: () => true,
     restrictAdd: ({ level }) => level === 0,
@@ -1799,7 +1807,11 @@ const data = {
           required schema.
         </Text>
         <Text>
-          See <Link>here</Link> for theming information.
+          See{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#themes" isExternal>
+            here
+          </Link>{' '}
+          for theming information.
         </Text>
       </Flex>
     ),
