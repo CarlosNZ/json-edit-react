@@ -43,10 +43,6 @@ const data = {
         'To start a new line': 'Shift/Ctrl/Cmd-Enter (or just "Enter" when editing JSON nodes)',
         'When copying to clipboard': 'Hold down "Ctrl/Cmd" to copy path instead of data',
       },
-      object: {
-        name: 'Basic object data',
-        info: 'You can edit individual values, or even a whole object node at once.',
-      },
     },
   },
   starWars: {

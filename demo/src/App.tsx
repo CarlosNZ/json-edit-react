@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
-import { JsonEditor, ThemeName, Theme, themes } from './json-edit-react/src'
+// import { JsonEditor, ThemeName, Theme, themes } from './json-edit-react/src'
+import { JsonEditor, ThemeName, Theme, themes } from 'json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
