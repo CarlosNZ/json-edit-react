@@ -43,10 +43,6 @@ const data = {
         'To start a new line': 'Shift/Ctrl/Cmd-Enter (or just "Enter" when editing JSON nodes)',
         'When copying to clipboard': 'Hold down "Ctrl/Cmd" to copy path instead of data',
       },
-      object: {
-        name: 'Basic object data',
-        info: 'You can edit individual values, or even a whole object node at once.',
-      },
     },
   },
   starWars: {
@@ -70,7 +66,7 @@ const data = {
         </Text>
       </Flex>
     ),
-    // restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
+    restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
     restrictDelete: ({ value }) => typeof value === 'object' && value !== null,
     restrictAdd: ({ value }) => !Array.isArray(value),
     collapse: 1,
