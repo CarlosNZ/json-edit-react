@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useState } from 'react'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import clone from 'just-clone'
-import { useWindowSize } from '@react-hookz/web'
 import { CollectionNode, isCollection } from './CollectionNode'
 import { CollectionData, JsonEditorProps, FilterFunction, OnChangeFunction } from './types'
 import { useTheme, ThemeProvider } from './theme'
@@ -47,10 +46,6 @@ const Editor: React.FC<JsonEditorProps> = ({
     if (theme) setTheme(theme)
     if (icons) setIcons(icons)
   }, [theme, icons])
-
-  const { width } = useWindowSize()
-  // So component can't overflow the current viewport
-  const maximumWidth = Math.min(maxWidth, width - 10)
 
   const onEdit: OnChangeFunction = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
@@ -145,7 +140,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   return (
     <div
       className={'jer-editor-container ' + className}
-      style={{ ...styles.container, minWidth, maxWidth: maximumWidth }}
+      style={{ ...styles.container, minWidth, maxWidth }}
     >
       {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
     </div>

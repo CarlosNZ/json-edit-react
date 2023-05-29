@@ -105,18 +105,6 @@
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
   integrity sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==
 
-"@react-hookz/deep-equal@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@react-hookz/deep-equal/-/deep-equal-1.0.4.tgz#68a71f36cbc88724b3ce6f4036183778b6e7f282"
-  integrity sha512-N56fTrAPUDz/R423pag+n6TXWbvlBZDtTehaGFjK0InmN+V2OFWLE/WmORhmn6Ce7dlwH5+tQN1LJFw3ngTJVg==
-
-"@react-hookz/web@^23.0.0":
-  version "23.0.0"
-  resolved "https://registry.yarnpkg.com/@react-hookz/web/-/web-23.0.0.tgz#d0470de7f9ec4f6eaedd2c13b9fb474d8f3a0d09"
-  integrity sha512-diBtlo17CJtZJ/Yb8veri7hZL7QPnqNZ+IAMHWWSb//nq+Z3XDHaXcozH7cyvMZj4gYwQeY/L/H4298etHxu1Q==
-  dependencies:
-    "@react-hookz/deep-equal" "^1.0.4"
-
 "@rollup/plugin-typescript@^11.1.1":
   version "11.1.1"
   resolved "https://registry.yarnpkg.com/@rollup/plugin-typescript/-/plugin-typescript-11.1.1.tgz#258663a7aa6b51390dd39ae6e5502f2c4b2807cb"

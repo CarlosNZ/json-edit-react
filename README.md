@@ -2,7 +2,7 @@
 
 <img width="60" alt="screenshot" src="image/logo192.png" style="float:left; margin-right: 1em;">
 
-A [React](https://github.com/facebook/react) component for editing for viewing JSON/object data
+A [React](https://github.com/facebook/react) component for editing or viewing JSON/object data
 
 Features include:
 
@@ -48,7 +48,7 @@ or
 import { JsonEditor } from 'json-edit-react'
 
 // In your React components:
-<JsonEditor data={ myObject } { ...props }>
+<JsonEditor data={ myDataObject } { ...props }>
 
 ```
 
@@ -106,12 +106,12 @@ The function will receive the following object as a parameter:
     newValue,     // the new value of the property being updated
     currentValue, // the current value of the property being updated
     name,         // name of the property being updated
-    path          // full path to the property being updated, as an array of property keys (e.g. [ "user", "friends", 1, "name" ] )
-                  // (equivalent to "user.friends[1].name")
+    path          // full path to the property being updated, as an array of property keys
+                  // (e.g. [ "user", "friends", 1, "name" ] ) (equivalent to "user.friends[1].name")
 }
 ```
 
-The function needn't return anything, but if it returns `false`, it will be considered an error, in which case an error message will displayed in the UI and the internal data state won't actually be updated. If the return value is a `string`, this will be the error message displayed.
+The function needn't return anything, but if it returns `false`, it will be considered an error, in which case an error message will displayed in the UI and the internal data state won't actually be updated. If the return value is a `string`, this will be the error message displayed (i.e. you can define your own error messages for updates).
 
 ### Copy function
 
@@ -155,7 +155,8 @@ restrictEdit = { ({ level }) => level === 0 }
 - Don't let the `id` field be edited:
 
 ```js
-restrictEdit = { ({ key }) => key === "id" } // You'd probably want to include this in `restrictDelete` as well
+restrictEdit = { ({ key }) => key === "id" }
+// You'd probably want to include this in `restrictDelete` as well
 ```
 
 - Only individual properties can be deleted, not objects or arrays:
@@ -166,12 +167,13 @@ restrictDelete = { ({ size }) => size !== null }
 
 - The only collections that can have new items added are the "address" object and the "users" array:
 ```js
-restrictAdd = { ({ key }) => key !== "address" && key !== "users" } // "Adding" is irrelevant for non-collection nodes
+restrictAdd = { ({ key }) => key !== "address" && key !== "users" }
+// "Adding" is irrelevant for non-collection nodes
 ```
 
 ## Themes
 
-There are a small selection of built-in themes (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react/)). In order to use one of these, just pass the name into the `theme` prop (although realistically, these exist more to showcase the capabilities  — I'm open to better built-in themes, so feel free to [create an issue](https://github.com/CarlosNZ/json-edit-react/issues) with suggestions). The available themes are:
+There is a small selection of built-in themes (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react/)). In order to use one of these, just pass the name into the `theme` prop (although realistically, these exist more to showcase the capabilities  — I'm open to better built-in themes, so feel free to [create an issue](https://github.com/CarlosNZ/json-edit-react/issues) with suggestions). The available themes are:
 - `default`
 - `githubDark`
 - `githubLight`
@@ -228,13 +230,10 @@ theme={[
       ]}
 ```
 
-Which would change the "Edit" icon and boolean values from this:
-
-![Github Dark theme original](image/theme_edit_before.png)
-
-into this:
-
-![Github Dark theme modified](image/theme_edit_after.png)
+Which would change the "Edit" icon and boolean values from this:  
+<img width="218" alt="Github Dark theme original" src="image/theme_edit_before.png">  
+into this:  
+<img width="218" alt="Github Dark theme modified" src="image/theme_edit_after.png">
 
 Or you could create your own theme from scratch and overwrite the whole theme object.
 
@@ -246,9 +245,10 @@ So, to summarise, the `theme` prop can take *either*:
 - a theme name *and* an override object in an array, i.e. `[ "<themeName>, {...overrides } ]`
 
 You can play round with live editing of the themes in the [Demo app](https://carlosnz.github.io/json-edit-react/) by selecting "Edit this theme!" from the "Demo data" selector.
+
 ### Fragments
 
-The `fragments` property above is just convenience to allow repeated style "fragments" to be defined once and referred to using an alias. For example, if you wanted all your icons to be blue and slightly larger and spaced out, you might define a fragment like so:
+The `fragments` property above is just a convenience to allow repeated style "fragments" to be defined once and referred to using an alias. For example, if you wanted all your icons to be blue and slightly larger and spaced out, you might define a fragment like so:
 ```js
 fragments: { iconAdjust: { color: "blue", fontSize: "110%", marginRight: "0.6em" }}
 ```
