@@ -9,12 +9,12 @@ const db = getFirestore(firebaseApp)
 
 export const useDatabase = () => {
   const [value, loading, error] = useDocument(
-    doc(getFirestore(firebaseApp), 'json-edit-react', 'guestbook')
+    doc(getFirestore(firebaseApp), 'json-edit-react', 'live_json_data')
   )
 
-  const updateGuestbook = async (data) => {
-    await setDoc(doc(db, 'json-edit-react', 'guestbook'), data, { merge: true })
+  const updateLiveData = async (data) => {
+    await setDoc(doc(db, 'json-edit-react', 'live_json_data'), data, { merge: true })
   }
 
-  return { guestbook: value?.data(), loading, error, updateGuestbook }
+  return { liveData: value?.data(), loading, error, updateLiveData }
 }

@@ -1,29 +1,29 @@
 import { ThemeInput } from './theme'
-import { LocalisedStrings, TranslateMethod } from './localisation'
+import { LocalisedStrings, TranslateFunction } from './localisation'
 import React from 'react'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
 
 export interface JsonEditorProps {
   data: object
-  schema?: object
+  // schema?: object
   rootName?: string
-  onUpdate?: UpdateMethod
-  onEdit?: UpdateMethod
-  onDelete?: UpdateMethod
-  onAdd?: UpdateMethod
-  enableClipboard?: boolean | CopyMethod
+  onUpdate?: UpdateFunction
+  onEdit?: UpdateFunction
+  onDelete?: UpdateFunction
+  onAdd?: UpdateFunction
+  enableClipboard?: boolean | CopyFunction
   theme?: ThemeInput
   icons?: IconReplacements
   className?: string
   indent?: number
-  collapse?: boolean | number | FilterMethod
-  showCount?: boolean | FilterMethod
-  restrictEdit?: boolean | FilterMethod
-  restrictDelete?: boolean | FilterMethod
-  restrictAdd?: boolean | FilterMethod
-  restrictKeyEdit?: boolean | FilterMethod
-  keySort?: boolean | CompareMethod
+  collapse?: boolean | number | FilterFunction
+  // showCount?: boolean | FilterFunction
+  restrictEdit?: boolean | FilterFunction
+  restrictDelete?: boolean | FilterFunction
+  restrictAdd?: boolean | FilterFunction
+  restrictKeyEdit?: boolean | FilterFunction
+  keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
   defaultValue?: unknown
   minWidth?: string | number
@@ -55,10 +55,10 @@ export interface IconReplacements {
 }
 
 /**
- * METHODS
+ * FUNCTIONS
  */
 
-export type UpdateMethod = (props: {
+export type UpdateFunction = (props: {
   newData: object
   currentData: object
   newValue: unknown
@@ -67,26 +67,26 @@ export type UpdateMethod = (props: {
   path: CollectionKey[]
 }) => void | ErrorString | false
 
-export type FilterMethod = (input: {
+export type FilterFunction = (input: {
   key: CollectionKey
   path: CollectionKey[]
   level: number
   value: unknown
-  size: number
+  size: number | null
 }) => boolean
 
 export type CopyType = 'path' | 'value'
-export type CopyMethod = (input: {
+export type CopyFunction = (input: {
   key: CollectionKey
   path: CollectionKey[]
   value: unknown
   type: CopyType
 }) => void
 
-export type CompareMethod = (a: string, b: string) => number
+export type CompareFunction = (a: string, b: string) => number
 
 // Internal update
-export type OnChangeMethod = (value: unknown, path: (string | number)[]) => Promise<string | void>
+export type OnChangeFunction = (value: unknown, path: (string | number)[]) => Promise<string | void>
 
 /**
  * NODES
@@ -96,23 +96,23 @@ interface BaseNodeProps {
   data: unknown
   path: CollectionKey[]
   name: CollectionKey
-  onEdit: OnChangeMethod
-  onDelete: OnChangeMethod
-  enableClipboard: boolean | CopyMethod
-  restrictEditFilter: FilterMethod
-  restrictDeleteFilter: FilterMethod
-  restrictAddFilter: FilterMethod
+  onEdit: OnChangeFunction
+  onDelete: OnChangeFunction
+  enableClipboard: boolean | CopyFunction
+  restrictEditFilter: FilterFunction
+  restrictDeleteFilter: FilterFunction
+  restrictAddFilter: FilterFunction
   showArrayIndices: boolean
   stringTruncate: number
   indent: number
-  translate: TranslateMethod
+  translate: TranslateFunction
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
   data: CollectionData
-  collapseFilter: FilterMethod
-  onAdd: OnChangeMethod
-  keySort: boolean | CompareMethod
+  collapseFilter: FilterFunction
+  onAdd: OnChangeFunction
+  keySort: boolean | CompareFunction
   defaultValue: unknown
 }
 

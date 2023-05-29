@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   StringValue,
   NumberValue,
@@ -91,10 +91,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     })
   }
 
-  const filterProps = { key: name, path, level: path.length, value: data, size: 1 }
+  const filterProps = { key: name, path, level: path.length, value: data, size: null }
 
-  const canEdit = !restrictEditFilter(filterProps)
-  const canDelete = !restrictDeleteFilter(filterProps)
+  const canEdit = useMemo(() => !restrictEditFilter(filterProps), [filterProps])
+  const canDelete = useMemo(() => !restrictDeleteFilter(filterProps), [filterProps])
 
   const inputProps = {
     value,

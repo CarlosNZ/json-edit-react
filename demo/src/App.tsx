@@ -34,7 +34,7 @@ import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import demoData from './data'
 import { useDatabase } from './useDatabase'
 import './style.css'
-import { FilterMethod } from './json-edit-react/src/types'
+import { FilterFunction } from './json-edit-react/src/types'
 
 function App() {
   const [selectedData, setSelectedData] = useState('basic')
@@ -53,7 +53,7 @@ function App() {
   const previousThemeName = useRef('') // Used when resetting after theme editing
   const toast = useToast()
 
-  const { guestbook, updateGuestbook } = useDatabase()
+  const { liveData, updateLiveData } = useDatabase()
 
   const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] = useUndo(
     demoData[selectedData].data
@@ -63,10 +63,10 @@ function App() {
     switch (selectedData) {
       case 'editTheme':
         return
-      case 'liveGuestbook':
-        setCollapseLevel(demoData.liveGuestbook.collapse)
-        if (!guestbook) reset({ 'Oops!': "We couldn't load this data, sorry " })
-        else reset(guestbook)
+      case 'liveData':
+        setCollapseLevel(demoData.liveData.collapse)
+        if (!liveData) reset({ 'Oops!': "We couldn't load this data, sorry " })
+        else reset(liveData)
         return
       default:
         const newData = demoData[selectedData]
@@ -75,19 +75,19 @@ function App() {
     }
   }, [selectedData, reset])
 
-  const restrictEdit: FilterMethod | boolean = (() => {
+  const restrictEdit: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictEdit
     if (customRestrictor) return (input) => !allowEdit || customRestrictor(input)
     return !allowEdit
   })()
 
-  const restrictDelete: FilterMethod | boolean = (() => {
+  const restrictDelete: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictDelete
     if (customRestrictor) return (input) => !allowDelete || customRestrictor(input)
     return !allowDelete
   })()
 
-  const restrictAdd: FilterMethod | boolean = (() => {
+  const restrictAdd: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictAdd
     if (customRestrictor) return (input) => !allowAdd || customRestrictor(input)
     return !allowAdd
@@ -115,9 +115,9 @@ function App() {
       case 'editTheme':
         reset(themes[previousThemeName.current])
         return
-      case 'liveGuestbook':
+      case 'liveData':
         setIsSaving(true)
-        await updateGuestbook(data)
+        await updateLiveData(data)
         setIsSaving(false)
         toast({
           title: 'Whoosh!',
@@ -126,7 +126,7 @@ function App() {
           duration: 5000,
           isClosable: true,
         })
-        console.log(guestbook)
+        console.log(liveData)
         reset(data)
         return
       default:
@@ -207,6 +207,7 @@ function App() {
           showArrayIndices={showIndices}
           maxWidth={650}
           className="block-shadow"
+          stringTruncate={80}
         />
         <VStack w="100%" align="flex-end" gap={4}>
           <HStack w="100%" justify="space-between" mt={4}>
@@ -238,13 +239,13 @@ function App() {
             </Text>
             <Button
               colorScheme="accentScheme"
-              leftIcon={selectedData === 'liveGuestbook' ? <AiOutlineCloudUpload /> : <BiReset />}
+              leftIcon={selectedData === 'liveData' ? <AiOutlineCloudUpload /> : <BiReset />}
               variant="outline"
               onClick={handleReset}
               visibility={canUndo ? 'visible' : 'hidden'}
               isLoading={isSaving}
             >
-              {selectedData === 'liveGuestbook' ? 'Push to the cloud' : 'Reset'}
+              {selectedData === 'liveData' ? 'Push to the cloud' : 'Reset'}
             </Button>
           </HStack>
         </VStack>
