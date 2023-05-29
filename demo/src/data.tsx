@@ -1768,8 +1768,8 @@ const data = {
       'editor.formatOnSave': true,
     },
   },
-  liveGuestbook: {
-    name: '📖 Live Guestbook',
+  liveData: {
+    name: '📖 Live Data (from database)',
     description: (
       <Text>
         Let's try a little experiment. You can save this JSON object to a live database, so feel

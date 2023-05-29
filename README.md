@@ -313,8 +313,8 @@ Localise your implementation by passing in a `translations` object to replace th
 ## Undo functionality
 
 Even though Undo/Redo functionality is probably desirable in most cases, this is not built in to the component, for two main reasons:
-1. It would involve too much additional UI and I didn't want this component becoming opinionated about how it should look and feel beyond the essentials (which are mostly customisable/style-able anyway)
-2. It is quite straightforward to implement using existing libraries. I've used **[use-undo](https://github.com/homerchen19/use-undo)** in the [Demo](https://carlosnz.github.io/json-edit-react/), which is working very well.
+1. It would involve too much additional UI and I didn't want this component becoming opinionated about the look and feel beyond the essentials (which are mostly customisable/style-able anyway)
+2. It is quite straightforward to implement using existing libraries. I've used **[use-undo](https://github.com/homerchen19/use-undo)** in the [Demo](https://carlosnz.github.io/json-edit-react/), which is working well.
 
 ## Issues, bugs, suggestions?
 
@@ -324,7 +324,7 @@ Please open an issue: https://github.com/CarlosNZ/json-edit-react/issues
 
 The main features I'd like to introduce are:
 
-1. **JSON Schema validation**. We can currently specify a reasonable degree of control over what can be edited using [Filter functions](#filter-functions) with the restriction props, but I'd like to go a step further and be able to pass in a [JSON Schema](https://json-schema.org/) and have the data be automatically validated against it. This would allow control over data types and prevent missing properties, something that is not currently possible.
+1. **JSON Schema validation**. We can currently specify a reasonable degree of control over what can be edited using [Filter functions](#filter-functions) with the restriction props, but I'd like to go a step further and be able to pass in a [JSON Schema](https://json-schema.org/) and have the data be automatically validated against it, with the results reflected in the UI. This would allow control over data types and prevent missing properties, something that is not currently possible.
 2. **Visibility filter function** — *hide* properties from the UI completely based on a Filter function. This should arguably be done outside the component though (filter the data upstream), so would be less of a priority (though it would be fairly simple to implement, so 🤷‍♂️)
 3. **Search** — allow the user to narrow the list of visible keys with a simple search input. This would be useful for very large data objects, but is possibly getting a bit too much in terms of opinionated UI, so would need to ensure it can be styled easily. Perhaps it would be better if the "Search" input was handled outside this package, and we just accepted a "search" string prop?
 

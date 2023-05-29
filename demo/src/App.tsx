@@ -53,7 +53,7 @@ function App() {
   const previousThemeName = useRef('') // Used when resetting after theme editing
   const toast = useToast()
 
-  const { guestbook, updateGuestbook } = useDatabase()
+  const { liveData, updateLiveData } = useDatabase()
 
   const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] = useUndo(
     demoData[selectedData].data
@@ -63,10 +63,10 @@ function App() {
     switch (selectedData) {
       case 'editTheme':
         return
-      case 'liveGuestbook':
-        setCollapseLevel(demoData.liveGuestbook.collapse)
-        if (!guestbook) reset({ 'Oops!': "We couldn't load this data, sorry " })
-        else reset(guestbook)
+      case 'liveData':
+        setCollapseLevel(demoData.liveData.collapse)
+        if (!liveData) reset({ 'Oops!': "We couldn't load this data, sorry " })
+        else reset(liveData)
         return
       default:
         const newData = demoData[selectedData]
@@ -115,9 +115,9 @@ function App() {
       case 'editTheme':
         reset(themes[previousThemeName.current])
         return
-      case 'liveGuestbook':
+      case 'liveData':
         setIsSaving(true)
-        await updateGuestbook(data)
+        await updateLiveData(data)
         setIsSaving(false)
         toast({
           title: 'Whoosh!',
@@ -126,7 +126,7 @@ function App() {
           duration: 5000,
           isClosable: true,
         })
-        console.log(guestbook)
+        console.log(liveData)
         reset(data)
         return
       default:
@@ -239,13 +239,13 @@ function App() {
             </Text>
             <Button
               colorScheme="accentScheme"
-              leftIcon={selectedData === 'liveGuestbook' ? <AiOutlineCloudUpload /> : <BiReset />}
+              leftIcon={selectedData === 'liveData' ? <AiOutlineCloudUpload /> : <BiReset />}
               variant="outline"
               onClick={handleReset}
               visibility={canUndo ? 'visible' : 'hidden'}
               isLoading={isSaving}
             >
-              {selectedData === 'liveGuestbook' ? 'Push to the cloud' : 'Reset'}
+              {selectedData === 'liveData' ? 'Push to the cloud' : 'Reset'}
             </Button>
           </HStack>
         </VStack>
