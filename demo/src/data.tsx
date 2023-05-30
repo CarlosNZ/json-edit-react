@@ -66,7 +66,7 @@ const data = {
         </Text>
       </Flex>
     ),
-    // restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
+    restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
     restrictDelete: ({ value }) => typeof value === 'object' && value !== null,
     restrictAdd: ({ value }) => !Array.isArray(value),
     collapse: 1,
