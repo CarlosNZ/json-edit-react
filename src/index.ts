@@ -1,4 +1,4 @@
 import JsonEditor from './JsonEditor'
-import { themes, ThemeName, Theme } from './theme'
+import { themes, ThemeName, Theme, ThemeInput } from './theme'
 
-export { JsonEditor, themes, type ThemeName, type Theme }
+export { JsonEditor, themes, type ThemeName, type Theme, type ThemeInput }

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 // import { JsonEditor, ThemeName, Theme, themes } from './json-edit-react/src'
+import { ThemeInput } from './json-edit-react/src'
 import { JsonEditor, ThemeName, Theme, themes } from 'json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
@@ -42,7 +43,7 @@ function App() {
   const [rootName, setRootName] = useState('data')
   const [indent, setIndent] = useState(4)
   const [collapseLevel, setCollapseLevel] = useState(2)
-  const [theme, setTheme] = useState<ThemeName>('default')
+  const [theme, setTheme] = useState<ThemeInput>('default')
   const [allowEdit, setAllowEdit] = useState(true)
   const [allowDelete, setAllowDelete] = useState(true)
   const [allowAdd, setAllowAdd] = useState(true)
@@ -75,6 +76,10 @@ function App() {
         reset(newData.data)
     }
   }, [selectedData, reset])
+
+  useEffect(() => {
+    if (selectedData === 'editTheme') setTheme(data)
+  }, [data])
 
   const restrictEdit: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictEdit
@@ -115,6 +120,7 @@ function App() {
     switch (selectedData) {
       case 'editTheme':
         reset(themes[previousThemeName.current])
+        setTheme(themes[previousThemeName.current])
         return
       case 'liveData':
         setIsSaving(true)
@@ -185,7 +191,7 @@ function App() {
           indent={indent}
           onUpdate={({ newData }) => {
             setData(newData)
-            if (selectedData === 'editTheme') setTheme(newData as any)
+            if (selectedData === 'editTheme') setTheme(newData)
           }}
           collapse={collapseLevel}
           enableClipboard={
