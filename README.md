@@ -215,7 +215,7 @@ However, you can pass in your own theme object, or part thereof. The theme struc
 
 ```
 
-The `styles` property is the main one to focus on. Each key (`property`, `bracket`, `itemCount`) refers to a part of the UI. The value for each key is *either* a `string`, in which case it is interpreted as the colour (or background colour in the case of `container` and `inputHighlight`), *or* a full CSS style object for fine-grained definition. You only need to provide properties you wish to override —— all unspecified ones will fallback to either the default theme, or another theme that you specify as the "base".
+The `styles` property is the main one to focus on. Each key (`property`, `bracket`, `itemCount`) refers to a part of the UI. The value for each key is *either* a `string`, in which case it is interpreted as the colour (or background colour in the case of `container` and `inputHighlight`), *or* a full CSS style object for fine-grained definition. You only need to provide properties you wish to override — all unspecified ones will fallback to either the default theme, or another theme that you specify as the "base".
 
 For example, if you want to use the "githubDark" theme, but just change a couple of small things, you'd specify something like this:
 
