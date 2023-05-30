@@ -1,6 +1,6 @@
 {
   "name": "json-edit-react",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
