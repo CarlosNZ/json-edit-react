@@ -31,6 +31,7 @@ Features include:
 - [Undo functionality](#undo-functionality)
 - [Issues, bugs, suggestions?](#issues-bugs-suggestions)
 - [Roadmap](#roadmap)
+- [Inspiration](#inspiration)
 - [Changelog](#changelog)
 
 
@@ -328,7 +329,12 @@ The main features I'd like to introduce are:
 2. **Visibility filter function** — *hide* properties from the UI completely based on a Filter function. This should arguably be done outside the component though (filter the data upstream), so would be less of a priority (though it would be fairly simple to implement, so 🤷‍♂️)
 3. **Search** — allow the user to narrow the list of visible keys with a simple search input. This would be useful for very large data objects, but is possibly getting a bit too much in terms of opinionated UI, so would need to ensure it can be styled easily. Perhaps it would be better if the "Search" input was handled outside this package, and we just accepted a "search" string prop?
 
+## Inspiration
+
+This component is heavily inspired by [react-json-view](https://github.com/mac-s-g/react-json-view), a great package that I've used in my own projects. However, it seems to have been abandoned now, and requires a few critical fixes, so I decided to create my own from scratch and extend the functionality while I was at it.
 
 ## Changelog
 
 - **0.9.0**: Initial release
+- **0.9.1**: Export more Types from the package
+
