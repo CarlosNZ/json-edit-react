@@ -335,6 +335,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **0.9.0**: Initial release
+- **0.9.3**: Bundle as ES6 module
 - **0.9.1**: Export more Types from the package
+- **0.9.0**: Initial release
 

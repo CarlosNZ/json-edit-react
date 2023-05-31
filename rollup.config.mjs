@@ -21,7 +21,7 @@ export default [
     plugins: [
       styles(),
       peerDepsExternal({ includeDependencies: true }),
-      typescript({ module: 'ESNext' }),
+      typescript({ module: 'ESNext', target: 'es6' }),
       sizes(),
       // terser(),
     ],
