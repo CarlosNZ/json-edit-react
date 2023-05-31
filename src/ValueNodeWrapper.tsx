@@ -37,12 +37,15 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
 }) => {
   const { styles } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
-  const [value, setValue] = useState<typeof data | CollectionData>(data)
+  const [value, setValue] = useState<typeof data | CollectionData>(
+    // Bad things happen when you put a function into useState
+    typeof data === 'function' ? 'INVALID_FUNCTION' : data
+  )
   const [error, setError] = useState<string | null>(null)
   const [dataType, setDataType] = useState<DataType>(getDataType(data))
 
   useEffect(() => {
-    setValue(data)
+    setValue(typeof data === 'function' ? 'INVALID_FUNCTION' : data)
     setDataType(getDataType(data))
   }, [data, error])
 
