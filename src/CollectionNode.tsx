@@ -122,8 +122,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   if (keySort && collectionType === 'object')
     keyValueArray.sort(typeof keySort === 'function' ? (a, b) => keySort(a[0], b[0]) : undefined)
 
-  // Used to determine the approximate height of the block, for setting the
-  // max-height in the collapsible interior
+  // A crude measure to estimate the approximate height of the block, for
+  // setting the max-height in the collapsible interior
   const numOfLines = JSON.stringify(data, null, 2).split('\n').length
 
   return (
