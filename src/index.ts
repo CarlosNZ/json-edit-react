@@ -25,3 +25,5 @@ export {
   type LocalisedStrings,
   type TranslateFunction,
 }
+
+export default JsonEditor

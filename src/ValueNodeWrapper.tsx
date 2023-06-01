@@ -37,12 +37,15 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
 }) => {
   const { styles } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
-  const [value, setValue] = useState<typeof data | CollectionData>(data)
+  const [value, setValue] = useState<typeof data | CollectionData>(
+    // Bad things happen when you put a function into useState
+    typeof data === 'function' ? 'INVALID_FUNCTION' : data
+  )
   const [error, setError] = useState<string | null>(null)
   const [dataType, setDataType] = useState<DataType>(getDataType(data))
 
   useEffect(() => {
-    setValue(data)
+    setValue(typeof data === 'function' ? 'INVALID_FUNCTION' : data)
     setDataType(getDataType(data))
   }, [data, error])
 
@@ -109,7 +112,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
 
   return (
     <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
-      <div className="jer-value-main-row">
+      <div
+        className="jer-value-main-row"
+        style={{
+          flexWrap: (name as string).length > 10 ? 'wrap' : 'nowrap',
+        }}
+      >
         {showArrayIndices && (
           <label
             htmlFor={path.join('.')}
@@ -117,47 +125,53 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
             style={{
               ...styles.property,
               minWidth: `${Math.min(String(name).length + 1, 5)}ch`,
+              flexShrink: (name as string).length > 10 ? 1 : 0,
             }}
           >
             {name}:{' '}
           </label>
         )}
-        <div className="jer-input-component">{getInputComponent(dataType, inputProps)}</div>
-        {isEditing ? (
-          <InputButtons onOk={handleEdit} onCancel={handleCancel} />
-        ) : (
-          dataType !== 'invalid' &&
-          !error && (
-            <EditButtons
-              startEdit={canEdit ? () => setIsEditing(true) : undefined}
-              handleDelete={canDelete ? handleDelete : undefined}
-              data={data}
-              enableClipboard={enableClipboard}
-              name={name}
-              path={path}
-              translate={translate}
-            />
-          )
-        )}
-        {isEditing && (
-          <select
-            name={`${name}-type-select`}
-            className="jer-type-select"
-            onChange={(e) => handleChangeDataType(e.target.value as DataType)}
-            value={dataType}
-          >
-            {DataTypes.map((type) => (
-              <option value={type} key={type}>
-                {type}
-              </option>
-            ))}
-          </select>
-        )}
-        {!isEditing && error && (
-          <span className="jer-error-slug" style={styles.error}>
-            {error}
-          </span>
-        )}
+        <div className="jer-value-and-buttons">
+          <div className="jer-input-component">{getInputComponent(dataType, inputProps)}</div>
+          {isEditing ? (
+            <InputButtons onOk={handleEdit} onCancel={handleCancel} />
+          ) : (
+            dataType !== 'invalid' &&
+            !error && (
+              <EditButtons
+                startEdit={canEdit ? () => setIsEditing(true) : undefined}
+                handleDelete={canDelete ? handleDelete : undefined}
+                data={data}
+                enableClipboard={enableClipboard}
+                name={name}
+                path={path}
+                translate={translate}
+              />
+            )
+          )}
+          {isEditing && (
+            <div className="jer-select">
+              <select
+                name={`${name}-type-select`}
+                className="jer-type-select"
+                onChange={(e) => handleChangeDataType(e.target.value as DataType)}
+                value={dataType}
+              >
+                {DataTypes.map((type) => (
+                  <option value={type} key={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+              <span className="focus"></span>
+            </div>
+          )}
+          {!isEditing && error && (
+            <span className="jer-error-slug" style={styles.error}>
+              {error}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   )

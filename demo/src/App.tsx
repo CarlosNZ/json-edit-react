@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
-// import { JsonEditor, themes, ThemeName, Theme, ThemeInput } from './json-edit-react/src'
-import { JsonEditor, themes, ThemeName, Theme, ThemeInput } from 'json-edit-react'
+import JsonEditor, { themes, ThemeName, Theme, ThemeInput } from './json-edit-react/src'
+// import JsonEditor, { themes, ThemeName, Theme, ThemeInput } from 'json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -101,9 +101,9 @@ function App() {
   const handleChangeData = (e) => {
     setSelectedData(e.target.value)
     if (e.target.value === 'editTheme') {
-      previousThemeName.current = theme
+      previousThemeName.current = theme as string
       setCollapseLevel(demoData.editTheme.collapse)
-      reset(themes[theme])
+      reset(themes[theme as string])
     }
   }
 

@@ -46,14 +46,14 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 
   const handleCopy = (e: React.MouseEvent<HTMLElement>) => {
     let type: CopyType = 'value'
-    let value
+    let value = ''
     if (enableClipboard) {
       switch (e.ctrlKey || e.metaKey) {
         case true:
           value = stringifyPath(path)
           type = 'path'
           break
-        case false:
+        default:
           value = JSON.stringify(data, null, 2)
       }
       navigator.clipboard.writeText(value)
