@@ -28,7 +28,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   showArrayIndices = true,
   defaultValue = null,
   minWidth = 250,
-  maxWidth = 600,
+  maxWidth = 'min(600px, 90vw)',
   stringTruncate = 250,
   translations = {},
   className,

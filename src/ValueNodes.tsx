@@ -4,6 +4,8 @@ import { InputProps } from './types'
 import { useTheme } from './theme'
 import './style.css'
 
+export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
+
 export const truncate = (string: string, length = 200) =>
   string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
 
@@ -134,14 +136,26 @@ export const NullValue: React.FC<InputProps> = ({ value, isEditing, setIsEditing
   )
 }
 
-export const ObjectValue: React.FC<InputProps> = () => {
-  return <span className="jer-value-object">{'{ }'}</span>
-}
+export const ObjectValue: React.FC<InputProps> = () => (
+  <span className="jer-value-object">{'{ }'}</span>
+)
 
-export const ArrayValue: React.FC<InputProps> = ({ value }) => {
-  return <span className="jer-value-array">{`[${value === null ? '' : value}]`}</span>
-}
+export const ArrayValue: React.FC<InputProps> = ({ value }) => (
+  <span className="jer-value-array">{`[${value === null ? '' : value}]`}</span>
+)
 
-export const InvalidValue: React.FC<InputProps> = () => {
-  return <span className="jer-value-invalid">Invalid value</span>
+export const InvalidValue: React.FC<InputProps> = ({ value }) => {
+  let message = 'Error!'
+  switch (typeof value) {
+    case 'string':
+      if (value === INVALID_FUNCTION_STRING) message = 'Function'
+      break
+    case 'undefined':
+      message = 'Undefined'
+      break
+    case 'symbol':
+      message = 'Symbol'
+      break
+  }
+  return <span className="jer-value-invalid">{message}</span>
 }

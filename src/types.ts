@@ -27,7 +27,7 @@ export interface JsonEditorProps {
   showArrayIndices?: boolean
   defaultValue?: unknown
   minWidth?: string | number
-  maxWidth?: number
+  maxWidth?: string | number
   stringTruncate?: number
   translations?: Partial<LocalisedStrings>
 }
