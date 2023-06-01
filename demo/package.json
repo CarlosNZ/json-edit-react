@@ -32,6 +32,7 @@
   "scripts": {
     "start": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && concurrently --kill-others-on-fail  \"PORT=3005 react-scripts start\" \"nodemon watch.js\"",
     "build": "react-scripts build",
+    "prebuild": "node ./scripts/getVersion.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "predeploy": "yarn build",

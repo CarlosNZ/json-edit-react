@@ -13,7 +13,7 @@
   "license": "MIT",
   "scripts": {
     "setup": "yarn install && cd demo && yarn install",
-    "demo": "cd demo && yarn start",
+    "demo": "cd demo && node ./scripts/getVersion.js &&  yarn start",
     "build": "rimraf ./build && rollup -c && rimraf ./build/dts",
     "compile": "rimraf ./build && tsc"
   },

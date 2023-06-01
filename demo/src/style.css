@@ -1,3 +1,17 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+footer {
+  height: 50px;
+  display: flex;
+  padding: 10px;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
 .inputRow {
   display: flex;
   width: 100%;
