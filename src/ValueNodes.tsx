@@ -79,7 +79,7 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
       type="text"
       name={path.join('.')}
       value={value}
-      onChange={(e) => setValue(e.target.value)}
+      onChange={(e) => setValue(validateNumber(e.target.value))}
       autoFocus
       onFocus={(e) => e.target.select()}
       onKeyDown={handleKeyPress}

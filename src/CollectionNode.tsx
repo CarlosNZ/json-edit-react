@@ -141,20 +141,25 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
         </div>
         <div className="jer-collection-name">
           <span style={styles.property}>{showLabel ? `${name}:` : null}</span>
-          <span className="jer-brackets" style={styles.bracket}>
-            {brackets.open}
-          </span>
+          {!isEditing && (
+            <span className="jer-brackets" style={styles.bracket}>
+              {brackets.open}
+            </span>
+          )}
         </div>
-        <div className="jer-collection-item-count" style={styles.itemCount}>
-          {collectionSize === 1
-            ? translate('ITEM_SINGLE', 1)
-            : translate('ITEMS_MULTIPLE', collectionSize)}
-        </div>
-        {collapsed && (
-          <div className="jer-brackets" style={styles.bracket}>
-            {brackets.close}
+        {!isEditing && (
+          <div className="jer-collection-item-count" style={styles.itemCount}>
+            {collectionSize === 1
+              ? translate('ITEM_SINGLE', 1)
+              : translate('ITEMS_MULTIPLE', collectionSize)}
           </div>
         )}
+        <div
+          className={`jer-brackets${collapsed ? ' jer-visible' : ' jer-hidden'}`}
+          style={styles.bracket}
+        >
+          {brackets.close}
+        </div>
         {!isEditing && (
           <EditButtons
             startEdit={
@@ -179,7 +184,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       <div
         className={'jer-collection-inner'}
         style={{
-          maxHeight: collapsed ? 0 : `${numOfLines * 1.6}em`,
+          maxHeight: collapsed ? 0 : !isEditing ? `${numOfLines * 4}em` : undefined,
           overflowY: collapsed ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately
           // "height: auto" doesn't 😔
@@ -188,16 +193,18 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       >
         {isEditing ? (
           <div className="jer-collection-text-edit">
-            <AutogrowTextArea
-              className="jer-collection-text-area"
-              name={path.join('.')}
-              value={stringifiedValue}
-              setValue={setStringifiedValue}
-              isEditing={isEditing}
-              handleKeyPress={handleKeyPress}
-            />
-            <div className="jer-collection-input-button-row">
-              <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
+            <div>
+              <AutogrowTextArea
+                className="jer-collection-text-area"
+                name={path.join('.')}
+                value={stringifiedValue}
+                setValue={setStringifiedValue}
+                isEditing={isEditing}
+                handleKeyPress={handleKeyPress}
+              />
+              <div className="jer-collection-input-button-row">
+                <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
+              </div>
             </div>
           </div>
         ) : (
@@ -235,7 +242,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           )}
         </div>
       </div>
-      {!collapsed && (
+      {!collapsed && !isEditing && (
         <div className="jer-brackets" style={styles.bracket}>
           {brackets.close}
         </div>

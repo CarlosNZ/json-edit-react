@@ -211,7 +211,7 @@ function App() {
           keySort={sortKeys}
           defaultValue={defaultNewValue}
           showArrayIndices={showIndices}
-          maxWidth={300}
+          maxWidth={650}
           className="block-shadow"
           stringTruncate={80}
         />
