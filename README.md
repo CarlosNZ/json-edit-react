@@ -9,8 +9,7 @@ Features include:
  - edit individual values, or whole objects as JSON text
  - fine-grained control over which elements can be edited, deleted, or added to
  - customisable UI, through simple, pre-defined [themes](#themes), or specific CSS overrides
- - self-contained — constructed with HTML/CSS, so no dependance on external UI libraries
- - Typescript!
+ - self-contained — rendered with plain HTML/CSS, so no dependance on external UI libraries
 
 **[Explore the Demo](https://carlosnz.github.io/json-edit-react/)**
 
