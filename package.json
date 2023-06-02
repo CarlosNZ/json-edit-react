@@ -13,9 +13,11 @@
   "license": "MIT",
   "scripts": {
     "setup": "yarn install && cd demo && yarn install",
-    "demo": "cd demo && node ./scripts/getVersion.js &&  yarn start",
+    "demo": "cd demo && node ./scripts/getVersion.js && yarn start",
     "build": "rimraf ./build && rollup -c && rimraf ./build/dts",
-    "compile": "rimraf ./build && tsc"
+    "compile": "rimraf ./build && tsc",
+    "release": "yarn build && yarn publish",
+    "release-demo": "cd demo && yarn deploy"
   },
   "peerDependencies": {
     "@types/react": "^18.2.6",
