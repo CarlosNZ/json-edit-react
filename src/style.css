@@ -4,7 +4,7 @@
   --jer-select-arrow: #777;
   --jer-form-border: 1px solid #ededf0;
   --jer-form-border-focus: 1px solid #e2e2e2;
-  --jer-expand-transition-time: 0.2s;
+  --jer-expand-transition-time: 0.5s;
   --jer-highlight-color: #b3d8ff;
 }
 
@@ -308,28 +308,15 @@ select:focus + .focus {
 .jer-input-buttons {
 }
 
-.jer-icon-wrapper {
-  height: 1.4em;
-  opacity: 1;
-  transition: 0.2s;
-}
-
-.jer-icon-wrapper:active {
-  position: relative;
-  top: 0.07em;
-}
-
-.jer-icon-wrapper:hover {
-  opacity: 0.85;
-  transition: 0.2s;
-  transform: scale(1.2);
-}
-
 .jer-copy-pulse {
   position: relative;
+  transition: transform var(--jer-expand-transition-time);
 }
 
 .jer-copy-pulse:hover {
+  opacity: 0.85;
+  transition: 0.3s;
+  transform: scale(1.2);
 }
 
 .jer-copy-pulse:after {
@@ -365,8 +352,9 @@ select:focus + .focus {
   transition: transform var(--jer-expand-transition-time);
 }
 
-.jer-icon {
+.jer-accordion-icon {
   /* font-size: '2em'; */
+  transition: transform var(--jer-expand-transition-time);
 }
 
 .jer-icon:hover {

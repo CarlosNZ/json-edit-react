@@ -9,7 +9,7 @@ Features include:
  - edit individual values, or whole objects as JSON text
  - fine-grained control over which elements can be edited, deleted, or added to
  - customisable UI, through simple, pre-defined [themes](#themes), or specific CSS overrides
- - self-contained — constructed with HTML/CSS, so no dependance on external UI libraries
+ - self-contained — rendered with plain HTML/CSS, so no dependance on external UI libraries
 
 **[Explore the Demo](https://carlosnz.github.io/json-edit-react/)**
 
@@ -119,10 +119,12 @@ The function needn't return anything, but if it returns `false`, it will be cons
 A similar callback is executed whenever an item is copied to the clipboard (if passed to the `enableClipboard` prop), but with a different input parameter:
 
 ```js
-    key:   // name of the property being copied  
-    path:  // path to the property
-    value: // the value copied to the clipboard (Note: this value will be serialised to a string)
-    type:  // Either "path" or "value" depending on whether "Cmd/Ctrl" was pressed 
+    key         // name of the property being copied  
+    path        // path to the property
+    value       // the value copied to the clipboard
+    type        // Either "path" or "value" depending on whether "Cmd/Ctrl" was pressed 
+    stringValue // A nicely stringified version of `value`  
+                // (i.e. what the clipboard actually receives)
 ```
 
 Since there is very little user feedback when clicking "Copy", a good idea would be to present some kind of notification in this callback.
@@ -335,6 +337,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **0.9.5**: Performance improvement by not processing child elements if not visible
 - **0.9.4**:
   - Layout improvements
   - Better internal handling of functions in data

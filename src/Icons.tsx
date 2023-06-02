@@ -44,7 +44,7 @@ export const Icon: React.FC<IconProps> = ({ name, rotate }): JSX.Element => {
       return (
         icons?.chevron ?? (
           <FaChevronDown
-            className={`${rotate ? ' jer-rotate-90' : ''}`}
+            className={`jer-accordion-icon${rotate ? ' jer-rotate-90' : ''}`}
             style={styles.iconCollection}
           />
         )

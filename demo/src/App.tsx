@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react'
 /* Local version */
-// import JsonEditor, { themes, ThemeName, Theme, ThemeInput } from './json-edit-react/src'
+import JsonEditor, { themes, ThemeName, Theme, ThemeInput } from './json-edit-react/src'
 /* npm version */
-import JsonEditor, { themes, ThemeName, Theme, ThemeInput } from 'json-edit-react'
+// import JsonEditor, { themes, ThemeName, Theme, ThemeInput } from 'json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -212,10 +212,10 @@ function App() {
             collapse={collapseLevel}
             enableClipboard={
               allowCopy
-                ? ({ value, type }) =>
+                ? ({ stringValue, type }) =>
                     toast({
                       title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
-                      description: truncate(String(value)),
+                      description: truncate(String(stringValue)),
                       status: 'success',
                       duration: 5000,
                       isClosable: true,
@@ -228,7 +228,7 @@ function App() {
             keySort={sortKeys}
             defaultValue={defaultNewValue}
             showArrayIndices={showIndices}
-            maxWidth="min(650px, 80vh)"
+            maxWidth="min(650px, 90vw)"
             className="block-shadow"
             stringTruncate={80}
           />

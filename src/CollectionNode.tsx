@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useRef } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
@@ -33,7 +33,16 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const collectionSize = Object.keys(data).length
   const filterProps = { key: name, path, level: path.length, value: data, size: collectionSize }
 
-  const [collapsed, setCollapsed] = useState(collapseFilter(filterProps))
+  const startCollapsed = collapseFilter(filterProps)
+  const [collapsed, setCollapsed] = useState(startCollapsed)
+
+  // This allows us to not render the children on load if they're hidden (which
+  // gives a big performance improvement with large data sets), but still keep
+  // the animation transition when opening and closing the accordion
+  const hasBeenOpened = useRef(!startCollapsed)
+  // Allows us to delay the overflow visibility of the collapsed element until
+  // the animation has completed
+  const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
     setStringifiedValue(JSON.stringify(data, null, 2))
@@ -54,6 +63,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.shiftKey || e.ctrlKey)) handleEdit()
     else if (e.key === 'Escape') handleCancel()
+  }
+
+  const handleCollapse = () => {
+    if (!isEditing) {
+      setIsAnimating(true)
+      hasBeenOpened.current = true
+      setCollapsed(!collapsed)
+      setTimeout(() => setIsAnimating(false), 500)
+    }
   }
 
   const showError = (errorString: ErrorString) => {
@@ -132,11 +150,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       style={{ marginLeft: `${path.length === 0 ? 0 : indent / 2}em` }}
     >
       <div className="jer-collection-header-row">
-        <div
-          onClick={() => {
-            if (!isEditing) setCollapsed(!collapsed)
-          }}
-        >
+        <div onClick={handleCollapse}>
           <Icon name="chevron" rotate={collapsed} />
         </div>
         <div className="jer-collection-name">
@@ -184,8 +198,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       <div
         className={'jer-collection-inner'}
         style={{
-          maxHeight: collapsed ? 0 : !isEditing ? `${numOfLines * 4}em` : undefined,
-          overflowY: collapsed ? 'hidden' : 'visible',
+          maxHeight: collapsed ? 0 : !isEditing ? `${numOfLines * 3}em` : undefined,
+          overflowY: collapsed || isAnimating ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately
           // "height: auto" doesn't 😔
           transition: `max-height ${transitionTime}`,
@@ -209,28 +223,30 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
           </div>
         ) : (
           <>
-            {keyValueArray.map(([key, value]) => (
-              <div className="jer-collection-element" key={key}>
-                {isCollection(value) ? (
-                  <CollectionNode
-                    key={key}
-                    data={value}
-                    path={[...path, key]}
-                    name={key}
-                    {...props}
-                  />
-                ) : (
-                  <ValueNodeWrapper
-                    key={key}
-                    data={value}
-                    path={[...path, key]}
-                    name={key}
-                    {...props}
-                    showArrayIndices={collectionType === 'object' ? true : showArrayIndices}
-                  />
-                )}
-              </div>
-            ))}
+            {!hasBeenOpened.current
+              ? null
+              : keyValueArray.map(([key, value]) => (
+                  <div className="jer-collection-element" key={key}>
+                    {isCollection(value) ? (
+                      <CollectionNode
+                        key={key}
+                        data={value}
+                        path={[...path, key]}
+                        name={key}
+                        {...props}
+                      />
+                    ) : (
+                      <ValueNodeWrapper
+                        key={key}
+                        data={value}
+                        path={[...path, key]}
+                        name={key}
+                        {...props}
+                        showArrayIndices={collectionType === 'object' ? true : showArrayIndices}
+                      />
+                    )}
+                  </div>
+                ))}
           </>
         )}
 
@@ -241,12 +257,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
             </span>
           )}
         </div>
-      </div>
-      {!collapsed && !isEditing && (
         <div className="jer-brackets" style={styles.bracket}>
           {brackets.close}
         </div>
-      )}
+      </div>
     </div>
   )
 }

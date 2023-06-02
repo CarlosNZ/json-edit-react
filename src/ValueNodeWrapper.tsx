@@ -7,6 +7,7 @@ import {
   ObjectValue,
   InvalidValue,
   ArrayValue,
+  INVALID_FUNCTION_STRING,
 } from './ValueNodes'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import {
@@ -39,13 +40,13 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
-    typeof data === 'function' ? 'INVALID_FUNCTION' : data
+    typeof data === 'function' ? INVALID_FUNCTION_STRING : data
   )
   const [error, setError] = useState<string | null>(null)
   const [dataType, setDataType] = useState<DataType>(getDataType(data))
 
   useEffect(() => {
-    setValue(typeof data === 'function' ? 'INVALID_FUNCTION' : data)
+    setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
     setDataType(getDataType(data))
   }, [data, error])
 

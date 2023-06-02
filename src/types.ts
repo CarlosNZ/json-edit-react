@@ -27,7 +27,7 @@ export interface JsonEditorProps {
   showArrayIndices?: boolean
   defaultValue?: unknown
   minWidth?: string | number
-  maxWidth?: number
+  maxWidth?: string | number
   stringTruncate?: number
   translations?: Partial<LocalisedStrings>
 }
@@ -79,7 +79,8 @@ export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
   key: CollectionKey
   path: CollectionKey[]
-  value: string
+  value: unknown
+  stringValue: string
   type: CopyType
 }) => void
 
