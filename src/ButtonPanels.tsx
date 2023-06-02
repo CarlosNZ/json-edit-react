@@ -45,20 +45,24 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   }
 
   const handleCopy = (e: React.MouseEvent<HTMLElement>) => {
-    let type: CopyType = 'value'
-    let value = ''
+    let copyType: CopyType = 'value'
+    let value
+    let stringValue = ''
     if (enableClipboard) {
       switch (e.ctrlKey || e.metaKey) {
         case true:
           value = stringifyPath(path)
-          type = 'path'
+          stringValue = value
+          copyType = 'path'
           break
         default:
-          value = JSON.stringify(data, null, 2)
+          value = data
+          stringValue = type ? JSON.stringify(data, null, 2) : String(value)
       }
-      navigator.clipboard.writeText(value)
+      navigator.clipboard.writeText(stringValue)
     }
-    if (typeof enableClipboard === 'function') enableClipboard({ value, path, key: name, type })
+    if (typeof enableClipboard === 'function')
+      enableClipboard({ value, stringValue, path, key: name, type: copyType })
   }
 
   return (

@@ -120,10 +120,12 @@ The function needn't return anything, but if it returns `false`, it will be cons
 A similar callback is executed whenever an item is copied to the clipboard (if passed to the `enableClipboard` prop), but with a different input parameter:
 
 ```js
-    key:   // name of the property being copied  
-    path:  // path to the property
-    value: // the value copied to the clipboard (Note: this value will be serialised to a string)
-    type:  // Either "path" or "value" depending on whether "Cmd/Ctrl" was pressed 
+    key         // name of the property being copied  
+    path        // path to the property
+    value       // the value copied to the clipboard
+    type        // Either "path" or "value" depending on whether "Cmd/Ctrl" was pressed 
+    stringValue // A nicely stringified version of `value`  
+                // (i.e. what the clipboard actually receives)
 ```
 
 Since there is very little user feedback when clicking "Copy", a good idea would be to present some kind of notification in this callback.

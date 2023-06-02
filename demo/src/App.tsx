@@ -212,10 +212,10 @@ function App() {
             collapse={collapseLevel}
             enableClipboard={
               allowCopy
-                ? ({ value, type }) =>
+                ? ({ stringValue, type }) =>
                     toast({
                       title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
-                      description: truncate(String(value)),
+                      description: truncate(String(stringValue)),
                       status: 'success',
                       duration: 5000,
                       isClosable: true,

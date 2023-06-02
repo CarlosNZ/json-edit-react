@@ -79,7 +79,8 @@ export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
   key: CollectionKey
   path: CollectionKey[]
-  value: string
+  value: unknown
+  stringValue: string
   type: CopyType
 }) => void
 
