@@ -104,7 +104,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     value,
     setValue,
     isEditing,
-    setIsEditing,
+    setIsEditing: canEdit ? () => setIsEditing(true) : () => {},
     handleEdit,
     handleCancel,
     path,
