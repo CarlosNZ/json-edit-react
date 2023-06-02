@@ -337,7 +337,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **0.9.5**: Performance improvement by not processing child elements if not visible
+- **0.9.6**: Performance improvement by not processing child elements if not visible
 - **0.9.4**:
   - Layout improvements
   - Better internal handling of functions in data
