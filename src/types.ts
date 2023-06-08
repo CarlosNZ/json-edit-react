@@ -23,6 +23,7 @@ export interface JsonEditorProps {
   restrictDelete?: boolean | FilterFunction
   restrictAdd?: boolean | FilterFunction
   restrictKeyEdit?: boolean | FilterFunction
+  search?: string
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
   defaultValue?: unknown
@@ -115,6 +116,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   onAdd: OnChangeFunction
   keySort: boolean | CompareFunction
   defaultValue: unknown
+  search?: string
 }
 
 export interface ValueNodeProps extends BaseNodeProps {

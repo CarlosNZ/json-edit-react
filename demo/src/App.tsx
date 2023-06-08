@@ -226,6 +226,7 @@ function App() {
             restrictDelete={restrictDelete}
             restrictAdd={restrictAdd}
             keySort={sortKeys}
+            search="ema"
             defaultValue={defaultNewValue}
             showArrayIndices={showIndices}
             maxWidth="min(650px, 90vw)"

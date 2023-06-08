@@ -25,6 +25,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   restrictDelete = false,
   restrictAdd = false,
   keySort = false,
+  search,
   showArrayIndices = true,
   defaultValue = null,
   minWidth = 250,
@@ -117,6 +118,8 @@ const Editor: React.FC<JsonEditorProps> = ({
   const restrictDeleteFilter = getFilterFunction(restrictDelete)
   const restrictAddFilter = getFilterFunction(restrictAdd)
 
+  const searchRegex = search ? new RegExp(search) : undefined
+
   const otherProps = {
     name: rootName,
     onEdit,
@@ -137,12 +140,20 @@ const Editor: React.FC<JsonEditorProps> = ({
 
   if (!styles) return null
 
+  console.log(searchRegex ? filterData(data, searchRegex) : data)
+
   return (
     <div
       className={'jer-editor-container ' + className}
       style={{ ...styles.container, minWidth, maxWidth }}
     >
-      {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
+      {isCollection(data) && (
+        <CollectionNode
+          data={!searchRegex ? data : filterData(data, searchRegex)}
+          path={[]}
+          {...otherProps}
+        />
+      )}
     </div>
   )
 }
@@ -183,6 +194,18 @@ const getFilterFunction = (propValue: boolean | number | FilterFunction): Filter
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
   return propValue
+}
+
+const filterData = (data: object, searchRegex: RegExp) => {
+  // if (Array.isArray(data)) return data.map()
+  const keyValArray = Object.entries(data).filter(([key, val]) => {
+    if (typeof val !== 'object' || val === null) return searchRegex.test(key)
+    // const evaluatedValue = filterData(val, searchRegex)
+    // return Object.keys(evaluatedValue).length > 0
+    return true
+  })
+
+  return Object.fromEntries(keyValArray)
 }
 
 export default JsonEditor
