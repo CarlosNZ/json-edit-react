@@ -7,6 +7,7 @@ import { CollectionData, JsonEditorProps, FilterFunction, OnChangeFunction } fro
 import { useTheme, ThemeProvider } from './theme'
 import { getTranslateFunction } from './localisation'
 import './style.css'
+import { ValueNodeWrapper } from './ValueNodeWrapper'
 
 const Editor: React.FC<JsonEditorProps> = ({
   data: srcData,
@@ -32,6 +33,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   stringTruncate = 250,
   translations = {},
   className,
+  customNodes,
 }) => {
   const [data, setData] = useState<object>(srcData)
   const { styles, setTheme, setIcons } = useTheme()
@@ -133,16 +135,33 @@ const Editor: React.FC<JsonEditorProps> = ({
     defaultValue,
     stringTruncate,
     translate,
+    customNodes,
   }
 
   if (!styles) return null
+
+  let customNode: JSX.Element | null = null
+  if (customNodes) {
+    const filterMatch = customNodes
+      .filter(({ condition }) => condition(data))
+      .map(({ element }) => element)
+
+    // If multiple matches, take the first one
+    if (filterMatch.length > 0) customNode = filterMatch[0]
+  }
 
   return (
     <div
       className={'jer-editor-container ' + className}
       style={{ ...styles.container, minWidth, maxWidth }}
     >
-      {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
+      {customNode ? (
+        customNode
+      ) : isCollection(data) ? (
+        <CollectionNode data={data} path={[]} {...otherProps} />
+      ) : (
+        <ValueNodeWrapper data={data as any} path={[]} {...otherProps} />
+      )}
     </div>
   )
 }

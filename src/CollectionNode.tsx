@@ -25,6 +25,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
     showArrayIndices,
     defaultValue,
     translate,
+    customNodes,
   } = props
   const [isEditing, setIsEditing] = useState(false)
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
@@ -144,123 +145,140 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   // setting the max-height in the collapsible interior
   const numOfLines = JSON.stringify(data, null, 2).split('\n').length
 
+  let customNode: JSX.Element | null = null
+  if (customNodes) {
+    const filterMatch = customNodes
+      .filter(({ condition }) => condition(data))
+      .map(({ element }) => element)
+    // If multiple matches, take the first one
+    if (filterMatch.length > 0) customNode = filterMatch[0]
+  }
+
   return (
     <div
       className="jer-component fb-collection-component"
       style={{ marginLeft: `${path.length === 0 ? 0 : indent / 2}em` }}
     >
-      <div className="jer-collection-header-row">
-        <div onClick={handleCollapse}>
-          <Icon name="chevron" rotate={collapsed} />
-        </div>
-        <div className="jer-collection-name">
-          <span style={styles.property}>{showLabel ? `${name}:` : null}</span>
-          {!isEditing && (
-            <span className="jer-brackets" style={styles.bracket}>
-              {brackets.open}
-            </span>
-          )}
-        </div>
-        {!isEditing && (
-          <div className="jer-collection-item-count" style={styles.itemCount}>
-            {collectionSize === 1
-              ? translate('ITEM_SINGLE', 1)
-              : translate('ITEMS_MULTIPLE', collectionSize)}
-          </div>
-        )}
-        <div
-          className={`jer-brackets${collapsed ? ' jer-visible' : ' jer-hidden'}`}
-          style={styles.bracket}
-        >
-          {brackets.close}
-        </div>
-        {!isEditing && (
-          <EditButtons
-            startEdit={
-              canEdit
-                ? () => {
-                    setIsEditing(true)
-                    setCollapsed(false)
-                  }
-                : undefined
-            }
-            handleAdd={canAdd ? handleAdd : undefined}
-            handleDelete={canDelete ? handleDelete : undefined}
-            enableClipboard={enableClipboard}
-            type={collectionType}
-            data={data}
-            name={name}
-            path={path}
-            translate={translate}
-          />
-        )}
-      </div>
-      <div
-        className={'jer-collection-inner'}
-        style={{
-          maxHeight: collapsed ? 0 : !isEditing ? `${numOfLines * 3}em` : undefined,
-          overflowY: collapsed || isAnimating ? 'hidden' : 'visible',
-          // Need to use max-height for animation to work, unfortunately
-          // "height: auto" doesn't 😔
-          transition: `max-height ${transitionTime}`,
-        }}
-      >
-        {isEditing ? (
-          <div className="jer-collection-text-edit">
-            <div>
-              <AutogrowTextArea
-                className="jer-collection-text-area"
-                name={path.join('.')}
-                value={stringifiedValue}
-                setValue={setStringifiedValue}
-                isEditing={isEditing}
-                handleKeyPress={handleKeyPress}
-              />
-              <div className="jer-collection-input-button-row">
-                <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
-              </div>
+      {customNode ? (
+        customNode
+      ) : (
+        <>
+          <div className="jer-collection-header-row">
+            <div onClick={handleCollapse}>
+              <Icon name="chevron" rotate={collapsed} />
             </div>
+            <div className="jer-collection-name">
+              <span style={styles.property}>{showLabel ? `${name}:` : null}</span>
+              {!isEditing && (
+                <span className="jer-brackets" style={styles.bracket}>
+                  {brackets.open}
+                </span>
+              )}
+            </div>
+            {!isEditing && (
+              <div className="jer-collection-item-count" style={styles.itemCount}>
+                {collectionSize === 1
+                  ? translate('ITEM_SINGLE', 1)
+                  : translate('ITEMS_MULTIPLE', collectionSize)}
+              </div>
+            )}
+            <div
+              className={`jer-brackets${collapsed ? ' jer-visible' : ' jer-hidden'}`}
+              style={styles.bracket}
+            >
+              {brackets.close}
+            </div>
+            {!isEditing && (
+              <EditButtons
+                startEdit={
+                  canEdit
+                    ? () => {
+                        setIsEditing(true)
+                        setCollapsed(false)
+                      }
+                    : undefined
+                }
+                handleAdd={canAdd ? handleAdd : undefined}
+                handleDelete={canDelete ? handleDelete : undefined}
+                enableClipboard={enableClipboard}
+                type={collectionType}
+                data={data}
+                name={name}
+                path={path}
+                translate={translate}
+              />
+            )}
           </div>
-        ) : (
-          <>
-            {!hasBeenOpened.current
-              ? null
-              : keyValueArray.map(([key, value]) => (
-                  <div className="jer-collection-element" key={key}>
-                    {isCollection(value) ? (
-                      <CollectionNode
-                        key={key}
-                        data={value}
-                        path={[...path, key]}
-                        name={key}
-                        {...props}
-                      />
-                    ) : (
-                      <ValueNodeWrapper
-                        key={key}
-                        data={value}
-                        path={[...path, key]}
-                        name={key}
-                        {...props}
-                        showArrayIndices={collectionType === 'object' ? true : showArrayIndices}
-                      />
-                    )}
+          <div
+            className={'jer-collection-inner'}
+            style={{
+              maxHeight: collapsed ? 0 : !isEditing ? `${numOfLines * 3}em` : undefined,
+              overflowY: collapsed || isAnimating ? 'hidden' : 'visible',
+              // Need to use max-height for animation to work, unfortunately
+              // "height: auto" doesn't 😔
+              transition: `max-height ${transitionTime}`,
+            }}
+          >
+            {isEditing ? (
+              <div className="jer-collection-text-edit">
+                <div>
+                  <AutogrowTextArea
+                    className="jer-collection-text-area"
+                    name={path.join('.')}
+                    value={stringifiedValue}
+                    setValue={setStringifiedValue}
+                    isEditing={isEditing}
+                    handleKeyPress={handleKeyPress}
+                  />
+                  <div className="jer-collection-input-button-row">
+                    <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
                   </div>
-                ))}
-          </>
-        )}
+                </div>
+              </div>
+            ) : (
+              <>
+                {!hasBeenOpened.current
+                  ? null
+                  : keyValueArray.map(([key, value]) => (
+                      <div className="jer-collection-element" key={key}>
+                        {isCollection(value) ? (
+                          <CollectionNode
+                            key={key}
+                            data={value}
+                            path={[...path, key]}
+                            name={key}
+                            {...props}
+                          />
+                        ) : (
+                          <ValueNodeWrapper
+                            key={key}
+                            data={value}
+                            path={[...path, key]}
+                            name={key}
+                            {...props}
+                            showArrayIndices={collectionType === 'object' ? true : showArrayIndices}
+                          />
+                        )}
+                      </div>
+                    ))}
+              </>
+            )}
 
-        <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
-          {error && (
-            <span className="jer-error-slug" style={styles.error}>
-              {error}
-            </span>
-          )}
-        </div>
-        <div className="jer-brackets" style={styles.bracket}>
-          {brackets.close}
-        </div>
-      </div>
+            <div
+              className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}
+            >
+              {error && (
+                <span className="jer-error-slug" style={styles.error}>
+                  {error}
+                </span>
+              )}
+            </div>
+            <div className="jer-brackets" style={styles.bracket}>
+              {brackets.close}
+            </div>
+          </div>{' '}
+        </>
+      )}
     </div>
   )
 }

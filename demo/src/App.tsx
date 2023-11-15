@@ -231,6 +231,7 @@ function App() {
             maxWidth="min(650px, 90vw)"
             className="block-shadow"
             stringTruncate={80}
+            customNodes={demoData[selectedData]?.customNodes}
           />
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>

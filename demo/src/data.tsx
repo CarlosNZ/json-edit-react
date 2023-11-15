@@ -1817,6 +1817,22 @@ const data = {
     collapse: 2,
     data: {},
   },
+  custom: {
+    name: 'Custom',
+    description: (
+      <Flex flexDir="column" gap={2}>
+        <Text>Let's see if this works</Text>
+      </Flex>
+    ),
+    collapse: 2,
+    data: { property1: 'Just a string', custom: { operator: 'test', children: [1, 2, 3] } },
+    customNodes: [
+      {
+        condition: (data) => typeof data === 'object' && 'operator' in data,
+        element: <p>This is a custom node</p>,
+      },
+    ],
+  },
 }
 
 export default data

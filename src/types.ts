@@ -30,6 +30,7 @@ export interface JsonEditorProps {
   maxWidth?: string | number
   stringTruncate?: number
   translations?: Partial<LocalisedStrings>
+  customNodes?: CustomNode[]
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -115,10 +116,16 @@ export interface CollectionNodeProps extends BaseNodeProps {
   onAdd: OnChangeFunction
   keySort: boolean | CompareFunction
   defaultValue: unknown
+  customNodes: CustomNode[]
 }
 
 export interface ValueNodeProps extends BaseNodeProps {
   data: string | number | boolean | null
+}
+
+export interface CustomNode {
+  condition: (data: object) => boolean
+  element: JSX.Element
 }
 
 export interface InputProps {
