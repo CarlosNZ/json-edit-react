@@ -8,7 +8,8 @@ import {
   JsonEditorProps,
   FilterFunction,
   OnChangeFunction,
-  CollectionNodeProps,
+  CustomNodeDefinition,
+  FilterProps,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { getTranslateFunction } from './localisation'
@@ -39,7 +40,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   stringTruncate = 250,
   translations = {},
   className,
-  customNodes,
+  customNodeDefinitions = [],
 }) => {
   const [data, setData] = useState<object>(srcData)
   const { styles, setTheme, setIcons } = useTheme()
@@ -141,34 +142,17 @@ const Editor: React.FC<JsonEditorProps> = ({
     defaultValue,
     stringTruncate,
     translate,
-    customNodes,
+    customNodeDefinitions,
   }
 
   if (!styles) return null
-
-  let CustomNode: React.FC<CollectionNodeProps & { customProps: Record<string, unknown> }> | null =
-    null
-  let customProps = {} as Record<string, unknown>
-  if (customNodes) {
-    const filterMatch = customNodes.filter(({ condition }) => condition(data))
-
-    // If multiple matches, take the first one
-    if (filterMatch.length > 0) {
-      CustomNode = filterMatch[0].element
-      if (filterMatch[0].props) customProps = filterMatch[0].props
-    }
-  }
-
-  console.log('Top', customProps)
 
   return (
     <div
       className={'jer-editor-container ' + className}
       style={{ ...styles.container, minWidth, maxWidth }}
     >
-      {CustomNode ? (
-        <CustomNode data={data} path={[]} customProps={customProps} {...otherProps} />
-      ) : isCollection(data) ? (
+      {isCollection(data) ? (
         <CollectionNode data={data} path={[]} {...otherProps} />
       ) : (
         <ValueNodeWrapper data={data as any} path={[]} {...otherProps} />
@@ -213,6 +197,21 @@ const getFilterFunction = (propValue: boolean | number | FilterFunction): Filter
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
   return propValue
+}
+
+export const getCustomNode = (
+  customNodeDefinitions: CustomNodeDefinition[] = [],
+  filterProps: FilterProps
+) => {
+  const matchingDefinitions = customNodeDefinitions.filter(({ condition }) =>
+    condition(filterProps)
+  )
+  if (matchingDefinitions.length === 0) return {}
+
+  // Only take the first one that matches
+  const { element, props, hideKey = false } = matchingDefinitions[0]
+
+  return { CustomNode: element, customNodeProps: props, hideKey }
 }
 
 export default JsonEditor

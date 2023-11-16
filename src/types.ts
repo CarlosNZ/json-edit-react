@@ -30,7 +30,7 @@ export interface JsonEditorProps {
   maxWidth?: string | number
   stringTruncate?: number
   translations?: Partial<LocalisedStrings>
-  customNodes?: CustomNode[]
+  customNodeDefinitions?: CustomNodeDefinition[]
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -68,13 +68,15 @@ export type UpdateFunction = (props: {
   path: CollectionKey[]
 }) => void | ErrorString | false
 
-export type FilterFunction = (input: {
+export interface FilterProps {
   key: CollectionKey
   path: CollectionKey[]
   level: number
   value: unknown
   size: number | null
-}) => boolean
+}
+
+export type FilterFunction = (input: FilterProps) => boolean
 
 export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
@@ -108,7 +110,7 @@ interface BaseNodeProps {
   stringTruncate: number
   indent: number
   translate: TranslateFunction
-  customNodes: CustomNode[]
+  customNodeDefinitions: CustomNodeDefinition[]
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -127,10 +129,18 @@ export interface CustomNodeProps extends BaseNodeProps {
   customProps: Record<string, unknown>
 }
 
-export interface CustomNode {
-  condition: (data: object) => boolean
+export interface CustomNodeWrapperProps {
+  name: CollectionKey
+  hideKey: boolean
+  children: JSX.Element
+  indent?: number
+}
+
+export interface CustomNodeDefinition {
+  condition: FilterFunction
   element: React.FC
   props?: Record<string, unknown>
+  hideKey?: boolean
 }
 
 export interface InputProps {

@@ -1,27 +1,28 @@
 import React from 'react'
-import { CustomNodeProps } from './types'
+import { CustomNodeWrapperProps } from './types'
 import { useTheme } from './theme'
-import './style.css'
 
-export const CustomNodeWrapper: React.FC<CustomNodeProps> = ({
+export const CustomNodeWrapper: React.FC<CustomNodeWrapperProps> = ({
   name,
-  path,
-  showArrayIndices,
+  hideKey,
   children,
+  indent,
 }) => {
   const { styles } = useTheme()
 
+  const indentStyle = indent ? { marginLeft: `${indent / 2}em` } : {}
+
   return (
-    <div className="jer-component jer-value-component">
+    <div className="jer-component jer-value-component" style={indentStyle}>
       <div
         className="jer-value-main-row"
         style={{
           flexWrap: (name as string).length > 10 ? 'wrap' : 'nowrap',
         }}
       >
-        {showArrayIndices && (
+        {!hideKey && (
           <label
-            htmlFor={path.join('.')}
+            htmlFor={name}
             className="jer-object-key"
             style={{
               ...styles.property,
@@ -32,7 +33,9 @@ export const CustomNodeWrapper: React.FC<CustomNodeProps> = ({
             {name}:{' '}
           </label>
         )}
-        <div className="jer-value-and-buttons">{children}</div>
+        <div className="jer-value-and-buttons" style={{ paddingLeft: hideKey ? 0 : undefined }}>
+          {children}
+        </div>
       </div>
     </div>
   )

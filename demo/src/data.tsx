@@ -2,14 +2,68 @@ import React from 'react'
 import { Flex, Box, Link, Text } from '@chakra-ui/react'
 import { CollectionNodeProps } from './json-edit-react/src/types'
 
-const CustomNode: React.FC<CollectionNodeProps & { customProps: Record<string, unknown> }> = (
-  props
-) => {
-  console.log('props', props)
-  return <p {...props}>This is a custom node</p>
+const ReplaceOperator: React.FC<CollectionNodeProps & { customProps: Record<string, unknown> }> = ({
+  customProps,
+  data,
+}) => {
+  return <p style={customProps.style as React.CSSProperties}>This is an operator node</p>
+}
+const ReplaceSimpleValue: React.FC<
+  CollectionNodeProps & { customProps: Record<string, unknown> }
+> = ({ customProps, data }) => {
+  return <p style={customProps.style as React.CSSProperties}>This is: {data as any}</p>
+}
+const ReplaceWholeNode: React.FC<
+  CollectionNodeProps & { customProps: Record<string, unknown> }
+> = ({ customProps, data }) => {
+  return <p style={customProps.style as React.CSSProperties}>This is a whole node node</p>
 }
 
 const data = {
+  custom: {
+    name: 'Custom',
+    description: (
+      <Flex flexDir="column" gap={2}>
+        <Text>Let's see if this works</Text>
+      </Flex>
+    ),
+    collapse: 2,
+    data: {
+      property1: 'Just a string',
+      YesOrNo: true,
+      customOperator: { operator: 'test', children: [1, 2, 3] },
+      notCustom: { one: 1, two: 2 },
+      plainOld: 23,
+      customField: 'Just this one',
+      collectionNode: { replace: 'ME', other: 1, fields: 'TWO' },
+      replaceNodeKey: { replaceKey: true, somethingElse: 'YES' },
+    },
+    customNodeDefinitions: [
+      {
+        condition: ({ key }) => key === 'operator',
+        element: ReplaceOperator,
+        props: { style: { color: 'red' } },
+        hideKey: true,
+      },
+      {
+        condition: ({ key }) => key === 'customField',
+        element: ReplaceSimpleValue,
+        props: { style: { color: 'green' } },
+      },
+      {
+        condition: ({ value }) => typeof value === 'object' && value !== null && 'replace' in value,
+        element: ReplaceWholeNode,
+        props: { style: { border: '2px solid blue' } },
+      },
+      {
+        condition: ({ value }) =>
+          typeof value === 'object' && value !== null && 'replaceKey' in value,
+        element: ReplaceWholeNode,
+        props: { style: { border: '2px solid orange' } },
+        hideKey: true,
+      },
+    ],
+  },
   basic: {
     name: '🔰 Basic',
     description: (
@@ -1824,29 +1878,6 @@ const data = {
     restrictAdd: ({ level }) => level === 0,
     collapse: 2,
     data: {},
-  },
-  custom: {
-    name: 'Custom',
-    description: (
-      <Flex flexDir="column" gap={2}>
-        <Text>Let's see if this works</Text>
-      </Flex>
-    ),
-    collapse: 2,
-    data: {
-      property1: 'Just a string',
-      YesOrNo: true,
-      custom: { operator: 'test', children: [1, 2, 3] },
-      notCustom: { one: 1, two: 2 },
-      plainOld: 23,
-    },
-    customNodes: [
-      {
-        condition: (data) => typeof data === 'object' && data !== null && 'operator' in data,
-        element: CustomNode,
-        props: { style: { color: 'red' } },
-      },
-    ],
   },
 }
 

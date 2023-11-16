@@ -21,21 +21,25 @@ import {
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
+import { getCustomNode } from './JsonEditor'
+import { CustomNodeWrapper } from './CustomNodeWrapper'
 
-export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
-  data,
-  name,
-  path,
-  onEdit,
-  onDelete,
-  enableClipboard,
-  restrictEditFilter,
-  restrictDeleteFilter,
-  showArrayIndices,
-  stringTruncate,
-  indent,
-  translate,
-}) => {
+export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
+  const {
+    data,
+    name,
+    path,
+    onEdit,
+    onDelete,
+    enableClipboard,
+    restrictEditFilter,
+    restrictDeleteFilter,
+    showArrayIndices,
+    stringTruncate,
+    indent,
+    translate,
+    customNodeDefinitions,
+  } = props
   const { styles } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
   const [value, setValue] = useState<typeof data | CollectionData>(
@@ -111,7 +115,19 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     stringTruncate,
   }
 
-  return (
+  const { CustomNode, customNodeProps, hideKey } = getCustomNode(customNodeDefinitions, {
+    key: name,
+    path,
+    level: path.length,
+    value: data,
+    size: 0,
+  })
+
+  return CustomNode ? (
+    <CustomNodeWrapper name={name} hideKey={hideKey} indent={indent}>
+      <CustomNode customProps={customNodeProps} {...props} />
+    </CustomNodeWrapper>
+  ) : (
     <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
       <div
         className="jer-value-main-row"
