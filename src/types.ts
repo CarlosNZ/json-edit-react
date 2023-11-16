@@ -125,7 +125,7 @@ export interface ValueNodeProps extends BaseNodeProps {
 
 export interface CustomNode {
   condition: (data: object) => boolean
-  element: JSX.Element
+  element: React.FC
 }
 
 export interface InputProps {

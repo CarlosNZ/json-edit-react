@@ -1,5 +1,10 @@
 import React from 'react'
 import { Flex, Box, Link, Text } from '@chakra-ui/react'
+import { CollectionNodeProps } from './json-edit-react/src/types'
+
+const CustomNode: React.FC<CollectionNodeProps> = () => {
+  return <p>This is a custom node</p>
+}
 
 const data = {
   basic: {
@@ -1829,7 +1834,7 @@ const data = {
     customNodes: [
       {
         condition: (data) => typeof data === 'object' && 'operator' in data,
-        element: <p>This is a custom node</p>,
+        element: CustomNode,
       },
     ],
   },

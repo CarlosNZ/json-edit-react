@@ -3,7 +3,13 @@ import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import clone from 'just-clone'
 import { CollectionNode, isCollection } from './CollectionNode'
-import { CollectionData, JsonEditorProps, FilterFunction, OnChangeFunction } from './types'
+import {
+  CollectionData,
+  JsonEditorProps,
+  FilterFunction,
+  OnChangeFunction,
+  CollectionNodeProps,
+} from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { getTranslateFunction } from './localisation'
 import './style.css'
@@ -140,14 +146,14 @@ const Editor: React.FC<JsonEditorProps> = ({
 
   if (!styles) return null
 
-  let customNode: JSX.Element | null = null
+  let CustomNode: React.FC<CollectionNodeProps> | null = null
   if (customNodes) {
     const filterMatch = customNodes
       .filter(({ condition }) => condition(data))
       .map(({ element }) => element)
 
     // If multiple matches, take the first one
-    if (filterMatch.length > 0) customNode = filterMatch[0]
+    if (filterMatch.length > 0) CustomNode = filterMatch[0]
   }
 
   return (
@@ -155,8 +161,8 @@ const Editor: React.FC<JsonEditorProps> = ({
       className={'jer-editor-container ' + className}
       style={{ ...styles.container, minWidth, maxWidth }}
     >
-      {customNode ? (
-        customNode
+      {CustomNode ? (
+        <CustomNode data={data} path={[]} {...otherProps} />
       ) : isCollection(data) ? (
         <CollectionNode data={data} path={[]} {...otherProps} />
       ) : (
