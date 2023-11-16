@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
+import { CustomNodeWrapper } from './CustomNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
 import { Icon } from './Icons'
@@ -164,9 +165,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       style={{ marginLeft: `${path.length === 0 ? 0 : indent / 2}em` }}
     >
       {CustomNode ? (
-        <div>
+        <CustomNodeWrapper data={data} name={name} path={[]} {...props}>
           <CustomNode data={data} path={[]} customProps={customProps} {...props} />
-        </div>
+        </CustomNodeWrapper>
       ) : (
         <>
           <div className="jer-collection-header-row">

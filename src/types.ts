@@ -108,6 +108,7 @@ interface BaseNodeProps {
   stringTruncate: number
   indent: number
   translate: TranslateFunction
+  customNodes: CustomNode[]
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -116,11 +117,14 @@ export interface CollectionNodeProps extends BaseNodeProps {
   onAdd: OnChangeFunction
   keySort: boolean | CompareFunction
   defaultValue: unknown
-  customNodes: CustomNode[]
 }
 
 export interface ValueNodeProps extends BaseNodeProps {
   data: string | number | boolean | null
+}
+
+export interface CustomNodeProps extends BaseNodeProps {
+  customProps: Record<string, unknown>
 }
 
 export interface CustomNode {

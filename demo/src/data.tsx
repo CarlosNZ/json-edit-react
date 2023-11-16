@@ -1833,10 +1833,16 @@ const data = {
       </Flex>
     ),
     collapse: 2,
-    data: { property1: 'Just a string', custom: { operator: 'test', children: [1, 2, 3] } },
+    data: {
+      property1: 'Just a string',
+      YesOrNo: true,
+      custom: { operator: 'test', children: [1, 2, 3] },
+      notCustom: { one: 1, two: 2 },
+      plainOld: 23,
+    },
     customNodes: [
       {
-        condition: (data) => typeof data === 'object' && 'operator' in data,
+        condition: (data) => typeof data === 'object' && data !== null && 'operator' in data,
         element: CustomNode,
         props: { style: { color: 'red' } },
       },
