@@ -146,15 +146,20 @@ const Editor: React.FC<JsonEditorProps> = ({
 
   if (!styles) return null
 
-  let CustomNode: React.FC<CollectionNodeProps> | null = null
+  let CustomNode: React.FC<CollectionNodeProps & { customProps: Record<string, unknown> }> | null =
+    null
+  let customProps = {} as Record<string, unknown>
   if (customNodes) {
-    const filterMatch = customNodes
-      .filter(({ condition }) => condition(data))
-      .map(({ element }) => element)
+    const filterMatch = customNodes.filter(({ condition }) => condition(data))
 
     // If multiple matches, take the first one
-    if (filterMatch.length > 0) CustomNode = filterMatch[0]
+    if (filterMatch.length > 0) {
+      CustomNode = filterMatch[0].element
+      if (filterMatch[0].props) customProps = filterMatch[0].props
+    }
   }
+
+  console.log('Top', customProps)
 
   return (
     <div
@@ -162,7 +167,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       style={{ ...styles.container, minWidth, maxWidth }}
     >
       {CustomNode ? (
-        <CustomNode data={data} path={[]} {...otherProps} />
+        <CustomNode data={data} path={[]} customProps={customProps} {...otherProps} />
       ) : isCollection(data) ? (
         <CollectionNode data={data} path={[]} {...otherProps} />
       ) : (

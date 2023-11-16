@@ -145,14 +145,17 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
   // setting the max-height in the collapsible interior
   const numOfLines = JSON.stringify(data, null, 2).split('\n').length
 
-  let CustomNode: React.FC | null = null
+  let CustomNode: React.FC<CollectionNodeProps & { customProps: Record<string, unknown> }> | null =
+    null
+  let customProps = {} as Record<string, unknown>
   if (customNodes) {
-    const filterMatch = customNodes
-      .filter(({ condition }) => condition(data))
-      .map(({ element }) => element)
+    const filterMatch = customNodes.filter(({ condition }) => condition(data))
 
     // If multiple matches, take the first one
-    if (filterMatch.length > 0) CustomNode = filterMatch[0]
+    if (filterMatch.length > 0) {
+      CustomNode = filterMatch[0].element
+      if (filterMatch[0].props) customProps = filterMatch[0].props
+    }
   }
 
   return (
@@ -161,7 +164,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
       style={{ marginLeft: `${path.length === 0 ? 0 : indent / 2}em` }}
     >
       {CustomNode ? (
-        <CustomNode />
+        <div>
+          <CustomNode data={data} path={[]} customProps={customProps} {...props} />
+        </div>
       ) : (
         <>
           <div className="jer-collection-header-row">
