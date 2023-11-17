@@ -123,10 +123,12 @@ export interface CollectionNodeProps extends BaseNodeProps {
 
 export interface ValueNodeProps extends BaseNodeProps {
   data: string | number | boolean | null
+  parentData: CollectionData
 }
 
-export interface CustomNodeProps extends BaseNodeProps {
-  customProps: Record<string, unknown>
+export interface CustomNodeProps<T> extends BaseNodeProps {
+  customProps: T
+  parentData: CollectionData
 }
 
 export interface CustomNodeWrapperProps {
@@ -136,11 +138,13 @@ export interface CustomNodeWrapperProps {
   indent?: number
 }
 
-export interface CustomNodeDefinition {
+export interface CustomNodeDefinition<T> {
   condition: FilterFunction
-  element: React.FC
+  element: React.FC<CustomNodeProps<T>>
+  name: string // appears in "Type" selector
   props?: Record<string, unknown>
   hideKey?: boolean
+  defaultValue: unknown
 }
 
 export interface InputProps {

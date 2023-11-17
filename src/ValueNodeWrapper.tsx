@@ -27,6 +27,7 @@ import { CustomNodeWrapper } from './CustomNodeWrapper'
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
     data,
+    parentData,
     name,
     path,
     onEdit,
@@ -55,8 +56,13 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }, [data, error])
 
   const handleChangeDataType = (type: DataType) => {
-    setValue(convertValue(value, type))
-    setDataType(type)
+    const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
+    if (customNode) {
+      onEdit(customNode.defaultValue, path)
+    } else {
+      setValue(convertValue(value, type))
+      setDataType(type)
+    }
   }
 
   const logError = (errorString: ErrorString) => {
@@ -106,6 +112,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const inputProps = {
     value,
+    parentData,
     setValue,
     isEditing,
     setIsEditing: canEdit ? () => setIsEditing(true) : () => {},
@@ -122,6 +129,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     value: data,
     size: 0,
   })
+
+  // Include custom node options in dataType list
+  const dataTypes = [...customNodeDefinitions.map(({ name }) => name), ...DataTypes]
 
   return CustomNode ? (
     <CustomNodeWrapper name={name} hideKey={hideKey} indent={indent}>
@@ -174,7 +184,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 onChange={(e) => handleChangeDataType(e.target.value as DataType)}
                 value={dataType}
               >
-                {DataTypes.map((type) => (
+                {dataTypes.map((type) => (
                   <option value={type} key={type}>
                     {type}
                   </option>

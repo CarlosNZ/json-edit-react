@@ -154,7 +154,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
     value: data,
     size: Object.keys(data).length,
   })
-  // console.log('CustomNode', CustomNode)
 
   return (
     <div
@@ -257,6 +256,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
                           <ValueNodeWrapper
                             key={key}
                             data={value}
+                            parentData={data}
                             path={[...path, key]}
                             name={key}
                             {...props}
@@ -280,7 +280,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({ data, path, name
             <div className="jer-brackets" style={styles.bracket}>
               {brackets.close}
             </div>
-          </div>{' '}
+          </div>
         </>
       )}
     </div>
