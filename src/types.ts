@@ -145,6 +145,7 @@ export interface CustomNodeDefinition<T> {
   props?: Record<string, unknown>
   hideKey?: boolean
   defaultValue: unknown
+  showInTypesSelector?: boolean
 }
 
 export interface InputProps {

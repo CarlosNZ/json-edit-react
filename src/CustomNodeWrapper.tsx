@@ -22,7 +22,7 @@ export const CustomNodeWrapper: React.FC<CustomNodeWrapperProps> = ({
       >
         {!hideKey && (
           <label
-            htmlFor={name}
+            htmlFor={name as string}
             className="jer-object-key"
             style={{
               ...styles.property,
