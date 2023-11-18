@@ -3,7 +3,13 @@ import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import clone from 'just-clone'
 import { CollectionNode, isCollection } from './CollectionNode'
-import { CollectionData, JsonEditorProps, FilterFunction, OnChangeFunction } from './types'
+import {
+  CollectionData,
+  JsonEditorProps,
+  FilterFunction,
+  OnChangeFunction,
+  TypeFilterFunction,
+} from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { getTranslateFunction } from './localisation'
 import './style.css'
@@ -26,6 +32,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   restrictEdit = false,
   restrictDelete = false,
   restrictAdd = false,
+  restrictTypeSelection = false,
   keySort = false,
   showArrayIndices = true,
   defaultValue = null,
@@ -38,7 +45,7 @@ const Editor: React.FC<JsonEditorProps> = ({
 }) => {
   const [data, setData] = useState<object>(srcData)
   const { styles, setTheme, setIcons } = useTheme()
-  const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
+  const collapseFilter = useCallback(getFilterFunction(collapse) as FilterFunction, [collapse])
   const translate = useCallback(getTranslateFunction(translations), [translations])
 
   useEffect(() => {
@@ -131,6 +138,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     restrictEditFilter,
     restrictDeleteFilter,
     restrictAddFilter,
+    restrictTypeSelection,
     enableClipboard,
     keySort,
     showArrayIndices,

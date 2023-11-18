@@ -35,6 +35,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     enableClipboard,
     restrictEditFilter,
     restrictDeleteFilter,
+    restrictTypeSelection,
     showLabel,
     stringTruncate,
     indent,
@@ -154,12 +155,24 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   })
 
   // Include custom node options in dataType list
-  const dataTypes = [
+  const allDataTypes = [
     ...customNodeDefinitions
       .filter(({ showInTypesSelector = false }) => showInTypesSelector)
       .map(({ name }) => name),
     ...DataTypes,
   ]
+
+  const allowedDataTypes = useMemo(() => {
+    if (typeof restrictTypeSelection === 'boolean') return restrictTypeSelection ? [] : allDataTypes
+
+    if (Array.isArray(restrictTypeSelection)) return restrictTypeSelection
+
+    const result = restrictTypeSelection(filterProps)
+
+    if (typeof result === 'boolean') return result ? [] : allDataTypes
+
+    return result
+  }, [filterProps, restrictTypeSelection])
 
   return CustomNode ? (
     <CustomNodeWrapper name={name} hideKey={hideKey} indent={indent}>
@@ -217,7 +230,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
               />
             )
           )}
-          {isEditing && (
+          {isEditing && allowedDataTypes.length > 0 && (
             <div className="jer-select">
               <select
                 name={`${name}-type-select`}
@@ -225,7 +238,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 onChange={(e) => handleChangeDataType(e.target.value as DataType)}
                 value={dataType}
               >
-                {dataTypes.map((type) => (
+                {allowedDataTypes.map((type) => (
                   <option value={type} key={type}>
                     {type}
                   </option>

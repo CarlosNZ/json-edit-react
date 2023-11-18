@@ -60,7 +60,7 @@ import { JsonEditor } from 'json-edit-react'
 
 It's pretty self explanatory (click the "edit" icon to edit, etc.), but there are a few not-so-obvious ways of interacting with the editor:
 
-- Double-click a value to edit it
+- Double-click a value (or a key) to edit it
 - When editing a string, use `Cmd/Ctrl/Shift-Enter` to add a new line (`Enter` submits the value)
 - It's the opposite when editing a full object/array node (which you do by clicking "edit" on an object or array value) — `Enter` for new line, and `Cmd/Ctrl/Shift-Enter` for submit
 - `Escape` to cancel editing
@@ -148,6 +148,8 @@ The function receives the following object:
 ```
 
 A Filter function is available for the `collapse` prop as well, so you can have your data appear with deeply-nested collections opened up, while collapsing everything else, for example.
+
+There is no specific restriction function for editing object key names, but they must return `true` for *both* `restrictEdit` and `restrictDelete` (and `restrictAdd` for collections), since changing a key name is equivalent to deleting a property and adding a new one.
 
 ### Examples
 
@@ -366,6 +368,10 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.0.0**:
+  - [Custom nodes](#custom-nodes)
+  - Allow editing of keys
+  - Option to hide array/object item counts
 - **0.9.6**: Performance improvement by not processing child elements if not visible
 - **0.9.4**:
   - Layout improvements

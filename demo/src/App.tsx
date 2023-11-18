@@ -231,12 +231,13 @@ function App() {
             restrictEdit={restrictEdit}
             restrictDelete={restrictDelete}
             restrictAdd={restrictAdd}
+            restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
             keySort={sortKeys}
             defaultValue={defaultNewValue}
             showArrayIndices={showIndices}
             maxWidth="min(650px, 90vw)"
             className="block-shadow"
-            stringTruncate={80}
+            stringTruncate={90}
             customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
           />
           <VStack w="100%" align="flex-end" gap={4}>
@@ -290,6 +291,20 @@ function App() {
               <VStack align="flex-start" m={4}>
                 <HStack className="inputRow">
                   <FormLabel className="labelWidth" textAlign="right">
+                    Demo data
+                  </FormLabel>
+                  <div className="inputWidth" style={{ flexGrow: 1 }}>
+                    <Select onChange={handleChangeData} value={selectedData}>
+                      {Object.entries(demoData).map(([key, { name }]) => (
+                        <option value={key} key={key}>
+                          {name}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
                     Theme
                   </FormLabel>
                   <div className="inputWidth" style={{ flexGrow: 1 }}>
@@ -301,20 +316,6 @@ function App() {
                           </option>
                         )
                       )}
-                    </Select>
-                  </div>
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Demo data
-                  </FormLabel>
-                  <div className="inputWidth" style={{ flexGrow: 1 }}>
-                    <Select onChange={handleChangeData} value={selectedData}>
-                      {Object.entries(demoData).map(([key, { name }]) => (
-                        <option value={key} key={key}>
-                          {name}
-                        </option>
-                      ))}
                     </Select>
                   </div>
                 </HStack>

@@ -22,7 +22,8 @@ export interface JsonEditorProps {
   restrictEdit?: boolean | FilterFunction
   restrictDelete?: boolean | FilterFunction
   restrictAdd?: boolean | FilterFunction
-  restrictKeyEdit?: boolean | FilterFunction
+  restrictTypeSelection?: boolean | DataType[] | TypeFilterFunction
+  // restrictKeyEdit?: boolean | FilterFunction
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
   defaultValue?: unknown
@@ -77,6 +78,7 @@ export interface FilterProps {
 }
 
 export type FilterFunction = (input: FilterProps) => boolean
+export type TypeFilterFunction = (input: FilterProps) => boolean | DataType[]
 
 export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
@@ -126,6 +128,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
 export interface ValueNodeProps extends BaseNodeProps {
   data: string | number | boolean | null
   showLabel: boolean
+  restrictTypeSelection: boolean | TypeFilterFunction
 }
 
 export interface CustomNodeProps extends BaseNodeProps {

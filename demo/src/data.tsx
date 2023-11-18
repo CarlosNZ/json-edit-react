@@ -30,7 +30,7 @@ const data = {
         'Edit a value by clicking the "edit" icon, or double-clicking the value.',
         'You can change the type of any value',
         'You can add new values to objects or arrays',
-        'You can edit individual values, or even a whole object node at once',
+        'You can edit individual values, or even a whole object node at once (as JSON text)',
         {
           nested: 'An object inside an array',
           basic: false,
@@ -58,8 +58,8 @@ const data = {
         <Text>
           Note the additional editing restrictions in addition to the toggles above. This has been
           achieved by specifying filter functions for the <span className="code">restrictEdit</span>
-          , <span className="code">restrictDelete</span> and{' '}
-          <span className="code">restrictAdd</span> props.{' '}
+          , <span className="code">restrictDelete</span>, <span className="code">restrictAdd</span>{' '}
+          and <span className="code">restrictTypeSelection</span> props.{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#readme" isExternal>
             Learn more
           </Link>
@@ -69,6 +69,7 @@ const data = {
     restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
     restrictDelete: ({ value }) => typeof value === 'object' && value !== null,
     restrictAdd: ({ value }) => !Array.isArray(value),
+    restrictTypeSelection: true,
     collapse: 1,
     data: {
       name: 'Luke Skywalker',
@@ -1816,6 +1817,7 @@ const data = {
     restrictEdit: ({ key, level }) => level === 0 || ['fragments', 'styles'].includes(key),
     restrictDelete: ({ key }) => ['displayName', 'fragments', 'styles'].includes(key),
     restrictAdd: ({ level }) => level === 0,
+    restrictTypeSelection: ['string', 'object', 'array'],
     collapse: 2,
     data: {},
   },
@@ -1824,9 +1826,9 @@ const data = {
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>
-          This data set shows <strong>Custom Nodes</strong> — you can provide your own components in
-          order to present specialised data in a unique way, or provide a more complex editing
-          mechanism for a special type of object.
+          This data set shows <strong>Custom Nodes</strong> — you can provide your own components to
+          present specialised data in a unique way, or provide a more complex editing mechanism for
+          a specialised data structure, say.
         </Text>
         <Text>
           In this example, compare the raw JSON (edit the data root) with what is presented here.
