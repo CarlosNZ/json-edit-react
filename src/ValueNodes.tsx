@@ -110,7 +110,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   const { styles } = useTheme()
 
   useEffect(() => {
-    document.addEventListener('keydown', listenForSubmit)
+    if (isEditing) document.addEventListener('keydown', listenForSubmit)
     return () => document.removeEventListener('keydown', listenForSubmit)
   }, [])
 
@@ -149,7 +149,7 @@ export const NullValue: React.FC<InputProps> = ({
   const { styles } = useTheme()
 
   useEffect(() => {
-    document.addEventListener('keydown', listenForSubmit)
+    if (isEditing) document.addEventListener('keydown', listenForSubmit)
     return () => document.removeEventListener('keydown', listenForSubmit)
   }, [])
 
@@ -171,11 +171,12 @@ export const NullValue: React.FC<InputProps> = ({
 export const ObjectValue: React.FC<InputProps> = ({
   value,
   translate,
+  isEditing,
   handleEdit,
   handleCancel,
 }) => {
   useEffect(() => {
-    document.addEventListener('keydown', listenForSubmit)
+    if (isEditing) document.addEventListener('keydown', listenForSubmit)
     return () => document.removeEventListener('keydown', listenForSubmit)
   }, [])
 
@@ -190,9 +191,14 @@ export const ObjectValue: React.FC<InputProps> = ({
   )
 }
 
-export const ArrayValue: React.FC<InputProps> = ({ value, handleEdit, handleCancel }) => {
+export const ArrayValue: React.FC<InputProps> = ({
+  value,
+  isEditing,
+  handleEdit,
+  handleCancel,
+}) => {
   useEffect(() => {
-    document.addEventListener('keydown', listenForSubmit)
+    if (isEditing) document.addEventListener('keydown', listenForSubmit)
     return () => document.removeEventListener('keydown', listenForSubmit)
   }, [])
 
