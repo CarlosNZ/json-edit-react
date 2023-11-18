@@ -17,7 +17,7 @@
     "@types/react-dom": "^18.2.15",
     "firebase": "^9.22.1",
     "framer-motion": "^10.16.5",
-    "json-edit-react": "^0.9.6",
+    "json-edit-react": "^1.0.0",
     "just-clone": "^6.2.0",
     "just-compare": "^2.3.0",
     "react": "^18.2.0",
