@@ -109,6 +109,7 @@ interface BaseNodeProps {
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction
   restrictAddFilter: FilterFunction
+  restrictTypeSelection: boolean | DataType[] | TypeFilterFunction
   stringTruncate: number
   indent: number
   translate: TranslateFunction
@@ -128,7 +129,6 @@ export interface CollectionNodeProps extends BaseNodeProps {
 export interface ValueNodeProps extends BaseNodeProps {
   data: string | number | boolean | null
   showLabel: boolean
-  restrictTypeSelection: boolean | TypeFilterFunction
 }
 
 export interface CustomNodeProps extends BaseNodeProps {
