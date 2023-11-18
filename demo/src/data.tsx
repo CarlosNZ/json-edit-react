@@ -1904,16 +1904,3 @@ const data = {
 }
 
 export default data
-
-// - Multiple type restrictions:
-//   - `string` values can only be changed to strings or objects (for nesting)
-//   - `null` is not allowed anywhere
-// - `boolean` values must remain boolean
-//   - data nested below the "user" field can be any simple property (i.e. not objects or arrays)
-// ```js
-const restrictTypeSelection = ({ path, value }) => {
-  if (path.includes('user')) return ['string', 'number', 'boolean']
-  if (typeof value === 'boolean') return false
-  if (typeof value === 'string') return ['string', 'object']
-  return ['string', 'number', 'boolean', 'array', 'object'] // no "null"
-}

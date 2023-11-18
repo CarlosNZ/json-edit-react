@@ -136,8 +136,8 @@ export const NullValue: React.FC<InputProps> = ({ value, isEditing, setIsEditing
   )
 }
 
-export const ObjectValue: React.FC<InputProps> = () => (
-  <span className="jer-value-object">{'{ }'}</span>
+export const ObjectValue: React.FC<InputProps> = ({ value, translate }) => (
+  <span className="jer-value-object">{`{${translate('DEFAULT_NEW_KEY')}:${value} }`}</span>
 )
 
 export const ArrayValue: React.FC<InputProps> = ({ value }) => (

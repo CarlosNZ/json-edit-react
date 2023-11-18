@@ -162,4 +162,5 @@ export interface InputProps {
   handleCancel: () => void
   path: CollectionKey[]
   stringTruncate: number
+  translate: TranslateFunction
 }

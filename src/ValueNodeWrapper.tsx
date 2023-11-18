@@ -78,10 +78,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     let newValue
     switch (dataType) {
       case 'object':
-        newValue = {}
+        newValue = { [translate('DEFAULT_NEW_KEY')]: value }
         break
       case 'array':
-        newValue = value !== null ? [value] : []
+        newValue = value !== null ? value : []
         break
       case 'number':
         const n = Number(value)
@@ -144,6 +144,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     handleCancel,
     path,
     stringTruncate,
+    translate,
   }
 
   const { CustomNode, customNodeProps, hideKey } = getCustomNode(customNodeDefinitions, {
@@ -278,7 +279,7 @@ const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
     case 'null':
       return <NullValue {...inputProps} />
     case 'object':
-      return <ObjectValue {...inputProps} />
+      return <ObjectValue {...inputProps} value={value} />
     case 'array':
       return <ArrayValue {...inputProps} />
     default:
@@ -298,7 +299,7 @@ const convertValue = (value: unknown, type: DataType) => {
     case 'null':
       return null
     case 'object':
-      return {}
+      return value as any
     case 'array':
       return [value]
     default:
