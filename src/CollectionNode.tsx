@@ -151,6 +151,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const handleCancel = () => {
     setIsEditing(false)
+    setIsEditingKey(false)
     setError(null)
     setStringifiedValue(JSON.stringify(data, null, 2))
   }
