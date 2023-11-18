@@ -118,6 +118,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setIsEditing(false)
     setIsEditingKey(false)
     setValue(data)
+    setDataType(getDataType(data))
   }
 
   const handleDelete = () => {

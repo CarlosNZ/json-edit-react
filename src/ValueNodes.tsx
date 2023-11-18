@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { InputProps } from './types'
 import { useTheme } from './theme'
@@ -104,8 +104,22 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   isEditing,
   path,
   setIsEditing,
+  handleEdit,
+  handleCancel,
 }) => {
   const { styles } = useTheme()
+
+  useEffect(() => {
+    document.addEventListener('keydown', listenForSubmit)
+    return () => document.removeEventListener('keydown', listenForSubmit)
+  }, [])
+
+  const listenForSubmit = (event: any) => {
+    if (event.key === 'Enter') {
+      handleEdit()
+    } else if (event.key === 'Escape') handleCancel()
+  }
+
   return isEditing ? (
     <input
       className="jer-input-boolean"
@@ -125,8 +139,26 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   )
 }
 
-export const NullValue: React.FC<InputProps> = ({ value, isEditing, setIsEditing }) => {
+export const NullValue: React.FC<InputProps> = ({
+  value,
+  isEditing,
+  setIsEditing,
+  handleEdit,
+  handleCancel,
+}) => {
   const { styles } = useTheme()
+
+  useEffect(() => {
+    document.addEventListener('keydown', listenForSubmit)
+    return () => document.removeEventListener('keydown', listenForSubmit)
+  }, [])
+
+  const listenForSubmit = (event: any) => {
+    if (event.key === 'Enter') {
+      handleEdit()
+    } else if (event.key === 'Escape') handleCancel()
+  }
+
   return isEditing ? (
     <div className="jer-input-null">null</div>
   ) : (
@@ -136,13 +168,42 @@ export const NullValue: React.FC<InputProps> = ({ value, isEditing, setIsEditing
   )
 }
 
-export const ObjectValue: React.FC<InputProps> = ({ value, translate }) => (
-  <span className="jer-value-object">{`{${translate('DEFAULT_NEW_KEY')}:${value} }`}</span>
-)
+export const ObjectValue: React.FC<InputProps> = ({
+  value,
+  translate,
+  handleEdit,
+  handleCancel,
+}) => {
+  useEffect(() => {
+    document.addEventListener('keydown', listenForSubmit)
+    return () => document.removeEventListener('keydown', listenForSubmit)
+  }, [])
 
-export const ArrayValue: React.FC<InputProps> = ({ value }) => (
-  <span className="jer-value-array">{`[${value === null ? '' : value}]`}</span>
-)
+  const listenForSubmit = (event: any) => {
+    if (event.key === 'Enter') {
+      handleEdit()
+    } else if (event.key === 'Escape') handleCancel()
+  }
+
+  return (
+    <span className="jer-value-object">{`{${translate('DEFAULT_NEW_KEY')}: "${value}" }`}</span>
+  )
+}
+
+export const ArrayValue: React.FC<InputProps> = ({ value, handleEdit, handleCancel }) => {
+  useEffect(() => {
+    document.addEventListener('keydown', listenForSubmit)
+    return () => document.removeEventListener('keydown', listenForSubmit)
+  }, [])
+
+  const listenForSubmit = (event: any) => {
+    if (event.key === 'Enter') {
+      handleEdit()
+    } else if (event.key === 'Escape') handleCancel()
+  }
+
+  return <span className="jer-value-array">{`[${value === null ? '' : value}]`}</span>
+}
 
 export const InvalidValue: React.FC<InputProps> = ({ value }) => {
   let message = 'Error!'
