@@ -3,14 +3,7 @@ import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import clone from 'just-clone'
 import { CollectionNode, isCollection } from './CollectionNode'
-import {
-  CollectionData,
-  JsonEditorProps,
-  FilterFunction,
-  OnChangeFunction,
-  CustomNodeDefinition,
-  FilterProps,
-} from './types'
+import { CollectionData, JsonEditorProps, FilterFunction, OnChangeFunction } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { getTranslateFunction } from './localisation'
 import './style.css'
@@ -54,6 +47,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   useEffect(() => {
     if (theme) setTheme(theme)
     if (icons) setIcons(icons)
+    // eslint-disable-next-line
   }, [theme, icons])
 
   const onEdit: OnChangeFunction = async (value, path) => {
@@ -143,6 +137,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     stringTruncate,
     translate,
     customNodeDefinitions,
+    parentData: null,
   }
 
   if (!styles) return null
@@ -155,7 +150,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       {isCollection(data) ? (
         <CollectionNode data={data} path={[]} {...otherProps} />
       ) : (
-        <ValueNodeWrapper data={data as any} path={[]} {...otherProps} />
+        <ValueNodeWrapper data={data as any} path={[]} showLabel {...otherProps} />
       )}
     </div>
   )
@@ -197,21 +192,6 @@ const getFilterFunction = (propValue: boolean | number | FilterFunction): Filter
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
   return propValue
-}
-
-export const getCustomNode = (
-  customNodeDefinitions: CustomNodeDefinition[] = [],
-  filterProps: FilterProps
-) => {
-  const matchingDefinitions = customNodeDefinitions.filter(({ condition }) =>
-    condition(filterProps)
-  )
-  if (matchingDefinitions.length === 0) return {}
-
-  // Only take the first one that matches
-  const { element, props, hideKey = false } = matchingDefinitions[0]
-
-  return { CustomNode: element, customNodeProps: props, hideKey }
 }
 
 export default JsonEditor

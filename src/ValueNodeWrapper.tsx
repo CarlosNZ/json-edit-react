@@ -21,7 +21,7 @@ import {
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
-import { getCustomNode } from './JsonEditor'
+import { getCustomNode } from './helpers'
 import { CustomNodeWrapper } from './CustomNodeWrapper'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
@@ -35,7 +35,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     enableClipboard,
     restrictEditFilter,
     restrictDeleteFilter,
-    showArrayIndices,
+    showLabel,
     stringTruncate,
     indent,
     translate,
@@ -43,6 +43,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   } = props
   const { styles } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
+  const [isEditingKey, setIsEditingKey] = useState(false)
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
@@ -94,8 +95,25 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
+  const handleEditKey = (newKey: string) => {
+    setIsEditingKey(false)
+    if (!parentData) return
+    const parentPath = path.slice(0, -1)
+    // Need to update data in array form to preserve key order
+    const newData = Object.fromEntries(
+      Object.entries(parentData).map(([key, val]) => (key === name ? [newKey, val] : [key, val]))
+    )
+    onEdit(newData, parentPath)
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleEditKey((e.target as HTMLInputElement).value)
+    else if (e.key === 'Escape') handleCancel()
+  }
+
   const handleCancel = () => {
     setIsEditing(false)
+    setIsEditingKey(false)
     setValue(data)
   }
 
@@ -109,6 +127,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const canEdit = useMemo(() => !restrictEditFilter(filterProps), [filterProps])
   const canDelete = useMemo(() => !restrictDeleteFilter(filterProps), [filterProps])
+
+  const isArray = typeof path.slice(-1)[0] === 'number'
+  const canEditKey = !isArray && canEdit && canDelete
 
   const inputProps = {
     value,
@@ -150,7 +171,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           flexWrap: (name as string).length > 10 ? 'wrap' : 'nowrap',
         }}
       >
-        {showArrayIndices && (
+        {showLabel && !isEditingKey && (
           <label
             htmlFor={path.join('.')}
             className="jer-object-key"
@@ -159,9 +180,22 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
               minWidth: `${Math.min(String(name).length + 1, 5)}ch`,
               flexShrink: (name as string).length > 10 ? 1 : 0,
             }}
+            onDoubleClick={() => canEditKey && setIsEditingKey(true)}
           >
             {name}:{' '}
           </label>
+        )}
+        {showLabel && isEditingKey && (
+          <input
+            className="jer-object-key"
+            type="text"
+            name={path.join('.')}
+            defaultValue={name}
+            autoFocus
+            onFocus={(e) => e.target.select()}
+            onKeyDown={handleKeyPress}
+            style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
+          />
         )}
         <div className="jer-value-and-buttons">
           <div className="jer-input-component">{getInputComponent(dataType, inputProps)}</div>

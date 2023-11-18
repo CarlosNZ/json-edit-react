@@ -98,6 +98,7 @@ export type OnChangeFunction = (value: unknown, path: (string | number)[]) => Pr
 
 interface BaseNodeProps {
   data: unknown
+  parentData: CollectionData | null
   path: CollectionKey[]
   name: CollectionKey
   onEdit: OnChangeFunction
@@ -106,7 +107,6 @@ interface BaseNodeProps {
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction
   restrictAddFilter: FilterFunction
-  showArrayIndices: boolean
   stringTruncate: number
   indent: number
   translate: TranslateFunction
@@ -118,17 +118,18 @@ export interface CollectionNodeProps extends BaseNodeProps {
   collapseFilter: FilterFunction
   onAdd: OnChangeFunction
   keySort: boolean | CompareFunction
+  showArrayIndices: boolean
   defaultValue: unknown
 }
 
 export interface ValueNodeProps extends BaseNodeProps {
   data: string | number | boolean | null
-  parentData: CollectionData
+  showLabel: boolean
 }
 
-export interface CustomNodeProps<T> extends BaseNodeProps {
-  customProps: T
-  parentData: CollectionData
+export interface CustomNodeProps extends BaseNodeProps {
+  customProps?: Record<string, unknown>
+  parentData: CollectionData | null
 }
 
 export interface CustomNodeWrapperProps {
@@ -138,9 +139,9 @@ export interface CustomNodeWrapperProps {
   indent?: number
 }
 
-export interface CustomNodeDefinition<T> {
+export interface CustomNodeDefinition {
   condition: FilterFunction
-  element: React.FC<CustomNodeProps<T>>
+  element: React.FC<CustomNodeProps>
   name: string // appears in "Type" selector
   props?: Record<string, unknown>
   hideKey?: boolean
