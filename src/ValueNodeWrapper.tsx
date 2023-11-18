@@ -156,7 +156,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   // Include custom node options in dataType list
   const dataTypes = [
     ...customNodeDefinitions
-      .filter(({ showInTypesSelector = true }) => showInTypesSelector)
+      .filter(({ showInTypesSelector = false }) => showInTypesSelector)
       .map(({ name }) => name),
     ...DataTypes,
   ]

@@ -212,7 +212,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                   style={styles.property}
                   onDoubleClick={() => canEditKey && setIsEditingKey(true)}
                 >
-                  {showLabel && name ? `${name}:` : null}
+                  {showLabel && name !== '' && name !== undefined ? `${name}:` : null}
                 </span>
               )}
               {isEditingKey && (

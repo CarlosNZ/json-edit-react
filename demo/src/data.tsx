@@ -1,69 +1,7 @@
 import React from 'react'
 import { Flex, Box, Link, Text } from '@chakra-ui/react'
-import { CollectionNodeProps } from './json-edit-react/src/types'
-
-const ReplaceOperator: React.FC<CollectionNodeProps & { customProps: Record<string, unknown> }> = ({
-  customProps,
-  data,
-}) => {
-  return <p style={customProps.style as React.CSSProperties}>This is an operator node</p>
-}
-const ReplaceSimpleValue: React.FC<
-  CollectionNodeProps & { customProps: Record<string, unknown> }
-> = ({ customProps, data }) => {
-  return <p style={customProps.style as React.CSSProperties}>This is: {data as any}</p>
-}
-const ReplaceWholeNode: React.FC<
-  CollectionNodeProps & { customProps: Record<string, unknown> }
-> = ({ customProps, data }) => {
-  return <p style={customProps.style as React.CSSProperties}>This is a whole node node</p>
-}
 
 const data = {
-  custom: {
-    name: 'Custom',
-    description: (
-      <Flex flexDir="column" gap={2}>
-        <Text>Let's see if this works</Text>
-      </Flex>
-    ),
-    collapse: 2,
-    data: {
-      property1: 'Just a string',
-      YesOrNo: true,
-      customOperator: { operator: 'test', children: [1, 2, 3] },
-      notCustom: { one: 1, two: 2 },
-      plainOld: 23,
-      customField: 'Just this one',
-      collectionNode: { replace: 'ME', other: 1, fields: 'TWO' },
-      replaceNodeKey: { replaceKey: true, somethingElse: 'YES' },
-    },
-    customNodeDefinitions: [
-      {
-        condition: ({ key }) => key === 'operator',
-        element: ReplaceOperator,
-        props: { style: { color: 'red' } },
-        hideKey: true,
-      },
-      {
-        condition: ({ key }) => key === 'customField',
-        element: ReplaceSimpleValue,
-        props: { style: { color: 'green' } },
-      },
-      {
-        condition: ({ value }) => typeof value === 'object' && value !== null && 'replace' in value,
-        element: ReplaceWholeNode,
-        props: { style: { border: '2px solid blue' } },
-      },
-      {
-        condition: ({ value }) =>
-          typeof value === 'object' && value !== null && 'replaceKey' in value,
-        element: ReplaceWholeNode,
-        props: { style: { border: '2px solid orange' } },
-        hideKey: true,
-      },
-    ],
-  },
   basic: {
     name: '🔰 Basic',
     description: (
@@ -1845,6 +1783,7 @@ const data = {
         node. Let's see how long it lasts... 😉
       </Text>
     ),
+    rootName: 'liveData',
     collapse: 3,
     restrictEdit: ({ key, value, level, path, size }) => {
       return level === 0 || key === 'messages' || key === 'lastEdited'
@@ -1873,11 +1812,92 @@ const data = {
         </Text>
       </Flex>
     ),
+    rootName: 'theme',
     restrictEdit: ({ key, level }) => level === 0 || ['fragments', 'styles'].includes(key),
     restrictDelete: ({ key }) => ['displayName', 'fragments', 'styles'].includes(key),
     restrictAdd: ({ level }) => level === 0,
     collapse: 2,
     data: {},
+  },
+  customNodes: {
+    name: '🔧 Custom Nodes',
+    description: (
+      <Flex flexDir="column" gap={2}>
+        <Text>
+          This data set shows <strong>Custom Nodes</strong> — you can provide your own components in
+          order to present specialised data in a unique way, or provide a more complex editing
+          mechanism for a special type of object.
+        </Text>
+        <Text>
+          In this example, compare the raw JSON (edit the data root) with what is presented here.
+        </Text>
+        <Text>
+          See the{' '}
+          <a href="https://github.com/CarlosNZ/json-edit-react#custom-nodes">Custom Nodes</a>{' '}
+          section of the documentation for more info.
+        </Text>
+      </Flex>
+    ),
+    rootName: 'Superheroes',
+    collapse: 2,
+    data: [
+      {
+        name: 'Steve Rogers',
+        aliases: ['Captain America', 'The First Avenger'],
+        logo: 'https://logos-world.net/wp-content/uploads/2023/05/Captain-America-Logo.png',
+        actor: 'Chris Evans',
+        publisher: 'Marvel',
+      },
+      {
+        name: 'Clark Kent',
+        aliases: ['Superman', 'Man of Steel', 'Son of Krypton'],
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/2560px-Superman_shield.svg.png',
+        actor: 'Henry Cavill',
+        publisher: 'D.C. Comics',
+      },
+    ],
+    customNodeDefinitions: [
+      {
+        condition: ({ key, value }) =>
+          key === 'logo' &&
+          typeof value === 'string' &&
+          value.startsWith('http') &&
+          value.endsWith('.png'),
+        element: ({ data }) => {
+          const truncate = (string: string, length = 50) =>
+            string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
+          return (
+            <div style={{ maxWidth: 250 }}>
+              <a href={data} target="_blank">
+                <img src={data} style={{ maxHeight: 75 }} />
+                <p style={{ fontSize: '0.75em' }}>{truncate(data)}</p>{' '}
+              </a>
+            </div>
+          )
+        },
+      },
+      {
+        condition: ({ key }) => key === 'publisher',
+        element: ({ data }) => {
+          return (
+            <p
+              style={{
+                padding: '0.5em 1em',
+                border: '2px solid red',
+                borderRadius: '1.5em',
+                backgroundColor: 'yellow',
+                marginTop: '0.5em',
+                marginRight: '1em',
+                fontFamily: 'sans-serif',
+              }}
+            >
+              Presented by: <strong>{data}</strong>
+            </p>
+          )
+        },
+        hideKey: true,
+      },
+    ],
   },
 }
 

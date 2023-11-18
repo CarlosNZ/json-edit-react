@@ -42,7 +42,7 @@ import { version } from './version'
 
 function App() {
   const [selectedData, setSelectedData] = useState('basic')
-  const [rootName, setRootName] = useState('data')
+  const [rootName, setRootName] = useState(demoData[selectedData].rootName ?? 'data')
   const [indent, setIndent] = useState(4)
   const [collapseLevel, setCollapseLevel] = useState(2)
   const [showCount, setShowCount] = useState<'Yes' | 'No' | 'When closed'>('Yes')
@@ -82,6 +82,8 @@ function App() {
 
   useEffect(() => {
     if (selectedData === 'editTheme') setTheme(data)
+    const rootName = demoData[selectedData].rootName
+    setRootName(rootName ?? 'data')
   }, [data])
 
   const restrictEdit: FilterFunction | boolean = (() => {
