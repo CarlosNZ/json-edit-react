@@ -7,6 +7,8 @@ const localisedStrings = {
   ERROR_UPDATE: 'Update unsuccessful',
   ERROR_DELETE: 'Delete unsuccessful',
   ERROR_ADD: 'Adding node unsuccessful',
+  DEFAULT_STRING: 'New data!',
+  DEFAULT_NEW_KEY: 'key',
 }
 
 export type LocalisedStrings = typeof localisedStrings

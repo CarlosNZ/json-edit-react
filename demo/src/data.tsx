@@ -30,7 +30,7 @@ const data = {
         'Edit a value by clicking the "edit" icon, or double-clicking the value.',
         'You can change the type of any value',
         'You can add new values to objects or arrays',
-        'You can edit individual values, or even a whole object node at once',
+        'You can edit individual values, or even a whole object node at once (as JSON text)',
         {
           nested: 'An object inside an array',
           basic: false,
@@ -58,8 +58,8 @@ const data = {
         <Text>
           Note the additional editing restrictions in addition to the toggles above. This has been
           achieved by specifying filter functions for the <span className="code">restrictEdit</span>
-          , <span className="code">restrictDelete</span> and{' '}
-          <span className="code">restrictAdd</span> props.{' '}
+          , <span className="code">restrictDelete</span>, <span className="code">restrictAdd</span>{' '}
+          and <span className="code">restrictTypeSelection</span> props.{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#readme" isExternal>
             Learn more
           </Link>
@@ -69,6 +69,7 @@ const data = {
     restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
     restrictDelete: ({ value }) => typeof value === 'object' && value !== null,
     restrictAdd: ({ value }) => !Array.isArray(value),
+    restrictTypeSelection: true,
     collapse: 1,
     data: {
       name: 'Luke Skywalker',
@@ -1783,6 +1784,7 @@ const data = {
         node. Let's see how long it lasts... 😉
       </Text>
     ),
+    rootName: 'liveData',
     collapse: 3,
     restrictEdit: ({ key, value, level, path, size }) => {
       return level === 0 || key === 'messages' || key === 'lastEdited'
@@ -1811,11 +1813,93 @@ const data = {
         </Text>
       </Flex>
     ),
+    rootName: 'theme',
     restrictEdit: ({ key, level }) => level === 0 || ['fragments', 'styles'].includes(key),
     restrictDelete: ({ key }) => ['displayName', 'fragments', 'styles'].includes(key),
     restrictAdd: ({ level }) => level === 0,
+    restrictTypeSelection: ['string', 'object', 'array'],
     collapse: 2,
     data: {},
+  },
+  customNodes: {
+    name: '🔧 Custom Nodes',
+    description: (
+      <Flex flexDir="column" gap={2}>
+        <Text>
+          This data set shows <strong>Custom Nodes</strong> — you can provide your own components to
+          present specialised data in a unique way, or provide a more complex editing mechanism for
+          a specialised data structure, say.
+        </Text>
+        <Text>
+          In this example, compare the raw JSON (edit the data root) with what is presented here.
+        </Text>
+        <Text>
+          See the{' '}
+          <a href="https://github.com/CarlosNZ/json-edit-react#custom-nodes">Custom Nodes</a>{' '}
+          section of the documentation for more info.
+        </Text>
+      </Flex>
+    ),
+    rootName: 'Superheroes',
+    collapse: 2,
+    data: [
+      {
+        name: 'Steve Rogers',
+        aliases: ['Captain America', 'The First Avenger'],
+        logo: 'https://logos-world.net/wp-content/uploads/2023/05/Captain-America-Logo.png',
+        actor: 'Chris Evans',
+        publisher: 'Marvel',
+      },
+      {
+        name: 'Clark Kent',
+        aliases: ['Superman', 'Man of Steel', 'Son of Krypton'],
+        logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/2560px-Superman_shield.svg.png',
+        actor: 'Henry Cavill',
+        publisher: 'D.C. Comics',
+      },
+    ],
+    customNodeDefinitions: [
+      {
+        condition: ({ key, value }) =>
+          key === 'logo' &&
+          typeof value === 'string' &&
+          value.startsWith('http') &&
+          value.endsWith('.png'),
+        element: ({ data }) => {
+          const truncate = (string: string, length = 50) =>
+            string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
+          return (
+            <div style={{ maxWidth: 250 }}>
+              <a href={data} target="_blank">
+                <img src={data} style={{ maxHeight: 75 }} />
+                <p style={{ fontSize: '0.75em' }}>{truncate(data)}</p>{' '}
+              </a>
+            </div>
+          )
+        },
+      },
+      {
+        condition: ({ key }) => key === 'publisher',
+        element: ({ data }) => {
+          return (
+            <p
+              style={{
+                padding: '0.5em 1em',
+                border: '2px solid red',
+                borderRadius: '1.5em',
+                backgroundColor: 'yellow',
+                marginTop: '0.5em',
+                marginRight: '1em',
+                fontFamily: 'sans-serif',
+              }}
+            >
+              Presented by: <strong>{data}</strong>
+            </p>
+          )
+        },
+        hideKey: true,
+      },
+    ],
   },
 }
 

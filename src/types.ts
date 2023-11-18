@@ -18,11 +18,12 @@ export interface JsonEditorProps {
   className?: string
   indent?: number
   collapse?: boolean | number | FilterFunction
-  // showCount?: boolean | FilterFunction
+  showCollectionCount?: boolean | 'when-closed'
   restrictEdit?: boolean | FilterFunction
   restrictDelete?: boolean | FilterFunction
   restrictAdd?: boolean | FilterFunction
-  restrictKeyEdit?: boolean | FilterFunction
+  restrictTypeSelection?: boolean | DataType[] | TypeFilterFunction
+  // restrictKeyEdit?: boolean | FilterFunction
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
   defaultValue?: unknown
@@ -30,6 +31,7 @@ export interface JsonEditorProps {
   maxWidth?: string | number
   stringTruncate?: number
   translations?: Partial<LocalisedStrings>
+  customNodeDefinitions?: CustomNodeDefinition[]
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -67,13 +69,16 @@ export type UpdateFunction = (props: {
   path: CollectionKey[]
 }) => void | ErrorString | false
 
-export type FilterFunction = (input: {
+export interface FilterProps {
   key: CollectionKey
   path: CollectionKey[]
   level: number
   value: unknown
   size: number | null
-}) => boolean
+}
+
+export type FilterFunction = (input: FilterProps) => boolean
+export type TypeFilterFunction = (input: FilterProps) => boolean | DataType[]
 
 export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
@@ -95,6 +100,7 @@ export type OnChangeFunction = (value: unknown, path: (string | number)[]) => Pr
 
 interface BaseNodeProps {
   data: unknown
+  parentData: CollectionData | null
   path: CollectionKey[]
   name: CollectionKey
   onEdit: OnChangeFunction
@@ -103,10 +109,11 @@ interface BaseNodeProps {
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction
   restrictAddFilter: FilterFunction
-  showArrayIndices: boolean
+  restrictTypeSelection: boolean | DataType[] | TypeFilterFunction
   stringTruncate: number
   indent: number
   translate: TranslateFunction
+  customNodeDefinitions: CustomNodeDefinition[]
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -114,11 +121,36 @@ export interface CollectionNodeProps extends BaseNodeProps {
   collapseFilter: FilterFunction
   onAdd: OnChangeFunction
   keySort: boolean | CompareFunction
+  showArrayIndices: boolean
+  showCollectionCount: boolean | 'when-closed'
   defaultValue: unknown
 }
 
 export interface ValueNodeProps extends BaseNodeProps {
   data: string | number | boolean | null
+  showLabel: boolean
+}
+
+export interface CustomNodeProps extends BaseNodeProps {
+  customProps?: Record<string, unknown>
+  parentData: CollectionData | null
+}
+
+export interface CustomNodeWrapperProps {
+  name: CollectionKey
+  hideKey: boolean
+  children: JSX.Element
+  indent?: number
+}
+
+export interface CustomNodeDefinition {
+  condition: FilterFunction
+  element: React.FC<CustomNodeProps>
+  name: string // appears in "Type" selector
+  props?: Record<string, unknown>
+  hideKey?: boolean
+  defaultValue: unknown
+  showInTypesSelector?: boolean
 }
 
 export interface InputProps {
@@ -130,4 +162,5 @@ export interface InputProps {
   handleCancel: () => void
   path: CollectionKey[]
   stringTruncate: number
+  translate: TranslateFunction
 }

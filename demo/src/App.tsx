@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react'
 /* Local version */
-import JsonEditor, { themes, ThemeName, Theme, ThemeInput } from './json-edit-react/src'
+import { JsonEditor, themes, ThemeName, Theme, ThemeInput } from './json-edit-react/src'
 /* npm version */
-// import JsonEditor, { themes, ThemeName, Theme, ThemeInput } from 'json-edit-react'
+// import { JsonEditor, themes, ThemeName, Theme, ThemeInput } from 'json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -42,9 +42,10 @@ import { version } from './version'
 
 function App() {
   const [selectedData, setSelectedData] = useState('basic')
-  const [rootName, setRootName] = useState('data')
+  const [rootName, setRootName] = useState(demoData[selectedData].rootName ?? 'data')
   const [indent, setIndent] = useState(4)
   const [collapseLevel, setCollapseLevel] = useState(2)
+  const [showCount, setShowCount] = useState<'Yes' | 'No' | 'When closed'>('Yes')
   const [theme, setTheme] = useState<ThemeInput>('default')
   const [allowEdit, setAllowEdit] = useState(true)
   const [allowDelete, setAllowDelete] = useState(true)
@@ -81,6 +82,8 @@ function App() {
 
   useEffect(() => {
     if (selectedData === 'editTheme') setTheme(data)
+    const rootName = demoData[selectedData].rootName
+    setRootName(rootName ?? 'data')
   }, [data])
 
   const restrictEdit: FilterFunction | boolean = (() => {
@@ -210,6 +213,9 @@ function App() {
               if (selectedData === 'editTheme') setTheme(newData)
             }}
             collapse={collapseLevel}
+            showCollectionCount={
+              showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
+            }
             enableClipboard={
               allowCopy
                 ? ({ stringValue, type }) =>
@@ -225,12 +231,14 @@ function App() {
             restrictEdit={restrictEdit}
             restrictDelete={restrictDelete}
             restrictAdd={restrictAdd}
+            restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
             keySort={sortKeys}
             defaultValue={defaultNewValue}
             showArrayIndices={showIndices}
             maxWidth="min(650px, 90vw)"
             className="block-shadow"
-            stringTruncate={80}
+            stringTruncate={90}
+            customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
           />
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
@@ -283,6 +291,20 @@ function App() {
               <VStack align="flex-start" m={4}>
                 <HStack className="inputRow">
                   <FormLabel className="labelWidth" textAlign="right">
+                    Demo data
+                  </FormLabel>
+                  <div className="inputWidth" style={{ flexGrow: 1 }}>
+                    <Select onChange={handleChangeData} value={selectedData}>
+                      {Object.entries(demoData).map(([key, { name }]) => (
+                        <option value={key} key={key}>
+                          {name}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
                     Theme
                   </FormLabel>
                   <div className="inputWidth" style={{ flexGrow: 1 }}>
@@ -294,20 +316,6 @@ function App() {
                           </option>
                         )
                       )}
-                    </Select>
-                  </div>
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Demo data
-                  </FormLabel>
-                  <div className="inputWidth" style={{ flexGrow: 1 }}>
-                    <Select onChange={handleChangeData} value={selectedData}>
-                      {Object.entries(demoData).map(([key, { name }]) => (
-                        <option value={key} key={key}>
-                          {name}
-                        </option>
-                      ))}
                     </Select>
                   </div>
                 </HStack>
@@ -356,6 +364,27 @@ function App() {
                       <NumberDecrementStepper />
                     </NumberInputStepper>
                   </NumberInput>
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Show counts
+                  </FormLabel>
+                  <div className="inputWidth" style={{ flexGrow: 1 }}>
+                    <Select
+                      onChange={(e) => setShowCount(e.target.value as 'Yes' | 'No' | 'When closed')}
+                      value={showCount}
+                    >
+                      <option value="Yes" key={0}>
+                        Yes
+                      </option>
+                      <option value="No" key={1}>
+                        No
+                      </option>
+                      <option value="When closed" key={2}>
+                        When closed
+                      </option>
+                    </Select>
+                  </div>
                 </HStack>
                 <CheckboxGroup colorScheme="primaryScheme">
                   <Flex w="100%" justify="flex-start">

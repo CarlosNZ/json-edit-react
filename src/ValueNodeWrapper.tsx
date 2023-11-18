@@ -21,23 +21,30 @@ import {
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
+import { getCustomNode } from './helpers'
+import { CustomNodeWrapper } from './CustomNodeWrapper'
 
-export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
-  data,
-  name,
-  path,
-  onEdit,
-  onDelete,
-  enableClipboard,
-  restrictEditFilter,
-  restrictDeleteFilter,
-  showArrayIndices,
-  stringTruncate,
-  indent,
-  translate,
-}) => {
+export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
+  const {
+    data,
+    parentData,
+    name,
+    path,
+    onEdit,
+    onDelete,
+    enableClipboard,
+    restrictEditFilter,
+    restrictDeleteFilter,
+    restrictTypeSelection,
+    showLabel,
+    stringTruncate,
+    indent,
+    translate,
+    customNodeDefinitions,
+  } = props
   const { styles } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
+  const [isEditingKey, setIsEditingKey] = useState(false)
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
@@ -51,8 +58,13 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   }, [data, error])
 
   const handleChangeDataType = (type: DataType) => {
-    setValue(convertValue(value, type))
-    setDataType(type)
+    const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
+    if (customNode) {
+      onEdit(customNode.defaultValue, path)
+    } else {
+      setValue(convertValue(value, type))
+      setDataType(type)
+    }
   }
 
   const logError = (errorString: ErrorString) => {
@@ -66,10 +78,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     let newValue
     switch (dataType) {
       case 'object':
-        newValue = {}
+        newValue = { [translate('DEFAULT_NEW_KEY')]: value }
         break
       case 'array':
-        newValue = value !== null ? [value] : []
+        newValue = value !== null ? value : []
         break
       case 'number':
         const n = Number(value)
@@ -84,9 +96,29 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     })
   }
 
+  const handleEditKey = (newKey: string) => {
+    setIsEditingKey(false)
+    if (!parentData) return
+    const parentPath = path.slice(0, -1)
+    if (!newKey) return
+
+    // Need to update data in array form to preserve key order
+    const newData = Object.fromEntries(
+      Object.entries(parentData).map(([key, val]) => (key === name ? [newKey, val] : [key, val]))
+    )
+    onEdit(newData, parentPath)
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleEditKey((e.target as HTMLInputElement).value)
+    else if (e.key === 'Escape') handleCancel()
+  }
+
   const handleCancel = () => {
     setIsEditing(false)
+    setIsEditingKey(false)
     setValue(data)
+    setDataType(getDataType(data))
   }
 
   const handleDelete = () => {
@@ -100,8 +132,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
   const canEdit = useMemo(() => !restrictEditFilter(filterProps), [filterProps])
   const canDelete = useMemo(() => !restrictDeleteFilter(filterProps), [filterProps])
 
+  const isArray = typeof path.slice(-1)[0] === 'number'
+  const canEditKey = !isArray && canEdit && canDelete
+
   const inputProps = {
     value,
+    parentData,
     setValue,
     isEditing,
     setIsEditing: canEdit ? () => setIsEditing(true) : () => {},
@@ -109,9 +145,42 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
     handleCancel,
     path,
     stringTruncate,
+    translate,
   }
 
-  return (
+  const { CustomNode, customNodeProps, hideKey } = getCustomNode(customNodeDefinitions, {
+    key: name,
+    path,
+    level: path.length,
+    value: data,
+    size: 0,
+  })
+
+  // Include custom node options in dataType list
+  const allDataTypes = [
+    ...customNodeDefinitions
+      .filter(({ showInTypesSelector = false }) => showInTypesSelector)
+      .map(({ name }) => name),
+    ...DataTypes,
+  ]
+
+  const allowedDataTypes = useMemo(() => {
+    if (typeof restrictTypeSelection === 'boolean') return restrictTypeSelection ? [] : allDataTypes
+
+    if (Array.isArray(restrictTypeSelection)) return restrictTypeSelection
+
+    const result = restrictTypeSelection(filterProps)
+
+    if (typeof result === 'boolean') return result ? [] : allDataTypes
+
+    return result
+  }, [filterProps, restrictTypeSelection])
+
+  return CustomNode ? (
+    <CustomNodeWrapper name={name} hideKey={hideKey} indent={indent}>
+      <CustomNode customProps={customNodeProps} {...props} />
+    </CustomNodeWrapper>
+  ) : (
     <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
       <div
         className="jer-value-main-row"
@@ -119,7 +188,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
           flexWrap: (name as string).length > 10 ? 'wrap' : 'nowrap',
         }}
       >
-        {showArrayIndices && (
+        {showLabel && !isEditingKey && (
           <label
             htmlFor={path.join('.')}
             className="jer-object-key"
@@ -128,9 +197,22 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
               minWidth: `${Math.min(String(name).length + 1, 5)}ch`,
               flexShrink: (name as string).length > 10 ? 1 : 0,
             }}
+            onDoubleClick={() => canEditKey && setIsEditingKey(true)}
           >
             {name}:{' '}
           </label>
+        )}
+        {showLabel && isEditingKey && (
+          <input
+            className="jer-object-key"
+            type="text"
+            name={path.join('.')}
+            defaultValue={name}
+            autoFocus
+            onFocus={(e) => e.target.select()}
+            onKeyDown={handleKeyPress}
+            style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
+          />
         )}
         <div className="jer-value-and-buttons">
           <div className="jer-input-component">{getInputComponent(dataType, inputProps)}</div>
@@ -150,7 +232,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
               />
             )
           )}
-          {isEditing && (
+          {isEditing && allowedDataTypes.length > 0 && (
             <div className="jer-select">
               <select
                 name={`${name}-type-select`}
@@ -158,7 +240,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = ({
                 onChange={(e) => handleChangeDataType(e.target.value as DataType)}
                 value={dataType}
               >
-                {DataTypes.map((type) => (
+                {allowedDataTypes.map((type) => (
                   <option value={type} key={type}>
                     {type}
                   </option>
@@ -198,7 +280,7 @@ const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
     case 'null':
       return <NullValue {...inputProps} />
     case 'object':
-      return <ObjectValue {...inputProps} />
+      return <ObjectValue {...inputProps} value={value} />
     case 'array':
       return <ArrayValue {...inputProps} />
     default:
@@ -218,7 +300,7 @@ const convertValue = (value: unknown, type: DataType) => {
     case 'null':
       return null
     case 'object':
-      return {}
+      return value as any
     case 'array':
       return [value]
     default:

@@ -28,6 +28,7 @@ Features include:
   - [A note about sizing and scaling](#a-note-about-sizing-and-scaling)
   - [Icons](#icons)
 - [Localisation](#localisation)
+- [Custom nodes](#custom-nodes)
 - [Undo functionality](#undo-functionality)
 - [Issues, bugs, suggestions?](#issues-bugs-suggestions)
 - [Roadmap](#roadmap)
@@ -59,7 +60,7 @@ import { JsonEditor } from 'json-edit-react'
 
 It's pretty self explanatory (click the "edit" icon to edit, etc.), but there are a few not-so-obvious ways of interacting with the editor:
 
-- Double-click a value to edit it
+- Double-click a value (or a key) to edit it
 - When editing a string, use `Cmd/Ctrl/Shift-Enter` to add a new line (`Enter` submits the value)
 - It's the opposite when editing a full object/array node (which you do by clicking "edit" on an object or array value) — `Enter` for new line, and `Cmd/Ctrl/Shift-Enter` for submit
 - `Escape` to cancel editing
@@ -69,30 +70,33 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 
 The only *required* value is `data`. 
 
-| prop               | type                                         | default     | description                                                                                                                                                                                                                                                                                        |
-| ------------------ | -------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`             | `object\|array`                              |             | The data to be displayed / edited                                                                                                                                                                                                                                                                  |
-| `rootName`         | `string`                                     | `"data"`    | A name to display in the editor as the root of the data object.                                                                                                                                                                                                                                    |
-| `onUpdate`         | `UpdateFunction`                             |             | A function to run whenever a value is **updated** (edit, delete *or* add) in the editor. See [Update functions](#update-functions).                                                                                                                                                                |
-| `onUpdate`         | `UpdateFunction`                             |             | A function to run whenever a value is **edited**.                                                                                                                                                                                                                                                  |
-| `onDelete`         | `UpdateFunction`                             |             | A function to run whenever a value is **deleted**.                                                                                                                                                                                                                                                 |
-| `onAdd`            | `UpdateFunction`                             |             | A function to run whenever a new property is **added**.                                                                                                                                                                                                                                            |
-| `enableClipboard`  | `boolean\|CopyFunction`                      | `true`      | Whether or not to enable the "Copy to clipboard" button in the UI. If a function is provided, `true` is assumed and this function will be run whenever an item is copied.                                                                                                                          |
-| `indent`           | `number`                                     | `4`         | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                                 |
-| `collapse`         | `boolean\|number\|FilterFunction`            | `false`     | Defines which nodes of the JSON tree will be displayed "opened" in the UI on load. If `boolean`, it'll be either all or none. A `number` specifies a nesting depth after which nodes will be closed. For more fine control a function can be provided — see [Filter functions](#filter-functions). |
-| `restrictEdit`     | `boolean\|FilterFunction`                    | `false`     | If `false`, no editing is permitted. A function can be provided for more specificity — see [Filter functions](#filter-functions)                                                                                                                                                                   |
-| `restrictDelete`   | `boolean\|FilterFunction`                    | `false`     | As with `restrictEdit` but for deletion                                                                                                                                                                                                                                                            |
-| `restrictAdd`      | `boolean\|FilterFunction`                    | `false`     | As with `restrictEdit` but for adding new properties                                                                                                                                                                                                                                               |
-| `keySort`          | `boolean\|CompareFunction`                   | `false`     | If `true`, object keys will be ordered (using default JS `.sort()`). A [compare function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) can also be provided to define sorting behaviour.                                                           |
-| `showArrayIndices` | `boolean`                                    | `true`      | Whether or not to display the index (as a property key) for array elements.                                                                                                                                                                                                                        |
-| `defaultValue`     | `any`                                        | `null`      | When a new property is added, it is initialised with this value.                                                                                                                                                                                                                                   |
-| `stringTruncate`   | `number`                                     | `250`       | String values longer than this many characters will be displayed truncated (with `...`). The full string will always be visible when editing.                                                                                                                                                      |
-| `translations`     | `LocalisedStrings` object                    | `{ }`       | UI strings (such as error messages) can be translated by passing an object containing localised string values (there are only a few). See [Localisation](#localisation)                                                                                                                            |
-| `theme`            | `string\|ThemeObject\|[string, ThemeObject]` | `"default"` | Either the name of one of the built-in themes, or an object specifying some or all theme properties. See [Themes](#themes).                                                                                                                                                                        |
-| `className`        | `string`                                     |             | Name of a CSS class to apply to the component. In most cases, specifying `theme` properties will be more straightforward.                                                                                                                                                                          |
-| `icons`            | `{[iconName]: JSX.Element, ... }`            | `{ }`       | Replace the built-in icons by specifying them here. See [Themes](#themes).                                                                                                                                                                                                                         |  |
-| `minWidth`         | `number\|string` (CSS value)                 | `250`       | Minimum width for the editor container.                                                                                                                                                                                                                                                            |
-| `maxWidth`         | `number\|string` (CSS value)                 | `600`       | Maximum width for the editor container.                                                                                                                                                                                                                                                            |
+| prop                    | type                                         | default     | description                                                                                                                                                                                                                                                                                        |
+| ----------------------- | -------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`                  | `object\|array`                              |             | The data to be displayed / edited                                                                                                                                                                                                                                                                  |
+| `rootName`              | `string`                                     | `"data"`    | A name to display in the editor as the root of the data object.                                                                                                                                                                                                                                    |
+| `onUpdate`              | `UpdateFunction`                             |             | A function to run whenever a value is **updated** (edit, delete *or* add) in the editor. See [Update functions](#update-functions).                                                                                                                                                                |
+| `onUpdate`              | `UpdateFunction`                             |             | A function to run whenever a value is **edited**.                                                                                                                                                                                                                                                  |
+| `onDelete`              | `UpdateFunction`                             |             | A function to run whenever a value is **deleted**.                                                                                                                                                                                                                                                 |
+| `onAdd`                 | `UpdateFunction`                             |             | A function to run whenever a new property is **added**.                                                                                                                                                                                                                                            |
+| `enableClipboard`       | `boolean\|CopyFunction`                      | `true`      | Whether or not to enable the "Copy to clipboard" button in the UI. If a function is provided, `true` is assumed and this function will be run whenever an item is copied.                                                                                                                          |
+| `indent`                | `number`                                     | `4`         | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                                 |
+| `collapse`              | `boolean\|number\|FilterFunction`            | `false`     | Defines which nodes of the JSON tree will be displayed "opened" in the UI on load. If `boolean`, it'll be either all or none. A `number` specifies a nesting depth after which nodes will be closed. For more fine control a function can be provided — see [Filter functions](#filter-functions). |
+| `restrictEdit`          | `boolean\|FilterFunction`                    | `false`     | If `false`, no editing is permitted. A function can be provided for more specificity — see [Filter functions](#filter-functions)                                                                                                                                                                   |
+| `restrictDelete`        | `boolean\|FilterFunction`                    | `false`     | As with `restrictEdit` but for deletion                                                                                                                                                                                                                                                            |
+| `restrictAdd`           | `boolean\|FilterFunction`                    | `false`     | As with `restrictEdit` but for adding new properties                                                                                                                                                                                                                                               |
+| `restrictTypeSelection` | `boolean\|DataType[]\|TypeFilterFunction`    | `false`     | For restricting the data types the user can select. This varies slightly from the above restrictions in that the value (or output of the `TypeFilterFunction`) can be a list of data types *or* a `boolean`.                                                                                       |
+| `keySort`               | `boolean\|CompareFunction`                   | `false`     | If `true`, object keys will be ordered (using default JS `.sort()`). A [compare function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) can also be provided to define sorting behaviour.                                                           |
+| `showArrayIndices`      | `boolean`                                    | `true`      | Whether or not to display the index (as a property key) for array elements.                                                                                                                                                                                                                        |
+| `showCollectionCount`   | `boolean\|"when-closed"`                     | `true`      | Whether or not to display the number of items in each collection (object or array).                                                                                                                                                                                                                |
+| `defaultValue`          | `any`                                        | `null`      | When a new property is added, it is initialised with this value.                                                                                                                                                                                                                                   |
+| `stringTruncate`        | `number`                                     | `250`       | String values longer than this many characters will be displayed truncated (with `...`). The full string will always be visible when editing.                                                                                                                                                      |
+| `translations`          | `LocalisedStrings` object                    | `{ }`       | UI strings (such as error messages) can be translated by passing an object containing localised string values (there are only a few). See [Localisation](#localisation)                                                                                                                            |
+| `theme`                 | `string\|ThemeObject\|[string, ThemeObject]` | `"default"` | Either the name of one of the built-in themes, or an object specifying some or all theme properties. See [Themes](#themes).                                                                                                                                                                        |
+| `className`             | `string`                                     |             | Name of a CSS class to apply to the component. In most cases, specifying `theme` properties will be more straightforward.                                                                                                                                                                          |
+| `icons`                 | `{[iconName]: JSX.Element, ... }`            | `{ }`       | Replace the built-in icons by specifying them here. See [Themes](#themes).                                                                                                                                                                                                                         |  |
+| `minWidth`              | `number\|string` (CSS value)                 | `250`       | Minimum width for the editor container.                                                                                                                                                                                                                                                            |
+| `maxWidth`              | `number\|string` (CSS value)                 | `600`       | Maximum width for the editor container.                                                                                                                                                                                                                                                            |
+| `customNodeDefinitions` | `CustomNodeDefinition[]`                     |             | You can provide customised components to override specific nodes in the data tree, according to a condition function. See see [Custom nodes](#custom-nodes) for more detail.                                                                                                                       |
 
 ## Update functions
 
@@ -131,7 +135,7 @@ Since there is very little user feedback when clicking "Copy", a good idea would
 
 ## Filter functions
 
-You can control which nodes of the data structure can be edited, deleted, or added to by passing Filter functions. These will be called on each property in the data and the attribute will be enforced depending on whether the function returns `true` or `false` (`true` means *cannot* be edited).
+You can control which nodes of the data structure can be edited, deleted, or added to, or have their data type changed, by passing Filter functions. These will be called on each property in the data and the attribute will be enforced depending on whether the function returns `true` or `false` (`true` means *cannot* be edited).
 
 The function receives the following object:
 ```js
@@ -145,6 +149,18 @@ The function receives the following object:
 ```
 
 A Filter function is available for the `collapse` prop as well, so you can have your data appear with deeply-nested collections opened up, while collapsing everything else, for example.
+
+For restricting data types, the (Type) filter function is slightly more sophisticated. The input is the same, but the output can be either a `boolean` (which would restrict the available types for a given node to either *all* or *none*), or an array of data types to be restricted to. The available values are:
+- `"string"`
+- `"number"`
+- `"boolean"`
+- `"null"`
+- `"object"`
+- `"array"`
+
+There is no specific restriction function for editing object key names, but they must return `true` for *both* `restrictEdit` and `restrictDelete` (and `restrictAdd` for collections), since changing a key name is equivalent to deleting a property and adding a new one.
+
+Using all these restriction filters together can allow you to enforce a reasonably sophisticated data schema.
 
 ### Examples
 
@@ -172,6 +188,20 @@ restrictDelete = { ({ size }) => size !== null }
 ```js
 restrictAdd = { ({ key }) => key !== "address" && key !== "users" }
 // "Adding" is irrelevant for non-collection nodes
+```
+
+- Multiple type restrictions:
+  - `string` values can only be changed to strings or objects (for nesting)
+  - `null` is not allowed anywhere
+  - `boolean` values must remain boolean
+  - data nested below the "user" field can be any simple property (i.e. not objects or arrays), and doesn't have to follow the above rules (except no "null")
+```js
+restrictTypeSelection = { ({ path, value }) => {
+  if (path.includes('user')) return ['string', 'number', 'boolean']
+  if (typeof value === 'boolean') return false
+  if (typeof value === 'string') return ['string', 'object']
+  return ['string', 'number', 'boolean', 'array', 'object'] // no "null"
+} }
 ```
 
 ## Themes
@@ -313,6 +343,32 @@ Localise your implementation by passing in a `translations` object to replace th
 
 ```
 
+## Custom nodes
+
+You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/) to see it in action.
+
+Custom nodes are provided in the `customNodeDefinitions` prop, as an array of objects of following structure:
+
+```js
+{
+  condition,            // a FilterFunction, as above
+  element,              // React Component
+  props,                // object (optional)
+  hideKey,              // boolean (optional)
+  showInTypesSelector,  // boolean (optional)
+  defaultValue,         // JSON value for a new instance of your component
+  name                  // string
+}
+```
+
+The `condition` is just a [Filter function](#filter-functions), with the same input parameters (`key`, `path`, `level`, `value`, `size`), and `element` is a React component. Every node in the data structure will be run through each condition function, and any that match will be replaced by your custom component. Note that if a node matches more than one custom definition conditions (from multiple components), the *first* one will be used, so place them in the array in priority order.
+
+The component will receive *all* the same props as a standard node component (see codebase), but you can pass additional props to your component if required through the `props` object.
+
+By default, your component will be presented to the right of the property key it belongs to, like any other value. However, you can hide the key itself by setting `hideKey: true`, and the custom component will take the whole row. (See the "Presented by" box in the "Custom Nodes" data set for an example.)
+
+You can allow users to create new instances of your special nodes by selecting them as a "Type" in the types selector when editing/adding values. Set `showInTypesSelector: true` to enable this. However, if this is enabled you need to also provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
+ 
 ## Undo functionality
 
 Even though Undo/Redo functionality is probably desirable in most cases, this is not built in to the component, for two main reasons:
@@ -337,6 +393,12 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.0.0**:
+  - [Custom nodes](#custom-nodes)
+  - Allow editing of keys
+  - Option to define restrictions on data type selection
+  - Option to hide array/object item counts
+  - Improve keyboard interaction
 - **0.9.6**: Performance improvement by not processing child elements if not visible
 - **0.9.4**:
   - Layout improvements

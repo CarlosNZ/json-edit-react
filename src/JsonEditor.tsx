@@ -3,10 +3,17 @@ import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import clone from 'just-clone'
 import { CollectionNode, isCollection } from './CollectionNode'
-import { CollectionData, JsonEditorProps, FilterFunction, OnChangeFunction } from './types'
+import {
+  CollectionData,
+  JsonEditorProps,
+  FilterFunction,
+  OnChangeFunction,
+  TypeFilterFunction,
+} from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { getTranslateFunction } from './localisation'
 import './style.css'
+import { ValueNodeWrapper } from './ValueNodeWrapper'
 
 const Editor: React.FC<JsonEditorProps> = ({
   data: srcData,
@@ -21,9 +28,11 @@ const Editor: React.FC<JsonEditorProps> = ({
   icons,
   indent = 4,
   collapse = false,
+  showCollectionCount = true,
   restrictEdit = false,
   restrictDelete = false,
   restrictAdd = false,
+  restrictTypeSelection = false,
   keySort = false,
   showArrayIndices = true,
   defaultValue = null,
@@ -32,6 +41,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   stringTruncate = 250,
   translations = {},
   className,
+  customNodeDefinitions = [],
 }) => {
   const [data, setData] = useState<object>(srcData)
   const { styles, setTheme, setIcons } = useTheme()
@@ -45,6 +55,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   useEffect(() => {
     if (theme) setTheme(theme)
     if (icons) setIcons(icons)
+    // eslint-disable-next-line
   }, [theme, icons])
 
   const onEdit: OnChangeFunction = async (value, path) => {
@@ -122,10 +133,12 @@ const Editor: React.FC<JsonEditorProps> = ({
     onEdit,
     onDelete,
     onAdd,
+    showCollectionCount,
     collapseFilter,
     restrictEditFilter,
     restrictDeleteFilter,
     restrictAddFilter,
+    restrictTypeSelection,
     enableClipboard,
     keySort,
     showArrayIndices,
@@ -133,6 +146,8 @@ const Editor: React.FC<JsonEditorProps> = ({
     defaultValue,
     stringTruncate,
     translate,
+    customNodeDefinitions,
+    parentData: null,
   }
 
   if (!styles) return null
@@ -142,7 +157,11 @@ const Editor: React.FC<JsonEditorProps> = ({
       className={'jer-editor-container ' + className}
       style={{ ...styles.container, minWidth, maxWidth }}
     >
-      {isCollection(data) && <CollectionNode data={data} path={[]} {...otherProps} />}
+      {isCollection(data) ? (
+        <CollectionNode data={data} path={[]} {...otherProps} />
+      ) : (
+        <ValueNodeWrapper data={data as any} path={[]} showLabel {...otherProps} />
+      )}
     </div>
   )
 }
