@@ -398,6 +398,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
   - Allow editing of keys
   - Option to define restrictions on data type selection
   - Option to hide array/object item counts
+  - Improve keyboard interaction
 - **0.9.6**: Performance improvement by not processing child elements if not visible
 - **0.9.4**:
   - Layout improvements
