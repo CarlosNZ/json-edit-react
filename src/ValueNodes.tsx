@@ -112,7 +112,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   useEffect(() => {
     if (isEditing) document.addEventListener('keydown', listenForSubmit)
     return () => document.removeEventListener('keydown', listenForSubmit)
-  }, [])
+  }, [isEditing])
 
   const listenForSubmit = (event: any) => {
     if (event.key === 'Enter') {
@@ -151,7 +151,7 @@ export const NullValue: React.FC<InputProps> = ({
   useEffect(() => {
     if (isEditing) document.addEventListener('keydown', listenForSubmit)
     return () => document.removeEventListener('keydown', listenForSubmit)
-  }, [])
+  }, [isEditing])
 
   const listenForSubmit = (event: any) => {
     if (event.key === 'Enter') {

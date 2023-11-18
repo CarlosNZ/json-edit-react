@@ -45,7 +45,7 @@ const Editor: React.FC<JsonEditorProps> = ({
 }) => {
   const [data, setData] = useState<object>(srcData)
   const { styles, setTheme, setIcons } = useTheme()
-  const collapseFilter = useCallback(getFilterFunction(collapse) as FilterFunction, [collapse])
+  const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
   const translate = useCallback(getTranslateFunction(translations), [translations])
 
   useEffect(() => {
