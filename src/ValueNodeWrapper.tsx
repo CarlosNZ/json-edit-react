@@ -99,6 +99,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setIsEditingKey(false)
     if (!parentData) return
     const parentPath = path.slice(0, -1)
+    if (!newKey) return
+
     // Need to update data in array form to preserve key order
     const newData = Object.fromEntries(
       Object.entries(parentData).map(([key, val]) => (key === name ? [newKey, val] : [key, val]))

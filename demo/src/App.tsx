@@ -45,6 +45,7 @@ function App() {
   const [rootName, setRootName] = useState('data')
   const [indent, setIndent] = useState(4)
   const [collapseLevel, setCollapseLevel] = useState(2)
+  const [showCount, setShowCount] = useState<'Yes' | 'No' | 'When closed'>('Yes')
   const [theme, setTheme] = useState<ThemeInput>('default')
   const [allowEdit, setAllowEdit] = useState(true)
   const [allowDelete, setAllowDelete] = useState(true)
@@ -210,6 +211,9 @@ function App() {
               if (selectedData === 'editTheme') setTheme(newData)
             }}
             collapse={collapseLevel}
+            showCollectionCount={
+              showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
+            }
             enableClipboard={
               allowCopy
                 ? ({ stringValue, type }) =>
@@ -357,6 +361,27 @@ function App() {
                       <NumberDecrementStepper />
                     </NumberInputStepper>
                   </NumberInput>
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Show counts
+                  </FormLabel>
+                  <div className="inputWidth" style={{ flexGrow: 1 }}>
+                    <Select
+                      onChange={(e) => setShowCount(e.target.value as 'Yes' | 'No' | 'When closed')}
+                      value={showCount}
+                    >
+                      <option value="Yes" key={0}>
+                        Yes
+                      </option>
+                      <option value="No" key={1}>
+                        No
+                      </option>
+                      <option value="When closed" key={2}>
+                        When closed
+                      </option>
+                    </Select>
+                  </div>
                 </HStack>
                 <CheckboxGroup colorScheme="primaryScheme">
                   <Flex w="100%" justify="flex-start">

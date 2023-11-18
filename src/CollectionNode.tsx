@@ -16,6 +16,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   path,
   name,
   parentData,
+  showCollectionCount,
   ...props
 }) => {
   const { styles } = useTheme()
@@ -110,6 +111,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setIsEditingKey(false)
     if (!parentData) return
     const parentPath = path.slice(0, -1)
+    if (!newKey) return
+
     // Need to update data in array form to preserve key order
     const newData = Object.fromEntries(
       Object.entries(parentData).map(([key, val]) => (key === name ? [newKey, val] : [key, val]))
@@ -159,6 +162,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const isArray = typeof path.slice(-1)[0] === 'number'
   const showLabel = showArrayIndices || !isArray
+  const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
 
   const keyValueArray = Object.entries(data).map(([key, value]) => [
     collectionType === 'array' ? Number(key) : key,
@@ -208,7 +212,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                   style={styles.property}
                   onDoubleClick={() => canEditKey && setIsEditingKey(true)}
                 >
-                  {showLabel ? `${name}:` : null}
+                  {showLabel && name ? `${name}:` : null}
                 </span>
               )}
               {isEditingKey && (
@@ -229,8 +233,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 </span>
               )}
             </div>
-            {!isEditing && (
-              <div className="jer-collection-item-count" style={styles.itemCount}>
+            {!isEditing && showCollectionCount && (
+              <div
+                className={`jer-collection-item-count${showCount ? ' jer-visible' : ' jer-hidden'}`}
+                style={styles.itemCount}
+              >
                 {collectionSize === 1
                   ? translate('ITEM_SINGLE', 1)
                   : translate('ITEMS_MULTIPLE', collectionSize)}
@@ -302,6 +309,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                             parentData={data}
                             path={[...path, key]}
                             name={key}
+                            showCollectionCount={showCollectionCount}
                             {...props}
                           />
                         ) : (

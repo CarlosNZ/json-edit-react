@@ -18,7 +18,7 @@ export interface JsonEditorProps {
   className?: string
   indent?: number
   collapse?: boolean | number | FilterFunction
-  // showCount?: boolean | FilterFunction
+  showCollectionCount?: boolean | 'when-closed'
   restrictEdit?: boolean | FilterFunction
   restrictDelete?: boolean | FilterFunction
   restrictAdd?: boolean | FilterFunction
@@ -119,6 +119,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   onAdd: OnChangeFunction
   keySort: boolean | CompareFunction
   showArrayIndices: boolean
+  showCollectionCount: boolean | 'when-closed'
   defaultValue: unknown
 }
 
