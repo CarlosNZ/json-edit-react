@@ -84,6 +84,7 @@ The only *required* value is `data`.
 | `restrictEdit`          | `boolean\|FilterFunction`                    | `false`     | If `false`, no editing is permitted. A function can be provided for more specificity — see [Filter functions](#filter-functions)                                                                                                                                                                   |
 | `restrictDelete`        | `boolean\|FilterFunction`                    | `false`     | As with `restrictEdit` but for deletion                                                                                                                                                                                                                                                            |
 | `restrictAdd`           | `boolean\|FilterFunction`                    | `false`     | As with `restrictEdit` but for adding new properties                                                                                                                                                                                                                                               |
+| `restrictTypeSelection` | `boolean\|DataType[]\|TypeFilterFunction`    | `false`     | For restricting the data types the user can select. This varies slightly from the above restrictions in that the value (or output of the `TypeFilterFunction`) can be a list of data types *or* a `boolean`.                                                                                       |
 | `keySort`               | `boolean\|CompareFunction`                   | `false`     | If `true`, object keys will be ordered (using default JS `.sort()`). A [compare function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) can also be provided to define sorting behaviour.                                                           |
 | `showArrayIndices`      | `boolean`                                    | `true`      | Whether or not to display the index (as a property key) for array elements.                                                                                                                                                                                                                        |
 | `showCollectionCount`   | `boolean\|"when-closed"`                     | `true`      | Whether or not to display the number of items in each collection (object or array).                                                                                                                                                                                                                |
@@ -134,7 +135,7 @@ Since there is very little user feedback when clicking "Copy", a good idea would
 
 ## Filter functions
 
-You can control which nodes of the data structure can be edited, deleted, or added to by passing Filter functions. These will be called on each property in the data and the attribute will be enforced depending on whether the function returns `true` or `false` (`true` means *cannot* be edited).
+You can control which nodes of the data structure can be edited, deleted, or added to, or have their data type changed, by passing Filter functions. These will be called on each property in the data and the attribute will be enforced depending on whether the function returns `true` or `false` (`true` means *cannot* be edited).
 
 The function receives the following object:
 ```js
@@ -149,7 +150,17 @@ The function receives the following object:
 
 A Filter function is available for the `collapse` prop as well, so you can have your data appear with deeply-nested collections opened up, while collapsing everything else, for example.
 
+For restricting data types, the (Type) filter function is slightly more sophisticated. The input is the same, but the output can be either a `boolean` (which would restrict the available types for a given node to either *all* or *none*), or an array of data types to be restricted to. The available values are:
+- `"string"`
+- `"number"`
+- `"boolean"`
+- `"null"`
+- `"object"`
+- `"array"`
+
 There is no specific restriction function for editing object key names, but they must return `true` for *both* `restrictEdit` and `restrictDelete` (and `restrictAdd` for collections), since changing a key name is equivalent to deleting a property and adding a new one.
+
+Using all these restriction filters together can allow you to enforce a reasonably sophisticated data schema.
 
 ### Examples
 
@@ -177,6 +188,20 @@ restrictDelete = { ({ size }) => size !== null }
 ```js
 restrictAdd = { ({ key }) => key !== "address" && key !== "users" }
 // "Adding" is irrelevant for non-collection nodes
+```
+
+- Multiple type restrictions:
+  - `string` values can only be changed to strings or objects (for nesting)
+  - `null` is not allowed anywhere
+  - `boolean` values must remain boolean
+  - data nested below the "user" field can be any simple property (i.e. not objects or arrays), and doesn't have to follow the above rules (except no "null")
+```js
+restrictTypeSelection = { ({ path, value }) => {
+  if (path.includes('user')) return ['string', 'number', 'boolean']
+  if (typeof value === 'boolean') return false
+  if (typeof value === 'string') return ['string', 'object']
+  return ['string', 'number', 'boolean', 'array', 'object'] // no "null"
+} }
 ```
 
 ## Themes
@@ -371,6 +396,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 - **1.0.0**:
   - [Custom nodes](#custom-nodes)
   - Allow editing of keys
+  - Option to define restrictions on data type selection
   - Option to hide array/object item counts
 - **0.9.6**: Performance improvement by not processing child elements if not visible
 - **0.9.4**:
