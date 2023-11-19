@@ -10,6 +10,7 @@ Features include:
  - fine-grained control over which elements can be edited, deleted, or added to
  - customisable UI, through simple, pre-defined [themes](#themes), or specific CSS overrides
  - self-contained — rendered with plain HTML/CSS, so no dependance on external UI libraries
+ - provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
 
 **[Explore the Demo](https://carlosnz.github.io/json-edit-react/)**
 
@@ -46,13 +47,20 @@ or
 
 ## Implementation
 
-```js
+```jsx
 import { JsonEditor } from 'json-edit-react'
 
 // In your React components:
-<JsonEditor data={ myDataObject } { ...props }>
-
+<JsonEditor
+  data={ myData }
+  onUpdate={ ({newData} ) => {
+    // Set "myData" state, plus
+    // any desired side-effects.
+}}
+{ ...otherProps } />
 ```
+
+You are responsible for maintaining the data state — in your `onUpdate` function, use the `newData` property to set `data`, which should update inside the editor.
 
 ## Usage
 
@@ -68,7 +76,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 
 ## Props overview
 
-The only *required* value is `data`. 
+The only *required* value is `data`.
 
 | prop                    | type                                         | default     | description                                                                                                                                                                                                                                                                                        |
 | ----------------------- | -------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

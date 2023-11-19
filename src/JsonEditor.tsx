@@ -1,22 +1,16 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import clone from 'just-clone'
 import { CollectionNode, isCollection } from './CollectionNode'
-import {
-  CollectionData,
-  JsonEditorProps,
-  FilterFunction,
-  OnChangeFunction,
-  TypeFilterFunction,
-} from './types'
+import { CollectionData, JsonEditorProps, FilterFunction, OnChangeFunction } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { getTranslateFunction } from './localisation'
 import './style.css'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
 const Editor: React.FC<JsonEditorProps> = ({
-  data: srcData,
+  data,
   // schema,
   rootName = 'root',
   onUpdate,
@@ -43,14 +37,9 @@ const Editor: React.FC<JsonEditorProps> = ({
   className,
   customNodeDefinitions = [],
 }) => {
-  const [data, setData] = useState<object>(srcData)
   const { styles, setTheme, setIcons } = useTheme()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
   const translate = useCallback(getTranslateFunction(translations), [translations])
-
-  useEffect(() => {
-    setData(srcData)
-  }, [srcData])
 
   useEffect(() => {
     if (theme) setTheme(theme)
@@ -74,10 +63,9 @@ const Editor: React.FC<JsonEditorProps> = ({
         name: path.slice(-1)[0],
         path,
       })
-      if (result === undefined) setData(newData)
       if (result === false) return translate('ERROR_UPDATE')
       return result // Error string
-    } else setData(newData)
+    }
   }
 
   const onDelete: OnChangeFunction = async (value, path) => {
@@ -96,10 +84,9 @@ const Editor: React.FC<JsonEditorProps> = ({
         name: path.slice(-1)[0],
         path,
       })
-      if (result === undefined) setData(newData)
       if (result === false) return translate('ERROR_DELETE')
       return result // Error string
-    } else setData(newData)
+    }
   }
 
   const onAdd: OnChangeFunction = async (value, path) => {
@@ -118,10 +105,9 @@ const Editor: React.FC<JsonEditorProps> = ({
         name: path.slice(-1)[0],
         path,
       })
-      if (result === undefined) setData(newData)
       if (result === false) return translate('ERROR_ADD')
       return result // Error string
-    } else setData(newData)
+    }
   }
 
   const restrictEditFilter = getFilterFunction(restrictEdit)
