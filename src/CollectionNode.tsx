@@ -187,7 +187,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   return (
     <div
-      className="jer-component fb-collection-component"
+      className="jer-component jer-collection-component"
       style={{ marginLeft: `${path.length === 0 ? 0 : indent / 2}em` }}
     >
       {CustomNode ? (
