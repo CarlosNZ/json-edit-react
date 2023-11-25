@@ -1798,7 +1798,7 @@ const data = {
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>
-          You are now editing Theme object being used by the component right now — edit it live!.
+          You are now editing Theme object being used by the component right now — edit it live!
         </Text>
         <Text>
           Notice you are restricted from changing the structure in a way that would break the

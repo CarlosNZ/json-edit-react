@@ -4469,9 +4469,9 @@ caniuse-api@^3.0.0:
     lodash.uniq "^4.5.0"
 
 caniuse-lite@^1.0.0, caniuse-lite@^1.0.30001449, caniuse-lite@^1.0.30001464:
-  version "1.0.30001487"
-  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001487.tgz"
-  integrity sha512-83564Z3yWGqXsh2vaH/mhXfEM0wX+NlBCm1jYHOb97TrTWJEmPTccZgeLTPBUUb0PNVo+oomb7wkimZBIERClA==
+  version "1.0.30001564"
+  resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001564.tgz"
+  integrity sha512-DqAOf+rhof+6GVx1y+xzbFPeOumfQnhYzVnZD6LAXijR77yPtm9mfOcqOnT3mpnJiZVT+kwLAFnRlZcIz+c6bg==
 
 case-sensitive-paths-webpack-plugin@^2.4.0:
   version "2.4.0"
@@ -7652,10 +7652,10 @@ jsesc@~0.5.0:
   resolved "https://registry.npmjs.org/jsesc/-/jsesc-0.5.0.tgz"
   integrity sha512-uZz5UnB7u4T9LvwmFqXii7pZSouaRPorGs5who1Ip7VO0wxanFvBL7GkM6dTHlgX+jhBApRetaWpnDabOeTcnA==
 
-json-edit-react@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.0.0.tgz#e52ec366fd53025ddd711951b31e7af0c06a2597"
-  integrity sha512-qqbkupyanCxzFw0PsnmZdVjCQrdgfTC99MrjSOPYC+aWsQu1E2SwGrqIrqhOKoS/stwN7UGlRYIIbBPJv+gP3Q==
+json-edit-react@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.1.0.tgz#be1c9e82e9dbf12678c8f9547780fab68f6978db"
+  integrity sha512-szqjsT7dJSxvUKNB3odeZ2kmBUiCwLILJ1yp6umGpDfXtSBMEj9Q+JENcPsrNxl/0Hk7uHrbXYmjjVT1Dq7Rlw==
   dependencies:
     just-clone "^6.2.0"
     object-property-assigner "^1.0.1"
