@@ -401,6 +401,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.1.0**: Don't manage data state within component
 - **1.0.0**:
   - [Custom nodes](#custom-nodes)
   - Allow editing of keys
