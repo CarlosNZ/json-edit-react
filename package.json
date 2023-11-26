@@ -1,6 +1,6 @@
 {
   "name": "json-edit-react",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
@@ -16,7 +16,7 @@
     "demo": "cd demo && node ./scripts/getVersion.js && yarn start",
     "build": "rimraf ./build && rollup -c && rimraf ./build/dts",
     "compile": "rimraf ./build && tsc",
-    "release": "yarn build && yarn publish",
+    "release": "yarn publish",
     "release-demo": "cd demo && yarn deploy"
   },
   "peerDependencies": {
