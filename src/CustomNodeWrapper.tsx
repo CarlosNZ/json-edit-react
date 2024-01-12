@@ -1,6 +1,7 @@
 import React from 'react'
 import { CustomNodeWrapperProps } from './types'
 import { useTheme } from './theme'
+import { EditButtons } from './ButtonPanels'
 
 export const CustomNodeWrapper: React.FC<CustomNodeWrapperProps> = ({
   name,
