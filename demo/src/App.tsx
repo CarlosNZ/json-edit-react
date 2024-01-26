@@ -41,7 +41,7 @@ import { FilterFunction } from './json-edit-react/src/types'
 import { version } from './version'
 
 function App() {
-  const [selectedData, setSelectedData] = useState('test')
+  const [selectedData, setSelectedData] = useState('basic')
   const [rootName, setRootName] = useState(demoData[selectedData].rootName ?? 'data')
   const [indent, setIndent] = useState(4)
   const [collapseLevel, setCollapseLevel] = useState(2)

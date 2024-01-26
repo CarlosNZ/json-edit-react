@@ -333,9 +333,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             </span>
           )}
         </div>
-        <div className="jer-brackets" style={styles.bracket}>
-          {brackets.close}
-        </div>
+        {!isEditing && (
+          <div className="jer-brackets" style={styles.bracket}>
+            {brackets.close}
+          </div>
+        )}
       </div>
     </div>
   )
