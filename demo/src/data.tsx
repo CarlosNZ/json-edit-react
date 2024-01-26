@@ -1,5 +1,6 @@
 import React from 'react'
 import { Flex, Box, Link, Text } from '@chakra-ui/react'
+import { dateNodeDefinition } from './customComponents/DateTimePicker'
 
 const data = {
   basic: {
@@ -44,6 +45,7 @@ const data = {
         'When copying to clipboard': 'Hold down "Ctrl/Cmd" to copy path instead of data',
       },
     },
+    customNodeDefinitions: [dateNodeDefinition],
   },
   starWars: {
     name: '🚀 Star Wars',
@@ -71,6 +73,7 @@ const data = {
     restrictAdd: ({ value }) => !Array.isArray(value),
     restrictTypeSelection: true,
     collapse: 1,
+    customNodeDefinitions: [dateNodeDefinition],
     data: {
       name: 'Luke Skywalker',
       height: 172,

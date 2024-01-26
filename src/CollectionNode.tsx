@@ -295,6 +295,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 parentData={parentData}
                 customProps={customNodeProps}
                 {...props}
+                setValue={(value) => onEdit(value, path)}
               />
             ) : !hasBeenOpened.current ? null : (
               keyValueArray.map(([key, value]) => (

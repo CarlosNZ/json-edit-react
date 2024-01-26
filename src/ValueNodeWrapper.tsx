@@ -21,7 +21,7 @@ import {
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
-import { getCustomNode } from './helpers'
+import { CustomNodeData, getCustomNode } from './helpers'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -49,19 +49,36 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
   )
   const [error, setError] = useState<string | null>(null)
-  const [dataType, setDataType] = useState<DataType>(getDataType(data))
+
+  const customNodeData = getCustomNode(customNodeDefinitions, {
+    key: name,
+    path,
+    level: path.length,
+    value: data,
+    size: 0,
+  })
+  const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
   useEffect(() => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
-    setDataType(getDataType(data))
+    setDataType(getDataType(data, customNodeData))
   }, [data, error])
 
   const handleChangeDataType = (type: DataType) => {
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
       onEdit(customNode.defaultValue, path)
+      setDataType(type)
     } else {
-      setValue(convertValue(value, type))
+      const newValue = convertValue(
+        value,
+        type,
+        // If coming *FROM* a custom type, need to change value to something
+        // that won't match the custom node condition any more
+        customNodeData?.CustomNode ? translate('DEFAULT_STRING') : undefined
+      )
+      setValue(newValue)
+      onEdit(newValue, path)
       setDataType(type)
     }
   }
@@ -117,7 +134,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setIsEditing(false)
     setIsEditingKey(false)
     setValue(data)
-    setDataType(getDataType(data))
+    setDataType(getDataType(data, customNodeData))
   }
 
   const handleDelete = () => {
@@ -151,21 +168,17 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     CustomNode,
     customNodeProps,
     hideKey,
-    customEditable = true,
-  } = getCustomNode(customNodeDefinitions, {
-    key: name,
-    path,
-    level: path.length,
-    value: data,
-    size: 0,
-  })
+    showEditTools = true,
+    showOnEdit,
+    showOnView,
+  } = customNodeData
 
   // Include custom node options in dataType list
   const allDataTypes = [
-    ...customNodeDefinitions
-      .filter(({ showInTypesSelector = false }) => showInTypesSelector)
-      .map(({ name }) => name),
     ...DataTypes,
+    ...customNodeDefinitions
+      .filter(({ showInTypesSelector = false, name }) => showInTypesSelector && !!name)
+      .map(({ name }) => name),
   ]
 
   const allowedDataTypes = useMemo(() => {
@@ -179,6 +192,20 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
     return result
   }, [filterProps, restrictTypeSelection])
+
+  const ValueComponent =
+    CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
+      <CustomNode
+        customProps={customNodeProps}
+        {...props}
+        setValue={(value) => onEdit(value, path)}
+        isEditing={isEditing}
+        setIsEditing={setIsEditing}
+        styles={styles}
+      />
+    ) : (
+      getInputComponent(dataType as DataType, inputProps)
+    )
 
   return (
     <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
@@ -215,17 +242,13 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           />
         )}
         <div className="jer-value-and-buttons">
-          {CustomNode && !isEditing ? (
-            <CustomNode customProps={customNodeProps} {...props} />
-          ) : (
-            <div className="jer-input-component">{getInputComponent(dataType, inputProps)}</div>
-          )}
+          <div className="jer-input-component">{ValueComponent}</div>
           {isEditing ? (
             <InputButtons onOk={handleEdit} onCancel={handleCancel} />
           ) : (
             dataType !== 'invalid' &&
             !error &&
-            customEditable && (
+            showEditTools && (
               <EditButtons
                 startEdit={canEdit ? () => setIsEditing(true) : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
@@ -265,7 +288,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   )
 }
 
-const getDataType = (value: unknown) => {
+const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
+  if (customNodeData?.CustomNode && customNodeData?.name && customNodeData.showInTypesSelector)
+    return customNodeData.name
   if (typeof value === 'string') return 'string'
   if (typeof value === 'number') return 'number'
   if (typeof value === 'boolean') return 'boolean'
@@ -293,10 +318,11 @@ const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
   }
 }
 
-const convertValue = (value: unknown, type: DataType) => {
+const convertValue = (value: unknown, type: DataType, defaultString?: string) => {
+  console.log(value, type, defaultString)
   switch (type) {
     case 'string':
-      return String(value)
+      return defaultString ?? String(value)
     case 'number':
       const n = Number(value)
       return isNaN(n) ? 0 : n

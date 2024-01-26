@@ -1,4 +1,4 @@
-import { ThemeInput } from './theme'
+import { ThemeInput, CompiledStyles } from './theme'
 import { LocalisedStrings, TranslateFunction } from './localisation'
 import React from 'react'
 
@@ -126,21 +126,19 @@ export interface CollectionNodeProps extends BaseNodeProps {
   defaultValue: unknown
 }
 
+type ValueData = string | number | boolean | null
 export interface ValueNodeProps extends BaseNodeProps {
-  data: string | number | boolean | null
+  data: ValueData
   showLabel: boolean
 }
 
 export interface CustomNodeProps extends BaseNodeProps {
   customProps?: Record<string, unknown>
   parentData: CollectionData | null
-}
-
-export interface CustomNodeWrapperProps {
-  name: CollectionKey
-  hideKey: boolean
-  children: JSX.Element
-  indent?: number
+  setValue: (newValue: CollectionData | ValueData) => void
+  isEditing: boolean
+  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
+  styles: CompiledStyles
 }
 
 export interface CustomNodeDefinition {
@@ -150,13 +148,15 @@ export interface CustomNodeDefinition {
   props?: Record<string, unknown>
   hideKey?: boolean
   defaultValue: unknown
-  showInTypesSelector?: boolean
-  editable?: boolean
+  showInTypesSelector?: boolean // default false
+  showOnEdit?: boolean // default false
+  showOnView?: boolean // default true
+  showEditTools?: boolean // default true
 }
 
 export interface InputProps {
   value: unknown
-  setValue: React.Dispatch<React.SetStateAction<string | number | boolean | null>>
+  setValue: React.Dispatch<React.SetStateAction<ValueData>>
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void
