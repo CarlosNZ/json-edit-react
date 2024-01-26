@@ -45,3 +45,6 @@ demo/src/json-edit-react
 temp.js
 .vscode/settings.json
 demo/src/firebaseConfig.json
+
+# Built package in demo
+demo/src/package
