@@ -12,7 +12,7 @@ export const getCustomNode = (
   if (matchingDefinitions.length === 0) return {}
 
   // Only take the first one that matches
-  const { element, props, hideKey = false } = matchingDefinitions[0]
+  const { element, props, hideKey = false, editable } = matchingDefinitions[0]
 
-  return { CustomNode: element, customNodeProps: props, hideKey }
+  return { CustomNode: element, customNodeProps: props, hideKey, customEditable: editable }
 }

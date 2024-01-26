@@ -22,7 +22,6 @@ import {
 import { useTheme } from './theme'
 import './style.css'
 import { getCustomNode } from './helpers'
-import { CustomNodeWrapper } from './CustomNodeWrapper'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -148,7 +147,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     translate,
   }
 
-  const { CustomNode, customNodeProps, hideKey } = getCustomNode(customNodeDefinitions, {
+  const {
+    CustomNode,
+    customNodeProps,
+    hideKey,
+    customEditable = true,
+  } = getCustomNode(customNodeDefinitions, {
     key: name,
     path,
     level: path.length,
@@ -211,7 +215,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           />
         )}
         <div className="jer-value-and-buttons">
-          {CustomNode ? (
+          {CustomNode && !isEditing ? (
             <CustomNode customProps={customNodeProps} {...props} />
           ) : (
             <div className="jer-input-component">{getInputComponent(dataType, inputProps)}</div>
@@ -220,7 +224,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             <InputButtons onOk={handleEdit} onCancel={handleCancel} />
           ) : (
             dataType !== 'invalid' &&
-            !error && (
+            !error &&
+            customEditable && (
               <EditButtons
                 startEdit={canEdit ? () => setIsEditing(true) : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}

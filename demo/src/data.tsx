@@ -79,19 +79,20 @@ const data = {
           )
         },
         hideKey: true,
+        editable: false,
       },
       {
         condition: ({ key }) => key === 'aliases',
         element: ({ data }) => {
           return (
-            <ol style={{ paddingLeft: 50 }}>
+            <ol style={{ paddingLeft: 50, color: 'orange' }}>
               {data.map((val) => (
                 <li>{val}</li>
               ))}
             </ol>
           )
         },
-        hideKey: true,
+        // hideKey: true,
       },
     ],
   },
