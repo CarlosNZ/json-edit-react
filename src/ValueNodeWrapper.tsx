@@ -22,7 +22,6 @@ import {
 import { useTheme } from './theme'
 import './style.css'
 import { getCustomNode } from './helpers'
-import { CustomNodeWrapper } from './CustomNodeWrapper'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -148,7 +147,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     translate,
   }
 
-  const { CustomNode, customNodeProps, hideKey } = getCustomNode(customNodeDefinitions, {
+  const {
+    CustomNode,
+    customNodeProps,
+    hideKey,
+    customEditable = true,
+  } = getCustomNode(customNodeDefinitions, {
     key: name,
     path,
     level: path.length,
@@ -176,11 +180,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     return result
   }, [filterProps, restrictTypeSelection])
 
-  return CustomNode ? (
-    <CustomNodeWrapper name={name} hideKey={hideKey} indent={indent}>
-      <CustomNode customProps={customNodeProps} {...props} />
-    </CustomNodeWrapper>
-  ) : (
+  return (
     <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
       <div
         className="jer-value-main-row"
@@ -188,7 +188,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           flexWrap: (name as string).length > 10 ? 'wrap' : 'nowrap',
         }}
       >
-        {showLabel && !isEditingKey && (
+        {showLabel && !isEditingKey && !hideKey && (
           <label
             htmlFor={path.join('.')}
             className="jer-object-key"
@@ -215,12 +215,17 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           />
         )}
         <div className="jer-value-and-buttons">
-          <div className="jer-input-component">{getInputComponent(dataType, inputProps)}</div>
+          {CustomNode && !isEditing ? (
+            <CustomNode customProps={customNodeProps} {...props} />
+          ) : (
+            <div className="jer-input-component">{getInputComponent(dataType, inputProps)}</div>
+          )}
           {isEditing ? (
             <InputButtons onOk={handleEdit} onCancel={handleCancel} />
           ) : (
             dataType !== 'invalid' &&
-            !error && (
+            !error &&
+            customEditable && (
               <EditButtons
                 startEdit={canEdit ? () => setIsEditing(true) : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}

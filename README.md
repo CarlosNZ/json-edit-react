@@ -366,8 +366,9 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   props,                // object (optional)
   hideKey,              // boolean (optional)
   showInTypesSelector,  // boolean (optional)
+  name                  // string (appears in Types selector)
   defaultValue,         // JSON value for a new instance of your component
-  name                  // string
+  editable              // boolean (optional)
 }
 ```
 
@@ -378,6 +379,8 @@ The component will receive *all* the same props as a standard node component (se
 By default, your component will be presented to the right of the property key it belongs to, like any other value. However, you can hide the key itself by setting `hideKey: true`, and the custom component will take the whole row. (See the "Presented by" box in the "Custom Nodes" data set for an example.)
 
 You can allow users to create new instances of your special nodes by selecting them as a "Type" in the types selector when editing/adding values. Set `showInTypesSelector: true` to enable this. However, if this is enabled you need to also provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
+
+Lastly, you can specify whether or not the data inside the node can be edited using the standard editor, with the `editable` prop (default: `true`). If your component includes its own editing interface (e.g. a Date Picker), you might want to disable the standard editor.
  
 ## Undo functionality
 
@@ -403,6 +406,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.2.0**: Allow editing of Custom nodes
 - **1.1.0**: Don't manage data state within component
 - **1.0.0**:
   - [Custom nodes](#custom-nodes)

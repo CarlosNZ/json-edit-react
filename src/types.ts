@@ -151,6 +151,7 @@ export interface CustomNodeDefinition {
   hideKey?: boolean
   defaultValue: unknown
   showInTypesSelector?: boolean
+  editable?: boolean
 }
 
 export interface InputProps {
