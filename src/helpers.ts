@@ -26,7 +26,7 @@ export const getCustomNode = (
   // Only take the first one that matches
   const {
     element,
-    props,
+    customNodeProps,
     hideKey = false,
     showEditTools = true,
     showOnEdit = false,
@@ -36,7 +36,7 @@ export const getCustomNode = (
 
   return {
     CustomNode: element,
-    customNodeProps: props,
+    customNodeProps,
     hideKey,
     showEditTools,
     showOnEdit,

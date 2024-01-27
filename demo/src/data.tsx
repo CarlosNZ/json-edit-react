@@ -1,8 +1,22 @@
 import React from 'react'
 import { Flex, Box, Link, Text } from '@chakra-ui/react'
 import { dateNodeDefinition } from './customComponents/DateTimePicker'
+import { CustomNodeDefinition, FilterFunction } from './JsonEditImport'
 
-const data = {
+interface DemoData {
+  name: string
+  description: JSX.Element
+  data: object
+  rootName?: string
+  collapse?: number
+  restrictEdit?: FilterFunction
+  restrictDelete?: FilterFunction
+  restrictAdd?: FilterFunction
+  restrictTypeSelection?: boolean
+  customNodeDefinitions?: CustomNodeDefinition[]
+}
+
+const data: Record<string, DemoData> = {
   basic: {
     name: '🔰 Basic',
     description: (
@@ -64,6 +78,12 @@ const data = {
           and <span className="code">restrictTypeSelection</span> props.{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#readme" isExternal>
             Learn more
+          </Link>
+        </Text>
+        <Text>
+          Also, notice the ISO date strings are editable by a date picker control — this is a{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
+            Custom component.
           </Link>
         </Text>
       </Flex>
@@ -1848,6 +1868,7 @@ const data = {
     data: [
       {
         name: 'Steve Rogers',
+        dateOfBirth: '1920-07-04T12:00:00-05:00',
         aliases: ['Captain America', 'The First Avenger'],
         logo: 'https://logos-world.net/wp-content/uploads/2023/05/Captain-America-Logo.png',
         actor: 'Chris Evans',
@@ -1855,6 +1876,7 @@ const data = {
       },
       {
         name: 'Clark Kent',
+        dateOfBirth: '1977-04-14T12:00:00-06:00',
         aliases: ['Superman', 'Man of Steel', 'Son of Krypton'],
         logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/2560px-Superman_shield.svg.png',
         actor: 'Henry Cavill',
@@ -1875,7 +1897,7 @@ const data = {
             <div style={{ maxWidth: 250 }}>
               <a href={data} target="_blank">
                 <img src={data} style={{ maxHeight: 75 }} />
-                <p style={{ fontSize: '0.75em' }}>{truncate(data)}</p>{' '}
+                <p style={{ fontSize: '0.75em' }}>{truncate(data as string)}</p>{' '}
               </a>
             </div>
           )
@@ -1896,11 +1918,17 @@ const data = {
                 fontFamily: 'sans-serif',
               }}
             >
-              Presented by: <strong>{data}</strong>
+              Presented by: <strong>{String(data)}</strong>
             </p>
           )
         },
         hideKey: true,
+      },
+      {
+        ...dateNodeDefinition,
+        showOnView: true,
+        showInTypesSelector: true,
+        customNodeProps: { showTimeSelect: false, dateFormat: 'MMM d, yyyy' },
       },
     ],
   },
@@ -1982,7 +2010,7 @@ const data = {
   //         )
   //       },
   //       hideKey: true,
-  //       editable: false,
+  //       showEditTools: false,
   //     },
   //     {
   //       condition: ({ key }) => key === 'aliases',
@@ -1990,11 +2018,13 @@ const data = {
   //         return (
   //           <ol style={{ paddingLeft: 50, color: 'orange' }}>
   //             {data.map((val) => (
-  //               <li>{val}</li>
+  //               <li key={val}>{val}</li>
   //             ))}
   //           </ol>
   //         )
   //       },
+  //       // showOnEdit: true,
+  //       // showOnView: false,
   //       // hideKey: true,
   //     },
   //   ],

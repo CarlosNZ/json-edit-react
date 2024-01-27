@@ -196,15 +196,24 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const ValueComponent =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
       <CustomNode
-        customProps={customNodeProps}
         {...props}
-        setValue={(value) => onEdit(value, path)}
+        value={value}
+        customProps={customNodeProps}
+        setValue={setValue}
+        handleEdit={handleEdit}
+        handleCancel={handleCancel}
+        handleKeyPress={(e: React.KeyboardEvent) => {
+          if (e.key === 'Enter') handleEdit()
+          else if (e.key === 'Escape') handleCancel()
+        }}
         isEditing={isEditing}
         setIsEditing={setIsEditing}
         styles={styles}
       />
     ) : (
-      getInputComponent(dataType as DataType, inputProps)
+      // Need to re-fetch data type to make sure it's one of the "core" ones
+      // when fetching a non-custom component
+      getInputComponent(getDataType(data) as DataType, inputProps)
     )
 
   return (
@@ -319,7 +328,6 @@ const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
 }
 
 const convertValue = (value: unknown, type: DataType, defaultString?: string) => {
-  console.log(value, type, defaultString)
   switch (type) {
     case 'string':
       return defaultString ?? String(value)

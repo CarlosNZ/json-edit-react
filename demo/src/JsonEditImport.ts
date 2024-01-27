@@ -7,6 +7,7 @@ import {
   ThemeInput,
   CustomNodeProps,
   CustomNodeDefinition,
+  FilterFunction,
 } from './json-edit-react/src'
 
 /* npm version */
@@ -18,6 +19,7 @@ import {
 //   ThemeInput,
 //   CustomNodeProps,
 //   CustomNodeDefinition,
+//   FilterFunction,
 // } from 'json-edit-react'
 
 /* Local built version */
@@ -29,6 +31,7 @@ import {
 //   ThemeInput,
 //   CustomNodeProps,
 //   CustomNodeDefinition,
+//   FilterFunction,
 // } from './package'
 
 export {
@@ -39,4 +42,5 @@ export {
   type ThemeInput,
   type CustomNodeProps,
   type CustomNodeDefinition,
+  type FilterFunction,
 }
