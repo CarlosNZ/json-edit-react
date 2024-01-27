@@ -7698,10 +7698,10 @@ jsesc@~0.5.0:
   resolved "https://registry.npmjs.org/jsesc/-/jsesc-0.5.0.tgz"
   integrity sha512-uZz5UnB7u4T9LvwmFqXii7pZSouaRPorGs5who1Ip7VO0wxanFvBL7GkM6dTHlgX+jhBApRetaWpnDabOeTcnA==
 
-json-edit-react@^1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.2.1.tgz#39a8ccf821de688aa5a9598c7fd34537d2a9e1e5"
-  integrity sha512-uYALhjoW0ggVjS3d72dwPb2rb69xQNaKK5PQPbXZ0DA07Az7vfprpL++DlejgLmD8MmsvdGo1FcrZIiLxOcMEQ==
+json-edit-react@^1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.2.2.tgz#577e6de7e3609e9d4a92e927099a084e01c52ae9"
+  integrity sha512-hedz5CYuX0rvIye28Tmq2+mr1oBWIMsh+v6IwVR6qgsxeoM52omXAhwHIzfqtQf7SaN+chMWfxuOJUvOjWuELg==
   dependencies:
     just-clone "^6.2.0"
     object-property-assigner "^1.0.1"
