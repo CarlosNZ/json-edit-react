@@ -1,0 +1,102 @@
+/* Styles to make Date picker more like Chakra-UI
+   From https://github.com/chakra-ui/chakra-ui/issues/580#issuecomment-653527951
+*/
+
+.react-datepicker {
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue',
+    sans-serif;
+  overflow: hidden;
+}
+
+react-datepicker__navigation--next--with-time:not(
+    .react-datepicker__navigation--next--with-today-button
+  ) {
+  right: 90px;
+}
+
+/* .react-datepicker__navigation--previous,
+.react-datepicker__navigation--next {
+  height: 8px;
+} */
+
+.react-datepicker__navigation--previous {
+  border-right-color: #cbd5e0;
+
+  &:hover {
+    border-right-color: #a0aec0;
+  }
+}
+
+.react-datepicker__navigation--next {
+  border-left-color: #cbd5e0;
+
+  &:hover {
+    border-left-color: #a0aec0;
+  }
+}
+
+.react-datepicker-wrapper,
+.react-datepicker__input-container {
+  display: block;
+}
+
+.react-datepicker__input-container input {
+  padding-left: 1em;
+  padding-right: 1em;
+  color: darkslategrey;
+}
+
+.react-datepicker__header {
+  border-radius: 0;
+  background: #f7fafc;
+}
+
+.react-datepicker,
+.react-datepicker__header,
+.react-datepicker__time-container {
+  border-color: #e2e8f0;
+}
+
+.react-datepicker__current-month,
+.react-datepicker-time__header,
+.react-datepicker-year-header {
+  font-size: inherit;
+  font-weight: 600;
+}
+
+.react-datepicker__time-container
+  .react-datepicker__time
+  .react-datepicker__time-box
+  ul.react-datepicker__time-list
+  li.react-datepicker__time-list-item {
+  margin: 0 1px 0 0;
+  height: auto;
+  padding: 7px 10px;
+
+  &:hover {
+    background: #edf2f7;
+  }
+}
+
+.react-datepicker__day:hover {
+  background: #edf2f7;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range,
+.react-datepicker__month-text--selected,
+.react-datepicker__month-text--in-selecting-range,
+.react-datepicker__month-text--in-range,
+.react-datepicker__time-container
+  .react-datepicker__time
+  .react-datepicker__time-box
+  ul.react-datepicker__time-list
+  li.react-datepicker__time-list-item--selected {
+  background: #3182ce;
+  font-weight: normal;
+
+  &:hover {
+    background: #2a69ac;
+  }
+}

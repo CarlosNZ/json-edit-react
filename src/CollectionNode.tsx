@@ -180,7 +180,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     CustomNode,
     customNodeProps,
     hideKey,
-    customEditable = true,
+    showEditTools = true,
+    showOnEdit,
+    showOnView,
   } = getCustomNode(customNodeDefinitions, {
     key: name,
     path,
@@ -188,6 +190,68 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     value: data,
     size: Object.keys(data).length,
   })
+
+  const CollectionComponent =
+    CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
+      <CustomNode
+        {...props}
+        data={data}
+        value={data}
+        path={path}
+        name={name}
+        parentData={parentData}
+        customProps={customNodeProps}
+        setValue={(value) => onEdit(value, path)}
+        handleEdit={handleEdit}
+        handleCancel={handleCancel}
+        handleKeyPress={handleKeyPress}
+        isEditing={isEditing}
+        setIsEditing={setIsEditing}
+        styles={styles}
+      />
+    ) : isEditing ? (
+      <div className="jer-collection-text-edit">
+        <div>
+          <AutogrowTextArea
+            className="jer-collection-text-area"
+            name={path.join('.')}
+            value={stringifiedValue}
+            setValue={setStringifiedValue}
+            isEditing={isEditing}
+            handleKeyPress={handleKeyPress}
+          />
+          <div className="jer-collection-input-button-row">
+            <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
+          </div>
+        </div>
+      </div>
+    ) : !hasBeenOpened.current ? null : (
+      keyValueArray.map(([key, value]) => (
+        <div className="jer-collection-element" key={key}>
+          {isCollection(value) ? (
+            <CollectionNode
+              key={key}
+              data={value}
+              parentData={data}
+              path={[...path, key]}
+              name={key}
+              showCollectionCount={showCollectionCount}
+              {...props}
+            />
+          ) : (
+            <ValueNodeWrapper
+              key={key}
+              data={value}
+              parentData={data}
+              path={[...path, key]}
+              name={key}
+              {...props}
+              showLabel={collectionType === 'object' ? true : showArrayIndices}
+            />
+          )}
+        </div>
+      ))
+    )
 
   return (
     <div
@@ -238,7 +302,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         >
           {brackets.close}
         </div>
-        {!isEditing && customEditable && (
+        {!isEditing && showEditTools && (
           <EditButtons
             startEdit={
               canEdit
@@ -269,63 +333,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           transition: `max-height ${transitionTime}`,
         }}
       >
-        {isEditing ? (
-          <div className="jer-collection-text-edit">
-            <div>
-              <AutogrowTextArea
-                className="jer-collection-text-area"
-                name={path.join('.')}
-                value={stringifiedValue}
-                setValue={setStringifiedValue}
-                isEditing={isEditing}
-                handleKeyPress={handleKeyPress}
-              />
-              <div className="jer-collection-input-button-row">
-                <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {CustomNode && !isEditing ? (
-              <CustomNode
-                data={data}
-                path={path}
-                name={name}
-                parentData={parentData}
-                customProps={customNodeProps}
-                {...props}
-              />
-            ) : !hasBeenOpened.current ? null : (
-              keyValueArray.map(([key, value]) => (
-                <div className="jer-collection-element" key={key}>
-                  {isCollection(value) ? (
-                    <CollectionNode
-                      key={key}
-                      data={value}
-                      parentData={data}
-                      path={[...path, key]}
-                      name={key}
-                      showCollectionCount={showCollectionCount}
-                      {...props}
-                    />
-                  ) : (
-                    <ValueNodeWrapper
-                      key={key}
-                      data={value}
-                      parentData={data}
-                      path={[...path, key]}
-                      name={key}
-                      {...props}
-                      showLabel={collectionType === 'object' ? true : showArrayIndices}
-                    />
-                  )}
-                </div>
-              ))
-            )}
-          </>
-        )}
-
+        {CollectionComponent}
         <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
           {error && (
             <span className="jer-error-slug" style={styles.error}>

@@ -6,6 +6,10 @@ import {
   FilterFunction,
   CompareFunction,
   IconReplacements,
+  CollectionNodeProps,
+  ValueNodeProps,
+  CustomNodeProps,
+  CustomNodeDefinition,
 } from './types'
 import { LocalisedStrings, TranslateFunction } from './localisation'
 import { themes, ThemeName, Theme, ThemeInput } from './theme'
@@ -24,4 +28,8 @@ export {
   type IconReplacements,
   type LocalisedStrings,
   type TranslateFunction,
+  type CollectionNodeProps,
+  type ValueNodeProps,
+  type CustomNodeProps,
+  type CustomNodeDefinition,
 }
