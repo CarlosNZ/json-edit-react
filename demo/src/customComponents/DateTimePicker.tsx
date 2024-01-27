@@ -1,3 +1,13 @@
+/**
+ * An example Custom Component:
+ * https://github.com/CarlosNZ/json-edit-react#custom-nodes
+ *
+ * A date/time picker which can be configure to show (using the
+ * CustomNodeDefinitions at the bottom of this file) when an ISO date/time
+ * string is present in the JSON data, and present a Date picker interface
+ * rather than requiring the user to edit the ISO string directly.
+ */
+
 import React from 'react'
 import DatePicker from 'react-datepicker'
 import { Button } from '@chakra-ui/react'
