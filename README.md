@@ -355,7 +355,7 @@ Localise your implementation by passing in a `translations` object to replace th
 
 ## Custom nodes
 
-You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/) to see it in action.
+You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/) to see it in action. (There is also a custom Date picker that appears when editing ISO strings in the other data sets.)
 
 Custom nodes are provided in the `customNodeDefinitions` prop, as an array of objects of following structure:
 
@@ -363,24 +363,26 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
 {
   condition,            // a FilterFunction, as above
   element,              // React Component
-  props,                // object (optional)
+  customNodeProps,      // object (optional)
   hideKey,              // boolean (optional)
-  showInTypesSelector,  // boolean (optional)
-  name                  // string (appears in Types selector)
   defaultValue,         // JSON value for a new instance of your component
-  editable              // boolean (optional)
+  showOnEdit            // boolean, default false
+  showOnView            // boolean, default true
+  showEditTools         // boolean, default true
+  name                  // string (appears in Types selector)
+  showInTypesSelector,  // boolean (optional), default false
 }
 ```
 
 The `condition` is just a [Filter function](#filter-functions), with the same input parameters (`key`, `path`, `level`, `value`, `size`), and `element` is a React component. Every node in the data structure will be run through each condition function, and any that match will be replaced by your custom component. Note that if a node matches more than one custom definition conditions (from multiple components), the *first* one will be used, so place them in the array in priority order.
 
-The component will receive *all* the same props as a standard node component (see codebase), but you can pass additional props to your component if required through the `props` object.
+The component will receive *all* the same props as a standard node component (see codebase), but you can pass additional props to your component if required through the `customNodeProps` object. A thorough example of a custom Date picker is used in the demo (along with a couple of other more basic presentational ones), which you can inspect to see how to utilise the standard props and a couple of custom props. View the source code [here](https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/customComponents/DateTimePicker.tsx)
 
 By default, your component will be presented to the right of the property key it belongs to, like any other value. However, you can hide the key itself by setting `hideKey: true`, and the custom component will take the whole row. (See the "Presented by" box in the "Custom Nodes" data set for an example.)
 
-You can allow users to create new instances of your special nodes by selecting them as a "Type" in the types selector when editing/adding values. Set `showInTypesSelector: true` to enable this. However, if this is enabled you need to also provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
+Also, by default, your component will be treated as a "display" element, i.e. it will appear in the JSON viewer, but when editing, it will revert to the standard editing interface. This can be changed, however, with the `showOnEdit`, `showOnView` and `showEditTools` props. For example, a Date picker might only be required when *editing* and left as-is for display. The `showEditTools` prop refers to the editing icons (copy, add, edit, delete) that appear to the right of each value on hover. If you choose to disable these but you still want to your component to have an "edit" mode, you'll have to provide your own UI mechanism to toggle editing.
 
-Lastly, you can specify whether or not the data inside the node can be edited using the standard editor, with the `editable` prop (default: `true`). If your component includes its own editing interface (e.g. a Date Picker), you might want to disable the standard editor.
+You can allow users to create new instances of your special nodes by selecting them as a "Type" in the types selector when editing/adding values. Set `showInTypesSelector: true` to enable this. However, if this is enabled you need to also provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
  
 ## Undo functionality
 
@@ -406,7 +408,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.2.0**: Allow editing of Custom nodes
+- **1.2.2**: Allow editing of Custom nodes
 - **1.1.0**: Don't manage data state within component
 - **1.0.0**:
   - [Custom nodes](#custom-nodes)
