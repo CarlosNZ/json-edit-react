@@ -194,13 +194,17 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const CollectionComponent =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
       <CustomNode
+        {...props}
         data={data}
+        value={data}
         path={path}
         name={name}
         parentData={parentData}
         customProps={customNodeProps}
-        {...props}
         setValue={(value) => onEdit(value, path)}
+        handleEdit={handleEdit}
+        handleCancel={handleCancel}
+        handleKeyPress={handleKeyPress}
         isEditing={isEditing}
         setIsEditing={setIsEditing}
         styles={styles}
