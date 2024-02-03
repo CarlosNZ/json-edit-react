@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from 'react'
-import assign from 'object-property-assigner'
+import assign, { Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import clone from 'just-clone'
 import { CollectionNode, isCollection } from './CollectionNode'
@@ -174,7 +174,9 @@ const updateDataObject = (
   }
 
   const currentValue = action !== 'add' ? extract(data, path) : undefined
-  const newData = assign(clone(data), path, newValue, { remove: action === 'delete' })
+  const newData = assign(clone(data as Input), path, newValue, {
+    remove: action === 'delete',
+  })
 
   return {
     currentData: data,
