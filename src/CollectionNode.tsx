@@ -286,7 +286,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             </span>
           )}
         </div>
-        {!isEditing && showCollectionCount && (
+        {!isEditing && showCount && (
           <div
             className={`jer-collection-item-count${showCount ? ' jer-visible' : ' jer-hidden'}`}
             style={styles.itemCount}
