@@ -258,11 +258,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       className="jer-component jer-collection-component"
       style={{ marginLeft: `${path.length === 0 ? 0 : indent / 2}em` }}
     >
-      <div className="jer-collection-header-row">
-        <div onClick={handleCollapse}>
-          <Icon name="chevron" rotate={collapsed} />
-        </div>
+      <div className="jer-collection-header-row" style={{ position: 'relative' }}>
         <div className="jer-collection-name">
+          <div className="jer-collapse-icon" onClick={handleCollapse}>
+            <Icon name="chevron" rotate={collapsed} />
+          </div>
           {!isEditingKey && (
             <span style={styles.property} onDoubleClick={() => canEditKey && setIsEditingKey(true)}>
               {showLabel && !hideKey && name !== '' && name !== undefined ? `${name}:` : null}

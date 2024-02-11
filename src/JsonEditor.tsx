@@ -20,7 +20,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   enableClipboard = true,
   theme = 'default',
   icons,
-  indent = 4,
+  indent = 3,
   collapse = false,
   showCollectionCount = true,
   restrictEdit = false,

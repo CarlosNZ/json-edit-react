@@ -87,6 +87,7 @@ select:focus + .focus {
   font-size: 1.1em;
   /* font-size: 20px; */
   padding: 1em;
+  padding-left: 2em;
   margin-top: 1em;
   margin-bottom: 1em;
   border-radius: 0.5em;
@@ -143,6 +144,12 @@ select:focus + .focus {
 }
 
 .jer-collection-item-count {
+}
+
+.jer-collapse-icon {
+  position: absolute;
+  left: -1.2em;
+  top: 0.35em;
 }
 
 .jer-collection-inner {
