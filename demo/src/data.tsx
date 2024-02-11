@@ -2,6 +2,7 @@ import React from 'react'
 import { Flex, Box, Link, Text } from '@chakra-ui/react'
 import { dateNodeDefinition } from './customComponents/DateTimePicker'
 import { CustomNodeDefinition, FilterFunction } from './JsonEditImport'
+import { linkNodeDefinition } from './customComponents/ActiveHyperlinks'
 
 interface DemoData {
   name: string
@@ -81,7 +82,8 @@ const data: Record<string, DemoData> = {
           </Link>
         </Text>
         <Text>
-          Also, notice the ISO date strings are editable by a date picker control — this is a{' '}
+          Also, notice the ISO date strings are editable by a date picker control, and URL strings
+          are active links — these are{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
             Custom component.
           </Link>
@@ -93,7 +95,7 @@ const data: Record<string, DemoData> = {
     restrictAdd: ({ value }) => !Array.isArray(value),
     restrictTypeSelection: true,
     collapse: 1,
-    customNodeDefinitions: [dateNodeDefinition],
+    customNodeDefinitions: [dateNodeDefinition, linkNodeDefinition],
     data: {
       name: 'Luke Skywalker',
       height: 172,
