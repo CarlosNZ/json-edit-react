@@ -2,6 +2,7 @@ import React from 'react'
 import { Flex, Box, Link, Text } from '@chakra-ui/react'
 import { dateNodeDefinition } from './customComponents/DateTimePicker'
 import { CustomNodeDefinition, FilterFunction } from './JsonEditImport'
+import { CustomTextDefinitions } from './json-edit-react/src/types'
 
 interface DemoData {
   name: string
@@ -14,6 +15,7 @@ interface DemoData {
   restrictAdd?: FilterFunction
   restrictTypeSelection?: boolean
   customNodeDefinitions?: CustomNodeDefinition[]
+  customTextDefinitions?: CustomTextDefinitions
 }
 
 const data: Record<string, DemoData> = {
@@ -1861,6 +1863,11 @@ const data: Record<string, DemoData> = {
           <a href="https://github.com/CarlosNZ/json-edit-react#custom-nodes">Custom Nodes</a>{' '}
           section of the documentation for more info.
         </Text>
+        <Text>
+          You can also see how the property count text changes depending on the data. This is using
+          dynamic <a href="https://github.com/CarlosNZ/json-edit-react#custom-text">Custom Text</a>{' '}
+          definitions.
+        </Text>
       </Flex>
     ),
     rootName: 'Superheroes',
@@ -1931,6 +1938,22 @@ const data: Record<string, DemoData> = {
         customNodeProps: { showTimeSelect: false, dateFormat: 'MMM d, yyyy' },
       },
     ],
+    customTextDefinitions: {
+      ITEM_SINGLE: ({ key, value, size }) => {
+        if (value instanceof Object && 'name' in value)
+          return `${value.name} (${(value as any)?.publisher ?? ''})`
+        if (key === 'aliases' && Array.isArray(value))
+          return `${size} ${size === 1 ? 'name' : 'names'}`
+        return null
+      },
+      ITEMS_MULTIPLE: ({ key, value, size }) => {
+        if (value instanceof Object && 'name' in value)
+          return `${value.name} (${(value as any)?.publisher ?? ''})`
+        if (key === 'aliases' && Array.isArray(value))
+          return `${size} ${size === 1 ? 'name' : 'names'}`
+        return null
+      },
+    },
   },
   // Enable to test more complex features of Custom nodes
   // testCustomNodes: {

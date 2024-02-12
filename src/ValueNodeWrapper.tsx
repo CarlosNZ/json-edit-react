@@ -57,7 +57,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   useEffect(() => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
     setDataType(getDataType(data, customNodeData))
-    // eslint-disable-next-line react-hooks/exhaustive-dep
   }, [data, error])
 
   const handleChangeDataType = (type: DataType) => {
