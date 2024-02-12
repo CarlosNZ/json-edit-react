@@ -238,6 +238,7 @@ function App() {
             className="block-shadow"
             stringTruncate={90}
             customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
+            customText={demoData[selectedData]?.customTextDefinitions}
           />
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>

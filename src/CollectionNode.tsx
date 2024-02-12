@@ -12,8 +12,7 @@ export const isCollection = (value: unknown) => value !== null && typeof value =
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({
   data,
-  path,
-  name,
+  nodeData,
   parentData,
   showCollectionCount,
   ...props
@@ -40,10 +39,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
   const [error, setError] = useState<string | null>(null)
 
-  const collectionSize = Object.keys(data).length
-  const filterProps = { key: name, path, level: path.length, value: data, size: collectionSize }
+  const { path, key: name, size } = nodeData
 
-  const startCollapsed = collapseFilter(filterProps)
+  const startCollapsed = collapseFilter(nodeData)
   const [collapsed, setCollapsed] = useState(startCollapsed)
 
   // This allows us to not render the children on load if they're hidden (which
@@ -59,7 +57,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   }, [data])
 
   useEffect(() => {
-    setCollapsed(collapseFilter(filterProps))
+    setCollapsed(collapseFilter(nodeData))
   }, [collapseFilter])
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
@@ -99,7 +97,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         if (error) showError(error)
       })
     } catch {
-      setError(translate('ERROR_INVALID_JSON'))
+      setError(translate('ERROR_INVALID_JSON', nodeData))
       setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
       console.log('Invalid JSON')
       return
@@ -131,7 +129,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         if (error) showError(error)
       })
     } else if (key in data) {
-      showError(translate('ERROR_KEY_EXISTS'))
+      showError(translate('ERROR_KEY_EXISTS', nodeData))
       return
     } else
       onAdd(defaultValue, [...path, key]).then((error) => {
@@ -155,9 +153,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setStringifiedValue(JSON.stringify(data, null, 2))
   }
 
-  const canEdit = useMemo(() => !restrictEditFilter(filterProps), [filterProps])
-  const canDelete = useMemo(() => !restrictDeleteFilter(filterProps), [filterProps])
-  const canAdd = useMemo(() => !restrictAddFilter(filterProps), [filterProps])
+  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
+  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
+  const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
   const canEditKey = parentData !== null && canEdit && canAdd && canDelete
 
   const isArray = typeof path.slice(-1)[0] === 'number'
@@ -183,13 +181,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     showEditTools = true,
     showOnEdit,
     showOnView,
-  } = getCustomNode(customNodeDefinitions, {
-    key: name,
-    path,
-    level: path.length,
-    value: data,
-    size: Object.keys(data).length,
-  })
+  } = getCustomNode(customNodeDefinitions, nodeData)
 
   const CollectionComponent =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
@@ -197,9 +189,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         {...props}
         data={data}
         value={data}
-        path={path}
-        name={name}
         parentData={parentData}
+        nodeData={nodeData}
         customProps={customNodeProps}
         setValue={(value) => onEdit(value, path)}
         handleEdit={handleEdit}
@@ -233,8 +224,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
               key={key}
               data={value}
               parentData={data}
-              path={[...path, key]}
-              name={key}
+              nodeData={{
+                key,
+                value,
+                path: [...path, key],
+                level: path.length + 1,
+                size: Object.keys(value).length,
+              }}
               showCollectionCount={showCollectionCount}
               {...props}
             />
@@ -243,8 +239,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
               key={key}
               data={value}
               parentData={data}
-              path={[...path, key]}
-              name={key}
+              nodeData={{
+                key,
+                value,
+                path: [...path, key],
+                level: path.length + 1,
+                size: 1,
+              }}
               {...props}
               showLabel={collectionType === 'object' ? true : showArrayIndices}
             />
@@ -291,9 +292,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             className={`jer-collection-item-count${showCount ? ' jer-visible' : ' jer-hidden'}`}
             style={styles.itemCount}
           >
-            {collectionSize === 1
-              ? translate('ITEM_SINGLE', 1)
-              : translate('ITEMS_MULTIPLE', collectionSize)}
+            {size === 1
+              ? translate('ITEM_SINGLE', { ...nodeData, size: 1 }, 1)
+              : translate('ITEMS_MULTIPLE', nodeData, size as number)}
           </div>
         )}
         <div
@@ -316,9 +317,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             handleDelete={canDelete ? handleDelete : undefined}
             enableClipboard={enableClipboard}
             type={collectionType}
-            data={data}
-            name={name}
-            path={path}
+            nodeData={nodeData}
             translate={translate}
           />
         )}

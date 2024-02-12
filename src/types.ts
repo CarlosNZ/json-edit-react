@@ -32,6 +32,7 @@ export interface JsonEditorProps {
   stringTruncate?: number
   translations?: Partial<LocalisedStrings>
   customNodeDefinitions?: CustomNodeDefinition[]
+  customText?: CustomTextDefinitions
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -69,16 +70,9 @@ export type UpdateFunction = (props: {
   path: CollectionKey[]
 }) => void | ErrorString | false
 
-export interface FilterProps {
-  key: CollectionKey
-  path: CollectionKey[]
-  level: number
-  value: unknown
-  size: number | null
-}
-
-export type FilterFunction = (input: FilterProps) => boolean
-export type TypeFilterFunction = (input: FilterProps) => boolean | DataType[]
+export type FilterFunction = (input: NodeData) => boolean
+export type TypeFilterFunction = (input: NodeData) => boolean | DataType[]
+export type CustomTextFunction = (input: NodeData) => string | null
 
 export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
@@ -98,11 +92,18 @@ export type OnChangeFunction = (value: unknown, path: (string | number)[]) => Pr
  * NODES
  */
 
+export interface NodeData {
+  key: CollectionKey
+  path: CollectionKey[]
+  level: number
+  value: unknown
+  size: number | null
+}
+
 interface BaseNodeProps {
   data: unknown
   parentData: CollectionData | null
-  path: CollectionKey[]
-  name: CollectionKey
+  nodeData: NodeData
   onEdit: OnChangeFunction
   onDelete: OnChangeFunction
   enableClipboard: boolean | CopyFunction
@@ -126,7 +127,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   defaultValue: unknown
 }
 
-type ValueData = string | number | boolean | null
+type ValueData = string | number | boolean
 export interface ValueNodeProps extends BaseNodeProps {
   data: ValueData
   showLabel: boolean
@@ -158,6 +159,8 @@ export interface CustomNodeDefinition {
   showEditTools?: boolean // default true
 }
 
+export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>
+
 export interface InputProps {
   value: unknown
   setValue: React.Dispatch<React.SetStateAction<ValueData>>
@@ -167,5 +170,6 @@ export interface InputProps {
   handleCancel: () => void
   path: CollectionKey[]
   stringTruncate: number
+  nodeData: NodeData
   translate: TranslateFunction
 }

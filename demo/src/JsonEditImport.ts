@@ -7,6 +7,7 @@ import {
   ThemeInput,
   CustomNodeProps,
   CustomNodeDefinition,
+  CustomTextDefinitions,
   FilterFunction,
 } from './json-edit-react/src'
 
@@ -19,6 +20,7 @@ import {
 //   ThemeInput,
 //   CustomNodeProps,
 //   CustomNodeDefinition,
+//   CustomTextDefinitions,
 //   FilterFunction,
 // } from 'json-edit-react'
 
@@ -26,11 +28,12 @@ import {
 // import {
 //   JsonEditor,
 //   themes,
-//   ThemeName,
 //   Theme,
+//   ThemeName,
 //   ThemeInput,
 //   CustomNodeProps,
 //   CustomNodeDefinition,
+//   CustomTextDefinitions,
 //   FilterFunction,
 // } from './package'
 
@@ -42,5 +45,6 @@ export {
   type ThemeInput,
   type CustomNodeProps,
   type CustomNodeDefinition,
+  type CustomTextDefinitions,
   type FilterFunction,
 }

@@ -174,6 +174,7 @@ export const ObjectValue: React.FC<InputProps> = ({
   isEditing,
   handleEdit,
   handleCancel,
+  nodeData,
 }) => {
   useEffect(() => {
     if (isEditing) document.addEventListener('keydown', listenForSubmit)
@@ -187,7 +188,10 @@ export const ObjectValue: React.FC<InputProps> = ({
   }
 
   return (
-    <span className="jer-value-object">{`{${translate('DEFAULT_NEW_KEY')}: "${value}" }`}</span>
+    <span className="jer-value-object">{`{${translate(
+      'DEFAULT_NEW_KEY',
+      nodeData
+    )}: "${value}" }`}</span>
   )
 }
 
