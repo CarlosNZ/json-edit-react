@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Icon } from './Icons'
 import { useTheme } from './theme'
 import { TranslateFunction } from './localisation'
-import { CollectionDataType, CollectionKey, CopyFunction, CopyType } from './types'
+import { CollectionDataType, CopyFunction, CopyType, NodeData } from './types'
 import './style.css'
 
 interface EditButtonProps {
@@ -11,9 +11,7 @@ interface EditButtonProps {
   enableClipboard: boolean | CopyFunction
   handleAdd?: (newKey: string) => void
   type?: CollectionDataType
-  data: unknown
-  path: CollectionKey[]
-  name: CollectionKey
+  nodeData: NodeData
   translate: TranslateFunction
 }
 
@@ -23,15 +21,15 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   handleAdd,
   enableClipboard,
   type,
-  data,
-  path,
-  name,
+  nodeData,
   translate,
 }) => {
   const { styles } = useTheme()
-  const NEW_KEY_PROMPT = translate('KEY_NEW')
+  const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
   const [isAdding, setIsAdding] = useState(false)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
+
+  const { key, path, value: data } = nodeData
 
   useEffect(() => {
     if (!isAdding) setNewKey(NEW_KEY_PROMPT)
@@ -62,7 +60,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       navigator.clipboard.writeText(stringValue)
     }
     if (typeof enableClipboard === 'function')
-      enableClipboard({ value, stringValue, path, key: name, type: copyType })
+      enableClipboard({ value, stringValue, path, key, type: copyType })
   }
 
   return (

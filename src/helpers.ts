@@ -1,4 +1,4 @@
-import { CustomNodeDefinition, CustomNodeProps, FilterProps } from './types'
+import { CustomNodeDefinition, CustomNodeProps, NodeData } from './types'
 
 export interface CustomNodeData {
   CustomNode?: React.FC<CustomNodeProps>
@@ -16,7 +16,7 @@ export interface CustomNodeData {
 // definitions and return the component and its props
 export const getCustomNode = (
   customNodeDefinitions: CustomNodeDefinition[] = [],
-  filterProps: FilterProps
+  filterProps: NodeData
 ): CustomNodeData => {
   const matchingDefinitions = customNodeDefinitions.filter(({ condition }) =>
     condition(filterProps)
