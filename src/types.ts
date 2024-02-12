@@ -133,9 +133,9 @@ export interface ValueNodeProps extends BaseNodeProps {
   showLabel: boolean
 }
 
-export interface CustomNodeProps extends BaseNodeProps {
+export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodeProps {
   value: ValueData | CollectionData
-  customNodeProps?: Record<string, unknown>
+  customNodeProps?: T
   parentData: CollectionData | null
   setValue: React.Dispatch<React.SetStateAction<ValueData>>
   handleEdit: () => void
@@ -146,9 +146,9 @@ export interface CustomNodeProps extends BaseNodeProps {
   styles: CompiledStyles
 }
 
-export interface CustomNodeDefinition {
+export interface CustomNodeDefinition<T = Record<string, unknown>> {
   condition: FilterFunction
-  element: React.FC<CustomNodeProps>
+  element: React.FC<CustomNodeProps<T>>
   name?: string // appears in "Type" selector
   customNodeProps?: Record<string, unknown>
   hideKey?: boolean

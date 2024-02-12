@@ -1,8 +1,12 @@
 import React from 'react'
 import { Flex, Box, Link, Text } from '@chakra-ui/react'
 import { dateNodeDefinition } from './customComponents/DateTimePicker'
-import { linkNodeDefinition } from './customComponents/ActiveHyperlinks'
-import { CustomNodeDefinition, FilterFunction, CustomTextDefinitions } from './JsonEditImport'
+import {
+  CustomNodeDefinition,
+  FilterFunction,
+  CustomTextDefinitions,
+  LinkCustomNodeDefinition,
+} from './JsonEditImport'
 
 interface DemoData {
   name: string
@@ -96,7 +100,7 @@ const data: Record<string, DemoData> = {
     restrictAdd: ({ value }) => !Array.isArray(value),
     restrictTypeSelection: true,
     collapse: 1,
-    customNodeDefinitions: [dateNodeDefinition, linkNodeDefinition],
+    customNodeDefinitions: [dateNodeDefinition, LinkCustomNodeDefinition],
     data: {
       name: 'Luke Skywalker',
       height: 172,

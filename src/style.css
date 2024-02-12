@@ -218,6 +218,10 @@ select:focus + .focus {
   line-height: 1.3em;
 }
 
+.jer-hyperlink {
+  text-decoration: underline;
+}
+
 .jer-input-text {
   resize: none;
   margin: 0;

@@ -14,6 +14,7 @@ import {
 } from './types'
 import { LocalisedStrings, TranslateFunction } from './localisation'
 import { themes, ThemeName, Theme, ThemeInput } from './theme'
+import { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
 
 export {
   JsonEditor,
@@ -34,4 +35,6 @@ export {
   type CustomNodeProps,
   type CustomNodeDefinition,
   type CustomTextDefinitions,
+  LinkCustomComponent,
+  LinkCustomNodeDefinition,
 }

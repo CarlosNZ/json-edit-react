@@ -9,6 +9,8 @@ import {
   CustomNodeDefinition,
   CustomTextDefinitions,
   FilterFunction,
+  LinkCustomComponent,
+  LinkCustomNodeDefinition,
 } from './json-edit-react/src'
 
 /* npm version */
@@ -22,6 +24,8 @@ import {
 //   CustomNodeDefinition,
 //   CustomTextDefinitions,
 //   FilterFunction,
+//   LinkCustomComponent,
+//   LinkCustomNodeDefinition,
 // } from 'json-edit-react'
 
 /* Local built version */
@@ -35,6 +39,8 @@ import {
 //   CustomNodeDefinition,
 //   CustomTextDefinitions,
 //   FilterFunction,
+//   LinkCustomComponent,
+//   LinkCustomNodeDefinition,
 // } from './package'
 
 export {
@@ -47,4 +53,6 @@ export {
   type CustomNodeDefinition,
   type CustomTextDefinitions,
   type FilterFunction,
+  LinkCustomComponent,
+  LinkCustomNodeDefinition,
 }

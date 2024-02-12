@@ -7,40 +7,37 @@
  */
 
 import React from 'react'
-import { CustomNodeProps, CustomNodeDefinition } from '../JsonEditImport'
+import { truncate } from '../../src/ValueNodes'
+import { CustomNodeProps, CustomNodeDefinition } from '../types'
 
-// Styles
-// For better matching with Chakra-UI
-import './style.css'
-import { truncate } from '../json-edit-react/src/ValueNodes'
-
-export const Link: React.FC<CustomNodeProps> = ({
+export const LinkCustomComponent: React.FC<CustomNodeProps<{ stringTruncate?: number }>> = ({
   value,
   setIsEditing,
   styles,
-  stringTruncate,
+  customNodeProps,
 }) => {
+  const stringTruncateLength = customNodeProps?.stringTruncate ?? 100
   return (
     <div
       onDoubleClick={() => setIsEditing(true)}
       onClick={(e) => {
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
       }}
-      className="jer-value-string"
+      className="jer-value-string jer-hyperlink"
       style={styles.string}
     >
       <a href={value as string} target="_blank" rel="noreferrer">
-        "{truncate(value as string, stringTruncate)}"
+        "{truncate(value as string, stringTruncateLength)}"
       </a>
     </div>
   )
 }
 
 // Definition for custom node behaviour
-export const linkNodeDefinition: CustomNodeDefinition = {
+export const LinkCustomNodeDefinition: CustomNodeDefinition = {
   // Condition is a regex to match url strings
   condition: ({ value }) => typeof value === 'string' && /^https?:\/\/.+\..+$/.test(value),
-  element: Link, // the component defined above
+  element: LinkCustomComponent, // the component defined above
   showOnView: true,
   showOnEdit: false,
 }

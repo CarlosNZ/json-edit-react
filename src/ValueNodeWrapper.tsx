@@ -21,7 +21,7 @@ import {
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
-import { CustomNodeData, getCustomNode } from './helpers'
+import { CustomNodeData, getCustomNode } from './CustomNode'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
