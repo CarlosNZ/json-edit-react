@@ -191,7 +191,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         value={data}
         parentData={parentData}
         nodeData={nodeData}
-        customProps={customNodeProps}
+        customNodeProps={customNodeProps}
         setValue={(value) => onEdit(value, path)}
         handleEdit={handleEdit}
         handleCancel={handleCancel}

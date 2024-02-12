@@ -441,6 +441,8 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.3.0**:
+  - [Custom (dynamic) text](#custom-text)
 - **1.2.2**: Allow editing of Custom nodes
 - **1.1.0**: Don't manage data state within component
 - **1.0.0**:

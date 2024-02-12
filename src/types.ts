@@ -135,7 +135,7 @@ export interface ValueNodeProps extends BaseNodeProps {
 
 export interface CustomNodeProps extends BaseNodeProps {
   value: ValueData | CollectionData
-  customProps?: Record<string, unknown>
+  customNodeProps?: Record<string, unknown>
   parentData: CollectionData | null
   setValue: React.Dispatch<React.SetStateAction<ValueData>>
   handleEdit: () => void

@@ -194,7 +194,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       <CustomNode
         {...props}
         value={value}
-        customProps={customNodeProps}
+        customNodeProps={customNodeProps}
         setValue={setValue}
         handleEdit={handleEdit}
         handleCancel={handleCancel}

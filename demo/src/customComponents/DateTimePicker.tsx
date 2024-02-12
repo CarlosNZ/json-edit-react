@@ -27,9 +27,9 @@ export const DateTimePicker: React.FC<CustomNodeProps> = ({
   isEditing,
   setIsEditing,
   styles,
-  customProps,
+  customNodeProps,
 }) => {
-  const { dateFormat = 'MMM d, yyyy h:mm aa', showTimeSelect = true } = customProps ?? {}
+  const { dateFormat = 'MMM d, yyyy h:mm aa', showTimeSelect = true } = customNodeProps ?? {}
 
   const date = new Date(value as string)
 
