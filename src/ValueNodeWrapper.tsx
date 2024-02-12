@@ -27,8 +27,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
     data,
     parentData,
-    name,
-    path,
+    nodeData,
     onEdit,
     onDelete,
     enableClipboard,
@@ -50,13 +49,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   )
   const [error, setError] = useState<string | null>(null)
 
-  const customNodeData = getCustomNode(customNodeDefinitions, {
-    key: name,
-    path,
-    level: path.length,
-    value: data,
-    size: 0,
-  })
+  const { key: name, path } = nodeData
+
+  const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
   useEffect(() => {
@@ -75,7 +70,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         type,
         // If coming *FROM* a custom type, need to change value to something
         // that won't match the custom node condition any more
-        customNodeData?.CustomNode ? translate('DEFAULT_STRING') : undefined
+        customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
       )
       setValue(newValue)
       onEdit(newValue, path)
@@ -94,7 +89,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     let newValue
     switch (dataType) {
       case 'object':
-        newValue = { [translate('DEFAULT_NEW_KEY')]: value }
+        newValue = { [translate('DEFAULT_NEW_KEY', nodeData)]: value }
         break
       case 'array':
         newValue = value !== null ? value : []
@@ -161,6 +156,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     handleCancel,
     path,
     stringTruncate,
+    nodeData,
     translate,
   }
 
@@ -261,11 +257,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
               <EditButtons
                 startEdit={canEdit ? () => setIsEditing(true) : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
-                data={data}
                 enableClipboard={enableClipboard}
-                name={name}
-                path={path}
                 translate={translate}
+                nodeData={nodeData}
               />
             )
           )}

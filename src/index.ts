@@ -10,6 +10,7 @@ import {
   ValueNodeProps,
   CustomNodeProps,
   CustomNodeDefinition,
+  CustomTextDefinitions,
 } from './types'
 import { LocalisedStrings, TranslateFunction } from './localisation'
 import { themes, ThemeName, Theme, ThemeInput } from './theme'
@@ -32,4 +33,5 @@ export {
   type ValueNodeProps,
   type CustomNodeProps,
   type CustomNodeDefinition,
+  type CustomTextDefinitions,
 }
