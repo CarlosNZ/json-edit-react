@@ -461,6 +461,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 - **1.3.0**:
   - [Custom (dynamic) text](#custom-text)
   - Add [hyperlink](#custom-nodes) Custom component to bundle
+  - Better indentation of collection nodes (property name lines up with non-collection nodes, not the collapse icon)
 - **1.2.2**: Allow editing of Custom nodes
 - **1.1.0**: Don't manage data state within component
 - **1.0.0**:

@@ -42,7 +42,7 @@ import { version } from './version'
 function App() {
   const [selectedData, setSelectedData] = useState('basic')
   const [rootName, setRootName] = useState(demoData[selectedData].rootName ?? 'data')
-  const [indent, setIndent] = useState(4)
+  const [indent, setIndent] = useState(3)
   const [collapseLevel, setCollapseLevel] = useState(2)
   const [showCount, setShowCount] = useState<'Yes' | 'No' | 'When closed'>('Yes')
   const [theme, setTheme] = useState<ThemeInput>('default')
