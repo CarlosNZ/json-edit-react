@@ -26,7 +26,12 @@ export const LinkCustomComponent: React.FC<CustomNodeProps<{ stringTruncate?: nu
       className="jer-value-string jer-hyperlink"
       style={styles.string}
     >
-      <a href={value as string} target="_blank" rel="noreferrer">
+      <a
+        href={value as string}
+        target="_blank"
+        rel="noreferrer"
+        style={{ color: styles.string.color ?? undefined }}
+      >
         "{truncate(value as string, stringTruncateLength)}"
       </a>
     </div>
