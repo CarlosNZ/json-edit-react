@@ -3,7 +3,13 @@ import assign, { Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import clone from 'just-clone'
 import { CollectionNode, isCollection } from './CollectionNode'
-import { CollectionData, JsonEditorProps, FilterFunction, OnChangeFunction } from './types'
+import {
+  CollectionData,
+  JsonEditorProps,
+  FilterFunction,
+  OnChangeFunction,
+  NodeData,
+} from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { getTranslateFunction } from './localisation'
 import './style.css'
@@ -20,7 +26,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   enableClipboard = true,
   theme = 'default',
   icons,
-  indent = 4,
+  indent = 3,
   collapse = false,
   showCollectionCount = true,
   restrictEdit = false,
@@ -35,17 +41,29 @@ const Editor: React.FC<JsonEditorProps> = ({
   stringTruncate = 250,
   translations = {},
   className,
+  customText = {},
   customNodeDefinitions = [],
 }) => {
   const { styles, setTheme, setIcons } = useTheme()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
-  const translate = useCallback(getTranslateFunction(translations), [translations])
+  const translate = useCallback(getTranslateFunction(translations, customText), [
+    translations,
+    customText,
+  ])
 
   useEffect(() => {
     if (theme) setTheme(theme)
     if (icons) setIcons(icons)
     // eslint-disable-next-line
   }, [theme, icons])
+
+  const nodeData: NodeData = {
+    key: rootName,
+    path: [],
+    level: 0,
+    value: data,
+    size: Object.keys(data).length,
+  }
 
   const onEdit: OnChangeFunction = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
@@ -63,7 +81,7 @@ const Editor: React.FC<JsonEditorProps> = ({
         name: path.slice(-1)[0],
         path,
       })
-      if (result === false) return translate('ERROR_UPDATE')
+      if (result === false) return translate('ERROR_UPDATE', nodeData)
       return result // Error string
     }
   }
@@ -84,7 +102,7 @@ const Editor: React.FC<JsonEditorProps> = ({
         name: path.slice(-1)[0],
         path,
       })
-      if (result === false) return translate('ERROR_DELETE')
+      if (result === false) return translate('ERROR_DELETE', nodeData)
       return result // Error string
     }
   }
@@ -105,7 +123,7 @@ const Editor: React.FC<JsonEditorProps> = ({
         name: path.slice(-1)[0],
         path,
       })
-      if (result === false) return translate('ERROR_ADD')
+      if (result === false) return translate('ERROR_ADD', nodeData)
       return result // Error string
     }
   }
@@ -116,6 +134,7 @@ const Editor: React.FC<JsonEditorProps> = ({
 
   const otherProps = {
     name: rootName,
+    nodeData,
     onEdit,
     onDelete,
     onAdd,
@@ -144,9 +163,9 @@ const Editor: React.FC<JsonEditorProps> = ({
       style={{ ...styles.container, minWidth, maxWidth }}
     >
       {isCollection(data) ? (
-        <CollectionNode data={data} path={[]} {...otherProps} />
+        <CollectionNode data={data} {...otherProps} />
       ) : (
-        <ValueNodeWrapper data={data as any} path={[]} showLabel {...otherProps} />
+        <ValueNodeWrapper data={data as any} showLabel {...otherProps} />
       )}
     </div>
   )
