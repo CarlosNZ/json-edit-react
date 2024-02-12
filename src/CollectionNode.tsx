@@ -189,9 +189,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         {...props}
         data={data}
         value={data}
-        path={path}
-        name={name}
         parentData={parentData}
+        nodeData={nodeData}
         customProps={customNodeProps}
         setValue={(value) => onEdit(value, path)}
         handleEdit={handleEdit}
@@ -232,8 +231,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 level: path.length + 1,
                 size: Object.keys(value).length,
               }}
-              // path={[...path, key]}
-              // name={key}
               showCollectionCount={showCollectionCount}
               {...props}
             />
@@ -249,8 +246,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 level: path.length + 1,
                 size: 1,
               }}
-              // path={[...path, key]}
-              // name={key}
               {...props}
               showLabel={collectionType === 'object' ? true : showArrayIndices}
             />
@@ -305,11 +300,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                     path,
                     level: path.length,
                     value: data,
-                    size: Object.keys(data).length,
+                    size: 1,
                   },
                   1
                 )
-              : translate('ITEMS_MULTIPLE', nodeData, size)}
+              : translate('ITEMS_MULTIPLE', nodeData, size as number)}
           </div>
         )}
         <div

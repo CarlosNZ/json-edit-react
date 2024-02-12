@@ -16,11 +16,9 @@ export interface CustomNodeData {
 // definitions and return the component and its props
 export const getCustomNode = (
   customNodeDefinitions: CustomNodeDefinition[] = [],
-  filterProps: NodeData
+  nodeData: NodeData
 ): CustomNodeData => {
-  const matchingDefinitions = customNodeDefinitions.filter(({ condition }) =>
-    condition(filterProps)
-  )
+  const matchingDefinitions = customNodeDefinitions.filter(({ condition }) => condition(nodeData))
   if (matchingDefinitions.length === 0) return {}
 
   // Only take the first one that matches

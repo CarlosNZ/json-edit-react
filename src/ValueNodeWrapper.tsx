@@ -156,6 +156,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     handleCancel,
     path,
     stringTruncate,
+    nodeData,
     translate,
   }
 
