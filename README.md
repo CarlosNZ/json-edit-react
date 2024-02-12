@@ -29,7 +29,8 @@ Features include:
   - [A note about sizing and scaling](#a-note-about-sizing-and-scaling)
   - [Icons](#icons)
 - [Localisation](#localisation)
-- [Custom nodes](#custom-nodes)
+- [Custom Nodes](#custom-nodes)
+- [Custom Text](#custom-text)
 - [Undo functionality](#undo-functionality)
 - [Issues, bugs, suggestions?](#issues-bugs-suggestions)
 - [Roadmap](#roadmap)
@@ -105,6 +106,7 @@ The only *required* value is `data`.
 | `minWidth`              | `number\|string` (CSS value)                 | `250`       | Minimum width for the editor container.                                                                                                                                                                                                                                                            |
 | `maxWidth`              | `number\|string` (CSS value)                 | `600`       | Maximum width for the editor container.                                                                                                                                                                                                                                                            |
 | `customNodeDefinitions` | `CustomNodeDefinition[]`                     |             | You can provide customised components to override specific nodes in the data tree, according to a condition function. See see [Custom nodes](#custom-nodes) for more detail.                                                                                                                       |
+| `customText`            | `CustomTextDefinitions`                      |             | In addition to [localising the component](#localisation) text strings, you can also *dynamically* alter it, depending on the data. See [Custom Text](#custom-text) for more detail.                                                                                                                |
 
 ## Update functions
 
@@ -353,7 +355,7 @@ Localise your implementation by passing in a `translations` object to replace th
 
 ```
 
-## Custom nodes
+## Custom Nodes
 
 You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/) to see it in action. (There is also a custom Date picker that appears when editing ISO strings in the other data sets.)
 
@@ -383,6 +385,37 @@ By default, your component will be presented to the right of the property key it
 Also, by default, your component will be treated as a "display" element, i.e. it will appear in the JSON viewer, but when editing, it will revert to the standard editing interface. This can be changed, however, with the `showOnEdit`, `showOnView` and `showEditTools` props. For example, a Date picker might only be required when *editing* and left as-is for display. The `showEditTools` prop refers to the editing icons (copy, add, edit, delete) that appear to the right of each value on hover. If you choose to disable these but you still want to your component to have an "edit" mode, you'll have to provide your own UI mechanism to toggle editing.
 
 You can allow users to create new instances of your special nodes by selecting them as a "Type" in the types selector when editing/adding values. Set `showInTypesSelector: true` to enable this. However, if this is enabled you need to also provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
+
+## Custom Text
+
+It's possible to change the various text strings displayed by the component. You can [localise it](#localisation), but you can also specify functions to override the displayed text based on certain conditions. For example, say we want the property count text (e.g. `6 items` by default) to give a summary of a certain type of node, which can look nice when collapsed. For example (taken from the [Demo](https://carlosnz.github.io/json-edit-react/)):
+
+<img width="391" alt="Custom text example" src="image/custom_text.png">
+
+The `customText` property takes an object, with any of the [localisable keys](#localisation) as keys, with a function that returns a string (or `null`, which causes it to fallback to the localised or default string). The input to these functions is the same as for [Filter functions](#filter-functions), so in this example, it would be defined like so:
+
+```js
+
+// The function definition
+const itemCountReplacement = ({ key, value, size }) => {
+    // This returns "Steve Rogers (Marvel)" for the node summary
+    if (value instanceof Object && 'name' in value)
+      return `${value.name} (${(value)?.publisher ?? ''})`
+    // This returns "X names" for the alias lists
+    if (key === 'aliases' && Array.isArray(value))
+      return `${size} ${size === 1 ? 'name' : 'names'}`
+    // Everything else as normal
+    return null
+  }
+
+// And in component props...
+...otherProps,
+customText = {
+  ITEM_SINGLE: itemCountReplacement,
+  ITEMS_MULTIPLE: itemCountReplacement,
+}
+```
+
  
 ## Undo functionality
 
