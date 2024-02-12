@@ -15,6 +15,7 @@
     "setup": "yarn install && cd demo && yarn install",
     "demo": "cd demo && node ./scripts/getVersion.js && yarn start",
     "build": "rimraf ./build && rollup -c && rimraf ./build/dts",
+    "postbuild": "node ./scripts/cleanBuildTypes.js",
     "compile": "rimraf ./build && tsc",
     "release": "yarn publish",
     "release-demo": "cd demo && yarn deploy"
@@ -35,6 +36,7 @@
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^20.11.6",
     "@types/react": "^18.2.48",
+    "fs-extra": "^11.2.0",
     "rimraf": "^5.0.5",
     "rollup": "^4.9.6",
     "rollup-plugin-bundle-size": "^1.0.3",
