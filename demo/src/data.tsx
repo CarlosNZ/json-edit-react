@@ -1,8 +1,7 @@
 import React from 'react'
 import { Flex, Box, Link, Text } from '@chakra-ui/react'
 import { dateNodeDefinition } from './customComponents/DateTimePicker'
-import { CustomNodeDefinition, FilterFunction } from './JsonEditImport'
-import { CustomTextDefinitions } from './json-edit-react/src/types'
+import { CustomNodeDefinition, FilterFunction, CustomTextDefinitions } from './JsonEditImport'
 
 interface DemoData {
   name: string
