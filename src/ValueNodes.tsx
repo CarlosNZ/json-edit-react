@@ -42,6 +42,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       isEditing={isEditing}
       handleKeyPress={handleKeyPress}
+      styles={getStyles('input', nodeData)}
     />
   ) : (
     <div

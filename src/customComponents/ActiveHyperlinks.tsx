@@ -13,10 +13,12 @@ import { type CustomNodeProps, type CustomNodeDefinition } from '../types'
 export const LinkCustomComponent: React.FC<CustomNodeProps<{ stringTruncate?: number }>> = ({
   value,
   setIsEditing,
-  styles,
+  getStyles,
   customNodeProps,
+  nodeData,
 }) => {
   const stringTruncateLength = customNodeProps?.stringTruncate ?? 100
+  const styles = getStyles('string', nodeData)
   return (
     <div
       onDoubleClick={() => setIsEditing(true)}
@@ -24,13 +26,13 @@ export const LinkCustomComponent: React.FC<CustomNodeProps<{ stringTruncate?: nu
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
       }}
       className="jer-value-string jer-hyperlink"
-      style={styles.string}
+      style={styles}
     >
       <a
         href={value as string}
         target="_blank"
         rel="noreferrer"
-        style={{ color: styles.string.color ?? undefined }}
+        style={{ color: styles.color ?? undefined }}
       >
         &quot;{truncate(value as string, stringTruncateLength)}&quot;
       </a>

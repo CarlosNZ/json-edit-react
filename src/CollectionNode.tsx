@@ -12,7 +12,7 @@ export const isCollection = (value: unknown) => value !== null && typeof value =
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({
   data,
-  nodeData,
+  nodeData: incomingNodeData,
   parentData,
   showCollectionCount,
   ...props
@@ -39,10 +39,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
   const [error, setError] = useState<string | null>(null)
 
-  const { path, key: name, size } = nodeData
-
-  const startCollapsed = collapseFilter(nodeData)
+  const startCollapsed = collapseFilter(incomingNodeData)
   const [collapsed, setCollapsed] = useState(startCollapsed)
+
+  const nodeData = { ...incomingNodeData, collapsed }
+  const { path, key: name, size } = nodeData
 
   // This allows us to not render the children on load if they're hidden (which
   // gives a big performance improvement with large data sets), but still keep
@@ -213,6 +214,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             setValue={setStringifiedValue}
             isEditing={isEditing}
             handleKeyPress={handleKeyPress}
+            styles={getStyles('input', nodeData)}
           />
           <div className="jer-collection-input-button-row">
             <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
@@ -265,7 +267,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       <div className="jer-collection-header-row" style={{ position: 'relative' }}>
         <div className="jer-collection-name">
           <div className="jer-collapse-icon" onClick={handleCollapse}>
-            <Icon name="chevron" rotate={collapsed} />
+            <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
           </div>
           {!isEditingKey && (
             <span

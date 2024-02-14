@@ -209,6 +209,9 @@ function App() {
               string: ({ value }) => {
                 if (value === 'Welcome to the Editor 😀') return { color: 'blue' }
               },
+              bracket: ({ collapsed }) => {
+                if (!collapsed) return { display: 'none' }
+              },
             }}
             // theme={theme}
             indent={indent}

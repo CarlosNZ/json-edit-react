@@ -1,6 +1,5 @@
-import { type ThemeInput, type CompiledStyles } from './theme'
+import { type ThemeInput, type ThemeableElement } from './theme'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
-import { ThemeableElement } from './theme/themes'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
 
@@ -98,6 +97,7 @@ export interface NodeData {
   level: number
   value: unknown
   size: number | null
+  collapsed?: boolean
 }
 
 interface BaseNodeProps {
