@@ -1,4 +1,4 @@
-import { CustomNodeDefinition, CustomNodeProps, NodeData } from './types'
+import { type CustomNodeDefinition, type CustomNodeProps, type NodeData } from './types'
 
 export interface CustomNodeData {
   CustomNode?: React.FC<CustomNodeProps>

@@ -1,4 +1,4 @@
-import { CustomTextDefinitions, CustomTextFunction, NodeData } from './types'
+import { type CustomTextDefinitions, type CustomTextFunction, type NodeData } from './types'
 
 const localisedStrings = {
   ITEM_SINGLE: '{{count}} item',

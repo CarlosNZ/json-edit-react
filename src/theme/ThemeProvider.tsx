@@ -2,14 +2,14 @@ import React, { createContext, useContext, useState } from 'react'
 import {
   themes,
   emptyStyleObject,
-  Theme,
-  ThemeableElement,
-  ThemeStyles,
-  ThemeInput,
-  CompiledStyles,
-  ThemeValue,
+  type Theme,
+  type ThemeableElement,
+  type ThemeStyles,
+  type ThemeInput,
+  type CompiledStyles,
+  type ThemeValue,
 } from './themes'
-import { IconReplacements } from '../types'
+import { type IconReplacements } from '../types'
 
 const defaultTheme = themes.default
 
@@ -74,7 +74,7 @@ const buildStyleObject = (
     (theme) => {
       const { fragments, styles } = theme
       const compiledStyles: Partial<CompiledStyles> = {}
-      ;(Object.entries(styles) as [ThemeableElement, ThemeValue][]).forEach(([key, value]) => {
+      ;(Object.entries(styles) as Array<[ThemeableElement, ThemeValue]>).forEach(([key, value]) => {
         const elements = Array.isArray(value) ? value : [value]
         const cssStyles = elements.reduce((acc: React.CSSProperties, curr) => {
           if (typeof curr === 'string') {
@@ -105,16 +105,18 @@ const buildStyleObject = (
 
   // These properties can't be targeted inline, so we update a CSS variable
   // instead
-  if (finalStyles?.inputHighlight?.backgroundColor)
+  if (finalStyles?.inputHighlight?.backgroundColor) {
     document.documentElement.style.setProperty(
       '--jer-highlight-color',
       finalStyles?.inputHighlight?.backgroundColor
     )
-  if (finalStyles?.iconCopy?.color)
+  }
+  if (finalStyles?.iconCopy?.color) {
     document.documentElement.style.setProperty(
       '--jer-icon-copy-color',
       finalStyles?.iconCopy?.color
     )
+  }
 
   return finalStyles as CompiledStyles
 }

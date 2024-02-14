@@ -53,16 +53,14 @@ or
 import { JsonEditor } from 'json-edit-react'
 
 // In your React components:
-<JsonEditor
-  data={ myData }
-  onUpdate={ ({newData} ) => {
-    // Set "myData" state, plus
-    // any desired side-effects.
-}}
-{ ...otherProps } />
+return 
+  <JsonEditor
+    data={ jsonData }
+    onUpdate={ ({newData} ) => {
+      // Do something with the new data, e.g. update jsonData
+  }}
+  { ...otherProps } />
 ```
-
-You are responsible for maintaining the data state — in your `onUpdate` function, use the `newData` property to set `data`, which should update inside the editor.
 
 ## Usage
 
@@ -111,7 +109,7 @@ The only *required* value is `data`.
 
 ## Update functions
 
-A callback to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update some state, or make an API call, for example. If you want the same function for all updates, then just the `onUpdate` prop is sufficient. However, should you require something different for editing, deletion and addition, then you can provide separate Update functions via the `onEdit`, `onDelete` and `onAdd` props.
+A callback to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update your data state, or make an API call, for example. If you want the same function for all updates, then just the `onUpdate` prop is sufficient. However, should you require something different for editing, deletion and addition, then you can provide separate Update functions via the `onEdit`, `onDelete` and `onAdd` props.
 
 The function will receive the following object as a parameter:
 

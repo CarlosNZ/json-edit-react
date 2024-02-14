@@ -1,25 +1,25 @@
-import React, { useCallback, useEffect } from 'react'
-import assign, { Input } from 'object-property-assigner'
+import React, { useCallback, useEffect, useState } from 'react'
+import assign, { type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
-import clone from 'just-clone'
 import { CollectionNode, isCollection } from './CollectionNode'
 import {
-  CollectionData,
-  JsonEditorProps,
-  FilterFunction,
-  OnChangeFunction,
-  NodeData,
+  type CollectionData,
+  type JsonEditorProps,
+  type FilterFunction,
+  type OnChangeFunction,
+  type NodeData,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { getTranslateFunction } from './localisation'
 import './style.css'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
+import clone from 'just-clone'
 
 const Editor: React.FC<JsonEditorProps> = ({
-  data,
+  data: srcData,
   // schema,
   rootName = 'root',
-  onUpdate,
+  onUpdate = () => {},
   onEdit: srcEdit = onUpdate,
   onDelete: srcDelete = onUpdate,
   onAdd: srcAdd = onUpdate,
@@ -51,11 +51,16 @@ const Editor: React.FC<JsonEditorProps> = ({
     customText,
   ])
 
+  const [data, setData] = useState(srcData)
+
   useEffect(() => {
     if (theme) setTheme(theme)
     if (icons) setIcons(icons)
-    // eslint-disable-next-line
   }, [theme, icons])
+
+  useEffect(() => {
+    setData({ ...srcData })
+  }, [srcData])
 
   const nodeData: NodeData = {
     key: rootName,
@@ -72,18 +77,18 @@ const Editor: React.FC<JsonEditorProps> = ({
       value,
       'update'
     )
-    if (srcEdit) {
-      const result = await srcEdit({
-        currentData,
-        newData,
-        currentValue,
-        newValue,
-        name: path.slice(-1)[0],
-        path,
-      })
-      if (result === false) return translate('ERROR_UPDATE', nodeData)
-      return result // Error string
-    }
+    setData(newData)
+
+    const result = await srcEdit({
+      currentData,
+      newData,
+      currentValue,
+      newValue,
+      name: path.slice(-1)[0],
+      path,
+    })
+    if (result === false) return translate('ERROR_UPDATE', nodeData)
+    return result // Error string
   }
 
   const onDelete: OnChangeFunction = async (value, path) => {
@@ -93,18 +98,18 @@ const Editor: React.FC<JsonEditorProps> = ({
       value,
       'delete'
     )
-    if (srcDelete) {
-      const result = await srcDelete({
-        currentData,
-        newData,
-        currentValue,
-        newValue,
-        name: path.slice(-1)[0],
-        path,
-      })
-      if (result === false) return translate('ERROR_DELETE', nodeData)
-      return result // Error string
-    }
+    setData(newData)
+
+    const result = await srcDelete({
+      currentData,
+      newData,
+      currentValue,
+      newValue,
+      name: path.slice(-1)[0],
+      path,
+    })
+    if (result === false) return translate('ERROR_DELETE', nodeData)
+    return result // Error string
   }
 
   const onAdd: OnChangeFunction = async (value, path) => {
@@ -114,18 +119,18 @@ const Editor: React.FC<JsonEditorProps> = ({
       value,
       'add'
     )
-    if (srcAdd) {
-      const result = await srcAdd({
-        currentData,
-        newData,
-        currentValue,
-        newValue,
-        name: path.slice(-1)[0],
-        path,
-      })
-      if (result === false) return translate('ERROR_ADD', nodeData)
-      return result // Error string
-    }
+    setData(newData)
+
+    const result = await srcAdd({
+      currentData,
+      newData,
+      currentValue,
+      newValue,
+      name: path.slice(-1)[0],
+      path,
+    })
+    if (result === false) return translate('ERROR_ADD', nodeData)
+    return result // Error string
   }
 
   const restrictEditFilter = getFilterFunction(restrictEdit)
@@ -179,7 +184,7 @@ const JsonEditor: React.FC<JsonEditorProps> = (props) => (
 
 const updateDataObject = (
   data: CollectionData,
-  path: (string | number)[],
+  path: Array<string | number>,
   newValue: unknown,
   action: 'update' | 'delete' | 'add'
 ) => {
@@ -188,12 +193,12 @@ const updateDataObject = (
       currentData: data,
       newData: newValue as CollectionData,
       currentValue: data,
-      newValue: newValue,
+      newValue,
     }
   }
 
   const currentValue = action !== 'add' ? extract(data, path) : undefined
-  const newData = assign(clone(data as Input), path, newValue, {
+  const newData = assign(clone(data) as Input, path, newValue, {
     remove: action === 'delete',
   })
 

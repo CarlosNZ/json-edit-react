@@ -1,6 +1,5 @@
-import { ThemeInput, CompiledStyles } from './theme'
-import { LocalisedStrings, TranslateFunction } from './localisation'
-import React from 'react'
+import { type ThemeInput, type CompiledStyles } from './theme'
+import { type LocalisedStrings, type TranslateFunction } from './localisation'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
 
@@ -86,7 +85,7 @@ export type CopyFunction = (input: {
 export type CompareFunction = (a: string, b: string) => number
 
 // Internal update
-export type OnChangeFunction = (value: unknown, path: (string | number)[]) => Promise<string | void>
+export type OnChangeFunction = (value: unknown, path: CollectionKey[]) => Promise<string | void>
 
 /**
  * NODES

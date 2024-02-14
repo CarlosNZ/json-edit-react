@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { InputProps } from './types'
+import { type InputProps } from './types'
 import { useTheme } from './theme'
 import './style.css'
 
@@ -51,7 +51,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       className="jer-value-string"
       style={styles.string}
     >
-      "{breakString(truncate(value, stringTruncate))}"
+      &quot;{breakString(truncate(value, stringTruncate))}&quot;
     </div>
   )
 }
@@ -188,10 +188,9 @@ export const ObjectValue: React.FC<InputProps> = ({
   }
 
   return (
-    <span className="jer-value-object">{`{${translate(
-      'DEFAULT_NEW_KEY',
-      nodeData
-    )}: "${value}" }`}</span>
+    <span className="jer-value-object">{`{${translate('DEFAULT_NEW_KEY', nodeData)}: "${String(
+      value
+    )}" }`}</span>
   )
 }
 
@@ -212,7 +211,7 @@ export const ArrayValue: React.FC<InputProps> = ({
     } else if (event.key === 'Escape') handleCancel()
   }
 
-  return <span className="jer-value-array">{`[${value === null ? '' : value}]`}</span>
+  return <span className="jer-value-array">{`[${value === null ? '' : String(value)}]`}</span>
 }
 
 export const InvalidValue: React.FC<InputProps> = ({ value }) => {

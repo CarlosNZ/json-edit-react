@@ -1,4 +1,4 @@
-import { ThemeInput, ThemeName, Theme, themes, CompiledStyles } from './themes'
+import { themes, type ThemeInput, type ThemeName, type Theme, type CompiledStyles } from './themes'
 import { ThemeProvider, useTheme } from './ThemeProvider'
 
 export {

@@ -8,7 +8,7 @@
 
 import React from 'react'
 import { truncate } from '../../src/ValueNodes'
-import { CustomNodeProps, CustomNodeDefinition } from '../types'
+import { type CustomNodeProps, type CustomNodeDefinition } from '../types'
 
 export const LinkCustomComponent: React.FC<CustomNodeProps<{ stringTruncate?: number }>> = ({
   value,
@@ -32,7 +32,7 @@ export const LinkCustomComponent: React.FC<CustomNodeProps<{ stringTruncate?: nu
         rel="noreferrer"
         style={{ color: styles.string.color ?? undefined }}
       >
-        "{truncate(value as string, stringTruncateLength)}"
+        &quot;{truncate(value as string, stringTruncateLength)}&quot;
       </a>
     </div>
   )

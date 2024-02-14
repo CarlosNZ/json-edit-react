@@ -11,17 +11,17 @@ import {
 } from './ValueNodes'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import {
-  DataType,
-  ValueNodeProps,
-  InputProps,
   DataTypes,
-  CollectionData,
-  ErrorString,
+  type DataType,
+  type ValueNodeProps,
+  type InputProps,
+  type CollectionData,
+  type ErrorString,
   ERROR_DISPLAY_TIME,
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
-import { CustomNodeData, getCustomNode } from './CustomNode'
+import { getCustomNode, type CustomNodeData } from './CustomNode'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -68,6 +68,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       const newValue = convertValue(
         value,
         type,
+        translate('DEFAULT_NEW_KEY', nodeData),
         // If coming *FROM* a custom type, need to change value to something
         // that won't match the custom node condition any more
         customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
@@ -92,13 +93,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         newValue = { [translate('DEFAULT_NEW_KEY', nodeData)]: value }
         break
       case 'array':
-        newValue = value !== null ? value : []
+        newValue = value ?? []
         break
-      case 'number':
+      case 'number': {
         const n = Number(value)
         if (isNaN(n)) newValue = 0
         else newValue = n
         break
+      }
       default:
         newValue = value
     }
@@ -292,8 +294,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 }
 
 const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
-  if (customNodeData?.CustomNode && customNodeData?.name && customNodeData.showInTypesSelector)
+  if (customNodeData?.CustomNode && customNodeData?.name && customNodeData.showInTypesSelector) {
     return customNodeData.name
+  }
   if (typeof value === 'string') return 'string'
   if (typeof value === 'number') return 'number'
   if (typeof value === 'boolean') return 'boolean'
@@ -321,19 +324,25 @@ const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
   }
 }
 
-const convertValue = (value: unknown, type: DataType, defaultString?: string) => {
+const convertValue = (
+  value: unknown,
+  type: DataType,
+  defaultNewKey: string,
+  defaultString?: string
+) => {
   switch (type) {
     case 'string':
       return defaultString ?? String(value)
-    case 'number':
+    case 'number': {
       const n = Number(value)
       return isNaN(n) ? 0 : n
+    }
     case 'boolean':
       return !!value
     case 'null':
       return null
     case 'object':
-      return value as any
+      return { [defaultNewKey]: value }
     case 'array':
       return [value]
     default:

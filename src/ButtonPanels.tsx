@@ -1,8 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { Icon } from './Icons'
 import { useTheme } from './theme'
-import { TranslateFunction } from './localisation'
-import { CollectionDataType, CopyFunction, CopyType, NodeData } from './types'
+import { type TranslateFunction } from './localisation'
+import {
+  type CollectionKey,
+  type CollectionDataType,
+  type CopyFunction,
+  type CopyType,
+  type NodeData,
+} from './types'
 import './style.css'
 
 interface EditButtonProps {
@@ -57,10 +63,11 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           value = data
           stringValue = type ? JSON.stringify(data, null, 2) : String(value)
       }
-      navigator.clipboard.writeText(stringValue)
+      void navigator.clipboard.writeText(stringValue)
     }
-    if (typeof enableClipboard === 'function')
+    if (typeof enableClipboard === 'function') {
       enableClipboard({ value, stringValue, path, key, type: copyType })
+    }
   }
 
   return (
@@ -106,7 +113,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           />
           <InputButtons
             onOk={() => {
-              if (!!newKey) {
+              if (newKey) {
                 setIsAdding(false)
                 handleAdd(newKey)
               }
@@ -138,7 +145,7 @@ export const InputButtons: React.FC<{
   )
 }
 
-const stringifyPath = (path: (string | number)[]): string =>
+const stringifyPath = (path: CollectionKey[]): string =>
   path.reduce((str: string, part) => {
     if (typeof part === 'number') return `${str}[${part}]`
     else return str === '' ? part : `${str}.${part}`

@@ -2,13 +2,13 @@ import React, { useEffect, useState, useMemo, useRef } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
-import { CollectionNodeProps, ERROR_DISPLAY_TIME, ErrorString } from './types'
+import { type CollectionNodeProps, ERROR_DISPLAY_TIME, type ErrorString } from './types'
 import { Icon } from './Icons'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 
-export const isCollection = (value: unknown) => value !== null && typeof value == 'object'
+export const isCollection = (value: unknown) => value !== null && typeof value === 'object'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({
   data,
@@ -100,7 +100,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       setError(translate('ERROR_INVALID_JSON', nodeData))
       setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
       console.log('Invalid JSON')
-      return
     }
   }
 
@@ -130,11 +129,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       })
     } else if (key in data) {
       showError(translate('ERROR_KEY_EXISTS', nodeData))
-      return
-    } else
+    } else {
       onAdd(defaultValue, [...path, key]).then((error) => {
         if (error) showError(error)
       })
+    }
   }
 
   const handleDelete =
@@ -167,8 +166,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     value,
   ])
 
-  if (keySort && collectionType === 'object')
-    keyValueArray.sort(typeof keySort === 'function' ? (a, b) => keySort(a[0], b[0]) : undefined)
+  if (keySort && collectionType === 'object') {
+    keyValueArray.sort(
+      typeof keySort === 'function' ? (a: string[], b) => keySort(a[0], b[0] as string) : undefined
+    )
+  }
 
   // A crude measure to estimate the approximate height of the block, for
   // setting the max-height in the collapsible interior
@@ -192,6 +194,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         parentData={parentData}
         nodeData={nodeData}
         customNodeProps={customNodeProps}
+        // eslint-disable-next-line
         setValue={(value) => onEdit(value, path)}
         handleEdit={handleEdit}
         handleCancel={handleCancel}
@@ -229,7 +232,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 value,
                 path: [...path, key],
                 level: path.length + 1,
-                size: Object.keys(value).length,
+                size: Object.keys(value as object).length,
               }}
               showCollectionCount={showCollectionCount}
               {...props}

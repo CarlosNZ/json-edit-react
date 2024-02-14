@@ -15,6 +15,7 @@
     "setup": "yarn install && cd demo && yarn install",
     "demo": "cd demo && node ./scripts/getVersion.js && yarn start",
     "build": "rimraf ./build && rollup -c && rimraf ./build/dts",
+    "lint": "npx eslint \"src/**\"",
     "postbuild": "node ./scripts/cleanBuildTypes.js",
     "compile": "rimraf ./build && tsc",
     "release": "yarn publish",
@@ -25,20 +26,33 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
+  "resolutions": {
+    "strip-ansi": "6.0.1",
+    "string-width": "4.2.2",
+    "wrap-ansi": "7.0.0"
+  },
   "dependencies": {
     "just-clone": "^6.2.0",
-    "object-property-assigner": "^1.0.1",
-    "object-property-extractor": "^1.0.7",
-    "react-icons": "^4.12.0"
+    "object-property-assigner": "^1.2.0",
+    "object-property-extractor": "^1.0.10",
+    "react-icons": "^5.0.1"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
-    "@types/node": "^20.11.6",
-    "@types/react": "^18.2.48",
+    "@types/node": "^20.11.17",
+    "@types/react": "^18.2.55",
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "eslint": "^8.0.1",
+    "eslint-config-standard-with-typescript": "^43.0.1",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "fs-extra": "^11.2.0",
     "rimraf": "^5.0.5",
-    "rollup": "^4.9.6",
+    "rollup": "^4.10.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-dts": "^6.1.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
@@ -46,6 +60,6 @@
     "rollup-plugin-styles": "^4.0.0",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.2",
-    "typescript": "^5.3.3"
+    "typescript": "*"
   }
 }
