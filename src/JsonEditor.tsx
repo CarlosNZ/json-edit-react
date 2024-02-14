@@ -59,7 +59,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   }, [theme, icons])
 
   useEffect(() => {
-    setData({ ...srcData })
+    setData(srcData)
   }, [srcData])
 
   const nodeData: NodeData = {
