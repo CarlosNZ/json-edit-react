@@ -126,7 +126,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   defaultValue: unknown
 }
 
-type ValueData = string | number | boolean
+export type ValueData = string | number | boolean
 export interface ValueNodeProps extends BaseNodeProps {
   data: ValueData
   showLabel: boolean

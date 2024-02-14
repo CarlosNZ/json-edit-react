@@ -1,24 +1,9 @@
 /* Local version */
-import {
-  JsonEditor,
-  themes,
-  Theme,
-  ThemeName,
-  ThemeInput,
-  CustomNodeProps,
-  CustomNodeDefinition,
-  CustomTextDefinitions,
-  FilterFunction,
-  LinkCustomComponent,
-  LinkCustomNodeDefinition,
-} from './json-edit-react/src'
-
-/* npm version */
 // import {
 //   JsonEditor,
 //   themes,
-//   ThemeName,
 //   Theme,
+//   ThemeName,
 //   ThemeInput,
 //   CustomNodeProps,
 //   CustomNodeDefinition,
@@ -26,7 +11,22 @@ import {
 //   FilterFunction,
 //   LinkCustomComponent,
 //   LinkCustomNodeDefinition,
-// } from 'json-edit-react'
+// } from './json-edit-react/src'
+
+/* npm version */
+import {
+  JsonEditor,
+  themes,
+  ThemeName,
+  Theme,
+  ThemeInput,
+  CustomNodeProps,
+  CustomNodeDefinition,
+  CustomTextDefinitions,
+  FilterFunction,
+  LinkCustomComponent,
+  LinkCustomNodeDefinition,
+} from 'json-edit-react'
 
 /* Local built version */
 // import {

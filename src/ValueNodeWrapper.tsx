@@ -12,12 +12,13 @@ import {
 import { EditButtons, InputButtons } from './ButtonPanels'
 import {
   DataTypes,
+  ERROR_DISPLAY_TIME,
   type DataType,
   type ValueNodeProps,
   type InputProps,
   type CollectionData,
   type ErrorString,
-  ERROR_DISPLAY_TIME,
+  type ValueData,
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
@@ -73,7 +74,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         // that won't match the custom node condition any more
         customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
       )
-      setValue(newValue)
+      setValue(newValue as ValueData | CollectionData)
       onEdit(newValue, path)
       setDataType(type)
     }
