@@ -205,7 +205,12 @@ function App() {
           <JsonEditor
             data={data}
             rootName={rootName}
-            theme={theme}
+            theme={{
+              string: ({ value }) => {
+                if (value === 'Welcome to the Editor 😀') return { color: 'blue' }
+              },
+            }}
+            // theme={theme}
             indent={indent}
             onUpdate={({ newData }) => {
               setData(newData)

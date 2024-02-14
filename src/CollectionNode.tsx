@@ -17,7 +17,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   showCollectionCount,
   ...props
 }) => {
-  const { styles } = useTheme()
+  const { getStyles } = useTheme()
   const {
     onEdit,
     onAdd,
@@ -201,7 +201,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         handleKeyPress={handleKeyPress}
         isEditing={isEditing}
         setIsEditing={setIsEditing}
-        styles={styles}
+        getStyles={getStyles}
       />
     ) : isEditing ? (
       <div className="jer-collection-text-edit">
@@ -215,7 +215,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             handleKeyPress={handleKeyPress}
           />
           <div className="jer-collection-input-button-row">
-            <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
+            <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
           </div>
         </div>
       </div>
@@ -268,7 +268,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             <Icon name="chevron" rotate={collapsed} />
           </div>
           {!isEditingKey && (
-            <span style={styles.property} onDoubleClick={() => canEditKey && setIsEditingKey(true)}>
+            <span
+              style={getStyles('property', nodeData)}
+              onDoubleClick={() => canEditKey && setIsEditingKey(true)}
+            >
               {showLabel && !hideKey && name !== '' && name !== undefined ? `${name}:` : null}
             </span>
           )}
@@ -285,7 +288,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             />
           )}
           {!isEditing && (
-            <span className="jer-brackets" style={styles.bracket}>
+            <span className="jer-brackets" style={getStyles('bracket', nodeData)}>
               {brackets.open}
             </span>
           )}
@@ -293,7 +296,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         {!isEditing && showCount && (
           <div
             className={`jer-collection-item-count${showCount ? ' jer-visible' : ' jer-hidden'}`}
-            style={styles.itemCount}
+            style={getStyles('itemCount', nodeData)}
           >
             {size === 1
               ? translate('ITEM_SINGLE', { ...nodeData, size: 1 }, 1)
@@ -302,7 +305,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         )}
         <div
           className={`jer-brackets${collapsed ? ' jer-visible' : ' jer-hidden'}`}
-          style={styles.bracket}
+          style={getStyles('bracket', nodeData)}
         >
           {brackets.close}
         </div>
@@ -338,13 +341,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         {CollectionComponent}
         <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
           {error && (
-            <span className="jer-error-slug" style={styles.error}>
+            <span className="jer-error-slug" style={getStyles('error', nodeData)}>
               {error}
             </span>
           )}
         </div>
         {!isEditing && (
-          <div className="jer-brackets" style={styles.bracket}>
+          <div className="jer-brackets" style={getStyles('bracket', nodeData)}>
             {brackets.close}
           </div>
         )}

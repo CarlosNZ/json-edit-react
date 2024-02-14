@@ -1,3 +1,5 @@
+import { type NodeData } from '../types'
+
 const defaultTheme: DefaultTheme = {
   displayName: 'Default',
   fragments: { edit: 'rgb(42, 161, 152)' },
@@ -272,7 +274,13 @@ const themeableElements = [
 
 export type ThemeableElement = (typeof themeableElements)[number]
 
-export type ThemeValue = string | React.CSSProperties | Array<string | React.CSSProperties> // e.g. "#FFFFF", {backgroundColor: "grey"}, ["smaller", {fontWeight: "bold"}]
+export type ThemeFunction = (nodeData: NodeData) => React.CSSProperties | null | undefined
+
+export type ThemeValue =
+  | string
+  | React.CSSProperties
+  | Array<string | React.CSSProperties>
+  | ThemeFunction // e.g. "#FFFFF", {backgroundColor: "grey"}, ["smaller", {fontWeight: "bold"}]
 
 export type ThemeStyles = Record<ThemeableElement, ThemeValue>
 
@@ -291,7 +299,7 @@ export interface DefaultTheme extends Theme {
 
 // All the fragments and shorthand defined in Theme is compiled into a single CSS
 // "Style" object before being passed to components
-export type CompiledStyles = Record<ThemeableElement, React.CSSProperties>
+export type CompiledStyles = Record<ThemeableElement, ThemeFunction | React.CSSProperties>
 
 export type ThemeName = keyof typeof themes
 

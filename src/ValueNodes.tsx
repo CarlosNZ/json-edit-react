@@ -18,8 +18,9 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   handleEdit,
   handleCancel,
   stringTruncate,
+  nodeData,
 }) => {
-  const { styles } = useTheme()
+  const { getStyles } = useTheme()
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) handleEdit()
     else if (e.key === 'Escape') handleCancel()
@@ -49,7 +50,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
       }}
       className="jer-value-string"
-      style={styles.string}
+      style={getStyles('string', nodeData)}
     >
       &quot;{breakString(truncate(value, stringTruncate))}&quot;
     </div>
@@ -64,8 +65,9 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
   setIsEditing,
   handleEdit,
   handleCancel,
+  nodeData,
 }) => {
-  const { styles } = useTheme()
+  const { getStyles } = useTheme()
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleEdit()
     else if (e.key === 'Escape') handleCancel()
@@ -91,7 +93,7 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
     <span
       onDoubleClick={() => setIsEditing(true)}
       className="jer-value-number"
-      style={styles.number}
+      style={getStyles('number', nodeData)}
     >
       {value}
     </span>
@@ -106,8 +108,9 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   setIsEditing,
   handleEdit,
   handleCancel,
+  nodeData,
 }) => {
-  const { styles } = useTheme()
+  const { getStyles } = useTheme()
 
   useEffect(() => {
     if (isEditing) document.addEventListener('keydown', listenForSubmit)
@@ -132,7 +135,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
     <span
       onDoubleClick={() => setIsEditing(true)}
       className="jer-value-boolean"
-      style={styles.boolean}
+      style={getStyles('boolean', nodeData)}
     >
       {String(value)}
     </span>
@@ -145,8 +148,9 @@ export const NullValue: React.FC<InputProps> = ({
   setIsEditing,
   handleEdit,
   handleCancel,
+  nodeData,
 }) => {
-  const { styles } = useTheme()
+  const { getStyles } = useTheme()
 
   useEffect(() => {
     if (isEditing) document.addEventListener('keydown', listenForSubmit)
@@ -162,7 +166,11 @@ export const NullValue: React.FC<InputProps> = ({
   return isEditing ? (
     <div className="jer-input-null">null</div>
   ) : (
-    <div onDoubleClick={() => setIsEditing(true)} className="jer-value-null" style={styles.null}>
+    <div
+      onDoubleClick={() => setIsEditing(true)}
+      className="jer-value-null"
+      style={getStyles('null', nodeData)}
+    >
       {String(value)}
     </div>
   )

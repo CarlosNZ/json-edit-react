@@ -41,7 +41,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     translate,
     customNodeDefinitions,
   } = props
-  const { styles } = useTheme()
+  const { getStyles } = useTheme()
   const [isEditing, setIsEditing] = useState(false)
   const [isEditingKey, setIsEditingKey] = useState(false)
   const [value, setValue] = useState<typeof data | CollectionData>(
@@ -207,7 +207,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         }}
         isEditing={isEditing}
         setIsEditing={setIsEditing}
-        styles={styles}
+        getStyles={getStyles}
       />
     ) : (
       // Need to re-fetch data type to make sure it's one of the "core" ones
@@ -228,7 +228,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             htmlFor={path.join('.')}
             className="jer-object-key"
             style={{
-              ...styles.property,
+              ...getStyles('property', nodeData),
               minWidth: `${Math.min(String(name).length + 1, 5)}ch`,
               flexShrink: (name as string).length > 10 ? 1 : 0,
             }}
@@ -252,7 +252,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         <div className="jer-value-and-buttons">
           <div className="jer-input-component">{ValueComponent}</div>
           {isEditing ? (
-            <InputButtons onOk={handleEdit} onCancel={handleCancel} />
+            <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
           ) : (
             dataType !== 'invalid' &&
             !error &&
@@ -284,7 +284,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             </div>
           )}
           {!isEditing && error && (
-            <span className="jer-error-slug" style={styles.error}>
+            <span className="jer-error-slug" style={getStyles('error', nodeData)}>
               {error}
             </span>
           )}

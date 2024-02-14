@@ -44,7 +44,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   customText = {},
   customNodeDefinitions = [],
 }) => {
-  const { styles, setTheme, setIcons } = useTheme()
+  const { getStyles, setTheme, setIcons } = useTheme()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
   const translate = useCallback(getTranslateFunction(translations, customText), [
     translations,
@@ -160,12 +160,12 @@ const Editor: React.FC<JsonEditorProps> = ({
     parentData: null,
   }
 
-  if (!styles) return null
+  // if (!styles) return null
 
   return (
     <div
       className={'jer-editor-container ' + className}
-      style={{ ...styles.container, minWidth, maxWidth }}
+      style={{ ...getStyles('container', nodeData), minWidth, maxWidth }}
     >
       {isCollection(data) ? (
         <CollectionNode data={data} {...otherProps} />

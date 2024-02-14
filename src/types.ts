@@ -1,5 +1,6 @@
 import { type ThemeInput, type CompiledStyles } from './theme'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
+import { ThemeableElement } from './theme/themes'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
 
@@ -142,7 +143,7 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   handleKeyPress: (e: React.KeyboardEvent) => void
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
-  styles: CompiledStyles
+  getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
 }
 
 export interface CustomNodeDefinition<T = Record<string, unknown>> {
