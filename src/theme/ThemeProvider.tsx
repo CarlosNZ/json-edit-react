@@ -136,8 +136,6 @@ const buildStyleObject = (
     finalStyles[element] = mergedFunction
   })
 
-  console.log('finalStyles', finalStyles)
-
   // These properties can't be targeted inline, so we update a CSS variable
   // instead
   if (
