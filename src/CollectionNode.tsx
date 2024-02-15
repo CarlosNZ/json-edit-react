@@ -223,7 +223,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       </div>
     ) : !hasBeenOpened.current ? null : (
       keyValueArray.map(([key, value]) => (
-        <div className="jer-collection-element" key={key}>
+        <div
+          className="jer-collection-element"
+          key={key}
+          style={getStyles('collectionElement', nodeData)}
+        >
           {isCollection(value) ? (
             <CollectionNode
               key={key}
@@ -262,7 +266,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   return (
     <div
       className="jer-component jer-collection-component"
-      style={{ marginLeft: `${path.length === 0 ? 0 : indent / 2}em` }}
+      style={{
+        marginLeft: `${path.length === 0 ? 0 : indent / 2}em`,
+        ...getStyles('collection', nodeData),
+      }}
     >
       <div className="jer-collection-header-row" style={{ position: 'relative' }}>
         <div className="jer-collection-name">
@@ -338,6 +345,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           // Need to use max-height for animation to work, unfortunately
           // "height: auto" doesn't 😔
           transition: `max-height ${transitionTime}`,
+          ...getStyles('collectionInner', nodeData),
         }}
       >
         {CollectionComponent}
@@ -349,7 +357,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           )}
         </div>
         {!isEditing && (
-          <div className="jer-brackets" style={getStyles('bracket', nodeData)}>
+          <div className="jer-brackets jer-bracket-outside" style={getStyles('bracket', nodeData)}>
             {brackets.close}
           </div>
         )}

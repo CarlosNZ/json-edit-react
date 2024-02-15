@@ -15,14 +15,12 @@ import { type NodeData, type IconReplacements } from '../types'
 const defaultTheme = themes.default
 
 interface ThemeContext {
-  // styles: CompiledStyles
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
   setTheme: (theme: ThemeInput) => void
   icons: IconReplacements
   setIcons: React.Dispatch<React.SetStateAction<IconReplacements>>
 }
 const initialContext: ThemeContext = {
-  // styles: emptyStyleObject,
   getStyles: () => ({}),
   setTheme: (_: ThemeInput) => {},
   icons: {},
@@ -35,7 +33,10 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [styles, setStyles] = useState<CompiledStyles>(emptyStyleObject)
   const [icons, setIcons] = useState<IconReplacements>({})
 
-  const setTheme = (theme: ThemeInput) => setStyles(compileStyles(theme))
+  const setTheme = (theme: ThemeInput) => {
+    const styles = compileStyles(theme)
+    setStyles(styles)
+  }
 
   const getStyles = (element: ThemeableElement, nodeData: NodeData) => {
     if (typeof styles[element] === 'function') {
@@ -81,17 +82,22 @@ const buildStyleObject = (
   overrides: Theme = { styles: emptyStyleObject }
 ): CompiledStyles => {
   // Replace fragments and merge properties
+  const compiledFunctions: Partial<Record<ThemeableElement, ThemeFunction>> = {}
   const [defaultStyles, baseStyles, overrideStyles] = [defaultTheme, baseTheme, overrides].map(
     (theme) => {
       const { fragments, styles } = theme
       const compiledStyles: Partial<CompiledStyles> = {}
       ;(Object.entries(styles) as Array<[ThemeableElement, ThemeValue]>).forEach(([key, value]) => {
-        if (typeof value === 'function') {
-          compiledStyles[key as ThemeableElement] = value
-          return
-        }
+        // if (typeof value === 'function') {
+        //   compiledFunctions[key as ThemeableElement] = value
+        //   return
+        // }
         const elements = Array.isArray(value) ? value : [value]
         const cssStyles = elements.reduce((acc: React.CSSProperties, curr) => {
+          if (typeof curr === 'function') {
+            compiledFunctions[key] = curr
+            return { ...acc }
+          }
           if (typeof curr === 'string') {
             const style = fragments?.[curr] ?? curr
             switch (typeof style) {
@@ -109,43 +115,44 @@ const buildStyleObject = (
   )
 
   // Merge the two compiled style objects with the default styles
-  const finalStyles: Partial<CompiledStyles> = {}
+  const combinedStyles = { ...emptyStyleObject }
   ;(Object.keys(defaultTheme.styles) as ThemeableElement[]).forEach((key) => {
-    finalStyles[key] = {
+    combinedStyles[key] = {
       ...defaultStyles[key],
       ...baseStyles[key],
       ...overrideStyles[key],
     }
-    // Replace with ThemeFunction if present
-    if (typeof baseStyles[key] === 'function') {
-      finalStyles[key] = (nodeData: NodeData) => {
-        const funcResult = (baseStyles[key] as ThemeFunction)(nodeData)
-        return (funcResult ?? defaultStyles[key]) as React.CSSProperties
-      }
-    }
-    if (typeof overrideStyles[key] === 'function') {
-      finalStyles[key] = (nodeData: NodeData) => {
-        const funcResult = (overrideStyles[key] as ThemeFunction)(nodeData)
-        return (funcResult ?? baseStyles[key] ?? defaultStyles[key]) as React.CSSProperties
-      }
-    }
   })
+
+  const finalStyles = { ...combinedStyles }
+
+  // Merge functions into compiledStyles
+  Object.entries(compiledFunctions).forEach(([key, func]) => {
+    const element = key as ThemeableElement
+    const mergedFunction = (nodeData: NodeData) => {
+      const funcResult = func(nodeData) || {}
+      return { ...combinedStyles[element], ...funcResult }
+    }
+    finalStyles[element] = mergedFunction
+  })
+
+  console.log('finalStyles', finalStyles)
 
   // These properties can't be targeted inline, so we update a CSS variable
   // instead
   if (
-    typeof finalStyles?.inputHighlight !== 'function' &&
-    finalStyles?.inputHighlight?.backgroundColor
+    typeof combinedStyles?.inputHighlight !== 'function' &&
+    combinedStyles?.inputHighlight?.backgroundColor
   ) {
     document.documentElement.style.setProperty(
       '--jer-highlight-color',
-      finalStyles?.inputHighlight?.backgroundColor
+      combinedStyles?.inputHighlight?.backgroundColor
     )
   }
-  if (typeof finalStyles?.iconCopy !== 'function' && finalStyles?.iconCopy?.color) {
+  if (typeof combinedStyles?.iconCopy !== 'function' && combinedStyles?.iconCopy?.color) {
     document.documentElement.style.setProperty(
       '--jer-icon-copy-color',
-      finalStyles?.iconCopy?.color
+      combinedStyles?.iconCopy?.color
     )
   }
 
@@ -160,6 +167,9 @@ const isStyleObject = (
 
 const defaultStyleProperties: { [Property in ThemeableElement]: keyof React.CSSProperties } = {
   container: 'backgroundColor',
+  collection: 'backgroundColor',
+  collectionInner: 'backgroundColor',
+  collectionElement: 'backgroundColor',
   property: 'color',
   bracket: 'color',
   itemCount: 'color',

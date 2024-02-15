@@ -8,6 +8,9 @@ const defaultTheme: DefaultTheme = {
       backgroundColor: '#f6f6f6',
       fontFamily: 'monospace',
     },
+    collection: {},
+    collectionInner: {},
+    collectionElement: {},
     property: '#292929',
     bracket: { color: 'rgb(0, 43, 54)', fontWeight: 'bold' },
     itemCount: { color: 'rgba(0, 0, 0, 0.3)', fontStyle: 'italic' },
@@ -228,6 +231,9 @@ export const themes: { default: DefaultTheme } & Record<string, Theme> = {
 
 export const emptyStyleObject: CompiledStyles = {
   container: {},
+  collection: {},
+  collectionInner: {},
+  collectionElement: {},
   property: {},
   bracket: {},
   itemCount: {},
@@ -253,6 +259,9 @@ export const emptyStyleObject: CompiledStyles = {
 
 const themeableElements = [
   'container',
+  'collection',
+  'collectionInner',
+  'collectionElement',
   'property',
   'bracket',
   'itemCount',
@@ -279,8 +288,9 @@ export type ThemeFunction = (nodeData: NodeData) => React.CSSProperties | null |
 export type ThemeValue =
   | string
   | React.CSSProperties
-  | Array<string | React.CSSProperties>
-  | ThemeFunction // e.g. "#FFFFF", {backgroundColor: "grey"}, ["smaller", {fontWeight: "bold"}]
+  | Array<string | React.CSSProperties | ThemeFunction>
+  | ThemeFunction
+// e.g. "#FFFFF", {backgroundColor: "grey"}, ["smaller", {fontWeight: "bold"}]
 
 export type ThemeStyles = Record<ThemeableElement, ThemeValue>
 
@@ -297,8 +307,8 @@ export interface DefaultTheme extends Theme {
   styles: ThemeStyles
 }
 
-// All the fragments and shorthand defined in Theme is compiled into a single CSS
-// "Style" object before being passed to components
+// All the fragments and shorthand defined in Theme is compiled into a single
+// CSS "Style" object before being passed to components
 export type CompiledStyles = Record<ThemeableElement, ThemeFunction | React.CSSProperties>
 
 export type ThemeName = keyof typeof themes
