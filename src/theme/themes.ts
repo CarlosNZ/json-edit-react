@@ -1,4 +1,4 @@
-import { type NodeData } from '../types'
+import { type ThemeName, type CompiledStyles, type DefaultTheme, type Theme } from '../types'
 
 const defaultTheme: DefaultTheme = {
   displayName: 'Default',
@@ -31,7 +31,7 @@ const defaultTheme: DefaultTheme = {
   },
 }
 
-export const themes: { default: DefaultTheme } & Record<string, Theme> = {
+export const themes: Record<ThemeName, Theme> = {
   default: defaultTheme,
   githubDark: {
     displayName: 'Github Dark',
@@ -256,66 +256,3 @@ export const emptyStyleObject: CompiledStyles = {
 /**
  * TYPE DEFINITIONS
  */
-
-const themeableElements = [
-  'container',
-  'collection',
-  'collectionInner',
-  'collectionElement',
-  'property',
-  'bracket',
-  'itemCount',
-  'string',
-  'number',
-  'boolean',
-  'null',
-  'input',
-  'inputHighlight',
-  'error',
-  'iconCollection',
-  'iconEdit',
-  'iconDelete',
-  'iconAdd',
-  'iconCopy',
-  'iconOk',
-  'iconCancel',
-] as const
-
-export type ThemeableElement = (typeof themeableElements)[number]
-
-export type ThemeFunction = (nodeData: NodeData) => React.CSSProperties | null | undefined
-
-export type ThemeValue =
-  | string
-  | React.CSSProperties
-  | Array<string | React.CSSProperties | ThemeFunction>
-  | ThemeFunction
-// e.g. "#FFFFF", {backgroundColor: "grey"}, ["smaller", {fontWeight: "bold"}]
-
-export type ThemeStyles = Record<ThemeableElement, ThemeValue>
-
-type Fragments = Record<string, React.CSSProperties | string>
-export interface Theme {
-  displayName?: string
-  fragments?: Fragments
-  styles: Partial<ThemeStyles>
-}
-
-// Same as "Theme", but we know every property in styles is defined
-export interface DefaultTheme extends Theme {
-  displayName: 'Default'
-  styles: ThemeStyles
-}
-
-// All the fragments and shorthand defined in Theme is compiled into a single
-// CSS "Style" object before being passed to components
-export type CompiledStyles = Record<ThemeableElement, ThemeFunction | React.CSSProperties>
-
-export type ThemeName = keyof typeof themes
-
-// Value(s) passed to "setTheme" function
-export type ThemeInput =
-  | ThemeName
-  | Theme
-  | Partial<ThemeStyles>
-  | [ThemeName, Theme | Partial<ThemeStyles>]

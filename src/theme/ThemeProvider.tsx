@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState } from 'react'
+import { themes, emptyStyleObject } from './themes'
 import {
-  themes,
-  emptyStyleObject,
   type Theme,
   type ThemeableElement,
   type ThemeStyles,
@@ -9,8 +8,9 @@ import {
   type CompiledStyles,
   type ThemeValue,
   type ThemeFunction,
-} from './themes'
-import { type NodeData, type IconReplacements } from '../types'
+  type NodeData,
+  type IconReplacements,
+} from '../types'
 
 const defaultTheme = themes.default
 

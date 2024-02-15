@@ -11,9 +11,12 @@ import {
   type CustomNodeProps,
   type CustomNodeDefinition,
   type CustomTextDefinitions,
+  type ThemeName,
+  type Theme,
+  type ThemeInput,
 } from './types'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
-import { themes, type ThemeName, type Theme, type ThemeInput } from './theme'
+import { themes } from './theme'
 import { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
 
 export {
