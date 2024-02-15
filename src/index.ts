@@ -17,6 +17,7 @@ import {
 } from './types'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { themes } from './theme'
+import { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 import { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
 
 export {
@@ -40,4 +41,11 @@ export {
   type CustomTextDefinitions,
   LinkCustomComponent,
   LinkCustomNodeDefinition,
+  IconAdd,
+  IconEdit,
+  IconDelete,
+  IconCopy,
+  IconOk,
+  IconCancel,
+  IconChevron,
 }
