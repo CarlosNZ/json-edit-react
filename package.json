@@ -34,8 +34,7 @@
   "dependencies": {
     "just-clone": "^6.2.0",
     "object-property-assigner": "^1.2.0",
-    "object-property-extractor": "^1.0.10",
-    "react-icons": "^5.0.1"
+    "object-property-extractor": "^1.0.10"
   },
   "devDependencies": {
     "@rollup/plugin-terser": "^0.4.4",
