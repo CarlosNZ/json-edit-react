@@ -297,7 +297,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             />
           )}
           {!isEditing && (
-            <span className="jer-brackets" style={getStyles('bracket', nodeData)}>
+            <span className="jer-brackets jer-bracket-open" style={getStyles('bracket', nodeData)}>
               {brackets.open}
             </span>
           )}

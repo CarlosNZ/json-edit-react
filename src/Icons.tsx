@@ -6,8 +6,8 @@ import { type NodeData } from './types'
 
 export interface IconProps {
   size: string
-  style: React.CSSProperties
-  className: string
+  style?: React.CSSProperties
+  className?: string
 }
 
 export const IconAdd: React.FC<IconProps> = ({ size, style, className }): JSX.Element => (
