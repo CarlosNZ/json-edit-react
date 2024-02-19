@@ -37,6 +37,7 @@ export const DateTimePicker: React.FC<CustomNodeProps> = ({
   const textColour = getStyles('container', nodeData).backgroundColor
   const okColour = getStyles('iconOk', nodeData).color
   const cancelColour = getStyles('iconCancel', nodeData).color
+  const stringStyle = getStyles('string', nodeData)
 
   return isEditing ? (
     // Picker only shows up when "editing". Due to the `showOnView: false` in
@@ -71,7 +72,7 @@ export const DateTimePicker: React.FC<CustomNodeProps> = ({
       // Double-click behaviour same as standard elements
       onDoubleClick={() => setIsEditing(true)}
       className="jer-value-string"
-      style={styles.string}
+      style={stringStyle}
     >
       "{new Date(value as string).toLocaleDateString()}"
     </div>

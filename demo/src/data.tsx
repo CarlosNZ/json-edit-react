@@ -6,6 +6,7 @@ import {
   FilterFunction,
   CustomTextDefinitions,
   LinkCustomNodeDefinition,
+  ThemeInput,
 } from './JsonEditImport'
 
 interface DemoData {
@@ -20,6 +21,7 @@ interface DemoData {
   restrictTypeSelection?: boolean
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
+  theme?: ThemeInput
 }
 
 const data: Record<string, DemoData> = {
@@ -1864,14 +1866,19 @@ const data: Record<string, DemoData> = {
           In this example, compare the raw JSON (edit the data root) with what is presented here.
         </Text>
         <Text>
-          See the{' '}
-          <a href="https://github.com/CarlosNZ/json-edit-react#custom-nodes">Custom Nodes</a>{' '}
-          section of the documentation for more info.
+          You can also see how the property count text changes depending on the data. This is using
+          dynamic{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-text" isExternal>
+            Custom Text
+          </Link>{' '}
+          definitions.
         </Text>
         <Text>
-          You can also see how the property count text changes depending on the data. This is using
-          dynamic <a href="https://github.com/CarlosNZ/json-edit-react#custom-text">Custom Text</a>{' '}
-          definitions.
+          We are also using a condition{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#themes" isExternal>
+            Theme function
+          </Link>{' '}
+          for the character name (bolder and larger than other strings).
         </Text>
       </Flex>
     ),
@@ -1928,6 +1935,7 @@ const data: Record<string, DemoData> = {
                 marginTop: '0.5em',
                 marginRight: '1em',
                 fontFamily: 'sans-serif',
+                color: 'black',
               }}
             >
               Presented by: <strong>{String(data)}</strong>
@@ -1958,6 +1966,9 @@ const data: Record<string, DemoData> = {
           return `${size} ${size === 1 ? 'name' : 'names'}`
         return null
       },
+    },
+    theme: {
+      string: ({ key }) => (key === 'name' ? { fontWeight: 'bold', fontSize: '110%' } : null),
     },
   },
   // Enable to test more complex features of Custom nodes

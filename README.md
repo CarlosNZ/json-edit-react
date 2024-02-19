@@ -235,6 +235,9 @@ However, you can pass in your own theme object, or part thereof. The theme struc
       backgroundColor: '#f6f6f6',
       fontFamily: 'monospace',
     },
+    collection: {},
+    collectionInner: {},
+    collectionElement: {},
     property: '#292929',
     bracket: { color: 'rgb(0, 43, 54)', fontWeight: 'bold' },
     itemCount: { color: 'rgba(0, 0, 0, 0.3)', fontStyle: 'italic' },
@@ -257,7 +260,11 @@ However, you can pass in your own theme object, or part thereof. The theme struc
 
 ```
 
-The `styles` property is the main one to focus on. Each key (`property`, `bracket`, `itemCount`) refers to a part of the UI. The value for each key is *either* a `string`, in which case it is interpreted as the colour (or background colour in the case of `container` and `inputHighlight`), *or* a full CSS style object for fine-grained definition. You only need to provide properties you wish to override — all unspecified ones will fallback to either the default theme, or another theme that you specify as the "base".
+The `styles` property is the main one to focus on. Each key (`property`, `bracket`, `itemCount`) refers to a part of the UI. The value for each key is *either*:
+- a `string`, in which case it is interpreted as the colour (or background colour in the case of `container` and `inputHighlight`)
+- a full CSS style object for fine-grained definition. You only need to provide properties you wish to override — all unspecified ones will fallback to either the default theme, or another theme that you specify as the "base".
+- a "Theme Function", which is a function that takes the same input as [Filter Functions](#filter-functions), but returns a CSS style object (or `null`). This allows you to *dynamically* change styling of various elements based on content or structure.
+- an array containing any combination of the above, in which case they are merged together. For example, you could provide a Theme Function with styling for a very specific condition, but then provide "fallback" styles whenever the function returns `null`
 
 For example, if you want to use the "githubDark" theme, but just change a couple of small things, you'd specify something like this:
 
@@ -286,7 +293,7 @@ So, to summarise, the `theme` prop can take *either*:
   - can be structured as above with `fragments`, `styles`, `displayName` etc., or just the `styles` part (at the root level)
 - a theme name *and* an override object in an array, i.e. `[ "<themeName>, {...overrides } ]`
 
-You can play round with live editing of the themes in the [Demo app](https://carlosnz.github.io/json-edit-react/) by selecting "Edit this theme!" from the "Demo data" selector.
+You can play round with live editing of the themes in the [Demo app](https://carlosnz.github.io/json-edit-react/) by selecting "Edit this theme!" from the "Demo data" selector (though you won't be able to create functions in JSON).
 
 ### Fragments
 

@@ -205,7 +205,7 @@ function App() {
           <JsonEditor
             data={data}
             rootName={rootName}
-            theme={theme}
+            theme={demoData[selectedData]?.theme ? [theme, demoData[selectedData]?.theme] : theme}
             indent={indent}
             onUpdate={({ newData }) => {
               setData(newData)
