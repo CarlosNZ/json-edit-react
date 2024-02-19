@@ -58,23 +58,108 @@ export const useTheme = () => useContext(ThemeProviderContext)
 // Combines a named theme (or none) with any custom overrides into a single
 // Theme object
 const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
-  // Theme name only provided
-  if (typeof themeInput === 'string') return buildStyleObject(themes[themeInput])
+  // First collect all elements into an array of the same type of thing -- style
+  // objects
 
-  // Theme name with overrides
-  if (Array.isArray(themeInput)) {
-    const [name, overrides] = themeInput
-    return buildStyleObject(
-      themes[name],
-      isStyleObject(overrides) ? { styles: overrides } : overrides
+  const collectedFunctions: Partial<Record<ThemeableElement, ThemeFunction>> = {}
+
+  const stylesArray = (Array.isArray(themeInput) ? themeInput : [themeInput]).map((theme) => {
+    if (themeInput === 'default') return {}
+    if (typeof theme === 'string') return buildOneStyleObject(themes[theme], collectedFunctions)
+    if (isStyleObject(theme)) {
+      return buildOneStyleObject({ fragments: {}, styles: theme }, collectedFunctions)
+    }
+    return buildOneStyleObject(theme, collectedFunctions)
+  })
+
+  // Merge all style objects
+  const mergedStyleObject = buildOneStyleObject(defaultTheme, {})
+
+  Object.keys(mergedStyleObject).forEach((k) => {
+    const key = k as ThemeableElement
+    stylesArray.forEach((styleObj) => {
+      if (styleObj[key]) mergedStyleObject[key] = { ...mergedStyleObject[key], ...styleObj[key] }
+    })
+  })
+
+  // Merge functions into compiledStyles
+  const finalStyles = { ...mergedStyleObject }
+  Object.entries(collectedFunctions).forEach(([key, func]) => {
+    const element = key as ThemeableElement
+    const mergedFunction = (nodeData: NodeData) => {
+      const funcResult = func(nodeData) || {}
+      return { ...mergedStyleObject[element], ...funcResult }
+    }
+    finalStyles[element] = mergedFunction
+  })
+
+  // These properties can't be targeted inline, so we update a CSS variable
+  // instead
+  if (
+    typeof finalStyles?.inputHighlight !== 'function' &&
+    finalStyles?.inputHighlight?.backgroundColor
+  ) {
+    document.documentElement.style.setProperty(
+      '--jer-highlight-color',
+      finalStyles?.inputHighlight?.backgroundColor
+    )
+  }
+  if (typeof finalStyles?.iconCopy !== 'function' && finalStyles?.iconCopy?.color) {
+    document.documentElement.style.setProperty(
+      '--jer-icon-copy-color',
+      finalStyles?.iconCopy?.color
     )
   }
 
-  // Overrides only
-  return buildStyleObject(
-    defaultTheme,
-    isStyleObject(themeInput) ? { styles: themeInput } : themeInput
-  )
+  return finalStyles as CompiledStyles
+}
+
+//   // Theme name only provided
+//   if (typeof themeInput === 'string') return buildStyleObject(themes[themeInput])
+
+//   // Theme name with overrides
+//   if (Array.isArray(themeInput)) {
+//     const [name, overrides] = themeInput
+//     return buildStyleObject(
+//       themes[name],
+//       isStyleObject(overrides) ? { styles: overrides } : overrides
+//     )
+//   }
+
+//   // Overrides only
+//   return buildStyleObject(
+//     defaultTheme,
+//     isStyleObject(themeInput) ? { styles: themeInput } : themeInput
+//   )
+// }
+
+// Inject all fragments in to styles and return just the compiled style object
+function buildOneStyleObject(
+  theme: Theme,
+  collectedFunctions: Partial<Record<ThemeableElement, ThemeFunction>>
+) {
+  const { fragments, styles } = theme
+  const styleObject: Partial<CompiledStyles> = {}
+  ;(Object.entries(styles) as Array<[ThemeableElement, ThemeValue]>).forEach(([key, value]) => {
+    const elements = Array.isArray(value) ? value : [value]
+    const cssStyles = elements.reduce((acc: React.CSSProperties, curr) => {
+      if (typeof curr === 'function') {
+        collectedFunctions[key] = curr
+        return { ...acc }
+      }
+      if (typeof curr === 'string') {
+        const style = fragments?.[curr] ?? curr
+        switch (typeof style) {
+          case 'string':
+            return { ...acc, [defaultStyleProperties[key as ThemeableElement]]: style }
+          default:
+            return { ...acc, ...style }
+        }
+      } else return { ...acc, ...curr }
+    }, {})
+    styleObject[key as ThemeableElement] = cssStyles
+  })
+  return styleObject
 }
 
 const buildStyleObject = (

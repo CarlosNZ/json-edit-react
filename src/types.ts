@@ -245,4 +245,4 @@ export type ThemeInput =
   | ThemeName
   | Theme
   | Partial<ThemeStyles>
-  | [ThemeName, Theme | Partial<ThemeStyles>]
+  | Array<ThemeName | Theme | Partial<ThemeStyles>>

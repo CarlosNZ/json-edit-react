@@ -6,8 +6,8 @@ import {
   FilterFunction,
   CustomTextDefinitions,
   LinkCustomNodeDefinition,
-  ThemeInput,
 } from './JsonEditImport'
+import { DataType, ThemeStyles } from './json-edit-react/src/types'
 
 interface DemoData {
   name: string
@@ -18,10 +18,10 @@ interface DemoData {
   restrictEdit?: FilterFunction
   restrictDelete?: FilterFunction
   restrictAdd?: FilterFunction
-  restrictTypeSelection?: boolean
+  restrictTypeSelection?: boolean | DataType[]
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
-  theme?: ThemeInput
+  styles?: Partial<ThemeStyles>
 }
 
 const data: Record<string, DemoData> = {
@@ -1967,7 +1967,7 @@ const data: Record<string, DemoData> = {
         return null
       },
     },
-    theme: {
+    styles: {
       string: ({ key }) => (key === 'name' ? { fontWeight: 'bold', fontSize: '110%' } : null),
     },
   },
