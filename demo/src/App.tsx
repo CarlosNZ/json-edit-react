@@ -1,7 +1,7 @@
 import 'react-datepicker/dist/react-datepicker.css'
 
 import React, { useEffect, useRef } from 'react'
-import { JsonEditor, themes, ThemeName, Theme, ThemeInput } from './JsonEditImport'
+import { JsonEditor, themes, ThemeName, Theme } from './JsonEditImport'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
