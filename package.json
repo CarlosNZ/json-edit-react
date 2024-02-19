@@ -32,6 +32,7 @@
     "wrap-ansi": "7.0.0"
   },
   "dependencies": {
+    "json-loose": "^1.2.3",
     "just-clone": "^6.2.0",
     "object-property-assigner": "^1.2.0",
     "object-property-extractor": "^1.0.10"

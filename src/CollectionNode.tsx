@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react'
+import jsonLoose from 'json-loose'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
@@ -91,7 +92,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const handleEdit = () => {
     try {
-      const value = JSON.parse(stringifiedValue)
+      const value = JSON.parse(jsonLoose(stringifiedValue))
       setIsEditing(false)
       setError(null)
       onEdit(value, path).then((error) => {
