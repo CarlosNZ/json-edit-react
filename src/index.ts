@@ -19,6 +19,7 @@ import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { themes } from './theme'
 import { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 import { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
+import { truncate, breakString } from './ValueNodes'
 
 export {
   JsonEditor,
@@ -48,4 +49,6 @@ export {
   IconOk,
   IconCancel,
   IconChevron,
+  truncate,
+  breakString,
 }

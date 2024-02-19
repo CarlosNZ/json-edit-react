@@ -9,6 +9,18 @@ export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
 export const truncate = (string: string, length = 200) =>
   string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
 
+export const breakString = (text: string) =>
+  text.split('\n').map((line, index, arr) => {
+    const match = /^( +)/.exec(line)
+    return (
+      <span key={index}>
+        {match ? match[0].split('').map(() => <>&nbsp;</>) : null}
+        {line}
+        {index < arr.length - 1 ? <br /> : null}
+      </span>
+    )
+  })
+
 export const StringValue: React.FC<InputProps & { value: string }> = ({
   value,
   setValue,
@@ -25,14 +37,6 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
     if (e.key === 'Enter' && !e.shiftKey) handleEdit()
     else if (e.key === 'Escape') handleCancel()
   }
-
-  const breakString = (text: string) =>
-    text.split('\n').map((line, index, arr) => (
-      <span key={index}>
-        {line}
-        {index < arr.length - 1 ? <br /> : null}
-      </span>
-    ))
 
   return isEditing ? (
     <AutogrowTextArea
