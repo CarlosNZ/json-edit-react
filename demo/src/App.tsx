@@ -45,7 +45,7 @@ function App() {
   const [indent, setIndent] = useState(3)
   const [collapseLevel, setCollapseLevel] = useState(2)
   const [showCount, setShowCount] = useState<'Yes' | 'No' | 'When closed'>('Yes')
-  const [theme, setTheme] = useState<ThemeInput>('default')
+  const [theme, setTheme] = useState<ThemeName | Theme>('default')
   const [allowEdit, setAllowEdit] = useState(true)
   const [allowDelete, setAllowDelete] = useState(true)
   const [allowAdd, setAllowAdd] = useState(true)
@@ -68,7 +68,7 @@ function App() {
       case 'editTheme':
         return
       case 'liveData':
-        setCollapseLevel(demoData.liveData.collapse)
+        setCollapseLevel(demoData.liveData.collapse as number)
         if (!liveData) reset({ 'Oops!': "We couldn't load this data, sorry " })
         else reset(liveData)
         return
@@ -107,7 +107,7 @@ function App() {
     setSelectedData(e.target.value)
     if (e.target.value === 'editTheme') {
       previousThemeName.current = theme as string
-      setCollapseLevel(demoData.editTheme.collapse)
+      setCollapseLevel(demoData.editTheme.collapse as number)
       reset(themes[theme as string])
     }
   }
@@ -205,7 +205,7 @@ function App() {
           <JsonEditor
             data={data}
             rootName={rootName}
-            theme={theme}
+            theme={[theme, demoData[selectedData]?.styles ?? {}]}
             indent={indent}
             onUpdate={({ newData }) => {
               setData(newData)

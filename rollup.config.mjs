@@ -5,6 +5,7 @@ import peerDepsExternal from 'rollup-plugin-peer-deps-external'
 import styles from 'rollup-plugin-styles'
 import terser from '@rollup/plugin-terser'
 import bundleSize from 'rollup-plugin-bundle-size'
+import sizes from 'rollup-plugin-sizes'
 
 export default [
   {
@@ -26,6 +27,7 @@ export default [
       // sizes(),
       terser({ mangle: false }),
       bundleSize(),
+      sizes(),
     ],
     external: [],
   },

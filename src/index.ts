@@ -11,10 +11,15 @@ import {
   type CustomNodeProps,
   type CustomNodeDefinition,
   type CustomTextDefinitions,
+  type ThemeName,
+  type Theme,
+  type ThemeInput,
 } from './types'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
-import { themes, type ThemeName, type Theme, type ThemeInput } from './theme'
+import { themes } from './theme'
+import { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 import { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
+import { truncate, breakString } from './ValueNodes'
 
 export {
   JsonEditor,
@@ -37,4 +42,13 @@ export {
   type CustomTextDefinitions,
   LinkCustomComponent,
   LinkCustomNodeDefinition,
+  IconAdd,
+  IconEdit,
+  IconDelete,
+  IconCopy,
+  IconOk,
+  IconCancel,
+  IconChevron,
+  truncate,
+  breakString,
 }

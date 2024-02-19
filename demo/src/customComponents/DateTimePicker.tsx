@@ -26,12 +26,18 @@ export const DateTimePicker: React.FC<CustomNodeProps> = ({
   handleKeyPress,
   isEditing,
   setIsEditing,
-  styles,
+  getStyles,
+  nodeData,
   customNodeProps,
 }) => {
   const { dateFormat = 'MMM d, yyyy h:mm aa', showTimeSelect = true } = customNodeProps ?? {}
 
   const date = new Date(value as string)
+
+  const textColour = getStyles('container', nodeData).backgroundColor
+  const okColour = getStyles('iconOk', nodeData).color
+  const cancelColour = getStyles('iconCancel', nodeData).color
+  const stringStyle = getStyles('string', nodeData)
 
   return isEditing ? (
     // Picker only shows up when "editing". Due to the `showOnView: false` in
@@ -53,18 +59,10 @@ export const DateTimePicker: React.FC<CustomNodeProps> = ({
         {/* These buttons are not really necessary -- you can either use the
         standard Ok/Cancel icons, or keyboard Enter/Esc, but shown for demo
         purposes */}
-        <Button
-          color={styles.container.backgroundColor}
-          backgroundColor={styles.iconOk.color}
-          onClick={handleEdit}
-        >
+        <Button color={textColour} backgroundColor={okColour} onClick={handleEdit}>
           OK
         </Button>
-        <Button
-          color={styles.container.backgroundColor}
-          backgroundColor={styles.iconCancel.color}
-          onClick={handleCancel}
-        >
+        <Button color={textColour} backgroundColor={cancelColour} onClick={handleCancel}>
           Cancel
         </Button>
       </div>
@@ -74,7 +72,7 @@ export const DateTimePicker: React.FC<CustomNodeProps> = ({
       // Double-click behaviour same as standard elements
       onDoubleClick={() => setIsEditing(true)}
       className="jer-value-string"
-      style={styles.string}
+      style={stringStyle}
     >
       "{new Date(value as string).toLocaleDateString()}"
     </div>

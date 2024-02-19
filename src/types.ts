@@ -1,4 +1,3 @@
-import { type ThemeInput, type CompiledStyles } from './theme'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
@@ -97,6 +96,7 @@ export interface NodeData {
   level: number
   value: unknown
   size: number | null
+  collapsed?: boolean
 }
 
 interface BaseNodeProps {
@@ -142,7 +142,7 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   handleKeyPress: (e: React.KeyboardEvent) => void
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
-  styles: CompiledStyles
+  getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
 }
 
 export interface CustomNodeDefinition<T = Record<string, unknown>> {
@@ -172,3 +172,77 @@ export interface InputProps {
   nodeData: NodeData
   translate: TranslateFunction
 }
+
+/**
+ * THEMES
+ */
+
+const themeableElements = [
+  'container',
+  'collection',
+  'collectionInner',
+  'collectionElement',
+  'property',
+  'bracket',
+  'itemCount',
+  'string',
+  'number',
+  'boolean',
+  'null',
+  'input',
+  'inputHighlight',
+  'error',
+  'iconCollection',
+  'iconEdit',
+  'iconDelete',
+  'iconAdd',
+  'iconCopy',
+  'iconOk',
+  'iconCancel',
+] as const
+
+export type ThemeableElement = (typeof themeableElements)[number]
+
+export type ThemeFunction = (nodeData: NodeData) => React.CSSProperties | null | undefined
+
+export type ThemeValue =
+  | string
+  | React.CSSProperties
+  | Array<string | React.CSSProperties | ThemeFunction>
+  | ThemeFunction
+// e.g. "#FFFFF", {backgroundColor: "grey"}, ["smaller", {fontWeight: "bold"}]
+
+export type ThemeStyles = Record<ThemeableElement, ThemeValue>
+
+type Fragments = Record<string, React.CSSProperties | string>
+export interface Theme {
+  displayName?: string
+  fragments?: Fragments
+  styles: Partial<ThemeStyles>
+}
+
+// Same as "Theme", but we know every property in styles is defined
+export interface DefaultTheme extends Theme {
+  displayName: 'Default'
+  styles: ThemeStyles
+}
+
+// All the fragments and shorthand defined in Theme is compiled into a single
+// CSS "Style" object before being passed to components
+export type CompiledStyles = Record<ThemeableElement, ThemeFunction | React.CSSProperties>
+
+export type ThemeName =
+  | 'default'
+  | 'githubDark'
+  | 'githubLight'
+  | 'monoDark'
+  | 'monoLight'
+  | 'candyWrapper'
+  | 'psychedelic'
+
+// Value(s) passed to "setTheme" function
+export type ThemeInput =
+  | ThemeName
+  | Theme
+  | Partial<ThemeStyles>
+  | Array<ThemeName | Theme | Partial<ThemeStyles>>

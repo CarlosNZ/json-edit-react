@@ -7,6 +7,7 @@ import {
   CustomTextDefinitions,
   LinkCustomNodeDefinition,
 } from './JsonEditImport'
+import { DataType, ThemeStyles } from './json-edit-react/src/types'
 
 interface DemoData {
   name: string
@@ -17,9 +18,10 @@ interface DemoData {
   restrictEdit?: FilterFunction
   restrictDelete?: FilterFunction
   restrictAdd?: FilterFunction
-  restrictTypeSelection?: boolean
+  restrictTypeSelection?: boolean | DataType[]
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
+  styles?: Partial<ThemeStyles>
 }
 
 const data: Record<string, DemoData> = {
@@ -1864,14 +1866,19 @@ const data: Record<string, DemoData> = {
           In this example, compare the raw JSON (edit the data root) with what is presented here.
         </Text>
         <Text>
-          See the{' '}
-          <a href="https://github.com/CarlosNZ/json-edit-react#custom-nodes">Custom Nodes</a>{' '}
-          section of the documentation for more info.
+          You can also see how the property count text changes depending on the data. This is using
+          dynamic{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-text" isExternal>
+            Custom Text
+          </Link>{' '}
+          definitions.
         </Text>
         <Text>
-          You can also see how the property count text changes depending on the data. This is using
-          dynamic <a href="https://github.com/CarlosNZ/json-edit-react#custom-text">Custom Text</a>{' '}
-          definitions.
+          We are also using a condition{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#themes" isExternal>
+            Theme function
+          </Link>{' '}
+          for the character name (bolder and larger than other strings).
         </Text>
       </Flex>
     ),
@@ -1883,7 +1890,15 @@ const data: Record<string, DemoData> = {
         dateOfBirth: '1920-07-04T12:00:00-05:00',
         aliases: ['Captain America', 'The First Avenger'],
         logo: 'https://logos-world.net/wp-content/uploads/2023/05/Captain-America-Logo.png',
-        actor: 'Chris Evans',
+        portrayedBy: ['Chris Evans'],
+        publisher: 'Marvel',
+      },
+      {
+        name: 'Peter Parker',
+        dateOfBirth: '2001-08-09T16:30:00.000Z',
+        aliases: ['Spiderman'],
+        logo: 'https://logos-world.net/wp-content/uploads/2020/11/Spider-Man-Logo.png',
+        portrayedBy: ['Tobey Maguire', 'Andrew Garfield', 'Tom Holland'],
         publisher: 'Marvel',
       },
       {
@@ -1891,7 +1906,22 @@ const data: Record<string, DemoData> = {
         dateOfBirth: '1977-04-14T12:00:00-06:00',
         aliases: ['Superman', 'Man of Steel', 'Son of Krypton'],
         logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/2560px-Superman_shield.svg.png',
-        actor: 'Henry Cavill',
+        portrayedBy: ['Christopher Reeve', 'Brandon Routh', 'Henry Cavill'],
+        publisher: 'D.C. Comics',
+      },
+      {
+        name: 'Bruce Wayne',
+        dateOfBirth: '1970-02-18T18:00:00.000Z',
+        aliases: ['Batman', 'The Dark Knight', 'The Caped Crusader'],
+        logo: 'https://logos-world.net/wp-content/uploads/2020/12/Batman-Logo.png',
+        portrayedBy: [
+          'Michael Keaton',
+          'George Clooney',
+          'Val Kilmer',
+          'Christian Bale',
+          'Ben Affleck',
+          'Robert Pattinson',
+        ],
         publisher: 'D.C. Comics',
       },
     ],
@@ -1928,6 +1958,7 @@ const data: Record<string, DemoData> = {
                 marginTop: '0.5em',
                 marginRight: '1em',
                 fontFamily: 'sans-serif',
+                color: 'black',
               }}
             >
               Presented by: <strong>{String(data)}</strong>
@@ -1958,6 +1989,9 @@ const data: Record<string, DemoData> = {
           return `${size} ${size === 1 ? 'name' : 'names'}`
         return null
       },
+    },
+    styles: {
+      string: ({ key }) => (key === 'name' ? { fontWeight: 'bold', fontSize: '120%' } : null),
     },
   },
   // Enable to test more complex features of Custom nodes

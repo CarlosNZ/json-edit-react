@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react'
+import jsonLoose from 'json-loose'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
@@ -12,12 +13,12 @@ export const isCollection = (value: unknown) => value !== null && typeof value =
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({
   data,
-  nodeData,
+  nodeData: incomingNodeData,
   parentData,
   showCollectionCount,
   ...props
 }) => {
-  const { styles } = useTheme()
+  const { getStyles } = useTheme()
   const {
     onEdit,
     onAdd,
@@ -39,10 +40,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
   const [error, setError] = useState<string | null>(null)
 
-  const { path, key: name, size } = nodeData
-
-  const startCollapsed = collapseFilter(nodeData)
+  const startCollapsed = collapseFilter(incomingNodeData)
   const [collapsed, setCollapsed] = useState(startCollapsed)
+
+  const nodeData = { ...incomingNodeData, collapsed }
+  const { path, key: name, size } = nodeData
 
   // This allows us to not render the children on load if they're hidden (which
   // gives a big performance improvement with large data sets), but still keep
@@ -90,7 +92,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const handleEdit = () => {
     try {
-      const value = JSON.parse(stringifiedValue)
+      const value = JSON.parse(jsonLoose(stringifiedValue))
       setIsEditing(false)
       setError(null)
       onEdit(value, path).then((error) => {
@@ -201,7 +203,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         handleKeyPress={handleKeyPress}
         isEditing={isEditing}
         setIsEditing={setIsEditing}
-        styles={styles}
+        getStyles={getStyles}
       />
     ) : isEditing ? (
       <div className="jer-collection-text-edit">
@@ -213,15 +215,20 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             setValue={setStringifiedValue}
             isEditing={isEditing}
             handleKeyPress={handleKeyPress}
+            styles={getStyles('input', nodeData)}
           />
           <div className="jer-collection-input-button-row">
-            <InputButtons onOk={handleEdit} onCancel={handleCancel} isCollection />
+            <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
           </div>
         </div>
       </div>
     ) : !hasBeenOpened.current ? null : (
       keyValueArray.map(([key, value]) => (
-        <div className="jer-collection-element" key={key}>
+        <div
+          className="jer-collection-element"
+          key={key}
+          style={getStyles('collectionElement', nodeData)}
+        >
           {isCollection(value) ? (
             <CollectionNode
               key={key}
@@ -260,15 +267,21 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   return (
     <div
       className="jer-component jer-collection-component"
-      style={{ marginLeft: `${path.length === 0 ? 0 : indent / 2}em` }}
+      style={{
+        marginLeft: `${path.length === 0 ? 0 : indent / 2}em`,
+        ...getStyles('collection', nodeData),
+      }}
     >
       <div className="jer-collection-header-row" style={{ position: 'relative' }}>
         <div className="jer-collection-name">
           <div className="jer-collapse-icon" onClick={handleCollapse}>
-            <Icon name="chevron" rotate={collapsed} />
+            <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
           </div>
           {!isEditingKey && (
-            <span style={styles.property} onDoubleClick={() => canEditKey && setIsEditingKey(true)}>
+            <span
+              style={getStyles('property', nodeData)}
+              onDoubleClick={() => canEditKey && setIsEditingKey(true)}
+            >
               {showLabel && !hideKey && name !== '' && name !== undefined ? `${name}:` : null}
             </span>
           )}
@@ -285,7 +298,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             />
           )}
           {!isEditing && (
-            <span className="jer-brackets" style={styles.bracket}>
+            <span className="jer-brackets jer-bracket-open" style={getStyles('bracket', nodeData)}>
               {brackets.open}
             </span>
           )}
@@ -293,7 +306,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         {!isEditing && showCount && (
           <div
             className={`jer-collection-item-count${showCount ? ' jer-visible' : ' jer-hidden'}`}
-            style={styles.itemCount}
+            style={getStyles('itemCount', nodeData)}
           >
             {size === 1
               ? translate('ITEM_SINGLE', { ...nodeData, size: 1 }, 1)
@@ -302,7 +315,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         )}
         <div
           className={`jer-brackets${collapsed ? ' jer-visible' : ' jer-hidden'}`}
-          style={styles.bracket}
+          style={getStyles('bracket', nodeData)}
         >
           {brackets.close}
         </div>
@@ -333,18 +346,19 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           // Need to use max-height for animation to work, unfortunately
           // "height: auto" doesn't 😔
           transition: `max-height ${transitionTime}`,
+          ...getStyles('collectionInner', nodeData),
         }}
       >
         {CollectionComponent}
         <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
           {error && (
-            <span className="jer-error-slug" style={styles.error}>
+            <span className="jer-error-slug" style={getStyles('error', nodeData)}>
               {error}
             </span>
           )}
         </div>
         {!isEditing && (
-          <div className="jer-brackets" style={styles.bracket}>
+          <div className="jer-brackets jer-bracket-outside" style={getStyles('bracket', nodeData)}>
             {brackets.close}
           </div>
         )}

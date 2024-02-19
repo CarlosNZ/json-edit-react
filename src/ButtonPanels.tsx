@@ -30,7 +30,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   nodeData,
   translate,
 }) => {
-  const { styles } = useTheme()
+  const { getStyles } = useTheme()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
   const [isAdding, setIsAdding] = useState(false)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
@@ -74,17 +74,17 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     <div className="jer-edit-buttons" style={isAdding ? { opacity: 1 } : undefined}>
       {enableClipboard && (
         <div onClick={handleCopy} className="jer-copy-pulse">
-          <Icon name="copy" />
+          <Icon name="copy" nodeData={nodeData} />
         </div>
       )}
       {startEdit && (
         <div onClick={startEdit}>
-          <Icon name="edit" />
+          <Icon name="edit" nodeData={nodeData} />
         </div>
       )}
       {handleDelete && (
         <div onClick={handleDelete}>
-          <Icon name="delete" />
+          <Icon name="delete" nodeData={nodeData} />
         </div>
       )}
       {handleAdd && (
@@ -95,7 +95,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             else handleAdd('')
           }}
         >
-          <Icon name="add" />
+          <Icon name="add" nodeData={nodeData} />
         </div>
       )}
       {isAdding && handleAdd && type === 'object' && (
@@ -109,7 +109,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             autoFocus
             onFocus={(e) => e.target.select()}
             onKeyDown={handleKeyPress}
-            style={{ ...styles.input }}
+            style={getStyles('input', nodeData)}
           />
           <InputButtons
             onOk={() => {
@@ -121,6 +121,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             onCancel={() => {
               setIsAdding(false)
             }}
+            nodeData={nodeData}
           />
         </>
       )}
@@ -131,15 +132,15 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 export const InputButtons: React.FC<{
   onOk: () => void
   onCancel: () => void
-  isCollection?: boolean
-}> = ({ onOk, onCancel }) => {
+  nodeData: NodeData
+}> = ({ onOk, onCancel, nodeData }) => {
   return (
     <div className="jer-confirm-buttons">
       <div onClick={onOk}>
-        <Icon name="ok" />
+        <Icon name="ok" nodeData={nodeData} />
       </div>
       <div onClick={onCancel}>
-        <Icon name="cancel" />
+        <Icon name="cancel" nodeData={nodeData} />
       </div>
     </div>
   )

@@ -1,3 +1,5 @@
+import { type ThemeName, type CompiledStyles, type DefaultTheme, type Theme } from '../types'
+
 const defaultTheme: DefaultTheme = {
   displayName: 'Default',
   fragments: { edit: 'rgb(42, 161, 152)' },
@@ -6,6 +8,9 @@ const defaultTheme: DefaultTheme = {
       backgroundColor: '#f6f6f6',
       fontFamily: 'monospace',
     },
+    collection: {},
+    collectionInner: {},
+    collectionElement: {},
     property: '#292929',
     bracket: { color: 'rgb(0, 43, 54)', fontWeight: 'bold' },
     itemCount: { color: 'rgba(0, 0, 0, 0.3)', fontStyle: 'italic' },
@@ -26,7 +31,7 @@ const defaultTheme: DefaultTheme = {
   },
 }
 
-export const themes: { default: DefaultTheme } & Record<string, Theme> = {
+export const themes: Record<ThemeName, Theme> = {
   default: defaultTheme,
   githubDark: {
     displayName: 'Github Dark',
@@ -226,6 +231,9 @@ export const themes: { default: DefaultTheme } & Record<string, Theme> = {
 
 export const emptyStyleObject: CompiledStyles = {
   container: {},
+  collection: {},
+  collectionInner: {},
+  collectionElement: {},
   property: {},
   bracket: {},
   itemCount: {},
@@ -248,56 +256,3 @@ export const emptyStyleObject: CompiledStyles = {
 /**
  * TYPE DEFINITIONS
  */
-
-const themeableElements = [
-  'container',
-  'property',
-  'bracket',
-  'itemCount',
-  'string',
-  'number',
-  'boolean',
-  'null',
-  'input',
-  'inputHighlight',
-  'error',
-  'iconCollection',
-  'iconEdit',
-  'iconDelete',
-  'iconAdd',
-  'iconCopy',
-  'iconOk',
-  'iconCancel',
-] as const
-
-export type ThemeableElement = (typeof themeableElements)[number]
-
-export type ThemeValue = string | React.CSSProperties | Array<string | React.CSSProperties> // e.g. "#FFFFF", {backgroundColor: "grey"}, ["smaller", {fontWeight: "bold"}]
-
-export type ThemeStyles = Record<ThemeableElement, ThemeValue>
-
-type Fragments = Record<string, React.CSSProperties | string>
-export interface Theme {
-  displayName?: string
-  fragments?: Fragments
-  styles: Partial<ThemeStyles>
-}
-
-// Same as "Theme", but we know every property in styles is defined
-export interface DefaultTheme extends Theme {
-  displayName: 'Default'
-  styles: ThemeStyles
-}
-
-// All the fragments and shorthand defined in Theme is compiled into a single CSS
-// "Style" object before being passed to components
-export type CompiledStyles = Record<ThemeableElement, React.CSSProperties>
-
-export type ThemeName = keyof typeof themes
-
-// Value(s) passed to "setTheme" function
-export type ThemeInput =
-  | ThemeName
-  | Theme
-  | Partial<ThemeStyles>
-  | [ThemeName, Theme | Partial<ThemeStyles>]

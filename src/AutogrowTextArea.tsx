@@ -10,7 +10,6 @@
 
 import React from 'react'
 import './style.css'
-import { useTheme } from './theme'
 
 interface TextAreaProps {
   className: string
@@ -19,6 +18,7 @@ interface TextAreaProps {
   setValue: React.Dispatch<React.SetStateAction<string>>
   isEditing: boolean
   handleKeyPress: (e: React.KeyboardEvent) => void
+  styles: React.CSSProperties
 }
 
 export const AutogrowTextArea: React.FC<TextAreaProps> = ({
@@ -27,8 +27,8 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   value,
   setValue,
   handleKeyPress,
+  styles,
 }) => {
-  const { styles } = useTheme()
   // Adding extra (hidden) char when adding new lines to input prevents
   // mis-alignment between real value and dummy value
   const dummyValue = value.slice(-1) === '\n' ? value + '.' : value
@@ -40,7 +40,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
           height: 'auto',
           gridArea: '1 / 1 / 2 / 2',
           overflowY: 'auto',
-          ...styles.input,
+          ...styles,
         }}
         rows={1}
         className={className}
@@ -66,7 +66,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
           whiteSpace: 'pre-wrap',
           overflow: 'clip',
           border: '1px solid transparent',
-          ...styles.input,
+          ...styles,
         }}
       >
         {dummyValue}

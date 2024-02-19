@@ -42,5 +42,6 @@ module.exports = {
     '@typescript-eslint/no-floating-promises': 0,
     'react-hooks/exhaustive-deps': 0,
     '@typescript-eslint/prefer-nullish-coalescing': 0,
+    '@typescript-eslint/no-unsafe-argument': 'warn',
   },
 }
