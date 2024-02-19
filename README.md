@@ -263,10 +263,10 @@ However, you can pass in your own theme object, or part thereof. The theme struc
 The `styles` property is the main one to focus on. Each key (`property`, `bracket`, `itemCount`) refers to a part of the UI. The value for each key is *either*:
 - a `string`, in which case it is interpreted as the colour (or background colour in the case of `container` and `inputHighlight`)
 - a full CSS style object for fine-grained definition. You only need to provide properties you wish to override — all unspecified ones will fallback to either the default theme, or another theme that you specify as the "base".
-- a "Theme Function", which is a function that takes the same input as [Filter Functions](#filter-functions), but returns a CSS style object (or `null`). This allows you to *dynamically* change styling of various elements based on content or structure.
-- an array containing any combination of the above, in which case they are merged together. For example, you could provide a Theme Function with styling for a very specific condition, but then provide "fallback" styles whenever the function returns `null`
+- a "Style Function", which is a function that takes the same input as [Filter Functions](#filter-functions), but returns a CSS style object (or `null`). This allows you to *dynamically* change styling of various elements based on content or structure.
+- an array containing any combination of the above, in which case they are merged together. For example, you could provide a Theme Function with styling for a very specific condition, but then provide "fallback" styles whenever the function returns `null`. (In the array, the *later* items have higher precedence)
 
-For example, if you want to use the "githubDark" theme, but just change a couple of small things, you'd specify something like this:
+For a simple example, if you want to use the "githubDark" theme, but just change a couple of small things, you'd specify something like this:
 
 ```js
 // in <JsonEditor /> props
@@ -463,6 +463,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.4.0**:
+  - [Style functions](#themes) for context-dependent styling
+  - Handle "loose" JSON input in Text input (e.g. non-quoted keys, trailing commas, etc.)
 - **1.3.0**:
   - [Custom (dynamic) text](#custom-text)
   - Add [hyperlink](#custom-nodes) Custom component to bundle
