@@ -7698,22 +7698,15 @@ jsesc@~0.5.0:
   resolved "https://registry.npmjs.org/jsesc/-/jsesc-0.5.0.tgz"
   integrity sha512-uZz5UnB7u4T9LvwmFqXii7pZSouaRPorGs5who1Ip7VO0wxanFvBL7GkM6dTHlgX+jhBApRetaWpnDabOeTcnA==
 
-json-edit-react@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.4.0.tgz#aeeec20e4448309ab906b89f399dfb9215ec83c9"
-  integrity sha512-NvHeAXYJ9j9w4vPcqnA3VaoO9UI9V3oZBddrFG0c8cS4kpTUN89VUO1uiNvAOhnb0wBvqqFJUhlKsGra5XkpGQ==
+json-edit-react@^1.4.1:
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.4.1.tgz#4fe3a9f98a49879cc36b46bdba18b4c37e8d4b14"
+  integrity sha512-z3J+t1d9NStnPMQX07bxEk5786xafi9kbwXeMEn4Afa+DeXPiNnxdNO1wWya2D3ipkmaStta2Z4d9wm8Dl5c/w==
   dependencies:
-    json-loose "^1.2.3"
+    json5 "^2.2.3"
     just-clone "^6.2.0"
     object-property-assigner "^1.2.0"
     object-property-extractor "^1.0.10"
-
-json-loose@^1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/json-loose/-/json-loose-1.2.3.tgz#200ed759bceb0e2cf6fdf30af1c566aaa87e0615"
-  integrity sha512-gnx3y7j68efE7WOAFJq4lcivbUZXjW1Udx0VWh25kGDDhsM4stK6TejLahGvqJ8lraua6+6+BbBxy6ABR0ayWA==
-  dependencies:
-    moo "^0.5.2"
 
 json-parse-even-better-errors@^2.3.0, json-parse-even-better-errors@^2.3.1:
   version "2.3.1"
@@ -7747,9 +7740,9 @@ json5@^1.0.2:
   dependencies:
     minimist "^1.2.0"
 
-json5@^2.1.2, json5@^2.2.0, json5@^2.2.2:
+json5@^2.1.2, json5@^2.2.0, json5@^2.2.2, json5@^2.2.3:
   version "2.2.3"
-  resolved "https://registry.npmjs.org/json5/-/json5-2.2.3.tgz"
+  resolved "https://registry.yarnpkg.com/json5/-/json5-2.2.3.tgz#78cd6f1a19bdc12b73db5ad0c61efd66c1e29283"
   integrity sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==
 
 jsonfile@^6.0.1:
@@ -8104,11 +8097,6 @@ mkdirp@~0.5.1:
   integrity sha512-FP+p8RB8OWpF3YZBCrP5gtADmtXApB5AMLn+vdyA+PyxCjrCs00mjyUozssO33cwDeT3wNGdLxJ5M//YqtHAJw==
   dependencies:
     minimist "^1.2.6"
-
-moo@^0.5.2:
-  version "0.5.2"
-  resolved "https://registry.yarnpkg.com/moo/-/moo-0.5.2.tgz#f9fe82473bc7c184b0d32e2215d3f6e67278733c"
-  integrity sha512-iSAJLHYKnX41mKcJKjqvnAN9sf0LMDTXDEvFv+ffuRR9a1MIuXLjMNL6EsnDHSkKLTWNqQQ5uo61P4EbU4NU+Q==
 
 ms@2.0.0:
   version "2.0.0"
