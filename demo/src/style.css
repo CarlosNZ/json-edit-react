@@ -12,6 +12,10 @@ footer {
   align-items: flex-end;
 }
 
+.jer-editor-container {
+  margin-top: 0;
+}
+
 .inputRow {
   display: flex;
   width: 100%;

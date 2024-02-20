@@ -281,7 +281,6 @@ function App() {
             </HStack>
           </VStack>
         </VStack>
-
         <VStack flexBasis={500}>
           <Heading size="lg" variant="accent">
             Options

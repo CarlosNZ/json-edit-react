@@ -88,8 +88,8 @@ select:focus + .focus {
   line-height: 1;
   padding: 1em;
   padding-left: 2em;
-  margin-top: 1em;
-  margin-bottom: 1em;
+  /* margin-top: 1em; */
+  /* margin-bottom: 1em; */
   border-radius: 0.5em;
 }
 
