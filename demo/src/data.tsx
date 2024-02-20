@@ -1838,7 +1838,7 @@ const data: Record<string, DemoData> = {
         </Text>
         <Text>
           See{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#themes" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react#themes--styles" isExternal>
             here
           </Link>{' '}
           for theming information.
@@ -1875,7 +1875,7 @@ const data: Record<string, DemoData> = {
         </Text>
         <Text>
           We are also using a condition{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#themes" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react#themes--styles" isExternal>
             Theme function
           </Link>{' '}
           for the character name (bolder and larger than other strings).

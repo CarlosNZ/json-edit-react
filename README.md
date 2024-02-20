@@ -8,7 +8,7 @@ Features include:
 
  - edit individual values, or whole objects as JSON text
  - fine-grained control over which elements can be edited, deleted, or added to
- - customisable UI, through simple, pre-defined [themes](#themes), or specific CSS overrides
+ - customisable UI, through simple, pre-defined [themes](#themes--styles), or specific CSS overrides
  - self-contained — rendered with plain HTML/CSS, so no dependance on external UI libraries
  - provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
 
@@ -24,7 +24,7 @@ Features include:
   - [Copy function](#copy-function)
 - [Filter functions](#filter-functions)
   - [Examples](#examples)
-- [Themes](#themes)
+- [Themes \& Styles](#themes--styles)
   - [Fragments](#fragments)
   - [A note about sizing and scaling](#a-note-about-sizing-and-scaling)
   - [Icons](#icons)
@@ -99,9 +99,9 @@ The only *required* value is `data`.
 | `defaultValue`          | `any`                                        | `null`      | When a new property is added, it is initialised with this value.                                                                                                                                                                                                                                                  |
 | `stringTruncate`        | `number`                                     | `250`       | String values longer than this many characters will be displayed truncated (with `...`). The full string will always be visible when editing.                                                                                                                                                                     |
 | `translations`          | `LocalisedStrings` object                    | `{ }`       | UI strings (such as error messages) can be translated by passing an object containing localised string values (there are only a few). See [Localisation](#localisation)                                                                                                                                           |
-| `theme`                 | `string\|ThemeObject\|[string, ThemeObject]` | `"default"` | Either the name of one of the built-in themes, or an object specifying some or all theme properties. See [Themes](#themes).                                                                                                                                                                                       |
+| `theme`                 | `string\|ThemeObject\|[string, ThemeObject]` | `"default"` | Either the name of one of the built-in themes, or an object specifying some or all theme properties. See [Themes](#themes--styles).                                                                                                                                                                               |
 | `className`             | `string`                                     |             | Name of a CSS class to apply to the component. In most cases, specifying `theme` properties will be more straightforward.                                                                                                                                                                                         |
-| `icons`                 | `{[iconName]: JSX.Element, ... }`            | `{ }`       | Replace the built-in icons by specifying them here. See [Themes](#themes).                                                                                                                                                                                                                                        |  |
+| `icons`                 | `{[iconName]: JSX.Element, ... }`            | `{ }`       | Replace the built-in icons by specifying them here. See [Themes](#themes--styles).                                                                                                                                                                                                                                |  |
 | `minWidth`              | `number\|string` (CSS value)                 | `250`       | Minimum width for the editor container.                                                                                                                                                                                                                                                                           |
 | `maxWidth`              | `number\|string` (CSS value)                 | `600`       | Maximum width for the editor container.                                                                                                                                                                                                                                                                           |
 | `customNodeDefinitions` | `CustomNodeDefinition[]`                     |             | You can provide customised components to override specific nodes in the data tree, according to a condition function. See see [Custom nodes](#custom-nodes) for more detail. (A simple custom component to turn url strings into active links is provided in the main package  -- see [here](#active-hyperlinks)) |
@@ -213,7 +213,7 @@ restrictTypeSelection = { ({ path, value }) => {
 } }
 ```
 
-## Themes
+## Themes & Styles
 
 There is a small selection of built-in themes (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react/)). In order to use one of these, just pass the name into the `theme` prop (although realistically, these exist more to showcase the capabilities  — I'm open to better built-in themes, so feel free to [create an issue](https://github.com/CarlosNZ/json-edit-react/issues) with suggestions). The available themes are:
 - `default`
@@ -294,6 +294,10 @@ So, to summarise, the `theme` prop can take *either*:
 - a theme name *and* an override object in an array, i.e. `[ "<themeName>, {...overrides } ]`
 
 You can play round with live editing of the themes in the [Demo app](https://carlosnz.github.io/json-edit-react/) by selecting "Edit this theme!" from the "Demo data" selector (though you won't be able to create functions in JSON).
+
+#### CSS classes
+
+Another way to style the component is to target the CSS classes directly. Every element in the component has a unique class name, so you should be able to locate them in your browser inspector and override them accordingly. All class names begin with the prefix `jer-`, e.g. `jer-collection-header-row`, `jer-value-string`
 
 ### Fragments
 
@@ -464,8 +468,8 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 ## Changelog
 
 - **1.4.0**:
-  - [Style functions](#themes) for context-dependent styling
-  - Handle "loose" JSON input in Text input (e.g. non-quoted keys, trailing commas, etc.)
+  - [Style functions](#themes--styles) for context-dependent styling
+  - Handle "loose" ([JSON5](https://json5.org/)) JSON text input(e.g. non-quoted keys, trailing commas, etc.)
 - **1.3.0**:
   - [Custom (dynamic) text](#custom-text)
   - Add [hyperlink](#custom-nodes) Custom component to bundle
