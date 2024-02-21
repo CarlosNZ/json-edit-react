@@ -20,7 +20,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   ...props
 }) => {
   const { getStyles } = useTheme()
-  const { isAllCollapsed, setCollapseAll } = useCollapseAll()
+  const { collapseState, setCollapseState, doesPathMatch } = useCollapseAll()
   const {
     onEdit,
     onAdd,
@@ -65,8 +65,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   }, [collapseFilter])
 
   useEffect(() => {
-    if (isAllCollapsed !== null) setCollapsed(isAllCollapsed)
-  }, [isAllCollapsed])
+    if (collapseState !== null && doesPathMatch(path)) {
+      hasBeenOpened.current = true
+      setCollapsed(collapseState.open)
+    }
+  }, [collapseState])
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
@@ -83,9 +86,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const handleCollapse = (e: React.MouseEvent) => {
     if (e.getModifierState('Alt')) {
-      console.log('Option clicked')
       hasBeenOpened.current = true
-      setCollapseAll(!collapsed)
+      setCollapseState({ open: !collapsed, path })
+      return
     }
     if (!isEditing) {
       setIsAnimating(true)
@@ -233,7 +236,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           </div>
         </div>
       </div>
-    ) : !hasBeenOpened.current && !isAllCollapsed ? null : (
+    ) : !hasBeenOpened.current ? null : (
       keyValueArray.map(([key, value]) => (
         <div
           className="jer-collection-element"
