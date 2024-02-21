@@ -65,6 +65,8 @@ const data: Record<string, DemoData> = {
         '"Escape" to cancel': '👍',
         'To start a new line': 'Shift/Ctrl/Cmd-Enter (or just "Enter" when editing JSON nodes)',
         'When copying to clipboard': 'Hold down "Ctrl/Cmd" to copy path instead of data',
+        'When opening/closing a node':
+          'Hold down "Alt/Option" to open/close ALL child nodes at once',
       },
     },
     customNodeDefinitions: [dateNodeDefinition],

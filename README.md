@@ -8,7 +8,7 @@ Features include:
 
  - edit individual values, or whole objects as JSON text
  - fine-grained control over which elements can be edited, deleted, or added to
- - customisable UI, through simple, pre-defined [themes](#themes--styles), or specific CSS overrides
+ - customisable UI, through simple, pre-defined [themes](#themes--styles), specific CSS overrides for UI components, or by targeting CSS classes
  - self-contained — rendered with plain HTML/CSS, so no dependance on external UI libraries
  - provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
 
@@ -73,6 +73,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - It's the opposite when editing a full object/array node (which you do by clicking "edit" on an object or array value) — `Enter` for new line, and `Cmd/Ctrl/Shift-Enter` for submit
 - `Escape` to cancel editing
 - When clicking the "clipboard" icon, holding down `Cmd/Ctrl` will copy the *path* to the selected node rather than its value
+- When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
 
 ## Props overview
 
@@ -467,6 +468,8 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.5.0**:
+  - Open/close all descendant nodes by holding "Alt"/"Option" while opening/closing a node
 - **1.4.0**:
   - [Style functions](#themes--styles) for context-dependent styling
   - Handle "loose" ([JSON5](https://json5.org/)) JSON text input(e.g. non-quoted keys, trailing commas, etc.)
