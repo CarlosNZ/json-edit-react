@@ -10,6 +10,7 @@ import {
   type NodeData,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
+import { CollapseProvider, useCollapseAll } from './CollapseProvider'
 import { getTranslateFunction } from './localisation'
 import './style.css'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
@@ -45,6 +46,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   customNodeDefinitions = [],
 }) => {
   const { getStyles, setTheme, setIcons } = useTheme()
+  const { setCollapseState } = useCollapseAll()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
   const translate = useCallback(getTranslateFunction(translations, customText), [
     translations,
@@ -59,6 +61,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   }, [theme, icons])
 
   useEffect(() => {
+    setCollapseState(null)
     setData(srcData)
   }, [srcData])
 
@@ -178,7 +181,9 @@ const Editor: React.FC<JsonEditorProps> = ({
 
 const JsonEditor: React.FC<JsonEditorProps> = (props) => (
   <ThemeProvider>
-    <Editor {...props} />
+    <CollapseProvider>
+      <Editor {...props} />
+    </CollapseProvider>
   </ThemeProvider>
 )
 
