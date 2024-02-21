@@ -10,6 +10,7 @@ import {
   type NodeData,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
+import { CollapseProvider } from './CollapseProvider'
 import { getTranslateFunction } from './localisation'
 import './style.css'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
@@ -178,7 +179,9 @@ const Editor: React.FC<JsonEditorProps> = ({
 
 const JsonEditor: React.FC<JsonEditorProps> = (props) => (
   <ThemeProvider>
-    <Editor {...props} />
+    <CollapseProvider>
+      <Editor {...props} />
+    </CollapseProvider>
   </ThemeProvider>
 )
 

@@ -8,6 +8,7 @@ import { Icon } from './Icons'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
+import { useCollapseAll } from './CollapseProvider'
 
 export const isCollection = (value: unknown) => value !== null && typeof value === 'object'
 
@@ -19,6 +20,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   ...props
 }) => {
   const { getStyles } = useTheme()
+  const { isAllCollapsed, setCollapseAll } = useCollapseAll()
   const {
     onEdit,
     onAdd,
@@ -62,6 +64,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setCollapsed(collapseFilter(nodeData))
   }, [collapseFilter])
 
+  useEffect(() => {
+    if (isAllCollapsed !== null) setCollapsed(isAllCollapsed)
+  }, [isAllCollapsed])
+
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
@@ -75,7 +81,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     else if (e.key === 'Escape') handleCancel()
   }
 
-  const handleCollapse = () => {
+  const handleCollapse = (e: React.MouseEvent) => {
+    if (e.getModifierState('Alt')) {
+      console.log('Option clicked')
+      hasBeenOpened.current = true
+      setCollapseAll(!collapsed)
+    }
     if (!isEditing) {
       setIsAnimating(true)
       hasBeenOpened.current = true
@@ -222,7 +233,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           </div>
         </div>
       </div>
-    ) : !hasBeenOpened.current ? null : (
+    ) : !hasBeenOpened.current && !isAllCollapsed ? null : (
       keyValueArray.map(([key, value]) => (
         <div
           className="jer-collection-element"
@@ -274,7 +285,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     >
       <div className="jer-collection-header-row" style={{ position: 'relative' }}>
         <div className="jer-collection-name">
-          <div className="jer-collapse-icon" onClick={handleCollapse}>
+          <div className="jer-collapse-icon" onClick={(e) => handleCollapse(e)}>
             <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
           </div>
           {!isEditingKey && (
