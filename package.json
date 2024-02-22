@@ -1,6 +1,6 @@
 {
   "name": "json-edit-react",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
@@ -34,7 +34,7 @@
   "dependencies": {
     "json5": "^2.2.3",
     "just-clone": "^6.2.0",
-    "object-property-assigner": "^1.2.0",
+    "object-property-assigner": "^1.2.1",
     "object-property-extractor": "^1.0.10"
   },
   "devDependencies": {
