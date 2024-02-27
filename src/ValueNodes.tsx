@@ -9,7 +9,7 @@ export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
 export const truncate = (string: string, length = 200) =>
   string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
 
-export const breakString = (text: string) =>
+export const breakString = (text: string): React.ReactElement[] =>
   text.split('\n').map((line, index, arr) => {
     const match = /^( +)/.exec(line)
     return (
