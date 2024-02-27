@@ -7,7 +7,7 @@ import {
   CustomTextDefinitions,
   LinkCustomNodeDefinition,
 } from './JsonEditImport'
-import { DataType, ThemeStyles } from './json-edit-react/src/types'
+import { DataType, DefaultValueFunction, ThemeStyles } from './json-edit-react/src/types'
 
 interface DemoData {
   name: string
@@ -19,6 +19,7 @@ interface DemoData {
   restrictDelete?: FilterFunction
   restrictAdd?: FilterFunction
   restrictTypeSelection?: boolean | DataType[]
+  defaultValue?: unknown | DefaultValueFunction
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
   styles?: Partial<ThemeStyles>
@@ -1531,11 +1532,43 @@ const data: Record<string, DemoData> = {
           <span className="code">restrictEdit</span> function as been included which targets the{' '}
           <span className="code">id</span> field specifically.
         </Text>
+        <Text>
+          Also, notice that when a new item is added at the top level, a correctly structured Person
+          object is added, but adding new items elsewhere adds simple string values. This is done by
+          specifying a function for the <span className="code">defaultValue</span> prop.
+        </Text>
       </Flex>
     ),
     restrictEdit: ({ key, level }) => key === 'id' || level === 0 || level === 1,
     restrictDelete: ({ key }) => key === 'id',
     collapse: 2,
+    defaultValue: ({ level }) => {
+      if (level === 0)
+        return {
+          id: Math.floor(Math.random() * 1000) + 10,
+          name: 'New User',
+          username: 'user',
+          email: 'info@test.com',
+          address: {
+            street: '',
+            suite: '',
+            city: '',
+            zipcode: '',
+            geo: {
+              lat: 0,
+              lng: 0,
+            },
+          },
+          phone: '1234',
+          website: '',
+          company: {
+            name: '',
+            catchPhrase: '',
+            bs: '',
+          },
+        }
+      return 'New Value'
+    },
     data: [
       {
         id: 1,

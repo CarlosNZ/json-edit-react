@@ -232,7 +232,7 @@ function App() {
             restrictAdd={restrictAdd}
             restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
             keySort={sortKeys}
-            defaultValue={defaultNewValue}
+            defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
             showArrayIndices={showIndices}
             maxWidth="min(650px, 90vw)"
             className="block-shadow"
