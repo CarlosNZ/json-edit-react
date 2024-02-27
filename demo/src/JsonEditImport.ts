@@ -10,8 +10,8 @@ import {
   FilterFunction,
   LinkCustomComponent,
   LinkCustomNodeDefinition,
-  // } from './json-edit-react/src'
-} from 'json-edit-react'
+} from './json-edit-react/src'
+// } from 'json-edit-react'
 // } from './package'
 
 export {

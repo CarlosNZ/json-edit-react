@@ -146,7 +146,7 @@ function App() {
   }
 
   return (
-    <>
+    <div className="App">
       <Flex
         px={8}
         pt={4}
@@ -450,7 +450,7 @@ function App() {
       <footer>
         <Text fontSize="sm">{`json-edit-react v${version}`}</Text>
       </footer>
-    </>
+    </div>
   )
 }
 

@@ -4,16 +4,16 @@ body {
   margin: 0;
 }
 
+/* .App {
+  text-align: center;
+} */
+
 footer {
   height: 50px;
   display: flex;
   padding: 10px;
   justify-content: flex-end;
   align-items: flex-end;
-}
-
-.jer-editor-container {
-  margin-top: 0;
 }
 
 .inputRow {

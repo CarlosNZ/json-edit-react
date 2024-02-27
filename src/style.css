@@ -91,6 +91,7 @@ select:focus + .focus {
   /* margin-top: 1em; */
   /* margin-bottom: 1em; */
   border-radius: 0.5em;
+  text-align: left;
 }
 
 .jer-editor-container textarea {
