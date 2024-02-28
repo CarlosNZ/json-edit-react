@@ -3,7 +3,12 @@ import JSON5 from 'json5'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
-import { type CollectionNodeProps, ERROR_DISPLAY_TIME, type ErrorString } from './types'
+import {
+  type CollectionNodeProps,
+  type ErrorString,
+  type NodeData,
+  ERROR_DISPLAY_TIME,
+} from './types'
 import { Icon } from './Icons'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
@@ -79,6 +84,14 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     '--jer-expand-transition-time'
   )
 
+  const getDefaultNewValue = useMemo(
+    () => (nodeData: NodeData) => {
+      if (typeof defaultValue !== 'function') return defaultValue
+      return defaultValue(nodeData)
+    },
+    [defaultValue]
+  )
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.shiftKey || e.ctrlKey)) handleEdit()
     else if (e.key === 'Escape') handleCancel()
@@ -139,14 +152,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const handleAdd = (key: string) => {
     setCollapsed(false)
+    const newValue = getDefaultNewValue(nodeData)
     if (collectionType === 'array') {
-      onAdd(defaultValue, [...path, (data as unknown[]).length]).then((error) => {
+      onAdd(newValue, [...path, (data as unknown[]).length]).then((error) => {
         if (error) showError(error)
       })
     } else if (key in data) {
       showError(translate('ERROR_KEY_EXISTS', nodeData))
     } else {
-      onAdd(defaultValue, [...path, key]).then((error) => {
+      onAdd(newValue, [...path, key]).then((error) => {
         if (error) showError(error)
       })
     }

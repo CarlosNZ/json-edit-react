@@ -141,10 +141,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
-  const filterProps = { key: name, path, level: path.length, value: data, size: null }
-
-  const canEdit = useMemo(() => !restrictEditFilter(filterProps), [filterProps])
-  const canDelete = useMemo(() => !restrictDeleteFilter(filterProps), [filterProps])
+  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
+  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
 
   const isArray = typeof path.slice(-1)[0] === 'number'
   const canEditKey = !isArray && canEdit && canDelete
@@ -185,12 +183,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
     if (Array.isArray(restrictTypeSelection)) return restrictTypeSelection
 
-    const result = restrictTypeSelection(filterProps)
+    const result = restrictTypeSelection(nodeData)
 
     if (typeof result === 'boolean') return result ? [] : allDataTypes
 
     return result
-  }, [filterProps, restrictTypeSelection])
+  }, [nodeData, restrictTypeSelection])
 
   const ValueComponent =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
