@@ -71,6 +71,7 @@ export type UpdateFunction = (props: {
 export type FilterFunction = (input: NodeData) => boolean
 export type TypeFilterFunction = (input: NodeData) => boolean | DataType[]
 export type CustomTextFunction = (input: NodeData) => string | null
+export type DefaultValueFunction = (input: NodeData) => unknown
 
 export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
