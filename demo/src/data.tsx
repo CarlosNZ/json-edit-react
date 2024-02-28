@@ -26,12 +26,22 @@ interface DemoData {
 }
 
 const data: Record<string, DemoData> = {
-  basic: {
-    name: '🔰 Basic',
+  intro: {
+    name: '📘 Intro',
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>Play around with the JSON structure, and test out various options above.</Text>
-        <Text>There are a range of different demo data sets to play with.</Text>
+        <Text>
+          There are a range of different demo data sets to play with. The data and custom
+          definitions for all demo data can be found in the repo{' '}
+          <Link
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/data.tsx"
+            isExternal
+          >
+            here
+          </Link>
+          .
+        </Text>
         <Text>Incorporate into your own React project:</Text>
         <Box fontSize="sm">
           <Text pl={3}>
@@ -95,8 +105,9 @@ const data: Record<string, DemoData> = {
           Also, notice the ISO date strings are editable by a date picker control, and URL strings
           are active links — these are{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
-            Custom component.
+            Custom components
           </Link>
+          .
         </Text>
       </Flex>
     ),
@@ -1528,14 +1539,15 @@ const data: Record<string, DemoData> = {
         </Text>
         <Text>
           You'll note that the <span className="code">id</span> field is not editable, which would
-          be desirable if this saved back to a database. An additional{' '}
+          be important if this saved back to a database. An additional{' '}
           <span className="code">restrictEdit</span> function as been included which targets the{' '}
           <span className="code">id</span> field specifically.
         </Text>
         <Text>
-          Also, notice that when a new item is added at the top level, a correctly structured Person
-          object is added, but adding new items elsewhere adds simple string values. This is done by
-          specifying a function for the <span className="code">defaultValue</span> prop.
+          Also, notice that when a new item is added at the top level, a correctly structured{' '}
+          <strong>Person</strong> object is added, but adding new items elsewhere adds simple string
+          values. This is done by specifying a function for the{' '}
+          <span className="code">defaultValue</span> prop.
         </Text>
       </Flex>
     ),
@@ -1865,7 +1877,8 @@ const data: Record<string, DemoData> = {
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>
-          You are now editing Theme object being used by the component right now — edit it live!
+          You are now viewing the <strong>Theme</strong> object being used by the component right
+          now — edit it live!
         </Text>
         <Text>
           Notice you are restricted from changing the structure in a way that would break the
@@ -1893,9 +1906,9 @@ const data: Record<string, DemoData> = {
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>
-          This data set shows <strong>Custom Nodes</strong> — you can provide your own components to
-          present specialised data in a unique way, or provide a more complex editing mechanism for
-          a specialised data structure, say.
+          This data set demonstrates <strong>Custom Nodes</strong> — you can provide your own
+          components to present specialised data in a unique way, or provide a more complex editing
+          mechanism for a specialised data structure, say.
         </Text>
         <Text>
           In this example, compare the raw JSON (edit the data root) with what is presented here.

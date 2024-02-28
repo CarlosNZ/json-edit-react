@@ -40,7 +40,7 @@ import { FilterFunction } from './json-edit-react/src/types'
 import { version } from './version'
 
 function App() {
-  const [selectedData, setSelectedData] = useState('basic')
+  const [selectedData, setSelectedData] = useState('intro')
   const [rootName, setRootName] = useState(demoData[selectedData].rootName ?? 'data')
   const [indent, setIndent] = useState(3)
   const [collapseLevel, setCollapseLevel] = useState(2)
@@ -209,7 +209,7 @@ function App() {
             indent={indent}
             onUpdate={({ newData }) => {
               setData(newData)
-              if (selectedData === 'editTheme') setTheme(newData)
+              if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
             }}
             collapse={collapseLevel}
             showCollectionCount={

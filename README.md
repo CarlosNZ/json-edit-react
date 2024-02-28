@@ -468,6 +468,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.6.0**: Allow a function for `defaultValue` prop
 - **1.5.0**:
   - Open/close all descendant nodes by holding "Alt"/"Option" while opening/closing a node
 - **1.4.0**:

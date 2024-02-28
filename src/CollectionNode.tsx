@@ -3,7 +3,12 @@ import JSON5 from 'json5'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
-import { type CollectionNodeProps, ERROR_DISPLAY_TIME, type ErrorString, NodeData } from './types'
+import {
+  type CollectionNodeProps,
+  type ErrorString,
+  type NodeData,
+  ERROR_DISPLAY_TIME,
+} from './types'
 import { Icon } from './Icons'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
