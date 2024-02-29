@@ -126,7 +126,7 @@ The function will receive the following object as a parameter:
 }
 ```
 
-The function needn't return anything, but if it returns `false`, it will be considered an error, in which case an error message will displayed in the UI and the internal data state won't actually be updated. If the return value is a `string`, this will be the error message displayed (i.e. you can define your own error messages for updates).
+The function needn't return anything, but if it returns `false`, it will be considered an error, in which case an error message will displayed in the UI and the internal data state won't actually be updated. If the return value is a `string`, this will be the error message displayed (i.e. you can define your own error messages for updates). On error, the displayed data will revert to its previous value.
 
 ### Copy function
 
@@ -468,6 +468,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.6.1**: Revert data state on Update Function error
 - **1.6.0**: Allow a function for `defaultValue` prop
 - **1.5.0**:
   - Open/close all descendant nodes by holding "Alt"/"Option" while opening/closing a node

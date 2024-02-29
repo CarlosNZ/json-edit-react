@@ -33,7 +33,7 @@ import {
 } from '@chakra-ui/react'
 import logo from './image/logo_400.png'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
-import demoData from './data'
+import { demoData } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { FilterFunction } from './json-edit-react/src/types'
@@ -207,8 +207,12 @@ function App() {
             rootName={rootName}
             theme={[theme, demoData[selectedData]?.styles ?? {}]}
             indent={indent}
-            onUpdate={({ newData }) => {
-              setData(newData)
+            onUpdate={async ({ newData, newValue }) => {
+              if (newValue === 'wrong') {
+                return await new Promise((resolve, reject) => {
+                  setTimeout(() => resolve('NOPE'), 2000)
+                })
+              } else setData(newData)
               if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
             }}
             collapse={collapseLevel}

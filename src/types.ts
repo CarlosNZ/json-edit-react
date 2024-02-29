@@ -66,7 +66,7 @@ export type UpdateFunction = (props: {
   currentValue: unknown
   name: CollectionKey
   path: CollectionKey[]
-}) => void | ErrorString | false
+}) => void | ErrorString | false | Promise<false | ErrorString | void>
 
 export type FilterFunction = (input: NodeData) => boolean
 export type TypeFilterFunction = (input: NodeData) => boolean | DataType[]
