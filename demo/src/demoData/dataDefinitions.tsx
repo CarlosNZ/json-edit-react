@@ -112,17 +112,18 @@ export const demoData: Record<string, DemoData> = {
           You'll note that the <span className="code">id</span> field is not editable, which would
           be important if this saved back to a database. An additional{' '}
           <span className="code">restrictEdit</span> function as been included which targets the{' '}
-          <span className="code">id</span> field specifically.
+          <span className="code">id</span> field specifically. You also can't add additional fields
+          to the main "Person" objects.
         </Text>
         <Text>
           Also, notice that when a new item is added at the top level, a correctly structured{' '}
-          <strong>Person</strong> object is added, but adding new items elsewhere adds simple string
-          values. This is done by specifying a function for the{' '}
-          <span className="code">defaultValue</span> prop.
+          "Person" object is added, but adding new items elsewhere adds simple string values. This
+          is done by specifying a function for the <span className="code">defaultValue</span> prop.
         </Text>
       </Flex>
     ),
     restrictEdit: ({ key, level }) => key === 'id' || level === 0 || level === 1,
+    restrictAdd: ({ level }) => level === 1,
     restrictDelete: ({ key }) => key === 'id',
     collapse: 2,
     defaultValue: ({ level }) => {
@@ -162,7 +163,7 @@ export const demoData: Record<string, DemoData> = {
         <Link href="https://code.visualstudio.com/" isExternal>
           VSCode
         </Link>{' '}
-        config file.
+        config file. No editing restrictions or special features on this one.
       </Text>
     ),
     collapse: 2,
