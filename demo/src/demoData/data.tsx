@@ -1682,7 +1682,7 @@ export const data: Record<string, object> = {
         'import/no-unresolved': 'error',
       },
     },
-    'javascript.format.enable': false,
+    'javascript.format.enable': true,
     'window.zoomLevel': 3,
     'editor.tabSize': 2,
     'typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis': true,

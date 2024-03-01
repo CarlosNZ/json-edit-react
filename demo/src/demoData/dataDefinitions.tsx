@@ -14,6 +14,7 @@ import {
   DataType,
   DefaultValueFunction,
   ThemeStyles,
+  UpdateFunction,
 } from '../json-edit-react/src/types'
 import { Input } from 'object-property-assigner/build'
 
@@ -27,6 +28,7 @@ interface DemoData {
   restrictDelete?: FilterFunction
   restrictAdd?: FilterFunction
   restrictTypeSelection?: boolean | DataType[]
+  onUpdate?: UpdateFunction
   onAdd?: (props: {
     newData: object
     currentData: object
@@ -181,16 +183,27 @@ export const demoData: Record<string, DemoData> = {
   vsCode: {
     name: '⚙️ VSCode settings file',
     description: (
-      <Text>
-        A typical{' '}
-        <Link href="https://code.visualstudio.com/" isExternal>
-          VSCode
-        </Link>{' '}
-        config file. No editing restrictions or special features on this one.
-      </Text>
+      <>
+        <Text>
+          A typical{' '}
+          <Link href="https://code.visualstudio.com/" isExternal>
+            VSCode
+          </Link>{' '}
+          config file.
+        </Text>
+        <Text mt={3}>
+          The only restriction here is that you can't set any boolean values to{' '}
+          <span className="code">false</span>. It uses a custom{' '}
+          <span className="code">onUpdate</span> function to return an error string when you attempt
+          to do so, and the value is reset to <span className="code">true</span>.
+        </Text>
+      </>
     ),
     collapse: 2,
     data: data.vsCode,
+    onUpdate: ({ newValue }) => {
+      if (newValue === false) return "Don't use FALSE, just delete the value"
+    },
   },
   liveData: {
     name: '📖 Live Data (from database)',

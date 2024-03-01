@@ -207,10 +207,17 @@ function App() {
             rootName={rootName}
             theme={[theme, demoData[selectedData]?.styles ?? {}]}
             indent={indent}
-            onUpdate={({ newData }) => {
-              setData(newData)
-              if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
-            }}
+            onUpdate={
+              // ({ newValue }) => {
+              //   if (newValue === 'wrong') return 'NOPE'
+              // }
+              demoData[selectedData]?.onUpdate
+                ? demoData[selectedData]?.onUpdate
+                : ({ newData }) => {
+                    setData(newData)
+                    if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
+                  }
+            }
             onEdit={
               demoData[selectedData]?.onEdit
                 ? (data) => {

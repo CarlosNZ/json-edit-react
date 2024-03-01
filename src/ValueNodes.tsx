@@ -127,7 +127,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   useEffect(() => {
     if (isEditing) document.addEventListener('keydown', listenForSubmit)
     return () => document.removeEventListener('keydown', listenForSubmit)
-  }, [isEditing])
+  }, [isEditing, handleEdit])
 
   const listenForSubmit = (event: any) => {
     if (event.key === 'Enter') {
