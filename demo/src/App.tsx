@@ -1,7 +1,7 @@
 import 'react-datepicker/dist/react-datepicker.css'
 
 import React, { useEffect, useRef } from 'react'
-import { JsonEditor, themes, ThemeName, Theme } from './JsonEditImport'
+import { JsonEditor, themes, ThemeName, Theme, assign } from './JsonEditImport'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -33,7 +33,7 @@ import {
 } from '@chakra-ui/react'
 import logo from './image/logo_400.png'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
-import demoData from './data'
+import { demoData } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { FilterFunction } from './json-edit-react/src/types'
@@ -44,7 +44,7 @@ function App() {
   const [rootName, setRootName] = useState(demoData[selectedData].rootName ?? 'data')
   const [indent, setIndent] = useState(3)
   const [collapseLevel, setCollapseLevel] = useState(2)
-  const [showCount, setShowCount] = useState<'Yes' | 'No' | 'When closed'>('Yes')
+  const [showCount, setShowCount] = useState<'Yes' | 'No' | 'When closed'>('When closed')
   const [theme, setTheme] = useState<ThemeName | Theme>('default')
   const [allowEdit, setAllowEdit] = useState(true)
   const [allowDelete, setAllowDelete] = useState(true)
@@ -207,10 +207,33 @@ function App() {
             rootName={rootName}
             theme={[theme, demoData[selectedData]?.styles ?? {}]}
             indent={indent}
-            onUpdate={({ newData }) => {
-              setData(newData)
-              if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
-            }}
+            onUpdate={
+              // ({ newValue }) => {
+              //   if (newValue === 'wrong') return 'NOPE'
+              // }
+              demoData[selectedData]?.onUpdate
+                ? demoData[selectedData]?.onUpdate
+                : ({ newData }) => {
+                    setData(newData)
+                    if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
+                  }
+            }
+            onEdit={
+              demoData[selectedData]?.onEdit
+                ? (data) => {
+                    const updateData = (demoData[selectedData] as any).onEdit(data)
+                    if (updateData) setData(updateData)
+                  }
+                : undefined
+            }
+            onAdd={
+              demoData[selectedData]?.onAdd
+                ? (data) => {
+                    const updateData = (demoData[selectedData] as any).onAdd(data)
+                    if (updateData) setData(updateData)
+                  }
+                : undefined
+            }
             collapse={collapseLevel}
             showCollectionCount={
               showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false

@@ -71,6 +71,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     level: 0,
     value: data,
     size: Object.keys(data).length,
+    parentData: null,
   }
 
   const onEdit: OnChangeFunction = async (value, path) => {
@@ -90,8 +91,10 @@ const Editor: React.FC<JsonEditorProps> = ({
       name: path.slice(-1)[0],
       path,
     })
-    if (result === false) return translate('ERROR_UPDATE', nodeData)
-    return result // Error string
+    if (result !== undefined) {
+      setData(currentData)
+      return result === false ? translate('ERROR_UPDATE', nodeData) : result
+    }
   }
 
   const onDelete: OnChangeFunction = async (value, path) => {
@@ -111,8 +114,10 @@ const Editor: React.FC<JsonEditorProps> = ({
       name: path.slice(-1)[0],
       path,
     })
-    if (result === false) return translate('ERROR_DELETE', nodeData)
-    return result // Error string
+    if (result !== undefined) {
+      setData(currentData)
+      return result === false ? translate('ERROR_UPDATE', nodeData) : result
+    }
   }
 
   const onAdd: OnChangeFunction = async (value, path) => {
@@ -132,8 +137,10 @@ const Editor: React.FC<JsonEditorProps> = ({
       name: path.slice(-1)[0],
       path,
     })
-    if (result === false) return translate('ERROR_ADD', nodeData)
-    return result // Error string
+    if (result !== undefined) {
+      setData(currentData)
+      return result === false ? translate('ERROR_UPDATE', nodeData) : result
+    }
   }
 
   const restrictEditFilter = getFilterFunction(restrictEdit)
@@ -211,7 +218,7 @@ const updateDataObject = (
     currentData: data,
     newData,
     currentValue,
-    newValue: action === 'update' ? newValue : undefined,
+    newValue: action !== 'delete' ? newValue : undefined,
   }
 }
 
