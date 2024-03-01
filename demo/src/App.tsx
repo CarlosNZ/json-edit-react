@@ -207,12 +207,8 @@ function App() {
             rootName={rootName}
             theme={[theme, demoData[selectedData]?.styles ?? {}]}
             indent={indent}
-            onUpdate={async ({ newData, newValue }) => {
-              if (newValue === 'wrong') {
-                return await new Promise((resolve, reject) => {
-                  setTimeout(() => resolve('NOPE'), 2000)
-                })
-              } else setData(newData)
+            onUpdate={({ newData }) => {
+              setData(newData)
               if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
             }}
             onEdit={
