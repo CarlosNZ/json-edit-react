@@ -1,6 +1,6 @@
 import React from 'react'
 import { data } from './data'
-import { Flex, Box, Link, Text } from '@chakra-ui/react'
+import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'
 import { dateNodeDefinition } from '../customComponents/DateTimePicker'
 import {
   CustomNodeDefinition,
@@ -14,8 +14,8 @@ import {
   DataType,
   DefaultValueFunction,
   ThemeStyles,
-  UpdateFunction,
 } from '../json-edit-react/src/types'
+import { Input } from 'object-property-assigner/build'
 
 interface DemoData {
   name: string
@@ -24,7 +24,7 @@ interface DemoData {
   rootName?: string
   collapse?: number
   restrictEdit?: FilterFunction
-  restrictDelete?: boolean | FilterFunction
+  restrictDelete?: FilterFunction
   restrictAdd?: FilterFunction
   restrictTypeSelection?: boolean | DataType[]
   onAdd?: (props: {
@@ -195,52 +195,73 @@ export const demoData: Record<string, DemoData> = {
   liveData: {
     name: '📖 Live Data (from database)',
     description: (
-      <Text>
-        Let's try a little experiment. You can save this JSON object to a live database, so feel
-        free to use it to leave the world a message or find some way to be creative.
-        <br />
-        Note the deletion restriction and the restriction on being able to modify a whole object
-        node. Let's see how long it lasts... 😉
-      </Text>
+      <>
+        <Text>
+          Here's a live "guestbook" — your changes can be saved permanently to the cloud. However,
+          there are restrictions:
+          <UnorderedList>
+            <ListItem>You can only add new messages, or fields within your message</ListItem>
+            <ListItem>Only the most recent message is editable, and only for five minutes</ListItem>
+          </UnorderedList>
+        </Text>
+        <Text mt={3}>
+          Notice also (these are achieved by customising the <span className="code">onEdit</span>{' '}
+          and <span className="code">onAdd</span> props):
+          <UnorderedList>
+            <ListItem>
+              The messages list gets sorted so the most recent is at the <em>top</em>
+            </ListItem>
+            <ListItem>The timestamps get updated automatically after each edit</ListItem>
+          </UnorderedList>
+        </Text>
+      </>
     ),
     rootName: 'liveData',
     collapse: 3,
-    restrictEdit: ({ key, value, level, path, size }) => {
-      const messageIndex = path[1]
-      // console.log('fullData', fullData)
-      // if (messageIndex && typeof messageIndex === 'number' && fullData?.messages?.[messageIndex]) {
-      //   const currentTimeStamp = fullData?.messages?.[messageIndex]?.timeStamp
-      //   console.log('currentTimeStamp', currentTimeStamp)
-      // }
-      // console.log(key, value, level, path, size)
+    restrictEdit: ({ key, value, level, parentData }) => {
+      if (level < 3) return true
+      if (parentData && 'timeStamp' in parentData) {
+        const timeStamp = parentData.timeStamp as string
+        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return true
+      }
       if (key === 'timeStamp') return true
       if (value instanceof Object) return true
-      return level === 0 || key === 'messages' || key === 'lastEdited'
+      return false
     },
-    restrictDelete: ({ level, key, path, value }) => {
-      return level !== 3 || ['name', 'timeStamp', 'message'].includes(key)
+    restrictDelete: ({ level, key, parentData }) => {
+      if (level !== 3 || ['name', 'timeStamp', 'message'].includes(key as string)) return true
+      if (parentData && 'timeStamp' in parentData) {
+        const timeStamp = parentData.timeStamp as string
+        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return true
+      }
+      return false
     },
-    restrictAdd: ({ level }) => level === 0,
-    onEdit: ({ newData, newValue, path }) => {
-      console.log('Path', path)
+    restrictAdd: ({ path, parentData, value, key }) => {
+      if (path[0] !== 'messages') return true
+      if (key !== 'messages' && path.slice(-1)[0] !== 0) return true
+      if (value instanceof Object && 'timeStamp' in value) {
+        const timeStamp = value.timeStamp as string
+        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return true
+      }
+      if (parentData && 'timeStamp' in parentData) {
+        const timeStamp = parentData.timeStamp as string
+        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return true
+      }
+      return false
+    },
+    onEdit: ({ newData, path }) => {
       if (path[0] !== 'messages' && path.length !== 3) return newData
       const parentPath = [path[0], path[1]]
-      console.log('path', path, parentPath)
-      const messageObject = newData?.messages?.[path[1]]
-      console.log('messageObject', messageObject)
+      const messageObject = (newData as Record<string, any>)?.messages?.[path[1]]
       messageObject.timeStamp = new Date().toISOString()
-      // const timeStampObject =
       const data = assign(newData as any, parentPath, messageObject)
       return data
     },
-    onAdd: ({ name, path, newData }) => {
-      console.log('path', path)
+    onAdd: ({ path, newData }) => {
       if (path[0] === 'messages' && path.length === 2) {
-        const messages = [...newData.messages]
-        console.log('messages', messages)
-        messages.sort((a, b) => new Date(b.timeStamp) - new Date(a.timeStamp))
-        console.log('messages', messages)
-        const data = assign(newData, 'messages', messages)
+        const messages = [...(newData as Record<string, any>)?.messages]
+        messages.sort((a, b) => new Date(b.timeStamp).getTime() - new Date(a.timeStamp).getTime())
+        const data = assign(newData as Input, 'messages', messages)
         return data
       }
       return newData
@@ -249,13 +270,24 @@ export const demoData: Record<string, DemoData> = {
     defaultValue: ({ level }) => {
       if (level === 1)
         return {
-          timeStamp: new Date().toISOString(),
           message: 'Edit this message or "Undo" to remove it',
           name: 'Enter your username here',
+          from: 'Where are you from?',
+          timeStamp: new Date().toISOString(),
         }
       return 'New value'
     },
     data: {},
+    customNodeDefinitions: [
+      {
+        condition: dateNodeDefinition.condition,
+        element: ({ data, getStyles, nodeData }) => {
+          return (
+            <p style={getStyles('string', nodeData)}>{new Date(data as string).toLocaleString()}</p>
+          )
+        },
+      },
+    ],
   },
   editTheme: {
     name: '🎨 Edit this theme!',
