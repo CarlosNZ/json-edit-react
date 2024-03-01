@@ -288,6 +288,13 @@ export const demoData: Record<string, DemoData> = {
         },
       },
     ],
+    customTextDefinitions: {
+      ITEMS_MULTIPLE: ({ level, value }) => {
+        const entry = value as { name: string; from?: string }
+        if (level === 2) return `${entry.name}${entry.from ? '  from ' + entry.from : ''}`
+        return null
+      },
+    },
   },
   editTheme: {
     name: '🎨 Edit this theme!',

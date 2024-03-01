@@ -6,9 +6,16 @@ import './style.css'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
 
+/**
+ * Truncates a string to a specified length, appends `...` if truncated
+ */
 export const truncate = (string: string, length = 200) =>
   string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
 
+/**
+ * Takes a string and returns HTML such as to correctly preserve line breaks and
+ * white space
+ */
 export const breakString = (text: string): React.ReactElement[] =>
   text.split('\n').map((line, index, arr) => {
     const match = /^( +)/.exec(line)

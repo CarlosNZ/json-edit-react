@@ -33,6 +33,9 @@ Features include:
   - [Active hyperlinks](#active-hyperlinks)
 - [Custom Text](#custom-text)
 - [Undo functionality](#undo-functionality)
+- [Exported helpers](#exported-helpers)
+  - [Functions \& Components](#functions--components)
+  - [Types](#types)
 - [Issues, bugs, suggestions?](#issues-bugs-suggestions)
 - [Roadmap](#roadmap)
 - [Inspiration](#inspiration)
@@ -452,6 +455,34 @@ customText = {
 Even though Undo/Redo functionality is probably desirable in most cases, this is not built in to the component, for two main reasons:
 1. It would involve too much additional UI and I didn't want this component becoming opinionated about the look and feel beyond the essentials (which are mostly customisable/style-able anyway)
 2. It is quite straightforward to implement using existing libraries. I've used **[use-undo](https://github.com/homerchen19/use-undo)** in the [Demo](https://carlosnz.github.io/json-edit-react/), which is working well.
+
+## Exported helpers
+
+A few helper functions, components and types that might be useful in your own implementations (from creating Filter or Update functions, or Custom components) are exported from the package:
+
+### Functions & Components
+
+- `themes`: an object containing all the built-in theme definitions
+- `LinkCustomComponent`: the component used to render [hyperlinks](#active-hyperlinks)
+- `LinkCustomNodeDefinition`: custom node definition for [hyperlinks](#active-hyperlinks)
+- `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron`: all the built-in [icon](#icons) components
+- `truncate`: function to truncate a string to a specified length. See [here](#link)
+- `breakString`: function to turn a string into HTML, preserving line breaks and white space. See [here](#link)
+- `extract`: function to extract a deeply nested object value from a string path. See [here](https://github.com/CarlosNZ/object-property-extractor)
+- `assign`: function to set a deep object value from a string path. See [here](https://github.com/CarlosNZ/object-property-assigner)
+
+### Types
+
+- `ThemeName`: string literal list of built-in theme names
+- `Theme`: a full [Theme](#themes--styles) object
+- `ThemeInput`: input type for the `theme` prop
+- `JsonEditorProps`: all input props for the Json Editor component
+- [`UpdateFunction`](#update-functions), [`FilterFunction`](#filter-functions), [`CopyFunction`](#copy-function), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort), [`LocalisedString`](#localisation), [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text)
+- `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
+- `IconReplacements`: input type for the `icons` prop
+- `CollectionNodeProps`: all props passed internally to "collection" nodes (i.e. objects/arrays)
+- `ValueNodeProps`: all props passed internally to "value" nodes (i.e. *not* objects/arrays)
+- `CustomNodeProps`: all props passed internally to [Custom nodes](#custom-nodes); basically the same as `CollectionNodeProps` with an extra `customNodeProps` field for passing props unique to your component`
 
 ## Issues, bugs, suggestions?
 

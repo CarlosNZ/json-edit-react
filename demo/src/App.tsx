@@ -44,7 +44,7 @@ function App() {
   const [rootName, setRootName] = useState(demoData[selectedData].rootName ?? 'data')
   const [indent, setIndent] = useState(3)
   const [collapseLevel, setCollapseLevel] = useState(2)
-  const [showCount, setShowCount] = useState<'Yes' | 'No' | 'When closed'>('Yes')
+  const [showCount, setShowCount] = useState<'Yes' | 'No' | 'When closed'>('When closed')
   const [theme, setTheme] = useState<ThemeName | Theme>('default')
   const [allowEdit, setAllowEdit] = useState(true)
   const [allowDelete, setAllowDelete] = useState(true)
