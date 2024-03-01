@@ -71,6 +71,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     level: 0,
     value: data,
     size: Object.keys(data).length,
+    parentData: null,
   }
 
   const onEdit: OnChangeFunction = async (value, path) => {

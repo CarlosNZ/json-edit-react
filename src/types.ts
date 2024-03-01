@@ -97,6 +97,7 @@ export interface NodeData {
   level: number
   value: unknown
   size: number | null
+  parentData: object | null
   collapsed?: boolean
 }
 

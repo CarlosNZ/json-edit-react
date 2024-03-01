@@ -267,6 +267,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 value,
                 path: [...path, key],
                 level: path.length + 1,
+                parentData: data,
                 size: Object.keys(value as object).length,
               }}
               showCollectionCount={showCollectionCount}
@@ -283,6 +284,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 path: [...path, key],
                 level: path.length + 1,
                 size: 1,
+                parentData: data,
               }}
               {...props}
               showLabel={collectionType === 'object' ? true : showArrayIndices}

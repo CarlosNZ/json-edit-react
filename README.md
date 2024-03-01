@@ -154,7 +154,10 @@ The function receives the following object:
     path,  // path to the property (as an array of property keys)
     level, // depth of the property (with 0 being the root)
     value, // value of the property
-    size   // if a collection (object, array), the number of items (null for non-collections)
+    size ,  // if a collection (object, array), the number of items (null for non-collections)
+    parentData, // parent object containing the current node
+    collapsed // whether or not the current node is in a
+              // "collapsed" state (only for Collection nodes)
 }
 ```
 
