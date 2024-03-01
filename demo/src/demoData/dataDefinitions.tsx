@@ -7,8 +7,15 @@ import {
   FilterFunction,
   CustomTextDefinitions,
   LinkCustomNodeDefinition,
+  assign,
 } from '../JsonEditImport'
-import { DataType, DefaultValueFunction, ThemeStyles } from '../json-edit-react/src/types'
+import {
+  CollectionKey,
+  DataType,
+  DefaultValueFunction,
+  ThemeStyles,
+  UpdateFunction,
+} from '../json-edit-react/src/types'
 
 interface DemoData {
   name: string
@@ -17,9 +24,25 @@ interface DemoData {
   rootName?: string
   collapse?: number
   restrictEdit?: FilterFunction
-  restrictDelete?: FilterFunction
+  restrictDelete?: boolean | FilterFunction
   restrictAdd?: FilterFunction
   restrictTypeSelection?: boolean | DataType[]
+  onAdd?: (props: {
+    newData: object
+    currentData: object
+    newValue: unknown
+    currentValue: unknown
+    name: CollectionKey
+    path: CollectionKey[]
+  }) => any
+  onEdit?: (props: {
+    newData: object
+    currentData: object
+    newValue: unknown
+    currentValue: unknown
+    name: CollectionKey
+    path: CollectionKey[]
+  }) => any
   defaultValue?: unknown | DefaultValueFunction
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
@@ -183,10 +206,55 @@ export const demoData: Record<string, DemoData> = {
     rootName: 'liveData',
     collapse: 3,
     restrictEdit: ({ key, value, level, path, size }) => {
+      const messageIndex = path[1]
+      // console.log('fullData', fullData)
+      // if (messageIndex && typeof messageIndex === 'number' && fullData?.messages?.[messageIndex]) {
+      //   const currentTimeStamp = fullData?.messages?.[messageIndex]?.timeStamp
+      //   console.log('currentTimeStamp', currentTimeStamp)
+      // }
+      // console.log(key, value, level, path, size)
+      if (key === 'timeStamp') return true
+      if (value instanceof Object) return true
       return level === 0 || key === 'messages' || key === 'lastEdited'
     },
-    restrictDelete: () => true,
+    restrictDelete: ({ level, key, path, value }) => {
+      return level !== 3 || ['name', 'timeStamp', 'message'].includes(key)
+    },
     restrictAdd: ({ level }) => level === 0,
+    onEdit: ({ newData, newValue, path }) => {
+      console.log('Path', path)
+      if (path[0] !== 'messages' && path.length !== 3) return newData
+      const parentPath = [path[0], path[1]]
+      console.log('path', path, parentPath)
+      const messageObject = newData?.messages?.[path[1]]
+      console.log('messageObject', messageObject)
+      messageObject.timeStamp = new Date().toISOString()
+      // const timeStampObject =
+      const data = assign(newData as any, parentPath, messageObject)
+      return data
+    },
+    onAdd: ({ name, path, newData }) => {
+      console.log('path', path)
+      if (path[0] === 'messages' && path.length === 2) {
+        const messages = [...newData.messages]
+        console.log('messages', messages)
+        messages.sort((a, b) => new Date(b.timeStamp) - new Date(a.timeStamp))
+        console.log('messages', messages)
+        const data = assign(newData, 'messages', messages)
+        return data
+      }
+      return newData
+    },
+    restrictTypeSelection: ['string', 'number', 'boolean'],
+    defaultValue: ({ level }) => {
+      if (level === 1)
+        return {
+          timeStamp: new Date().toISOString(),
+          message: 'Edit this message or "Undo" to remove it',
+          name: 'Enter your username here',
+        }
+      return 'New value'
+    },
     data: {},
   },
   editTheme: {

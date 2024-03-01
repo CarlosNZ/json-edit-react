@@ -1,7 +1,7 @@
 import 'react-datepicker/dist/react-datepicker.css'
 
 import React, { useEffect, useRef } from 'react'
-import { JsonEditor, themes, ThemeName, Theme } from './JsonEditImport'
+import { JsonEditor, themes, ThemeName, Theme, assign } from './JsonEditImport'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -215,6 +215,22 @@ function App() {
               } else setData(newData)
               if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
             }}
+            onEdit={
+              demoData[selectedData]?.onEdit
+                ? (data) => {
+                    const updateData = (demoData[selectedData] as any).onEdit(data)
+                    if (updateData) setData(updateData)
+                  }
+                : undefined
+            }
+            onAdd={
+              demoData[selectedData]?.onAdd
+                ? (data) => {
+                    const updateData = (demoData[selectedData] as any).onAdd(data)
+                    if (updateData) setData(updateData)
+                  }
+                : undefined
+            }
             collapse={collapseLevel}
             showCollectionCount={
               showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false

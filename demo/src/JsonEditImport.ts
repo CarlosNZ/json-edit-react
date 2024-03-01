@@ -10,6 +10,7 @@ import {
   FilterFunction,
   LinkCustomComponent,
   LinkCustomNodeDefinition,
+  assign,
 } from './json-edit-react/src'
 // } from 'json-edit-react'
 // } from './package'
@@ -26,4 +27,5 @@ export {
   type FilterFunction,
   LinkCustomComponent,
   LinkCustomNodeDefinition,
+  assign,
 }

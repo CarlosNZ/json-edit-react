@@ -217,7 +217,7 @@ const updateDataObject = (
     currentData: data,
     newData,
     currentValue,
-    newValue: action === 'update' ? newValue : undefined,
+    newValue: action !== 'delete' ? newValue : undefined,
   }
 }
 
