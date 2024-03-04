@@ -52,7 +52,7 @@ export {
   IconOk,
   IconCancel,
   IconChevron,
-  matchNode as valueMatch,
+  matchNode,
   truncate,
   breakString,
   assign,

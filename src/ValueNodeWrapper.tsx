@@ -36,7 +36,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     restrictEditFilter,
     restrictDeleteFilter,
     restrictTypeSelection,
-    searchFilterFunction,
+    searchFilter,
     searchText,
     showLabel,
     stringTruncate,
@@ -193,7 +193,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     return result
   }, [nodeData, restrictTypeSelection])
 
-  if (!filterNode('value', nodeData, searchFilterFunction, searchText)) return null
+  if (!filterNode('value', nodeData, searchFilter, searchText)) return null
 
   const ValueComponent =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (

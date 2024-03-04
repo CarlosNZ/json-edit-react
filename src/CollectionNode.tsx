@@ -8,10 +8,9 @@ import {
   type ErrorString,
   type NodeData,
   ERROR_DISPLAY_TIME,
-  SearchFilterFunction,
 } from './types'
 import { Icon } from './Icons'
-import { filterCollection, filterNode, isCollection, matchNode } from './filterHelpers'
+import { filterNode, isCollection } from './filterHelpers'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
@@ -35,7 +34,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     restrictAddFilter,
     collapseFilter,
     enableClipboard,
-    searchFilterFunction,
+    searchFilter,
     searchText,
     indent,
     keySort,
@@ -189,7 +188,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
   const canEditKey = parentData !== null && canEdit && canAdd && canDelete
 
-  if (!filterNode('collection', nodeData, searchFilterFunction, searchText) && nodeData.level > 0) {
+  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0) {
     return null
   }
 
@@ -275,6 +274,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 level: path.length + 1,
                 parentData: data,
                 size: Object.keys(value as object).length,
+                fullData: nodeData.fullData,
               }}
               showCollectionCount={showCollectionCount}
               {...props}
@@ -291,6 +291,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 level: path.length + 1,
                 size: 1,
                 parentData: data,
+                fullData: nodeData.fullData,
               }}
               {...props}
               showLabel={collectionType === 'object' ? true : showArrayIndices}

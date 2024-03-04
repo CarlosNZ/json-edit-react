@@ -13,12 +13,9 @@ export const filterNode = (
 
   switch (type) {
     case 'collection':
-      if (
-        searchFilter &&
-        !searchFilter(nodeData, searchText) &&
-        !filterCollection(searchText, nodeData, searchFilter)
-      ) {
-        return false
+      if (searchFilter) {
+        if (searchFilter(nodeData, searchText)) return true
+        if (!filterCollection(searchText, nodeData, searchFilter)) return false
       }
       if (!searchFilter && searchText && !filterCollection(searchText, nodeData)) return false
       break
@@ -33,7 +30,7 @@ export const filterNode = (
 export const filterCollection = (
   searchText: string = '',
   nodeData: NodeData,
-  matcher: SearchFilterFunction = matchNode
+  matcher = matchNode
 ): boolean => {
   const collection = nodeData.value as object | unknown[]
   const entries = Object.entries(collection)
@@ -42,6 +39,7 @@ export const filterCollection = (
     const childPath = [...nodeData.path, key]
 
     const childNodeData = {
+      ...nodeData,
       key,
       path: childPath,
       level: nodeData.level + 1,
@@ -55,12 +53,11 @@ export const filterCollection = (
   })
 }
 
-export const matchNode: SearchFilterFunction = (inputData, searchText = '') => {
-  const { matchValue, matchField, ...nodeData } = inputData
-  const value =
-    matchValue ?? matchField
-      ? nodeData[matchField as 'key' | 'value' | 'level' | 'size']
-      : nodeData.value
+export const matchNode: (input: Partial<NodeData>, searchText: string) => boolean = (
+  nodeData,
+  searchText = ''
+) => {
+  const { value } = nodeData
 
   if (value === null && 'null'.includes(searchText.toLowerCase())) return true
 

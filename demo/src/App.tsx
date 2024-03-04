@@ -1,12 +1,13 @@
 import 'react-datepicker/dist/react-datepicker.css'
 
 import React, { useEffect, useRef } from 'react'
-import { JsonEditor, themes, ThemeName, Theme, FilterFunction, matchNode } from './JsonEditImport'
+import { JsonEditor, themes, ThemeName, Theme, FilterFunction } from './JsonEditImport'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
 import { useState } from 'react'
 import useUndo from 'use-undo'
+import { useDebounce } from './useDebounce'
 import {
   Box,
   Flex,
@@ -53,7 +54,7 @@ function App() {
   const [showIndices, setShowIndices] = useState(true)
   const [defaultNewValue, setDefaultNewValue] = useState('New data!')
   const [isSaving, setIsSaving] = useState(false)
-  const [searchText, setSearchText] = useState('')
+  const [searchText, debouncedSearchText, setSearchText, resetSearchText] = useDebounce('')
   const previousThemeName = useRef('') // Used when resetting after theme editing
   const toast = useToast()
 
@@ -105,6 +106,7 @@ function App() {
 
   const handleChangeData = (e) => {
     setSelectedData(e.target.value)
+    resetSearchText()
     if (e.target.value === 'editTheme') {
       previousThemeName.current = theme as string
       setCollapseLevel(demoData.editTheme.collapse as number)
@@ -121,6 +123,7 @@ function App() {
   }
 
   const handleReset = async () => {
+    resetSearchText()
     switch (selectedData) {
       case 'editTheme':
         reset(themes[previousThemeName.current])
@@ -199,11 +202,13 @@ function App() {
           </Flex>
         </HStack>
         <VStack minW={400}>
-          <Heading size="lg" variant="accent">
-            Demo
-          </Heading>
+          <HStack justifyContent="space-evenly" w="100%">
+            <Heading size="lg" variant="accent">
+              Demo
+            </Heading>
+          </HStack>
           <Input
-            placeholder="Search values"
+            placeholder={demoData[selectedData].searchPlaceholder ?? 'Search values'}
             bgColor={'#f6f6f6'}
             borderRadius={50}
             size="sm"
@@ -260,12 +265,8 @@ function App() {
             restrictDelete={restrictDelete}
             restrictAdd={restrictAdd}
             restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
-            // searchFilter={({ parentData, value }, searchText) => {
-            //   console.log(searchText, value, parentData.name === searchText)
-            //   return matchNode({ value: parentData.name }, searchText)
-            // }}
-            searchFilter={['key']}
-            searchText={searchText}
+            searchFilter={demoData[selectedData]?.searchFilter}
+            searchText={debouncedSearchText}
             keySort={sortKeys}
             defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
             showArrayIndices={showIndices}

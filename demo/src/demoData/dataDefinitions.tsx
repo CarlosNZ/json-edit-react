@@ -8,11 +8,13 @@ import {
   CustomTextDefinitions,
   LinkCustomNodeDefinition,
   assign,
+  matchNode,
 } from '../JsonEditImport'
 import {
   CollectionKey,
   DataType,
   DefaultValueFunction,
+  SearchFilterFunction,
   ThemeStyles,
   UpdateFunction,
 } from '../json-edit-react/src/types'
@@ -28,6 +30,8 @@ interface DemoData {
   restrictDelete?: FilterFunction
   restrictAdd?: FilterFunction
   restrictTypeSelection?: boolean | DataType[]
+  searchFilter?: SearchFilterFunction
+  searchPlaceholder?: string
   onUpdate?: UpdateFunction
   onAdd?: (props: {
     newData: object
@@ -151,6 +155,16 @@ export const demoData: Record<string, DemoData> = {
     restrictAdd: ({ level }) => level === 1,
     restrictDelete: ({ key }) => key === 'id',
     collapse: 2,
+    searchFilter: ({ path, fullData }, searchText = '') => {
+      if (path?.length >= 2) {
+        const index = path?.[0]
+        return (
+          matchNode({ value: fullData[index].name }, searchText) ||
+          matchNode({ value: fullData[index].username }, searchText)
+        )
+      } else return false
+    },
+    searchPlaceholder: 'Search by client name or username',
     defaultValue: ({ level }) => {
       if (level === 0)
         return {
@@ -337,6 +351,12 @@ export const demoData: Record<string, DemoData> = {
     restrictAdd: ({ level }) => level === 0,
     restrictTypeSelection: ['string', 'object', 'array'],
     collapse: 2,
+    searchFilter: ({ key, path }, searchText = '') => {
+      if (matchNode({ value: key }, searchText)) return true
+      if (path.some((field) => matchNode({ value: field }, searchText))) return true
+      else return false
+    },
+    searchPlaceholder: 'Search Theme keys',
     data: {},
   },
   customNodes: {
@@ -373,6 +393,13 @@ export const demoData: Record<string, DemoData> = {
     ),
     rootName: 'Superheroes',
     collapse: 2,
+    searchFilter: ({ path, fullData }, searchText = '') => {
+      if (path?.length >= 2) {
+        const index = path?.[0]
+        return matchNode({ value: fullData[index].name }, searchText)
+      } else return false
+    },
+    searchPlaceholder: 'Search by character name',
     data: data.customNodes,
     customNodeDefinitions: [
       {
