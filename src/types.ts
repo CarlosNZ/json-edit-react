@@ -22,6 +22,8 @@ export interface JsonEditorProps {
   restrictAdd?: boolean | FilterFunction
   restrictTypeSelection?: boolean | DataType[] | TypeFilterFunction
   // restrictKeyEdit?: boolean | FilterFunction
+  searchFilter?: NodeDataSearchableField[] | SearchFilterFunction
+  searchText?: string
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
   defaultValue?: unknown
@@ -72,6 +74,13 @@ export type FilterFunction = (input: NodeData) => boolean
 export type TypeFilterFunction = (input: NodeData) => boolean | DataType[]
 export type CustomTextFunction = (input: NodeData) => string | null
 export type DefaultValueFunction = (input: NodeData) => unknown
+export type SearchFilterFunction = (inputData: SearchFilterInput, searchText?: string) => boolean
+
+export type NodeDataSearchableField = 'key' | 'value' | 'level' | 'size'
+export type SearchFilterInput = Partial<NodeData> & {
+  matchField?: NodeDataSearchableField
+  matchValue?: string | number | boolean | null
+}
 
 export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
@@ -100,7 +109,6 @@ export interface NodeData {
   parentData: object | null
   collapsed?: boolean
 }
-
 interface BaseNodeProps {
   data: unknown
   parentData: CollectionData | null
@@ -111,6 +119,8 @@ interface BaseNodeProps {
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction
   restrictAddFilter: FilterFunction
+  searchFilterFunction?: SearchFilterFunction
+  searchText?: string
   restrictTypeSelection: boolean | DataType[] | TypeFilterFunction
   stringTruncate: number
   indent: number

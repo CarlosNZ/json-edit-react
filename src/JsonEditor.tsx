@@ -1,13 +1,17 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import assign, { type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
-import { CollectionNode, isCollection } from './CollectionNode'
+import { CollectionNode } from './CollectionNode'
+import { isCollection, matchNode } from './filterHelpers'
 import {
   type CollectionData,
   type JsonEditorProps,
   type FilterFunction,
   type OnChangeFunction,
   type NodeData,
+  NodeDataSearchableField,
+  SearchFilterFunction,
+  SearchFilterInput,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { CollapseProvider, useCollapseAll } from './CollapseProvider'
@@ -34,6 +38,8 @@ const Editor: React.FC<JsonEditorProps> = ({
   restrictDelete = false,
   restrictAdd = false,
   restrictTypeSelection = false,
+  searchFilter,
+  searchText,
   keySort = false,
   showArrayIndices = true,
   defaultValue = null,
@@ -146,6 +152,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   const restrictEditFilter = getFilterFunction(restrictEdit)
   const restrictDeleteFilter = getFilterFunction(restrictDelete)
   const restrictAddFilter = getFilterFunction(restrictAdd)
+  const searchFilterFunction = getSearchFilterFunction(searchFilter)
 
   const otherProps = {
     name: rootName,
@@ -159,6 +166,8 @@ const Editor: React.FC<JsonEditorProps> = ({
     restrictDeleteFilter,
     restrictAddFilter,
     restrictTypeSelection,
+    searchFilterFunction,
+    searchText,
     enableClipboard,
     keySort,
     showArrayIndices,
@@ -225,6 +234,17 @@ const updateDataObject = (
 const getFilterFunction = (propValue: boolean | number | FilterFunction): FilterFunction => {
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
+  return propValue
+}
+
+const getSearchFilterFunction = (
+  propValue: NodeDataSearchableField[] | SearchFilterFunction | undefined
+) => {
+  if (!propValue) return undefined
+  if (Array.isArray(propValue)) {
+    return (nodeData: NodeData, searchText?: string) =>
+      propValue.some((field) => matchNode({ ...nodeData, matchField: field }, searchText))
+  }
   return propValue
 }
 

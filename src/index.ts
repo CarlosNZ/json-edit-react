@@ -20,6 +20,7 @@ import { themes } from './theme'
 import { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 import { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
 import { truncate, breakString } from './ValueNodes'
+import { matchNode } from './filterHelpers'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 
@@ -51,6 +52,7 @@ export {
   IconOk,
   IconCancel,
   IconChevron,
+  matchNode as valueMatch,
   truncate,
   breakString,
   assign,

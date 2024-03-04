@@ -8,14 +8,14 @@ import {
   type ErrorString,
   type NodeData,
   ERROR_DISPLAY_TIME,
+  SearchFilterFunction,
 } from './types'
 import { Icon } from './Icons'
+import { filterCollection, filterNode, isCollection, matchNode } from './filterHelpers'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useCollapseAll } from './CollapseProvider'
-
-export const isCollection = (value: unknown) => value !== null && typeof value === 'object'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({
   data,
@@ -35,6 +35,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     restrictAddFilter,
     collapseFilter,
     enableClipboard,
+    searchFilterFunction,
+    searchText,
     indent,
     keySort,
     showArrayIndices,
@@ -186,6 +188,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
   const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
   const canEditKey = parentData !== null && canEdit && canAdd && canDelete
+
+  if (!filterNode('collection', nodeData, searchFilterFunction, searchText) && nodeData.level > 0) {
+    return null
+  }
 
   const isArray = typeof path.slice(-1)[0] === 'number'
   const showLabel = showArrayIndices || !isArray

@@ -1,7 +1,7 @@
 import 'react-datepicker/dist/react-datepicker.css'
 
 import React, { useEffect, useRef } from 'react'
-import { JsonEditor, themes, ThemeName, Theme, assign } from './JsonEditImport'
+import { JsonEditor, themes, ThemeName, Theme, FilterFunction, matchNode } from './JsonEditImport'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -36,7 +36,6 @@ import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import { demoData } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
-import { FilterFunction } from './json-edit-react/src/types'
 import { version } from './version'
 
 function App() {
@@ -54,6 +53,7 @@ function App() {
   const [showIndices, setShowIndices] = useState(true)
   const [defaultNewValue, setDefaultNewValue] = useState('New data!')
   const [isSaving, setIsSaving] = useState(false)
+  const [searchText, setSearchText] = useState('')
   const previousThemeName = useRef('') // Used when resetting after theme editing
   const toast = useToast()
 
@@ -202,15 +202,21 @@ function App() {
           <Heading size="lg" variant="accent">
             Demo
           </Heading>
+          <Input
+            placeholder="Search values"
+            bgColor={'#f6f6f6'}
+            borderRadius={50}
+            size="sm"
+            w={80}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
           <JsonEditor
             data={data}
             rootName={rootName}
             theme={[theme, demoData[selectedData]?.styles ?? {}]}
             indent={indent}
             onUpdate={
-              // ({ newValue }) => {
-              //   if (newValue === 'wrong') return 'NOPE'
-              // }
               demoData[selectedData]?.onUpdate
                 ? demoData[selectedData]?.onUpdate
                 : ({ newData }) => {
@@ -254,6 +260,12 @@ function App() {
             restrictDelete={restrictDelete}
             restrictAdd={restrictAdd}
             restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
+            // searchFilter={({ parentData, value }, searchText) => {
+            //   console.log(searchText, value, parentData.name === searchText)
+            //   return matchNode({ value: parentData.name }, searchText)
+            // }}
+            searchFilter={['key']}
+            searchText={searchText}
             keySort={sortKeys}
             defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
             showArrayIndices={showIndices}
