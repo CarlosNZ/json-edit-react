@@ -30,7 +30,7 @@ interface DemoData {
   restrictDelete?: FilterFunction
   restrictAdd?: FilterFunction
   restrictTypeSelection?: boolean | DataType[]
-  searchFilter?: SearchFilterFunction
+  searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
   searchPlaceholder?: string
   onUpdate?: UpdateFunction
   onAdd?: (props: {
@@ -149,6 +149,7 @@ export const demoData: Record<string, DemoData> = {
           "Person" object is added, but adding new items elsewhere adds simple string values. This
           is done by specifying a function for the <span className="code">defaultValue</span> prop.
         </Text>
+        <Text>We've also changed the behaviour of the "Search"</Text>
       </Flex>
     ),
     restrictEdit: ({ key, level }) => key === 'id' || level === 0 || level === 1,
@@ -351,11 +352,7 @@ export const demoData: Record<string, DemoData> = {
     restrictAdd: ({ level }) => level === 0,
     restrictTypeSelection: ['string', 'object', 'array'],
     collapse: 2,
-    searchFilter: ({ key, path }, searchText = '') => {
-      if (matchNode({ value: key }, searchText)) return true
-      if (path.some((field) => matchNode({ value: field }, searchText))) return true
-      else return false
-    },
+    searchFilter: 'key',
     searchPlaceholder: 'Search Theme keys',
     data: {},
   },

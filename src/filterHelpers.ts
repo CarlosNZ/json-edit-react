@@ -1,4 +1,4 @@
-import { type SearchFilterFunction, type NodeData } from './types'
+import { type SearchFilterFunction, type NodeData, type SearchFilterInputFunction } from './types'
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
   value !== null && typeof value === 'object'
@@ -27,10 +27,10 @@ export const filterNode = (
   return true
 }
 
-export const filterCollection = (
+const filterCollection = (
   searchText: string = '',
   nodeData: NodeData,
-  matcher = matchNode
+  matcher: SearchFilterInputFunction | SearchFilterFunction = matchNode
 ): boolean => {
   const collection = nodeData.value as object | unknown[]
   const entries = Object.entries(collection)
@@ -75,4 +75,10 @@ export const matchNode: (input: Partial<NodeData>, searchText: string) => boolea
     default:
       return false
   }
+}
+
+export const matchNodeKey: SearchFilterFunction = ({ key, path }, searchText = '') => {
+  if (matchNode({ value: key }, searchText)) return true
+  if (path.some((field) => matchNode({ value: field }, searchText))) return true
+  return false
 }

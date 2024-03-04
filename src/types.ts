@@ -22,7 +22,7 @@ export interface JsonEditorProps {
   restrictAdd?: boolean | FilterFunction
   restrictTypeSelection?: boolean | DataType[] | TypeFilterFunction
   // restrictKeyEdit?: boolean | FilterFunction
-  searchFilter?: SearchFilterFunction
+  searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
   searchText?: string
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
@@ -74,9 +74,11 @@ export type FilterFunction = (input: NodeData) => boolean
 export type TypeFilterFunction = (input: NodeData) => boolean | DataType[]
 export type CustomTextFunction = (input: NodeData) => string | null
 export type DefaultValueFunction = (input: NodeData) => unknown
-export type SearchFilterFunction = (inputData: SearchFilterInput, searchText?: string) => boolean
-
-export type SearchFilterInput = NodeData
+export type SearchFilterFunction = (inputData: NodeData, searchText: string) => boolean
+export type SearchFilterInputFunction = (
+  inputData: Partial<NodeData>,
+  searchText: string
+) => boolean
 
 export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {

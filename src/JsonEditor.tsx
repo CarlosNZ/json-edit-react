@@ -2,13 +2,15 @@ import React, { useCallback, useEffect, useState } from 'react'
 import assign, { type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import { CollectionNode } from './CollectionNode'
-import { isCollection } from './filterHelpers'
+import { isCollection, matchNode, matchNodeKey } from './filterHelpers'
 import {
   type CollectionData,
   type JsonEditorProps,
   type FilterFunction,
   type OnChangeFunction,
   type NodeData,
+  SearchFilterInputFunction,
+  SearchFilterFunction,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { CollapseProvider, useCollapseAll } from './CollapseProvider'
@@ -35,7 +37,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   restrictDelete = false,
   restrictAdd = false,
   restrictTypeSelection = false,
-  searchFilter,
+  searchFilter: searchFilterInput,
   searchText,
   keySort = false,
   showArrayIndices = true,
@@ -150,6 +152,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   const restrictEditFilter = getFilterFunction(restrictEdit)
   const restrictDeleteFilter = getFilterFunction(restrictDelete)
   const restrictAddFilter = getFilterFunction(restrictAdd)
+  const searchFilter = getSearchFilter(searchFilterInput)
 
   const otherProps = {
     name: rootName,
@@ -232,6 +235,23 @@ const getFilterFunction = (propValue: boolean | number | FilterFunction): Filter
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
   return propValue
+}
+
+const getSearchFilter = (
+  searchFilterInput: 'key' | 'value' | 'all' | SearchFilterFunction | undefined
+): SearchFilterFunction | undefined => {
+  if (searchFilterInput === undefined) return undefined
+  if (searchFilterInput === 'value') {
+    return matchNode as SearchFilterFunction
+  }
+  if (searchFilterInput === 'key') {
+    return matchNodeKey
+  }
+  if (searchFilterInput === 'all') {
+    return (inputData, searchText) =>
+      matchNode(inputData, searchText) || matchNodeKey(inputData, searchText)
+  }
+  return searchFilterInput
 }
 
 export default JsonEditor
