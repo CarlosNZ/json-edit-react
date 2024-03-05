@@ -236,7 +236,7 @@ You can specify what should be matched by setting `searchFilter` to either `"key
 ( { key, path, level, value, ...etc }:FilterFunctionInput, searchText:string ) => boolean
 ```
 
-There are two helper functions (`matchNode()` and `matchNodeKey()`) exported with the package that might make creating your search function easier (these are the functions used internally for the `"key"` and `"value"` matches described above). You can see what they do [here](#linktocodebase).
+There are two helper functions (`matchNode()` and `matchNodeKey()`) exported with the package that might make creating your search function easier (these are the functions used internally for the `"key"` and `"value"` matches described above). You can see what they do [here](https://github.com/CarlosNZ/json-edit-react/blob/574f2c1ba3e724c93ce8ab9cdba2fe8ebbbbf806/src/filterHelpers.ts#L64-L95).
 
 An example custom search function can be seen in the [Demo](#https://carlosnz.github.io/json-edit-react/) with the "Client list" data set -- the search function matches by name and username, and makes the entire "Client" object visible when one of those matches, so it can be used to find a particular person and edit their specific details:
 

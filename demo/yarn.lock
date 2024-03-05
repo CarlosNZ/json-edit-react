@@ -7698,14 +7698,14 @@ jsesc@~0.5.0:
   resolved "https://registry.npmjs.org/jsesc/-/jsesc-0.5.0.tgz"
   integrity sha512-uZz5UnB7u4T9LvwmFqXii7pZSouaRPorGs5who1Ip7VO0wxanFvBL7GkM6dTHlgX+jhBApRetaWpnDabOeTcnA==
 
-json-edit-react@^1.6.1:
-  version "1.6.1"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.6.1.tgz#a7b3c3ea7bd768faa5f52083d8b08c01c16cf95e"
-  integrity sha512-kQbtVpy66czFDseP7i5vqeK652aktb3tlGFMq+EtykhKhNFD2Lu+jkL8K6C8bq0QQJkWmVU3drLuO+72RBN8rw==
+json-edit-react@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.7.0.tgz#c56b9fcebf1efb19e136f742e10556e2fd718691"
+  integrity sha512-w/y/XT/8m8zUFPvVcJrn9Cxp+mb/QTm9Va/1dX2QsX9V2En5aYioFSXRDLkLpKC+84xSIUvcySZr43LzIgYA1A==
   dependencies:
     json5 "^2.2.3"
     just-clone "^6.2.0"
-    object-property-assigner "^1.2.1"
+    object-property-assigner "^1.2.2"
     object-property-extractor "^1.0.10"
 
 json-parse-even-better-errors@^2.3.0, json-parse-even-better-errors@^2.3.1:
@@ -8284,10 +8284,10 @@ object-keys@^1.1.1:
   resolved "https://registry.npmjs.org/object-keys/-/object-keys-1.1.1.tgz"
   integrity sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==
 
-object-property-assigner@^1.2.1:
-  version "1.2.1"
-  resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.2.1.tgz#ec16ecefd940d0fb973d392000c5744cbc1066c3"
-  integrity sha512-sMf0u3+7efLtYIjsuUec6lsjIm2cx+Kv3wsxhtiifQSgq1sFrKXUDCU0RQo52sKd1eN+VHhjePvtNDzbTdH27w==
+object-property-assigner@^1.2.2:
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.2.2.tgz#bc07ada5673892913d5206d4daf28e3c5cdc16b8"
+  integrity sha512-/t/aeJgDlP3FQTfVs+7XhLWe1WjH4V2TLX2Q0g++APfa7gHrtIB8HKuTUpH77LFOw9Rm0HyVW7t34KKRUAxF4A==
 
 object-property-extractor@^1.0.10:
   version "1.0.10"

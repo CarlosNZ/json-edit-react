@@ -1,4 +1,4 @@
-import { getFirestore, doc, setDoc, DocumentData } from 'firebase/firestore'
+import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import { initializeApp } from 'firebase/app'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import firebaseConfig from './firebaseConfig.json'
