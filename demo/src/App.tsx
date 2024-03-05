@@ -1,7 +1,7 @@
 import 'react-datepicker/dist/react-datepicker.css'
 
 import React, { useEffect, useRef } from 'react'
-import { JsonEditor, themes, ThemeName, Theme, assign } from './JsonEditImport'
+import { JsonEditor, themes, ThemeName, Theme, FilterFunction } from './JsonEditImport'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -36,7 +36,6 @@ import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import { demoData } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
-import { FilterFunction } from './json-edit-react/src/types'
 import { version } from './version'
 
 function App() {
@@ -54,6 +53,7 @@ function App() {
   const [showIndices, setShowIndices] = useState(true)
   const [defaultNewValue, setDefaultNewValue] = useState('New data!')
   const [isSaving, setIsSaving] = useState(false)
+  const [searchText, setSearchText] = useState('')
   const previousThemeName = useRef('') // Used when resetting after theme editing
   const toast = useToast()
 
@@ -105,6 +105,7 @@ function App() {
 
   const handleChangeData = (e) => {
     setSelectedData(e.target.value)
+    setSearchText('')
     if (e.target.value === 'editTheme') {
       previousThemeName.current = theme as string
       setCollapseLevel(demoData.editTheme.collapse as number)
@@ -121,6 +122,7 @@ function App() {
   }
 
   const handleReset = async () => {
+    setSearchText('')
     switch (selectedData) {
       case 'editTheme':
         reset(themes[previousThemeName.current])
@@ -202,67 +204,87 @@ function App() {
           <Heading size="lg" variant="accent">
             Demo
           </Heading>
-          <JsonEditor
-            data={data}
-            rootName={rootName}
-            theme={[theme, demoData[selectedData]?.styles ?? {}]}
-            indent={indent}
-            onUpdate={
-              // ({ newValue }) => {
-              //   if (newValue === 'wrong') return 'NOPE'
-              // }
-              demoData[selectedData]?.onUpdate
-                ? demoData[selectedData]?.onUpdate
-                : ({ newData }) => {
-                    setData(newData)
-                    if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
-                  }
-            }
-            onEdit={
-              demoData[selectedData]?.onEdit
-                ? (data) => {
-                    const updateData = (demoData[selectedData] as any).onEdit(data)
-                    if (updateData) setData(updateData)
-                  }
-                : undefined
-            }
-            onAdd={
-              demoData[selectedData]?.onAdd
-                ? (data) => {
-                    const updateData = (demoData[selectedData] as any).onAdd(data)
-                    if (updateData) setData(updateData)
-                  }
-                : undefined
-            }
-            collapse={collapseLevel}
-            showCollectionCount={
-              showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
-            }
-            enableClipboard={
-              allowCopy
-                ? ({ stringValue, type }) =>
-                    toast({
-                      title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
-                      description: truncate(String(stringValue)),
-                      status: 'success',
-                      duration: 5000,
-                      isClosable: true,
-                    })
-                : false
-            }
-            restrictEdit={restrictEdit}
-            restrictDelete={restrictDelete}
-            restrictAdd={restrictAdd}
-            restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
-            keySort={sortKeys}
-            defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
-            showArrayIndices={showIndices}
-            maxWidth="min(650px, 90vw)"
-            className="block-shadow"
-            stringTruncate={90}
-            customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
-            customText={demoData[selectedData]?.customTextDefinitions}
-          />
+          <Box position="relative">
+            <Input
+              placeholder={demoData[selectedData].searchPlaceholder ?? 'Search values'}
+              bgColor={'#f6f6f6'}
+              borderColor="gainsboro"
+              borderRadius={50}
+              size="sm"
+              w={60}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              position="absolute"
+              right={2}
+              top={2}
+              zIndex={100}
+            />
+            <JsonEditor
+              data={data}
+              rootName={rootName}
+              theme={[
+                theme,
+                demoData[selectedData]?.styles ?? {},
+                { container: { paddingTop: '1em' } },
+              ]}
+              indent={indent}
+              onUpdate={
+                demoData[selectedData]?.onUpdate
+                  ? demoData[selectedData]?.onUpdate
+                  : ({ newData }) => {
+                      setData(newData)
+                      if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
+                    }
+              }
+              onEdit={
+                demoData[selectedData]?.onEdit
+                  ? (data) => {
+                      const updateData = (demoData[selectedData] as any).onEdit(data)
+                      if (updateData) setData(updateData)
+                    }
+                  : undefined
+              }
+              onAdd={
+                demoData[selectedData]?.onAdd
+                  ? (data) => {
+                      const updateData = (demoData[selectedData] as any).onAdd(data)
+                      if (updateData) setData(updateData)
+                    }
+                  : undefined
+              }
+              collapse={collapseLevel}
+              showCollectionCount={
+                showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
+              }
+              enableClipboard={
+                allowCopy
+                  ? ({ stringValue, type }) =>
+                      toast({
+                        title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
+                        description: truncate(String(stringValue)),
+                        status: 'success',
+                        duration: 5000,
+                        isClosable: true,
+                      })
+                  : false
+              }
+              restrictEdit={restrictEdit}
+              restrictDelete={restrictDelete}
+              restrictAdd={restrictAdd}
+              restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
+              searchFilter={demoData[selectedData]?.searchFilter}
+              searchText={searchText}
+              keySort={sortKeys}
+              defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
+              showArrayIndices={showIndices}
+              minWidth={450}
+              maxWidth="min(650px, 90vw)"
+              className="block-shadow"
+              stringTruncate={90}
+              customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
+              customText={demoData[selectedData]?.customTextDefinitions}
+            />
+          </Box>
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
               <Button

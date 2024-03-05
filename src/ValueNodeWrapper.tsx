@@ -23,6 +23,7 @@ import {
 import { useTheme } from './theme'
 import './style.css'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
+import { filterNode } from './filterHelpers'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -35,6 +36,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     restrictEditFilter,
     restrictDeleteFilter,
     restrictTypeSelection,
+    searchFilter,
+    searchText,
     showLabel,
     stringTruncate,
     indent,
@@ -189,6 +192,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
     return result
   }, [nodeData, restrictTypeSelection])
+
+  if (!filterNode('value', nodeData, searchFilter, searchText)) return null
 
   const ValueComponent =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (

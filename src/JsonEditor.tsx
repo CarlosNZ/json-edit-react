@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import assign, { type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
-import { CollectionNode, isCollection } from './CollectionNode'
+import { CollectionNode } from './CollectionNode'
+import { isCollection, matchNode, matchNodeKey } from './filterHelpers'
 import {
   type CollectionData,
   type JsonEditorProps,
   type FilterFunction,
   type OnChangeFunction,
   type NodeData,
+  type SearchFilterFunction,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { CollapseProvider, useCollapseAll } from './CollapseProvider'
@@ -34,6 +36,9 @@ const Editor: React.FC<JsonEditorProps> = ({
   restrictDelete = false,
   restrictAdd = false,
   restrictTypeSelection = false,
+  searchFilter: searchFilterInput,
+  searchText,
+  searchDebounceTime = 350,
   keySort = false,
   showArrayIndices = true,
   defaultValue = null,
@@ -52,6 +57,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     translations,
     customText,
   ])
+  const [debouncedSearchText, setDebouncedSearchText] = useState(searchText)
 
   const [data, setData] = useState(srcData)
 
@@ -65,6 +71,11 @@ const Editor: React.FC<JsonEditorProps> = ({
     setData(srcData)
   }, [srcData])
 
+  useEffect(() => {
+    const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
+    return () => clearTimeout(debounce)
+  }, [searchText, searchDebounceTime])
+
   const nodeData: NodeData = {
     key: rootName,
     path: [],
@@ -72,6 +83,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     value: data,
     size: Object.keys(data).length,
     parentData: null,
+    fullData: data,
   }
 
   const onEdit: OnChangeFunction = async (value, path) => {
@@ -146,6 +158,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   const restrictEditFilter = getFilterFunction(restrictEdit)
   const restrictDeleteFilter = getFilterFunction(restrictDelete)
   const restrictAddFilter = getFilterFunction(restrictAdd)
+  const searchFilter = getSearchFilter(searchFilterInput)
 
   const otherProps = {
     name: rootName,
@@ -159,6 +172,8 @@ const Editor: React.FC<JsonEditorProps> = ({
     restrictDeleteFilter,
     restrictAddFilter,
     restrictTypeSelection,
+    searchFilter,
+    searchText: debouncedSearchText,
     enableClipboard,
     keySort,
     showArrayIndices,
@@ -226,6 +241,23 @@ const getFilterFunction = (propValue: boolean | number | FilterFunction): Filter
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
   return propValue
+}
+
+const getSearchFilter = (
+  searchFilterInput: 'key' | 'value' | 'all' | SearchFilterFunction | undefined
+): SearchFilterFunction | undefined => {
+  if (searchFilterInput === undefined) return undefined
+  if (searchFilterInput === 'value') {
+    return matchNode as SearchFilterFunction
+  }
+  if (searchFilterInput === 'key') {
+    return matchNodeKey
+  }
+  if (searchFilterInput === 'all') {
+    return (inputData, searchText) =>
+      matchNode(inputData, searchText) || matchNodeKey(inputData, searchText)
+  }
+  return searchFilterInput
 }
 
 export default JsonEditor

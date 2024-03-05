@@ -34,7 +34,7 @@
   "dependencies": {
     "json5": "^2.2.3",
     "just-clone": "^6.2.0",
-    "object-property-assigner": "^1.2.1",
+    "object-property-assigner": "^1.2.2",
     "object-property-extractor": "^1.0.10"
   },
   "devDependencies": {
@@ -60,6 +60,6 @@
     "rollup-plugin-styles": "^4.0.0",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.2",
-    "typescript": "*"
+    "typescript": "^5.3.3"
   }
 }

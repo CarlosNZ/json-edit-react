@@ -10,12 +10,11 @@ import {
   ERROR_DISPLAY_TIME,
 } from './types'
 import { Icon } from './Icons'
+import { filterNode, isCollection } from './filterHelpers'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useCollapseAll } from './CollapseProvider'
-
-export const isCollection = (value: unknown) => value !== null && typeof value === 'object'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({
   data,
@@ -35,6 +34,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     restrictAddFilter,
     collapseFilter,
     enableClipboard,
+    searchFilter,
+    searchText,
     indent,
     keySort,
     showArrayIndices,
@@ -187,6 +188,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
   const canEditKey = parentData !== null && canEdit && canAdd && canDelete
 
+  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0) {
+    return null
+  }
+
   const isArray = typeof path.slice(-1)[0] === 'number'
   const showLabel = showArrayIndices || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
@@ -269,6 +274,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 level: path.length + 1,
                 parentData: data,
                 size: Object.keys(value as object).length,
+                fullData: nodeData.fullData,
               }}
               showCollectionCount={showCollectionCount}
               {...props}
@@ -285,6 +291,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 level: path.length + 1,
                 size: 1,
                 parentData: data,
+                fullData: nodeData.fullData,
               }}
               {...props}
               showLabel={collectionType === 'object' ? true : showArrayIndices}
