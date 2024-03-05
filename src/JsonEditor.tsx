@@ -9,8 +9,7 @@ import {
   type FilterFunction,
   type OnChangeFunction,
   type NodeData,
-  SearchFilterInputFunction,
-  SearchFilterFunction,
+  type SearchFilterFunction,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { CollapseProvider, useCollapseAll } from './CollapseProvider'
@@ -39,6 +38,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   restrictTypeSelection = false,
   searchFilter: searchFilterInput,
   searchText,
+  searchDebounceTime = 350,
   keySort = false,
   showArrayIndices = true,
   defaultValue = null,
@@ -57,6 +57,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     translations,
     customText,
   ])
+  const [debouncedSearchText, setDebouncedSearchText] = useState(searchText)
 
   const [data, setData] = useState(srcData)
 
@@ -69,6 +70,11 @@ const Editor: React.FC<JsonEditorProps> = ({
     setCollapseState(null)
     setData(srcData)
   }, [srcData])
+
+  useEffect(() => {
+    const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
+    return () => clearTimeout(debounce)
+  }, [searchText, searchDebounceTime])
 
   const nodeData: NodeData = {
     key: rootName,
@@ -167,7 +173,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     restrictAddFilter,
     restrictTypeSelection,
     searchFilter,
-    searchText,
+    searchText: debouncedSearchText,
     enableClipboard,
     keySort,
     showArrayIndices,

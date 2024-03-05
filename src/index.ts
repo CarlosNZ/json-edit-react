@@ -4,6 +4,7 @@ import {
   type UpdateFunction,
   type CopyFunction,
   type FilterFunction,
+  type SearchFilterFunction,
   type CompareFunction,
   type IconReplacements,
   type CollectionNodeProps,
@@ -20,7 +21,7 @@ import { themes } from './theme'
 import { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 import { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
 import { truncate, breakString } from './ValueNodes'
-import { matchNode } from './filterHelpers'
+import { matchNode, matchNodeKey } from './filterHelpers'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 
@@ -34,6 +35,7 @@ export {
   type UpdateFunction,
   type CopyFunction,
   type FilterFunction,
+  type SearchFilterFunction,
   type CompareFunction,
   type IconReplacements,
   type LocalisedStrings,
@@ -53,6 +55,7 @@ export {
   IconCancel,
   IconChevron,
   matchNode,
+  matchNodeKey,
   truncate,
   breakString,
   assign,

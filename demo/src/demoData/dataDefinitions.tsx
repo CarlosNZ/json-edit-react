@@ -156,7 +156,7 @@ export const demoData: Record<string, DemoData> = {
     restrictAdd: ({ level }) => level === 1,
     restrictDelete: ({ key }) => key === 'id',
     collapse: 2,
-    searchFilter: ({ path, fullData }, searchText = '') => {
+    searchFilter: ({ path, fullData }, searchText) => {
       if (path?.length >= 2) {
         const index = path?.[0]
         return (
@@ -198,7 +198,7 @@ export const demoData: Record<string, DemoData> = {
   vsCode: {
     name: '⚙️ VSCode settings file',
     description: (
-      <>
+      <Flex flexDir="column" gap={2}>
         <Text>
           A typical{' '}
           <Link href="https://code.visualstudio.com/" isExternal>
@@ -206,13 +206,13 @@ export const demoData: Record<string, DemoData> = {
           </Link>{' '}
           config file.
         </Text>
-        <Text mt={3}>
+        <Text>
           The only restriction here is that you can't set any boolean values to{' '}
           <span className="code">false</span>. It uses a custom{' '}
           <span className="code">onUpdate</span> function to return an error string when you attempt
           to do so, and the value is reset to <span className="code">true</span>.
         </Text>
-      </>
+      </Flex>
     ),
     collapse: 2,
     data: data.vsCode,
@@ -223,7 +223,7 @@ export const demoData: Record<string, DemoData> = {
   liveData: {
     name: '📖 Live Data (from database)',
     description: (
-      <>
+      <Flex flexDir="column" gap={2}>
         <Text>
           Here's a live "guestbook" — your changes can be saved permanently to the cloud. However,
           there are restrictions:
@@ -232,7 +232,7 @@ export const demoData: Record<string, DemoData> = {
             <ListItem>Only the most recent message is editable, and only for five minutes</ListItem>
           </UnorderedList>
         </Text>
-        <Text mt={3}>
+        <Text>
           Notice also (these are achieved by customising the <span className="code">onEdit</span>{' '}
           and <span className="code">onAdd</span> props):
           <UnorderedList>
@@ -242,7 +242,7 @@ export const demoData: Record<string, DemoData> = {
             <ListItem>The timestamps get updated automatically after each edit</ListItem>
           </UnorderedList>
         </Text>
-      </>
+      </Flex>
     ),
     rootName: 'liveData',
     collapse: 3,

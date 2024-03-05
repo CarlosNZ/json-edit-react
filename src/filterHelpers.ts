@@ -3,11 +3,16 @@ import { type SearchFilterFunction, type NodeData, type SearchFilterInputFunctio
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
   value !== null && typeof value === 'object'
 
+/**
+ * Handles the overall logic for whether a node should be visible or not, and
+ * returns true/false accordingly. Collections must be handled differently to
+ * primitive values, as they must also check their children (recursively)
+ */
 export const filterNode = (
   type: 'collection' | 'value',
   nodeData: NodeData,
   searchFilter: SearchFilterFunction | undefined,
-  searchText: string | undefined
+  searchText: string | undefined = ''
 ): boolean => {
   if (!searchFilter && !searchText) return true
 
@@ -27,6 +32,9 @@ export const filterNode = (
   return true
 }
 
+// Each collection must recursively check the matches of all its descendants --
+// if a deeply nested node matches the searchFilter, then all it's ancestors
+// must also remain visible
 const filterCollection = (
   searchText: string = '',
   nodeData: NodeData,
@@ -59,6 +67,7 @@ export const matchNode: (input: Partial<NodeData>, searchText: string) => boolea
 ) => {
   const { value } = nodeData
 
+  // Any partial completion of the input "null" will match null values
   if (value === null && 'null'.includes(searchText.toLowerCase())) return true
 
   switch (typeof value) {
@@ -67,6 +76,8 @@ export const matchNode: (input: Partial<NodeData>, searchText: string) => boolea
     case 'number':
       return !!String(value).includes(searchText)
     case 'boolean':
+      // Will match partial completion of the inputs "true" and "false", as well
+      // as "1" or "0"
       if (value) {
         return 'true'.includes(searchText.toLowerCase()) || searchText === '1'
       } else {

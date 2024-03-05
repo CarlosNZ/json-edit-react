@@ -7,7 +7,6 @@ import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
 import { useState } from 'react'
 import useUndo from 'use-undo'
-import { useDebounce } from './useDebounce'
 import {
   Box,
   Flex,
@@ -54,7 +53,7 @@ function App() {
   const [showIndices, setShowIndices] = useState(true)
   const [defaultNewValue, setDefaultNewValue] = useState('New data!')
   const [isSaving, setIsSaving] = useState(false)
-  const [searchText, debouncedSearchText, setSearchText, resetSearchText] = useDebounce('')
+  const [searchText, setSearchText] = useState('')
   const previousThemeName = useRef('') // Used when resetting after theme editing
   const toast = useToast()
 
@@ -106,7 +105,7 @@ function App() {
 
   const handleChangeData = (e) => {
     setSelectedData(e.target.value)
-    resetSearchText()
+    setSearchText('')
     if (e.target.value === 'editTheme') {
       previousThemeName.current = theme as string
       setCollapseLevel(demoData.editTheme.collapse as number)
@@ -123,7 +122,7 @@ function App() {
   }
 
   const handleReset = async () => {
-    resetSearchText()
+    setSearchText('')
     switch (selectedData) {
       case 'editTheme':
         reset(themes[previousThemeName.current])
@@ -266,7 +265,7 @@ function App() {
             restrictAdd={restrictAdd}
             restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
             searchFilter={demoData[selectedData]?.searchFilter}
-            searchText={debouncedSearchText}
+            searchText={searchText}
             keySort={sortKeys}
             defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
             showArrayIndices={showIndices}
