@@ -145,11 +145,20 @@ export const demoData: Record<string, DemoData> = {
           to the main "Person" objects.
         </Text>
         <Text>
-          Also, notice that when a new item is added at the top level, a correctly structured{' '}
+          Also, notice that when you add a new item in the top level array, a correctly structured{' '}
           "Person" object is added, but adding new items elsewhere adds simple string values. This
           is done by specifying a function for the <span className="code">defaultValue</span> prop.
         </Text>
-        <Text>We've also changed the behaviour of the "Search"</Text>
+        <Text>
+          We've also changed the behaviour of the "Search" input, so that it matches specific people
+          (on <span className="code">name</span> and <span className="code">username</span>) and
+          displays all fields associated with the matching people. This is achieved by specifying a
+          custom{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#searchfiltering" isExternal>
+            Search filter function
+          </Link>
+          .
+        </Text>
       </Flex>
     ),
     restrictEdit: ({ key, level }) => key === 'id' || level === 0 || level === 1,
@@ -212,6 +221,10 @@ export const demoData: Record<string, DemoData> = {
           <span className="code">onUpdate</span> function to return an error string when you attempt
           to do so, and the value is reset to <span className="code">true</span>.
         </Text>
+        <Text>
+          Note the "Search" input is configured to filter for object <em>properties</em> rather than{' '}
+          <em>values</em> (by setting <span className="code">searchFilter: "key"</span>).
+        </Text>
       </Flex>
     ),
     collapse: 2,
@@ -219,6 +232,8 @@ export const demoData: Record<string, DemoData> = {
     onUpdate: ({ newValue }) => {
       if (newValue === false) return "Don't use FALSE, just delete the value"
     },
+    searchFilter: 'key',
+    searchPlaceholder: 'Search properties',
   },
   liveData: {
     name: '📖 Live Data (from database)',
@@ -227,20 +242,33 @@ export const demoData: Record<string, DemoData> = {
         <Text>
           Here's a live "guestbook" — your changes can be saved permanently to the cloud. However,
           there are restrictions:
-          <UnorderedList>
-            <ListItem>You can only add new messages, or fields within your message</ListItem>
-            <ListItem>Only the most recent message is editable, and only for five minutes</ListItem>
-          </UnorderedList>
         </Text>
+        <UnorderedList>
+          <ListItem>
+            <Text>You can only add new messages, or fields within your message</Text>
+          </ListItem>
+          <ListItem>
+            <Text>Only the most recent message is editable, and only for five minutes</Text>
+          </ListItem>
+        </UnorderedList>
         <Text>
           Notice also (these are achieved by customising the <span className="code">onEdit</span>{' '}
           and <span className="code">onAdd</span> props):
-          <UnorderedList>
-            <ListItem>
+        </Text>
+        <UnorderedList>
+          <ListItem>
+            <Text>
               The messages list gets sorted so the most recent is at the <em>top</em>
-            </ListItem>
-            <ListItem>The timestamps get updated automatically after each edit</ListItem>
-          </UnorderedList>
+            </Text>
+          </ListItem>
+          <ListItem>
+            <Text>The timestamps get updated automatically after each edit</Text>
+          </ListItem>
+        </UnorderedList>
+        <Text>
+          You can also filter full "Message" objects by searching any text value (
+          <span className="code">message</span>, <span className="code">name</span>,{' '}
+          <span className="code">from</span>).
         </Text>
       </Flex>
     ),
@@ -305,6 +333,18 @@ export const demoData: Record<string, DemoData> = {
         }
       return 'New value'
     },
+    searchFilter: ({ path, fullData }, searchText) => {
+      if (path?.length >= 2 && path[0] === 'messages') {
+        const index = path?.[1]
+        const messages = (fullData as { messages: unknown[] })?.messages
+        return (
+          matchNode({ value: messages[index].message }, searchText) ||
+          matchNode({ value: messages[index].name }, searchText) ||
+          matchNode({ value: messages[index].from }, searchText)
+        )
+      } else return true
+    },
+    searchPlaceholder: 'Search guestbook',
     data: {},
     customNodeDefinitions: [
       {
