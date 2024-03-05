@@ -201,80 +201,90 @@ function App() {
           </Flex>
         </HStack>
         <VStack minW={400}>
-          <HStack justifyContent="space-evenly" w="100%">
-            <Heading size="lg" variant="accent">
-              Demo
-            </Heading>
-          </HStack>
-          <Input
-            placeholder={demoData[selectedData].searchPlaceholder ?? 'Search values'}
-            bgColor={'#f6f6f6'}
-            borderRadius={50}
-            size="sm"
-            w={80}
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-          <JsonEditor
-            data={data}
-            rootName={rootName}
-            theme={[theme, demoData[selectedData]?.styles ?? {}]}
-            indent={indent}
-            onUpdate={
-              demoData[selectedData]?.onUpdate
-                ? demoData[selectedData]?.onUpdate
-                : ({ newData }) => {
-                    setData(newData)
-                    if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
-                  }
-            }
-            onEdit={
-              demoData[selectedData]?.onEdit
-                ? (data) => {
-                    const updateData = (demoData[selectedData] as any).onEdit(data)
-                    if (updateData) setData(updateData)
-                  }
-                : undefined
-            }
-            onAdd={
-              demoData[selectedData]?.onAdd
-                ? (data) => {
-                    const updateData = (demoData[selectedData] as any).onAdd(data)
-                    if (updateData) setData(updateData)
-                  }
-                : undefined
-            }
-            collapse={collapseLevel}
-            showCollectionCount={
-              showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
-            }
-            enableClipboard={
-              allowCopy
-                ? ({ stringValue, type }) =>
-                    toast({
-                      title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
-                      description: truncate(String(stringValue)),
-                      status: 'success',
-                      duration: 5000,
-                      isClosable: true,
-                    })
-                : false
-            }
-            restrictEdit={restrictEdit}
-            restrictDelete={restrictDelete}
-            restrictAdd={restrictAdd}
-            restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
-            searchFilter={demoData[selectedData]?.searchFilter}
-            searchText={searchText}
-            keySort={sortKeys}
-            defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
-            showArrayIndices={showIndices}
-            maxWidth="min(650px, 90vw)"
-            className="block-shadow"
-            stringTruncate={90}
-            customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
-            customText={demoData[selectedData]?.customTextDefinitions}
-          />
+          <Heading size="lg" variant="accent">
+            Demo
+          </Heading>
+          <Box position="relative">
+            <Input
+              placeholder={demoData[selectedData].searchPlaceholder ?? 'Search values'}
+              bgColor={'#f6f6f6'}
+              borderColor="gainsboro"
+              borderRadius={50}
+              size="sm"
+              w={60}
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              position="absolute"
+              right={2}
+              top={2}
+              zIndex={100}
+            />
+            <JsonEditor
+              data={data}
+              rootName={rootName}
+              theme={[
+                theme,
+                demoData[selectedData]?.styles ?? {},
+                { container: { paddingTop: '1em' } },
+              ]}
+              indent={indent}
+              onUpdate={
+                demoData[selectedData]?.onUpdate
+                  ? demoData[selectedData]?.onUpdate
+                  : ({ newData }) => {
+                      setData(newData)
+                      if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
+                    }
+              }
+              onEdit={
+                demoData[selectedData]?.onEdit
+                  ? (data) => {
+                      const updateData = (demoData[selectedData] as any).onEdit(data)
+                      if (updateData) setData(updateData)
+                    }
+                  : undefined
+              }
+              onAdd={
+                demoData[selectedData]?.onAdd
+                  ? (data) => {
+                      const updateData = (demoData[selectedData] as any).onAdd(data)
+                      if (updateData) setData(updateData)
+                    }
+                  : undefined
+              }
+              collapse={collapseLevel}
+              showCollectionCount={
+                showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
+              }
+              enableClipboard={
+                allowCopy
+                  ? ({ stringValue, type }) =>
+                      toast({
+                        title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
+                        description: truncate(String(stringValue)),
+                        status: 'success',
+                        duration: 5000,
+                        isClosable: true,
+                      })
+                  : false
+              }
+              restrictEdit={restrictEdit}
+              restrictDelete={restrictDelete}
+              restrictAdd={restrictAdd}
+              restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
+              searchFilter={demoData[selectedData]?.searchFilter}
+              searchText={searchText}
+              keySort={sortKeys}
+              defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
+              showArrayIndices={showIndices}
+              minWidth={450}
+              maxWidth="min(650px, 90vw)"
+              className="block-shadow"
+              stringTruncate={90}
+              customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
+              customText={demoData[selectedData]?.customTextDefinitions}
+            />
+          </Box>
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
               <Button

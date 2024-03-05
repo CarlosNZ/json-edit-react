@@ -174,7 +174,7 @@ export const demoData: Record<string, DemoData> = {
         )
       } else return false
     },
-    searchPlaceholder: 'Search by client name or username',
+    searchPlaceholder: 'Search by name or username',
     defaultValue: ({ level }) => {
       if (level === 0)
         return {
