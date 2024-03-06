@@ -80,6 +80,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     key: rootName,
     path: [],
     level: 0,
+    index: 0,
     value: data,
     size: Object.keys(data).length,
     parentData: null,

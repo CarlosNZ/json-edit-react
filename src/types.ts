@@ -103,6 +103,7 @@ export interface NodeData {
   key: CollectionKey
   path: CollectionKey[]
   level: number
+  index: number
   value: unknown
   size: number | null
   parentData: object | null

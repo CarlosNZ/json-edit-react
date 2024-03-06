@@ -213,7 +213,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const CollectionChildren = !hasBeenOpened.current
     ? null
-    : keyValueArray.map(([key, value]) => (
+    : keyValueArray.map(([key, value], index) => (
         <div
           className="jer-collection-element"
           key={key}
@@ -229,6 +229,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 value,
                 path: [...path, key],
                 level: path.length + 1,
+                index,
                 parentData: data,
                 size: Object.keys(value as object).length,
                 fullData: nodeData.fullData,
@@ -246,6 +247,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
                 value,
                 path: [...path, key],
                 level: path.length + 1,
+                index,
                 size: 1,
                 parentData: data,
                 fullData: nodeData.fullData,
