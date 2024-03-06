@@ -67,7 +67,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   }, [data])
 
   useEffect(() => {
-    setCollapsed(collapseFilter(nodeData))
+    const isCollapsed = collapseFilter(nodeData)
+    hasBeenOpened.current = !isCollapsed
+    setCollapsed(isCollapsed)
   }, [collapseFilter])
 
   useEffect(() => {
