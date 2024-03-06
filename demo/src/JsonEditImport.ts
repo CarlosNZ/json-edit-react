@@ -1,33 +1,12 @@
-import {
-  JsonEditor,
-  themes,
-  Theme,
-  ThemeName,
-  ThemeInput,
-  CustomNodeProps,
-  CustomNodeDefinition,
-  CustomTextDefinitions,
-  FilterFunction,
-  LinkCustomComponent,
-  LinkCustomNodeDefinition,
-  matchNode,
-  assign,
-} from './json-edit-react/src'
-// } from 'json-edit-react'
-// } from './package'
+/**
+ * Quickly switch between importing from local src or installed package
+ */
 
-export {
-  JsonEditor,
-  themes,
-  type Theme,
-  type ThemeName,
-  type ThemeInput,
-  type CustomNodeProps,
-  type CustomNodeDefinition,
-  type CustomTextDefinitions,
-  type FilterFunction,
-  LinkCustomComponent,
-  LinkCustomNodeDefinition,
-  matchNode,
-  assign,
-}
+/* Installed package */
+// export * from 'json-edit-react'
+
+/* Local src */
+export * from './json-edit-react/src'
+
+/* Compiled local package */
+// export * from './package'
