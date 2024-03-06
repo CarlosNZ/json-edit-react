@@ -281,39 +281,7 @@ function App() {
               maxWidth="min(650px, 90vw)"
               className="block-shadow"
               stringTruncate={90}
-              customNodeDefinitions={[
-                ...demoData[selectedData]?.customNodeDefinitions,
-                {
-                  condition: ({ value, key }) => {
-                    return key === 'Usage'
-                  },
-                  element: ({ children, key }) => (
-                    <div>
-                      <p>COLLECTION NODE:</p>
-                      {children}
-                    </div>
-                  ),
-                  // customNodeProps: { figTree, isEvaluating, evaluateNode },
-                  // hideKey: true,
-                  // showOnEdit: false,
-                  // showEditTools: false,
-                  // showInTypesSelector: true,
-                  showCollectionWrapper: true,
-                  // defaultValue: { fragment: fragments[0].name },
-                },
-                {
-                  condition: ({ value }) => {
-                    return value === null
-                  },
-                  element: () => <p>VALUE NODE</p>,
-                  // customNodeProps: { figTree, isEvaluating, evaluateNode },
-                  // hideKey: true,
-                  // showOnEdit: false,
-                  // showEditTools: false,
-                  // showInTypesSelector: true,
-                  // defaultValue: { fragment: fragments[0].name },
-                },
-              ]}
+              customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
               customText={demoData[selectedData]?.customTextDefinitions}
             />
           </Box>

@@ -30,7 +30,7 @@ export const getCustomNode = (
     showEditTools = true,
     showOnEdit = false,
     showOnView = true,
-    showCollectionWrapper = false,
+    showCollectionWrapper = true,
     ...rest
   } = matchingDefinitions[0]
 

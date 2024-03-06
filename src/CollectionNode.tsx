@@ -267,7 +267,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     showCollectionWrapper = true,
   } = getCustomNode(customNodeDefinitions, nodeData)
 
-  const CollectionComponent =
+  // If the collection wrapper (expand icon, brackets) are hidden, there's no
+  // way to open a collapsed custom node, so this ensures it will stay open. It
+  // can still be displayed collapsed by handling it internally if this is
+  // desired.
+  const isCollapsed = !showCollectionWrapper ? false : collapsed
+
+  const CollectionContents =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
       <CustomNode
         {...props}
@@ -308,6 +314,26 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       CollectionChildren
     )
 
+  const KeyDisplay = isEditingKey ? (
+    <input
+      className="jer-collection-name"
+      type="text"
+      name={path.join('.')}
+      defaultValue={name}
+      autoFocus
+      onFocus={(e) => e.target.select()}
+      onKeyDown={handleKeyPressKeyEdit}
+      style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
+    />
+  ) : (
+    <span
+      style={getStyles('property', nodeData)}
+      onDoubleClick={() => canEditKey && setIsEditingKey(true)}
+    >
+      {showLabel && !hideKey && name !== '' && name !== undefined ? `${name}:` : null}
+    </span>
+  )
+
   return (
     <div
       className="jer-component jer-collection-component"
@@ -316,32 +342,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         ...getStyles('collection', nodeData),
       }}
     >
-      {showCollectionWrapper && (
+      {showCollectionWrapper ? (
         <div className="jer-collection-header-row" style={{ position: 'relative' }}>
           <div className="jer-collection-name">
             <div className="jer-collapse-icon" onClick={(e) => handleCollapse(e)}>
               <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
             </div>
-            {!isEditingKey && (
-              <span
-                style={getStyles('property', nodeData)}
-                onDoubleClick={() => canEditKey && setIsEditingKey(true)}
-              >
-                {showLabel && !hideKey && name !== '' && name !== undefined ? `${name}:` : null}
-              </span>
-            )}
-            {isEditingKey && (
-              <input
-                className="jer-collection-name"
-                type="text"
-                name={path.join('.')}
-                defaultValue={name}
-                autoFocus
-                onFocus={(e) => e.target.select()}
-                onKeyDown={handleKeyPressKeyEdit}
-                style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
-              />
-            )}
+            {KeyDisplay}
             {!isEditing && (
               <span
                 className="jer-brackets jer-bracket-open"
@@ -362,7 +369,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             </div>
           )}
           <div
-            className={`jer-brackets${collapsed ? ' jer-visible' : ' jer-hidden'}`}
+            className={`jer-brackets${isCollapsed ? ' jer-visible' : ' jer-hidden'}`}
             style={getStyles('bracket', nodeData)}
           >
             {brackets.close}
@@ -386,19 +393,23 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             />
           )}
         </div>
+      ) : hideKey ? null : (
+        <div className="jer-collection-header-row" style={{ position: 'relative' }}>
+          {KeyDisplay}
+        </div>
       )}
       <div
         className={'jer-collection-inner'}
         style={{
-          maxHeight: collapsed ? 0 : !isEditing ? `${numOfLines * 3}em` : undefined,
-          overflowY: collapsed || isAnimating ? 'hidden' : 'visible',
+          maxHeight: isCollapsed ? 0 : !isEditing ? `${numOfLines * 3}em` : undefined,
+          overflowY: isCollapsed || isAnimating ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately
           // "height: auto" doesn't 😔
           transition: `max-height ${transitionTime}`,
           ...getStyles('collectionInner', nodeData),
         }}
       >
-        {CollectionComponent}
+        {CollectionContents}
         <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
           {error && (
             <span className="jer-error-slug" style={getStyles('error', nodeData)}>

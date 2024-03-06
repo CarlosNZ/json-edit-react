@@ -173,8 +173,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     showOnView,
   } = customNodeData
 
-  console.log('Value custom', CustomNode)
-
   // Include custom node options in dataType list
   const allDataTypes = [
     ...DataTypes,
