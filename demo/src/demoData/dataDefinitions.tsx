@@ -429,7 +429,7 @@ export const demoData: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'Superheroes',
-    collapse: 2,
+    collapse: 3,
     searchFilter: ({ path, fullData }, searchText = '') => {
       if (path?.length >= 2) {
         const index = path?.[0]
@@ -438,9 +438,9 @@ export const demoData: Record<string, DemoData> = {
     },
     searchPlaceholder: 'Search by character name',
     data: data.customNodes,
-    restrictEdit: ({ level }) => level > 0,
-    restrictAdd: true,
-    restrictDelete: true,
+    // restrictEdit: ({ level }) => level > 0,
+    // restrictAdd: true,
+    // restrictDelete: true,
     customNodeDefinitions: [
       {
         condition: ({ key, value }) =>
@@ -483,32 +483,41 @@ export const demoData: Record<string, DemoData> = {
         },
         hideKey: true,
       },
-      // Uncomment to test a custom Collection node
-      // {
-      //   condition: ({ key }) => key === 'portrayedBy',
-      //   element: ({ nodeData, data, getStyles }) => {
-      //     const styles = getStyles('string', nodeData)
-      //     return (
-      //       <ol style={{ ...styles, paddingLeft: '3em' }}>
-      //         {data.map((val) => (
-      //           <li key={val}>{val}</li>
-      //         ))}
-      //       </ol>
-      //     )
-      //   },
-      //   showEditTools: true,
-      //   // hideKey: true,
-      //   // showCollectionWrapper: false,
-      // },
+
       {
         ...dateNodeDefinition,
         showOnView: true,
         showInTypesSelector: true,
         customNodeProps: { showTimeSelect: false, dateFormat: 'MMM d, yyyy' },
       },
+      // Uncomment to test a custom Collection node
+      {
+        condition: ({ key }) => key === 'portrayedBy',
+        element: ({ nodeData, data, getStyles, children }) => {
+          const styles = getStyles('string', nodeData)
+          return (
+            <>
+              <p>
+                <strong>Heading</strong>
+              </p>
+              {/* <ol style={{ ...styles, paddingLeft: '3em' }}>
+                {data.map((val) => (
+                  <li key={val}>{val}</li>
+                ))}
+              </ol> */}
+              {children}
+            </>
+          )
+        },
+        showOnEdit: true,
+        showOnView: true,
+        // showEditTools: false,
+        // hideKey: true,
+        // showCollectionWrapper: false,
+      },
     ],
     customTextDefinitions: {
-      ITEM_SINGLE: ({ key, value, size }) => {
+      ITEM_SINGLE: ({ key, value }) => {
         if (value instanceof Object && 'name' in value)
           return `${value.name} (${(value as any)?.publisher ?? ''})`
         if (key === 'aliases' && Array.isArray(value)) return `One name`

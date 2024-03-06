@@ -156,7 +156,7 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
-  children?: JSX.Element[] | null
+  children?: JSX.Element | JSX.Element[] | null
 }
 
 export interface CustomNodeDefinition<T = Record<string, unknown>> {

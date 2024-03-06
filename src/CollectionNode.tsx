@@ -211,53 +211,70 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   // setting the max-height in the collapsible interior
   const numOfLines = JSON.stringify(data, null, 2).split('\n').length
 
-  const CollectionChildren = !hasBeenOpened.current
-    ? null
-    : keyValueArray.map(([key, value], index) => (
-        <div
-          className="jer-collection-element"
-          key={key}
-          style={getStyles('collectionElement', nodeData)}
-        >
-          {isCollection(value) ? (
-            <CollectionNode
-              key={key}
-              data={value}
-              parentData={data}
-              nodeData={{
-                key,
-                value,
-                path: [...path, key],
-                level: path.length + 1,
-                index,
-                parentData: data,
-                size: Object.keys(value as object).length,
-                fullData: nodeData.fullData,
-              }}
-              showCollectionCount={showCollectionCount}
-              {...props}
-            />
-          ) : (
-            <ValueNodeWrapper
-              key={key}
-              data={value}
-              parentData={data}
-              nodeData={{
-                key,
-                value,
-                path: [...path, key],
-                level: path.length + 1,
-                index,
-                size: 1,
-                parentData: data,
-                fullData: nodeData.fullData,
-              }}
-              {...props}
-              showLabel={collectionType === 'object' ? true : showArrayIndices}
-            />
-          )}
+  const CollectionChildren = !hasBeenOpened.current ? null : !isEditing ? (
+    keyValueArray.map(([key, value], index) => (
+      <div
+        className="jer-collection-element"
+        key={key}
+        style={getStyles('collectionElement', nodeData)}
+      >
+        {isCollection(value) ? (
+          <CollectionNode
+            key={key}
+            data={value}
+            parentData={data}
+            nodeData={{
+              key,
+              value,
+              path: [...path, key],
+              level: path.length + 1,
+              index,
+              parentData: data,
+              size: Object.keys(value as object).length,
+              fullData: nodeData.fullData,
+            }}
+            showCollectionCount={showCollectionCount}
+            {...props}
+          />
+        ) : (
+          <ValueNodeWrapper
+            key={key}
+            data={value}
+            parentData={data}
+            nodeData={{
+              key,
+              value,
+              path: [...path, key],
+              level: path.length + 1,
+              index,
+              size: 1,
+              parentData: data,
+              fullData: nodeData.fullData,
+            }}
+            {...props}
+            showLabel={collectionType === 'object' ? true : showArrayIndices}
+          />
+        )}
+      </div>
+    ))
+  ) : (
+    <div className="jer-collection-text-edit">
+      <div>
+        <AutogrowTextArea
+          className="jer-collection-text-area"
+          name={path.join('.')}
+          value={stringifiedValue}
+          setValue={setStringifiedValue}
+          isEditing={isEditing}
+          handleKeyPress={handleKeyPress}
+          styles={getStyles('input', nodeData)}
+        />
+        <div className="jer-collection-input-button-row">
+          <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
         </div>
-      ))
+      </div>
+    </div>
+  )
 
   const {
     CustomNode,
@@ -295,23 +312,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       >
         {CollectionChildren}
       </CustomNode>
-    ) : isEditing ? (
-      <div className="jer-collection-text-edit">
-        <div>
-          <AutogrowTextArea
-            className="jer-collection-text-area"
-            name={path.join('.')}
-            value={stringifiedValue}
-            setValue={setStringifiedValue}
-            isEditing={isEditing}
-            handleKeyPress={handleKeyPress}
-            styles={getStyles('input', nodeData)}
-          />
-          <div className="jer-collection-input-button-row">
-            <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
-          </div>
-        </div>
-      </div>
     ) : (
       CollectionChildren
     )
@@ -334,6 +334,25 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     >
       {showLabel && !hideKey && name !== '' && name !== undefined ? `${name}:` : null}
     </span>
+  )
+
+  const EditButtonDisplay = !isEditing && showEditTools && (
+    <EditButtons
+      startEdit={
+        canEdit
+          ? () => {
+              setIsEditing(true)
+              setCollapsed(false)
+            }
+          : undefined
+      }
+      handleAdd={canAdd ? handleAdd : undefined}
+      handleDelete={canDelete ? handleDelete : undefined}
+      enableClipboard={enableClipboard}
+      type={collectionType}
+      nodeData={nodeData}
+      translate={translate}
+    />
   )
 
   return (
@@ -376,28 +395,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           >
             {brackets.close}
           </div>
-          {!isEditing && showEditTools && (
-            <EditButtons
-              startEdit={
-                canEdit
-                  ? () => {
-                      setIsEditing(true)
-                      setCollapsed(false)
-                    }
-                  : undefined
-              }
-              handleAdd={canAdd ? handleAdd : undefined}
-              handleDelete={canDelete ? handleDelete : undefined}
-              enableClipboard={enableClipboard}
-              type={collectionType}
-              nodeData={nodeData}
-              translate={translate}
-            />
-          )}
+          {EditButtonDisplay}
         </div>
       ) : hideKey ? null : (
         <div className="jer-collection-header-row" style={{ position: 'relative' }}>
           {KeyDisplay}
+          {EditButtonDisplay}
         </div>
       )}
       <div
