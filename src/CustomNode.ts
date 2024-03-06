@@ -10,6 +10,7 @@ export interface CustomNodeData {
   showOnEdit?: boolean
   showOnView?: boolean
   showEditTools?: boolean
+  showCollectionWrapper?: boolean
 }
 
 // Fetches matching custom nodes (based on condition filter) from custom node
@@ -29,6 +30,7 @@ export const getCustomNode = (
     showEditTools = true,
     showOnEdit = false,
     showOnView = true,
+    showCollectionWrapper = true,
     ...rest
   } = matchingDefinitions[0]
 
@@ -39,6 +41,7 @@ export const getCustomNode = (
     showEditTools,
     showOnEdit,
     showOnView,
+    showCollectionWrapper,
     ...rest,
   }
 }

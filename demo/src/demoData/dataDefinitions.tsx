@@ -26,9 +26,9 @@ interface DemoData {
   data: object
   rootName?: string
   collapse?: number
-  restrictEdit?: FilterFunction
-  restrictDelete?: FilterFunction
-  restrictAdd?: FilterFunction
+  restrictEdit?: boolean | FilterFunction
+  restrictDelete?: boolean | FilterFunction
+  restrictAdd?: boolean | FilterFunction
   restrictTypeSelection?: boolean | DataType[]
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
   searchPlaceholder?: string
@@ -438,6 +438,9 @@ export const demoData: Record<string, DemoData> = {
     },
     searchPlaceholder: 'Search by character name',
     data: data.customNodes,
+    restrictEdit: ({ level }) => level > 0,
+    restrictAdd: true,
+    restrictDelete: true,
     customNodeDefinitions: [
       {
         condition: ({ key, value }) =>
@@ -480,6 +483,23 @@ export const demoData: Record<string, DemoData> = {
         },
         hideKey: true,
       },
+      // Uncomment to test a custom Collection node
+      // {
+      //   condition: ({ key }) => key === 'portrayedBy',
+      //   element: ({ nodeData, data, getStyles }) => {
+      //     const styles = getStyles('string', nodeData)
+      //     return (
+      //       <ol style={{ ...styles, paddingLeft: '3em' }}>
+      //         {data.map((val) => (
+      //           <li key={val}>{val}</li>
+      //         ))}
+      //       </ol>
+      //     )
+      //   },
+      //   showEditTools: true,
+      //   // hideKey: true,
+      //   // showCollectionWrapper: false,
+      // },
       {
         ...dateNodeDefinition,
         showOnView: true,
@@ -491,15 +511,15 @@ export const demoData: Record<string, DemoData> = {
       ITEM_SINGLE: ({ key, value, size }) => {
         if (value instanceof Object && 'name' in value)
           return `${value.name} (${(value as any)?.publisher ?? ''})`
-        if (key === 'aliases' && Array.isArray(value))
-          return `${size} ${size === 1 ? 'name' : 'names'}`
+        if (key === 'aliases' && Array.isArray(value)) return `One name`
+        if (key === 'portrayedBy' && Array.isArray(value)) return `One actor`
         return null
       },
       ITEMS_MULTIPLE: ({ key, value, size }) => {
         if (value instanceof Object && 'name' in value)
           return `${value.name} (${(value as any)?.publisher ?? ''})`
-        if (key === 'aliases' && Array.isArray(value))
-          return `${size} ${size === 1 ? 'name' : 'names'}`
+        if (key === 'aliases' && Array.isArray(value)) return `${size} names`
+        if (key === 'portrayedBy' && Array.isArray(value)) return `${size} actors`
         return null
       },
     },
@@ -507,86 +527,4 @@ export const demoData: Record<string, DemoData> = {
       string: ({ key }) => (key === 'name' ? { fontWeight: 'bold', fontSize: '120%' } : null),
     },
   },
-  // Enable to test more complex features of Custom nodes
-  //   testCustomNodes: {
-  //     name: '🔧 Custom Nodes',
-  //     description: (
-  //       <Flex flexDir="column" gap={2}>
-  //         <Text>
-  //           This data set shows <strong>Custom Nodes</strong> — you can provide your own components to
-  //           present specialised data in a unique way, or provide a more complex editing mechanism for
-  //           a specialised data structure, say.
-  //         </Text>
-  //         <Text>
-  //           In this example, compare the raw JSON (edit the data root) with what is presented here.
-  //         </Text>
-  //         <Text>
-  //           See the{' '}
-  //           <a href="https://github.com/CarlosNZ/json-edit-react#custom-nodes">Custom Nodes</a>{' '}
-  //           section of the documentation for more info.
-  //         </Text>
-  //       </Flex>
-  //     ),
-  //     rootName: 'Superheroes',
-  //     collapse: 2,
-  //     data: data.customNodes,
-  //     customNodeDefinitions: [
-  //       {
-  //         condition: ({ key, value }) =>
-  //           key === 'logo' &&
-  //           typeof value === 'string' &&
-  //           value.startsWith('http') &&
-  //           value.endsWith('.png'),
-  //         element: ({ data }) => {
-  //           const truncate = (string: string, length = 50) =>
-  //             string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
-  //           return (
-  //             <div style={{ maxWidth: 250 }}>
-  //               <a href={data} target="_blank">
-  //                 <img src={data} style={{ maxHeight: 75 }} />
-  //                 <p style={{ fontSize: '0.75em' }}>{truncate(data)}</p>{' '}
-  //               </a>
-  //             </div>
-  //           )
-  //         },
-  //       },
-  //       {
-  //         condition: ({ key }) => key === 'publisher',
-  //         element: ({ data }) => {
-  //           return (
-  //             <p
-  //               style={{
-  //                 padding: '0.5em 1em',
-  //                 border: '2px solid red',
-  //                 borderRadius: '1.5em',
-  //                 backgroundColor: 'yellow',
-  //                 marginTop: '0.5em',
-  //                 marginRight: '1em',
-  //                 fontFamily: 'sans-serif',
-  //               }}
-  //             >
-  //               Presented by: <strong>{data}</strong>
-  //             </p>
-  //           )
-  //         },
-  //         hideKey: true,
-  //         showEditTools: false,
-  //       },
-  //       {
-  //         condition: ({ key }) => key === 'aliases',
-  //         element: ({ data }) => {
-  //           return (
-  //             <ol style={{ paddingLeft: 50, color: 'orange' }}>
-  //               {data.map((val) => (
-  //                 <li key={val}>{val}</li>
-  //               ))}
-  //             </ol>
-  //           )
-  //         },
-  //         // showOnEdit: true,
-  //         // showOnView: false,
-  //         // hideKey: true,
-  //       },
-  //     ],
-  //   },
 }

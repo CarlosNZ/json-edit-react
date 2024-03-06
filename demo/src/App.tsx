@@ -87,19 +87,25 @@ function App() {
 
   const restrictEdit: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictEdit
-    if (customRestrictor) return (input) => !allowEdit || customRestrictor(input)
+    if (typeof customRestrictor === 'function')
+      return (input) => !allowEdit || customRestrictor(input)
+    if (customRestrictor !== undefined) return customRestrictor
     return !allowEdit
   })()
 
   const restrictDelete: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictDelete
-    if (customRestrictor) return (input) => !allowDelete || customRestrictor(input)
+    if (typeof customRestrictor === 'function')
+      return (input) => !allowDelete || customRestrictor(input)
+    if (customRestrictor !== undefined) return customRestrictor
     return !allowDelete
   })()
 
   const restrictAdd: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictAdd
-    if (customRestrictor) return (input) => !allowAdd || customRestrictor(input)
+    if (typeof customRestrictor === 'function')
+      return (input) => !allowAdd || customRestrictor(input)
+    if (customRestrictor !== undefined) return customRestrictor
     return !allowAdd
   })()
 
@@ -277,7 +283,7 @@ function App() {
               keySort={sortKeys}
               defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
               showArrayIndices={showIndices}
-              minWidth={450}
+              minWidth={'min(500px, 95vw)'}
               maxWidth="min(650px, 90vw)"
               className="block-shadow"
               stringTruncate={90}
@@ -434,6 +440,7 @@ function App() {
                   <Flex w="100%" justify="flex-start">
                     <Checkbox
                       isChecked={allowEdit}
+                      disabled={demoData[selectedData].restrictEdit !== undefined}
                       onChange={() => setAllowEdit(!allowEdit)}
                       w="50%"
                     >
@@ -441,6 +448,7 @@ function App() {
                     </Checkbox>
                     <Checkbox
                       isChecked={allowDelete}
+                      disabled={demoData[selectedData].restrictDelete !== undefined}
                       onChange={() => setAllowDelete(!allowDelete)}
                       w="50%"
                     >
@@ -448,7 +456,12 @@ function App() {
                     </Checkbox>
                   </Flex>
                   <Flex w="100%" justify="flex-start">
-                    <Checkbox isChecked={allowAdd} onChange={() => setAllowAdd(!allowAdd)} w="50%">
+                    <Checkbox
+                      isChecked={allowAdd}
+                      disabled={demoData[selectedData].restrictAdd !== undefined}
+                      onChange={() => setAllowAdd(!allowAdd)}
+                      w="50%"
+                    >
                       Allow Add
                     </Checkbox>
                     <Checkbox
@@ -477,6 +490,7 @@ function App() {
                     </FormLabel>
                     <Input
                       className="inputWidth"
+                      disabled={demoData[selectedData].defaultValue !== undefined}
                       type="text"
                       value={defaultNewValue}
                       onChange={(e) => setDefaultNewValue(e.target.value)}

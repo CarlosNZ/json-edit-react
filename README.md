@@ -32,6 +32,7 @@ Features include:
   - [Icons](#icons)
 - [Localisation](#localisation)
 - [Custom Nodes](#custom-nodes)
+  - [Custom Collection nodes](#custom-collection-nodes)
   - [Active hyperlinks](#active-hyperlinks)
 - [Custom Text](#custom-text)
 - [Undo functionality](#undo-functionality)
@@ -423,10 +424,12 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   showEditTools         // boolean, default true
   name                  // string (appears in Types selector)
   showInTypesSelector,  // boolean (optional), default false
+  // Only affects Collection nodes:
+  showCollectionWrapper // boolean (optional), default true
 }
 ```
 
-The `condition` is just a [Filter function](#filter-functions), with the same input parameters (`key`, `path`, `level`, `value`, `size`), and `element` is a React component. Every node in the data structure will be run through each condition function, and any that match will be replaced by your custom component. Note that if a node matches more than one custom definition conditions (from multiple components), the *first* one will be used, so place them in the array in priority order.
+The `condition` is just a [Filter function](#filter-functions), with the same input parameters (`key`, `path`, `value`, etc.), and `element` is a React component. Every node in the data structure will be run through each condition function, and any that match will be replaced by your custom component. Note that if a node matches more than one custom definition conditions (from multiple components), the *first* one will be used, so place them in the array in priority order.
 
 The component will receive *all* the same props as a standard node component (see codebase), but you can pass additional props to your component if required through the `customNodeProps` object. A thorough example of a custom Date picker is used in the demo (along with a couple of other more basic presentational ones), which you can inspect to see how to utilise the standard props and a couple of custom props. View the source code [here](https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/customComponents/DateTimePicker.tsx)
 
@@ -435,6 +438,12 @@ By default, your component will be presented to the right of the property key it
 Also, by default, your component will be treated as a "display" element, i.e. it will appear in the JSON viewer, but when editing, it will revert to the standard editing interface. This can be changed, however, with the `showOnEdit`, `showOnView` and `showEditTools` props. For example, a Date picker might only be required when *editing* and left as-is for display. The `showEditTools` prop refers to the editing icons (copy, add, edit, delete) that appear to the right of each value on hover. If you choose to disable these but you still want to your component to have an "edit" mode, you'll have to provide your own UI mechanism to toggle editing.
 
 You can allow users to create new instances of your special nodes by selecting them as a "Type" in the types selector when editing/adding values. Set `showInTypesSelector: true` to enable this. However, if this is enabled you need to also provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
+
+### Custom Collection nodes
+
+In most cases it will be preferable to create custom nodes to match *value* nodes (i.e. not `array` or `object` *collection* nodes). However, if you do wish to replace a whole collection, there are a couple of other things to know:
+- The descendants of this node can still be displayed using the [React `children`](https://react.dev/learn/passing-props-to-a-component#passing-jsx-as-children) property, it just becomes your component's responsibility to handle it.
+- There is one additional prop, `showCollectionWrapper` (default `true`), which, when set to `false`, hides the surrounding "wrapper", namely the hide/show chevron and the brackets. In this case, you would have to provide your own hide/show mechanism in your component.
 
 ### Active hyperlinks
 
