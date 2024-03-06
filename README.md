@@ -546,7 +546,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.7.1**: Fix and improve Custom nodes in *collections*
+- **1.7.2**:
+  - Fix and improve Custom nodes in *collections*
+  - Include `index` in Filter (and other) function input
 - **1.7.0**: Implement [Search/filtering](#searchfiltering) of data visibility
 - **1.6.1**: Revert data state on Update Function error
 - **1.6.0**: Allow a function for `defaultValue` prop
