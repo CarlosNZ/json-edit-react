@@ -43,5 +43,6 @@ module.exports = {
     'react-hooks/exhaustive-deps': 0,
     '@typescript-eslint/prefer-nullish-coalescing': 0,
     '@typescript-eslint/no-unsafe-argument': 'warn',
+    '@typescript-eslint/indent': 0,
   },
 }

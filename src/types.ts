@@ -155,6 +155,7 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
+  children: React.ReactElement[] | null
 }
 
 export interface CustomNodeDefinition<T = Record<string, unknown>> {
@@ -168,6 +169,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>> {
   showOnEdit?: boolean // default false
   showOnView?: boolean // default true
   showEditTools?: boolean // default true
+  showCollectionWrapper?: boolean // default true
 }
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>
