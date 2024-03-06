@@ -267,9 +267,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     showCollectionWrapper = true,
   } = getCustomNode(customNodeDefinitions, nodeData)
 
-  // If the collection wrapper (expand icon, brackets) are hidden, there's no
-  // way to open a collapsed custom node, so this ensures it will stay open. It
-  // can still be displayed collapsed by handling it internally if this is
+  // If the collection wrapper (expand icon, brackets, etc) is hidden, there's
+  // no way to open a collapsed custom node, so this ensures it will stay open.
+  // It can still be displayed collapsed by handling it internally if this is
   // desired.
   const isCollapsed = !showCollectionWrapper ? false : collapsed
 
