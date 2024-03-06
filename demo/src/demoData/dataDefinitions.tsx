@@ -26,9 +26,9 @@ interface DemoData {
   data: object
   rootName?: string
   collapse?: number
-  restrictEdit?: FilterFunction
-  restrictDelete?: FilterFunction
-  restrictAdd?: FilterFunction
+  restrictEdit?: boolean | FilterFunction
+  restrictDelete?: boolean | FilterFunction
+  restrictAdd?: boolean | FilterFunction
   restrictTypeSelection?: boolean | DataType[]
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
   searchPlaceholder?: string
@@ -438,6 +438,9 @@ export const demoData: Record<string, DemoData> = {
     },
     searchPlaceholder: 'Search by character name',
     data: data.customNodes,
+    restrictEdit: ({ level }) => level > 0,
+    restrictAdd: true,
+    restrictDelete: true,
     customNodeDefinitions: [
       {
         condition: ({ key, value }) =>
