@@ -58,6 +58,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   // gives a big performance improvement with large data sets), but still keep
   // the animation transition when opening and closing the accordion
   const hasBeenOpened = useRef(!startCollapsed)
+
   // Allows us to delay the overflow visibility of the collapsed element until
   // the animation has completed
   const [isAnimating, setIsAnimating] = useState(false)
