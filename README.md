@@ -443,7 +443,7 @@ You can allow users to create new instances of your special nodes by selecting t
 
 In most cases it will be preferable to create custom nodes to match *value* nodes (i.e. not `array` or `object` *collection* nodes). However, if you do wish to replace a whole collection, there are a couple of other things to know:
 - The descendants of this node can still be displayed using the [React `children`](https://react.dev/learn/passing-props-to-a-component#passing-jsx-as-children) property, it just becomes your component's responsibility to handle it.
-- There is one additional prop, `showCollectionWrapper` (default `true`), which, when set to `false` hides the surrounding "wrapper", namely the hide/show chevron and the brackets. In this case, you would have to provide your own hide/show mechanism in your component.
+- There is one additional prop, `showCollectionWrapper` (default `true`), which, when set to `false`, hides the surrounding "wrapper", namely the hide/show chevron and the brackets. In this case, you would have to provide your own hide/show mechanism in your component.
 
 ### Active hyperlinks
 
