@@ -80,13 +80,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     }
   }, [collapseState])
 
-  const collectionType = Array.isArray(data) ? 'array' : 'object'
-  const brackets =
-    collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
-
-  const transitionTime = getComputedStyle(document.documentElement).getPropertyValue(
-    '--jer-expand-transition-time'
-  )
+  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
+  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
+  const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
+  const canEditKey = parentData !== null && canEdit && canAdd && canDelete
 
   const getDefaultNewValue = useMemo(
     () => (nodeData: NodeData) => {
@@ -94,6 +91,19 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       return defaultValue(nodeData)
     },
     [defaultValue]
+  )
+
+  // Early return if this node is filtered out
+  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0) {
+    return null
+  }
+
+  const collectionType = Array.isArray(data) ? 'array' : 'object'
+  const brackets =
+    collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
+
+  const transitionTime = getComputedStyle(document.documentElement).getPropertyValue(
+    '--jer-expand-transition-time'
   )
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -184,15 +194,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setIsEditingKey(false)
     setError(null)
     setStringifiedValue(JSON.stringify(data, null, 2))
-  }
-
-  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
-  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
-  const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
-  const canEditKey = parentData !== null && canEdit && canAdd && canDelete
-
-  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0) {
-    return null
   }
 
   const isArray = typeof path.slice(-1)[0] === 'number'
