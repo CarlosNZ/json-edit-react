@@ -39,7 +39,7 @@ import './style.css'
 import { version } from './version'
 
 function App() {
-  const [selectedData, setSelectedData] = useState('customNodes')
+  const [selectedData, setSelectedData] = useState('intro')
   const [rootName, setRootName] = useState(demoData[selectedData].rootName ?? 'data')
   const [indent, setIndent] = useState(3)
   const [collapseLevel, setCollapseLevel] = useState(2)
