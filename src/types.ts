@@ -160,9 +160,9 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   children?: JSX.Element | JSX.Element[] | null
 }
 
-export interface CustomNodeDefinition<T = Record<string, unknown>> {
+export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<string, unknown>> {
   condition: FilterFunction
-  element: React.FC<CustomNodeProps<T>>
+  element?: React.FC<CustomNodeProps<T>>
   name?: string // appears in "Type" selector
   customNodeProps?: Record<string, unknown>
   hideKey?: boolean
@@ -171,7 +171,10 @@ export interface CustomNodeDefinition<T = Record<string, unknown>> {
   showOnEdit?: boolean // default false
   showOnView?: boolean // default true
   showEditTools?: boolean // default true
+  // For collection nodes only:
   showCollectionWrapper?: boolean // default true
+  wrapperElement?: React.FC<CustomNodeProps<U>>
+  wrapperProps?: Record<string, unknown>
 }
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>

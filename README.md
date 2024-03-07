@@ -32,8 +32,8 @@ Features include:
   - [Icons](#icons)
 - [Localisation](#localisation)
 - [Custom Nodes](#custom-nodes)
-  - [Custom Collection nodes](#custom-collection-nodes)
   - [Active hyperlinks](#active-hyperlinks)
+  - [Custom Collection nodes](#custom-collection-nodes)
 - [Custom Text](#custom-text)
 - [Undo functionality](#undo-functionality)
 - [Exported helpers](#exported-helpers)
@@ -426,8 +426,11 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   showEditTools         // boolean, default true
   name                  // string (appears in Types selector)
   showInTypesSelector,  // boolean (optional), default false
+  
   // Only affects Collection nodes:
   showCollectionWrapper // boolean (optional), default true
+  wrapperElement        // React component (optional) to wrap *outside* the normal collection wrapper
+  wrapperProps          // object (optional) -- props for the above wrapper component
 }
 ```
 
@@ -440,12 +443,6 @@ By default, your component will be presented to the right of the property key it
 Also, by default, your component will be treated as a "display" element, i.e. it will appear in the JSON viewer, but when editing, it will revert to the standard editing interface. This can be changed, however, with the `showOnEdit`, `showOnView` and `showEditTools` props. For example, a Date picker might only be required when *editing* and left as-is for display. The `showEditTools` prop refers to the editing icons (copy, add, edit, delete) that appear to the right of each value on hover. If you choose to disable these but you still want to your component to have an "edit" mode, you'll have to provide your own UI mechanism to toggle editing.
 
 You can allow users to create new instances of your special nodes by selecting them as a "Type" in the types selector when editing/adding values. Set `showInTypesSelector: true` to enable this. However, if this is enabled you need to also provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
-
-### Custom Collection nodes
-
-In most cases it will be preferable to create custom nodes to match *value* nodes (i.e. not `array` or `object` *collection* nodes). However, if you do wish to replace a whole collection, there are a couple of other things to know:
-- The descendants of this node can still be displayed using the [React `children`](https://react.dev/learn/passing-props-to-a-component#passing-jsx-as-children) property, it just becomes your component's responsibility to handle it.
-- There is one additional prop, `showCollectionWrapper` (default `true`), which, when set to `false`, hides the surrounding "wrapper", namely the hide/show chevron and the brackets. In this case, you would have to provide your own hide/show mechanism in your component.
 
 ### Active hyperlinks
 
@@ -462,6 +459,17 @@ return (
   />
   )
 ```
+
+### Custom Collection nodes
+
+In most cases it will be preferable (and simpler) to create custom nodes to match *value* nodes (i.e. not `array` or `object` *collection* nodes), which is what all the [Demo](https://carlosnz.github.io/json-edit-react/) examples show. However, if you *do* wish to target a whole collection node, there are a couple of other things to know:
+- The normal descendants of this node can still be displayed using the [React `children`](https://react.dev/learn/passing-props-to-a-component#passing-jsx-as-children) property, it just becomes your component's responsibility to handle it.
+- You can specify two different components in the definition:
+  - the regular `element` prop, which will be displayed *inside* the collection brackets (i.e. it appears as the *contents* of the collection)
+  - an optional `wrapperElement`, which is displayed *outside* the collection (props can be supplied as described above with `wrapperProps`). Again, the inner contents (including your custom `element`) can be displayed using React `children`. In this example, the **blue** border shows the `wrapperElement` and the **red** border shows the inner `element`:  
+  <img width="450" alt="custom node levels" src="image/custom_component_levels.png"> 
+- There is one additional prop, `showCollectionWrapper` (default `true`), which, when set to `false`, hides the surrounding collection elements (namely the hide/show chevron and the brackets). In this case, you would have to provide your own hide/show mechanism in your component should you want it.
+
 
 ## Custom Text
 

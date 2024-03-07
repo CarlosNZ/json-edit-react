@@ -283,6 +283,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const {
     CustomNode,
     customNodeProps,
+    CustomWrapper = ({ children }) => <>{children}</>,
+    wrapperProps = {},
     hideKey,
     showEditTools = true,
     showOnEdit,
@@ -295,25 +297,26 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   // It can still be displayed collapsed by handling it internally if this is
   // desired.
   const isCollapsed = !showCollectionWrapper ? false : collapsed
+  if (!isCollapsed) hasBeenOpened.current = true
+
+  const customNodeAllProps = {
+    ...props,
+    data,
+    value: data,
+    parentData,
+    nodeData,
+    setValue: async (val: unknown) => await onEdit(val, path),
+    handleEdit,
+    handleCancel,
+    handleKeyPress,
+    isEditing,
+    setIsEditing,
+    getStyles,
+  }
 
   const CollectionContents =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
-      <CustomNode
-        {...props}
-        data={data}
-        value={data}
-        parentData={parentData}
-        nodeData={nodeData}
-        customNodeProps={customNodeProps}
-        // eslint-disable-next-line
-        setValue={(value) => onEdit(value, path)}
-        handleEdit={handleEdit}
-        handleCancel={handleCancel}
-        handleKeyPress={handleKeyPress}
-        isEditing={isEditing}
-        setIsEditing={setIsEditing}
-        getStyles={getStyles}
-      >
+      <CustomNode customNodeProps={customNodeProps} {...customNodeAllProps}>
         {CollectionChildren}
       </CustomNode>
     ) : (
@@ -360,78 +363,85 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   )
 
   return (
-    <div
-      className="jer-component jer-collection-component"
-      style={{
-        marginLeft: `${path.length === 0 ? 0 : indent / 2}em`,
-        ...getStyles('collection', nodeData),
-      }}
-    >
-      {showCollectionWrapper ? (
-        <div className="jer-collection-header-row" style={{ position: 'relative' }}>
-          <div className="jer-collection-name">
-            <div className="jer-collapse-icon" onClick={(e) => handleCollapse(e)}>
-              <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
+    <CustomWrapper customNodeProps={wrapperProps} {...customNodeAllProps}>
+      <div
+        className="jer-component jer-collection-component"
+        style={{
+          marginLeft: `${path.length === 0 ? 0 : indent / 2}em`,
+          ...getStyles('collection', nodeData),
+        }}
+      >
+        {showCollectionWrapper ? (
+          <div className="jer-collection-header-row" style={{ position: 'relative' }}>
+            <div className="jer-collection-name">
+              <div className="jer-collapse-icon" onClick={(e) => handleCollapse(e)}>
+                <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
+              </div>
+              {KeyDisplay}
+              {!isEditing && (
+                <span
+                  className="jer-brackets jer-bracket-open"
+                  style={getStyles('bracket', nodeData)}
+                >
+                  {brackets.open}
+                </span>
+              )}
             </div>
-            {KeyDisplay}
-            {!isEditing && (
-              <span
-                className="jer-brackets jer-bracket-open"
-                style={getStyles('bracket', nodeData)}
+            {!isEditing && showCount && (
+              <div
+                className={`jer-collection-item-count${showCount ? ' jer-visible' : ' jer-hidden'}`}
+                style={getStyles('itemCount', nodeData)}
               >
-                {brackets.open}
+                {size === 1
+                  ? translate('ITEM_SINGLE', { ...nodeData, size: 1 }, 1)
+                  : translate('ITEMS_MULTIPLE', nodeData, size as number)}
+              </div>
+            )}
+            <div
+              className={`jer-brackets${isCollapsed ? ' jer-visible' : ' jer-hidden'}`}
+              style={getStyles('bracket', nodeData)}
+            >
+              {brackets.close}
+            </div>
+            {EditButtonDisplay}
+          </div>
+        ) : hideKey ? (
+          <></>
+        ) : (
+          <div className="jer-collection-header-row" style={{ position: 'relative' }}>
+            {KeyDisplay}
+            {EditButtonDisplay}
+          </div>
+        )}
+        <div
+          className={'jer-collection-inner'}
+          style={{
+            maxHeight: isCollapsed ? 0 : !isEditing ? `${numOfLines * 3}em` : undefined,
+            overflowY: isCollapsed || isAnimating ? 'hidden' : 'visible',
+            // Need to use max-height for animation to work, unfortunately
+            // "height: auto" doesn't 😔
+            transition: `max-height ${transitionTime}`,
+            ...getStyles('collectionInner', nodeData),
+          }}
+        >
+          {CollectionContents}
+          <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
+            {error && (
+              <span className="jer-error-slug" style={getStyles('error', nodeData)}>
+                {error}
               </span>
             )}
           </div>
-          {!isEditing && showCount && (
+          {!isEditing && showCollectionWrapper && (
             <div
-              className={`jer-collection-item-count${showCount ? ' jer-visible' : ' jer-hidden'}`}
-              style={getStyles('itemCount', nodeData)}
+              className="jer-brackets jer-bracket-outside"
+              style={getStyles('bracket', nodeData)}
             >
-              {size === 1
-                ? translate('ITEM_SINGLE', { ...nodeData, size: 1 }, 1)
-                : translate('ITEMS_MULTIPLE', nodeData, size as number)}
+              {brackets.close}
             </div>
           )}
-          <div
-            className={`jer-brackets${isCollapsed ? ' jer-visible' : ' jer-hidden'}`}
-            style={getStyles('bracket', nodeData)}
-          >
-            {brackets.close}
-          </div>
-          {EditButtonDisplay}
         </div>
-      ) : hideKey ? null : (
-        <div className="jer-collection-header-row" style={{ position: 'relative' }}>
-          {KeyDisplay}
-          {EditButtonDisplay}
-        </div>
-      )}
-      <div
-        className={'jer-collection-inner'}
-        style={{
-          maxHeight: isCollapsed ? 0 : !isEditing ? `${numOfLines * 3}em` : undefined,
-          overflowY: isCollapsed || isAnimating ? 'hidden' : 'visible',
-          // Need to use max-height for animation to work, unfortunately
-          // "height: auto" doesn't 😔
-          transition: `max-height ${transitionTime}`,
-          ...getStyles('collectionInner', nodeData),
-        }}
-      >
-        {CollectionContents}
-        <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
-          {error && (
-            <span className="jer-error-slug" style={getStyles('error', nodeData)}>
-              {error}
-            </span>
-          )}
-        </div>
-        {!isEditing && showCollectionWrapper && (
-          <div className="jer-brackets jer-bracket-outside" style={getStyles('bracket', nodeData)}>
-            {brackets.close}
-          </div>
-        )}
       </div>
-    </div>
+    </CustomWrapper>
   )
 }

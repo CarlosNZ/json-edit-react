@@ -15,6 +15,7 @@ import {
   type ThemeName,
   type Theme,
   type ThemeInput,
+  type NodeData,
 } from './types'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { themes } from './theme'
@@ -37,6 +38,7 @@ export {
   type FilterFunction,
   type SearchFilterFunction,
   type CompareFunction,
+  type NodeData,
   type IconReplacements,
   type LocalisedStrings,
   type TranslateFunction,

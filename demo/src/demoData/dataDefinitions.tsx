@@ -496,19 +496,32 @@ export const demoData: Record<string, DemoData> = {
       //   element: ({ nodeData, data, getStyles, children }) => {
       //     const styles = getStyles('string', nodeData)
       //     return (
-      //       <>
-      //         <p>
-      //           <strong>Heading</strong>
+      //       <div style={{ border: '1px solid red', padding: '0.5em', borderRadius: '1em' }}>
+      //         <p style={{ marginBottom: '0.5em' }}>
+      //           <em>Regular custom element</em>
       //         </p>
       //         <ol style={{ ...styles, paddingLeft: '3em' }}>
       //           {data.map((val) => (
       //             <li key={val}>{val}</li>
       //           ))}
       //         </ol>
-      //         {children}
-      //       </>
+      //         {/* {children} */}
+      //       </div>
       //     )
       //   },
+      //   wrapperElement: ({ children }) => (
+      //     <div
+      //       style={{
+      //         border: '1px solid blue',
+      //         padding: '0.5em',
+      //         borderRadius: '1em',
+      //         marginTop: '1em',
+      //         marginBottom: '1em',
+      //       }}
+      //     >
+      //       <em>Custom Wrapper element</em>: {children}
+      //     </div>
+      //   ),
       //   showOnEdit: true,
       //   showOnView: true,
       //   // showEditTools: false,
