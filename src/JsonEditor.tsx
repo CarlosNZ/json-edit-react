@@ -47,6 +47,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   stringTruncate = 250,
   translations = {},
   className,
+  id,
   customText = {},
   customNodeDefinitions = [],
 }) => {
@@ -190,6 +191,7 @@ const Editor: React.FC<JsonEditorProps> = ({
 
   return (
     <div
+      id={id}
       className={'jer-editor-container ' + className}
       style={{ ...getStyles('container', nodeData), minWidth, maxWidth }}
     >

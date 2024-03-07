@@ -14,6 +14,7 @@ export interface JsonEditorProps {
   theme?: ThemeInput
   icons?: IconReplacements
   className?: string
+  id?: string
   indent?: number
   collapse?: boolean | number | FilterFunction
   showCollectionCount?: boolean | 'when-closed'
