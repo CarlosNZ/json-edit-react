@@ -22,7 +22,7 @@ import { themes } from './theme'
 import { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 import { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
 import { truncate, breakString } from './ValueNodes'
-import { matchNode, matchNodeKey } from './filterHelpers'
+import { matchNode, matchNodeKey, isCollection } from './filterHelpers'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 
@@ -58,6 +58,7 @@ export {
   IconChevron,
   matchNode,
   matchNodeKey,
+  isCollection,
   truncate,
   breakString,
   assign,
