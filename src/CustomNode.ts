@@ -2,8 +2,10 @@ import { type CustomNodeDefinition, type CustomNodeProps, type NodeData } from '
 
 export interface CustomNodeData {
   CustomNode?: React.FC<CustomNodeProps>
+  CustomWrapper?: React.FC<CustomNodeProps>
   name?: string
   customNodeProps?: Record<string, unknown>
+  wrapperProps?: Record<string, unknown>
   hideKey?: boolean
   defaultValue?: unknown
   showInTypesSelector?: boolean
@@ -25,7 +27,9 @@ export const getCustomNode = (
   // Only take the first one that matches
   const {
     element,
+    wrapperElement,
     customNodeProps,
+    wrapperProps,
     hideKey = false,
     showEditTools = true,
     showOnEdit = false,
@@ -36,7 +40,9 @@ export const getCustomNode = (
 
   return {
     CustomNode: element,
+    CustomWrapper: wrapperElement,
     customNodeProps,
+    wrapperProps,
     hideKey,
     showEditTools,
     showOnEdit,

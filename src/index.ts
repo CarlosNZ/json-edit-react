@@ -15,13 +15,14 @@ import {
   type ThemeName,
   type Theme,
   type ThemeInput,
+  type NodeData,
 } from './types'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { themes } from './theme'
 import { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 import { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
-import { truncate, breakString } from './ValueNodes'
-import { matchNode, matchNodeKey } from './filterHelpers'
+import { truncate } from './ValueNodes'
+import { matchNode, matchNodeKey, isCollection } from './filterHelpers'
 import assign from 'object-property-assigner'
 import extract from 'object-property-extractor'
 
@@ -37,6 +38,7 @@ export {
   type FilterFunction,
   type SearchFilterFunction,
   type CompareFunction,
+  type NodeData,
   type IconReplacements,
   type LocalisedStrings,
   type TranslateFunction,
@@ -56,8 +58,8 @@ export {
   IconChevron,
   matchNode,
   matchNodeKey,
+  isCollection,
   truncate,
-  breakString,
   assign,
   extract,
 }

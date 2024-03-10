@@ -58,6 +58,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   // gives a big performance improvement with large data sets), but still keep
   // the animation transition when opening and closing the accordion
   const hasBeenOpened = useRef(!startCollapsed)
+
   // Allows us to delay the overflow visibility of the collapsed element until
   // the animation has completed
   const [isAnimating, setIsAnimating] = useState(false)
@@ -67,7 +68,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   }, [data])
 
   useEffect(() => {
-    setCollapsed(collapseFilter(nodeData))
+    const isCollapsed = collapseFilter(nodeData)
+    hasBeenOpened.current = !isCollapsed
+    setCollapsed(isCollapsed)
   }, [collapseFilter])
 
   useEffect(() => {
@@ -77,13 +80,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     }
   }, [collapseState])
 
-  const collectionType = Array.isArray(data) ? 'array' : 'object'
-  const brackets =
-    collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
-
-  const transitionTime = getComputedStyle(document.documentElement).getPropertyValue(
-    '--jer-expand-transition-time'
-  )
+  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
+  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
+  const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
+  const canEditKey = parentData !== null && canEdit && canAdd && canDelete
 
   const getDefaultNewValue = useMemo(
     () => (nodeData: NodeData) => {
@@ -91,6 +91,19 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       return defaultValue(nodeData)
     },
     [defaultValue]
+  )
+
+  // Early return if this node is filtered out
+  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0) {
+    return null
+  }
+
+  const collectionType = Array.isArray(data) ? 'array' : 'object'
+  const brackets =
+    collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
+
+  const transitionTime = getComputedStyle(document.documentElement).getPropertyValue(
+    '--jer-expand-transition-time'
   )
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -183,15 +196,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setStringifiedValue(JSON.stringify(data, null, 2))
   }
 
-  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
-  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
-  const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
-  const canEditKey = parentData !== null && canEdit && canAdd && canDelete
-
-  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0) {
-    return null
-  }
-
   const isArray = typeof path.slice(-1)[0] === 'number'
   const showLabel = showArrayIndices || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
@@ -211,29 +215,30 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   // setting the max-height in the collapsible interior
   const numOfLines = JSON.stringify(data, null, 2).split('\n').length
 
-  const CollectionChildren = !hasBeenOpened.current
-    ? null
-    : keyValueArray.map(([key, value], index) => (
+  const CollectionChildren = !hasBeenOpened.current ? null : !isEditing ? (
+    keyValueArray.map(([key, value], index) => {
+      const childNodeData = {
+        key,
+        value,
+        path: [...path, key],
+        level: path.length + 1,
+        index,
+        size: isCollection(value) ? Object.keys(value as object).length : 1,
+        parentData: data,
+        fullData: nodeData.fullData,
+      }
+      return (
         <div
           className="jer-collection-element"
           key={key}
-          style={getStyles('collectionElement', nodeData)}
+          style={getStyles('collectionElement', childNodeData)}
         >
           {isCollection(value) ? (
             <CollectionNode
               key={key}
               data={value}
               parentData={data}
-              nodeData={{
-                key,
-                value,
-                path: [...path, key],
-                level: path.length + 1,
-                index,
-                parentData: data,
-                size: Object.keys(value as object).length,
-                fullData: nodeData.fullData,
-              }}
+              nodeData={childNodeData}
               showCollectionCount={showCollectionCount}
               {...props}
             />
@@ -242,26 +247,38 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
               key={key}
               data={value}
               parentData={data}
-              nodeData={{
-                key,
-                value,
-                path: [...path, key],
-                level: path.length + 1,
-                index,
-                size: 1,
-                parentData: data,
-                fullData: nodeData.fullData,
-              }}
+              nodeData={childNodeData}
               {...props}
               showLabel={collectionType === 'object' ? true : showArrayIndices}
             />
           )}
         </div>
-      ))
+      )
+    })
+  ) : (
+    <div className="jer-collection-text-edit">
+      <div>
+        <AutogrowTextArea
+          className="jer-collection-text-area"
+          name={path.join('.')}
+          value={stringifiedValue}
+          setValue={setStringifiedValue}
+          isEditing={isEditing}
+          handleKeyPress={handleKeyPress}
+          styles={getStyles('input', nodeData)}
+        />
+        <div className="jer-collection-input-button-row">
+          <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
+        </div>
+      </div>
+    </div>
+  )
 
   const {
     CustomNode,
     customNodeProps,
+    CustomWrapper,
+    wrapperProps = {},
     hideKey,
     showEditTools = true,
     showOnEdit,
@@ -274,44 +291,28 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   // It can still be displayed collapsed by handling it internally if this is
   // desired.
   const isCollapsed = !showCollectionWrapper ? false : collapsed
+  if (!isCollapsed) hasBeenOpened.current = true
+
+  const customNodeAllProps = {
+    ...props,
+    data,
+    value: data,
+    parentData,
+    nodeData,
+    setValue: async (val: unknown) => await onEdit(val, path),
+    handleEdit,
+    handleCancel,
+    handleKeyPress,
+    isEditing,
+    setIsEditing,
+    getStyles,
+  }
 
   const CollectionContents =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
-      <CustomNode
-        {...props}
-        data={data}
-        value={data}
-        parentData={parentData}
-        nodeData={nodeData}
-        customNodeProps={customNodeProps}
-        // eslint-disable-next-line
-        setValue={(value) => onEdit(value, path)}
-        handleEdit={handleEdit}
-        handleCancel={handleCancel}
-        handleKeyPress={handleKeyPress}
-        isEditing={isEditing}
-        setIsEditing={setIsEditing}
-        getStyles={getStyles}
-      >
+      <CustomNode customNodeProps={customNodeProps} {...customNodeAllProps}>
         {CollectionChildren}
       </CustomNode>
-    ) : isEditing ? (
-      <div className="jer-collection-text-edit">
-        <div>
-          <AutogrowTextArea
-            className="jer-collection-text-area"
-            name={path.join('.')}
-            value={stringifiedValue}
-            setValue={setStringifiedValue}
-            isEditing={isEditing}
-            handleKeyPress={handleKeyPress}
-            styles={getStyles('input', nodeData)}
-          />
-          <div className="jer-collection-input-button-row">
-            <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
-          </div>
-        </div>
-      </div>
     ) : (
       CollectionChildren
     )
@@ -336,7 +337,26 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     </span>
   )
 
-  return (
+  const EditButtonDisplay = !isEditing && showEditTools && (
+    <EditButtons
+      startEdit={
+        canEdit
+          ? () => {
+              setIsEditing(true)
+              setCollapsed(false)
+            }
+          : undefined
+      }
+      handleAdd={canAdd ? handleAdd : undefined}
+      handleDelete={canDelete ? handleDelete : undefined}
+      enableClipboard={enableClipboard}
+      type={collectionType}
+      nodeData={nodeData}
+      translate={translate}
+    />
+  )
+
+  const CollectionNodeComponent = (
     <div
       className="jer-component jer-collection-component"
       style={{
@@ -376,28 +396,14 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           >
             {brackets.close}
           </div>
-          {!isEditing && showEditTools && (
-            <EditButtons
-              startEdit={
-                canEdit
-                  ? () => {
-                      setIsEditing(true)
-                      setCollapsed(false)
-                    }
-                  : undefined
-              }
-              handleAdd={canAdd ? handleAdd : undefined}
-              handleDelete={canDelete ? handleDelete : undefined}
-              enableClipboard={enableClipboard}
-              type={collectionType}
-              nodeData={nodeData}
-              translate={translate}
-            />
-          )}
+          {EditButtonDisplay}
         </div>
-      ) : hideKey ? null : (
+      ) : hideKey ? (
+        <></>
+      ) : (
         <div className="jer-collection-header-row" style={{ position: 'relative' }}>
           {KeyDisplay}
+          {EditButtonDisplay}
         </div>
       )}
       <div
@@ -427,4 +433,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       </div>
     </div>
   )
+
+  if (CustomWrapper) {
+    return (
+      <CustomWrapper customNodeProps={wrapperProps} {...customNodeAllProps}>
+        {CollectionNodeComponent}
+      </CustomWrapper>
+    )
+  } else return CollectionNodeComponent
 }

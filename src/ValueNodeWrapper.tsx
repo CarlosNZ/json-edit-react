@@ -63,6 +63,41 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setDataType(getDataType(data, customNodeData))
   }, [data, error])
 
+  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
+  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
+
+  const {
+    CustomNode,
+    customNodeProps,
+    hideKey,
+    showEditTools = true,
+    showOnEdit,
+    showOnView,
+  } = customNodeData
+
+  // Include custom node options in dataType list
+  const allDataTypes = [
+    ...DataTypes,
+    ...customNodeDefinitions
+      .filter(({ showInTypesSelector = false, name }) => showInTypesSelector && !!name)
+      .map(({ name }) => name),
+  ]
+
+  const allowedDataTypes = useMemo(() => {
+    if (typeof restrictTypeSelection === 'boolean') return restrictTypeSelection ? [] : allDataTypes
+
+    if (Array.isArray(restrictTypeSelection)) return restrictTypeSelection
+
+    const result = restrictTypeSelection(nodeData)
+
+    if (typeof result === 'boolean') return result ? [] : allDataTypes
+
+    return result
+  }, [nodeData, restrictTypeSelection])
+
+  // Early return if this node is filtered out
+  if (!filterNode('value', nodeData, searchFilter, searchText)) return null
+
   const handleChangeDataType = (type: DataType) => {
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
@@ -144,9 +179,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
-  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
-  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
-
   const isArray = typeof path.slice(-1)[0] === 'number'
   const canEditKey = !isArray && canEdit && canDelete
 
@@ -163,37 +195,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     nodeData,
     translate,
   }
-
-  const {
-    CustomNode,
-    customNodeProps,
-    hideKey,
-    showEditTools = true,
-    showOnEdit,
-    showOnView,
-  } = customNodeData
-
-  // Include custom node options in dataType list
-  const allDataTypes = [
-    ...DataTypes,
-    ...customNodeDefinitions
-      .filter(({ showInTypesSelector = false, name }) => showInTypesSelector && !!name)
-      .map(({ name }) => name),
-  ]
-
-  const allowedDataTypes = useMemo(() => {
-    if (typeof restrictTypeSelection === 'boolean') return restrictTypeSelection ? [] : allDataTypes
-
-    if (Array.isArray(restrictTypeSelection)) return restrictTypeSelection
-
-    const result = restrictTypeSelection(nodeData)
-
-    if (typeof result === 'boolean') return result ? [] : allDataTypes
-
-    return result
-  }, [nodeData, restrictTypeSelection])
-
-  if (!filterNode('value', nodeData, searchFilter, searchText)) return null
 
   const ValueComponent =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
