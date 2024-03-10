@@ -216,51 +216,45 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const numOfLines = JSON.stringify(data, null, 2).split('\n').length
 
   const CollectionChildren = !hasBeenOpened.current ? null : !isEditing ? (
-    keyValueArray.map(([key, value], index) => (
-      <div
-        className="jer-collection-element"
-        key={key}
-        style={getStyles('collectionElement', nodeData)}
-      >
-        {isCollection(value) ? (
-          <CollectionNode
-            key={key}
-            data={value}
-            parentData={data}
-            nodeData={{
-              key,
-              value,
-              path: [...path, key],
-              level: path.length + 1,
-              index,
-              parentData: data,
-              size: Object.keys(value as object).length,
-              fullData: nodeData.fullData,
-            }}
-            showCollectionCount={showCollectionCount}
-            {...props}
-          />
-        ) : (
-          <ValueNodeWrapper
-            key={key}
-            data={value}
-            parentData={data}
-            nodeData={{
-              key,
-              value,
-              path: [...path, key],
-              level: path.length + 1,
-              index,
-              size: 1,
-              parentData: data,
-              fullData: nodeData.fullData,
-            }}
-            {...props}
-            showLabel={collectionType === 'object' ? true : showArrayIndices}
-          />
-        )}
-      </div>
-    ))
+    keyValueArray.map(([key, value], index) => {
+      const childNodeData = {
+        key,
+        value,
+        path: [...path, key],
+        level: path.length + 1,
+        index,
+        size: isCollection(value) ? Object.keys(value as object).length : 1,
+        parentData: data,
+        fullData: nodeData.fullData,
+      }
+      return (
+        <div
+          className="jer-collection-element"
+          key={key}
+          style={getStyles('collectionElement', childNodeData)}
+        >
+          {isCollection(value) ? (
+            <CollectionNode
+              key={key}
+              data={value}
+              parentData={data}
+              nodeData={childNodeData}
+              showCollectionCount={showCollectionCount}
+              {...props}
+            />
+          ) : (
+            <ValueNodeWrapper
+              key={key}
+              data={value}
+              parentData={data}
+              nodeData={childNodeData}
+              {...props}
+              showLabel={collectionType === 'object' ? true : showArrayIndices}
+            />
+          )}
+        </div>
+      )
+    })
   ) : (
     <div className="jer-collection-text-edit">
       <div>
