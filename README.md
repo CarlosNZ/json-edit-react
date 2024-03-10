@@ -554,6 +554,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.8.0**: Further improvements/fixes to collection custom nodes, including additional  `wrapperElement` [prop](#custom-collection-nodes)
 - **1.7.2**:
   - Fix and improve Custom nodes in *collections*
   - Include `index` in Filter (and other) function input
