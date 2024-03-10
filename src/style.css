@@ -220,6 +220,7 @@ select:focus + .focus {
 
 .jer-value-string {
   line-height: 1.3em;
+  white-space: pre-wrap;
 }
 
 .jer-hyperlink {

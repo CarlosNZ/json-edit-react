@@ -520,7 +520,6 @@ A few helper functions, components and types that might be useful in your own im
 - `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron`: all the built-in [icon](#icons) components
 - `matchNode`, `matchNodeKey`: helpers for defining custom [Search](#searchfiltering) functions
 - `truncate`: function to truncate a string to a specified length. See [here](https://github.com/CarlosNZ/json-edit-react/blob/d5fdbdfed6da7152f5802c67fbb3577810d13adc/src/ValueNodes.tsx#L9-L13)
-- `breakString`: function to turn a string into HTML, preserving line breaks and white space. See [here](https://github.com/CarlosNZ/json-edit-react/blob/d5fdbdfed6da7152f5802c67fbb3577810d13adc/src/ValueNodes.tsx#L15-L29)
 - `extract`: function to extract a deeply nested object value from a string path. See [here](https://github.com/CarlosNZ/object-property-extractor)
 - `assign`: function to set a deep object value from a string path. See [here](https://github.com/CarlosNZ/object-property-assigner)
 
