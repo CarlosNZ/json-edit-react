@@ -93,6 +93,18 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     [defaultValue]
   )
 
+  const {
+    CustomNode,
+    customNodeProps,
+    CustomWrapper,
+    wrapperProps = {},
+    hideKey,
+    showEditTools = true,
+    showOnEdit,
+    showOnView,
+    showCollectionWrapper = true,
+  } = useMemo(() => getCustomNode(customNodeDefinitions, nodeData), [])
+
   // Early return if this node is filtered out
   if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0) {
     return null
@@ -273,18 +285,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       </div>
     </div>
   )
-
-  const {
-    CustomNode,
-    customNodeProps,
-    CustomWrapper,
-    wrapperProps = {},
-    hideKey,
-    showEditTools = true,
-    showOnEdit,
-    showOnView,
-    showCollectionWrapper = true,
-  } = getCustomNode(customNodeDefinitions, nodeData)
 
   // If the collection wrapper (expand icon, brackets, etc) is hidden, there's
   // no way to open a collapsed custom node, so this ensures it will stay open.
