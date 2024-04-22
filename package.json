@@ -1,6 +1,6 @@
 {
   "name": "json-edit-react",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
@@ -22,9 +22,9 @@
     "release-demo": "cd demo && yarn deploy"
   },
   "peerDependencies": {
-    "@types/react": "^18.2.6",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "@types/react": "^16.0.0",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0"
   },
   "resolutions": {
     "strip-ansi": "6.0.1",
