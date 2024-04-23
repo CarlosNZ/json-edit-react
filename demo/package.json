@@ -3,10 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "homepage": "https://carlosnz.github.io/json-edit-react",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/CarlosNZ/json-edit-react.git"
-  },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.2",
@@ -72,24 +68,5 @@
     "gh-pages": "^6.1.1",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.0.3"
-  },
-  "keywords": [
-    "react",
-    "component",
-    "interactive",
-    "interactive-json",
-    "json",
-    "json-component",
-    "json-display",
-    "json-tree",
-    "json-view",
-    "json-viewer",
-    "json-inspector",
-    "react-component",
-    "react-json",
-    "theme",
-    "tree",
-    "tree-view",
-    "treeview"
-  ]
+  }
 }
