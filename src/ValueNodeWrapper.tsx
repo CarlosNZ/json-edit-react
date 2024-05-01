@@ -40,6 +40,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     searchText,
     showLabel,
     stringTruncate,
+    showStringQuotes,
     indent,
     translate,
     customNodeDefinitions,
@@ -192,6 +193,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     handleCancel,
     path,
     stringTruncate,
+    showStringQuotes,
     nodeData,
     translate,
   }

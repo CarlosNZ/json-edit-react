@@ -51,6 +51,7 @@ function App() {
   const [allowCopy, setAllowCopy] = useState(true)
   const [sortKeys, setSortKeys] = useState(false)
   const [showIndices, setShowIndices] = useState(true)
+  const [showStringQuotes, setShowStringQuotes] = useState(true)
   const [defaultNewValue, setDefaultNewValue] = useState('New data!')
   const [isSaving, setIsSaving] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -284,6 +285,7 @@ function App() {
               keySort={sortKeys}
               defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
               showArrayIndices={showIndices}
+              showStringQuotes={showStringQuotes}
               minWidth={'min(500px, 95vw)'}
               maxWidth="min(650px, 90vw)"
               className="block-shadow"
@@ -483,12 +485,12 @@ function App() {
                   </Flex>
                   <Flex w="100%" justify="flex-start">
                     <Checkbox
-                      id="sortKeysCheckbox"
-                      isChecked={sortKeys}
-                      onChange={() => setSortKeys(!sortKeys)}
+                      id="showStringQuotesCheckbox"
+                      isChecked={showStringQuotes}
+                      onChange={() => setShowStringQuotes(!showStringQuotes)}
                       w="50%"
                     >
-                      Sort Object keys
+                      Show String quotes
                     </Checkbox>
                     <Checkbox
                       id="showIndicesCheckbox"
@@ -497,6 +499,16 @@ function App() {
                       w="50%"
                     >
                       Show Array indices
+                    </Checkbox>
+                  </Flex>
+                  <Flex w="100%" justify="flex-start">
+                    <Checkbox
+                      id="sortKeysCheckbox"
+                      isChecked={sortKeys}
+                      onChange={() => setSortKeys(!sortKeys)}
+                      w="50%"
+                    >
+                      Sort Object keys
                     </Checkbox>
                   </Flex>
                   <HStack className="inputRow" pt={2}>

@@ -21,6 +21,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   handleEdit,
   handleCancel,
   stringTruncate,
+  showStringQuotes,
   nodeData,
 }) => {
   const { getStyles } = useTheme()
@@ -48,7 +49,9 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       className="jer-value-string"
       style={getStyles('string', nodeData)}
     >
-      &quot;{truncate(value, stringTruncate)}&quot;
+      {showStringQuotes ? '"' : ''}
+      {truncate(value, stringTruncate)}
+      {showStringQuotes ? '"' : ''}
     </div>
   )
 }
