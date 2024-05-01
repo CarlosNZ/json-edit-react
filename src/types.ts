@@ -28,6 +28,7 @@ export interface JsonEditorProps {
   searchDebounceTime?: number
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
+  showStringQuotes?: boolean
   defaultValue?: unknown
   minWidth?: string | number
   maxWidth?: string | number
@@ -144,6 +145,7 @@ export type ValueData = string | number | boolean
 export interface ValueNodeProps extends BaseNodeProps {
   data: ValueData
   showLabel: boolean
+  showStringQuotes: boolean
 }
 
 export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodeProps {
@@ -188,6 +190,7 @@ export interface InputProps {
   handleCancel: () => void
   path: CollectionKey[]
   stringTruncate: number
+  showStringQuotes: boolean
   nodeData: NodeData
   translate: TranslateFunction
 }
