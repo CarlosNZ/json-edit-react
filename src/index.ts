@@ -2,6 +2,7 @@ import JsonEditor from './JsonEditor'
 import {
   type JsonEditorProps,
   type UpdateFunction,
+  type OnChangeFunction,
   type CopyFunction,
   type FilterFunction,
   type SearchFilterFunction,
@@ -34,6 +35,7 @@ export {
   type ThemeInput,
   type JsonEditorProps,
   type UpdateFunction,
+  type OnChangeFunction,
   type CopyFunction,
   type FilterFunction,
   type SearchFilterFunction,

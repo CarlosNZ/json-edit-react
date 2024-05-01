@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import {
   StringValue,
   NumberValue,
@@ -32,6 +32,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     nodeData,
     onEdit,
     onDelete,
+    onChange,
     enableClipboard,
     restrictEditFilter,
     restrictDeleteFilter,
@@ -58,6 +59,25 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
+
+  const updateValue = useCallback(
+    (newValue: ValueData) => {
+      if (!onChange) {
+        setValue(newValue)
+        return
+      }
+
+      const modifiedValue = onChange({
+        currentData: nodeData.fullData,
+        newValue,
+        currentValue: value as ValueData,
+        name,
+        path,
+      })
+      setValue(modifiedValue)
+    },
+    [onChange]
+  )
 
   useEffect(() => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
@@ -113,7 +133,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         // that won't match the custom node condition any more
         customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
       )
-      setValue(newValue as ValueData | CollectionData)
+      updateValue(newValue as ValueData)
       onEdit(newValue, path)
       setDataType(type)
     }
@@ -151,6 +171,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleEditKey = (newKey: string) => {
     setIsEditingKey(false)
+    if (name === newKey) return
     if (!parentData) return
     const parentPath = path.slice(0, -1)
     if (!newKey) return
@@ -186,7 +207,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const inputProps = {
     value,
     parentData,
-    setValue,
+    setValue: updateValue,
     isEditing,
     setIsEditing: canEdit ? () => setIsEditing(true) : () => {},
     handleEdit,
@@ -204,7 +225,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         {...props}
         value={value}
         customNodeProps={customNodeProps}
-        setValue={setValue}
+        setValue={updateValue}
         handleEdit={handleEdit}
         handleCancel={handleCancel}
         handleKeyPress={(e: React.KeyboardEvent) => {

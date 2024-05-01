@@ -7,7 +7,7 @@ import {
   type CollectionData,
   type JsonEditorProps,
   type FilterFunction,
-  type OnChangeFunction,
+  type InternalUpdateFunction,
   type NodeData,
   type SearchFilterFunction,
 } from './types'
@@ -26,6 +26,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   onEdit: srcEdit = onUpdate,
   onDelete: srcDelete = onUpdate,
   onAdd: srcAdd = onUpdate,
+  onChange,
   enableClipboard = true,
   theme = 'default',
   icons,
@@ -89,13 +90,15 @@ const Editor: React.FC<JsonEditorProps> = ({
     fullData: data,
   }
 
-  const onEdit: OnChangeFunction = async (value, path) => {
+  const onEdit: InternalUpdateFunction = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
       path,
       value,
       'update'
     )
+    if (currentValue === newValue) return
+
     setData(newData)
 
     const result = await srcEdit({
@@ -112,7 +115,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     }
   }
 
-  const onDelete: OnChangeFunction = async (value, path) => {
+  const onDelete: InternalUpdateFunction = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
       path,
@@ -135,7 +138,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     }
   }
 
-  const onAdd: OnChangeFunction = async (value, path) => {
+  const onAdd: InternalUpdateFunction = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
       path,
@@ -169,6 +172,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     onEdit,
     onDelete,
     onAdd,
+    onChange,
     showCollectionCount,
     collapseFilter,
     restrictEditFilter,

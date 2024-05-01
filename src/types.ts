@@ -10,6 +10,7 @@ export interface JsonEditorProps {
   onEdit?: UpdateFunction
   onDelete?: UpdateFunction
   onAdd?: UpdateFunction
+  onChange?: OnChangeFunction
   enableClipboard?: boolean | CopyFunction
   theme?: ThemeInput
   icons?: IconReplacements
@@ -64,14 +65,26 @@ export interface IconReplacements {
  * FUNCTIONS
  */
 
-export type UpdateFunction = (props: {
+export interface UpdateFunctionProps {
   newData: object
   currentData: object
   newValue: unknown
   currentValue: unknown
   name: CollectionKey
   path: CollectionKey[]
-}) => void | ErrorString | false | Promise<false | ErrorString | void>
+}
+
+export type UpdateFunction = (
+  props: UpdateFunctionProps
+) => void | ErrorString | false | Promise<false | ErrorString | void>
+
+export type OnChangeFunction = (props: {
+  currentData: object
+  newValue: ValueData
+  currentValue: ValueData
+  name: CollectionKey
+  path: CollectionKey[]
+}) => ValueData
 
 export type FilterFunction = (input: NodeData) => boolean
 export type TypeFilterFunction = (input: NodeData) => boolean | DataType[]
@@ -95,7 +108,10 @@ export type CopyFunction = (input: {
 export type CompareFunction = (a: string, b: string) => number
 
 // Internal update
-export type OnChangeFunction = (value: unknown, path: CollectionKey[]) => Promise<string | void>
+export type InternalUpdateFunction = (
+  value: unknown,
+  path: CollectionKey[]
+) => Promise<string | void>
 
 /**
  * NODES
@@ -116,8 +132,8 @@ interface BaseNodeProps {
   data: unknown
   parentData: CollectionData | null
   nodeData: NodeData
-  onEdit: OnChangeFunction
-  onDelete: OnChangeFunction
+  onEdit: InternalUpdateFunction
+  onDelete: InternalUpdateFunction
   enableClipboard: boolean | CopyFunction
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction
@@ -134,10 +150,11 @@ interface BaseNodeProps {
 export interface CollectionNodeProps extends BaseNodeProps {
   data: CollectionData
   collapseFilter: FilterFunction
-  onAdd: OnChangeFunction
+  onAdd: InternalUpdateFunction
   keySort: boolean | CompareFunction
   showArrayIndices: boolean
   showCollectionCount: boolean | 'when-closed'
+  showStringQuotes: boolean
   defaultValue: unknown
 }
 
@@ -146,13 +163,14 @@ export interface ValueNodeProps extends BaseNodeProps {
   data: ValueData
   showLabel: boolean
   showStringQuotes: boolean
+  onChange?: OnChangeFunction
 }
 
 export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodeProps {
   value: ValueData | CollectionData
   customNodeProps?: T
   parentData: CollectionData | null
-  setValue: React.Dispatch<React.SetStateAction<ValueData>>
+  setValue: (value: ValueData) => void
   handleEdit: () => void
   handleCancel: () => void
   handleKeyPress: (e: React.KeyboardEvent) => void
@@ -183,7 +201,7 @@ export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: C
 
 export interface InputProps {
   value: unknown
-  setValue: React.Dispatch<React.SetStateAction<ValueData>>
+  setValue: (value: ValueData) => void
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void
