@@ -22,9 +22,10 @@ Features include:
 - [Usage](#usage)
 - [Props overview](#props-overview)
 - [Update functions](#update-functions)
+  - [OnChange function](#onchange-function)
   - [Copy function](#copy-function)
 - [Filter functions](#filter-functions)
-  - [Examples](#examples)
+  - [Examples](#examples-1)
 - [Search/Filtering](#searchfiltering)
 - [Themes \& Styles](#themes--styles)
   - [Fragments](#fragments)
@@ -94,6 +95,7 @@ The only *required* value is `data`.
 | `onEdit`                | `UpdateFunction`                              |             | A function to run whenever a value is **edited**.                                                                                                                                                                                                                                                                    |
 | `onDelete`              | `UpdateFunction`                              |             | A function to run whenever a value is **deleted**.                                                                                                                                                                                                                                                                   |
 | `onAdd`                 | `UpdateFunction`                              |             | A function to run whenever a new property is **added**.                                                                                                                                                                                                                                                              |
+| `onChange`              | `OnChangeFunction`                            |             | A function to modify/constrain user input as they type -- see [OnChange functions](#onchange-function).                                                                                                                                                                                                              |
 | `enableClipboard`       | `boolean\|CopyFunction`                       | `true`      | Whether or not to enable the "Copy to clipboard" button in the UI. If a function is provided, `true` is assumed and this function will be run whenever an item is copied.                                                                                                                                            |
 | `indent`                | `number`                                      | `3`         | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                                                   |
 | `collapse`              | `boolean\|number\|FilterFunction`             | `false`     | Defines which nodes of the JSON tree will be displayed "opened" in the UI on load. If `boolean`, it'll be either all or none. A `number` specifies a nesting depth after which nodes will be closed. For more fine control a function can be provided — see [Filter functions](#filter-functions).                   |
@@ -139,6 +141,32 @@ The function will receive the following object as a parameter:
 ```
 
 The function needn't return anything, but if it returns `false`, it will be considered an error, in which case an error message will displayed in the UI and the internal data state won't actually be updated. If the return value is a `string`, this will be the error message displayed (i.e. you can define your own error messages for updates). On error, the displayed data will revert to its previous value.
+
+### OnChange function
+
+Similar to the Update functions, the `onChange` function is executed as the user input changes. You can use this to restrict or constrain user input -- e.g. limiting numbers to positive values, or preventing line breaks in strings. The function *must* return a value in order to update the user input field, so if no changes are to made, just return it unmodified.
+
+The input object is similar to the Update function input, but with no `newData` field (since this operation occurs before the data is updated).
+
+#### Examples
+
+- Restrict "age" inputs to positive values up to 100:  
+  ```js
+  // in <JsonEditor /> props
+  onChange = ({ newValue, name }) => {
+        if (name === "age" && newValue < 0) return 0;
+        if (name === "age" && newValue > 100) return 100;
+        return newValue
+      }
+  ```
+- Only allow alphabetical or whitespace input for "name" field (including no line breaks):  
+  ```js
+  onChange = ({ newValue, name }) => {
+      if (name === 'name' && typeof newValue === "string")
+        return newValue.replace(/[^a-zA-Z\s]|\n|\r/gm, '');
+      return newValue;
+    }
+  ```
 
 ### Copy function
 

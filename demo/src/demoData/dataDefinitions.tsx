@@ -14,6 +14,7 @@ import {
   CollectionKey,
   DataType,
   DefaultValueFunction,
+  OnChangeFunction,
   SearchFilterFunction,
   ThemeStyles,
   UpdateFunction,
@@ -49,6 +50,7 @@ interface DemoData {
     name: CollectionKey
     path: CollectionKey[]
   }) => any
+  onChange?: OnChangeFunction
   defaultValue?: unknown | DefaultValueFunction
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
@@ -140,9 +142,11 @@ export const demoData: Record<string, DemoData> = {
         <Text>
           You'll note that the <span className="code">id</span> field is not editable, which would
           be important if this saved back to a database. An additional{' '}
-          <span className="code">restrictEdit</span> function as been included which targets the{' '}
-          <span className="code">id</span> field specifically. You also can't add additional fields
-          to the main "Person" objects.
+          <Link href="https://github.com/CarlosNZ/json-edit-react#filter-functions" isExternal>
+            <span className="code">restrictEdit</span> function
+          </Link>{' '}
+          has been included which targets the <span className="code">id</span> field specifically.
+          You also can't add additional fields to the main "Person" objects.
         </Text>
         <Text>
           Also, notice that when you add a new item in the top level array, a correctly structured{' '}
@@ -158,6 +162,14 @@ export const demoData: Record<string, DemoData> = {
             Search filter function
           </Link>
           .
+        </Text>
+        <Text>
+          Finally, an{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#onchange-function" isExternal>
+            <span className="code">onChange</span> function
+          </Link>{' '}
+          has been added to restrict user input in the <span className="code">name</span> field to
+          alphabetical characters only (with no line breaks too).
         </Text>
       </Flex>
     ),
@@ -201,6 +213,12 @@ export const demoData: Record<string, DemoData> = {
           },
         }
       return 'New Value'
+    },
+    onChange: ({ newValue, name }) => {
+      if (name === 'name') return (newValue as string).replace(/[^a-zA-Z\s]|\n|\r/gm, '')
+      if (['username', 'email', 'phone', 'website'].includes(name as string))
+        return (newValue as string).replace(/\n|\r/gm, '')
+      return newValue
     },
     data: data.jsonPlaceholder,
   },

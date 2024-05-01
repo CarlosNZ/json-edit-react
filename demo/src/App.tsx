@@ -37,7 +37,6 @@ import { demoData } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { version } from './version'
-import { ValueData } from './json-edit-react/src/types'
 
 function App() {
   const [selectedData, setSelectedData] = useState('intro')
@@ -293,11 +292,7 @@ function App() {
               stringTruncate={90}
               customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
               customText={demoData[selectedData]?.customTextDefinitions}
-              onChange={(props) => {
-                console.log(props)
-                if (props.name === 'number') return 0
-                return props.newValue as ValueData
-              }}
+              onChange={demoData[selectedData]?.onChange ?? undefined}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>
