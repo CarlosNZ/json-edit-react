@@ -228,8 +228,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         }}
       >
         {showLabel && !isEditingKey && !hideKey && (
-          <label
-            htmlFor={path.join('.')}
+          <span
             className="jer-object-key"
             style={{
               ...getStyles('property', nodeData),
@@ -239,7 +238,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             onDoubleClick={() => canEditKey && setIsEditingKey(true)}
           >
             {name}:{' '}
-          </label>
+          </span>
         )}
         {showLabel && isEditingKey && (
           <input

@@ -212,6 +212,7 @@ function App() {
           </Heading>
           <Box position="relative">
             <Input
+              id="searchTextInput"
               placeholder={demoData[selectedData].searchPlaceholder ?? 'Search values'}
               bgColor={'#f6f6f6'}
               borderColor="gainsboro"
@@ -344,7 +345,7 @@ function App() {
                     Demo data
                   </FormLabel>
                   <div className="inputWidth" style={{ flexGrow: 1 }}>
-                    <Select onChange={handleChangeData} value={selectedData}>
+                    <Select id="dataSelect" onChange={handleChangeData} value={selectedData}>
                       {Object.entries(demoData).map(([key, { name }]) => (
                         <option value={key} key={key}>
                           {name}
@@ -358,7 +359,7 @@ function App() {
                     Theme
                   </FormLabel>
                   <div className="inputWidth" style={{ flexGrow: 1 }}>
-                    <Select onChange={handleThemeChange} value={theme}>
+                    <Select id="themeSelect" onChange={handleThemeChange} value={theme}>
                       {(Object.entries(themes) as [ThemeName, Theme][]).map(
                         ([theme, { displayName }]) => (
                           <option value={theme} key={theme}>
@@ -374,6 +375,7 @@ function App() {
                     Data root name
                   </FormLabel>
                   <Input
+                    id="dataNameInput"
                     className="inputWidth"
                     type="text"
                     value={rootName}
@@ -385,6 +387,7 @@ function App() {
                     Collapse level
                   </FormLabel>
                   <NumberInput
+                    id="collapseInput"
                     className="inputWidth"
                     min={0}
                     value={collapseLevel}
@@ -402,6 +405,7 @@ function App() {
                     Indent level
                   </FormLabel>
                   <NumberInput
+                    id="indentInput"
                     className="inputWidth"
                     max={12}
                     min={0}
@@ -421,6 +425,7 @@ function App() {
                   </FormLabel>
                   <div className="inputWidth" style={{ flexGrow: 1 }}>
                     <Select
+                      id="showCountSelect"
                       onChange={(e) => setShowCount(e.target.value as 'Yes' | 'No' | 'When closed')}
                       value={showCount}
                     >
@@ -439,6 +444,7 @@ function App() {
                 <CheckboxGroup colorScheme="primaryScheme">
                   <Flex w="100%" justify="flex-start">
                     <Checkbox
+                      id="allowEditCheckbox"
                       isChecked={allowEdit}
                       disabled={demoData[selectedData].restrictEdit !== undefined}
                       onChange={() => setAllowEdit(!allowEdit)}
@@ -447,6 +453,7 @@ function App() {
                       Allow Edit
                     </Checkbox>
                     <Checkbox
+                      id="allowDeleteCheckbox"
                       isChecked={allowDelete}
                       disabled={demoData[selectedData].restrictDelete !== undefined}
                       onChange={() => setAllowDelete(!allowDelete)}
@@ -457,6 +464,7 @@ function App() {
                   </Flex>
                   <Flex w="100%" justify="flex-start">
                     <Checkbox
+                      id="allowAddCheckbox"
                       isChecked={allowAdd}
                       disabled={demoData[selectedData].restrictAdd !== undefined}
                       onChange={() => setAllowAdd(!allowAdd)}
@@ -465,6 +473,7 @@ function App() {
                       Allow Add
                     </Checkbox>
                     <Checkbox
+                      id="allowCopyCheckbox"
                       isChecked={allowCopy}
                       onChange={() => setAllowCopy(!allowCopy)}
                       w="50%"
@@ -473,10 +482,16 @@ function App() {
                     </Checkbox>
                   </Flex>
                   <Flex w="100%" justify="flex-start">
-                    <Checkbox isChecked={sortKeys} onChange={() => setSortKeys(!sortKeys)} w="50%">
+                    <Checkbox
+                      id="sortKeysCheckbox"
+                      isChecked={sortKeys}
+                      onChange={() => setSortKeys(!sortKeys)}
+                      w="50%"
+                    >
                       Sort Object keys
                     </Checkbox>
                     <Checkbox
+                      id="showIndicesCheckbox"
                       isChecked={showIndices}
                       onChange={() => setShowIndices(!showIndices)}
                       w="50%"

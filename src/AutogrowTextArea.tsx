@@ -36,10 +36,13 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   return (
     <div style={{ display: 'grid' }}>
       <textarea
+        id={name}
         style={{
           height: 'auto',
           gridArea: '1 / 1 / 2 / 2',
           overflowY: 'auto',
+          whiteSpace: 'pre-wrap',
+          // border: '1px solid transparent',
           ...styles,
         }}
         rows={1}
@@ -64,7 +67,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
           color: 'red',
           opacity: 0.9,
           whiteSpace: 'pre-wrap',
-          overflow: 'clip',
+          overflowY: 'auto',
           border: '1px solid transparent',
           ...styles,
         }}
