@@ -97,6 +97,8 @@ const Editor: React.FC<JsonEditorProps> = ({
       value,
       'update'
     )
+    if (currentValue === newValue) return
+
     setData(newData)
 
     const result = await srcEdit({

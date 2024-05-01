@@ -68,10 +68,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       }
 
       const modifiedValue = onChange({
-        newData: {},
         currentData: nodeData.fullData,
         newValue,
-        currentValue: value,
+        currentValue: value as ValueData,
         name,
         path,
       })
@@ -172,6 +171,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleEditKey = (newKey: string) => {
     setIsEditingKey(false)
+    if (name === newKey) return
     if (!parentData) return
     const parentPath = path.slice(0, -1)
     if (!newKey) return

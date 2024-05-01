@@ -148,6 +148,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       const value = JSON5.parse(stringifiedValue)
       setIsEditing(false)
       setError(null)
+      if (JSON.stringify(value) === JSON.stringify(data)) return
       onEdit(value, path).then((error) => {
         if (error) showError(error)
       })
@@ -160,6 +161,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const handleEditKey = (newKey: string) => {
     setIsEditingKey(false)
+    if (name === newKey) return
     if (!parentData) return
     const parentPath = path.slice(0, -1)
     if (!newKey) return

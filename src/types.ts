@@ -78,7 +78,13 @@ export type UpdateFunction = (
   props: UpdateFunctionProps
 ) => void | ErrorString | false | Promise<false | ErrorString | void>
 
-export type OnChangeFunction = (props: UpdateFunctionProps) => ValueData
+export type OnChangeFunction = (props: {
+  currentData: object
+  newValue: ValueData
+  currentValue: ValueData
+  name: CollectionKey
+  path: CollectionKey[]
+}) => ValueData
 
 export type FilterFunction = (input: NodeData) => boolean
 export type TypeFilterFunction = (input: NodeData) => boolean | DataType[]
@@ -148,6 +154,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   keySort: boolean | CompareFunction
   showArrayIndices: boolean
   showCollectionCount: boolean | 'when-closed'
+  showStringQuotes: boolean
   defaultValue: unknown
 }
 
@@ -163,7 +170,7 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   value: ValueData | CollectionData
   customNodeProps?: T
   parentData: CollectionData | null
-  setValue: React.Dispatch<React.SetStateAction<ValueData>>
+  setValue: (value: ValueData) => void
   handleEdit: () => void
   handleCancel: () => void
   handleKeyPress: (e: React.KeyboardEvent) => void
@@ -194,7 +201,7 @@ export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: C
 
 export interface InputProps {
   value: unknown
-  setValue: React.Dispatch<React.SetStateAction<ValueData>>
+  setValue: (value: ValueData) => void
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void
