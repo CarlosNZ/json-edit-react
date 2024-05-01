@@ -559,7 +559,7 @@ A few helper functions, components and types that might be useful in your own im
 - `Theme`: a full [Theme](#themes--styles) object
 - `ThemeInput`: input type for the `theme` prop
 - `JsonEditorProps`: all input props for the Json Editor component
-- [`UpdateFunction`](#update-functions), [`FilterFunction`](#filter-functions), [`CopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort), [`LocalisedString`](#localisation), [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text)
+- [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`FilterFunction`](#filter-functions), [`CopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort), [`LocalisedString`](#localisation), [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text)
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `IconReplacements`: input type for the `icons` prop
 - `CollectionNodeProps`: all props passed internally to "collection" nodes (i.e. objects/arrays)
