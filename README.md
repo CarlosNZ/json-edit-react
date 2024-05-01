@@ -80,6 +80,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - `Escape` to cancel editing
 - When clicking the "clipboard" icon, holding down `Cmd/Ctrl` will copy the *path* to the selected node rather than its value
 - When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
+- For Number inputs, arrow-up and down keys will increment/decrement the value
 
 ## Props overview
 
