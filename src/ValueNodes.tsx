@@ -77,11 +77,11 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
         break
       case 'ArrowUp':
         e.preventDefault()
-        setValue((prev) => Number(prev) + 1)
+        setValue(Number(value) + 1)
         break
       case 'ArrowDown':
         e.preventDefault()
-        setValue((prev) => Number(prev) - 1)
+        setValue(Number(value) - 1)
     }
   }
 
