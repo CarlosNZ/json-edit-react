@@ -575,8 +575,7 @@ Please open an issue: https://github.com/CarlosNZ/json-edit-react/issues
 The main features I'd like to introduce are:
 
 1. **JSON Schema validation**. We can currently specify a reasonable degree of control over what can be edited using [Filter functions](#filter-functions) with the restriction props, but I'd like to go a step further and be able to pass in a [JSON Schema](https://json-schema.org/) and have the data be automatically validated against it, with the results reflected in the UI. This would allow control over data types and prevent missing properties, something that is not currently possible.
-2. **Visibility filter function** — *hide* properties from the UI completely based on a Filter function. This should arguably be done outside the component though (filter the data upstream), so would be less of a priority (though it would be fairly simple to implement, so 🤷‍♂️)
-3. ~~**Search** — allow the user to narrow the list of visible keys with a simple search input. This would be useful for very large data objects, but is possibly getting a bit too much in terms of opinionated UI, so would need to ensure it can be styled easily. Perhaps it would be better if the "Search" input was handled outside this package, and we just accepted a "search" string prop?~~ 👍 [Done](#searchfiltering)
+2. ~~**Search/Visibility filter** — allow the user to narrow the list of visible keys with a simple search input. This would be useful for very large data objects, but is possibly getting a bit too much in terms of opinionated UI, so would need to ensure it can be styled easily. Perhaps it would be better if the "Search" input was handled outside this package, and we just accepted a "search" string prop?~~ 👍 [Done](#searchfiltering)
 
 ## Inspiration
 
@@ -584,6 +583,12 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.9.0**:
+  - Increment number input using up/down arrow keys
+  - Option to display string values without "quotes"
+  - Add [`onChange` prop](#onchange-function) to allow validation/restriction of user input as they type
+  - Don't update `data` if user hasn't actually changed a value (prevents Undo from being unnecessarily triggered)
+  - Misc HTML warnings, React compatibility fixes
 - **1.8.0**: Further improvements/fixes to collection custom nodes, including additional  `wrapperElement` [prop](#custom-collection-nodes)
   - Add optional `id` prop
 - **1.7.2**:
