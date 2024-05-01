@@ -65,8 +65,21 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
 }) => {
   const { getStyles } = useTheme()
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleEdit()
-    else if (e.key === 'Escape') handleCancel()
+    switch (e.key) {
+      case 'Enter':
+        handleEdit()
+        break
+      case 'Escape':
+        handleCancel()
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setValue((prev) => Number(prev) + 1)
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        setValue((prev) => Number(prev) - 1)
+    }
   }
 
   const validateNumber = (input: string) => {
