@@ -233,7 +233,7 @@ select:focus + .focus {
   height: 1.4em;
   padding-left: 0.5em;
   padding-right: 0.5em;
-  padding-top: 0.2em;
+  padding-top: 0.25em;
   padding-bottom: 0.2em;
   min-width: 6em;
   overflow: hidden;
