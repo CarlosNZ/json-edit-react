@@ -344,6 +344,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       startEdit={
         canEdit
           ? () => {
+              hasBeenOpened.current = true
               setIsEditing(true)
               setCollapsed(false)
             }
