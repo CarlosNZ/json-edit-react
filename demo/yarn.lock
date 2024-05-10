@@ -7965,10 +7965,10 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@^1.9.1:
-  version "1.9.1"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.9.1.tgz#9d89361be4b715b7164d024569b6a3635c98d378"
-  integrity sha512-rKqmhVb2pDUMMCZM2pRrtzPUusmXaZhAP8arUYMUsU/GLkwka6ZBqacGTBcuoskIWvvVsMQNuESPErrix8Hb9g==
+json-edit-react@^1.9.2:
+  version "1.9.2"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.9.2.tgz#221d86f72c9765c8b9052b2f410c84be3515b449"
+  integrity sha512-tkZ/lwSzi7Kf5rFkFNI1YY0HHfJOaRFnHsuZSw5XRNBm2l8node/b4i8k/QzA1W07bIFp2NHVilmHVZ/mBK4nQ==
   dependencies:
     json5 "^2.2.3"
     just-clone "^6.2.0"
