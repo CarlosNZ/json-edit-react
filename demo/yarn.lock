@@ -7965,15 +7965,15 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@^1.9.2:
-  version "1.9.2"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.9.2.tgz#221d86f72c9765c8b9052b2f410c84be3515b449"
-  integrity sha512-tkZ/lwSzi7Kf5rFkFNI1YY0HHfJOaRFnHsuZSw5XRNBm2l8node/b4i8k/QzA1W07bIFp2NHVilmHVZ/mBK4nQ==
+json-edit-react@^1.9.3:
+  version "1.9.3"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.9.3.tgz#440345377b44d03d70a0e82daad0b83f8d9744cf"
+  integrity sha512-ddJ2FqPoEZCyNWmS5+i3Trae8bU74+9nbFH4aFOqixTEEK9cFenPdKYATk3g7xiYT9DZlVDyoNimexi5hpjekQ==
   dependencies:
     json5 "^2.2.3"
     just-clone "^6.2.0"
-    object-property-assigner "^1.2.2"
-    object-property-extractor "^1.0.10"
+    object-property-assigner "^1.2.3"
+    object-property-extractor "^1.0.11"
 
 json-parse-even-better-errors@^2.3.0, json-parse-even-better-errors@^2.3.1:
   version "2.3.1"
@@ -8599,15 +8599,15 @@ object-keys@^1.1.1:
   resolved "https://registry.yarnpkg.com/object-keys/-/object-keys-1.1.1.tgz#1c47f272df277f3b1daf061677d9c82e2322c60e"
   integrity sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==
 
-object-property-assigner@^1.2.2:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.2.2.tgz#bc07ada5673892913d5206d4daf28e3c5cdc16b8"
-  integrity sha512-/t/aeJgDlP3FQTfVs+7XhLWe1WjH4V2TLX2Q0g++APfa7gHrtIB8HKuTUpH77LFOw9Rm0HyVW7t34KKRUAxF4A==
+object-property-assigner@^1.2.3:
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.2.3.tgz#73389a071ec5d1bb1117bb02c846727b892e3f9e"
+  integrity sha512-+9sLdS0jr2kjl5HskuX6/Fxvlyt9mfex3TbbjLPRdEXd+zAtAxrzv7fJz/2Q3mag9dclDrgjgwD+uEO1bHNEpA==
 
-object-property-extractor@^1.0.10:
-  version "1.0.10"
-  resolved "https://registry.yarnpkg.com/object-property-extractor/-/object-property-extractor-1.0.10.tgz#970c04522b0d24cf1c059c333bd7144436318fa0"
-  integrity sha512-9zKpkfjUZMYSBnj95tFNR9hjCuiyeVKBCKB2KGG4Nj/BDY4IeE8NobN/4rO2v8sgnwXoKotTRtLyKbtlN2/JrQ==
+object-property-extractor@^1.0.11:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/object-property-extractor/-/object-property-extractor-1.0.11.tgz#53cd9661266b4d6b5c7d32197b1824d2c5ecea60"
+  integrity sha512-VnDQcyN0FTXZ0hMZS/CTb2QkIssZ9XKB8zlf5rnFh1HjFQX1P73EHawavSztBOiPDGqAPNXebv4agjhF9eACAw==
 
 object.assign@^4.1.4, object.assign@^4.1.5:
   version "4.1.5"
