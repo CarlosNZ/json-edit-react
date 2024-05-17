@@ -15,6 +15,7 @@ import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useCollapseAll } from './CollapseProvider'
+import { toPathString } from './ValueNodes'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({
   data,
@@ -24,7 +25,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   ...props
 }) => {
   const { getStyles } = useTheme()
-  const { collapseState, setCollapseState, doesPathMatch } = useCollapseAll()
+  const {
+    collapseState,
+    setCollapseState,
+    doesPathMatch,
+    currentlyEditingElement,
+    setCurrentlyEditingElement,
+  } = useCollapseAll()
   const {
     onEdit,
     onAdd,
@@ -54,6 +61,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const nodeData = { ...incomingNodeData, collapsed }
   const { path, key: name, size } = nodeData
 
+  const pathString = toPathString(path)
+
   // This allows us to not render the children on load if they're hidden (which
   // gives a big performance improvement with large data sets), but still keep
   // the animation transition when opening and closing the accordion
@@ -79,6 +88,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       setCollapsed(collapseState.open)
     }
   }, [collapseState])
+
+  useEffect(() => {
+    if (currentlyEditingElement !== pathString && isEditing) setIsEditing(false)
+  }, [currentlyEditingElement])
 
   const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
@@ -129,7 +142,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       setCollapseState({ open: !collapsed, path })
       return
     }
-    if (!isEditing) {
+    if (!(currentlyEditingElement && currentlyEditingElement.includes(pathString))) {
       setIsAnimating(true)
       hasBeenOpened.current = true
       setCollapsed(!collapsed)
@@ -147,6 +160,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     try {
       const value = JSON5.parse(stringifiedValue)
       setIsEditing(false)
+      setCurrentlyEditingElement(null)
       setError(null)
       if (JSON.stringify(value) === JSON.stringify(data)) return
       onEdit(value, path).then((error) => {
@@ -205,6 +219,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const handleCancel = () => {
     setIsEditing(false)
+    setCurrentlyEditingElement(null)
     setIsEditingKey(false)
     setError(null)
     setStringifiedValue(JSON.stringify(data, null, 2))
@@ -276,7 +291,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       <div>
         <AutogrowTextArea
           className="jer-collection-text-area"
-          name={path.join('.')}
+          name={pathString}
           value={stringifiedValue}
           setValue={setStringifiedValue}
           isEditing={isEditing}
@@ -325,7 +340,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     <input
       className="jer-collection-name"
       type="text"
-      name={path.join('.')}
+      name={pathString}
       defaultValue={name}
       autoFocus
       onFocus={(e) => e.target.select()}
@@ -348,6 +363,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           ? () => {
               hasBeenOpened.current = true
               setIsEditing(true)
+              setCurrentlyEditingElement(pathString)
               setCollapsed(false)
             }
           : undefined
@@ -414,7 +430,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       <div
         className={'jer-collection-inner'}
         style={{
-          maxHeight: isCollapsed ? 0 : !isEditing ? `${numOfLines * 3}em` : undefined,
+          maxHeight: isCollapsed
+            ? 0
+            : !(currentlyEditingElement && currentlyEditingElement.includes(pathString))
+            ? `${numOfLines * 3}em`
+            : undefined,
           overflowY: isCollapsed || isAnimating ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately
           // "height: auto" doesn't 😔

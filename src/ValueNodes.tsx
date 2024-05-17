@@ -12,6 +12,8 @@ export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
 export const truncate = (string: string, length = 200) =>
   string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
 
+export const toPathString = (path: Array<string | number>) => path.join('.').replace(/"/g, '_')
+
 export const StringValue: React.FC<InputProps & { value: string }> = ({
   value,
   setValue,
@@ -29,13 +31,14 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
     if (e.key === 'Enter' && !e.shiftKey) handleEdit()
     else if (e.key === 'Escape') handleCancel()
   }
+  const pathString = toPathString(path)
 
   const quoteChar = showStringQuotes ? '"' : ''
 
   return isEditing ? (
     <AutogrowTextArea
       className="jer-input-text"
-      name={path.join('.')}
+      name={pathString}
       value={value}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       isEditing={isEditing}
@@ -44,7 +47,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
     />
   ) : (
     <div
-      id={`${path.join('.')}_display`}
+      id={`${pathString}_display`}
       onDoubleClick={() => setIsEditing(true)}
       onClick={(e) => {
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
@@ -96,7 +99,7 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
     <input
       className="jer-input-number"
       type="text"
-      name={path.join('.')}
+      name={toPathString(path)}
       value={value}
       onChange={(e) => setValue(validateNumber(e.target.value))}
       autoFocus
@@ -142,7 +145,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
     <input
       className="jer-input-boolean"
       type="checkbox"
-      name={path.join('.')}
+      name={toPathString(path)}
       checked={value}
       onChange={() => setValue(!value)}
     />
