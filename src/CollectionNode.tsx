@@ -14,7 +14,7 @@ import { filterNode, isCollection } from './filterHelpers'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
-import { useCollapseAll } from './CollapseProvider'
+import { useCollapseAll } from './TreeStateProvider'
 import { toPathString } from './ValueNodes'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({

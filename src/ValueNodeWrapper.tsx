@@ -25,7 +25,7 @@ import { useTheme } from './theme'
 import './style.css'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
 import { filterNode } from './filterHelpers'
-import { useCollapseAll } from './CollapseProvider'
+import { useCollapseAll } from './TreeStateProvider'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {

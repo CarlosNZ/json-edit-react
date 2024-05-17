@@ -20,7 +20,7 @@ const initialContext: CollapseContext = {
   setCurrentlyEditingElement: () => {},
 }
 
-const CollapseProviderContext = createContext(initialContext)
+const TreeStateProviderContext = createContext(initialContext)
 
 export const CollapseProvider = ({ children }: { children: React.ReactNode }) => {
   const [collapseState, setCollapseState] = useState<CollapseAllState | null>(null)
@@ -37,7 +37,7 @@ export const CollapseProvider = ({ children }: { children: React.ReactNode }) =>
   }
 
   return (
-    <CollapseProviderContext.Provider
+    <TreeStateProviderContext.Provider
       value={{
         collapseState,
         setCollapseState,
@@ -47,8 +47,8 @@ export const CollapseProvider = ({ children }: { children: React.ReactNode }) =>
       }}
     >
       {children}
-    </CollapseProviderContext.Provider>
+    </TreeStateProviderContext.Provider>
   )
 }
 
-export const useCollapseAll = () => useContext(CollapseProviderContext)
+export const useCollapseAll = () => useContext(TreeStateProviderContext)

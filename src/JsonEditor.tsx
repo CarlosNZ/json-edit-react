@@ -12,7 +12,7 @@ import {
   type SearchFilterFunction,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
-import { CollapseProvider, useCollapseAll } from './CollapseProvider'
+import { CollapseProvider, useCollapseAll } from './TreeStateProvider'
 import { getTranslateFunction } from './localisation'
 import './style.css'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
