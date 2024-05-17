@@ -30,6 +30,8 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
     else if (e.key === 'Escape') handleCancel()
   }
 
+  const quoteChar = showStringQuotes ? '"' : ''
+
   return isEditing ? (
     <AutogrowTextArea
       className="jer-input-text"
@@ -42,6 +44,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
     />
   ) : (
     <div
+      id={`${path.join('.')}_display`}
       onDoubleClick={() => setIsEditing(true)}
       onClick={(e) => {
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
@@ -49,9 +52,9 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       className="jer-value-string"
       style={getStyles('string', nodeData)}
     >
-      {showStringQuotes ? '"' : ''}
+      {quoteChar}
       {truncate(value, stringTruncate)}
-      {showStringQuotes ? '"' : ''}
+      {quoteChar}
     </div>
   )
 }

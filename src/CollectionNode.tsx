@@ -226,8 +226,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   }
 
   // A crude measure to estimate the approximate height of the block, for
-  // setting the max-height in the collapsible interior
-  const numOfLines = JSON.stringify(data, null, 2).split('\n').length
+  // setting the max-height in the collapsible interior.
+  // The Regexp replacement is so we can parse escaped line breaks *within* the
+  // JSON into *actual* line breaks before splitting
+  const numOfLines = JSON.stringify(data, null, 2).replace(/\\n/g, '\n').split('\n').length
 
   const CollectionChildren = !hasBeenOpened.current ? null : !isEditing ? (
     keyValueArray.map(([key, value], index) => {
