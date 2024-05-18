@@ -238,7 +238,7 @@ select:focus + .focus {
   padding-bottom: 0.2em;
   min-width: 6em;
   overflow: hidden;
-  max-height: 30em;
+  /* max-height: 20em; */
 }
 
 .jer-value-number {

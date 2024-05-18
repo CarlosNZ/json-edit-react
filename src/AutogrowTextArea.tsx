@@ -36,7 +36,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   return (
     <div style={{ display: 'grid' }}>
       <textarea
-        id={name}
+        id={`${name}_textarea`}
         style={{
           height: 'auto',
           gridArea: '1 / 1 / 2 / 2',
@@ -47,7 +47,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
         }}
         rows={1}
         className={className}
-        name={name}
+        name={`${name}_textarea`}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         autoFocus

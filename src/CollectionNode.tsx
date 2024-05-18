@@ -14,7 +14,8 @@ import { filterNode, isCollection } from './filterHelpers'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
-import { useCollapseAll } from './CollapseProvider'
+import { useTreeState } from './TreeStateProvider'
+import { toPathString } from './ValueNodes'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({
   data,
@@ -24,7 +25,14 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   ...props
 }) => {
   const { getStyles } = useTheme()
-  const { collapseState, setCollapseState, doesPathMatch } = useCollapseAll()
+  const {
+    collapseState,
+    setCollapseState,
+    doesPathMatch,
+    currentlyEditingElement,
+    setCurrentlyEditingElement,
+    areChildrenBeingEdited,
+  } = useTreeState()
   const {
     onEdit,
     onAdd,
@@ -43,8 +51,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     translate,
     customNodeDefinitions,
   } = props
-  const [isEditing, setIsEditing] = useState(false)
-  const [isEditingKey, setIsEditingKey] = useState(false)
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
   const [error, setError] = useState<string | null>(null)
 
@@ -53,6 +59,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const nodeData = { ...incomingNodeData, collapsed }
   const { path, key: name, size } = nodeData
+
+  const pathString = toPathString(path)
 
   // This allows us to not render the children on load if they're hidden (which
   // gives a big performance improvement with large data sets), but still keep
@@ -129,7 +137,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       setCollapseState({ open: !collapsed, path })
       return
     }
-    if (!isEditing) {
+    if (!(currentlyEditingElement && currentlyEditingElement.includes(pathString))) {
       setIsAnimating(true)
       hasBeenOpened.current = true
       setCollapsed(!collapsed)
@@ -146,7 +154,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const handleEdit = () => {
     try {
       const value = JSON5.parse(stringifiedValue)
-      setIsEditing(false)
+      setCurrentlyEditingElement(null)
       setError(null)
       if (JSON.stringify(value) === JSON.stringify(data)) return
       onEdit(value, path).then((error) => {
@@ -160,7 +168,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   }
 
   const handleEditKey = (newKey: string) => {
-    setIsEditingKey(false)
+    setCurrentlyEditingElement(null)
     if (name === newKey) return
     if (!parentData) return
     const parentPath = path.slice(0, -1)
@@ -204,30 +212,39 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       : undefined
 
   const handleCancel = () => {
-    setIsEditing(false)
-    setIsEditingKey(false)
+    setCurrentlyEditingElement(null)
     setError(null)
     setStringifiedValue(JSON.stringify(data, null, 2))
   }
 
+  // DERIVED VALUES (this makes the render logic easier to understand)
+  const isEditing = currentlyEditingElement === pathString
+  const isEditingKey = currentlyEditingElement === `key_${pathString}`
   const isArray = typeof path.slice(-1)[0] === 'number'
   const showLabel = showArrayIndices || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
+  const showEditButtons = !isEditing && showEditTools
+  const showKey = showLabel && !hideKey && name !== '' && name !== undefined
+  const showCustomNodeContents =
+    CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
+  const sortKeys = keySort && collectionType === 'object'
 
   const keyValueArray = Object.entries(data).map(([key, value]) => [
     collectionType === 'array' ? Number(key) : key,
     value,
   ])
 
-  if (keySort && collectionType === 'object') {
+  if (sortKeys) {
     keyValueArray.sort(
       typeof keySort === 'function' ? (a: string[], b) => keySort(a[0], b[0] as string) : undefined
     )
   }
 
   // A crude measure to estimate the approximate height of the block, for
-  // setting the max-height in the collapsible interior
-  const numOfLines = JSON.stringify(data, null, 2).split('\n').length
+  // setting the max-height in the collapsible interior.
+  // The Regexp replacement is to parse escaped line breaks *within* the JSON
+  // into *actual* line breaks before splitting
+  const numOfLines = JSON.stringify(data, null, 2).replace(/\\n/g, '\n').split('\n').length
 
   const CollectionChildren = !hasBeenOpened.current ? null : !isEditing ? (
     keyValueArray.map(([key, value], index) => {
@@ -274,7 +291,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       <div>
         <AutogrowTextArea
           className="jer-collection-text-area"
-          name={path.join('.')}
+          name={pathString}
           value={stringifiedValue}
           setValue={setStringifiedValue}
           isEditing={isEditing}
@@ -306,24 +323,23 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     handleCancel,
     handleKeyPress,
     isEditing,
-    setIsEditing,
+    setIsEditing: () => setCurrentlyEditingElement(pathString),
     getStyles,
   }
 
-  const CollectionContents =
-    CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
-      <CustomNode customNodeProps={customNodeProps} {...customNodeAllProps}>
-        {CollectionChildren}
-      </CustomNode>
-    ) : (
-      CollectionChildren
-    )
+  const CollectionContents = showCustomNodeContents ? (
+    <CustomNode customNodeProps={customNodeProps} {...customNodeAllProps}>
+      {CollectionChildren}
+    </CustomNode>
+  ) : (
+    CollectionChildren
+  )
 
   const KeyDisplay = isEditingKey ? (
     <input
       className="jer-collection-name"
       type="text"
-      name={path.join('.')}
+      name={pathString}
       defaultValue={name}
       autoFocus
       onFocus={(e) => e.target.select()}
@@ -333,19 +349,19 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   ) : (
     <span
       style={getStyles('property', nodeData)}
-      onDoubleClick={() => canEditKey && setIsEditingKey(true)}
+      onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
     >
-      {showLabel && !hideKey && name !== '' && name !== undefined ? `${name}:` : null}
+      {showKey ? `${name}:` : null}
     </span>
   )
 
-  const EditButtonDisplay = !isEditing && showEditTools && (
+  const EditButtonDisplay = showEditButtons && (
     <EditButtons
       startEdit={
         canEdit
           ? () => {
               hasBeenOpened.current = true
-              setIsEditing(true)
+              setCurrentlyEditingElement(pathString)
               setCollapsed(false)
             }
           : undefined
@@ -412,7 +428,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       <div
         className={'jer-collection-inner'}
         style={{
-          maxHeight: isCollapsed ? 0 : !isEditing ? `${numOfLines * 3}em` : undefined,
+          // Don't limit the height when collection or any of its children are
+          // being edited, so it won't overlap lower elements if the editing
+          // input gets too large. This won't cause problems, as it can't be
+          // collapsed while being edited anyway.
+          maxHeight: isCollapsed
+            ? 0
+            : !areChildrenBeingEdited(pathString)
+            ? `${numOfLines * 3}em`
+            : undefined,
           overflowY: isCollapsed || isAnimating ? 'hidden' : 'visible',
           // Need to use max-height for animation to work, unfortunately
           // "height: auto" doesn't 😔
@@ -437,11 +461,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     </div>
   )
 
-  if (CustomWrapper) {
-    return (
-      <CustomWrapper customNodeProps={wrapperProps} {...customNodeAllProps}>
-        {CollectionNodeComponent}
-      </CustomWrapper>
-    )
-  } else return CollectionNodeComponent
+  return CustomWrapper ? (
+    <CustomWrapper customNodeProps={wrapperProps} {...customNodeAllProps}>
+      {CollectionNodeComponent}
+    </CustomWrapper>
+  ) : (
+    CollectionNodeComponent
+  )
 }

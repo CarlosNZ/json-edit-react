@@ -138,6 +138,7 @@ export const themes: Record<ThemeName, Theme> = {
       number: ['darkBlue', { fontSize: '85%' }],
       boolean: ['mid', { fontStyle: 'italic', fontWeight: 'bold', fontSize: '80%' }],
       null: ['#cccccc', { fontWeight: 'bold' }],
+      input: { border: '1px solid rgb(115, 194, 198)' },
       iconCollection: '#1D3557',
       iconEdit: '#457B9D',
       iconDelete: '#E63946',
