@@ -583,6 +583,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.10.2**:
+  - Fixes for text wrapping and content overlaps when values and inputs contain very long strings (#57, #58)
+  - Only allow one element to be edited at a time, and prevent collapsing when an inner element is being edited.
 - **1.9.0**:
   - Increment number input using up/down arrow keys
   - Option to display string values without "quotes"
