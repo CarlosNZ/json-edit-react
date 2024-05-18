@@ -51,7 +51,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     translate,
     customNodeDefinitions,
   } = props
-  const [isEditingKey, setIsEditingKey] = useState(false)
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
   const [error, setError] = useState<string | null>(null)
 
@@ -169,7 +168,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   }
 
   const handleEditKey = (newKey: string) => {
-    setIsEditingKey(false)
+    setCurrentlyEditingElement(null)
     if (name === newKey) return
     if (!parentData) return
     const parentPath = path.slice(0, -1)
@@ -214,13 +213,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const handleCancel = () => {
     setCurrentlyEditingElement(null)
-    setIsEditingKey(false)
     setError(null)
     setStringifiedValue(JSON.stringify(data, null, 2))
   }
 
   // DERIVED VALUES (this makes the render logic easier to understand)
   const isEditing = currentlyEditingElement === pathString
+  const isEditingKey = currentlyEditingElement === `key_${pathString}`
   const isArray = typeof path.slice(-1)[0] === 'number'
   const showLabel = showArrayIndices || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
@@ -350,7 +349,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   ) : (
     <span
       style={getStyles('property', nodeData)}
-      onDoubleClick={() => canEditKey && setIsEditingKey(true)}
+      onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
     >
       {showKey ? `${name}:` : null}
     </span>
