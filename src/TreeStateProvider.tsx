@@ -1,3 +1,8 @@
+/**
+ * Captures the collapse state and the editing state of the entire tree, as
+ * nodes sometimes need to know the state of other (sibling or child) nodes
+ */
+
 import React, { createContext, useContext, useState } from 'react'
 import { type CollectionKey } from './types'
 
@@ -5,24 +10,26 @@ interface CollapseAllState {
   path: CollectionKey[]
   open: boolean
 }
-interface CollapseContext {
+interface TreeStateContext {
   collapseState: CollapseAllState | null
   setCollapseState: React.Dispatch<React.SetStateAction<CollapseAllState | null>>
   doesPathMatch: (path: CollectionKey[]) => boolean
   currentlyEditingElement: string | null
   setCurrentlyEditingElement: React.Dispatch<React.SetStateAction<string | null>>
+  areChildrenBeingEdited: (pathString: string) => boolean
 }
-const initialContext: CollapseContext = {
+const initialContext: TreeStateContext = {
   collapseState: null,
   setCollapseState: () => {},
   doesPathMatch: () => false,
   currentlyEditingElement: null,
   setCurrentlyEditingElement: () => {},
+  areChildrenBeingEdited: () => false,
 }
 
 const TreeStateProviderContext = createContext(initialContext)
 
-export const CollapseProvider = ({ children }: { children: React.ReactNode }) => {
+export const TreeStateProvider = ({ children }: { children: React.ReactNode }) => {
   const [collapseState, setCollapseState] = useState<CollapseAllState | null>(null)
   const [currentlyEditingElement, setCurrentlyEditingElement] = useState<string | null>(null)
 
@@ -36,14 +43,20 @@ export const CollapseProvider = ({ children }: { children: React.ReactNode }) =>
     return true
   }
 
+  const areChildrenBeingEdited = (pathString: string) =>
+    currentlyEditingElement !== null && currentlyEditingElement.includes(pathString)
+
   return (
     <TreeStateProviderContext.Provider
       value={{
+        // Collapse
         collapseState,
         setCollapseState,
         doesPathMatch,
+        // Editing
         currentlyEditingElement,
         setCurrentlyEditingElement,
+        areChildrenBeingEdited,
       }}
     >
       {children}
@@ -51,4 +64,4 @@ export const CollapseProvider = ({ children }: { children: React.ReactNode }) =>
   )
 }
 
-export const useCollapseAll = () => useContext(TreeStateProviderContext)
+export const useTreeState = () => useContext(TreeStateProviderContext)

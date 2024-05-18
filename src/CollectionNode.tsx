@@ -14,7 +14,7 @@ import { filterNode, isCollection } from './filterHelpers'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
-import { useCollapseAll } from './TreeStateProvider'
+import { useTreeState } from './TreeStateProvider'
 import { toPathString } from './ValueNodes'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({
@@ -31,7 +31,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     doesPathMatch,
     currentlyEditingElement,
     setCurrentlyEditingElement,
-  } = useCollapseAll()
+    areChildrenBeingEdited,
+  } = useTreeState()
   const {
     onEdit,
     onAdd,
@@ -50,7 +51,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     translate,
     customNodeDefinitions,
   } = props
-  const [isEditing, setIsEditing] = useState(false)
   const [isEditingKey, setIsEditingKey] = useState(false)
   const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
   const [error, setError] = useState<string | null>(null)
@@ -89,14 +89,14 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     }
   }, [collapseState])
 
-  useEffect(() => {
-    if (currentlyEditingElement !== pathString && isEditing) setIsEditing(false)
-  }, [currentlyEditingElement])
-
   const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
   const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
   const canEditKey = parentData !== null && canEdit && canAdd && canDelete
+
+  const isEditing = currentlyEditingElement === pathString
+
+  console.log(pathString, isEditing)
 
   const getDefaultNewValue = useMemo(
     () => (nodeData: NodeData) => {
@@ -159,7 +159,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const handleEdit = () => {
     try {
       const value = JSON5.parse(stringifiedValue)
-      setIsEditing(false)
       setCurrentlyEditingElement(null)
       setError(null)
       if (JSON.stringify(value) === JSON.stringify(data)) return
@@ -218,7 +217,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       : undefined
 
   const handleCancel = () => {
-    setIsEditing(false)
     setCurrentlyEditingElement(null)
     setIsEditingKey(false)
     setError(null)
@@ -323,7 +321,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     handleCancel,
     handleKeyPress,
     isEditing,
-    setIsEditing,
+    setIsEditing: () => setCurrentlyEditingElement(pathString),
     getStyles,
   }
 
@@ -362,7 +360,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         canEdit
           ? () => {
               hasBeenOpened.current = true
-              setIsEditing(true)
               setCurrentlyEditingElement(pathString)
               setCollapsed(false)
             }
@@ -430,9 +427,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       <div
         className={'jer-collection-inner'}
         style={{
+          // Don't limit the height when collection or any of its children are
+          // being edited, so it won't overlap lower elements if the editing
+          // input gets too large. This won't cause problems, as it can't be
+          // collapsed while being edited anyway.
           maxHeight: isCollapsed
             ? 0
-            : !(currentlyEditingElement && currentlyEditingElement.includes(pathString))
+            : !areChildrenBeingEdited(pathString)
             ? `${numOfLines * 3}em`
             : undefined,
           overflowY: isCollapsed || isAnimating ? 'hidden' : 'visible',

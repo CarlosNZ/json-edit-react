@@ -25,7 +25,7 @@ import { useTheme } from './theme'
 import './style.css'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
 import { filterNode } from './filterHelpers'
-import { useCollapseAll } from './TreeStateProvider'
+import { useTreeState } from './TreeStateProvider'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -49,8 +49,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     customNodeDefinitions,
   } = props
   const { getStyles } = useTheme()
-  const { currentlyEditingElement, setCurrentlyEditingElement } = useCollapseAll()
-  const [isEditing, setIsEditing] = useState(false)
+  const { currentlyEditingElement, setCurrentlyEditingElement } = useTreeState()
   const [isEditingKey, setIsEditingKey] = useState(false)
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
@@ -64,6 +63,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
   const pathString = toPathString(path)
+  const isEditing = currentlyEditingElement === pathString
 
   const updateValue = useCallback(
     (newValue: ValueData) => {
@@ -88,10 +88,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
     setDataType(getDataType(data, customNodeData))
   }, [data, error])
-
-  useEffect(() => {
-    if (currentlyEditingElement !== pathString && isEditing) setIsEditing(false)
-  }, [currentlyEditingElement])
 
   const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
@@ -155,7 +151,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   const handleEdit = () => {
-    setIsEditing(false)
     setCurrentlyEditingElement(null)
     let newValue
     switch (dataType) {
@@ -199,7 +194,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   const handleCancel = () => {
-    setIsEditing(false)
     setCurrentlyEditingElement(null)
     setIsEditingKey(false)
     setValue(data)
@@ -220,12 +214,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     parentData,
     setValue: updateValue,
     isEditing,
-    setIsEditing: canEdit
-      ? () => {
-          setIsEditing(true)
-          setCurrentlyEditingElement(pathString)
-        }
-      : () => {},
+    setIsEditing: canEdit ? () => setCurrentlyEditingElement(pathString) : () => {},
     handleEdit,
     handleCancel,
     path,
@@ -249,7 +238,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           else if (e.key === 'Escape') handleCancel()
         }}
         isEditing={isEditing}
-        setIsEditing={setIsEditing}
+        setIsEditing={() => setCurrentlyEditingElement(pathString)}
         getStyles={getStyles}
       />
     ) : (
@@ -300,14 +289,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             !error &&
             showEditTools && (
               <EditButtons
-                startEdit={
-                  canEdit
-                    ? () => {
-                        setIsEditing(true)
-                        setCurrentlyEditingElement(pathString)
-                      }
-                    : undefined
-                }
+                startEdit={canEdit ? () => setCurrentlyEditingElement(pathString) : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
                 enableClipboard={enableClipboard}
                 translate={translate}
