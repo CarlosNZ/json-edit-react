@@ -94,10 +94,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
   const canEditKey = parentData !== null && canEdit && canAdd && canDelete
 
-  const isEditing = currentlyEditingElement === pathString
-
-  console.log(pathString, isEditing)
-
   const getDefaultNewValue = useMemo(
     () => (nodeData: NodeData) => {
       if (typeof defaultValue !== 'function') return defaultValue
@@ -223,16 +219,23 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setStringifiedValue(JSON.stringify(data, null, 2))
   }
 
+  // DERIVED VALUES (this makes the render logic easier to understand)
+  const isEditing = currentlyEditingElement === pathString
   const isArray = typeof path.slice(-1)[0] === 'number'
   const showLabel = showArrayIndices || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
+  const showEditButtons = !isEditing && showEditTools
+  const showKey = showLabel && !hideKey && name !== '' && name !== undefined
+  const showCustomNodeContents =
+    CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
+  const sortKeys = keySort && collectionType === 'object'
 
   const keyValueArray = Object.entries(data).map(([key, value]) => [
     collectionType === 'array' ? Number(key) : key,
     value,
   ])
 
-  if (keySort && collectionType === 'object') {
+  if (sortKeys) {
     keyValueArray.sort(
       typeof keySort === 'function' ? (a: string[], b) => keySort(a[0], b[0] as string) : undefined
     )
@@ -240,8 +243,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   // A crude measure to estimate the approximate height of the block, for
   // setting the max-height in the collapsible interior.
-  // The Regexp replacement is so we can parse escaped line breaks *within* the
-  // JSON into *actual* line breaks before splitting
+  // The Regexp replacement is to parse escaped line breaks *within* the JSON
+  // into *actual* line breaks before splitting
   const numOfLines = JSON.stringify(data, null, 2).replace(/\\n/g, '\n').split('\n').length
 
   const CollectionChildren = !hasBeenOpened.current ? null : !isEditing ? (
@@ -325,14 +328,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     getStyles,
   }
 
-  const CollectionContents =
-    CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
-      <CustomNode customNodeProps={customNodeProps} {...customNodeAllProps}>
-        {CollectionChildren}
-      </CustomNode>
-    ) : (
-      CollectionChildren
-    )
+  const CollectionContents = showCustomNodeContents ? (
+    <CustomNode customNodeProps={customNodeProps} {...customNodeAllProps}>
+      {CollectionChildren}
+    </CustomNode>
+  ) : (
+    CollectionChildren
+  )
 
   const KeyDisplay = isEditingKey ? (
     <input
@@ -350,11 +352,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       style={getStyles('property', nodeData)}
       onDoubleClick={() => canEditKey && setIsEditingKey(true)}
     >
-      {showLabel && !hideKey && name !== '' && name !== undefined ? `${name}:` : null}
+      {showKey ? `${name}:` : null}
     </span>
   )
 
-  const EditButtonDisplay = !isEditing && showEditTools && (
+  const EditButtonDisplay = showEditButtons && (
     <EditButtons
       startEdit={
         canEdit
@@ -460,11 +462,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     </div>
   )
 
-  if (CustomWrapper) {
-    return (
-      <CustomWrapper customNodeProps={wrapperProps} {...customNodeAllProps}>
-        {CollectionNodeComponent}
-      </CustomWrapper>
-    )
-  } else return CollectionNodeComponent
+  return CustomWrapper ? (
+    <CustomWrapper customNodeProps={wrapperProps} {...customNodeAllProps}>
+      {CollectionNodeComponent}
+    </CustomWrapper>
+  ) : (
+    CollectionNodeComponent
+  )
 }

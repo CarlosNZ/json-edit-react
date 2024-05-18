@@ -206,8 +206,15 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
+  // DERIVED VALUES (this makes the render logic easier to understand)
   const isArray = typeof path.slice(-1)[0] === 'number'
   const canEditKey = !isArray && canEdit && canDelete
+  const showError = !isEditing && error
+  const showTypeSelector = isEditing && allowedDataTypes.length > 0
+  const showEditButtons = dataType !== 'invalid' && !error && showEditTools
+  const showKeyEdit = showLabel && isEditingKey
+  const showKey = showLabel && !isEditingKey && !hideKey
+  const showCustomNode = CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
   const inputProps = {
     value,
@@ -224,28 +231,27 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     translate,
   }
 
-  const ValueComponent =
-    CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView)) ? (
-      <CustomNode
-        {...props}
-        value={value}
-        customNodeProps={customNodeProps}
-        setValue={updateValue}
-        handleEdit={handleEdit}
-        handleCancel={handleCancel}
-        handleKeyPress={(e: React.KeyboardEvent) => {
-          if (e.key === 'Enter') handleEdit()
-          else if (e.key === 'Escape') handleCancel()
-        }}
-        isEditing={isEditing}
-        setIsEditing={() => setCurrentlyEditingElement(pathString)}
-        getStyles={getStyles}
-      />
-    ) : (
-      // Need to re-fetch data type to make sure it's one of the "core" ones
-      // when fetching a non-custom component
-      getInputComponent(getDataType(data) as DataType, inputProps)
-    )
+  const ValueComponent = showCustomNode ? (
+    <CustomNode
+      {...props}
+      value={value}
+      customNodeProps={customNodeProps}
+      setValue={updateValue}
+      handleEdit={handleEdit}
+      handleCancel={handleCancel}
+      handleKeyPress={(e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') handleEdit()
+        else if (e.key === 'Escape') handleCancel()
+      }}
+      isEditing={isEditing}
+      setIsEditing={() => setCurrentlyEditingElement(pathString)}
+      getStyles={getStyles}
+    />
+  ) : (
+    // Need to re-fetch data type to make sure it's one of the "core" ones
+    // when fetching a non-custom component
+    getInputComponent(getDataType(data) as DataType, inputProps)
+  )
 
   return (
     <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
@@ -255,7 +261,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           flexWrap: (name as string).length > 10 ? 'wrap' : 'nowrap',
         }}
       >
-        {showLabel && !isEditingKey && !hideKey && (
+        {showKey && (
           <span
             className="jer-object-key"
             style={{
@@ -268,7 +274,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             {name}:{' '}
           </span>
         )}
-        {showLabel && isEditingKey && (
+        {showKeyEdit && (
           <input
             className="jer-object-key"
             type="text"
@@ -285,9 +291,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           {isEditing ? (
             <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
           ) : (
-            dataType !== 'invalid' &&
-            !error &&
-            showEditTools && (
+            showEditButtons && (
               <EditButtons
                 startEdit={canEdit ? () => setCurrentlyEditingElement(pathString) : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
@@ -297,7 +301,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
               />
             )
           )}
-          {isEditing && allowedDataTypes.length > 0 && (
+          {showTypeSelector && (
             <div className="jer-select">
               <select
                 name={`${name}-type-select`}
@@ -314,7 +318,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
               <span className="focus"></span>
             </div>
           )}
-          {!isEditing && error && (
+          {showError && (
             <span className="jer-error-slug" style={getStyles('error', nodeData)}>
               {error}
             </span>
