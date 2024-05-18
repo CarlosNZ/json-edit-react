@@ -50,7 +50,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   } = props
   const { getStyles } = useTheme()
   const { currentlyEditingElement, setCurrentlyEditingElement } = useTreeState()
-  const [isEditingKey, setIsEditingKey] = useState(false)
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
@@ -63,7 +62,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
   const pathString = toPathString(path)
-  const isEditing = currentlyEditingElement === pathString
 
   const updateValue = useCallback(
     (newValue: ValueData) => {
@@ -175,7 +173,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   const handleEditKey = (newKey: string) => {
-    setIsEditingKey(false)
+    setCurrentlyEditingElement(null)
     if (name === newKey) return
     if (!parentData) return
     const parentPath = path.slice(0, -1)
@@ -195,7 +193,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleCancel = () => {
     setCurrentlyEditingElement(null)
-    setIsEditingKey(false)
     setValue(data)
     setDataType(getDataType(data, customNodeData))
   }
@@ -207,6 +204,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   // DERIVED VALUES (this makes the render logic easier to understand)
+  const isEditing = currentlyEditingElement === pathString
+  const isEditingKey = currentlyEditingElement === `key_${pathString}`
   const isArray = typeof path.slice(-1)[0] === 'number'
   const canEditKey = !isArray && canEdit && canDelete
   const showError = !isEditing && error
@@ -269,7 +268,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
               minWidth: `${Math.min(String(name).length + 1, 5)}ch`,
               flexShrink: (name as string).length > 10 ? 1 : 0,
             }}
-            onDoubleClick={() => canEditKey && setIsEditingKey(true)}
+            onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
           >
             {name}:{' '}
           </span>
