@@ -400,7 +400,7 @@ iconEdit: [ "iconAdjust", "anotherFragment", { marginLeft: "1em" } ]
 
 ### A note about sizing and scaling
 
-Internally, all sizing and spacing is done in `em`s, never `px`. This makes scaling a lot easier — just change the font-size of the main container (either via the `className` prop or in the `container` prop of the theme) (or its parent), and watch the *whole* component scale accordingly.
+Internally, all sizing and spacing is done in `em`s, never `px` (aside from the [`rootFontSize`](#props-overview), which sets the "base" size). This makes scaling a lot easier — just change the `rootFontSize` prop (or set `fontSize` on the main container via targeting the `class`, or [theming](#themes--styles)), and watch the *whole* component scale accordingly.
 
 ### Icons
 
