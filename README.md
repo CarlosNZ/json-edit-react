@@ -584,6 +584,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.11.0**:
+  - Improve CSS definitions to prevent properties from being overridden by the host environment's CSS
+  - Add `rootFontSize` prop to set the "base" size for the component
 - **1.10.2**:
   - Fixes for text wrapping and content overlaps when values and inputs contain very long strings (#57, #58)
   - Only allow one element to be edited at a time, and prevent collapsing when an inner element is being edited.
