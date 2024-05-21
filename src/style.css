@@ -177,7 +177,7 @@ select:focus + .focus {
   overflow: hidden;
   max-height: 40em;
   font-family: inherit;
-  font-size: 0.9em;
+  font-size: 0.85em;
 }
 
 .jer-collection-input-button-row {
