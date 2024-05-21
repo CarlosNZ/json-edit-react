@@ -33,6 +33,7 @@ export interface JsonEditorProps {
   defaultValue?: unknown
   minWidth?: string | number
   maxWidth?: string | number
+  rootFontSize?: string | number
   stringTruncate?: number
   translations?: Partial<LocalisedStrings>
   customNodeDefinitions?: CustomNodeDefinition[]

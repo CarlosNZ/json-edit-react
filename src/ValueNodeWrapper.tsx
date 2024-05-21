@@ -262,7 +262,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       >
         {showKey && (
           <span
-            className="jer-object-key"
+            className="jer-key-text"
             style={{
               ...getStyles('property', nodeData),
               minWidth: `${Math.min(String(name).length + 1, 5)}ch`,
@@ -275,7 +275,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         )}
         {showKeyEdit && (
           <input
-            className="jer-object-key"
+            className="jer-input-text jer-key-edit"
             type="text"
             name={pathString}
             defaultValue={name}
