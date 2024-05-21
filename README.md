@@ -119,6 +119,7 @@ The only *required* value is `data`.
 | `icons`                 | `{[iconName]: JSX.Element, ... }`             | `{ }`       | Replace the built-in icons by specifying them here. See [Themes](#themes--styles).                                                                                                                                                                                                                                   |  |
 | `minWidth`              | `number\|string` (CSS value)                  | `250`       | Minimum width for the editor container.                                                                                                                                                                                                                                                                              |
 | `maxWidth`              | `number\|string` (CSS value)                  | `600`       | Maximum width for the editor container.                                                                                                                                                                                                                                                                              |
+| `rootFontSize`          | `number\|string` (CSS value)                  | `16px`      | The "base" font size from which all other sizings are derived (in `em`s). By changing this you will scale the entire component. container.                                                                                                                                                                           |
 | `customNodeDefinitions` | `CustomNodeDefinition[]`                      |             | You can provide customised components to override specific nodes in the data tree, according to a condition function. See see [Custom nodes](#custom-nodes) for more detail. (A simple custom component to turn url strings into active links is provided in the main package  -- see [here](#active-hyperlinks))    |
 | `customText`            | `CustomTextDefinitions`                       |             | In addition to [localising the component](#localisation) text strings, you can also *dynamically* alter it, depending on the data. See [Custom Text](#custom-text) for more detail.                                                                                                                                  |
 
@@ -399,7 +400,7 @@ iconEdit: [ "iconAdjust", "anotherFragment", { marginLeft: "1em" } ]
 
 ### A note about sizing and scaling
 
-Internally, all sizing and spacing is done in `em`s, never `px`. This makes scaling a lot easier — just change the font-size of the main container (either via the `className` prop or in the `container` prop of the theme) (or its parent), and watch the *whole* component scale accordingly.
+Internally, all sizing and spacing is done in `em`s, never `px` (aside from the [`rootFontSize`](#props-overview), which sets the "base" size). This makes scaling a lot easier — just change the `rootFontSize` prop (or set `fontSize` on the main container via targeting the class, or tweaking the [theme](#themes--styles)), and watch the *whole* component scale accordingly.
 
 ### Icons
 

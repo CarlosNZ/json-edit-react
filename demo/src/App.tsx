@@ -287,7 +287,7 @@ function App() {
               showArrayIndices={showIndices}
               showStringQuotes={showStringQuotes}
               minWidth={'min(500px, 95vw)'}
-              maxWidth="min(650px, 90vw)"
+              maxWidth="min(670px, 90vw)"
               className="block-shadow"
               stringTruncate={90}
               customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}

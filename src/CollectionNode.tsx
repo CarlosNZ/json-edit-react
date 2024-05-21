@@ -337,7 +337,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const KeyDisplay = isEditingKey ? (
     <input
-      className="jer-collection-name"
+      className="jer-input-text jer-key-edit"
       type="text"
       name={pathString}
       defaultValue={name}
@@ -348,6 +348,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     />
   ) : (
     <span
+      className="jer-key-text"
       style={getStyles('property', nodeData)}
       onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
     >

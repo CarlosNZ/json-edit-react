@@ -18,7 +18,7 @@ const defaultTheme: DefaultTheme = {
     number: 'rgb(38, 139, 210)',
     boolean: 'green',
     null: { color: 'rgb(220, 50, 47)', fontVariant: 'small-caps', fontWeight: 'bold' },
-    input: ['#292929', { fontSize: '90%' }],
+    input: ['#292929'],
     inputHighlight: '#b3d8ff',
     error: { fontSize: '0.8em', color: 'red', fontWeight: 'bold' },
     iconCollection: 'rgb(0, 43, 54)',

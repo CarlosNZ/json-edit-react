@@ -32,7 +32,7 @@ https://moderncss.dev/custom-select-styles-with-pure-css/
   margin: 0;
   /* width: 100%; */
   font-family: inherit;
-  font-size: inherit;
+  font-size: 0.8em;
   color: black;
   cursor: inherit;
   line-height: inherit;
@@ -53,7 +53,6 @@ select::-ms-expand {
   border: 1px solid var(--jer-select-border);
   border-radius: 0.25em;
   padding: 0.25em 0.5em;
-  font-size: 1em;
   cursor: pointer;
   line-height: 1.1;
   background-color: #fff;
@@ -84,7 +83,7 @@ select:focus + .focus {
 }
 
 .jer-editor-container {
-  font-size: 1.1em;
+  font-size: 16px;
   line-height: 1;
   padding: 1em;
   padding-left: 2em;
@@ -95,7 +94,6 @@ select:focus + .focus {
 }
 
 .jer-editor-container textarea {
-  /* width: 90%; */
   color: var(--jer-input-color);
   border: var(--jer-form-border);
   border-radius: 0.3em;
@@ -110,6 +108,7 @@ select:focus + .focus {
   border: var(--jer-form-border);
   border-radius: 0.3em;
   outline: none;
+  font-family: inherit;
 }
 
 .jer-editor-container input:focus {
@@ -175,12 +174,15 @@ select:focus + .focus {
   padding-bottom: 0;
   overflow: hidden;
   max-height: 40em;
+  font-family: inherit;
+  font-size: 0.85em;
 }
 
 .jer-collection-input-button-row {
   display: flex;
   justify-content: flex-end;
   font-size: 150%;
+  margin-top: 0.4em;
 }
 
 .jer-collection-element {
@@ -238,7 +240,9 @@ select:focus + .focus {
   padding-bottom: 0.2em;
   min-width: 6em;
   overflow: hidden;
-  /* max-height: 20em; */
+  line-height: 1.2em;
+  font-family: inherit;
+  font-size: 0.9em;
 }
 
 .jer-value-number {
@@ -259,9 +263,15 @@ select:focus + .focus {
 .jer-value-object {
 }
 
-.jer-object-key {
+.jer-key-text {
   word-break: break-word;
   line-height: 1.1em;
+}
+
+.jer-key-edit {
+  padding: 0 0.3em;
+  font-size: inherit;
+  font-size: 0.9em;
 }
 
 .jer-value-array {
@@ -272,13 +282,9 @@ select:focus + .focus {
   font-style: italic;
 }
 
-/* .jer-input-text, */
-.jer-input-number {
-  height: 1.6em;
-}
-
 .jer-input-number {
   min-width: 3em;
+  font-size: 90%;
 }
 
 .jer-input-component {
@@ -289,6 +295,7 @@ select:focus + .focus {
   display: flex;
   align-items: center;
   cursor: pointer;
+  height: 1em;
 }
 
 .jer-input-buttons {
