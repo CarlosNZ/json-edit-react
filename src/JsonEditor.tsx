@@ -197,9 +197,10 @@ const Editor: React.FC<JsonEditorProps> = ({
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }
 
   // Props fontSize takes priority over theme, but we fall back on a default of
-  // 16 if neither are provided. Having a defined base size ensures the
-  // component doesn't have its fontSize affected from the parent environment
-  mainContainerStyles.fontSize = rootFontSize ?? mainContainerStyles.fontSize ?? '16px'
+  // 16 (from CSS sheet) if neither are provided. Having a defined base size
+  // ensures the component doesn't have its fontSize affected from the parent
+  // environment
+  mainContainerStyles.fontSize = rootFontSize ?? mainContainerStyles.fontSize
 
   return (
     <div id={id} className={'jer-editor-container ' + className} style={mainContainerStyles}>
