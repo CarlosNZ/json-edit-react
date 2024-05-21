@@ -32,7 +32,7 @@ https://moderncss.dev/custom-select-styles-with-pure-css/
   margin: 0;
   /* width: 100%; */
   font-family: inherit;
-  font-size: inherit;
+  font-size: 0.8em;
   color: black;
   cursor: inherit;
   line-height: inherit;
@@ -53,7 +53,6 @@ select::-ms-expand {
   border: 1px solid var(--jer-select-border);
   border-radius: 0.25em;
   padding: 0.25em 0.5em;
-  font-size: 1em;
   cursor: pointer;
   line-height: 1.1;
   background-color: #fff;
