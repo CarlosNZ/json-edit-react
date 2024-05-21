@@ -176,12 +176,15 @@ select:focus + .focus {
   padding-bottom: 0;
   overflow: hidden;
   max-height: 40em;
+  font-family: inherit;
+  font-size: 0.9em;
 }
 
 .jer-collection-input-button-row {
   display: flex;
   justify-content: flex-end;
   font-size: 150%;
+  margin-top: 0.4em;
 }
 
 .jer-collection-element {
@@ -237,11 +240,11 @@ select:focus + .focus {
   padding-right: 0.5em;
   padding-top: 0.25em;
   padding-bottom: 0.2em;
-  min-width: 2em;
+  min-width: 6em;
   overflow: hidden;
   line-height: 1.2em;
   font-family: inherit;
-  font-size: 0.95em;
+  font-size: 0.9em;
 }
 
 .jer-value-number {
@@ -270,7 +273,7 @@ select:focus + .focus {
 .jer-key-edit {
   padding: 0 0.3em;
   font-size: inherit;
-  font-size: 0.95em;
+  font-size: 0.9em;
 }
 
 .jer-value-array {
