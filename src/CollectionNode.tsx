@@ -84,7 +84,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   useEffect(() => {
     if (collapseState !== null && doesPathMatch(path)) {
       hasBeenOpened.current = true
-      setCollapsed(collapseState.open)
+      setCollapsed(collapseState.collapsed)
     }
   }, [collapseState])
 
@@ -134,7 +134,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const handleCollapse = (e: React.MouseEvent) => {
     if (e.getModifierState('Alt')) {
       hasBeenOpened.current = true
-      setCollapseState({ open: !collapsed, path })
+      setCollapseState({ collapsed: !collapsed, path })
       return
     }
     if (!(currentlyEditingElement && currentlyEditingElement.includes(pathString))) {

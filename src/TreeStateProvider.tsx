@@ -8,7 +8,7 @@ import { type CollectionKey } from './types'
 
 interface CollapseAllState {
   path: CollectionKey[]
-  open: boolean
+  collapsed: boolean
 }
 interface TreeStateContext {
   collapseState: CollapseAllState | null
