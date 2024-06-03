@@ -181,7 +181,7 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   children?: JSX.Element | JSX.Element[] | null
 }
 
-export interface CustomNodeDefinition<T, U> {
+export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<string, unknown>> {
   condition: FilterFunction
   element?: React.FC<CustomNodeProps<T>>
   name?: string // appears in "Type" selector
