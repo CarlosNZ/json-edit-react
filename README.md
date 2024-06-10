@@ -584,6 +584,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.11.7**: Handle \<empty-string\> object keys / prevent duplicate keys
 - **1.11.3**: Bug fix for invalid state when changing type to Collection node
 - **1.11.0**:
   - Improve CSS definitions to prevent properties from being overridden by the host environment's CSS

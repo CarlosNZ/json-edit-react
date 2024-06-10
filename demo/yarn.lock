@@ -7965,14 +7965,14 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@^1.11.6:
-  version "1.11.6"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.11.6.tgz#cdfe4905afc30bc14cbc06f82c5e6c1ec51e5e66"
-  integrity sha512-5TkPJ5RDKxekbXnq4psD8YxuOuDR29j9j6fEyC6IwduTQFp/b6BzMq9p7pSV48m7GAcUzp47Q9ymn2TM/2ub9Q==
+json-edit-react@^1.11.7:
+  version "1.11.7"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.11.7.tgz#d1f129ebf844f2d54cfb2bd0aa8452961de36e03"
+  integrity sha512-vCkREGhBN7P3i0QHeGd1bt2ZQ+c6qLzDLzksqz/hybAZoQxJUXF9YZpGNRF46kslKwI87Qnn13RgmoYG0MUF4w==
   dependencies:
     json5 "^2.2.3"
     just-clone "^6.2.0"
-    object-property-assigner "^1.2.3"
+    object-property-assigner "^1.2.4"
     object-property-extractor "^1.0.11"
 
 json-parse-even-better-errors@^2.3.0, json-parse-even-better-errors@^2.3.1:
@@ -8599,10 +8599,10 @@ object-keys@^1.1.1:
   resolved "https://registry.yarnpkg.com/object-keys/-/object-keys-1.1.1.tgz#1c47f272df277f3b1daf061677d9c82e2322c60e"
   integrity sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==
 
-object-property-assigner@^1.2.3:
-  version "1.2.3"
-  resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.2.3.tgz#73389a071ec5d1bb1117bb02c846727b892e3f9e"
-  integrity sha512-+9sLdS0jr2kjl5HskuX6/Fxvlyt9mfex3TbbjLPRdEXd+zAtAxrzv7fJz/2Q3mag9dclDrgjgwD+uEO1bHNEpA==
+object-property-assigner@^1.2.4:
+  version "1.2.4"
+  resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.2.4.tgz#1545f55e51b6b3b0eaf83ce2bfd1ea171e3949bb"
+  integrity sha512-wL4Y1ugqycyFu6ihfDM8BPhJR5NbaFXW7RXlt6ROmeAEyuBDI2XDctMUowQYlkj5LxQcxGC7NP6axENyZGge6A==
 
 object-property-extractor@^1.0.11:
   version "1.0.11"
