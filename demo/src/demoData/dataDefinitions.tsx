@@ -9,7 +9,7 @@ import {
   LinkCustomNodeDefinition,
   assign,
   matchNode,
-} from '../JsonEditImport'
+} from '../_imports'
 import {
   CollectionKey,
   DataType,
