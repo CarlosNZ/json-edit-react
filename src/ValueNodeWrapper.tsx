@@ -152,7 +152,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   const handleEdit = () => {
-    console.log('Path', path)
     setCurrentlyEditingElement(null)
     let newValue
     switch (dataType) {
@@ -307,14 +306,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           ) : (
             showEditButtons && (
               <EditButtons
-                startEdit={
-                  canEdit
-                    ? () => {
-                        console.log(path, pathString)
-                        setCurrentlyEditingElement(pathString)
-                      }
-                    : undefined
-                }
+                startEdit={canEdit ? () => setCurrentlyEditingElement(pathString) : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
                 enableClipboard={enableClipboard}
                 translate={translate}
