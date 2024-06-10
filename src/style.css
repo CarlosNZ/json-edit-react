@@ -190,7 +190,7 @@ select:focus + .focus {
 
 .jer-collection-error-row {
   position: absolute;
-  bottom: 0;
+  bottom: 0.5em;
 }
 
 .jer-collection-error-row-edit {
@@ -266,6 +266,7 @@ select:focus + .focus {
 .jer-key-text {
   word-break: break-word;
   line-height: 1.1em;
+  white-space: pre-wrap;
 }
 
 .jer-key-edit {
@@ -386,4 +387,11 @@ select:focus + .focus {
   opacity: 0.85;
   transition: 0.3s;
   transform: scale(1.2);
+}
+
+/* For displaying keys that are purely <empty string> "" */
+.jer-empty-string::after {
+  content: '<empty string>';
+  font-style: italic;
+  font-size: 90%;
 }

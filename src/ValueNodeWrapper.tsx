@@ -152,6 +152,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   const handleEdit = () => {
+    console.log('Path', path)
     setCurrentlyEditingElement(null)
     let newValue
     switch (dataType) {
@@ -180,7 +181,11 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     if (name === newKey) return
     if (!parentData) return
     const parentPath = path.slice(0, -1)
-    if (!newKey) return
+    const existingKeys = Object.keys(parentData)
+    if (existingKeys.includes(newKey)) {
+      logError(translate('ERROR_KEY_EXISTS', nodeData))
+      return
+    }
 
     // Need to update data in array form to preserve key order
     const newData = Object.fromEntries(
@@ -206,7 +211,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
-  // DERIVED VALUES (this makes the render logic easier to understand)
+  // DERIVED VALUES (this makes the JSX logic less messy)
   const isEditing = currentlyEditingElement === pathString
   const isEditingKey = currentlyEditingElement === `key_${pathString}`
   const isArray = typeof path.slice(-1)[0] === 'number'
@@ -273,7 +278,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             }}
             onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
           >
-            {name}:{' '}
+            {name === '' ? (
+              <span className="jer-empty-string">
+                {/* display "<empty string>" using pseudo class CSS */}
+              </span>
+            ) : (
+              name
+            )}
+            :
           </span>
         )}
         {showKeyEdit && (
@@ -295,7 +307,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           ) : (
             showEditButtons && (
               <EditButtons
-                startEdit={canEdit ? () => setCurrentlyEditingElement(pathString) : undefined}
+                startEdit={
+                  canEdit
+                    ? () => {
+                        console.log(path, pathString)
+                        setCurrentlyEditingElement(pathString)
+                      }
+                    : undefined
+                }
                 handleDelete={canDelete ? handleDelete : undefined}
                 enableClipboard={enableClipboard}
                 translate={translate}

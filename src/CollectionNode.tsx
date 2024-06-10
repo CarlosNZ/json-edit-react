@@ -91,7 +91,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
   const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
-  const canEditKey = parentData !== null && canEdit && canAdd && canDelete
 
   const getDefaultNewValue = useMemo(
     () => (nodeData: NodeData) => {
@@ -172,7 +171,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     if (name === newKey) return
     if (!parentData) return
     const parentPath = path.slice(0, -1)
-    if (!newKey) return
+    const existingKeys = Object.keys(parentData)
+    if (existingKeys.includes(newKey)) {
+      showError(translate('ERROR_KEY_EXISTS', nodeData))
+      return
+    }
 
     // Need to update data in array form to preserve key order
     const newData = Object.fromEntries(
@@ -217,14 +220,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setStringifiedValue(JSON.stringify(data, null, 2))
   }
 
-  // DERIVED VALUES (this makes the render logic easier to understand)
+  // DERIVED VALUES (this makes the JSX logic less messy)
   const isEditing = currentlyEditingElement === pathString
   const isEditingKey = currentlyEditingElement === `key_${pathString}`
   const isArray = typeof path.slice(-1)[0] === 'number'
+  const canEditKey = parentData !== null && canEdit && canAdd && canDelete && !isArray
   const showLabel = showArrayIndices || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
-  const showKey = showLabel && !hideKey && name !== '' && name !== undefined
+  const showKey = showLabel && !hideKey && name !== undefined
   const showCustomNodeContents =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
   const sortKeys = keySort && collectionType === 'object'
@@ -347,13 +351,22 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
     />
   ) : (
-    <span
-      className="jer-key-text"
-      style={getStyles('property', nodeData)}
-      onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
-    >
-      {showKey ? `${name}:` : null}
-    </span>
+    showKey && (
+      <span
+        className="jer-key-text"
+        style={getStyles('property', nodeData)}
+        onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
+      >
+        {name === '' ? (
+          <span className="jer-empty-string">
+            {/* display "<empty string>" using pseudo class CSS */}
+          </span>
+        ) : (
+          name
+        )}
+        :
+      </span>
+    )
   )
 
   const EditButtonDisplay = showEditButtons && (

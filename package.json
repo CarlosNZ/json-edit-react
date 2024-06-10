@@ -33,7 +33,7 @@
   "dependencies": {
     "json5": "^2.2.3",
     "just-clone": "^6.2.0",
-    "object-property-assigner": "^1.2.3",
+    "object-property-assigner": "^1.2.4",
     "object-property-extractor": "^1.0.11"
   },
   "devDependencies": {

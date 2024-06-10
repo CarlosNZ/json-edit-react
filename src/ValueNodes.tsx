@@ -12,7 +12,12 @@ export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
 export const truncate = (string: string, length = 200) =>
   string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
 
-export const toPathString = (path: Array<string | number>) => path.join('.').replace(/"/g, '_')
+export const toPathString = (path: Array<string | number>) =>
+  path
+    // An empty string in a part will "disappear", so replace it with a
+    // non-printable char
+    .map((part) => (part === '' ? String.fromCharCode(0) : part))
+    .join('.')
 
 export const StringValue: React.FC<InputProps & { value: string }> = ({
   value,
