@@ -65,6 +65,8 @@ function App() {
   )
 
   useEffect(() => {
+    const rootName = demoData[selectedData].rootName
+    if (rootName) setRootName(rootName ?? 'data')
     switch (selectedData) {
       case 'editTheme':
         return
@@ -81,9 +83,7 @@ function App() {
   }, [selectedData, reset])
 
   useEffect(() => {
-    if (selectedData === 'editTheme') setTheme(data)
-    const rootName = demoData[selectedData].rootName
-    setRootName(rootName ?? 'data')
+    if (selectedData === 'editTheme') setTheme(data as Theme)
   }, [data])
 
   const restrictEdit: FilterFunction | boolean = (() => {
