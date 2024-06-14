@@ -61,7 +61,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       style={getStyles('string', nodeData)}
     >
       {quoteChar}
-      {truncate(value, stringTruncate)}
+      {truncate(value ?? '', stringTruncate)}
       {quoteChar}
     </div>
   )
