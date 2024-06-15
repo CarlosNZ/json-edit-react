@@ -126,7 +126,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
       onEdit(customNode.defaultValue, path)
-      setCurrentlyEditingElement(null)
       setDataType(type)
     } else {
       const newValue = convertValue(
@@ -139,7 +138,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       )
       updateValue(newValue as ValueData)
       onEdit(newValue, path)
-      setCurrentlyEditingElement(null)
       setCollapseState({ path, collapsed: false })
       setDataType(type)
     }
