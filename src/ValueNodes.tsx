@@ -10,7 +10,11 @@ export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
  * Truncates a string to a specified length, appends `...` if truncated
  */
 export const truncate = (string: string, length = 200) =>
-  string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
+  typeof string === 'string'
+    ? string.length < length
+      ? string
+      : `${string.slice(0, length - 2).trim()}...`
+    : string
 
 export const toPathString = (path: Array<string | number>) =>
   path
@@ -61,7 +65,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       style={getStyles('string', nodeData)}
     >
       {quoteChar}
-      {truncate(value ?? '', stringTruncate)}
+      {truncate(value, stringTruncate)}
       {quoteChar}
     </div>
   )
@@ -186,9 +190,7 @@ export const NullValue: React.FC<InputProps> = ({
     } else if (event.key === 'Escape') handleCancel()
   }
 
-  return isEditing ? (
-    <div className="jer-input-null">null</div>
-  ) : (
+  return (
     <div
       onDoubleClick={() => setIsEditing(true)}
       className="jer-value-null"
