@@ -127,7 +127,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const onError = useMemo(
     () => (error: JerError, errorValue: CollectionData | string) => {
-      showError(error.error)
+      showError(error.message)
       if (onErrorCallback) {
         onErrorCallback({
           currentData: nodeData.fullData,
@@ -182,12 +182,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       if (JSON.stringify(value) === JSON.stringify(data)) return
       onEdit(value, path).then((error) => {
         if (error) {
-          onError({ code: 'UPDATE_ERROR', error }, value as CollectionData)
+          onError({ code: 'UPDATE_ERROR', message: error }, value as CollectionData)
         }
       })
     } catch {
       onError(
-        { code: 'INVALID_JSON', error: translate('ERROR_INVALID_JSON', nodeData) },
+        { code: 'INVALID_JSON', message: translate('ERROR_INVALID_JSON', nodeData) },
         stringifiedValue
       )
     }
@@ -200,7 +200,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     const parentPath = path.slice(0, -1)
     const existingKeys = Object.keys(parentData)
     if (existingKeys.includes(newKey)) {
-      onError({ code: 'KEY_EXISTS', error: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
+      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
       return
     }
 
@@ -221,13 +221,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     const newValue = getDefaultNewValue(nodeData)
     if (collectionType === 'array') {
       onAdd(newValue, [...path, (data as unknown[]).length]).then((error) => {
-        if (error) onError({ code: 'ADD_ERROR', error }, newValue as CollectionData)
+        if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
       })
     } else if (key in data) {
-      onError({ code: 'KEY_EXISTS', error: translate('ERROR_KEY_EXISTS', nodeData) }, key)
+      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
     } else {
       onAdd(newValue, [...path, key]).then((error) => {
-        if (error) onError({ code: 'ADD_ERROR', error }, newValue as CollectionData)
+        if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
       })
     }
   }
@@ -238,7 +238,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           onDelete(data, path).then((error) => {
             if (error) {
               onError(
-                { code: 'DELETE_ERROR', error },
+                { code: 'DELETE_ERROR', message: error },
                 extractProperty(data, path) as CollectionData
               )
             }

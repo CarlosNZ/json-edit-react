@@ -103,7 +103,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const onError = useMemo(
     () => (error: JerError, errorValue: ValueData) => {
-      showError(error.error)
+      showError(error.message)
       if (onErrorCallback) {
         onErrorCallback({
           currentData: nodeData.fullData,
@@ -191,7 +191,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         newValue = value
     }
     onEdit(newValue, path).then((error) => {
-      if (error) onError({ code: 'UPDATE_ERROR', error }, newValue as ValueData)
+      if (error) onError({ code: 'UPDATE_ERROR', message: error }, newValue as ValueData)
     })
   }
 
@@ -202,7 +202,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     const parentPath = path.slice(0, -1)
     const existingKeys = Object.keys(parentData)
     if (existingKeys.includes(newKey)) {
-      onError({ code: 'KEY_EXISTS', error: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
+      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
       return
     }
 
@@ -226,7 +226,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleDelete = () => {
     onDelete(value, path).then((error) => {
-      if (error) onError({ code: 'DELETE_ERROR', error }, value as ValueData)
+      if (error) onError({ code: 'DELETE_ERROR', message: error }, value as ValueData)
     })
   }
 

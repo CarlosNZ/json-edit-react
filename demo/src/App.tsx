@@ -33,10 +33,11 @@ import {
 } from '@chakra-ui/react'
 import logo from './image/logo_400.png'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
-import { demoData } from './demoData'
+import { DemoData, demoData } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { version } from './version'
+import { OnErrorFunction } from './json-edit-react/src/types'
 
 function App() {
   const [selectedData, setSelectedData] = useState('intro')
@@ -260,7 +261,20 @@ function App() {
                     }
                   : undefined
               }
-              onError={demoData[selectedData].onError}
+              onError={
+                demoData[selectedData].onError
+                  ? (errorData) => {
+                      const error = (demoData[selectedData].onError as OnErrorFunction)(errorData)
+                      toast({
+                        title: 'ERROR 😢',
+                        description: error as any,
+                        status: 'error',
+                        duration: 5000,
+                        isClosable: true,
+                      })
+                    }
+                  : undefined
+              }
               showErrorMessages={demoData[selectedData].showErrorMessages}
               collapse={collapseLevel}
               showCollectionCount={

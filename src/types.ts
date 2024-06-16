@@ -91,7 +91,7 @@ export type OnChangeFunction = (props: {
 
 export interface JerError {
   code: 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR' | 'INVALID_JSON' | 'KEY_EXISTS'
-  error: ErrorString
+  message: ErrorString
 }
 
 export type OnErrorFunction = (props: {
@@ -101,7 +101,7 @@ export type OnErrorFunction = (props: {
   name: CollectionKey
   path: CollectionKey[]
   error: JerError
-}) => void
+}) => unknown
 
 export type FilterFunction = (input: NodeData) => boolean
 export type TypeFilterFunction = (input: NodeData) => boolean | DataType[]

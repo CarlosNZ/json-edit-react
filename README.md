@@ -24,6 +24,7 @@ Features include:
 - [Props overview](#props-overview)
 - [Update functions](#update-functions)
   - [OnChange function](#onchange-function)
+  - [OnError function](#onerror-function)
   - [Copy function](#copy-function)
 - [Filter functions](#filter-functions)
   - [Examples](#examples-1)
@@ -97,6 +98,8 @@ The only *required* value is `data`.
 | `onDelete`              | `UpdateFunction`                              |             | A function to run whenever a value is **deleted**.                                                                                                                                                                                                                                                                   |
 | `onAdd`                 | `UpdateFunction`                              |             | A function to run whenever a new property is **added**.                                                                                                                                                                                                                                                              |
 | `onChange`              | `OnChangeFunction`                            |             | A function to modify/constrain user input as they type -- see [OnChange functions](#onchange-function).                                                                                                                                                                                                              |
+| `onError`               | `OnErrorFunction`                             |             | A function to run whenever the component reports an error -- see [OnErrorFunction](#onerror-function).                                                                                                                                                                                                               |
+| `showErrorMessages`     | `boolean `                                    | `true`      | Whether or not the component should display its own error messages (you'd probably only want to disable this if you provided your own `onError` function)                                                                                                                                                            |
 | `enableClipboard`       | `boolean\|CopyFunction`                       | `true`      | Whether or not to enable the "Copy to clipboard" button in the UI. If a function is provided, `true` is assumed and this function will be run whenever an item is copied.                                                                                                                                            |
 | `indent`                | `number`                                      | `3`         | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                                                   |
 | `collapse`              | `boolean\|number\|FilterFunction`             | `false`     | Defines which nodes of the JSON tree will be displayed "opened" in the UI on load. If `boolean`, it'll be either all or none. A `number` specifies a nesting depth after which nodes will be closed. For more fine control a function can be provided — see [Filter functions](#filter-functions).                   |
@@ -169,6 +172,26 @@ The input object is similar to the Update function input, but with no `newData` 
       return newValue;
     }
   ```
+
+### OnError function
+
+Normally, the component will display simple error messages whenever an error condition is detected (e.g. invalid JSON input, duplicate keys, or custom errors returned by the [`onUpdate` functions)](#update-functions)). However, you can provide your own `onError` callback in order to implement your own error UI, or run additional side effects. (In the former case, you'd probably want to disable the `showErrorMessages` prop, too.) The input to the callback is similar to the other callbacks:
+
+```js
+{
+    currentData,  // data state before update 
+    currentValue, // the current value of the property being updated
+    errorValue,   // the erroneous value that failed to update the property
+    name,         // name of the property being updated
+    path,         // full path to the property being updated, as an array of property keys
+                  // (e.g. [ "user", "friends", 1, "name" ] ) (equivalent to "user.friends[1].name"),
+    error: {
+      code,       // one of 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR' | 'INVALID_JSON' | 'KEY_EXISTS'
+      message     // the (localised) error message that would be displayed
+    }
+}
+```
+ (An example of a custom Error UI can be seen in the [Demo](#https://carlosnz.github.io/json-edit-react/) with the "Custom Nodes" data set -- when you enter invalid JSON input a "Toast" notification is displayed instead of the normal component error message.)
 
 ### Copy function
 
@@ -561,7 +584,7 @@ A few helper functions, components and types that might be useful in your own im
 - `Theme`: a full [Theme](#themes--styles) object
 - `ThemeInput`: input type for the `theme` prop
 - `JsonEditorProps`: all input props for the Json Editor component
-- [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`FilterFunction`](#filter-functions), [`CopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort), [`LocalisedString`](#localisation), [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text)
+- [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`CopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort), [`LocalisedString`](#localisation), [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text)
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `IconReplacements`: input type for the `icons` prop
 - `CollectionNodeProps`: all props passed internally to "collection" nodes (i.e. objects/arrays)
