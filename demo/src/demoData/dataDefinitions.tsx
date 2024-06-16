@@ -15,6 +15,7 @@ import {
   DataType,
   DefaultValueFunction,
   OnChangeFunction,
+  OnErrorFunction,
   SearchFilterFunction,
   ThemeStyles,
   UpdateFunction,
@@ -51,6 +52,8 @@ interface DemoData {
     path: CollectionKey[]
   }) => any
   onChange?: OnChangeFunction
+  onError?: OnErrorFunction
+  showErrorMessages?: boolean
   defaultValue?: unknown | DefaultValueFunction
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
@@ -459,6 +462,10 @@ export const demoData: Record<string, DemoData> = {
     restrictEdit: ({ level }) => level > 0,
     restrictAdd: true,
     restrictDelete: true,
+    onError: (data) => {
+      console.log('Data', data)
+    },
+    showErrorMessages: false,
     customNodeDefinitions: [
       {
         condition: ({ key, value }) =>

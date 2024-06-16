@@ -20,6 +20,7 @@ import {
   type CollectionData,
   type ErrorString,
   type ValueData,
+  type JerError,
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
@@ -35,6 +36,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     onEdit,
     onDelete,
     onChange,
+    onError: onErrorCallback,
+    showErrorMessages,
     enableClipboard,
     restrictEditFilter,
     restrictDeleteFilter,
@@ -90,6 +93,31 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
 
+  const showError = (errorString: ErrorString) => {
+    if (showErrorMessages) {
+      setError(errorString)
+      setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
+    }
+    console.warn('Error', errorString)
+  }
+
+  const onError = useMemo(
+    () => (error: JerError, errorValue: ValueData) => {
+      showError(error.error)
+      if (onErrorCallback) {
+        onErrorCallback({
+          currentData: nodeData.fullData,
+          errorValue,
+          currentValue: value as ValueData,
+          name,
+          path,
+          error,
+        })
+      }
+    },
+    [onErrorCallback, showErrorMessages]
+  )
+
   const {
     CustomNode,
     customNodeProps,
@@ -143,15 +171,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     }
   }
 
-  const logError = (errorString: ErrorString) => {
-    setError(errorString)
-    setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
-    console.log('Error', errorString)
-  }
-
   const handleEdit = () => {
     setCurrentlyEditingElement(null)
-    let newValue
+    let newValue: ValueData | CollectionData
     switch (dataType) {
       case 'object':
         newValue = { [translate('DEFAULT_NEW_KEY', nodeData)]: value }
@@ -169,7 +191,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         newValue = value
     }
     onEdit(newValue, path).then((error) => {
-      if (error) logError(error)
+      if (error) onError({ code: 'UPDATE_ERROR', error }, newValue as ValueData)
     })
   }
 
@@ -180,7 +202,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     const parentPath = path.slice(0, -1)
     const existingKeys = Object.keys(parentData)
     if (existingKeys.includes(newKey)) {
-      logError(translate('ERROR_KEY_EXISTS', nodeData))
+      onError({ code: 'KEY_EXISTS', error: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
       return
     }
 
@@ -204,7 +226,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleDelete = () => {
     onDelete(value, path).then((error) => {
-      if (error) logError(error)
+      if (error) onError({ code: 'DELETE_ERROR', error }, value as ValueData)
     })
   }
 
@@ -213,7 +235,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const isEditingKey = currentlyEditingElement === `key_${pathString}`
   const isArray = typeof path.slice(-1)[0] === 'number'
   const canEditKey = !isArray && canEdit && canDelete
-  const showError = !isEditing && error
+  const showErrorString = !isEditing && error
   const showTypeSelector = isEditing && allowedDataTypes.length > 0
   const showEditButtons = dataType !== 'invalid' && !error && showEditTools
   const showKeyEdit = showLabel && isEditingKey
@@ -329,7 +351,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
               <span className="focus"></span>
             </div>
           )}
-          {showError && (
+          {showErrorString && (
             <span className="jer-error-slug" style={getStyles('error', nodeData)}>
               {error}
             </span>

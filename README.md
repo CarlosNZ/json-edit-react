@@ -12,6 +12,7 @@ Features include:
  - self-contained — rendered with plain HTML/CSS, so no dependance on external UI libraries
  - search/filter data by key, value or custom function
  - provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
+ - [localisable](#localisation) UI
 
 **[Explore the Demo](https://carlosnz.github.io/json-edit-react/)**
 

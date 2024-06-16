@@ -260,6 +260,8 @@ function App() {
                     }
                   : undefined
               }
+              onError={demoData[selectedData].onError}
+              showErrorMessages={demoData[selectedData].showErrorMessages}
               collapse={collapseLevel}
               showCollectionCount={
                 showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false

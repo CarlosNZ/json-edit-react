@@ -7,7 +7,9 @@ import {
   type CollectionNodeProps,
   type ErrorString,
   type NodeData,
+  type JerError,
   ERROR_DISPLAY_TIME,
+  CollectionData,
 } from './types'
 import { Icon } from './Icons'
 import { filterNode, isCollection } from './filterHelpers'
@@ -16,6 +18,7 @@ import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useTreeState } from './TreeStateProvider'
 import { toPathString } from './ValueNodes'
+import extractProperty from 'object-property-extractor'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = ({
   data,
@@ -37,6 +40,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     onEdit,
     onAdd,
     onDelete,
+    onError: onErrorCallback,
+    showErrorMessages,
     restrictEditFilter,
     restrictDeleteFilter,
     restrictAddFilter,
@@ -112,6 +117,31 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     showCollectionWrapper = true,
   } = useMemo(() => getCustomNode(customNodeDefinitions, nodeData), [])
 
+  const showError = (errorString: ErrorString) => {
+    if (showErrorMessages) {
+      setError(errorString)
+      setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
+    }
+    console.warn('Error', errorString)
+  }
+
+  const onError = useMemo(
+    () => (error: JerError, errorValue: CollectionData | string) => {
+      showError(error.error)
+      if (onErrorCallback) {
+        onErrorCallback({
+          currentData: nodeData.fullData,
+          errorValue,
+          currentValue: data,
+          name,
+          path,
+          error,
+        })
+      }
+    },
+    [onErrorCallback, showErrorMessages]
+  )
+
   // Early return if this node is filtered out
   if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0) {
     return null
@@ -144,12 +174,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     }
   }
 
-  const showError = (errorString: ErrorString) => {
-    setError(errorString)
-    setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
-    console.log('Error', errorString)
-  }
-
   const handleEdit = () => {
     try {
       const value = JSON5.parse(stringifiedValue)
@@ -157,12 +181,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       setError(null)
       if (JSON.stringify(value) === JSON.stringify(data)) return
       onEdit(value, path).then((error) => {
-        if (error) showError(error)
+        if (error) {
+          onError({ code: 'UPDATE_ERROR', error }, value as CollectionData)
+        }
       })
     } catch {
-      setError(translate('ERROR_INVALID_JSON', nodeData))
-      setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
-      console.log('Invalid JSON')
+      onError(
+        { code: 'INVALID_JSON', error: translate('ERROR_INVALID_JSON', nodeData) },
+        stringifiedValue
+      )
     }
   }
 
@@ -173,7 +200,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     const parentPath = path.slice(0, -1)
     const existingKeys = Object.keys(parentData)
     if (existingKeys.includes(newKey)) {
-      showError(translate('ERROR_KEY_EXISTS', nodeData))
+      onError({ code: 'KEY_EXISTS', error: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
       return
     }
 
@@ -194,13 +221,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     const newValue = getDefaultNewValue(nodeData)
     if (collectionType === 'array') {
       onAdd(newValue, [...path, (data as unknown[]).length]).then((error) => {
-        if (error) showError(error)
+        if (error) onError({ code: 'ADD_ERROR', error }, newValue as CollectionData)
       })
     } else if (key in data) {
-      showError(translate('ERROR_KEY_EXISTS', nodeData))
+      onError({ code: 'KEY_EXISTS', error: translate('ERROR_KEY_EXISTS', nodeData) }, key)
     } else {
       onAdd(newValue, [...path, key]).then((error) => {
-        if (error) showError(error)
+        if (error) onError({ code: 'ADD_ERROR', error }, newValue as CollectionData)
       })
     }
   }
@@ -208,8 +235,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const handleDelete =
     path.length > 0
       ? () => {
-          onDelete(data, path).then((result) => {
-            if (result) showError(result)
+          onDelete(data, path).then((error) => {
+            if (error) {
+              onError(
+                { code: 'DELETE_ERROR', error },
+                extractProperty(data, path) as CollectionData
+              )
+            }
           })
         }
       : undefined
