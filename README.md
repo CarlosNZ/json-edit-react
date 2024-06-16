@@ -608,6 +608,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.12.0**:
+  - Preserve editing mode when changing Data Type
+  - [`onError` callback](#onerror-function) available for custom error handling
 - **1.11.8**: Fix regression for empty data root name introduces in 1.11.7
 - **1.11.7**: Handle \<empty-string\> object keys / prevent duplicate keys
 - **1.11.3**: Bug fix for invalid state when changing type to Collection node
