@@ -3,10 +3,10 @@
  */
 
 /* Installed package */
-// export * from 'json-edit-react'
+export * from 'json-edit-react'
 
 /* Local src */
-export * from './json-edit-react/src'
+// export * from './json-edit-react/src'
 
 /* Compiled local package */
 // export * from './package/build'
