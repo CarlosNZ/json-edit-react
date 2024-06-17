@@ -8,8 +8,8 @@ import {
   type ErrorString,
   type NodeData,
   type JerError,
+  type CollectionData,
   ERROR_DISPLAY_TIME,
-  CollectionData,
 } from './types'
 import { Icon } from './Icons'
 import { filterNode, isCollection } from './filterHelpers'
@@ -55,8 +55,17 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     defaultValue,
     translate,
     customNodeDefinitions,
+    useJSON5Editor,
   } = props
-  const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
+  const stringifyJson = useMemo(() => {
+    if (!useJSON5Editor) return (data: object) => JSON.stringify(data, null, 2)
+    if (useJSON5Editor instanceof Object) {
+      return (data: object) => JSON5.stringify(data, useJSON5Editor)
+    }
+    return (data: object) => JSON5.stringify(data, { space: 2 })
+  }, [useJSON5Editor])
+
+  const [stringifiedValue, setStringifiedValue] = useState(stringifyJson(data))
   const [error, setError] = useState<string | null>(null)
 
   const startCollapsed = collapseFilter(incomingNodeData)
@@ -77,7 +86,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
-    setStringifiedValue(JSON.stringify(data, null, 2))
+    setStringifiedValue(stringifyJson(data))
   }, [data])
 
   useEffect(() => {
@@ -249,7 +258,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const handleCancel = () => {
     setCurrentlyEditingElement(null)
     setError(null)
-    setStringifiedValue(JSON.stringify(data, null, 2))
+    setStringifiedValue(stringifyJson(data))
   }
 
   // DERIVED VALUES (this makes the JSX logic less messy)
