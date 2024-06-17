@@ -8,8 +8,8 @@ import {
   type ErrorString,
   type NodeData,
   type JerError,
-  ERROR_DISPLAY_TIME,
   type CollectionData,
+  ERROR_DISPLAY_TIME,
 } from './types'
 import { Icon } from './Icons'
 import { filterNode, isCollection } from './filterHelpers'
