@@ -15,13 +15,14 @@ import {
   DataType,
   DefaultValueFunction,
   OnChangeFunction,
+  OnErrorFunction,
   SearchFilterFunction,
   ThemeStyles,
   UpdateFunction,
 } from '../json-edit-react/src/types'
 import { Input } from 'object-property-assigner/build'
 
-interface DemoData {
+export interface DemoData {
   name: string
   description: JSX.Element
   data: object
@@ -51,6 +52,8 @@ interface DemoData {
     path: CollectionKey[]
   }) => any
   onChange?: OnChangeFunction
+  onError?: OnErrorFunction
+  showErrorMessages?: boolean
   defaultValue?: unknown | DefaultValueFunction
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
@@ -428,6 +431,12 @@ export const demoData: Record<string, DemoData> = {
         </Text>
         <Text>
           In this example, compare the raw JSON (edit the data root) with what is presented here.
+          (You can also see a custom{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#onerror-function" isExternal>
+            <span className="code">onError</span>
+          </Link>{' '}
+          function that displays a Toast notification rather than the standard error message when
+          you enter invalid JSON input.)
         </Text>
         <Text>
           You can also see how the property count text changes depending on the data. This is using
@@ -459,6 +468,8 @@ export const demoData: Record<string, DemoData> = {
     restrictEdit: ({ level }) => level > 0,
     restrictAdd: true,
     restrictDelete: true,
+    onError: (errorData) => errorData.error.message,
+    showErrorMessages: false,
     customNodeDefinitions: [
       {
         condition: ({ key, value }) =>

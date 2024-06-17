@@ -11,6 +11,8 @@ export interface JsonEditorProps {
   onDelete?: UpdateFunction
   onAdd?: UpdateFunction
   onChange?: OnChangeFunction
+  onError?: OnErrorFunction
+  showErrorMessages?: boolean
   enableClipboard?: boolean | CopyFunction
   theme?: ThemeInput
   icons?: IconReplacements
@@ -87,6 +89,20 @@ export type OnChangeFunction = (props: {
   path: CollectionKey[]
 }) => ValueData
 
+export interface JerError {
+  code: 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR' | 'INVALID_JSON' | 'KEY_EXISTS'
+  message: ErrorString
+}
+
+export type OnErrorFunction = (props: {
+  currentData: object
+  errorValue: ValueData | CollectionData
+  currentValue: ValueData | CollectionData
+  name: CollectionKey
+  path: CollectionKey[]
+  error: JerError
+}) => unknown
+
 export type FilterFunction = (input: NodeData) => boolean
 export type TypeFilterFunction = (input: NodeData) => boolean | DataType[]
 export type CustomTextFunction = (input: NodeData) => string | null
@@ -135,6 +151,8 @@ interface BaseNodeProps {
   nodeData: NodeData
   onEdit: InternalUpdateFunction
   onDelete: InternalUpdateFunction
+  onError?: OnErrorFunction
+  showErrorMessages: boolean
   enableClipboard: boolean | CopyFunction
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction
