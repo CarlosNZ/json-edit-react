@@ -63,7 +63,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       return (data: object) => JSON5.stringify(data, useJSON5Editor)
     }
     return (data: object) => JSON5.stringify(data, { space: 2 })
-  }, [useJSON5Editor, indent])
+  }, [useJSON5Editor])
 
   const [stringifiedValue, setStringifiedValue] = useState(stringifyJson(data))
   const [error, setError] = useState<string | null>(null)

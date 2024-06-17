@@ -308,7 +308,7 @@ export type ThemeInput =
   | Partial<ThemeStyles>
   | Array<ThemeName | Theme | Partial<ThemeStyles>>
 
-// JSON5 options
+// JSON5 options (https://json5.org/)
 export interface JSON5StringifyOptions {
   space?: number
   quote?: string
