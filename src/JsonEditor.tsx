@@ -10,6 +10,7 @@ import {
   type InternalUpdateFunction,
   type NodeData,
   type SearchFilterFunction,
+  type CollectionKey,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { TreeStateProvider, useTreeState } from './TreeStateProvider'
@@ -165,6 +166,58 @@ const Editor: React.FC<JsonEditorProps> = ({
     }
   }
 
+  // "moveItem" is just a "Delete" followed by an "Add", but we combine into a
+  // single "action" and only run one "onUpdate", which also means it'll be
+  // registered as a single event in the "Undo" queue
+  const moveItem = async (sourcePath: CollectionKey[] | null, destPath: CollectionKey[]) => {
+    if (sourcePath === null) return
+    console.log('Moving from', sourcePath, 'to', destPath)
+    const { currentData, newData, currentValue, newValue } = updateDataObject(
+      data,
+      sourcePath,
+      '',
+      'delete'
+    )
+    const result = await srcDelete({
+      currentData,
+      newData,
+      currentValue,
+      newValue,
+      name: sourcePath.slice(-1)[0],
+      path: sourcePath,
+    })
+    if (result !== undefined) {
+      setData(currentData)
+      return result === false ? translate('ERROR_UPDATE', nodeData) : result
+    }
+
+    const targetKey = sourcePath.slice(-1)[0]
+    const targetPath = destPath.slice(0, -1)
+    console.log('Moving', currentValue, 'to', [...targetPath, targetKey])
+    console.log('Updating', newData)
+
+    const { newData: addedData } = updateDataObject(
+      newData,
+      [...targetPath, targetKey],
+      currentValue,
+      'add'
+    )
+    const result2 = await srcAdd({
+      currentData,
+      newData,
+      currentValue,
+      newValue,
+      name: targetKey,
+      path: [...targetPath, targetKey],
+    })
+    if (result2 !== undefined) {
+      setData(currentData)
+      return result2 === false ? translate('ERROR_UPDATE', nodeData) : result
+    }
+
+    setData(addedData)
+  }
+
   const restrictEditFilter = getFilterFunction(restrictEdit)
   const restrictDeleteFilter = getFilterFunction(restrictDelete)
   const restrictAddFilter = getFilterFunction(restrictAdd)
@@ -179,6 +232,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     onChange,
     onError,
     showErrorMessages,
+    moveItem,
     showCollectionCount,
     collapseFilter,
     restrictEditFilter,

@@ -38,6 +38,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     onChange,
     onError: onErrorCallback,
     showErrorMessages,
+    moveItem,
     enableClipboard,
     restrictEditFilter,
     restrictDeleteFilter,
@@ -52,12 +53,19 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     customNodeDefinitions,
   } = props
   const { getStyles } = useTheme()
-  const { currentlyEditingElement, setCurrentlyEditingElement, setCollapseState } = useTreeState()
+  const {
+    currentlyEditingElement,
+    setCurrentlyEditingElement,
+    setCollapseState,
+    dragState: { dragPath, dragPathString },
+    setDragState,
+  } = useTreeState()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
   )
   const [error, setError] = useState<string | null>(null)
+  const [isDragTarget, setIsDragTarget] = useState(false)
 
   const { key: name, path } = nodeData
 
@@ -280,7 +288,37 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   )
 
   return (
-    <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
+    <div
+      className="jer-component jer-value-component"
+      style={{
+        marginLeft: `${indent / 2}em`,
+        marginTop: isDragTarget ? '0.5em' : undefined,
+      }}
+      draggable
+      onDragStart={(e) => {
+        setDragState({ dragPath: path, dragPathString: pathString })
+      }}
+      onDragEnd={(e) => {
+        setDragState({ dragPath: null, dragPathString: null })
+      }}
+      onDragOver={(e) => {
+        e.stopPropagation()
+        e.preventDefault()
+      }}
+      onDrop={(e) => {
+        console.log('DROP!', { dragPath, dragPathString })
+        moveItem(dragPath, path)
+        setDragState({ dragPath: null, dragPathString: null })
+        setIsDragTarget(false)
+      }}
+      onDragEnter={(e) => {
+        console.log(dragPathString, pathString)
+        if (dragPathString !== pathString) setIsDragTarget(true)
+      }}
+      onDragExit={(e) => {
+        setIsDragTarget(false)
+      }}
+    >
       <div
         className="jer-value-main-row"
         style={{

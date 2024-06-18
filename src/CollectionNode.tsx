@@ -35,6 +35,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     currentlyEditingElement,
     setCurrentlyEditingElement,
     areChildrenBeingEdited,
+    dragState: { dragPath, dragPathString },
+    setDragState,
   } = useTreeState()
   const {
     onEdit,
@@ -46,6 +48,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     restrictDeleteFilter,
     restrictAddFilter,
     collapseFilter,
+    moveItem,
     enableClipboard,
     searchFilter,
     searchText,
@@ -67,6 +70,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const [stringifiedValue, setStringifiedValue] = useState(stringifyJson(data))
   const [error, setError] = useState<string | null>(null)
+  const [isDragTarget, setIsDragTarget] = useState(false)
 
   const startCollapsed = collapseFilter(incomingNodeData)
   const [collapsed, setCollapsed] = useState(startCollapsed)
@@ -434,11 +438,37 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       className="jer-component jer-collection-component"
       style={{
         marginLeft: `${path.length === 0 ? 0 : indent / 2}em`,
+        marginTop: isDragTarget ? '0.5em' : undefined,
         ...getStyles('collection', nodeData),
       }}
+      draggable
     >
       {showCollectionWrapper ? (
-        <div className="jer-collection-header-row" style={{ position: 'relative' }}>
+        <div
+          className="jer-collection-header-row"
+          style={{ position: 'relative' }}
+          onDragStart={(e) => {
+            setDragState({ dragPath: path, dragPathString: pathString })
+          }}
+          onDragEnd={(e) => {
+            setDragState({ dragPath: null, dragPathString: null })
+          }}
+          onDragOver={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
+          }}
+          onDrop={(e) => {
+            console.log('DROP!', { dragPath, dragPathString })
+            moveItem(dragPath, path)
+            setDragState({ dragPath: null, dragPathString: null })
+          }}
+          onDragEnter={(e) => {
+            if (dragPathString !== pathString) setIsDragTarget(true)
+          }}
+          onDragExit={(e) => {
+            setIsDragTarget(false)
+          }}
+        >
           <div className="jer-collection-name">
             <div className="jer-collapse-icon" onClick={(e) => handleCollapse(e)}>
               <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />

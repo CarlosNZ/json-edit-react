@@ -10,6 +10,12 @@ interface CollapseAllState {
   path: CollectionKey[]
   collapsed: boolean
 }
+
+interface DragState {
+  dragPath: CollectionKey[] | null
+  dragPathString: string | null
+}
+
 interface TreeStateContext {
   collapseState: CollapseAllState | null
   setCollapseState: React.Dispatch<React.SetStateAction<CollapseAllState | null>>
@@ -17,6 +23,8 @@ interface TreeStateContext {
   currentlyEditingElement: string | null
   setCurrentlyEditingElement: React.Dispatch<React.SetStateAction<string | null>>
   areChildrenBeingEdited: (pathString: string) => boolean
+  dragState: DragState
+  setDragState: (newState: DragState) => void
 }
 const initialContext: TreeStateContext = {
   collapseState: null,
@@ -25,6 +33,8 @@ const initialContext: TreeStateContext = {
   currentlyEditingElement: null,
   setCurrentlyEditingElement: () => {},
   areChildrenBeingEdited: () => false,
+  dragState: { dragPath: null, dragPathString: null },
+  setDragState: () => {},
 }
 
 const TreeStateProviderContext = createContext(initialContext)
@@ -32,6 +42,10 @@ const TreeStateProviderContext = createContext(initialContext)
 export const TreeStateProvider = ({ children }: { children: React.ReactNode }) => {
   const [collapseState, setCollapseState] = useState<CollapseAllState | null>(null)
   const [currentlyEditingElement, setCurrentlyEditingElement] = useState<string | null>(null)
+  const [dragState, setDragState] = useState<DragState>({
+    dragPath: null,
+    dragPathString: null,
+  })
 
   const doesPathMatch = (path: CollectionKey[]) => {
     if (collapseState === null) return false
@@ -57,6 +71,8 @@ export const TreeStateProvider = ({ children }: { children: React.ReactNode }) =
         currentlyEditingElement,
         setCurrentlyEditingElement,
         areChildrenBeingEdited,
+        dragState,
+        setDragState,
       }}
     >
       {children}
