@@ -48,7 +48,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     restrictDeleteFilter,
     restrictAddFilter,
     collapseFilter,
-    moveItem,
+    onMove,
     enableClipboard,
     searchFilter,
     searchText,
@@ -458,7 +458,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             e.preventDefault()
           }}
           onDrop={(e) => {
-            moveItem(dragPath, path)
+            onMove(dragPath, path)
             setDragState({ dragPath: null, dragPathString: null })
           }}
           onDragEnter={(e) => {

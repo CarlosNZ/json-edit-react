@@ -166,10 +166,10 @@ const Editor: React.FC<JsonEditorProps> = ({
     }
   }
 
-  // "moveItem" is just a "Delete" followed by an "Add", but we combine into a
+  // "onMove" is just a "Delete" followed by an "Add", but we combine into a
   // single "action" and only run one "onUpdate", which also means it'll be
   // registered as a single event in the "Undo" queue
-  const moveItem = async (sourcePath: CollectionKey[] | null, destPath: CollectionKey[]) => {
+  const onMove = async (sourcePath: CollectionKey[] | null, destPath: CollectionKey[]) => {
     if (sourcePath === null) return
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
@@ -241,7 +241,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     onChange,
     onError,
     showErrorMessages,
-    moveItem,
+    onMove,
     showCollectionCount,
     collapseFilter,
     restrictEditFilter,

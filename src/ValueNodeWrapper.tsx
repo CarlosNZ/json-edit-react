@@ -38,7 +38,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     onChange,
     onError: onErrorCallback,
     showErrorMessages,
-    moveItem,
+    onMove,
     enableClipboard,
     restrictEditFilter,
     restrictDeleteFilter,
@@ -305,8 +305,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         e.stopPropagation()
         e.preventDefault()
       }}
-      onDrop={(e) => {
-        moveItem(dragPath, path)
+      onDrop={(_) => {
+        onMove(dragPath, path).then((error) => {
+          if (error) onError({ code: 'UPDATE_ERROR', message: error }, value as ValueData)
+        })
         setDragState({ dragPath: null, dragPathString: null })
         setIsDragTarget(false)
       }}

@@ -154,7 +154,7 @@ interface BaseNodeProps {
   onDelete: InternalUpdateFunction
   onError?: OnErrorFunction
   showErrorMessages: boolean
-  moveItem: (source: CollectionKey[] | null, dest: CollectionKey[]) => void
+  onMove: (source: CollectionKey[] | null, dest: CollectionKey[]) => Promise<string | void>
   enableClipboard: boolean | CopyFunction
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction
