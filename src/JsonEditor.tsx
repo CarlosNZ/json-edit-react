@@ -171,7 +171,6 @@ const Editor: React.FC<JsonEditorProps> = ({
   // registered as a single event in the "Undo" queue
   const moveItem = async (sourcePath: CollectionKey[] | null, destPath: CollectionKey[]) => {
     if (sourcePath === null) return
-    console.log('Moving from', sourcePath, 'to', destPath)
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
       sourcePath,
@@ -191,23 +190,33 @@ const Editor: React.FC<JsonEditorProps> = ({
       return result === false ? translate('ERROR_UPDATE', nodeData) : result
     }
 
-    const targetKey = sourcePath.slice(-1)[0]
+    // Immediate key of the item being moved
+    const originalKey = sourcePath.slice(-1)[0]
+    // Where it's going
     const targetPath = destPath.slice(0, -1)
-    console.log('Moving', currentValue, 'to', [...targetPath, targetKey])
-    console.log('Updating', newData)
+    // The key in the target path to insert before
+    const insertBefore = destPath.slice(-1)[0]
+
+    const targetKey =
+      typeof insertBefore === 'number'
+        ? insertBefore // Moving TO an array
+        : typeof originalKey === 'number'
+        ? `arr_${originalKey}` // Moving FROM an array, so needs a key
+        : originalKey // Moving from object to object
 
     const { newData: addedData } = updateDataObject(
       newData,
       [...targetPath, targetKey],
       currentValue,
-      'add'
+      'add',
+      typeof targetKey === 'number' ? true : insertBefore
     )
     const result2 = await srcAdd({
       currentData,
       newData,
       currentValue,
       newValue,
-      name: targetKey,
+      name: originalKey,
       path: [...targetPath, targetKey],
     })
     if (result2 !== undefined) {
@@ -281,11 +290,18 @@ const JsonEditor: React.FC<JsonEditorProps> = (props) => (
   </ThemeProvider>
 )
 
+interface AssignOptions {
+  remove?: boolean
+  insert?: boolean
+  insertBefore?: string
+}
+
 const updateDataObject = (
   data: CollectionData,
   path: Array<string | number>,
   newValue: unknown,
-  action: 'update' | 'delete' | 'add'
+  action: 'update' | 'delete' | 'add',
+  insert?: true | CollectionKey
 ) => {
   if (path.length === 0) {
     return {
@@ -296,10 +312,14 @@ const updateDataObject = (
     }
   }
 
+  const assignOptions: AssignOptions = { remove: action === 'delete' }
+  if (insert === true) assignOptions.insert = true
+  if (typeof insert === 'string') assignOptions.insertBefore = insert
+
   const currentValue = action !== 'add' ? extract(data, path) : undefined
-  const newData = assign(clone(data) as Input, path, newValue, {
-    remove: action === 'delete',
-  })
+  const newData = assign(clone(data) as Input, path, newValue, assignOptions)
+
+  console.log(JSON.stringify(newData, null, 2))
 
   return {
     currentData: data,
