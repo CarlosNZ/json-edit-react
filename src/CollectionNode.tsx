@@ -458,7 +458,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
             e.preventDefault()
           }}
           onDrop={(e) => {
-            console.log('DROP!', { dragPath, dragPathString })
             moveItem(dragPath, path)
             setDragState({ dragPath: null, dragPathString: null })
           }}

@@ -319,8 +319,6 @@ const updateDataObject = (
   const currentValue = action !== 'add' ? extract(data, path) : undefined
   const newData = assign(clone(data) as Input, path, newValue, assignOptions)
 
-  console.log(JSON.stringify(newData, null, 2))
-
   return {
     currentData: data,
     newData,
