@@ -306,13 +306,11 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         e.preventDefault()
       }}
       onDrop={(e) => {
-        console.log('DROP!', { dragPath, dragPathString })
         moveItem(dragPath, path)
         setDragState({ dragPath: null, dragPathString: null })
         setIsDragTarget(false)
       }}
       onDragEnter={(e) => {
-        console.log(dragPathString, pathString)
         if (dragPathString !== pathString) setIsDragTarget(true)
       }}
       onDragExit={(e) => {
