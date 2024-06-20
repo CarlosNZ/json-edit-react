@@ -169,7 +169,11 @@ const Editor: React.FC<JsonEditorProps> = ({
   // "onMove" is just a "Delete" followed by an "Add", but we combine into a
   // single "action" and only run one "onUpdate", which also means it'll be
   // registered as a single event in the "Undo" queue
-  const onMove = async (sourcePath: CollectionKey[] | null, destPath: CollectionKey[]) => {
+  const onMove = async (
+    sourcePath: CollectionKey[] | null,
+    destPath: CollectionKey[],
+    position: 'above' | 'below'
+  ) => {
     if (sourcePath === null) return
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
@@ -195,21 +199,42 @@ const Editor: React.FC<JsonEditorProps> = ({
     // Where it's going
     const targetPath = destPath.slice(0, -1)
     // The key in the target path to insert before
-    const insertBefore = destPath.slice(-1)[0]
+    const insertPos = destPath.slice(-1)[0]
 
-    const targetKey =
-      typeof insertBefore === 'number'
-        ? insertBefore // Moving TO an array
+    let targetKey =
+      typeof insertPos === 'number' // Moving TO an array
+        ? position === 'above'
+          ? insertPos
+          : insertPos + 1
         : typeof originalKey === 'number'
         ? `arr_${originalKey}` // Moving FROM an array, so needs a key
         : originalKey // Moving from object to object
+
+    const sourceBase = sourcePath.slice(0, -1).join('.')
+    const destBase = destPath.slice(0, -1).join('.')
+
+    if (
+      sourceBase === destBase &&
+      typeof originalKey === 'number' &&
+      typeof targetKey === 'number' &&
+      originalKey < targetKey
+    ) {
+      targetKey -= 1
+    }
+
+    const insertOptions =
+      typeof targetKey === 'number'
+        ? { insert: true }
+        : position === 'above'
+        ? { insertBefore: insertPos }
+        : { insertAfter: insertPos }
 
     const { newData: addedData } = updateDataObject(
       newData,
       [...targetPath, targetKey],
       currentValue,
       'add',
-      typeof targetKey === 'number' ? true : insertBefore
+      insertOptions as AssignOptions
     )
     const result2 = await srcAdd({
       currentData,
@@ -292,8 +317,9 @@ const JsonEditor: React.FC<JsonEditorProps> = (props) => (
 
 interface AssignOptions {
   remove?: boolean
-  insert?: boolean
+  insert?: true
   insertBefore?: string
+  insertAfter?: string
 }
 
 const updateDataObject = (
@@ -301,7 +327,7 @@ const updateDataObject = (
   path: Array<string | number>,
   newValue: unknown,
   action: 'update' | 'delete' | 'add',
-  insert?: true | CollectionKey
+  insertOptions: { insert?: true; insertBefore?: string; insertAfter?: string } = {}
 ) => {
   if (path.length === 0) {
     return {
@@ -312,9 +338,10 @@ const updateDataObject = (
     }
   }
 
-  const assignOptions: AssignOptions = { remove: action === 'delete' }
-  if (insert === true) assignOptions.insert = true
-  if (typeof insert === 'string') assignOptions.insertBefore = insert
+  const assignOptions: AssignOptions = {
+    remove: action === 'delete',
+    ...insertOptions,
+  }
 
   const currentValue = action !== 'add' ? extract(data, path) : undefined
   const newData = assign(clone(data) as Input, path, newValue, assignOptions)

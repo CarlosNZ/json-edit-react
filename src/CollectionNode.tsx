@@ -70,7 +70,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const [stringifiedValue, setStringifiedValue] = useState(stringifyJson(data))
   const [error, setError] = useState<string | null>(null)
-  const [isDragTarget, setIsDragTarget] = useState(false)
+  const [isDragTarget, setIsDragTarget] = useState<'top' | 'bottom' | false>(false)
 
   const startCollapsed = collapseFilter(incomingNodeData)
   const [collapsed, setCollapsed] = useState(startCollapsed)
@@ -265,7 +265,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setStringifiedValue(stringifyJson(data))
   }
 
-  const handleDrop = () => {
+  const handleDrop = (position: 'above' | 'below') => {
     const sourceKey = dragPath?.slice(-1)[0]
     const sourceBase = dragPath?.slice(0, -1).join('.')
     const thisBase = path.slice(0, -1).join('')
@@ -280,7 +280,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
       return
     } else {
-      onMove(dragPath, path).then((error) => {
+      onMove(dragPath, path, position).then((error) => {
         if (error) onError({ code: 'UPDATE_ERROR', message: error }, data as CollectionData)
       })
     }
@@ -468,7 +468,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       onDragStart={(e) => {
         e.stopPropagation()
         setDragState({ dragPath: path, dragPathString: pathString })
-        console.log('Dragging collection', path)
       }}
       onDragEnd={(e) => {
         e.stopPropagation()
@@ -491,20 +490,30 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         setIsDragTarget(false)
       }}
     >
-      {/* {isDragTarget && pathString !== '' && <div className="jer-drag-n-drop-padding" />} */}
+      <div
+        style={{
+          height: '50%',
+          position: 'absolute',
+          width: '100%',
+          top: '50%',
+          // border: '1px solid blue',
+        }}
+        onDragEnter={(e) => {
+          e.stopPropagation()
+          if (dragPathString !== pathString) setIsDragTarget('bottom')
+        }}
+        onDragExit={(e) => {
+          e.stopPropagation()
+          setIsDragTarget(false)
+        }}
+        onDrop={(e) => {
+          e.stopPropagation()
+          handleDrop('below')
+        }}
+      ></div>
+      {isDragTarget === 'top' && pathString !== '' && <div className="jer-drag-n-drop-padding" />}
       {showCollectionWrapper ? (
-        <div
-          className="jer-collection-header-row"
-          style={{ position: 'relative' }}
-          onDragEnter={(e) => {
-            e.stopPropagation()
-            if (dragPathString !== pathString) setIsDragTarget(true)
-          }}
-          onDragExit={(e) => {
-            e.stopPropagation()
-            setIsDragTarget(false)
-          }}
-        >
+        <div className="jer-collection-header-row" style={{ position: 'relative' }}>
           <div className="jer-collection-name">
             <div className="jer-collapse-icon" onClick={(e) => handleCollapse(e)}>
               <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
@@ -578,6 +587,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           </div>
         )}
       </div>
+      {isDragTarget === 'bottom' && <div className="jer-drag-n-drop-padding" />}
     </div>
   )
 
