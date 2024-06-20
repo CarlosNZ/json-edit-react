@@ -265,6 +265,29 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setStringifiedValue(stringifyJson(data))
   }
 
+  const handleDrop = () => {
+    const sourceKey = dragPath?.slice(-1)[0]
+    const sourceBase = dragPath?.slice(0, -1).join('.')
+    const thisBase = path.slice(0, -1).join('')
+    if (
+      typeof sourceKey === 'string' &&
+      parentData &&
+      !Array.isArray(parentData) &&
+      Object.keys(parentData).includes(sourceKey) &&
+      sourceKey in parentData &&
+      sourceBase !== thisBase
+    ) {
+      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
+      return
+    } else {
+      onMove(dragPath, path).then((error) => {
+        if (error) onError({ code: 'UPDATE_ERROR', message: error }, data as CollectionData)
+      })
+    }
+    setDragState({ dragPath: null, dragPathString: null })
+    setIsDragTarget(false)
+  }
+
   // DERIVED VALUES (this makes the JSX logic less messy)
   const isEditing = currentlyEditingElement === pathString
   const isEditingKey = currentlyEditingElement === `key_${pathString}`
@@ -442,29 +465,43 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         ...getStyles('collection', nodeData),
       }}
       draggable
+      onDragStart={(e) => {
+        e.stopPropagation()
+        setDragState({ dragPath: path, dragPathString: pathString })
+        console.log('Dragging collection', path)
+      }}
+      onDragEnd={(e) => {
+        e.stopPropagation()
+        setDragState({ dragPath: null, dragPathString: null })
+      }}
+      onDragOver={(e) => {
+        e.stopPropagation()
+        e.preventDefault()
+      }}
+      onDrop={(e) => {
+        e.stopPropagation()
+        handleDrop()
+      }}
+      onDragEnter={(e) => {
+        e.stopPropagation()
+        if (dragPathString !== pathString) setIsDragTarget(true)
+      }}
+      onDragExit={(e) => {
+        e.stopPropagation()
+        setIsDragTarget(false)
+      }}
     >
+      {/* {isDragTarget && pathString !== '' && <div className="jer-drag-n-drop-padding" />} */}
       {showCollectionWrapper ? (
         <div
           className="jer-collection-header-row"
           style={{ position: 'relative' }}
-          onDragStart={(e) => {
-            setDragState({ dragPath: path, dragPathString: pathString })
-          }}
-          onDragEnd={(e) => {
-            setDragState({ dragPath: null, dragPathString: null })
-          }}
-          onDragOver={(e) => {
-            e.stopPropagation()
-            e.preventDefault()
-          }}
-          onDrop={(e) => {
-            onMove(dragPath, path)
-            setDragState({ dragPath: null, dragPathString: null })
-          }}
           onDragEnter={(e) => {
+            e.stopPropagation()
             if (dragPathString !== pathString) setIsDragTarget(true)
           }}
           onDragExit={(e) => {
+            e.stopPropagation()
             setIsDragTarget(false)
           }}
         >

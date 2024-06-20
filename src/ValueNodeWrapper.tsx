@@ -238,6 +238,28 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
+  const handleDrop = () => {
+    const sourceKey = dragPath?.slice(-1)[0]
+    const sourceBase = dragPath?.slice(0, -1).join('.')
+    const thisBase = path.slice(0, -1).join('')
+    if (
+      typeof sourceKey === 'string' &&
+      parentData &&
+      !Array.isArray(parentData) &&
+      sourceKey in parentData &&
+      sourceBase !== thisBase
+    ) {
+      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
+      return
+    } else {
+      onMove(dragPath, path).then((error) => {
+        if (error) onError({ code: 'UPDATE_ERROR', message: error }, value as ValueData)
+      })
+    }
+    setDragState({ dragPath: null, dragPathString: null })
+    setIsDragTarget(false)
+  }
+
   // DERIVED VALUES (this makes the JSX logic less messy)
   const isEditing = currentlyEditingElement === pathString
   const isEditingKey = currentlyEditingElement === `key_${pathString}`
@@ -292,33 +314,36 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       className="jer-component jer-value-component"
       style={{
         marginLeft: `${indent / 2}em`,
-        marginTop: isDragTarget ? '0.5em' : undefined,
       }}
       draggable
       onDragStart={(e) => {
+        console.log(nodeData)
+        e.stopPropagation()
         setDragState({ dragPath: path, dragPathString: pathString })
+        console.log('Dragging Value', path)
       }}
       onDragEnd={(e) => {
+        e.stopPropagation()
         setDragState({ dragPath: null, dragPathString: null })
       }}
       onDragOver={(e) => {
         e.stopPropagation()
         e.preventDefault()
       }}
-      onDrop={(_) => {
-        onMove(dragPath, path).then((error) => {
-          if (error) onError({ code: 'UPDATE_ERROR', message: error }, value as ValueData)
-        })
-        setDragState({ dragPath: null, dragPathString: null })
-        setIsDragTarget(false)
+      onDrop={(e) => {
+        e.stopPropagation()
+        handleDrop()
       }}
       onDragEnter={(e) => {
+        e.stopPropagation()
         if (dragPathString !== pathString) setIsDragTarget(true)
       }}
       onDragExit={(e) => {
+        e.stopPropagation()
         setIsDragTarget(false)
       }}
     >
+      {/* {isDragTarget && <div className="jer-drag-n-drop-padding" />} */}
       <div
         className="jer-value-main-row"
         style={{
