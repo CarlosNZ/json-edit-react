@@ -1,6 +1,10 @@
 /**
- * Captures the collapse state and the editing state of the entire tree, as
- * nodes sometimes need to know the state of other (sibling or child) nodes
+ * Captures state that is required to be shared between nodes. In particular:
+ * - global collapse state for triggering whole tree expansions/closures
+ * - the currently editing node (to ensure only one node at a time can be
+ *   edited)
+ * - the value of the node currently being dragged (so that the target it is
+ *   dropped on can act on it)
  */
 
 import React, { createContext, useContext, useState } from 'react'
@@ -11,9 +15,9 @@ interface CollapseAllState {
   collapsed: boolean
 }
 
-interface DragState {
-  dragPath: CollectionKey[] | null
-  dragPathString: string | null
+interface DragSource {
+  path: CollectionKey[] | null
+  pathString: string | null
 }
 
 interface TreeStateContext {
@@ -23,8 +27,8 @@ interface TreeStateContext {
   currentlyEditingElement: string | null
   setCurrentlyEditingElement: React.Dispatch<React.SetStateAction<string | null>>
   areChildrenBeingEdited: (pathString: string) => boolean
-  dragState: DragState
-  setDragState: (newState: DragState) => void
+  dragSource: DragSource
+  setDragSource: (newState: DragSource) => void
 }
 const initialContext: TreeStateContext = {
   collapseState: null,
@@ -33,8 +37,8 @@ const initialContext: TreeStateContext = {
   currentlyEditingElement: null,
   setCurrentlyEditingElement: () => {},
   areChildrenBeingEdited: () => false,
-  dragState: { dragPath: null, dragPathString: null },
-  setDragState: () => {},
+  dragSource: { path: null, pathString: null },
+  setDragSource: () => {},
 }
 
 const TreeStateProviderContext = createContext(initialContext)
@@ -42,9 +46,9 @@ const TreeStateProviderContext = createContext(initialContext)
 export const TreeStateProvider = ({ children }: { children: React.ReactNode }) => {
   const [collapseState, setCollapseState] = useState<CollapseAllState | null>(null)
   const [currentlyEditingElement, setCurrentlyEditingElement] = useState<string | null>(null)
-  const [dragState, setDragState] = useState<DragState>({
-    dragPath: null,
-    dragPathString: null,
+  const [dragSource, setDragSource] = useState<DragSource>({
+    path: null,
+    pathString: null,
   })
 
   const doesPathMatch = (path: CollectionKey[]) => {
@@ -71,8 +75,9 @@ export const TreeStateProvider = ({ children }: { children: React.ReactNode }) =
         currentlyEditingElement,
         setCurrentlyEditingElement,
         areChildrenBeingEdited,
-        dragState,
-        setDragState,
+        // Drag-n-drop
+        dragSource,
+        setDragSource,
       }}
     >
       {children}

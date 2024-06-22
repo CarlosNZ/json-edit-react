@@ -4,7 +4,6 @@ import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
 import { useDragNDrop } from './useDragNDrop'
-// import { BottomDropTarget } from './DragElements'
 import {
   type CollectionNodeProps,
   type ErrorString,
@@ -37,8 +36,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     currentlyEditingElement,
     setCurrentlyEditingElement,
     areChildrenBeingEdited,
-    dragState: { dragPath, dragPathString },
-    setDragState,
+    dragSource: { path: dragPath, pathString: dragPathString },
+    setDragSource: setDragState,
   } = useTreeState()
   const {
     onEdit,
@@ -74,7 +73,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const [stringifiedValue, setStringifiedValue] = useState(stringifyJson(data))
   const [error, setError] = useState<string | null>(null)
-  const [isDragTarget, setIsDragTarget] = useState<'top' | 'bottom' | false>(false)
 
   const startCollapsed = collapseFilter(incomingNodeData)
   const [collapsed, setCollapsed] = useState(startCollapsed)
@@ -84,10 +82,17 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const pathString = toPathString(path)
 
-  const { draggableProps, dragTargetTopProps } = useDragNDrop({
+  const {
+    dragSource,
+    dragSourceProps,
+    getDropTargetProps,
+    dropTargetTopProps,
+    BottomDropTarget,
+    DropTargetPadding,
+  } = useDragNDrop({
     canDragOnto,
     path,
-    handleTopDrop: () => handleDrop('above'),
+    handleDrop,
   })
 
   // This allows us to not render the children on load if they're hidden (which
@@ -276,7 +281,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setStringifiedValue(stringifyJson(data))
   }
 
-  const handleDrop = (position: 'above' | 'below') => {
+  function handleDrop(position: 'above' | 'below') {
     const sourceKey = dragPath?.slice(-1)[0]
     const sourceBase = dragPath?.slice(0, -1).join('.')
     const thisBase = path.slice(0, -1).join('')
@@ -292,11 +297,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       return
     } else {
       onMove(dragPath, path, position).then((error) => {
-        if (error) onError({ code: 'UPDATE_ERROR', message: error }, data as CollectionData)
+        if (error) onError({ code: 'UPDATE_ERROR', message: error }, data)
       })
     }
-    setDragState({ dragPath: null, dragPathString: null })
-    setIsDragTarget(false)
   }
 
   // DERIVED VALUES (this makes the JSX logic less messy)
@@ -480,36 +483,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         zIndex: path.length,
       }}
       draggable={canDrag}
-      {...draggableProps}
-      {...dragTargetTopProps}
+      {...dragSourceProps}
+      {...getDropTargetProps('above')}
     >
-      {!isEditing && (
-        <div
-          style={{
-            height: '50%',
-            position: 'absolute',
-            width: '100%',
-            top: '50%',
-            zIndex: path.length,
-          }}
-          onDragEnter={(e) => {
-            e.stopPropagation()
-            if (!canDragOnto) return
-            if (!pathString.startsWith(dragPathString ?? '')) setIsDragTarget('bottom')
-          }}
-          onDragExit={(e) => {
-            e.stopPropagation()
-            if (!canDragOnto) return
-            setIsDragTarget(false)
-          }}
-          onDrop={(e) => {
-            e.stopPropagation()
-            if (!canDragOnto) return
-            handleDrop('below')
-          }}
-        ></div>
-      )}
-      {isDragTarget === 'top' && pathString !== '' && <div className="jer-drag-n-drop-padding" />}
+      {!isEditing && BottomDropTarget}
+      <DropTargetPadding position="above" />
       {showCollectionWrapper ? (
         <div className="jer-collection-header-row" style={{ position: 'relative' }}>
           <div className="jer-collection-name">
@@ -585,7 +563,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           </div>
         )}
       </div>
-      {isDragTarget === 'bottom' && <div className="jer-drag-n-drop-padding" />}
+      <DropTargetPadding position="below" />
     </div>
   )
 

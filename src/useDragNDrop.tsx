@@ -5,36 +5,35 @@ import { type CollectionKey } from './types'
 
 type Position = 'above' | 'below'
 
-interface DragNDropProps {
+interface DnDProps {
   canDragOnto: boolean
   path: CollectionKey[]
   handleDrop: (position: 'above' | 'below') => void
 }
 
-export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DragNDropProps) => {
-  const {
-    dragState: { dragPathString, dragPath },
-    setDragState,
-  } = useTreeState()
+export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DnDProps) => {
+  const { dragSource, setDragSource } = useTreeState()
   const [isDragTarget, setIsDragTarget] = useState<Position | false>(false)
 
   const pathString = toPathString(path)
 
-  const draggableProps = useMemo(
+  // Props added to items being dragged
+  const dragSourceProps = useMemo(
     () => ({
       onDragStart: (e: React.DragEvent) => {
         e.stopPropagation()
-        setDragState({ dragPath: path, dragPathString: pathString })
+        setDragSource({ path, pathString })
       },
       onDragEnd: (e: React.DragEvent) => {
         e.stopPropagation()
-        setDragState({ dragPath: null, dragPathString: null })
+        setDragSource({ path: null, pathString: null })
       },
     }),
     []
   )
 
-  const getDragTargetProps = useMemo(
+  // Props for the items being dropped onto
+  const getDropTargetProps = useMemo(
     () => (position: Position) => ({
       onDragOver: (e: React.DragEvent) => {
         e.stopPropagation()
@@ -44,13 +43,13 @@ export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DragNDropProps) 
         e.stopPropagation()
         if (!canDragOnto) return
         handleDrop(position)
-        setDragState({ dragPath: null, dragPathString: null })
+        setDragSource({ path: null, pathString: null })
         setIsDragTarget(false)
       },
       onDragEnter: (e: React.DragEvent) => {
         e.stopPropagation()
         if (!canDragOnto) return
-        if (!pathString.startsWith(dragPathString ?? '')) {
+        if (!pathString.startsWith(dragSource.pathString ?? '')) {
           setIsDragTarget(position)
         }
       },
@@ -60,10 +59,11 @@ export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DragNDropProps) 
         setIsDragTarget(false)
       },
     }),
-    [dragPathString]
+    [dragSource]
   )
 
-  const dragTargetTopProps = getDragTargetProps('above')
+  // Top of of the drop target
+  const dropTargetTopProps = getDropTargetProps('above')
 
   // A dummy component to allow us to detect when dragging onto the *bottom*
   // half of an element -- takes up exactly 50% its container height and is
@@ -78,23 +78,24 @@ export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DragNDropProps) 
           top: '50%',
           zIndex: path.length,
         }}
-        {...getDragTargetProps('below')}
+        {...getDropTargetProps('below')}
       ></div>
     ),
-    [dragPathString]
+    [dragSource]
   )
 
-  const DragTarget: React.FC<{ position: Position }> = ({ position }) => {
+  // "Padding" element displayed either above or below a node to indicate
+  // current drop target position
+  const DropTargetPadding: React.FC<{ position: Position }> = ({ position }) => {
     return isDragTarget === position ? <div className="jer-drag-n-drop-padding" /> : null
   }
 
   return {
-    dragPath,
-    // isDragTarget,
-    getDragTargetProps,
-    draggableProps,
-    dragTargetTopProps,
+    dragSource,
+    dragSourceProps,
+    getDropTargetProps,
+    dropTargetTopProps,
     BottomDropTarget,
-    DragTarget,
+    DropTargetPadding,
   }
 }

@@ -70,7 +70,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const pathString = toPathString(path)
 
-  const { dragPath, getDragTargetProps, draggableProps, BottomDropTarget, DragTarget } =
+  const { dragSource, dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } =
     useDragNDrop({
       canDragOnto,
       path,
@@ -243,8 +243,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   function handleDrop(position: 'above' | 'below') {
-    const sourceKey = dragPath?.slice(-1)[0]
-    const sourceBase = dragPath?.slice(0, -1).join('.')
+    const sourceKey = dragSource.path?.slice(-1)[0]
+    const sourceBase = dragSource.path?.slice(0, -1).join('.')
     const thisBase = path.slice(0, -1).join('')
     if (
       typeof sourceKey === 'string' &&
@@ -256,12 +256,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
       // return
     } else {
-      onMove(dragPath, path, position).then((error) => {
+      onMove(dragSource.path, path, position).then((error) => {
         if (error) onError({ code: 'UPDATE_ERROR', message: error }, value as ValueData)
       })
     }
-    // setDragState({ dragPath: null, dragPathString: null })
-    // setIsDragTarget(false)
   }
 
   // DERIVED VALUES (this makes the JSX logic less messy)
@@ -322,11 +320,11 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         zIndex: 50,
       }}
       draggable={canDrag}
-      {...draggableProps}
-      {...getDragTargetProps('above')}
+      {...dragSourceProps}
+      {...getDropTargetProps('above')}
     >
       {BottomDropTarget}
-      <DragTarget position="above" />
+      <DropTargetPadding position="above" />
       <div
         className="jer-value-main-row"
         style={{
@@ -404,7 +402,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           )}
         </div>
       </div>
-      <DragTarget position="below" />
+      <DropTargetPadding position="below" />
     </div>
   )
 }
