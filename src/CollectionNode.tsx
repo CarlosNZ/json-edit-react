@@ -461,8 +461,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       className="jer-component jer-collection-component"
       style={{
         marginLeft: `${path.length === 0 ? 0 : indent / 2}em`,
-        // border: '1px solid green',
-        border: isDragTarget ? '1px solid green' : undefined,
         ...getStyles('collection', nodeData),
         position: 'relative',
         zIndex: path.length,
