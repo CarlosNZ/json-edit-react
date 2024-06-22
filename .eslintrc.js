@@ -7,6 +7,7 @@ module.exports = {
     'standard-with-typescript',
     'plugin:react/recommended',
     'plugin:react-hooks/recommended',
+    'prettier',
   ],
   overrides: [
     {
