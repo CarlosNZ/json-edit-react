@@ -154,6 +154,7 @@ const defaultStyleProperties: { [Property in ThemeableElement]: keyof React.CSSP
   collection: 'backgroundColor',
   collectionInner: 'backgroundColor',
   collectionElement: 'backgroundColor',
+  dropZone: 'borderColor',
   property: 'color',
   bracket: 'color',
   itemCount: 'color',

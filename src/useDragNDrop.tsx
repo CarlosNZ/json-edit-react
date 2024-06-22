@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react'
 import { useTreeState } from './TreeStateProvider'
+import { useTheme } from './theme'
 import { toPathString } from './ValueNodes'
-import { type CollectionKey } from './types'
+import { type NodeData, type CollectionKey } from './types'
 
 type Position = 'above' | 'below'
 
@@ -12,6 +13,7 @@ interface DnDProps {
 }
 
 export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DnDProps) => {
+  const { getStyles } = useTheme()
   const { dragSource, setDragSource } = useTreeState()
   const [isDragTarget, setIsDragTarget] = useState<Position | false>(false)
 
@@ -83,8 +85,13 @@ export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DnDProps) => {
 
   // "Padding" element displayed either above or below a node to indicate
   // current drop target position
-  const DropTargetPadding: React.FC<{ position: Position }> = ({ position }) => {
-    return isDragTarget === position ? <div className="jer-drag-n-drop-padding" /> : null
+  const DropTargetPadding: React.FC<{ position: Position; nodeData: NodeData }> = ({
+    position,
+    nodeData,
+  }) => {
+    return isDragTarget === position ? (
+      <div className="jer-drag-n-drop-padding" style={getStyles('dropZone', nodeData)} />
+    ) : null
   }
 
   return {

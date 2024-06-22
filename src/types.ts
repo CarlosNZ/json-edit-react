@@ -251,6 +251,7 @@ const themeableElements = [
   'collection',
   'collectionInner',
   'collectionElement',
+  'dropZone',
   'property',
   'bracket',
   'itemCount',

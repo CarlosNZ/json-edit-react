@@ -324,7 +324,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       {...getDropTargetProps('above')}
     >
       {BottomDropTarget}
-      <DropTargetPadding position="above" />
+      <DropTargetPadding position="above" nodeData={nodeData} />
       <div
         className="jer-value-main-row"
         style={{
@@ -402,7 +402,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           )}
         </div>
       </div>
-      <DropTargetPadding position="below" />
+      <DropTargetPadding position="below" nodeData={nodeData} />
     </div>
   )
 }

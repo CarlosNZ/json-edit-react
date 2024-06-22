@@ -478,7 +478,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       {...getDropTargetProps('above')}
     >
       {!isEditing && BottomDropTarget}
-      <DropTargetPadding position="above" />
+      <DropTargetPadding position="above" nodeData={nodeData} />
       {showCollectionWrapper ? (
         <div className="jer-collection-header-row" style={{ position: 'relative' }}>
           <div className="jer-collection-name">
@@ -554,7 +554,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           </div>
         )}
       </div>
-      <DropTargetPadding position="below" />
+      <DropTargetPadding position="below" nodeData={nodeData} />
     </div>
   )
 
