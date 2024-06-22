@@ -461,8 +461,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       className="jer-component jer-collection-component"
       style={{
         marginLeft: `${path.length === 0 ? 0 : indent / 2}em`,
-        marginTop: isDragTarget ? '0.5em' : undefined,
+        // border: '1px solid green',
+        border: isDragTarget ? '1px solid green' : undefined,
         ...getStyles('collection', nodeData),
+        position: 'relative',
+        zIndex: path.length,
       }}
       draggable
       onDragStart={(e) => {
@@ -479,11 +482,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       }}
       onDrop={(e) => {
         e.stopPropagation()
-        handleDrop()
+        handleDrop('above')
       }}
       onDragEnter={(e) => {
         e.stopPropagation()
-        if (dragPathString !== pathString) setIsDragTarget(true)
+        if (dragPathString !== pathString) setIsDragTarget('top')
       }}
       onDragExit={(e) => {
         e.stopPropagation()
@@ -496,7 +499,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           position: 'absolute',
           width: '100%',
           top: '50%',
-          // border: '1px solid blue',
+          zIndex: path.length,
         }}
         onDragEnter={(e) => {
           e.stopPropagation()

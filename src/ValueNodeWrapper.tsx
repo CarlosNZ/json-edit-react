@@ -314,7 +314,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       className="jer-component jer-value-component"
       style={{
         marginLeft: `${indent / 2}em`,
-        // border: '1px solid red',
+        position: 'relative',
+        zIndex: 50,
       }}
       draggable
       onDragStart={(e) => {
@@ -348,6 +349,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           position: 'absolute',
           width: '100%',
           top: '50%',
+          zIndex: 50,
         }}
         onDragEnter={(e) => {
           e.stopPropagation()
