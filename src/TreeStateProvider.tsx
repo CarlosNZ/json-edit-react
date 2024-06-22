@@ -15,7 +15,7 @@ interface CollapseAllState {
   collapsed: boolean
 }
 
-interface DragSource {
+export interface DragSource {
   path: CollectionKey[] | null
   pathString: string | null
 }

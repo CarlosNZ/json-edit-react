@@ -62,9 +62,6 @@ export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DnDProps) => {
     [dragSource]
   )
 
-  // Top of of the drop target
-  const dropTargetTopProps = getDropTargetProps('above')
-
   // A dummy component to allow us to detect when dragging onto the *bottom*
   // half of an element -- takes up exactly 50% its container height and is
   // locked to the bottom.
@@ -94,7 +91,6 @@ export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DnDProps) => {
     dragSource,
     dragSourceProps,
     getDropTargetProps,
-    dropTargetTopProps,
     BottomDropTarget,
     DropTargetPadding,
   }

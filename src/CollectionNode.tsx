@@ -36,8 +36,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     currentlyEditingElement,
     setCurrentlyEditingElement,
     areChildrenBeingEdited,
-    dragSource: { path: dragPath, pathString: dragPathString },
-    setDragSource: setDragState,
   } = useTreeState()
   const {
     onEdit,
@@ -82,18 +80,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const pathString = toPathString(path)
 
-  const {
-    dragSource,
-    dragSourceProps,
-    getDropTargetProps,
-    dropTargetTopProps,
-    BottomDropTarget,
-    DropTargetPadding,
-  } = useDragNDrop({
-    canDragOnto,
-    path,
-    handleDrop,
-  })
+  const { dragSource, dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } =
+    useDragNDrop({
+      canDragOnto,
+      path,
+      handleDrop,
+    })
 
   // This allows us to not render the children on load if they're hidden (which
   // gives a big performance improvement with large data sets), but still keep
@@ -282,8 +274,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   }
 
   function handleDrop(position: 'above' | 'below') {
-    const sourceKey = dragPath?.slice(-1)[0]
-    const sourceBase = dragPath?.slice(0, -1).join('.')
+    const sourceKey = dragSource.path?.slice(-1)[0]
+    const sourceBase = dragSource.path?.slice(0, -1).join('.')
     const thisBase = path.slice(0, -1).join('')
     if (
       typeof sourceKey === 'string' &&
@@ -294,9 +286,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       sourceBase !== thisBase
     ) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
-      return
     } else {
-      onMove(dragPath, path, position).then((error) => {
+      onMove(dragSource.path, path, position).then((error) => {
         if (error) onError({ code: 'UPDATE_ERROR', message: error }, data)
       })
     }
