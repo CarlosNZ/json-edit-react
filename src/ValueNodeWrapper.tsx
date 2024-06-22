@@ -42,6 +42,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     enableClipboard,
     restrictEditFilter,
     restrictDeleteFilter,
+    restrictDragFilter,
+    canDragOnto,
     restrictTypeSelection,
     searchFilter,
     searchText,
@@ -100,6 +102,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
+  const canDrag = useMemo(() => !restrictDragFilter(nodeData) && canDelete, [nodeData])
 
   const showError = (errorString: ErrorString) => {
     if (showErrorMessages) {
@@ -317,7 +320,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         position: 'relative',
         zIndex: 50,
       }}
-      draggable
+      draggable={canDrag}
       onDragStart={(e) => {
         e.stopPropagation()
         setDragState({ dragPath: path, dragPathString: pathString })
@@ -332,14 +335,19 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       }}
       onDrop={(e) => {
         e.stopPropagation()
+        if (!canDragOnto) return
         handleDrop('above')
       }}
       onDragEnter={(e) => {
         e.stopPropagation()
-        if (dragPathString !== pathString) setIsDragTarget('top')
+        if (!canDragOnto) return
+        if (!pathString.startsWith(dragPathString ?? '')) {
+          setIsDragTarget('top')
+        }
       }}
       onDragExit={(e) => {
         e.stopPropagation()
+        if (!canDragOnto) return
         setIsDragTarget(false)
       }}
     >
@@ -353,14 +361,19 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         }}
         onDragEnter={(e) => {
           e.stopPropagation()
-          if (dragPathString !== pathString) setIsDragTarget('bottom')
+          if (!canDragOnto) return
+          if (!pathString.startsWith(dragPathString ?? '')) {
+            setIsDragTarget('bottom')
+          }
         }}
         onDragExit={(e) => {
           e.stopPropagation()
+          if (!canDragOnto) return
           setIsDragTarget(false)
         }}
         onDrop={(e) => {
           e.stopPropagation()
+          if (!canDragOnto) return
           handleDrop('below')
         }}
       ></div>

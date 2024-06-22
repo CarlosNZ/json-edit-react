@@ -40,6 +40,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   restrictDelete = false,
   restrictAdd = false,
   restrictTypeSelection = false,
+  restrictDrag = true,
   searchFilter: searchFilterInput,
   searchText,
   searchDebounceTime = 350,
@@ -255,6 +256,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   const restrictEditFilter = getFilterFunction(restrictEdit)
   const restrictDeleteFilter = getFilterFunction(restrictDelete)
   const restrictAddFilter = getFilterFunction(restrictAdd)
+  const restrictDragFilter = getFilterFunction(restrictDrag)
   const searchFilter = getSearchFilter(searchFilterInput)
 
   const otherProps = {
@@ -273,6 +275,8 @@ const Editor: React.FC<JsonEditorProps> = ({
     restrictDeleteFilter,
     restrictAddFilter,
     restrictTypeSelection,
+    restrictDragFilter,
+    canDragOnto: false, // can't drag onto outermost container
     searchFilter,
     searchText: debouncedSearchText,
     enableClipboard,

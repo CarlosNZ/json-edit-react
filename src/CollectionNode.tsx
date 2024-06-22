@@ -3,6 +3,7 @@ import JSON5 from 'json5'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
+import { BottomDropTarget } from './DragElements'
 import {
   type CollectionNodeProps,
   type ErrorString,
@@ -47,6 +48,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     restrictEditFilter,
     restrictDeleteFilter,
     restrictAddFilter,
+    restrictDragFilter,
+    canDragOnto,
     collapseFilter,
     onMove,
     enableClipboard,
@@ -109,6 +112,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
   const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
+  const canDrag = useMemo(() => !restrictDragFilter(nodeData) && canDelete, [nodeData])
 
   const getDefaultNewValue = useMemo(
     () => (nodeData: NodeData) => {
@@ -344,6 +348,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
               nodeData={childNodeData}
               showCollectionCount={showCollectionCount}
               {...props}
+              canDragOnto={canEdit}
             />
           ) : (
             <ValueNodeWrapper
@@ -352,6 +357,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
               parentData={data}
               nodeData={childNodeData}
               {...props}
+              canDragOnto={canEdit}
               showLabel={collectionType === 'object' ? true : showArrayIndices}
             />
           )}
@@ -397,6 +403,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     isEditing,
     setIsEditing: () => setCurrentlyEditingElement(pathString),
     getStyles,
+    canDragOnto: canEdit,
   }
 
   const CollectionContents = showCustomNodeContents ? (
@@ -465,7 +472,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         position: 'relative',
         zIndex: path.length,
       }}
-      draggable
+      draggable={canDrag}
       onDragStart={(e) => {
         e.stopPropagation()
         setDragState({ dragPath: path, dragPathString: pathString })
@@ -480,38 +487,48 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       }}
       onDrop={(e) => {
         e.stopPropagation()
+        if (!canDragOnto) return
         handleDrop('above')
       }}
       onDragEnter={(e) => {
         e.stopPropagation()
-        if (dragPathString !== pathString) setIsDragTarget('top')
+        if (!canDragOnto) return
+        if (!pathString.startsWith(dragPathString ?? '')) {
+          setIsDragTarget('top')
+        }
       }}
       onDragExit={(e) => {
         e.stopPropagation()
+        if (!canDragOnto) return
         setIsDragTarget(false)
       }}
     >
-      <div
-        style={{
-          height: '50%',
-          position: 'absolute',
-          width: '100%',
-          top: '50%',
-          zIndex: path.length,
-        }}
-        onDragEnter={(e) => {
-          e.stopPropagation()
-          if (dragPathString !== pathString) setIsDragTarget('bottom')
-        }}
-        onDragExit={(e) => {
-          e.stopPropagation()
-          setIsDragTarget(false)
-        }}
-        onDrop={(e) => {
-          e.stopPropagation()
-          handleDrop('below')
-        }}
-      ></div>
+      {!isEditing && (
+        <div
+          style={{
+            height: '50%',
+            position: 'absolute',
+            width: '100%',
+            top: '50%',
+            zIndex: path.length,
+          }}
+          onDragEnter={(e) => {
+            e.stopPropagation()
+            if (!canDragOnto) return
+            if (!pathString.startsWith(dragPathString ?? '')) setIsDragTarget('bottom')
+          }}
+          onDragExit={(e) => {
+            e.stopPropagation()
+            if (!canDragOnto) return
+            setIsDragTarget(false)
+          }}
+          onDrop={(e) => {
+            e.stopPropagation()
+            if (!canDragOnto) return
+            handleDrop('below')
+          }}
+        ></div>
+      )}
       {isDragTarget === 'top' && pathString !== '' && <div className="jer-drag-n-drop-padding" />}
       {showCollectionWrapper ? (
         <div className="jer-collection-header-row" style={{ position: 'relative' }}>

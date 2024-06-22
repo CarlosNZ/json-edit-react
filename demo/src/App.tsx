@@ -296,6 +296,7 @@ function App() {
               restrictDelete={restrictDelete}
               restrictAdd={restrictAdd}
               restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
+              restrictDrag={false}
               searchFilter={demoData[selectedData]?.searchFilter}
               searchText={searchText}
               keySort={sortKeys}
