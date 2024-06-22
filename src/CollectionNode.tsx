@@ -5,7 +5,7 @@ import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
 import { type CollectionNodeProps, type NodeData, type CollectionData } from './types'
 import { Icon } from './Icons'
-import { isCollection } from './filterHelpers'
+import { filterNode, isCollection } from './filterHelpers'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
@@ -37,6 +37,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     collapseFilter,
     onMove,
     enableClipboard,
+    searchFilter,
+    searchText,
     indent,
     keySort,
     showArrayIndices,
@@ -71,8 +73,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     error,
     setError,
     onError,
-    renderNull,
     handleEditKey,
+    derivedValues,
   } = useCommon({ props, collapsed })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
@@ -133,7 +135,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   } = useMemo(() => getCustomNode(customNodeDefinitions, nodeData), [])
 
   // Early return if this node is filtered out
-  if (renderNull) return null
+  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0)
+    return null
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
@@ -222,11 +225,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     setStringifiedValue(stringifyJson(data))
   }
 
-  // DERIVED VALUES (this makes the JSX logic less messy)
-  const isEditing = currentlyEditingElement === pathString
-  const isEditingKey = currentlyEditingElement === `key_${pathString}`
-  const isArray = typeof path.slice(-1)[0] === 'number'
-  const canEditKey = parentData !== null && canEdit && canAdd && canDelete && !isArray
+  // DERIVED VALUES (this makes the JSX conditional logic easier to follow)
+  const { isEditing, isEditingKey, isArray, canEditKey } = derivedValues
   const showLabel = showArrayIndices || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
   const showEditButtons = !isEditing && showEditTools

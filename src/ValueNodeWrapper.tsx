@@ -47,7 +47,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     customNodeDefinitions,
   } = props
   const { getStyles } = useTheme()
-  const { currentlyEditingElement, setCurrentlyEditingElement, setCollapseState } = useTreeState()
+  const { setCurrentlyEditingElement, setCollapseState } = useTreeState()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
@@ -64,7 +64,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     error,
     onError,
     handleEditKey,
-  } = useCommon({ props, collapsed: false })
+    derivedValues,
+  } = useCommon({ props })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
     {
@@ -199,10 +200,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   // DERIVED VALUES (this makes the JSX logic less messy)
-  const isEditing = currentlyEditingElement === pathString
-  const isEditingKey = currentlyEditingElement === `key_${pathString}`
-  const isArray = typeof path.slice(-1)[0] === 'number'
-  const canEditKey = !isArray && canEdit && canDelete
+  const { isEditing, isEditingKey, canEditKey } = derivedValues
   const showErrorString = !isEditing && error
   const showTypeSelector = isEditing && allowedDataTypes.length > 0
   const showEditButtons = dataType !== 'invalid' && !error && showEditTools

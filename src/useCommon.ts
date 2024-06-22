@@ -1,3 +1,8 @@
+/**
+ * Values and Methods returned from this hook are common to both Collection
+ * Nodes and Value Nodes
+ */
+
 import { useMemo, useState } from 'react'
 import { useTreeState } from './TreeStateProvider'
 import {
@@ -10,15 +15,10 @@ import {
   ERROR_DISPLAY_TIME,
 } from './types'
 import { toPathString } from './ValueNodes'
-import { filterNode } from './filterHelpers'
-
-// Require:
-// - ...props
-// -
 
 export interface CommonProps {
   props: CollectionNodeProps | ValueNodeProps
-  collapsed: boolean
+  collapsed?: boolean
 }
 
 export const useCommon = ({ props, collapsed }: CommonProps) => {
@@ -33,11 +33,9 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     restrictDeleteFilter,
     restrictAddFilter,
     restrictDragFilter,
-    searchFilter,
-    searchText,
     translate,
   } = props
-  const { setCurrentlyEditingElement } = useTreeState()
+  const { currentlyEditingElement, setCurrentlyEditingElement } = useTreeState()
   const [error, setError] = useState<string | null>(null)
 
   const nodeData = { ...incomingNodeData, collapsed }
@@ -93,28 +91,13 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     onEdit(newData, parentPath)
   }
 
-  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0) {
-    return {
-      pathString,
-      nodeData,
-      path,
-      name,
-      size,
-      canEdit,
-      canDelete,
-      canAdd,
-      canDrag,
-      error,
-      setError,
-      showError,
-      onError,
-      renderNull: true,
-      handleEditKey,
-    }
-  }
+  // Common DERIVED VALUES (this makes the JSX logic less messy)
+  const isEditing = currentlyEditingElement === pathString
+  const isEditingKey = currentlyEditingElement === `key_${pathString}`
+  const isArray = typeof path.slice(-1)[0] === 'number'
+  const canEditKey = parentData !== null && canEdit && canAdd && canDelete && !isArray
 
-  // - bunch of Derived values
-  // - Maybe? getCustomNode
+  const derivedValues = { isEditing, isEditingKey, isArray, canEditKey }
 
   return {
     pathString,
@@ -130,8 +113,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     setError,
     showError,
     onError,
-    renderNull: false,
-    // Others
     handleEditKey,
+    derivedValues,
   }
 }
