@@ -27,6 +27,7 @@ import './style.css'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
 import { filterNode } from './filterHelpers'
 import { useTreeState } from './TreeStateProvider'
+import { useDragNDrop } from './useDragNDrop'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -55,19 +56,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     customNodeDefinitions,
   } = props
   const { getStyles } = useTheme()
-  const {
-    currentlyEditingElement,
-    setCurrentlyEditingElement,
-    setCollapseState,
-    dragState: { dragPath, dragPathString },
-    setDragState,
-  } = useTreeState()
+  const { currentlyEditingElement, setCurrentlyEditingElement, setCollapseState } = useTreeState()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
   )
   const [error, setError] = useState<string | null>(null)
-  const [isDragTarget, setIsDragTarget] = useState<'top' | 'bottom' | false>(false)
 
   const { key: name, path } = nodeData
 
@@ -75,6 +69,13 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
   const pathString = toPathString(path)
+
+  const { dragPath, getDragTargetProps, draggableProps, BottomDropTarget, DragTarget } =
+    useDragNDrop({
+      canDragOnto,
+      path,
+      handleDrop,
+    })
 
   const updateValue = useCallback(
     (newValue: ValueData) => {
@@ -241,7 +242,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
-  const handleDrop = (position: 'above' | 'below') => {
+  function handleDrop(position: 'above' | 'below') {
     const sourceKey = dragPath?.slice(-1)[0]
     const sourceBase = dragPath?.slice(0, -1).join('.')
     const thisBase = path.slice(0, -1).join('')
@@ -253,14 +254,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       sourceBase !== thisBase
     ) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
-      return
+      // return
     } else {
       onMove(dragPath, path, position).then((error) => {
         if (error) onError({ code: 'UPDATE_ERROR', message: error }, value as ValueData)
       })
     }
-    setDragState({ dragPath: null, dragPathString: null })
-    setIsDragTarget(false)
+    // setDragState({ dragPath: null, dragPathString: null })
+    // setIsDragTarget(false)
   }
 
   // DERIVED VALUES (this makes the JSX logic less messy)
@@ -321,63 +322,11 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         zIndex: 50,
       }}
       draggable={canDrag}
-      onDragStart={(e) => {
-        e.stopPropagation()
-        setDragState({ dragPath: path, dragPathString: pathString })
-      }}
-      onDragEnd={(e) => {
-        e.stopPropagation()
-        setDragState({ dragPath: null, dragPathString: null })
-      }}
-      onDragOver={(e) => {
-        e.stopPropagation()
-        e.preventDefault()
-      }}
-      onDrop={(e) => {
-        e.stopPropagation()
-        if (!canDragOnto) return
-        handleDrop('above')
-      }}
-      onDragEnter={(e) => {
-        e.stopPropagation()
-        if (!canDragOnto) return
-        if (!pathString.startsWith(dragPathString ?? '')) {
-          setIsDragTarget('top')
-        }
-      }}
-      onDragExit={(e) => {
-        e.stopPropagation()
-        if (!canDragOnto) return
-        setIsDragTarget(false)
-      }}
+      {...draggableProps}
+      {...getDragTargetProps('above')}
     >
-      <div
-        style={{
-          height: '50%',
-          position: 'absolute',
-          width: '100%',
-          top: '50%',
-          zIndex: 50,
-        }}
-        onDragEnter={(e) => {
-          e.stopPropagation()
-          if (!canDragOnto) return
-          if (!pathString.startsWith(dragPathString ?? '')) {
-            setIsDragTarget('bottom')
-          }
-        }}
-        onDragExit={(e) => {
-          e.stopPropagation()
-          if (!canDragOnto) return
-          setIsDragTarget(false)
-        }}
-        onDrop={(e) => {
-          e.stopPropagation()
-          if (!canDragOnto) return
-          handleDrop('below')
-        }}
-      ></div>
-      {isDragTarget === 'top' && <div className="jer-drag-n-drop-padding" />}
+      {BottomDropTarget}
+      <DragTarget position="above" />
       <div
         className="jer-value-main-row"
         style={{
@@ -455,7 +404,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           )}
         </div>
       </div>
-      {isDragTarget === 'bottom' && <div className="jer-drag-n-drop-padding" />}
+      <DragTarget position="below" />
     </div>
   )
 }

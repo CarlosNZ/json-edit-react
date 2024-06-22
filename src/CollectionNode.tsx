@@ -3,7 +3,8 @@ import JSON5 from 'json5'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
-import { BottomDropTarget } from './DragElements'
+import { useDragNDrop } from './useDragNDrop'
+// import { BottomDropTarget } from './DragElements'
 import {
   type CollectionNodeProps,
   type ErrorString,
@@ -82,6 +83,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const { path, key: name, size } = nodeData
 
   const pathString = toPathString(path)
+
+  const { draggableProps, dragTargetTopProps } = useDragNDrop({
+    canDragOnto,
+    path,
+    handleTopDrop: () => handleDrop('above'),
+  })
 
   // This allows us to not render the children on load if they're hidden (which
   // gives a big performance improvement with large data sets), but still keep
@@ -473,35 +480,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         zIndex: path.length,
       }}
       draggable={canDrag}
-      onDragStart={(e) => {
-        e.stopPropagation()
-        setDragState({ dragPath: path, dragPathString: pathString })
-      }}
-      onDragEnd={(e) => {
-        e.stopPropagation()
-        setDragState({ dragPath: null, dragPathString: null })
-      }}
-      onDragOver={(e) => {
-        e.stopPropagation()
-        e.preventDefault()
-      }}
-      onDrop={(e) => {
-        e.stopPropagation()
-        if (!canDragOnto) return
-        handleDrop('above')
-      }}
-      onDragEnter={(e) => {
-        e.stopPropagation()
-        if (!canDragOnto) return
-        if (!pathString.startsWith(dragPathString ?? '')) {
-          setIsDragTarget('top')
-        }
-      }}
-      onDragExit={(e) => {
-        e.stopPropagation()
-        if (!canDragOnto) return
-        setIsDragTarget(false)
-      }}
+      {...draggableProps}
+      {...dragTargetTopProps}
     >
       {!isEditing && (
         <div
