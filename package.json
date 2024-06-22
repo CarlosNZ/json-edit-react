@@ -32,7 +32,6 @@
   },
   "dependencies": {
     "json5": "^2.2.3",
-    "just-clone": "^6.2.0",
     "object-property-assigner": "^1.3.0",
     "object-property-extractor": "^1.0.11"
   },
