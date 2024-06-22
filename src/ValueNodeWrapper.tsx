@@ -319,7 +319,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         position: 'relative',
         zIndex: 50,
       }}
-      draggable={canDrag}
+      draggable={canDrag && currentlyEditingElement === null}
       {...dragSourceProps}
       {...getDropTargetProps('above')}
     >

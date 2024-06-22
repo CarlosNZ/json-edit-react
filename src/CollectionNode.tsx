@@ -473,7 +473,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
         position: 'relative',
         zIndex: path.length,
       }}
-      draggable={canDrag}
+      draggable={canDrag && currentlyEditingElement === null}
       {...dragSourceProps}
       {...getDropTargetProps('above')}
     >
