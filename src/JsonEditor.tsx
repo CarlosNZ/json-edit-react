@@ -56,7 +56,6 @@ const Editor: React.FC<JsonEditorProps> = ({
   id,
   customText = {},
   customNodeDefinitions = [],
-  useJSON5Editor = false,
 }) => {
   const { getStyles, setTheme, setIcons } = useTheme()
   const { setCollapseState } = useTreeState()
@@ -290,7 +289,6 @@ const Editor: React.FC<JsonEditorProps> = ({
     translate,
     customNodeDefinitions,
     parentData: null,
-    useJSON5Editor,
   }
 
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }
