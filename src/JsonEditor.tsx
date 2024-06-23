@@ -199,7 +199,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     const originalKey = sourcePath.slice(-1)[0]
     // Where it's going
     const targetPath = destPath.slice(0, -1)
-    // The key in the target path to insert before
+    // The key in the target path to insert before or after
     const insertPos = destPath.slice(-1)[0]
 
     let targetKey =
