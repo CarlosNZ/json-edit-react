@@ -87,6 +87,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
 - For Number inputs, arrow-up and down keys will increment/decrement the value
 - Drag and drop items to change the structure or modify display order
+- JSON text input can accept the more forgiving [JSON5](https://json5.org/) syntax as input
 
 ## Props overview
 
@@ -627,10 +628,13 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.13.0**:
+  - [Drag-n-drop](#drag-n-drop) editing!
+  - Remove unnecessary dependency
+  - Refactor some duplicate code into common hook
 - **1.12.0**:
   - Preserve editing mode when changing Data Type
   - [`onError` callback](#onerror-function) available for custom error handling
-  - option to display JSON text as [JSON5](https://json5.org/)
 - **1.11.8**: Fix regression for empty data root name introduces in 1.11.7
 - **1.11.7**: Handle \<empty-string\> object keys / prevent duplicate keys
 - **1.11.3**: Bug fix for invalid state when changing type to Collection node

@@ -251,7 +251,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       style={{
         marginLeft: `${indent / 2}em`,
         position: 'relative',
-        zIndex: 50,
+        zIndex: path.length + 1,
       }}
       draggable={canDrag && currentlyEditingElement === null}
       {...dragSourceProps}
@@ -313,7 +313,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             )
           )}
           {showTypeSelector && (
-            <div className="jer-select">
+            <div className="jer-select" style={{ zIndex: path.length + 1 }}>
               <select
                 name={`${name}-type-select`}
                 className="jer-type-select"
