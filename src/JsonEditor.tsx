@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import assign, { type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import { CollectionNode } from './CollectionNode'
@@ -10,6 +10,7 @@ import {
   type InternalUpdateFunction,
   type NodeData,
   type SearchFilterFunction,
+  type CollectionKey,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { TreeStateProvider, useTreeState } from './TreeStateProvider'
@@ -39,6 +40,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   restrictDelete = false,
   restrictAdd = false,
   restrictTypeSelection = false,
+  restrictDrag = true,
   searchFilter: searchFilterInput,
   searchText,
   searchDebounceTime = 350,
@@ -165,10 +167,99 @@ const Editor: React.FC<JsonEditorProps> = ({
     }
   }
 
-  const restrictEditFilter = getFilterFunction(restrictEdit)
-  const restrictDeleteFilter = getFilterFunction(restrictDelete)
-  const restrictAddFilter = getFilterFunction(restrictAdd)
-  const searchFilter = getSearchFilter(searchFilterInput)
+  // "onMove" is just a "Delete" followed by an "Add", but we combine into a
+  // single "action" and only run one "onUpdate", which also means it'll be
+  // registered as a single event in the "Undo" queue.
+  // If either action returns an error, we reset the data the same way we do
+  // when a single action returns error.
+  const onMove = async (
+    sourcePath: CollectionKey[] | null,
+    destPath: CollectionKey[],
+    position: 'above' | 'below'
+  ) => {
+    if (sourcePath === null) return
+    const { currentData, newData, currentValue, newValue } = updateDataObject(
+      data,
+      sourcePath,
+      '',
+      'delete'
+    )
+    const deleteResult = await srcDelete({
+      currentData,
+      newData,
+      currentValue,
+      newValue,
+      name: sourcePath.slice(-1)[0],
+      path: sourcePath,
+    })
+    if (deleteResult !== undefined) {
+      setData(currentData)
+      return deleteResult === false ? translate('ERROR_UPDATE', nodeData) : deleteResult
+    }
+
+    // Immediate key of the item being moved
+    const originalKey = sourcePath.slice(-1)[0]
+    // Where it's going
+    const targetPath = destPath.slice(0, -1)
+    // The key in the target path to insert before or after
+    const insertPos = destPath.slice(-1)[0]
+
+    let targetKey =
+      typeof insertPos === 'number' // Moving TO an array
+        ? position === 'above'
+          ? insertPos
+          : insertPos + 1
+        : typeof originalKey === 'number'
+        ? `arr_${originalKey}` // Moving FROM an array, so needs a key
+        : originalKey // Moving from object to object
+
+    const sourceBase = sourcePath.slice(0, -1).join('.')
+    const destBase = destPath.slice(0, -1).join('.')
+
+    if (
+      sourceBase === destBase &&
+      typeof originalKey === 'number' &&
+      typeof targetKey === 'number' &&
+      originalKey < targetKey
+    ) {
+      targetKey -= 1
+    }
+
+    const insertOptions =
+      typeof targetKey === 'number'
+        ? { insert: true }
+        : position === 'above'
+        ? { insertBefore: insertPos }
+        : { insertAfter: insertPos }
+
+    const { newData: addedData } = updateDataObject(
+      newData,
+      [...targetPath, targetKey],
+      currentValue,
+      'add',
+      insertOptions as AssignOptions
+    )
+    const addResult = await srcAdd({
+      currentData,
+      newData,
+      currentValue,
+      newValue,
+      name: originalKey,
+      path: [...targetPath, targetKey],
+    })
+    if (addResult !== undefined) {
+      setData(currentData)
+      return addResult === false ? translate('ERROR_UPDATE', nodeData) : addResult
+    }
+
+    setData(addedData)
+  }
+
+  const restrictEditFilter = useMemo(() => getFilterFunction(restrictEdit), [restrictEdit])
+  const restrictDeleteFilter = useMemo(() => getFilterFunction(restrictDelete), [restrictDelete])
+  const restrictAddFilter = useMemo(() => getFilterFunction(restrictAdd), [restrictAdd])
+  const restrictDragFilter = useMemo(() => getFilterFunction(restrictDrag), [restrictDrag])
+  const searchFilter = useMemo(() => getSearchFilter(searchFilterInput), [searchFilterInput])
 
   const otherProps = {
     name: rootName,
@@ -179,12 +270,15 @@ const Editor: React.FC<JsonEditorProps> = ({
     onChange,
     onError,
     showErrorMessages,
+    onMove,
     showCollectionCount,
     collapseFilter,
     restrictEditFilter,
     restrictDeleteFilter,
     restrictAddFilter,
     restrictTypeSelection,
+    restrictDragFilter,
+    canDragOnto: false, // can't drag onto outermost container
     searchFilter,
     searchText: debouncedSearchText,
     enableClipboard,
@@ -227,11 +321,19 @@ const JsonEditor: React.FC<JsonEditorProps> = (props) => (
   </ThemeProvider>
 )
 
+interface AssignOptions {
+  remove?: boolean
+  insert?: true
+  insertBefore?: string
+  insertAfter?: string
+}
+
 const updateDataObject = (
   data: CollectionData,
   path: Array<string | number>,
   newValue: unknown,
-  action: 'update' | 'delete' | 'add'
+  action: 'update' | 'delete' | 'add',
+  insertOptions: { insert?: true; insertBefore?: string; insertAfter?: string } = {}
 ) => {
   if (path.length === 0) {
     return {
@@ -242,10 +344,13 @@ const updateDataObject = (
     }
   }
 
-  const currentValue = action !== 'add' ? extract(data, path) : undefined
-  const newData = assign(clone(data) as Input, path, newValue, {
+  const assignOptions: AssignOptions = {
     remove: action === 'delete',
-  })
+    ...insertOptions,
+  }
+
+  const currentValue = action !== 'add' ? extract(data, path) : undefined
+  const newData = assign(clone(data) as Input, path, newValue, assignOptions)
 
   return {
     currentData: data,

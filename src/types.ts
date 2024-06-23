@@ -25,6 +25,7 @@ export interface JsonEditorProps {
   restrictDelete?: boolean | FilterFunction
   restrictAdd?: boolean | FilterFunction
   restrictTypeSelection?: boolean | DataType[] | TypeFilterFunction
+  restrictDrag: boolean | FilterFunction
   // restrictKeyEdit?: boolean | FilterFunction
   searchText?: string
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
@@ -131,6 +132,14 @@ export type InternalUpdateFunction = (
   path: CollectionKey[]
 ) => Promise<string | void>
 
+// For drag-n-drop
+export type Position = 'above' | 'below'
+export type InternalMoveFunction = (
+  source: CollectionKey[] | null,
+  dest: CollectionKey[],
+  position: Position
+) => Promise<string | void>
+
 /**
  * NODES
  */
@@ -154,10 +163,13 @@ interface BaseNodeProps {
   onDelete: InternalUpdateFunction
   onError?: OnErrorFunction
   showErrorMessages: boolean
+  onMove: InternalMoveFunction
   enableClipboard: boolean | CopyFunction
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction
   restrictAddFilter: FilterFunction
+  restrictDragFilter: FilterFunction
+  canDragOnto: boolean
   searchFilter?: SearchFilterFunction
   searchText?: string
   restrictTypeSelection: boolean | DataType[] | TypeFilterFunction
@@ -243,6 +255,7 @@ const themeableElements = [
   'collection',
   'collectionInner',
   'collectionElement',
+  'dropZone',
   'property',
   'bracket',
   'itemCount',

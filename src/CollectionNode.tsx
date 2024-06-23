@@ -3,6 +3,7 @@ import JSON5 from 'json5'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
+import { useDragNDrop } from './useDragNDrop'
 import {
   type CollectionNodeProps,
   type ErrorString,
@@ -45,7 +46,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     restrictEditFilter,
     restrictDeleteFilter,
     restrictAddFilter,
+    restrictDragFilter,
+    canDragOnto,
     collapseFilter,
+    onMove,
     enableClipboard,
     searchFilter,
     searchText,
@@ -76,6 +80,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
 
   const pathString = toPathString(path)
 
+  const { dragSource, dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } =
+    useDragNDrop({
+      canDragOnto,
+      path,
+      handleDrop,
+    })
+
   // This allows us to not render the children on load if they're hidden (which
   // gives a big performance improvement with large data sets), but still keep
   // the animation transition when opening and closing the accordion
@@ -105,6 +116,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
   const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
+  const canDrag = useMemo(() => !restrictDragFilter(nodeData) && canDelete, [nodeData])
 
   const getDefaultNewValue = useMemo(
     () => (nodeData: NodeData) => {
@@ -261,6 +273,26 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setStringifiedValue(stringifyJson(data))
   }
 
+  function handleDrop(position: 'above' | 'below') {
+    const sourceKey = dragSource.path?.slice(-1)[0]
+    const sourceBase = dragSource.path?.slice(0, -1).join('.')
+    const thisBase = path.slice(0, -1).join('')
+    if (
+      typeof sourceKey === 'string' &&
+      parentData &&
+      !Array.isArray(parentData) &&
+      Object.keys(parentData).includes(sourceKey) &&
+      sourceKey in parentData &&
+      sourceBase !== thisBase
+    ) {
+      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
+    } else {
+      onMove(dragSource.path, path, position).then((error) => {
+        if (error) onError({ code: 'UPDATE_ERROR', message: error }, data)
+      })
+    }
+  }
+
   // DERIVED VALUES (this makes the JSX logic less messy)
   const isEditing = currentlyEditingElement === pathString
   const isEditingKey = currentlyEditingElement === `key_${pathString}`
@@ -317,6 +349,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
               nodeData={childNodeData}
               showCollectionCount={showCollectionCount}
               {...props}
+              canDragOnto={canEdit}
             />
           ) : (
             <ValueNodeWrapper
@@ -325,6 +358,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
               parentData={data}
               nodeData={childNodeData}
               {...props}
+              canDragOnto={canEdit}
               showLabel={collectionType === 'object' ? true : showArrayIndices}
             />
           )}
@@ -370,6 +404,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     isEditing,
     setIsEditing: () => setCurrentlyEditingElement(pathString),
     getStyles,
+    canDragOnto: canEdit,
   }
 
   const CollectionContents = showCustomNodeContents ? (
@@ -435,8 +470,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
       style={{
         marginLeft: `${path.length === 0 ? 0 : indent / 2}em`,
         ...getStyles('collection', nodeData),
+        position: 'relative',
+        zIndex: path.length,
       }}
+      draggable={canDrag && currentlyEditingElement === null}
+      {...dragSourceProps}
+      {...getDropTargetProps('above')}
     >
+      {!isEditing && BottomDropTarget}
+      <DropTargetPadding position="above" nodeData={nodeData} />
       {showCollectionWrapper ? (
         <div className="jer-collection-header-row" style={{ position: 'relative' }}>
           <div className="jer-collection-name">
@@ -512,6 +554,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           </div>
         )}
       </div>
+      <DropTargetPadding position="below" nodeData={nodeData} />
     </div>
   )
 

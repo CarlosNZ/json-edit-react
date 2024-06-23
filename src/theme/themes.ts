@@ -11,6 +11,7 @@ const defaultTheme: DefaultTheme = {
     collection: {},
     collectionInner: {},
     collectionElement: {},
+    dropZone: {},
     property: '#292929',
     bracket: { color: 'rgb(0, 43, 54)', fontWeight: 'bold' },
     itemCount: { color: 'rgba(0, 0, 0, 0.3)', fontStyle: 'italic' },
@@ -40,6 +41,7 @@ export const themes: Record<ThemeName, Theme> = {
         backgroundColor: '#0d1117',
         color: 'white',
       },
+      dropZone: 'rgba(165, 214, 255, 0.17)',
       property: '#E6EDF3',
       bracket: '#56d364',
       itemCount: '#8B949E',
@@ -82,6 +84,7 @@ export const themes: Record<ThemeName, Theme> = {
     },
     styles: {
       container: ['lightText', { backgroundColor: 'black' }],
+      dropZone: '#e0e0e029',
       property: 'lightText',
       bracket: 'midGrey',
       itemCount: '#4a4a4a',
@@ -132,6 +135,7 @@ export const themes: Record<ThemeName, Theme> = {
     styles: {
       container: 'minty',
       property: 'pop',
+      dropZone: '#eb121217',
       bracket: 'dark',
       itemCount: 'pale',
       string: 'mid',
@@ -176,6 +180,7 @@ export const themes: Record<ThemeName, Theme> = {
           'linear-gradient(90deg, hsla(333, 100%, 53%, 1) 0%, hsla(33, 94%, 57%, 1) 100%)',
         color: 'black',
       },
+      dropZone: 'fluroYellow',
       property: 'black',
       bracket: 'fluroYellow',
       itemCount: [
@@ -235,6 +240,7 @@ export const emptyStyleObject: CompiledStyles = {
   collection: {},
   collectionInner: {},
   collectionElement: {},
+  dropZone: {},
   property: {},
   bracket: {},
   itemCount: {},

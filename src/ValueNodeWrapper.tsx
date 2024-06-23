@@ -27,6 +27,7 @@ import './style.css'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
 import { filterNode } from './filterHelpers'
 import { useTreeState } from './TreeStateProvider'
+import { useDragNDrop } from './useDragNDrop'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -38,9 +39,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     onChange,
     onError: onErrorCallback,
     showErrorMessages,
+    onMove,
     enableClipboard,
     restrictEditFilter,
     restrictDeleteFilter,
+    restrictDragFilter,
+    canDragOnto,
     restrictTypeSelection,
     searchFilter,
     searchText,
@@ -65,6 +69,13 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
   const pathString = toPathString(path)
+
+  const { dragSource, dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } =
+    useDragNDrop({
+      canDragOnto,
+      path,
+      handleDrop,
+    })
 
   const updateValue = useCallback(
     (newValue: ValueData) => {
@@ -92,6 +103,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
+  const canDrag = useMemo(() => !restrictDragFilter(nodeData) && canDelete, [nodeData])
 
   const showError = (errorString: ErrorString) => {
     if (showErrorMessages) {
@@ -230,6 +242,26 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
+  function handleDrop(position: 'above' | 'below') {
+    const sourceKey = dragSource.path?.slice(-1)[0]
+    const sourceBase = dragSource.path?.slice(0, -1).join('.')
+    const thisBase = path.slice(0, -1).join('')
+    if (
+      typeof sourceKey === 'string' &&
+      parentData &&
+      !Array.isArray(parentData) &&
+      sourceKey in parentData &&
+      sourceBase !== thisBase
+    ) {
+      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
+      // return
+    } else {
+      onMove(dragSource.path, path, position).then((error) => {
+        if (error) onError({ code: 'UPDATE_ERROR', message: error }, value as ValueData)
+      })
+    }
+  }
+
   // DERIVED VALUES (this makes the JSX logic less messy)
   const isEditing = currentlyEditingElement === pathString
   const isEditingKey = currentlyEditingElement === `key_${pathString}`
@@ -280,7 +312,19 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   )
 
   return (
-    <div className="jer-component jer-value-component" style={{ marginLeft: `${indent / 2}em` }}>
+    <div
+      className="jer-component jer-value-component"
+      style={{
+        marginLeft: `${indent / 2}em`,
+        position: 'relative',
+        zIndex: 50,
+      }}
+      draggable={canDrag && currentlyEditingElement === null}
+      {...dragSourceProps}
+      {...getDropTargetProps('above')}
+    >
+      {BottomDropTarget}
+      <DropTargetPadding position="above" nodeData={nodeData} />
       <div
         className="jer-value-main-row"
         style={{
@@ -358,6 +402,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           )}
         </div>
       </div>
+      <DropTargetPadding position="below" nodeData={nodeData} />
     </div>
   )
 }
