@@ -132,6 +132,14 @@ export type InternalUpdateFunction = (
   path: CollectionKey[]
 ) => Promise<string | void>
 
+// For drag-n-drop
+export type Position = 'above' | 'below'
+export type InternalMoveFunction = (
+  source: CollectionKey[] | null,
+  dest: CollectionKey[],
+  position: Position
+) => Promise<string | void>
+
 /**
  * NODES
  */
@@ -155,11 +163,7 @@ interface BaseNodeProps {
   onDelete: InternalUpdateFunction
   onError?: OnErrorFunction
   showErrorMessages: boolean
-  onMove: (
-    source: CollectionKey[] | null,
-    dest: CollectionKey[],
-    position: 'above' | 'below'
-  ) => Promise<string | void>
+  onMove: InternalMoveFunction
   enableClipboard: boolean | CopyFunction
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction
