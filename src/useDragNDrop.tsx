@@ -32,7 +32,7 @@ export const useDragNDrop = ({
   translate,
 }: DnDProps) => {
   const { getStyles } = useTheme()
-  const { currentlyEditingElement, dragSource, setDragSource } = useTreeState()
+  const { dragSource, setDragSource } = useTreeState()
   const [isDragTarget, setIsDragTarget] = useState<Position | false>(false)
 
   const pathString = toPathString(path)
