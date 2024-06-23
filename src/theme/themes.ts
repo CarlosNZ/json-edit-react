@@ -259,7 +259,3 @@ export const emptyStyleObject: CompiledStyles = {
   iconOk: {},
   iconCancel: {},
 }
-
-/**
- * TYPE DEFINITIONS
- */

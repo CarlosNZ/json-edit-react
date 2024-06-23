@@ -120,12 +120,12 @@ select:focus + .focus {
   background-color: var(--jer-highlight-color);
 }
 
-.jer-editor-container select {
-  /* color: red; */
-}
+/* .jer-editor-container select {
+  color: red;
+} */
 
-.jer-component {
-}
+/* .jer-component {
+} */
 
 .jer-collection-header-row,
 .jer-value-main-row {
@@ -140,14 +140,14 @@ select:focus + .focus {
   flex-wrap: wrap;
 }
 
-.jer-brackets {
-}
+/* .jer-brackets {
+} */
 
-.jer-bracket-outside {
-}
+/* .jer-bracket-outside {
+} */
 
-.jer-collection-item-count {
-}
+/* .jer-collection-item-count {
+} */
 
 .jer-collapse-icon {
   position: absolute;
@@ -185,16 +185,16 @@ select:focus + .focus {
   margin-top: 0.4em;
 }
 
-.jer-collection-element {
-}
+/* .jer-collection-element {
+} */
 
 .jer-collection-error-row {
   position: absolute;
   bottom: 0.5em;
 }
 
-.jer-collection-error-row-edit {
-}
+/* .jer-collection-error-row-edit {
+} */
 
 .jer-error-slug {
   margin-left: 1em;
@@ -245,11 +245,11 @@ select:focus + .focus {
   font-size: 0.9em;
 }
 
-.jer-value-number {
-}
+/* .jer-value-number {
+} */
 
-.jer-value-boolean {
-}
+/* .jer-value-boolean {
+} */
 
 .jer-input-boolean {
   transform: scale(1.5);
@@ -257,8 +257,8 @@ select:focus + .focus {
   margin-right: 0.3em;
 }
 
-.jer-value-null {
-}
+/* .jer-value-null {
+} */
 
 .jer-value-object {
 }
@@ -275,8 +275,8 @@ select:focus + .focus {
   font-size: 0.9em;
 }
 
-.jer-value-array {
-}
+/* .jer-value-array {
+} */
 
 .jer-value-invalid {
   opacity: 0.5;
@@ -288,8 +288,8 @@ select:focus + .focus {
   font-size: 90%;
 }
 
-.jer-input-component {
-}
+/* .jer-input-component {
+} */
 
 .jer-edit-buttons,
 .jer-confirm-buttons {
@@ -331,8 +331,8 @@ select:focus + .focus {
   opacity: 1;
 }
 
-.jer-input-buttons {
-}
+/* .jer-input-buttons {
+} */
 
 .jer-copy-pulse {
   position: relative;

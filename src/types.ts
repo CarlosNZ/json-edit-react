@@ -41,7 +41,6 @@ export interface JsonEditorProps {
   translations?: Partial<LocalisedStrings>
   customNodeDefinitions?: CustomNodeDefinition[]
   customText?: CustomTextDefinitions
-  useJSON5Editor?: boolean | JSON5StringifyOptions
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -188,7 +187,6 @@ export interface CollectionNodeProps extends BaseNodeProps {
   showCollectionCount: boolean | 'when-closed'
   showStringQuotes: boolean
   defaultValue: unknown
-  useJSON5Editor: boolean | JSON5StringifyOptions
 }
 
 export type ValueData = string | number | boolean
@@ -320,14 +318,3 @@ export type ThemeInput =
   | Theme
   | Partial<ThemeStyles>
   | Array<ThemeName | Theme | Partial<ThemeStyles>>
-
-// JSON5 options (https://json5.org/)
-export interface JSON5StringifyOptions {
-  space?: number
-  quote?: string
-  replacer?:
-    | Array<string | number>
-    | ((this: any, key: string, value: any) => any)
-    | null
-    | undefined
-}
