@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react'
 import JSON5 from 'json5'
-import { useCommon } from './useCommon'
+import extractProperty from 'object-property-extractor'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
@@ -12,7 +12,7 @@ import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useTreeState } from './TreeStateProvider'
 import { useDragNDrop } from './useDragNDrop'
-import extractProperty from 'object-property-extractor'
+import { useCommon } from './useCommon'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()

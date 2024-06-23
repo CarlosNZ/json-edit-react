@@ -2,21 +2,21 @@ import React, { useMemo, useState } from 'react'
 import { useTreeState } from './TreeStateProvider'
 import { useTheme } from './theme'
 import { toPathString } from './ValueNodes'
-import { type NodeData, type CollectionKey, type CollectionData, type JerError } from './types'
+import {
+  type NodeData,
+  type CollectionKey,
+  type CollectionData,
+  type JerError,
+  type Position,
+  type InternalMoveFunction,
+} from './types'
 import { type TranslateFunction } from './localisation'
-
-export type Position = 'above' | 'below'
 
 interface DnDProps {
   canDragOnto: boolean
   path: CollectionKey[]
-  // handleDrop: (position: 'above' | 'below') => void
   nodeData: NodeData
-  onMove: (
-    source: CollectionKey[] | null,
-    dest: CollectionKey[],
-    position: 'above' | 'below'
-  ) => Promise<string | void>
+  onMove: InternalMoveFunction
   onError: (error: JerError, errorValue: CollectionData | string) => unknown
   translate: TranslateFunction
 }
