@@ -114,7 +114,7 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
       autoFocus
       onFocus={(e) => e.target.select()}
       onKeyDown={handleKeyPress}
-      style={{ width: `${String(value).length / 1.5 + 2}em` }}
+      style={{ width: `${String(value).length / 1.5 + 2}em`, ...getStyles('input', nodeData) }}
     />
   ) : (
     <span
@@ -157,6 +157,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       name={toPathString(path)}
       checked={value}
       onChange={() => setValue(!value)}
+      style={{ zIndex: path.length + 2 }}
     />
   ) : (
     <span
