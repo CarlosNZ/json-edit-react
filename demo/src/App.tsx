@@ -310,7 +310,6 @@ function App() {
               customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
               customText={demoData[selectedData]?.customTextDefinitions}
               onChange={demoData[selectedData]?.onChange ?? undefined}
-              useJSON5Editor={false}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>

@@ -44,17 +44,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     defaultValue,
     translate,
     customNodeDefinitions,
-    useJSON5Editor,
   } = props
-  const stringifyJson = useMemo(() => {
-    if (!useJSON5Editor) return (data: object) => JSON.stringify(data, null, 2)
-    if (useJSON5Editor instanceof Object) {
-      return (data: object) => JSON5.stringify(data, useJSON5Editor)
-    }
-    return (data: object) => JSON5.stringify(data, { space: 2 })
-  }, [useJSON5Editor])
-
-  const [stringifiedValue, setStringifiedValue] = useState(stringifyJson(data))
+  const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
 
   const startCollapsed = collapseFilter(incomingNodeData)
   const [collapsed, setCollapsed] = useState(startCollapsed)
@@ -97,7 +88,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
-    setStringifiedValue(stringifyJson(data))
+    setStringifiedValue(JSON.stringify(data, null, 2))
   }, [data])
 
   useEffect(() => {
@@ -221,7 +212,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const handleCancel = () => {
     setCurrentlyEditingElement(null)
     setError(null)
-    setStringifiedValue(stringifyJson(data))
+    setStringifiedValue(JSON.stringify(data, null, 2))
   }
 
   // DERIVED VALUES (this makes the JSX conditional logic easier to follow)
