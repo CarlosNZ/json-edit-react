@@ -17,7 +17,6 @@ import { TreeStateProvider, useTreeState } from './TreeStateProvider'
 import { getTranslateFunction } from './localisation'
 import './style.css'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
-import clone from 'just-clone'
 
 const Editor: React.FC<JsonEditorProps> = ({
   data: srcData,
@@ -350,7 +349,7 @@ const updateDataObject = (
   }
 
   const currentValue = action !== 'add' ? extract(data, path) : undefined
-  const newData = assign(clone(data) as Input, path, newValue, assignOptions)
+  const newData = assign(data as Input, path, newValue, assignOptions)
 
   return {
     currentData: data,

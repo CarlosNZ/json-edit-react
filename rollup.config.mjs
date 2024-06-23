@@ -29,7 +29,7 @@ export default [
       bundleSize(),
       sizes(),
     ],
-    external: ['json5', 'just-clone', 'object-property-assigner', 'object-property-extractor'],
+    external: ['json5', 'object-property-assigner', 'object-property-extractor'],
   },
   {
     input: './build/dts/index.d.ts',
