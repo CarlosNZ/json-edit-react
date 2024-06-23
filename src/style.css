@@ -83,6 +83,7 @@ select:focus + .focus {
 }
 
 .jer-editor-container {
+  position: relative;
   font-size: 16px;
   line-height: 1;
   padding: 1em;

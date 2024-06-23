@@ -71,10 +71,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   }
 
   return (
-    <div
-      className="jer-edit-buttons"
-      style={{ opacity: isAdding ? 1 : undefined, zIndex: path.length + 1 }}
-    >
+    <div className="jer-edit-buttons" style={{ opacity: isAdding ? 1 : undefined }}>
       {enableClipboard && (
         <div onClick={handleCopy} className="jer-copy-pulse">
           <Icon name="copy" nodeData={nodeData} />
@@ -138,7 +135,7 @@ export const InputButtons: React.FC<{
   nodeData: NodeData
 }> = ({ onOk, onCancel, nodeData }) => {
   return (
-    <div className="jer-confirm-buttons" style={{ zIndex: nodeData.path.length + 1 }}>
+    <div className="jer-confirm-buttons">
       <div onClick={onOk}>
         <Icon name="ok" nodeData={nodeData} />
       </div>

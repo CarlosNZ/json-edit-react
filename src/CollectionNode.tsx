@@ -68,14 +68,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   } = useCommon({ props, collapsed })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
-    {
-      canDragOnto,
-      path,
-      nodeData,
-      onMove,
-      onError,
-      translate,
-    }
+    { canDrag, canDragOnto, path, nodeData, onMove, onError, translate }
   )
 
   // This allows us to not render the children on load if they're hidden (which
@@ -390,9 +383,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         marginLeft: `${path.length === 0 ? 0 : indent / 2}em`,
         ...getStyles('collection', nodeData),
         position: 'relative',
-        zIndex: path.length,
       }}
-      draggable={canDrag && currentlyEditingElement === null}
+      draggable={canDrag}
       {...dragSourceProps}
       {...getDropTargetProps('above')}
     >

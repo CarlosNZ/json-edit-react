@@ -68,14 +68,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   } = useCommon({ props })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
-    {
-      canDragOnto,
-      path,
-      nodeData,
-      onMove,
-      onError,
-      translate,
-    }
+    { canDrag, canDragOnto, path, nodeData, onMove, onError, translate }
   )
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
@@ -251,9 +244,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       style={{
         marginLeft: `${indent / 2}em`,
         position: 'relative',
-        zIndex: path.length + 1,
       }}
-      draggable={canDrag && currentlyEditingElement === null}
+      draggable={canDrag}
       {...dragSourceProps}
       {...getDropTargetProps('above')}
     >
@@ -313,7 +305,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             )
           )}
           {showTypeSelector && (
-            <div className="jer-select" style={{ zIndex: path.length + 1 }}>
+            <div className="jer-select">
               <select
                 name={`${name}-type-select`}
                 className="jer-type-select"

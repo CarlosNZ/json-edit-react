@@ -46,7 +46,10 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
   const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
   const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
-  const canDrag = useMemo(() => !restrictDragFilter(nodeData) && canDelete, [nodeData])
+  const canDrag = useMemo(
+    () => !restrictDragFilter(nodeData) && canDelete && currentlyEditingElement === null,
+    [nodeData]
+  )
 
   const showError = (errorString: ErrorString) => {
     if (showErrorMessages) {

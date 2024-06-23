@@ -157,7 +157,6 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       name={toPathString(path)}
       checked={value}
       onChange={() => setValue(!value)}
-      style={{ zIndex: path.length + 2 }}
     />
   ) : (
     <span
