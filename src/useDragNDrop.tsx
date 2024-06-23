@@ -2,17 +2,33 @@ import React, { useMemo, useState } from 'react'
 import { useTreeState } from './TreeStateProvider'
 import { useTheme } from './theme'
 import { toPathString } from './ValueNodes'
-import { type NodeData, type CollectionKey } from './types'
-
-type Position = 'above' | 'below'
+import {
+  type NodeData,
+  type CollectionKey,
+  type CollectionData,
+  type JerError,
+  type Position,
+  type InternalMoveFunction,
+} from './types'
+import { type TranslateFunction } from './localisation'
 
 interface DnDProps {
   canDragOnto: boolean
   path: CollectionKey[]
-  handleDrop: (position: 'above' | 'below') => void
+  nodeData: NodeData
+  onMove: InternalMoveFunction
+  onError: (error: JerError, errorValue: CollectionData | string) => unknown
+  translate: TranslateFunction
 }
 
-export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DnDProps) => {
+export const useDragNDrop = ({
+  canDragOnto,
+  path,
+  nodeData,
+  onMove,
+  onError,
+  translate,
+}: DnDProps) => {
   const { getStyles } = useTheme()
   const { dragSource, setDragSource } = useTreeState()
   const [isDragTarget, setIsDragTarget] = useState<Position | false>(false)
@@ -94,11 +110,33 @@ export const useDragNDrop = ({ canDragOnto, path, handleDrop }: DnDProps) => {
     ) : null
   }
 
+  const handleDrop = (position: Position) => {
+    const sourceKey = dragSource.path?.slice(-1)[0]
+    const sourceBase = dragSource.path?.slice(0, -1).join('.')
+    const thisBase = path.slice(0, -1).join('')
+    const { parentData } = nodeData
+    if (
+      typeof sourceKey === 'string' &&
+      parentData &&
+      !Array.isArray(parentData) &&
+      Object.keys(parentData).includes(sourceKey) &&
+      sourceKey in parentData &&
+      sourceBase !== thisBase
+    ) {
+      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
+    } else {
+      onMove(dragSource.path, path, position).then((error) => {
+        if (error)
+          onError({ code: 'UPDATE_ERROR', message: error }, nodeData.value as CollectionData)
+      })
+    }
+  }
+
   return {
-    dragSource,
     dragSourceProps,
     getDropTargetProps,
     BottomDropTarget,
     DropTargetPadding,
+    handleDrop,
   }
 }

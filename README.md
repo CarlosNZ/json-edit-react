@@ -13,6 +13,7 @@ Features include:
  - search/filter data by key, value or custom function
  - provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
  - [localisable](#localisation) UI
+ - **NEW!** [Drag-n-drop](#drag-n-drop) editing! (*experimental*)
 
 **[Explore the Demo](https://carlosnz.github.io/json-edit-react/)**
 
@@ -28,6 +29,7 @@ Features include:
   - [Copy function](#copy-function)
 - [Filter functions](#filter-functions)
   - [Examples](#examples-1)
+  - [Drag-n-drop](#drag-n-drop)
 - [Search/Filtering](#searchfiltering)
 - [Themes \& Styles](#themes--styles)
   - [Fragments](#fragments)
@@ -84,6 +86,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - When clicking the "clipboard" icon, holding down `Cmd/Ctrl` will copy the *path* to the selected node rather than its value
 - When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
 - For Number inputs, arrow-up and down keys will increment/decrement the value
+- Drag and drop items to change the structure or modify display order
 
 ## Props overview
 
@@ -106,7 +109,8 @@ The only *required* value is `data`.
 | `restrictEdit`          | `boolean\|FilterFunction`                     | `false`     | If `true`, no editing is permitted. A function can be provided for more specificity — see [Filter functions](#filter-functions)                                                                                                                                                                                                             |
 | `restrictDelete`        | `boolean\|FilterFunction`                     | `false`     | As with `restrictEdit` but for deletion                                                                                                                                                                                                                                                                                                     |
 | `restrictAdd`           | `boolean\|FilterFunction`                     | `false`     | As with `restrictEdit` but for adding new properties                                                                                                                                                                                                                                                                                        |
-| `restrictTypeSelection` | `boolean\|DataType[]\|TypeFilterFunction`     | `false`     | For restricting the data types the user can select. Can be a list of data types (e.g. `[ 'string', 'number', 'boolean', 'array', 'object', 'null' ]`) or a boolean. A function can be provided -- it should take the same input as the above `FilterFunction`s, but output should be `boolean \| DataType[]`.                               |
+| `restrictTypeSelection` | `boolean\|FilterFunction`                     | `true`      | Set to `false` to enable drag and drop functionality. See [Drag-n-drop](#drag-n-drop)                                                                                                                                                                                                                                                       |
+| `restrictDrag`          | `boolean\|DataType[]\|TypeFilterFunction`     | `false`     | For restricting the data types the user can select. Can be a list of data types (e.g. `[ 'string', 'number', 'boolean', 'array', 'object', 'null' ]`) or a boolean. A function can be provided -- it should take the same input as the above `FilterFunction`s, but output should be `boolean \| DataType[]`.                               |
 | `searchText`            | `string`                                      | `undefined` | Data visibility will be filtered by matching against value, using the method defined below in `searchFilter`                                                                                                                                                                                                                                |
 | `searchFilter`          | `"key"\|"value"\|"all"\|SearchFilterFunction` | `undefined` | Define how `searchText` should be matched to filter the visible items. See [Search/Filtering](#searchfiltering)                                                                                                                                                                                                                             |
 | `searchDebounceTime`    | `number`                                      | `350`       | Debounce time when `searchText` changes                                                                                                                                                                                                                                                                                                     |
@@ -285,6 +289,19 @@ restrictTypeSelection = { ({ path, value }) => {
 } }
 ```
 
+### Drag-n-drop
+
+*NOTE: This is a new feature and should be considered "experimental". Please provide [feedback or suggestions](https://github.com/CarlosNZ/json-edit-react/issues) to help improve it.*
+
+The `restrictDrag` property controls which items (if any) can be dragged into new positions. By default, this is *off*, so you must set `restrictDrag = false` to enable this functionality. Like the Edit restrictions above, this property can also take a Filter function for fine-grained control. There are a couple of additional considerations, though:
+
+- Javascript does *not* guarantee object property order, so enabling this feature may yield unpredictable results. See [here](https://dev.to/frehner/the-order-of-js-object-keys-458d) for an explanation of how key ordering is handled. It is strongly advised that you only enable drag-and-drop functionality if:
+  1. you're sure object keys will always be simple strings (i.e. not digits or non-standard characters)
+  2. you're saving the data in a serialisation format that preserves key order. For example, storing in a Postgres database using the `jsonb` (binary JSON) type, key order is meaningless, so the next time the object is loaded, the keys will be listed alphabetically.
+- The `restrictDrag` filter applies to the *source* element (i.e. the node being dragged), not the destination.
+- To be draggable, the node must *also* be delete-able (via the `restrictDelete` prop), as dragging a node to a new destination is essentially just deleting it and adding it back elsewhere.
+- Similarly, the destination collection must be editable in order to drop it in there. This means that, if you've gone to the trouble of configuring restrictive editing constraints using Filter functions, you can be confident that they can't be circumvented via drag-n-drop.
+
 ## Search/Filtering
 
 The displayed data can be filtered based on search input from a user. The user input should be captured independently (we don't provide a UI here) and passed in with the `searchText` prop. This input is debounced internally (time can be set with the `searchDebounceTime` prop), so no need for that as well. The values that the `searchText` are tested against is specified with the `searchFilter` prop. By default (no `searchFilter` defined), it will match against the data *values* (with case-insensitive partial matching -- i.e. input "Ilb", will match value "Bilbo").
@@ -337,6 +354,7 @@ However, you can pass in your own theme object, or part thereof. The theme struc
     collection: {},
     collectionInner: {},
     collectionElement: {},
+    dropZone: {},
     property: '#292929',
     bracket: { color: 'rgb(0, 43, 54)', fontWeight: 'bold' },
     itemCount: { color: 'rgba(0, 0, 0, 0.3)', fontStyle: 'italic' },
@@ -396,7 +414,7 @@ You can play round with live editing of the themes in the [Demo app](https://car
 
 #### CSS classes
 
-Another way to style the component is to target the CSS classes directly. Every element in the component has a unique class name, so you should be able to locate them in your browser inspector and override them accordingly. All class names begin with the prefix `jer-`, e.g. `jer-collection-header-row`, `jer-value-string`
+Another way to style the component is to target the CSS classes directly. Every element in the component has a unique class name, so you should be able to locate them in your browser inspector and override them accordingly. All class names begin with the prefix `jer-`, e.g. `jer-collection-header-row`, `jer-value-string`.
 
 ### Fragments
 

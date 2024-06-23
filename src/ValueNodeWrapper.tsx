@@ -8,19 +8,15 @@ import {
   InvalidValue,
   ArrayValue,
   INVALID_FUNCTION_STRING,
-  toPathString,
 } from './ValueNodes'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import {
   DataTypes,
-  ERROR_DISPLAY_TIME,
   type DataType,
   type ValueNodeProps,
   type InputProps,
   type CollectionData,
-  type ErrorString,
   type ValueData,
-  type JerError,
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
@@ -28,22 +24,17 @@ import { getCustomNode, type CustomNodeData } from './CustomNode'
 import { filterNode } from './filterHelpers'
 import { useTreeState } from './TreeStateProvider'
 import { useDragNDrop } from './useDragNDrop'
+import { useCommon } from './useCommon'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
     data,
     parentData,
-    nodeData,
     onEdit,
     onDelete,
     onChange,
-    onError: onErrorCallback,
-    showErrorMessages,
     onMove,
     enableClipboard,
-    restrictEditFilter,
-    restrictDeleteFilter,
-    restrictDragFilter,
     canDragOnto,
     restrictTypeSelection,
     searchFilter,
@@ -61,21 +52,34 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
   )
-  const [error, setError] = useState<string | null>(null)
 
-  const { key: name, path } = nodeData
+  const {
+    pathString,
+    nodeData,
+    path,
+    name,
+    canEdit,
+    canDelete,
+    canDrag,
+    error,
+    onError,
+    handleEditKey,
+    derivedValues,
+  } = useCommon({ props })
+
+  const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
+    {
+      canDragOnto,
+      path,
+      nodeData,
+      onMove,
+      onError,
+      translate,
+    }
+  )
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
-
-  const pathString = toPathString(path)
-
-  const { dragSource, dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } =
-    useDragNDrop({
-      canDragOnto,
-      path,
-      handleDrop,
-    })
 
   const updateValue = useCallback(
     (newValue: ValueData) => {
@@ -100,35 +104,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
     setDataType(getDataType(data, customNodeData))
   }, [data, error])
-
-  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
-  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
-  const canDrag = useMemo(() => !restrictDragFilter(nodeData) && canDelete, [nodeData])
-
-  const showError = (errorString: ErrorString) => {
-    if (showErrorMessages) {
-      setError(errorString)
-      setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
-    }
-    console.warn('Error', errorString)
-  }
-
-  const onError = useMemo(
-    () => (error: JerError, errorValue: ValueData) => {
-      showError(error.message)
-      if (onErrorCallback) {
-        onErrorCallback({
-          currentData: nodeData.fullData,
-          errorValue,
-          currentValue: value as ValueData,
-          name,
-          path,
-          error,
-        })
-      }
-    },
-    [onErrorCallback, showErrorMessages]
-  )
 
   const {
     CustomNode,
@@ -203,26 +178,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         newValue = value
     }
     onEdit(newValue, path).then((error) => {
-      if (error) onError({ code: 'UPDATE_ERROR', message: error }, newValue as ValueData)
+      if (error) onError({ code: 'UPDATE_ERROR', message: error }, newValue)
     })
-  }
-
-  const handleEditKey = (newKey: string) => {
-    setCurrentlyEditingElement(null)
-    if (name === newKey) return
-    if (!parentData) return
-    const parentPath = path.slice(0, -1)
-    const existingKeys = Object.keys(parentData)
-    if (existingKeys.includes(newKey)) {
-      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
-      return
-    }
-
-    // Need to update data in array form to preserve key order
-    const newData = Object.fromEntries(
-      Object.entries(parentData).map(([key, val]) => (key === name ? [newKey, val] : [key, val]))
-    )
-    onEdit(newData, parentPath)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -242,31 +199,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
-  function handleDrop(position: 'above' | 'below') {
-    const sourceKey = dragSource.path?.slice(-1)[0]
-    const sourceBase = dragSource.path?.slice(0, -1).join('.')
-    const thisBase = path.slice(0, -1).join('')
-    if (
-      typeof sourceKey === 'string' &&
-      parentData &&
-      !Array.isArray(parentData) &&
-      sourceKey in parentData &&
-      sourceBase !== thisBase
-    ) {
-      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
-      // return
-    } else {
-      onMove(dragSource.path, path, position).then((error) => {
-        if (error) onError({ code: 'UPDATE_ERROR', message: error }, value as ValueData)
-      })
-    }
-  }
-
   // DERIVED VALUES (this makes the JSX logic less messy)
-  const isEditing = currentlyEditingElement === pathString
-  const isEditingKey = currentlyEditingElement === `key_${pathString}`
-  const isArray = typeof path.slice(-1)[0] === 'number'
-  const canEditKey = !isArray && canEdit && canDelete
+  const { isEditing, isEditingKey, canEditKey } = derivedValues
   const showErrorString = !isEditing && error
   const showTypeSelector = isEditing && allowedDataTypes.length > 0
   const showEditButtons = dataType !== 'invalid' && !error && showEditTools

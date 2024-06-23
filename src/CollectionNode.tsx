@@ -1,33 +1,20 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react'
 import JSON5 from 'json5'
+import { useCommon } from './useCommon'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
 import { useDragNDrop } from './useDragNDrop'
-import {
-  type CollectionNodeProps,
-  type ErrorString,
-  type NodeData,
-  type JerError,
-  type CollectionData,
-  ERROR_DISPLAY_TIME,
-} from './types'
+import { type CollectionNodeProps, type NodeData, type CollectionData } from './types'
 import { Icon } from './Icons'
 import { filterNode, isCollection } from './filterHelpers'
 import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useTreeState } from './TreeStateProvider'
-import { toPathString } from './ValueNodes'
 import extractProperty from 'object-property-extractor'
 
-export const CollectionNode: React.FC<CollectionNodeProps> = ({
-  data,
-  nodeData: incomingNodeData,
-  parentData,
-  showCollectionCount,
-  ...props
-}) => {
+export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   const {
     collapseState,
@@ -38,15 +25,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     areChildrenBeingEdited,
   } = useTreeState()
   const {
+    data,
+    nodeData: incomingNodeData,
+    parentData,
+    showCollectionCount,
     onEdit,
     onAdd,
     onDelete,
-    onError: onErrorCallback,
-    showErrorMessages,
-    restrictEditFilter,
-    restrictDeleteFilter,
-    restrictAddFilter,
-    restrictDragFilter,
     canDragOnto,
     collapseFilter,
     onMove,
@@ -70,22 +55,37 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
   }, [useJSON5Editor])
 
   const [stringifiedValue, setStringifiedValue] = useState(stringifyJson(data))
-  const [error, setError] = useState<string | null>(null)
 
   const startCollapsed = collapseFilter(incomingNodeData)
   const [collapsed, setCollapsed] = useState(startCollapsed)
 
-  const nodeData = { ...incomingNodeData, collapsed }
-  const { path, key: name, size } = nodeData
+  const {
+    pathString,
+    nodeData,
+    path,
+    name,
+    size,
+    canEdit,
+    canDelete,
+    canAdd,
+    canDrag,
+    error,
+    setError,
+    onError,
+    handleEditKey,
+    derivedValues,
+  } = useCommon({ props, collapsed })
 
-  const pathString = toPathString(path)
-
-  const { dragSource, dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } =
-    useDragNDrop({
+  const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
+    {
       canDragOnto,
       path,
-      handleDrop,
-    })
+      nodeData,
+      onMove,
+      onError,
+      translate,
+    }
+  )
 
   // This allows us to not render the children on load if they're hidden (which
   // gives a big performance improvement with large data sets), but still keep
@@ -113,11 +113,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     }
   }, [collapseState])
 
-  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
-  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
-  const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
-  const canDrag = useMemo(() => !restrictDragFilter(nodeData) && canDelete, [nodeData])
-
   const getDefaultNewValue = useMemo(
     () => (nodeData: NodeData) => {
       if (typeof defaultValue !== 'function') return defaultValue
@@ -138,35 +133,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     showCollectionWrapper = true,
   } = useMemo(() => getCustomNode(customNodeDefinitions, nodeData), [])
 
-  const showError = (errorString: ErrorString) => {
-    if (showErrorMessages) {
-      setError(errorString)
-      setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
-    }
-    console.warn('Error', errorString)
-  }
-
-  const onError = useMemo(
-    () => (error: JerError, errorValue: CollectionData | string) => {
-      showError(error.message)
-      if (onErrorCallback) {
-        onErrorCallback({
-          currentData: nodeData.fullData,
-          errorValue,
-          currentValue: data,
-          name,
-          path,
-          error,
-        })
-      }
-    },
-    [onErrorCallback, showErrorMessages]
-  )
-
   // Early return if this node is filtered out
-  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0) {
+  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0)
     return null
-  }
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
@@ -214,24 +183,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     }
   }
 
-  const handleEditKey = (newKey: string) => {
-    setCurrentlyEditingElement(null)
-    if (name === newKey) return
-    if (!parentData) return
-    const parentPath = path.slice(0, -1)
-    const existingKeys = Object.keys(parentData)
-    if (existingKeys.includes(newKey)) {
-      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
-      return
-    }
-
-    // Need to update data in array form to preserve key order
-    const newData = Object.fromEntries(
-      Object.entries(parentData).map(([key, val]) => (key === name ? [newKey, val] : [key, val]))
-    )
-    onEdit(newData, parentPath)
-  }
-
   const handleKeyPressKeyEdit = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleEditKey((e.target as HTMLInputElement).value)
     else if (e.key === 'Escape') handleCancel()
@@ -273,31 +224,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
     setStringifiedValue(stringifyJson(data))
   }
 
-  function handleDrop(position: 'above' | 'below') {
-    const sourceKey = dragSource.path?.slice(-1)[0]
-    const sourceBase = dragSource.path?.slice(0, -1).join('.')
-    const thisBase = path.slice(0, -1).join('')
-    if (
-      typeof sourceKey === 'string' &&
-      parentData &&
-      !Array.isArray(parentData) &&
-      Object.keys(parentData).includes(sourceKey) &&
-      sourceKey in parentData &&
-      sourceBase !== thisBase
-    ) {
-      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
-    } else {
-      onMove(dragSource.path, path, position).then((error) => {
-        if (error) onError({ code: 'UPDATE_ERROR', message: error }, data)
-      })
-    }
-  }
-
-  // DERIVED VALUES (this makes the JSX logic less messy)
-  const isEditing = currentlyEditingElement === pathString
-  const isEditingKey = currentlyEditingElement === `key_${pathString}`
-  const isArray = typeof path.slice(-1)[0] === 'number'
-  const canEditKey = parentData !== null && canEdit && canAdd && canDelete && !isArray
+  // DERIVED VALUES (this makes the JSX conditional logic easier to follow)
+  const { isEditing, isEditingKey, isArray, canEditKey } = derivedValues
   const showLabel = showArrayIndices || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
@@ -344,20 +272,20 @@ export const CollectionNode: React.FC<CollectionNodeProps> = ({
           {isCollection(value) ? (
             <CollectionNode
               key={key}
+              {...props}
               data={value}
               parentData={data}
               nodeData={childNodeData}
               showCollectionCount={showCollectionCount}
-              {...props}
               canDragOnto={canEdit}
             />
           ) : (
             <ValueNodeWrapper
               key={key}
+              {...props}
               data={value}
               parentData={data}
               nodeData={childNodeData}
-              {...props}
               canDragOnto={canEdit}
               showLabel={collectionType === 'object' ? true : showArrayIndices}
             />
