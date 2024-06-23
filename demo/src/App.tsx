@@ -33,7 +33,7 @@ import {
 } from '@chakra-ui/react'
 import logo from './image/logo_400.png'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
-import { DemoData, demoData } from './demoData'
+import { demoData } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { version } from './version'
