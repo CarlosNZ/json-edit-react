@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import assign, { type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import { CollectionNode } from './CollectionNode'
@@ -168,7 +168,9 @@ const Editor: React.FC<JsonEditorProps> = ({
 
   // "onMove" is just a "Delete" followed by an "Add", but we combine into a
   // single "action" and only run one "onUpdate", which also means it'll be
-  // registered as a single event in the "Undo" queue
+  // registered as a single event in the "Undo" queue.
+  // If either action returns an error, we reset the data the same way we do
+  // when a single action returns error.
   const onMove = async (
     sourcePath: CollectionKey[] | null,
     destPath: CollectionKey[],
@@ -181,7 +183,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       '',
       'delete'
     )
-    const result = await srcDelete({
+    const deleteResult = await srcDelete({
       currentData,
       newData,
       currentValue,
@@ -189,16 +191,16 @@ const Editor: React.FC<JsonEditorProps> = ({
       name: sourcePath.slice(-1)[0],
       path: sourcePath,
     })
-    if (result !== undefined) {
+    if (deleteResult !== undefined) {
       setData(currentData)
-      return result === false ? translate('ERROR_UPDATE', nodeData) : result
+      return deleteResult === false ? translate('ERROR_UPDATE', nodeData) : deleteResult
     }
 
     // Immediate key of the item being moved
     const originalKey = sourcePath.slice(-1)[0]
     // Where it's going
     const targetPath = destPath.slice(0, -1)
-    // The key in the target path to insert before
+    // The key in the target path to insert before or after
     const insertPos = destPath.slice(-1)[0]
 
     let targetKey =
@@ -236,7 +238,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       'add',
       insertOptions as AssignOptions
     )
-    const result2 = await srcAdd({
+    const addResult = await srcAdd({
       currentData,
       newData,
       currentValue,
@@ -244,19 +246,19 @@ const Editor: React.FC<JsonEditorProps> = ({
       name: originalKey,
       path: [...targetPath, targetKey],
     })
-    if (result2 !== undefined) {
+    if (addResult !== undefined) {
       setData(currentData)
-      return result2 === false ? translate('ERROR_UPDATE', nodeData) : result
+      return addResult === false ? translate('ERROR_UPDATE', nodeData) : addResult
     }
 
     setData(addedData)
   }
 
-  const restrictEditFilter = getFilterFunction(restrictEdit)
-  const restrictDeleteFilter = getFilterFunction(restrictDelete)
-  const restrictAddFilter = getFilterFunction(restrictAdd)
-  const restrictDragFilter = getFilterFunction(restrictDrag)
-  const searchFilter = getSearchFilter(searchFilterInput)
+  const restrictEditFilter = useMemo(() => getFilterFunction(restrictEdit), [restrictEdit])
+  const restrictDeleteFilter = useMemo(() => getFilterFunction(restrictDelete), [restrictDelete])
+  const restrictAddFilter = useMemo(() => getFilterFunction(restrictAdd), [restrictAdd])
+  const restrictDragFilter = useMemo(() => getFilterFunction(restrictDrag), [restrictDrag])
+  const searchFilter = useMemo(() => getSearchFilter(searchFilterInput), [searchFilterInput])
 
   const otherProps = {
     name: rootName,
