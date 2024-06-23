@@ -90,6 +90,7 @@ export const demoData: Record<string, DemoData> = {
         </Box>
       </Flex>
     ),
+    rootName: 'data',
     collapse: 2,
     data: data.intro,
     customNodeDefinitions: [dateNodeDefinition],
@@ -123,6 +124,7 @@ export const demoData: Record<string, DemoData> = {
         </Text>
       </Flex>
     ),
+    rootName: 'Star Wars data',
     restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
     restrictDelete: ({ value }) => typeof value === 'object' && value !== null,
     restrictAdd: ({ value }) => !Array.isArray(value),
@@ -149,7 +151,7 @@ export const demoData: Record<string, DemoData> = {
             <span className="code">restrictEdit</span> function
           </Link>{' '}
           has been included which targets the <span className="code">id</span> field specifically.
-          You also can't add additional fields to the main "Person" objects.
+          You also can't add or delete fields to the main "Person" objects.
         </Text>
         <Text>
           Also, notice that when you add a new item in the top level array, a correctly structured{' '}
@@ -176,9 +178,10 @@ export const demoData: Record<string, DemoData> = {
         </Text>
       </Flex>
     ),
+    rootName: 'Clients',
     restrictEdit: ({ key, level }) => key === 'id' || level === 0 || level === 1,
     restrictAdd: ({ level }) => level === 1,
-    restrictDelete: ({ key }) => key === 'id',
+    restrictDelete: ({ level }) => level !== 1,
     collapse: 2,
     searchFilter: ({ path, fullData }, searchText) => {
       if (path?.length >= 2) {
@@ -248,6 +251,7 @@ export const demoData: Record<string, DemoData> = {
         </Text>
       </Flex>
     ),
+    rootName: 'settings',
     collapse: 2,
     data: data.vsCode,
     onUpdate: ({ newValue }) => {
