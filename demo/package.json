@@ -15,6 +15,7 @@
     "@types/node": "^20.11.6",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
+    "ajv": "^8.16.0",
     "firebase": "^10.7.2",
     "framer-motion": "^11.0.3",
     "json-edit-react": "^1.13.1",

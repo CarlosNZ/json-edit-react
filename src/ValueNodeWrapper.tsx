@@ -145,7 +145,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
       )
       updateValue(newValue as ValueData)
-      onEdit(newValue, path)
+      onEdit(newValue, path).then((error) => {
+        if (error) {
+          onError({ code: 'UPDATE_ERROR', message: error }, newValue as ValueData | CollectionData)
+          setCurrentlyEditingElement(null)
+        }
+      })
       setCollapseState({ path, collapsed: false })
       setDataType(type)
     }

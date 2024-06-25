@@ -31,6 +31,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
 }) => {
   // Adding extra (hidden) char when adding new lines to input prevents
   // mis-alignment between real value and dummy value
+  if (typeof value !== 'string') return null
   const dummyValue = value.slice(-1) === '\n' ? value + '.' : value
 
   return (

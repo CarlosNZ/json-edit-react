@@ -14,13 +14,19 @@ import {
   CollectionKey,
   DataType,
   DefaultValueFunction,
+  ErrorString,
   OnChangeFunction,
   OnErrorFunction,
   SearchFilterFunction,
   ThemeStyles,
-  UpdateFunction,
+  UpdateFunctionProps,
 } from '../json-edit-react/src/types'
 import { Input } from 'object-property-assigner/build'
+import schema from './jsonSchema.json'
+import Ajv from 'ajv'
+
+const ajv = new Ajv()
+const validate = ajv.compile(schema)
 
 export interface DemoData {
   name: string
@@ -34,7 +40,10 @@ export interface DemoData {
   restrictTypeSelection?: boolean | DataType[]
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
   searchPlaceholder?: string
-  onUpdate?: UpdateFunction
+  onUpdate?: (
+    props: UpdateFunctionProps,
+    toast: (options: unknown) => void
+  ) => void | ErrorString | false | Promise<false | ErrorString | void>
   onAdd?: (props: {
     newData: object
     currentData: object
@@ -227,6 +236,29 @@ export const demoData: Record<string, DemoData> = {
       return newValue
     },
     data: data.jsonPlaceholder,
+  },
+  jsonSchemaValidation: {
+    name: '⚙️ JSON Schema validation',
+    description: <p>TBD</p>,
+    rootName: 'data',
+    data: data.jsonSchemaValidation,
+    onUpdate: ({ newData }, toast) => {
+      const valid = validate(newData)
+      if (!valid) {
+        console.log('Errors', validate.errors)
+        const errorMessage = validate.errors
+          ?.map((error) => `${error.instancePath}${error.instancePath ? ': ' : ''}${error.message}`)
+          .join('\n')
+        toast({
+          title: 'Not compliant with JSON Schema',
+          description: errorMessage,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+        return 'JSON Schema error'
+      }
+    },
   },
   vsCode: {
     name: '⚙️ VSCode settings file',

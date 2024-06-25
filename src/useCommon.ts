@@ -91,7 +91,11 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     const newData = Object.fromEntries(
       Object.entries(parentData).map(([key, val]) => (key === name ? [newKey, val] : [key, val]))
     )
-    onEdit(newData, parentPath)
+    onEdit(newData, parentPath).then((error) => {
+      if (error) {
+        onError({ code: 'UPDATE_ERROR', message: error }, newKey as ValueData)
+      }
+    })
   }
 
   // Common DERIVED VALUES (this makes the JSX logic less messy)
@@ -113,9 +117,9 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     canAdd,
     canDrag,
     error,
-    setError,
     showError,
     onError,
+    setError,
     handleEditKey,
     derivedValues,
   }

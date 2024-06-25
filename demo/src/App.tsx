@@ -237,14 +237,16 @@ function App() {
                 { container: { paddingTop: '1em' } },
               ]}
               indent={indent}
-              onUpdate={
-                demoData[selectedData]?.onUpdate
-                  ? demoData[selectedData]?.onUpdate
-                  : ({ newData }) => {
-                      setData(newData)
-                      if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
-                    }
-              }
+              onUpdate={async (nodeData) => {
+                const demoOnUpdate = demoData[selectedData]?.onUpdate
+                const result = demoOnUpdate ? await demoOnUpdate(nodeData, toast) : undefined
+                const { newData } = nodeData
+                if (result) return result
+                else {
+                  setData(newData)
+                  if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
+                }
+              }}
               onEdit={
                 demoData[selectedData]?.onEdit
                   ? (data) => {

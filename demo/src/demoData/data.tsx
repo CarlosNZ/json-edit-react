@@ -1689,6 +1689,17 @@ export const data: Record<string, object> = {
     'typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis': true,
     'editor.formatOnSave': true,
   },
+  jsonSchemaValidation: {
+    name: 'Tony Stark',
+    age: 42,
+    address: {
+      street: '10880 Malibu Point',
+      city: 'Los Angeles',
+      state: 'CA',
+      postalCode: '90265',
+    },
+    hobbies: ['partying', 'building stuff', 'avenging'],
+  },
   customNodes: [
     {
       name: 'Steve Rogers',

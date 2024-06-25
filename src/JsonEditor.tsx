@@ -103,8 +103,6 @@ const Editor: React.FC<JsonEditorProps> = ({
     )
     if (currentValue === newValue) return
 
-    setData(newData)
-
     const result = await srcEdit({
       currentData,
       newData,
@@ -116,7 +114,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     if (result !== undefined) {
       setData(currentData)
       return result === false ? translate('ERROR_UPDATE', nodeData) : result
-    }
+    } else setData(newData)
   }
 
   const onDelete: InternalUpdateFunction = async (value, path) => {
@@ -126,7 +124,6 @@ const Editor: React.FC<JsonEditorProps> = ({
       value,
       'delete'
     )
-    setData(newData)
 
     const result = await srcDelete({
       currentData,
@@ -139,7 +136,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     if (result !== undefined) {
       setData(currentData)
       return result === false ? translate('ERROR_UPDATE', nodeData) : result
-    }
+    } else setData(newData)
   }
 
   const onAdd: InternalUpdateFunction = async (value, path) => {
@@ -149,7 +146,6 @@ const Editor: React.FC<JsonEditorProps> = ({
       value,
       'add'
     )
-    setData(newData)
 
     const result = await srcAdd({
       currentData,
@@ -162,7 +158,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     if (result !== undefined) {
       setData(currentData)
       return result === false ? translate('ERROR_UPDATE', nodeData) : result
-    }
+    } else setData(newData)
   }
 
   // "onMove" is just a "Delete" followed by an "Add", but we combine into a
@@ -182,18 +178,18 @@ const Editor: React.FC<JsonEditorProps> = ({
       '',
       'delete'
     )
-    const deleteResult = await srcDelete({
-      currentData,
-      newData,
-      currentValue,
-      newValue,
-      name: sourcePath.slice(-1)[0],
-      path: sourcePath,
-    })
-    if (deleteResult !== undefined) {
-      setData(currentData)
-      return deleteResult === false ? translate('ERROR_UPDATE', nodeData) : deleteResult
-    }
+    // const deleteResult = await srcDelete({
+    //   currentData,
+    //   newData,
+    //   currentValue,
+    //   newValue,
+    //   name: sourcePath.slice(-1)[0],
+    //   path: sourcePath,
+    // })
+    // if (deleteResult !== undefined) {
+    //   setData(currentData)
+    //   return deleteResult === false ? translate('ERROR_UPDATE', nodeData) : deleteResult
+    // }
 
     // Immediate key of the item being moved
     const originalKey = sourcePath.slice(-1)[0]
@@ -230,27 +226,41 @@ const Editor: React.FC<JsonEditorProps> = ({
         ? { insertBefore: insertPos }
         : { insertAfter: insertPos }
 
-    const { newData: addedData } = updateDataObject(
+    const { newData: addedData, newValue: addedValue } = updateDataObject(
       newData,
       [...targetPath, targetKey],
       currentValue,
       'add',
       insertOptions as AssignOptions
     )
-    const addResult = await srcAdd({
-      currentData,
-      newData,
-      currentValue,
-      newValue,
-      name: originalKey,
-      path: [...targetPath, targetKey],
-    })
-    if (addResult !== undefined) {
-      setData(currentData)
-      return addResult === false ? translate('ERROR_UPDATE', nodeData) : addResult
-    }
 
-    setData(addedData)
+    const result = await srcEdit({
+      currentData,
+      newData: addedData,
+      currentValue,
+      newValue: addedValue,
+      name: destPath.slice(-1)[0],
+      path: destPath,
+    })
+    if (result !== undefined) {
+      setData(currentData)
+      return result === false ? translate('ERROR_UPDATE', nodeData) : result
+    } else setData(addedData)
+
+    // const addResult = await srcAdd({
+    //   currentData,
+    //   newData,
+    //   currentValue,
+    //   newValue,
+    //   name: originalKey,
+    //   path: [...targetPath, targetKey],
+    // })
+    // if (addResult !== undefined) {
+    //   setData(currentData)
+    //   return addResult === false ? translate('ERROR_UPDATE', nodeData) : addResult
+    // }
+
+    // setData(addedData)
   }
 
   const restrictEditFilter = useMemo(() => getFilterFunction(restrictEdit), [restrictEdit])
