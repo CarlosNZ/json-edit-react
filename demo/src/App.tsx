@@ -239,7 +239,9 @@ function App() {
               indent={indent}
               onUpdate={async (nodeData) => {
                 const demoOnUpdate = demoData[selectedData]?.onUpdate
-                const result = demoOnUpdate ? await demoOnUpdate(nodeData, toast) : undefined
+                const result = demoOnUpdate
+                  ? await demoOnUpdate(nodeData, toast as (options: unknown) => void)
+                  : undefined
                 const { newData } = nodeData
                 if (result) return result
                 else {
