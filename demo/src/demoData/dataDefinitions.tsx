@@ -239,7 +239,39 @@ export const demoData: Record<string, DemoData> = {
   },
   jsonSchemaValidation: {
     name: '⚙️ JSON Schema validation',
-    description: <p>TBD</p>,
+    description: (
+      <Flex flexDir="column" gap={2}>
+        <Text>
+          This data is being validated against a{' '}
+          <Link href="https://json-schema.org/" isExternal>
+            JSON Schema
+          </Link>{' '}
+          — it uses a custom{' '}
+          <Link
+            href="https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#update-functions"
+            isExternal
+          >
+            <span className="code">onUpdate</span>
+          </Link>{' '}
+          function to check the new input against a{' '}
+          <Link href="https://ajv.js.org/" isExternal>
+            Schema validator{' '}
+          </Link>
+          and, if it doesn't pass, the input is rejected and an error displayed.
+        </Text>
+        <Text>
+          Note that there are no restrictions on the edit controls that are accessible, but you
+          won't be allowed to make any changes that don't comply with the schema. The schema being
+          enforced here is{' '}
+          <Link
+            href="https://json-schema.org/learn/miscellaneous-examples#complex-object-with-nested-properties"
+            isExternal
+          >
+            this one.
+          </Link>
+        </Text>
+      </Flex>
+    ),
     rootName: 'data',
     data: data.jsonSchemaValidation,
     onUpdate: ({ newData }, toast) => {
@@ -259,38 +291,6 @@ export const demoData: Record<string, DemoData> = {
         return 'JSON Schema error'
       }
     },
-  },
-  vsCode: {
-    name: '⚙️ VSCode settings file',
-    description: (
-      <Flex flexDir="column" gap={2}>
-        <Text>
-          A typical{' '}
-          <Link href="https://code.visualstudio.com/" isExternal>
-            VSCode
-          </Link>{' '}
-          config file.
-        </Text>
-        <Text>
-          The only restriction here is that you can't set any boolean values to{' '}
-          <span className="code">false</span>. It uses a custom{' '}
-          <span className="code">onUpdate</span> function to return an error string when you attempt
-          to do so, and the value is reset to <span className="code">true</span>.
-        </Text>
-        <Text>
-          Note the "Search" input is configured to filter for object <em>properties</em> rather than{' '}
-          <em>values</em> (by setting <span className="code">searchFilter: "key"</span>).
-        </Text>
-      </Flex>
-    ),
-    rootName: 'settings',
-    collapse: 2,
-    data: data.vsCode,
-    onUpdate: ({ newValue }) => {
-      if (newValue === false) return "Don't use FALSE, just delete the value"
-    },
-    searchFilter: 'key',
-    searchPlaceholder: 'Search properties',
   },
   liveData: {
     name: '📖 Live Data (from database)',

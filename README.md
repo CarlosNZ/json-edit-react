@@ -8,6 +8,7 @@ Features include:
 
  - edit individual values, or whole objects as JSON text
  - fine-grained control over which elements can be edited, deleted, or added to
+ - full [JSON Schema](https://json-schema.org/) validation (using 3rd-party validation library)
  - customisable UI, through simple, pre-defined [themes](#themes--styles), specific CSS overrides for UI components, or by targeting CSS classes
  - self-contained — rendered with plain HTML/CSS, so no dependance on external UI libraries
  - search/filter data by key, value or custom function
@@ -29,6 +30,7 @@ Features include:
   - [Copy function](#copy-function)
 - [Filter functions](#filter-functions)
   - [Examples](#examples-1)
+  - [JSON Schema validation](#json-schema-validation)
   - [Drag-n-drop](#drag-n-drop)
 - [Search/Filtering](#searchfiltering)
 - [Themes \& Styles](#themes--styles)
@@ -87,7 +89,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
 - For Number inputs, arrow-up and down keys will increment/decrement the value
 - Drag and drop items to change the structure or modify display order
-- JSON text input can accept the more forgiving [JSON5](https://json5.org/) syntax as input
+- JSON text input can accept the more convenient [JSON5](https://json5.org/) syntax as input
 
 ## Props overview
 
@@ -135,7 +137,7 @@ The only *required* value is `data`.
 
 ## Update functions
 
-A callback to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update your data state, or make an API call, for example. If you want the same function for all updates, then just the `onUpdate` prop is sufficient. However, should you require something different for editing, deletion and addition, then you can provide separate Update functions via the `onEdit`, `onDelete` and `onAdd` props.
+A callback to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update some external state, make an API call, or [validate the data structure](#json-schema-validation) against a JSON schema. If you want the same function for all updates, then just the `onUpdate` prop is sufficient. However, should you require something different for editing, deletion and addition, then you can provide separate Update functions via the `onEdit`, `onDelete` and `onAdd` props.
 
 The function will receive the following object as a parameter:
 
@@ -288,6 +290,46 @@ restrictTypeSelection = { ({ path, value }) => {
   if (typeof value === 'string') return ['string', 'object']
   return ['string', 'number', 'boolean', 'array', 'object'] // no "null"
 } }
+```
+
+### JSON Schema validation
+
+As well as dynamically controlling *access* to the various edit tools as described above, it's possible to do full [JSON Schema](https://json-schema.org/) validation by creating an [Update Function](#update-functions) that passes the data to a 3rd-party schema validation library (e.g. [Ajv](https://ajv.js.org/)). This will then reject any invalid input, and display an error in the UI (or via a custom [onError](#onerror-function) function). You can see an example of this in the [Demo](https://carlosnz.github.io/json-edit-react/) with the "JSON Schema Validation" data set. 
+
+An example `onUpdate` validation function (using Ajv) could be something like this:
+
+```js
+import { JsonEditor } from 'json-edit-react'
+import Ajv from 'ajv'
+import schema from './my-json-schema.json'
+
+const ajv = new Ajv()
+const validate = ajv.compile(schema)
+
+/// Etc....
+
+// In the React components:
+return 
+  <JsonEditor
+    data={ jsonData }
+    onUpdate={ ({ newData }) => {
+      const valid = validate(newData)
+      if (!valid) {
+        console.log('Errors', validate.errors)
+        const errorMessage = validate.errors
+          ?.map((error) => `${error.instancePath}${error.instancePath ? ': ' : ''}${error.message}`)
+          .join('\n')
+        // Send detailed error message to an external UI element, such as a "Toast" notification
+         displayError({
+          title: 'Not compliant with JSON Schema',
+          description: errorMessage,
+          status: 'error',
+        })
+        // This string returned to and displayed in json-edit-react UI
+        return 'JSON Schema error'
+      }
+    }}
+  { ...otherProps } />
 ```
 
 ### Drag-n-drop
@@ -619,7 +661,7 @@ Please open an issue: https://github.com/CarlosNZ/json-edit-react/issues
 
 The main features I'd like to introduce are:
 
-1. **JSON Schema validation**. We can currently specify a reasonable degree of control over what can be edited using [Filter functions](#filter-functions) with the restriction props, but I'd like to go a step further and be able to pass in a [JSON Schema](https://json-schema.org/) and have the data be automatically validated against it, with the results reflected in the UI. This would allow control over data types and prevent missing properties, something that is not currently possible.
+1. ~~**JSON Schema validation**. We can currently specify a reasonable degree of control over what can be edited using [Filter functions](#filter-functions) with the restriction props, but I'd like to go a step further and be able to pass in a [JSON Schema](https://json-schema.org/) and have the data be automatically validated against it, with the results reflected in the UI. This would allow control over data types and prevent missing properties, something that is not currently possible.~~ [Done] (using 3rd-party validation library)
 2. ~~**Search/Visibility filter** — allow the user to narrow the list of visible keys with a simple search input. This would be useful for very large data objects, but is possibly getting a bit too much in terms of opinionated UI, so would need to ensure it can be styled easily. Perhaps it would be better if the "Search" input was handled outside this package, and we just accepted a "search" string prop?~~ 👍 [Done](#searchfiltering)
 
 ## Inspiration

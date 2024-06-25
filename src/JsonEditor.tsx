@@ -172,24 +172,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     position: 'above' | 'below'
   ) => {
     if (sourcePath === null) return
-    const { currentData, newData, currentValue, newValue } = updateDataObject(
-      data,
-      sourcePath,
-      '',
-      'delete'
-    )
-    // const deleteResult = await srcDelete({
-    //   currentData,
-    //   newData,
-    //   currentValue,
-    //   newValue,
-    //   name: sourcePath.slice(-1)[0],
-    //   path: sourcePath,
-    // })
-    // if (deleteResult !== undefined) {
-    //   setData(currentData)
-    //   return deleteResult === false ? translate('ERROR_UPDATE', nodeData) : deleteResult
-    // }
+    const { currentData, newData, currentValue } = updateDataObject(data, sourcePath, '', 'delete')
 
     // Immediate key of the item being moved
     const originalKey = sourcePath.slice(-1)[0]
@@ -246,21 +229,6 @@ const Editor: React.FC<JsonEditorProps> = ({
       setData(currentData)
       return result === false ? translate('ERROR_UPDATE', nodeData) : result
     } else setData(addedData)
-
-    // const addResult = await srcAdd({
-    //   currentData,
-    //   newData,
-    //   currentValue,
-    //   newValue,
-    //   name: originalKey,
-    //   path: [...targetPath, targetKey],
-    // })
-    // if (addResult !== undefined) {
-    //   setData(currentData)
-    //   return addResult === false ? translate('ERROR_UPDATE', nodeData) : addResult
-    // }
-
-    // setData(addedData)
   }
 
   const restrictEditFilter = useMemo(() => getFilterFunction(restrictEdit), [restrictEdit])
