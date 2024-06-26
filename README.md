@@ -670,6 +670,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.13.2**: Slightly better error handling when validating [JSON schema](#json-schema-validation)
 - **1.13.0**:
   - [Drag-n-drop](#drag-n-drop) editing!
   - Remove unnecessary dependency
