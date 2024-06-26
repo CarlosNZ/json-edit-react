@@ -475,10 +475,13 @@ export const demoData: Record<string, DemoData> = {
           </Link>{' '}
           function that displays a Toast notification rather than the standard error message when
           you enter invalid JSON input or violate{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#onerror-function" isExternal>
+          <Link
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/demoData/customNodesSchema.json"
+            isExternal
+          >
             this JSON schema
           </Link>
-          )
+          .)
         </Text>
         <Text>
           You can also see how the property count text changes depending on the data. This is using
