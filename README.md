@@ -65,7 +65,7 @@ or
 ```jsx
 import { JsonEditor } from 'json-edit-react'
 
-// In your React components:
+// In your React component:
 return 
   <JsonEditor
     data={ jsonData }
@@ -308,7 +308,7 @@ const validate = ajv.compile(schema)
 
 /// Etc....
 
-// In the React components:
+// In the React component:
 return 
   <JsonEditor
     data={ jsonData }
