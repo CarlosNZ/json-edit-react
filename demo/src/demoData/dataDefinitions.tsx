@@ -22,11 +22,13 @@ import {
   UpdateFunctionProps,
 } from '../json-edit-react/src/types'
 import { Input } from 'object-property-assigner/build'
-import schema from './jsonSchema.json'
+import jsonSchema from './jsonSchema.json'
+import customNodesSchema from './customNodesSchema.json'
 import Ajv from 'ajv'
 
 const ajv = new Ajv()
-const validate = ajv.compile(schema)
+const validateJsonSchema = ajv.compile(jsonSchema)
+const validateCustomNodes = ajv.compile(customNodesSchema)
 
 export interface DemoData {
   name: string
@@ -275,10 +277,10 @@ export const demoData: Record<string, DemoData> = {
     rootName: 'data',
     data: data.jsonSchemaValidation,
     onUpdate: ({ newData }, toast) => {
-      const valid = validate(newData)
+      const valid = validateJsonSchema(newData)
       if (!valid) {
-        console.log('Errors', validate.errors)
-        const errorMessage = validate.errors
+        console.log('Errors', validateJsonSchema.errors)
+        const errorMessage = validateJsonSchema.errors
           ?.map((error) => `${error.instancePath}${error.instancePath ? ': ' : ''}${error.message}`)
           .join('\n')
         toast({
@@ -472,7 +474,11 @@ export const demoData: Record<string, DemoData> = {
             <span className="code">onError</span>
           </Link>{' '}
           function that displays a Toast notification rather than the standard error message when
-          you enter invalid JSON input.)
+          you enter invalid JSON input or violate{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#onerror-function" isExternal>
+            this JSON schema
+          </Link>
+          )
         </Text>
         <Text>
           You can also see how the property count text changes depending on the data. This is using
@@ -504,6 +510,23 @@ export const demoData: Record<string, DemoData> = {
     restrictEdit: ({ level }) => level > 0,
     restrictAdd: true,
     restrictDelete: true,
+    onUpdate: ({ newData }, toast) => {
+      const valid = validateCustomNodes(newData)
+      if (!valid) {
+        console.log('Errors', validateCustomNodes.errors)
+        const errorMessage = validateCustomNodes.errors
+          ?.map((error) => `${error.instancePath}${error.instancePath ? ': ' : ''}${error.message}`)
+          .join('\n')
+        toast({
+          title: 'Not compliant with JSON Schema',
+          description: errorMessage,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        })
+        return 'JSON Schema error'
+      }
+    },
     onError: (errorData) => errorData.error.message,
     showErrorMessages: false,
     customNodeDefinitions: [
