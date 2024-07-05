@@ -81,10 +81,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
-    setStringifiedValue(JSON.stringify(data, null, 2))
-  }, [data])
-
-  useEffect(() => {
     const isCollapsed = collapseFilter(nodeData)
     hasBeenOpened.current = !isCollapsed
     setCollapsed(isCollapsed)

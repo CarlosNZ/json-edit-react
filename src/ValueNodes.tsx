@@ -139,16 +139,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
 }) => {
   const { getStyles } = useTheme()
 
-  useEffect(() => {
-    if (isEditing) document.addEventListener('keydown', listenForSubmit)
-    return () => document.removeEventListener('keydown', listenForSubmit)
-  }, [isEditing, handleEdit])
-
-  const listenForSubmit = (event: any) => {
-    if (event.key === 'Enter') {
-      handleEdit()
-    } else if (event.key === 'Escape') handleCancel()
-  }
+  useKeyboardListener(isEditing, handleEdit, handleCancel)
 
   return isEditing ? (
     <input
@@ -179,16 +170,7 @@ export const NullValue: React.FC<InputProps> = ({
 }) => {
   const { getStyles } = useTheme()
 
-  useEffect(() => {
-    if (isEditing) document.addEventListener('keydown', listenForSubmit)
-    return () => document.removeEventListener('keydown', listenForSubmit)
-  }, [isEditing])
-
-  const listenForSubmit = (event: any) => {
-    if (event.key === 'Enter') {
-      handleEdit()
-    } else if (event.key === 'Escape') handleCancel()
-  }
+  useKeyboardListener(isEditing, handleEdit, handleCancel)
 
   return (
     <div
@@ -209,16 +191,7 @@ export const ObjectValue: React.FC<InputProps> = ({
   handleCancel,
   nodeData,
 }) => {
-  useEffect(() => {
-    if (isEditing) document.addEventListener('keydown', listenForSubmit)
-    return () => document.removeEventListener('keydown', listenForSubmit)
-  }, [])
-
-  const listenForSubmit = (event: any) => {
-    if (event.key === 'Enter') {
-      handleEdit()
-    } else if (event.key === 'Escape') handleCancel()
-  }
+  useKeyboardListener(isEditing, handleEdit, handleCancel)
 
   return (
     <span className="jer-value-object">{`{${translate('DEFAULT_NEW_KEY', nodeData)}: "${String(
@@ -233,18 +206,27 @@ export const ArrayValue: React.FC<InputProps> = ({
   handleEdit,
   handleCancel,
 }) => {
+  useKeyboardListener(isEditing, handleEdit, handleCancel)
+
+  return <span className="jer-value-array">{`[${value === null ? '' : String(value)}]`}</span>
+}
+
+// Used for inputs that don't naturally register keyboard events
+const useKeyboardListener = (
+  isEditing: boolean,
+  handleEdit: () => void,
+  handleCancel: () => void
+) => {
   useEffect(() => {
     if (isEditing) document.addEventListener('keydown', listenForSubmit)
     return () => document.removeEventListener('keydown', listenForSubmit)
-  }, [])
+  }, [isEditing])
 
   const listenForSubmit = (event: any) => {
     if (event.key === 'Enter') {
       handleEdit()
     } else if (event.key === 'Escape') handleCancel()
   }
-
-  return <span className="jer-value-array">{`[${value === null ? '' : String(value)}]`}</span>
 }
 
 export const InvalidValue: React.FC<InputProps> = ({ value }) => {
