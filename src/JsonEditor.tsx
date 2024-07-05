@@ -30,8 +30,6 @@ const Editor: React.FC<JsonEditorProps> = ({
   onError,
   showErrorMessages = true,
   enableClipboard = true,
-  theme = 'default',
-  icons,
   indent = 3,
   collapse = false,
   showCollectionCount = true,

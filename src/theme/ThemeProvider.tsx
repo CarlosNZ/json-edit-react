@@ -26,7 +26,7 @@ const initialContext: ThemeContext = {
 const ThemeProviderContext = createContext(initialContext)
 
 export const ThemeProvider = ({
-  theme,
+  theme = 'default',
   icons = {},
   children,
 }: {
@@ -34,7 +34,7 @@ export const ThemeProvider = ({
   icons?: IconReplacements
   children: React.ReactNode
 }) => {
-  const styles = theme ? compileStyles(theme) : emptyStyleObject
+  const styles = compileStyles(theme)
 
   const getStyles = (element: ThemeableElement, nodeData: NodeData) => {
     if (typeof styles[element] === 'function') {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { Icon } from './Icons'
 import { useTheme } from './theme'
 import { type TranslateFunction } from './localisation'
@@ -37,15 +37,15 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 
   const { key, path, value: data } = nodeData
 
-  useEffect(() => {
-    if (!isAdding) setNewKey(NEW_KEY_PROMPT)
-  }, [isAdding])
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && handleAdd) {
       setIsAdding(false)
       handleAdd(newKey)
-    } else if (e.key === 'Escape') setIsAdding(false)
+      setNewKey(NEW_KEY_PROMPT)
+    } else if (e.key === 'Escape') {
+      setIsAdding(false)
+      setNewKey(NEW_KEY_PROMPT)
+    }
   }
 
   const handleCopy = (e: React.MouseEvent<HTMLElement>) => {
