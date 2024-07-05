@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext } from 'react'
 import { themes, emptyStyleObject } from './themes'
 import {
   type Theme,
@@ -16,27 +16,25 @@ const defaultTheme = themes.default
 
 interface ThemeContext {
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
-  setTheme: (theme: ThemeInput) => void
   icons: IconReplacements
-  setIcons: React.Dispatch<React.SetStateAction<IconReplacements>>
 }
 const initialContext: ThemeContext = {
   getStyles: () => ({}),
-  setTheme: (_: ThemeInput) => {},
   icons: {},
-  setIcons: () => {},
 }
 
 const ThemeProviderContext = createContext(initialContext)
 
-export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [styles, setStyles] = useState<CompiledStyles>(emptyStyleObject)
-  const [icons, setIcons] = useState<IconReplacements>({})
-
-  const setTheme = (theme: ThemeInput) => {
-    const styles = compileStyles(theme)
-    setStyles(styles)
-  }
+export const ThemeProvider = ({
+  theme,
+  icons = {},
+  children,
+}: {
+  theme?: ThemeInput
+  icons?: IconReplacements
+  children: React.ReactNode
+}) => {
+  const styles = theme ? compileStyles(theme) : emptyStyleObject
 
   const getStyles = (element: ThemeableElement, nodeData: NodeData) => {
     if (typeof styles[element] === 'function') {
@@ -47,7 +45,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   return (
-    <ThemeProviderContext.Provider value={{ getStyles, setTheme, icons, setIcons }}>
+    <ThemeProviderContext.Provider value={{ getStyles, icons }}>
       {children}
     </ThemeProviderContext.Provider>
   )

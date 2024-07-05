@@ -57,7 +57,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   customText = {},
   customNodeDefinitions = [],
 }) => {
-  const { getStyles, setTheme, setIcons } = useTheme()
+  const { getStyles } = useTheme()
   const { setCollapseState } = useTreeState()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
   const translate = useCallback(getTranslateFunction(translations, customText), [
@@ -67,11 +67,6 @@ const Editor: React.FC<JsonEditorProps> = ({
   const [debouncedSearchText, setDebouncedSearchText] = useState(searchText)
 
   const [data, setData] = useState(srcData)
-
-  useEffect(() => {
-    if (theme) setTheme(theme)
-    if (icons) setIcons(icons)
-  }, [theme, icons])
 
   useEffect(() => {
     setCollapseState(null)
@@ -288,13 +283,15 @@ const Editor: React.FC<JsonEditorProps> = ({
   )
 }
 
-const JsonEditor: React.FC<JsonEditorProps> = (props) => (
-  <ThemeProvider>
-    <TreeStateProvider>
-      <Editor {...props} />
-    </TreeStateProvider>
-  </ThemeProvider>
-)
+const JsonEditor: React.FC<JsonEditorProps> = (props) => {
+  return (
+    <ThemeProvider theme={props.theme} icons={props.icons}>
+      <TreeStateProvider>
+        <Editor {...props} />
+      </TreeStateProvider>
+    </ThemeProvider>
+  )
+}
 
 interface AssignOptions {
   remove?: boolean
