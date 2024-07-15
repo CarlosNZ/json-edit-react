@@ -670,6 +670,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.13.3**: Bug fix for when root data value is `null` [#90](https://github.com/CarlosNZ/json-edit-react/issues/90)
 - **1.13.2**: Slightly better error handling when validating [JSON schema](#json-schema-validation)
 - **1.13.0**:
   - [Drag-n-drop](#drag-n-drop) editing!
