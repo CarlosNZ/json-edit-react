@@ -82,7 +82,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     level: 0,
     index: 0,
     value: data,
-    size: Object.keys(data).length,
+    size: typeof data === 'object' && data !== null ? Object.keys(data).length : 1,
     parentData: null,
     fullData: data,
   }
