@@ -261,7 +261,8 @@ function App() {
                 demoData[selectedData]?.onAdd
                   ? (data) => {
                       const updateData = (demoData[selectedData] as any).onAdd(data)
-                      if (updateData) setData(updateData)
+                      // Hacky way to force the order change, needs proper fix.
+                      if (updateData) setTimeout(() => setData(updateData), 50)
                     }
                   : undefined
               }
