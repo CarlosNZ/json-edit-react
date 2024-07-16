@@ -151,8 +151,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           setCurrentlyEditingElement(null)
         }
       })
-      setCollapseState({ path, collapsed: false })
-      setDataType(type)
     }
   }
 
