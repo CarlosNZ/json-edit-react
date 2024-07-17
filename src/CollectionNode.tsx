@@ -11,8 +11,7 @@ import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useTreeState } from './TreeStateProvider'
-import { useDragNDrop } from './useDragNDrop'
-import { useCommon } from './useCommon'
+import { useCommon, useDragNDrop } from './hooks'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
@@ -144,6 +143,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       setIsAnimating(true)
       hasBeenOpened.current = true
       setCollapsed(!collapsed)
+      setCollapseState(null)
       setTimeout(() => setIsAnimating(false), 500)
     }
   }

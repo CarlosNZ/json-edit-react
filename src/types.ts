@@ -2,9 +2,11 @@ import { type LocalisedStrings, type TranslateFunction } from './localisation'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
 
+export type JsonData = CollectionData | ValueData
+
 export interface JsonEditorProps {
-  data: object
-  // schema?: object
+  data: JsonData
+  setData?: (data: JsonData) => void
   rootName?: string
   onUpdate?: UpdateFunction
   onEdit?: UpdateFunction
@@ -70,20 +72,27 @@ export interface IconReplacements {
  */
 
 export interface UpdateFunctionProps {
-  newData: object
-  currentData: object
+  newData: JsonData
+  currentData: JsonData
   newValue: unknown
   currentValue: unknown
   name: CollectionKey
   path: CollectionKey[]
 }
 
+export type UpdateFunctionReturn = ['error' | 'value', JsonData]
+
 export type UpdateFunction = (
   props: UpdateFunctionProps
-) => void | ErrorString | false | Promise<false | ErrorString | void>
+) =>
+  | void
+  | ErrorString
+  | false
+  | UpdateFunctionReturn
+  | Promise<false | ErrorString | void | UpdateFunctionReturn>
 
 export type OnChangeFunction = (props: {
-  currentData: object
+  currentData: JsonData
   newValue: ValueData
   currentValue: ValueData
   name: CollectionKey
@@ -96,9 +105,9 @@ export interface JerError {
 }
 
 export type OnErrorFunction = (props: {
-  currentData: object
-  errorValue: ValueData | CollectionData
-  currentValue: ValueData | CollectionData
+  currentData: JsonData
+  errorValue: JsonData
+  currentValue: JsonData
   name: CollectionKey
   path: CollectionKey[]
   error: JerError
@@ -151,7 +160,7 @@ export interface NodeData {
   value: unknown
   size: number | null
   parentData: object | null
-  fullData: object
+  fullData: JsonData
   collapsed?: boolean
 }
 interface BaseNodeProps {
@@ -198,7 +207,7 @@ export interface ValueNodeProps extends BaseNodeProps {
 }
 
 export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodeProps {
-  value: ValueData | CollectionData
+  value: JsonData
   customNodeProps?: T
   parentData: CollectionData | null
   setValue: (value: ValueData) => void

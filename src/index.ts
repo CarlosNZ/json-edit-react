@@ -19,6 +19,7 @@ import {
   type Theme,
   type ThemeInput,
   type NodeData,
+  type JsonData,
 } from './types'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { themes } from './theme'
@@ -53,6 +54,7 @@ export {
   type CustomNodeProps,
   type CustomNodeDefinition,
   type CustomTextDefinitions,
+  type JsonData,
   LinkCustomComponent,
   LinkCustomNodeDefinition,
   IconAdd,

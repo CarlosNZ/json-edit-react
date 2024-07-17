@@ -17,14 +17,14 @@ import {
   type InputProps,
   type CollectionData,
   type ValueData,
+  type JsonData,
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
 import { filterNode } from './filterHelpers'
 import { useTreeState } from './TreeStateProvider'
-import { useDragNDrop } from './useDragNDrop'
-import { useCommon } from './useCommon'
+import { useCommon, useDragNDrop } from './hooks'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -47,7 +47,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     customNodeDefinitions,
   } = props
   const { getStyles } = useTheme()
-  const { setCurrentlyEditingElement, setCollapseState } = useTreeState()
+  const { setCurrentlyEditingElement } = useTreeState()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
@@ -147,7 +147,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       updateValue(newValue as ValueData)
       onEdit(newValue, path).then((error) => {
         if (error) {
-          onError({ code: 'UPDATE_ERROR', message: error }, newValue as ValueData | CollectionData)
+          onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
           setCurrentlyEditingElement(null)
         }
       })
@@ -156,7 +156,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleEdit = () => {
     setCurrentlyEditingElement(null)
-    let newValue: ValueData | CollectionData
+    let newValue: JsonData
     switch (dataType) {
       case 'object':
         newValue = { [translate('DEFAULT_NEW_KEY', nodeData)]: value }
