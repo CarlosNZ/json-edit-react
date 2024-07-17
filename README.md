@@ -24,6 +24,7 @@ Features include:
 - [Implementation](#implementation)
 - [Usage](#usage)
 - [Props overview](#props-overview)
+- [Managing state](#managing-state)
 - [Update functions](#update-functions)
   - [OnChange function](#onchange-function)
   - [OnError function](#onerror-function)
@@ -69,10 +70,8 @@ import { JsonEditor } from 'json-edit-react'
 return 
   <JsonEditor
     data={ jsonData }
-    onUpdate={ ({newData} ) => {
-      // Do something with the new data, e.g. update jsonData
-  }}
-  { ...otherProps } />
+    setData={ setJsonData } // optional
+    { ...otherProps } />
 ```
 
 ## Usage
@@ -98,6 +97,7 @@ The only *required* value is `data`.
 | prop                    | type                                          | default     | description                                                                                                                                                                                                                                                                                                          |
 | ----------------------- | --------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `data`                  | `object\|array`                               |             | The data to be displayed / edited                                                                                                                                                                                                                                                                                    |
+| `setData`               | `object\|array => void`                       |             | Method to update your `data` object. See [Managing state](#managing-state) below for additional notes.                                                                                                                                                                                                               |
 | `rootName`              | `string`                                      | `"data"`    | A name to display in the editor as the root of the data object.                                                                                                                                                                                                                                                      |
 | `onUpdate`              | `UpdateFunction`                              |             | A function to run whenever a value is **updated** (edit, delete *or* add) in the editor. See [Update functions](#update-functions).                                                                                                                                                                                  |
 | `onEdit`                | `UpdateFunction`                              |             | A function to run whenever a value is **edited**.                                                                                                                                                                                                                                                                    |
@@ -134,10 +134,13 @@ The only *required* value is `data`.
 | `customNodeDefinitions` | `CustomNodeDefinition[]`                      |             | You can provide customised components to override specific nodes in the data tree, according to a condition function. See see [Custom nodes](#custom-nodes) for more detail. (A simple custom component to turn url strings into active links is provided in the main package  -- see [here](#active-hyperlinks))    |
 | `customText`            | `CustomTextDefinitions`                       |             | In addition to [localising the component](#localisation) text strings, you can also *dynamically* alter it, depending on the data. See [Custom Text](#custom-text) for more detail.                                                                                                                                  |
 
+## Managing state
+
+It is recommended that you manage the `data` state yourself outside this component. Pass in a `setData` method, which is called internally to update your `data`. However, this is not compulsory -- if you don't provide a `setData` method, the data will be managed internally, which would be fine if you're not doing anything with the data. The alternative is to use the [Update functions](#update-functions) to update your `data` externally, but this is not recommended except in special circumstances as you can run into issues keeping your data in sync with the internal state (which is what is displayed), as well as unnecessary re-renders.
 
 ## Update functions
 
-A callback to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update some external state, make an API call, or [validate the data structure](#json-schema-validation) against a JSON schema. If you want the same function for all updates, then just the `onUpdate` prop is sufficient. However, should you require something different for editing, deletion and addition, then you can provide separate Update functions via the `onEdit`, `onDelete` and `onAdd` props.
+A callback to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update some external state, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema. If you want the same function for all updates, then just the `onUpdate` prop is sufficient. However, should you require something different for editing, deletion and addition, then you can provide separate Update functions via the `onEdit`, `onDelete` and `onAdd` props.
 
 The function will receive the following object as a parameter:
 
@@ -153,7 +156,12 @@ The function will receive the following object as a parameter:
 }
 ```
 
-The function needn't return anything, but if it returns `false`, it will be considered an error, in which case an error message will displayed in the UI and the internal data state won't actually be updated. If the return value is a `string`, this will be the error message displayed (i.e. you can define your own error messages for updates). On error, the displayed data will revert to its previous value.
+The function needn't return anything, in which case the data is updated normally. However, you can return either an Error value, or a modified data value, which will be used instead of the input data. The return value can be one of the following:
+- `void` / `undefined`: data continues update as normal
+- `false`: considers the update to be an error, so data is not updated (reverts to previous value), and a generic error message is displayed in the UI
+- `string`: also considered an error, so no data update, but the UI error message will be your provided string
+- `[ "value", <value> ]`: tells the component to use the returned `<value>` instead of the input data. You might use this to automatically modify user input -- for example, sorting an array, or inserting a timestamp field into an object.
+- `[ "error", <value> ]`: same as `string`, but in the longer tuple format.
 
 ### OnChange function
 
@@ -646,6 +654,7 @@ A few helper functions, components and types that might be useful in your own im
 - `Theme`: a full [Theme](#themes--styles) object
 - `ThemeInput`: input type for the `theme` prop
 - `JsonEditorProps`: all input props for the Json Editor component
+- `JsonData`: main `data` object -- any valid JSON structure
 - [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`CopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort), [`LocalisedString`](#localisation), [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text)
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `IconReplacements`: input type for the `icons` prop
