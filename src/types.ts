@@ -3,8 +3,7 @@ import { type LocalisedStrings, type TranslateFunction } from './localisation'
 export const ERROR_DISPLAY_TIME = 2500 // ms
 
 export interface JsonEditorProps {
-  data: object
-  // schema?: object
+  data: CollectionData | ValueData
   rootName?: string
   onUpdate?: UpdateFunction
   onEdit?: UpdateFunction
@@ -70,20 +69,27 @@ export interface IconReplacements {
  */
 
 export interface UpdateFunctionProps {
-  newData: object
-  currentData: object
+  newData: CollectionData | ValueData
+  currentData: CollectionData | ValueData
   newValue: unknown
   currentValue: unknown
   name: CollectionKey
   path: CollectionKey[]
 }
 
+export type UpdateFunctionReturn = ['error' | 'value', ValueData | CollectionData]
+
 export type UpdateFunction = (
   props: UpdateFunctionProps
-) => void | ErrorString | false | Promise<false | ErrorString | void>
+) =>
+  | void
+  | ErrorString
+  | false
+  | UpdateFunctionReturn
+  | Promise<false | ErrorString | void | UpdateFunctionReturn>
 
 export type OnChangeFunction = (props: {
-  currentData: object
+  currentData: CollectionData | ValueData
   newValue: ValueData
   currentValue: ValueData
   name: CollectionKey
@@ -151,7 +157,7 @@ export interface NodeData {
   value: unknown
   size: number | null
   parentData: object | null
-  fullData: object
+  fullData: CollectionData | ValueData
   collapsed?: boolean
 }
 interface BaseNodeProps {

@@ -370,16 +370,16 @@ export const demoData: Record<string, DemoData> = {
       const messageObject = (newData as Record<string, any>)?.messages?.[path[1]]
       messageObject.timeStamp = new Date().toISOString()
       const data = assign(newData as any, parentPath, messageObject)
-      return data
+      return ['value', data]
     },
     onAdd: ({ path, newData }) => {
       if (path[0] === 'messages' && path.length === 2) {
         const messages = [...(newData as Record<string, any>)?.messages]
         messages.sort((a, b) => new Date(b.timeStamp).getTime() - new Date(a.timeStamp).getTime())
         const data = assign(newData as Input, 'messages', messages)
-        return data
+        return ['value', data]
       }
-      return newData
+      return
     },
     restrictTypeSelection: ['string', 'number', 'boolean'],
     defaultValue: ({ level }) => {

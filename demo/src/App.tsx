@@ -249,23 +249,8 @@ function App() {
                   if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
                 }
               }}
-              onEdit={
-                demoData[selectedData]?.onEdit
-                  ? (data) => {
-                      const updateData = (demoData[selectedData] as any).onEdit(data)
-                      if (updateData) setData(updateData)
-                    }
-                  : undefined
-              }
-              onAdd={
-                demoData[selectedData]?.onAdd
-                  ? (data) => {
-                      const updateData = (demoData[selectedData] as any).onAdd(data)
-                      // Hacky way to force the order change, needs proper fix.
-                      if (updateData) setTimeout(() => setData(updateData), 50)
-                    }
-                  : undefined
-              }
+              onEdit={demoData[selectedData]?.onEdit ?? undefined}
+              onAdd={demoData[selectedData]?.onAdd ? demoData[selectedData]?.onAdd : undefined}
               onError={
                 demoData[selectedData].onError
                   ? (errorData) => {

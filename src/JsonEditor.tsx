@@ -11,6 +11,10 @@ import {
   type NodeData,
   type SearchFilterFunction,
   type CollectionKey,
+  type UpdateFunctionReturn,
+  type UpdateFunction,
+  type UpdateFunctionProps,
+  ValueData,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { TreeStateProvider, useTreeState } from './TreeStateProvider'
@@ -87,6 +91,28 @@ const Editor: React.FC<JsonEditorProps> = ({
     fullData: data,
   }
 
+  // Common method for handling data update. It runs the updated data through
+  // provided "onUpdate" function, then updates data state or returns error
+  // information accordingly
+  const handleEdit = async (updateMethod: UpdateFunction, input: UpdateFunctionProps) => {
+    const result = await updateMethod(input)
+
+    if (result === undefined) {
+      setData(input.newData)
+      return
+    }
+
+    const returnTuple = isUpdateReturnTuple(result) ? result : ['error', result]
+    const [type, resultValue] = returnTuple
+
+    if (type === 'error') {
+      setData(input.currentData)
+      return resultValue === false ? translate('ERROR_UPDATE', nodeData) : String(resultValue)
+    }
+
+    setData(resultValue)
+  }
+
   const onEdit: InternalUpdateFunction = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
@@ -96,7 +122,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     )
     if (currentValue === newValue) return
 
-    const result = await srcEdit({
+    return await handleEdit(srcEdit, {
       currentData,
       newData,
       currentValue,
@@ -104,10 +130,6 @@ const Editor: React.FC<JsonEditorProps> = ({
       name: path.slice(-1)[0],
       path,
     })
-    if (result !== undefined) {
-      setData(currentData)
-      return result === false ? translate('ERROR_UPDATE', nodeData) : result
-    } else setData(newData)
   }
 
   const onDelete: InternalUpdateFunction = async (value, path) => {
@@ -118,7 +140,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       'delete'
     )
 
-    const result = await srcDelete({
+    return await handleEdit(srcDelete, {
       currentData,
       newData,
       currentValue,
@@ -126,10 +148,6 @@ const Editor: React.FC<JsonEditorProps> = ({
       name: path.slice(-1)[0],
       path,
     })
-    if (result !== undefined) {
-      setData(currentData)
-      return result === false ? translate('ERROR_UPDATE', nodeData) : result
-    } else setData(newData)
   }
 
   const onAdd: InternalUpdateFunction = async (value, path) => {
@@ -140,7 +158,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       'add'
     )
 
-    const result = await srcAdd({
+    return await handleEdit(srcAdd, {
       currentData,
       newData,
       currentValue,
@@ -148,10 +166,6 @@ const Editor: React.FC<JsonEditorProps> = ({
       name: path.slice(-1)[0],
       path,
     })
-    if (result !== undefined) {
-      setData(currentData)
-      return result === false ? translate('ERROR_UPDATE', nodeData) : result
-    } else setData(newData)
   }
 
   // "onMove" is just a "Delete" followed by an "Add", but we combine into a
@@ -210,7 +224,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       insertOptions as AssignOptions
     )
 
-    const result = await srcEdit({
+    return await handleEdit(srcEdit, {
       currentData,
       newData: addedData,
       currentValue,
@@ -218,10 +232,6 @@ const Editor: React.FC<JsonEditorProps> = ({
       name: destPath.slice(-1)[0],
       path: destPath,
     })
-    if (result !== undefined) {
-      setData(currentData)
-      return result === false ? translate('ERROR_UPDATE', nodeData) : result
-    } else setData(addedData)
   }
 
   const restrictEditFilter = useMemo(() => getFilterFunction(restrictEdit), [restrictEdit])
@@ -299,7 +309,7 @@ interface AssignOptions {
 }
 
 const updateDataObject = (
-  data: CollectionData,
+  data: CollectionData | ValueData,
   path: Array<string | number>,
   newValue: unknown,
   action: 'update' | 'delete' | 'add',
@@ -351,6 +361,12 @@ const getSearchFilter = (
       matchNode(inputData, searchText) || matchNodeKey(inputData, searchText)
   }
   return searchFilterInput
+}
+
+const isUpdateReturnTuple = (
+  input: UpdateFunctionReturn | string | false | undefined
+): input is UpdateFunctionReturn => {
+  return Array.isArray(input) && input.length === 2 && ['error', 'value'].includes(input[0])
 }
 
 export default JsonEditor
