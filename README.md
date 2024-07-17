@@ -2,10 +2,10 @@
 
 <img width="60" alt="screenshot" src="image/logo192.png" style="float:left; margin-right: 1em;">
 
-> [!WARNING]
-> Version 1.14.0 has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state)
-
 A [React](https://github.com/facebook/react) component for editing or viewing JSON/object data
+
+> [!IMPORTANT]
+> Version 1.14.0 has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state)
 
 Features include:
 
