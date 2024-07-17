@@ -18,7 +18,7 @@
     "ajv": "^8.16.0",
     "firebase": "^10.7.2",
     "framer-motion": "^11.0.3",
-    "json-edit-react": "^1.13.3",
+    "json-edit-react": "^1.14.0",
     "just-compare": "^2.3.0",
     "react": "^18.2.0",
     "react-datepicker": "^5.0.0",
