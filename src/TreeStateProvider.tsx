@@ -22,7 +22,7 @@ export interface DragSource {
 
 interface TreeStateContext {
   collapseState: CollapseAllState | null
-  setCollapseState: (collapseState: CollapseAllState) => void
+  setCollapseState: (collapseState: CollapseAllState | null) => void
   doesPathMatch: (path: CollectionKey[]) => boolean
   currentlyEditingElement: string | null
   setCurrentlyEditingElement: React.Dispatch<React.SetStateAction<string | null>>
@@ -69,7 +69,7 @@ export const TreeStateProvider = ({ children }: { children: React.ReactNode }) =
       value={{
         // Collapse
         collapseState,
-        setCollapseState: (state: CollapseAllState) => {
+        setCollapseState: (state) => {
           setCollapseState(state)
           // Reset after 2 seconds, which is enough time for all child nodes to
           // have opened/closed, but still allows collapse reset if data changes
