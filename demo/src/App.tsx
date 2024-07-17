@@ -1,6 +1,14 @@
 import React, { useRef } from 'react'
 import 'react-datepicker/dist/react-datepicker.css'
-import { JsonEditor, themes, ThemeName, Theme, FilterFunction } from './_imports'
+import {
+  JsonEditor,
+  themes,
+  ThemeName,
+  Theme,
+  FilterFunction,
+  JsonData,
+  OnErrorFunction,
+} from './_imports'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -36,7 +44,6 @@ import { demoData } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { version } from './version'
-import { JsonData, OnErrorFunction } from './json-edit-react/src/types'
 
 function App() {
   const [selectedData, setSelectedData] = useState('intro')
