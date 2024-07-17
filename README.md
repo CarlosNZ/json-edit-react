@@ -95,7 +95,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 
 ## Props overview
 
-The only *required* value is `data`.
+The only *required* value is `data` (although you will need to provide a `setData` method to update your data).
 
 | prop                    | type                                          | default     | description                                                                                                                                                                                                                                                                                                          |
 | ----------------------- | --------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
