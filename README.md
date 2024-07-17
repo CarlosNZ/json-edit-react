@@ -2,6 +2,9 @@
 
 <img width="60" alt="screenshot" src="image/logo192.png" style="float:left; margin-right: 1em;">
 
+> [!WARNING]
+> Version 1.14.0 has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state)
+
 A [React](https://github.com/facebook/react) component for editing or viewing JSON/object data
 
 Features include:
@@ -342,7 +345,8 @@ return
 
 ### Drag-n-drop
 
-*NOTE: This is a new feature and should be considered "experimental". Please provide [feedback or suggestions](https://github.com/CarlosNZ/json-edit-react/issues) to help improve it.*
+> [!NOTE]
+> *This is a new feature and should be considered "experimental". Please provide [feedback or suggestions](https://github.com/CarlosNZ/json-edit-react/issues) to help improve it.*
 
 The `restrictDrag` property controls which items (if any) can be dragged into new positions. By default, this is *off*, so you must set `restrictDrag = false` to enable this functionality. Like the Edit restrictions above, this property can also take a Filter function for fine-grained control. There are a couple of additional considerations, though:
 
