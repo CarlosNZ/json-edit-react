@@ -1,5 +1,5 @@
 /**
- * Hook to manage data state using *either* local data state *or* a setData
+ * Hook to manage data state using *either* local data state *or* a `setData`
  * method provided by the consumer.
  */
 
