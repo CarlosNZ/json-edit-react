@@ -1,6 +1,6 @@
 import 'react-datepicker/dist/react-datepicker.css'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useRef } from 'react'
 import { JsonEditor, themes, ThemeName, Theme, FilterFunction } from './_imports'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
@@ -37,7 +37,7 @@ import { demoData } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { version } from './version'
-import { OnErrorFunction } from './json-edit-react/src/types'
+import { JsonData, OnErrorFunction } from './json-edit-react/src/types'
 
 function App() {
   const [selectedData, setSelectedData] = useState('intro')
@@ -65,28 +65,6 @@ function App() {
     demoData[selectedData].data
   )
 
-  useEffect(() => {
-    const rootName = demoData[selectedData].rootName
-    if (rootName) setRootName(rootName ?? 'data')
-    switch (selectedData) {
-      case 'editTheme':
-        return
-      case 'liveData':
-        setCollapseLevel(demoData.liveData.collapse as number)
-        if (!liveData) reset({ 'Oops!': "We couldn't load this data, sorry " })
-        else reset(liveData)
-        return
-      default:
-        const newData = demoData[selectedData]
-        if (newData.collapse) setCollapseLevel(newData.collapse)
-        reset(newData.data)
-    }
-  }, [selectedData, reset])
-
-  useEffect(() => {
-    if (selectedData === 'editTheme') setTheme(data as Theme)
-  }, [data])
-
   const restrictEdit: FilterFunction | boolean = (() => {
     const customRestrictor = demoData[selectedData]?.restrictEdit
     if (typeof customRestrictor === 'function')
@@ -112,20 +90,34 @@ function App() {
   })()
 
   const handleChangeData = (e) => {
-    setSelectedData(e.target.value)
+    const selected = e.target.value
+    setSelectedData(selected)
     setSearchText('')
-    if (e.target.value === 'editTheme') {
-      previousThemeName.current = theme as string
-      setCollapseLevel(demoData.editTheme.collapse as number)
-      reset(themes[theme as string])
+
+    switch (selected) {
+      case 'editTheme':
+        previousThemeName.current = theme as string
+        setCollapseLevel(demoData.editTheme.collapse as number)
+        reset(typeof theme === 'string' ? themes[theme] : theme)
+        return
+      case 'liveData':
+        setCollapseLevel(demoData.liveData.collapse as number)
+        if (!liveData) reset({ 'Oops!': "We couldn't load this data, sorry " })
+        else reset(liveData)
+        return
+      default:
+        const newDataDefinition = demoData[selected]
+        if (newDataDefinition.collapse) setCollapseLevel(newDataDefinition.collapse)
+        reset(newDataDefinition.data)
     }
   }
 
   const handleThemeChange = (e) => {
-    setTheme(e.target.value as ThemeName)
+    const selected = e.target.value
+    setTheme(selected)
     if (selectedData === 'editTheme') {
-      setData(themes[e.target.value])
-      previousThemeName.current = e.target.value
+      setData(themes[selected])
+      previousThemeName.current = selected
     }
   }
 
@@ -230,6 +222,7 @@ function App() {
             />
             <JsonEditor
               data={data}
+              setData={setData as (data: JsonData) => void}
               rootName={rootName}
               theme={[
                 theme,
@@ -238,19 +231,16 @@ function App() {
               ]}
               indent={indent}
               onUpdate={async (nodeData) => {
-                const demoOnUpdate = demoData[selectedData]?.onUpdate
-                const result = demoOnUpdate
-                  ? await demoOnUpdate(nodeData, toast as (options: unknown) => void)
-                  : undefined
-                const { newData } = nodeData
+                const demoOnUpdate = demoData[selectedData]?.onUpdate ?? (() => undefined)
+                const result = await demoOnUpdate(nodeData, toast as (options: unknown) => void)
                 if (result) return result
                 else {
-                  setData(newData)
+                  const { newData } = nodeData
                   if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
                 }
               }}
               onEdit={demoData[selectedData]?.onEdit ?? undefined}
-              onAdd={demoData[selectedData]?.onAdd ? demoData[selectedData]?.onAdd : undefined}
+              onAdd={demoData[selectedData]?.onAdd ?? undefined}
               onError={
                 demoData[selectedData].onError
                   ? (errorData) => {

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
-import { useTreeState } from './TreeStateProvider'
-import { useTheme } from './theme'
-import { toPathString } from './ValueNodes'
+import { useTreeState } from '../TreeStateProvider'
+import { useTheme } from '../theme'
+import { toPathString } from '../ValueNodes'
 import {
   type NodeData,
   type CollectionKey,
@@ -9,8 +9,8 @@ import {
   type JerError,
   type Position,
   type InternalMoveFunction,
-} from './types'
-import { type TranslateFunction } from './localisation'
+} from '../types'
+import { type TranslateFunction } from '../localisation'
 
 interface DnDProps {
   canDrag: boolean

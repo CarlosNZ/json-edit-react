@@ -14,17 +14,18 @@ import {
   type UpdateFunctionReturn,
   type UpdateFunction,
   type UpdateFunctionProps,
-  ValueData,
+  type JsonData,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
-import { TreeStateProvider, useTreeState } from './TreeStateProvider'
+import { TreeStateProvider } from './TreeStateProvider'
+import { useData } from './hooks/useData'
 import { getTranslateFunction } from './localisation'
 import './style.css'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
 const Editor: React.FC<JsonEditorProps> = ({
   data: srcData,
-  // schema,
+  setData: srcSetData,
   rootName = 'root',
   onUpdate = () => {},
   onEdit: srcEdit = onUpdate,
@@ -60,7 +61,6 @@ const Editor: React.FC<JsonEditorProps> = ({
   customNodeDefinitions = [],
 }) => {
   const { getStyles } = useTheme()
-  const { setCollapseState } = useTreeState()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
   const translate = useCallback(getTranslateFunction(translations, customText), [
     translations,
@@ -68,12 +68,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   ])
   const [debouncedSearchText, setDebouncedSearchText] = useState(searchText)
 
-  const [data, setData] = useState(srcData)
-
-  useEffect(() => {
-    setCollapseState(null)
-    setData(srcData)
-  }, [srcData])
+  const [data, setData] = useData<JsonData>({ setData: srcSetData, data: srcData })
 
   useEffect(() => {
     const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
@@ -309,7 +304,7 @@ interface AssignOptions {
 }
 
 const updateDataObject = (
-  data: CollectionData | ValueData,
+  data: JsonData,
   path: Array<string | number>,
   newValue: unknown,
   action: 'update' | 'delete' | 'add',

@@ -4,17 +4,17 @@
  */
 
 import { useMemo, useState } from 'react'
-import { useTreeState } from './TreeStateProvider'
+import { useTreeState } from '../TreeStateProvider'
 import {
-  type CollectionData,
   type CollectionNodeProps,
   type ErrorString,
   type JerError,
   type ValueData,
   type ValueNodeProps,
+  type JsonData,
   ERROR_DISPLAY_TIME,
-} from './types'
-import { toPathString } from './ValueNodes'
+} from '../types'
+import { toPathString } from '../ValueNodes'
 
 export interface CommonProps {
   props: CollectionNodeProps | ValueNodeProps
@@ -60,7 +60,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   }
 
   const onError = useMemo(
-    () => (error: JerError, errorValue: CollectionData | ValueData | string) => {
+    () => (error: JerError, errorValue: JsonData | string) => {
       showError(error.message)
       if (onErrorCallback) {
         onErrorCallback({

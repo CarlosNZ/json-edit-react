@@ -11,7 +11,6 @@ import {
   matchNode,
 } from '../_imports'
 import {
-  CollectionKey,
   DataType,
   DefaultValueFunction,
   ErrorString,
@@ -19,6 +18,7 @@ import {
   OnErrorFunction,
   SearchFilterFunction,
   ThemeStyles,
+  UpdateFunction,
   UpdateFunctionProps,
 } from '../json-edit-react/src/types'
 import { Input } from 'object-property-assigner/build'
@@ -46,22 +46,8 @@ export interface DemoData {
     props: UpdateFunctionProps,
     toast: (options: unknown) => void
   ) => void | ErrorString | false | Promise<false | ErrorString | void>
-  onAdd?: (props: {
-    newData: object
-    currentData: object
-    newValue: unknown
-    currentValue: unknown
-    name: CollectionKey
-    path: CollectionKey[]
-  }) => any
-  onEdit?: (props: {
-    newData: object
-    currentData: object
-    newValue: unknown
-    currentValue: unknown
-    name: CollectionKey
-    path: CollectionKey[]
-  }) => any
+  onAdd?: UpdateFunction
+  onEdit?: UpdateFunction
   onChange?: OnChangeFunction
   onError?: OnErrorFunction
   showErrorMessages?: boolean
@@ -365,7 +351,7 @@ export const demoData: Record<string, DemoData> = {
       return false
     },
     onEdit: ({ newData, path }) => {
-      if (path[0] !== 'messages' && path.length !== 3) return newData
+      if (path[0] !== 'messages' && path.length !== 3) return ['value', newData]
       const parentPath = [path[0], path[1]]
       const messageObject = (newData as Record<string, any>)?.messages?.[path[1]]
       messageObject.timeStamp = new Date().toISOString()

@@ -2,8 +2,11 @@ import { type LocalisedStrings, type TranslateFunction } from './localisation'
 
 export const ERROR_DISPLAY_TIME = 2500 // ms
 
+export type JsonData = CollectionData | ValueData
+
 export interface JsonEditorProps {
-  data: CollectionData | ValueData
+  data: JsonData
+  setData?: (data: JsonData) => void
   rootName?: string
   onUpdate?: UpdateFunction
   onEdit?: UpdateFunction
@@ -69,15 +72,15 @@ export interface IconReplacements {
  */
 
 export interface UpdateFunctionProps {
-  newData: CollectionData | ValueData
-  currentData: CollectionData | ValueData
+  newData: JsonData
+  currentData: JsonData
   newValue: unknown
   currentValue: unknown
   name: CollectionKey
   path: CollectionKey[]
 }
 
-export type UpdateFunctionReturn = ['error' | 'value', ValueData | CollectionData]
+export type UpdateFunctionReturn = ['error' | 'value', JsonData]
 
 export type UpdateFunction = (
   props: UpdateFunctionProps
@@ -89,7 +92,7 @@ export type UpdateFunction = (
   | Promise<false | ErrorString | void | UpdateFunctionReturn>
 
 export type OnChangeFunction = (props: {
-  currentData: CollectionData | ValueData
+  currentData: JsonData
   newValue: ValueData
   currentValue: ValueData
   name: CollectionKey
@@ -102,9 +105,9 @@ export interface JerError {
 }
 
 export type OnErrorFunction = (props: {
-  currentData: object
-  errorValue: ValueData | CollectionData
-  currentValue: ValueData | CollectionData
+  currentData: JsonData
+  errorValue: JsonData
+  currentValue: JsonData
   name: CollectionKey
   path: CollectionKey[]
   error: JerError
@@ -157,7 +160,7 @@ export interface NodeData {
   value: unknown
   size: number | null
   parentData: object | null
-  fullData: CollectionData | ValueData
+  fullData: JsonData
   collapsed?: boolean
 }
 interface BaseNodeProps {
@@ -204,7 +207,7 @@ export interface ValueNodeProps extends BaseNodeProps {
 }
 
 export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodeProps {
-  value: ValueData | CollectionData
+  value: JsonData
   customNodeProps?: T
   parentData: CollectionData | null
   setValue: (value: ValueData) => void

@@ -1,5 +1,5 @@
 import React, { createContext, useContext } from 'react'
-import { themes, emptyStyleObject } from './themes'
+import { themes } from './themes'
 import {
   type Theme,
   type ThemeableElement,
