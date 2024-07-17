@@ -143,6 +143,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       setIsAnimating(true)
       hasBeenOpened.current = true
       setCollapsed(!collapsed)
+      setCollapseState(null)
       setTimeout(() => setIsAnimating(false), 500)
     }
   }
