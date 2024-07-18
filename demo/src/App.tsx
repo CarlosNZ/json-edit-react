@@ -173,8 +173,8 @@ function App() {
         reset(newDataDefinition.data)
     }
 
-    if (selected === 'intro') navigate('/')
-    else navigate(`/?data=${selected}`)
+    if (selected === 'intro') navigate('./')
+    else navigate(`./?data=${selected}`)
   }
 
   const handleThemeChange = (e) => {
