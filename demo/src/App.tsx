@@ -1,4 +1,5 @@
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
+import { useSearch, useLocation } from 'wouter'
 import 'react-datepicker/dist/react-datepicker.css'
 import {
   JsonEditor,
@@ -40,39 +41,89 @@ import {
 } from '@chakra-ui/react'
 import logo from './image/logo_400.png'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
-import { demoData } from './demoData'
+import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { version } from './version'
 
+interface AppState {
+  rootName: string
+  indent: number
+  collapseLevel: number
+  showCount: 'Yes' | 'No' | 'When closed'
+  theme: ThemeName | Theme
+  allowEdit: boolean
+  allowDelete: boolean
+  allowAdd: boolean
+  allowCopy: boolean
+  sortKeys: boolean
+  showIndices: boolean
+  showStringQuotes: boolean
+  defaultNewValue: string
+  searchText: string
+}
+
 function App() {
-  const [selectedData, setSelectedData] = useState('intro')
-  const [rootName, setRootName] = useState(demoData[selectedData].rootName ?? 'data')
-  const [indent, setIndent] = useState(3)
-  const [collapseLevel, setCollapseLevel] = useState(2)
-  const [showCount, setShowCount] = useState<'Yes' | 'No' | 'When closed'>('When closed')
-  const [theme, setTheme] = useState<ThemeName | Theme>('default')
-  const [allowEdit, setAllowEdit] = useState(true)
-  const [allowDelete, setAllowDelete] = useState(true)
-  const [allowAdd, setAllowAdd] = useState(true)
-  const [allowCopy, setAllowCopy] = useState(true)
-  const [sortKeys, setSortKeys] = useState(false)
-  const [showIndices, setShowIndices] = useState(true)
-  const [showStringQuotes, setShowStringQuotes] = useState(true)
-  const [defaultNewValue, setDefaultNewValue] = useState('New data!')
+  const navigate = useLocation()[1]
+  const searchString = useSearch()
+  const queryParams = new URLSearchParams(searchString)
+  const selectedDataSet = queryParams.get('data') ?? 'intro'
+  const dataDefinition = demoDataDefinitions[selectedDataSet]
+
+  const [state, setState] = useState<AppState>({
+    rootName: dataDefinition.rootName ?? 'data',
+    indent: 3,
+    collapseLevel: dataDefinition.collapse ?? 2,
+    showCount: 'When closed',
+    theme: 'default',
+    allowEdit: true,
+    allowDelete: true,
+    allowAdd: true,
+    allowCopy: true,
+    sortKeys: false,
+    showIndices: true,
+    showStringQuotes: true,
+    defaultNewValue: 'New data!',
+    searchText: '',
+  })
+
   const [isSaving, setIsSaving] = useState(false)
-  const [searchText, setSearchText] = useState('')
   const previousThemeName = useRef('') // Used when resetting after theme editing
   const toast = useToast()
 
-  const { liveData, updateLiveData } = useDatabase()
+  const { liveData, loading, updateLiveData } = useDatabase()
 
   const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] = useUndo(
-    demoData[selectedData].data
+    dataDefinition.data
   )
 
+  useEffect(() => {
+    if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
+  }, [loading, liveData, reset, selectedDataSet])
+
+  const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
+
+  const toggleState = (field: keyof AppState) => updateState({ [field]: !state[field] })
+
+  const {
+    searchText,
+    rootName,
+    theme,
+    indent,
+    collapseLevel,
+    showCount,
+    showIndices,
+    sortKeys,
+    showStringQuotes,
+    allowCopy,
+    defaultNewValue,
+    allowEdit,
+    allowDelete,
+    allowAdd,
+  } = state
+
   const restrictEdit: FilterFunction | boolean = (() => {
-    const customRestrictor = demoData[selectedData]?.restrictEdit
+    const customRestrictor = dataDefinition?.restrictEdit
     if (typeof customRestrictor === 'function')
       return (input) => !allowEdit || customRestrictor(input)
     if (customRestrictor !== undefined) return customRestrictor
@@ -80,7 +131,7 @@ function App() {
   })()
 
   const restrictDelete: FilterFunction | boolean = (() => {
-    const customRestrictor = demoData[selectedData]?.restrictDelete
+    const customRestrictor = dataDefinition?.restrictDelete
     if (typeof customRestrictor === 'function')
       return (input) => !allowDelete || customRestrictor(input)
     if (customRestrictor !== undefined) return customRestrictor
@@ -88,52 +139,58 @@ function App() {
   })()
 
   const restrictAdd: FilterFunction | boolean = (() => {
-    const customRestrictor = demoData[selectedData]?.restrictAdd
+    const customRestrictor = dataDefinition?.restrictAdd
     if (typeof customRestrictor === 'function')
       return (input) => !allowAdd || customRestrictor(input)
     if (customRestrictor !== undefined) return customRestrictor
     return !allowAdd
   })()
 
-  const handleChangeData = (e) => {
-    const selected = e.target.value
-    setSelectedData(selected)
-    setSearchText('')
+  const handleChangeData = (selected: string) => {
+    const newDataDefinition = demoDataDefinitions[selected]
+
+    setState({
+      ...state,
+      searchText: '',
+      collapseLevel: newDataDefinition.collapse ?? state.collapseLevel,
+      rootName: newDataDefinition.rootName ?? 'data',
+    })
 
     switch (selected) {
       case 'editTheme':
         previousThemeName.current = theme as string
-        setCollapseLevel(demoData.editTheme.collapse as number)
         reset(typeof theme === 'string' ? themes[theme] : theme)
-        return
+        break
       case 'liveData':
-        setCollapseLevel(demoData.liveData.collapse as number)
         if (!liveData) reset({ 'Oops!': "We couldn't load this data, sorry " })
         else reset(liveData)
-        return
+        break
       default:
-        const newDataDefinition = demoData[selected]
-        if (newDataDefinition.collapse) setCollapseLevel(newDataDefinition.collapse)
         reset(newDataDefinition.data)
     }
+
+    if (selected === 'intro') navigate('/')
+    else navigate(`/?data=${selected}`)
   }
 
   const handleThemeChange = (e) => {
     const selected = e.target.value
-    setTheme(selected)
-    if (selectedData === 'editTheme') {
+    updateState({ theme: selected })
+    if (selectedDataSet === 'editTheme') {
       setData(themes[selected])
       previousThemeName.current = selected
     }
   }
 
   const handleReset = async () => {
-    setSearchText('')
-    switch (selectedData) {
+    const newState = { ...state }
+    newState.searchText = ''
+
+    switch (selectedDataSet) {
       case 'editTheme':
         reset(themes[previousThemeName.current])
-        setTheme(themes[previousThemeName.current])
-        return
+        newState.theme = themes[previousThemeName.current]
+        break
       case 'liveData':
         setIsSaving(true)
         await updateLiveData(data)
@@ -145,12 +202,13 @@ function App() {
           duration: 5000,
           isClosable: true,
         })
-        console.log(liveData)
         reset(data)
-        return
+        break
       default:
-        reset(demoData[selectedData].data)
+        reset(dataDefinition.data)
     }
+
+    setState(newState)
   }
 
   return (
@@ -213,14 +271,14 @@ function App() {
           <Box position="relative">
             <Input
               id="searchTextInput"
-              placeholder={demoData[selectedData].searchPlaceholder ?? 'Search values'}
+              placeholder={dataDefinition.searchPlaceholder ?? 'Search values'}
               bgColor={'#f6f6f6'}
               borderColor="gainsboro"
               borderRadius={50}
               size="sm"
               w={60}
               value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
+              onChange={(e) => updateState({ searchText: e.target.value })}
               position="absolute"
               right={2}
               top={2}
@@ -230,27 +288,24 @@ function App() {
               data={data}
               setData={setData as (data: JsonData) => void}
               rootName={rootName}
-              theme={[
-                theme,
-                demoData[selectedData]?.styles ?? {},
-                { container: { paddingTop: '1em' } },
-              ]}
+              theme={[theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }]}
               indent={indent}
               onUpdate={async (nodeData) => {
-                const demoOnUpdate = demoData[selectedData]?.onUpdate ?? (() => undefined)
+                const demoOnUpdate = dataDefinition?.onUpdate ?? (() => undefined)
                 const result = await demoOnUpdate(nodeData, toast as (options: unknown) => void)
                 if (result) return result
                 else {
                   const { newData } = nodeData
-                  if (selectedData === 'editTheme') setTheme(newData as ThemeName | Theme)
+                  if (selectedDataSet === 'editTheme')
+                    updateState({ theme: newData as ThemeName | Theme })
                 }
               }}
-              onEdit={demoData[selectedData]?.onEdit ?? undefined}
-              onAdd={demoData[selectedData]?.onAdd ?? undefined}
+              onEdit={dataDefinition?.onEdit ?? undefined}
+              onAdd={dataDefinition?.onAdd ?? undefined}
               onError={
-                demoData[selectedData].onError
+                dataDefinition.onError
                   ? (errorData) => {
-                      const error = (demoData[selectedData].onError as OnErrorFunction)(errorData)
+                      const error = (dataDefinition.onError as OnErrorFunction)(errorData)
                       toast({
                         title: 'ERROR 😢',
                         description: error as any,
@@ -261,7 +316,7 @@ function App() {
                     }
                   : undefined
               }
-              showErrorMessages={demoData[selectedData].showErrorMessages}
+              showErrorMessages={dataDefinition.showErrorMessages}
               collapse={collapseLevel}
               showCollectionCount={
                 showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
@@ -281,21 +336,21 @@ function App() {
               restrictEdit={restrictEdit}
               restrictDelete={restrictDelete}
               restrictAdd={restrictAdd}
-              restrictTypeSelection={demoData[selectedData]?.restrictTypeSelection}
+              restrictTypeSelection={dataDefinition?.restrictTypeSelection}
               restrictDrag={false}
-              searchFilter={demoData[selectedData]?.searchFilter}
+              searchFilter={dataDefinition?.searchFilter}
               searchText={searchText}
               keySort={sortKeys}
-              defaultValue={demoData[selectedData]?.defaultValue ?? defaultNewValue}
+              defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
               showArrayIndices={showIndices}
               showStringQuotes={showStringQuotes}
               minWidth={'min(500px, 95vw)'}
               maxWidth="min(670px, 90vw)"
               className="block-shadow"
               stringTruncate={90}
-              customNodeDefinitions={demoData[selectedData]?.customNodeDefinitions}
-              customText={demoData[selectedData]?.customTextDefinitions}
-              onChange={demoData[selectedData]?.onChange ?? undefined}
+              customNodeDefinitions={dataDefinition?.customNodeDefinitions}
+              customText={dataDefinition?.customTextDefinitions}
+              onChange={dataDefinition?.onChange ?? undefined}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>
@@ -304,7 +359,6 @@ function App() {
                 colorScheme="primaryScheme"
                 leftIcon={<ArrowBackIcon />}
                 onClick={() => undo()}
-                // visibility={canUndo ? 'visible' : 'hidden'}
                 isDisabled={!canUndo}
               >
                 Undo
@@ -328,13 +382,13 @@ function App() {
               </Text>
               <Button
                 colorScheme="accentScheme"
-                leftIcon={selectedData === 'liveData' ? <AiOutlineCloudUpload /> : <BiReset />}
+                leftIcon={selectedDataSet === 'liveData' ? <AiOutlineCloudUpload /> : <BiReset />}
                 variant="outline"
                 onClick={handleReset}
                 visibility={canUndo ? 'visible' : 'hidden'}
                 isLoading={isSaving}
               >
-                {selectedData === 'liveData' ? 'Push to the cloud' : 'Reset'}
+                {selectedDataSet === 'liveData' ? 'Push to the cloud' : 'Reset'}
               </Button>
             </HStack>
           </VStack>
@@ -351,8 +405,12 @@ function App() {
                     Demo data
                   </FormLabel>
                   <div className="inputWidth" style={{ flexGrow: 1 }}>
-                    <Select id="dataSelect" onChange={handleChangeData} value={selectedData}>
-                      {Object.entries(demoData).map(([key, { name }]) => (
+                    <Select
+                      id="dataSelect"
+                      onChange={(e) => handleChangeData(e.target.value)}
+                      value={selectedDataSet}
+                    >
+                      {Object.entries(demoDataDefinitions).map(([key, { name }]) => (
                         <option value={key} key={key}>
                           {name}
                         </option>
@@ -385,7 +443,7 @@ function App() {
                     className="inputWidth"
                     type="text"
                     value={rootName}
-                    onChange={(e) => setRootName(e.target.value)}
+                    onChange={(e) => updateState({ rootName: e.target.value })}
                   />
                 </HStack>
                 <HStack className="inputRow">
@@ -397,7 +455,7 @@ function App() {
                     className="inputWidth"
                     min={0}
                     value={collapseLevel}
-                    onChange={(value) => setCollapseLevel(Number(value))}
+                    onChange={(value) => updateState({ collapseLevel: Number(value) })}
                   >
                     <NumberInputField />
                     <NumberInputStepper>
@@ -416,7 +474,7 @@ function App() {
                     max={12}
                     min={0}
                     value={indent}
-                    onChange={(value) => setIndent(Number(value))}
+                    onChange={(value) => updateState({ indent: Number(value) })}
                   >
                     <NumberInputField />
                     <NumberInputStepper>
@@ -432,7 +490,9 @@ function App() {
                   <div className="inputWidth" style={{ flexGrow: 1 }}>
                     <Select
                       id="showCountSelect"
-                      onChange={(e) => setShowCount(e.target.value as 'Yes' | 'No' | 'When closed')}
+                      onChange={(e) =>
+                        updateState({ showCount: e.target.value as 'Yes' | 'No' | 'When closed' })
+                      }
                       value={showCount}
                     >
                       <option value="Yes" key={0}>
@@ -452,8 +512,8 @@ function App() {
                     <Checkbox
                       id="allowEditCheckbox"
                       isChecked={allowEdit}
-                      disabled={demoData[selectedData].restrictEdit !== undefined}
-                      onChange={() => setAllowEdit(!allowEdit)}
+                      disabled={dataDefinition.restrictEdit !== undefined}
+                      onChange={() => toggleState('allowEdit')}
                       w="50%"
                     >
                       Allow Edit
@@ -461,8 +521,8 @@ function App() {
                     <Checkbox
                       id="allowDeleteCheckbox"
                       isChecked={allowDelete}
-                      disabled={demoData[selectedData].restrictDelete !== undefined}
-                      onChange={() => setAllowDelete(!allowDelete)}
+                      disabled={dataDefinition.restrictDelete !== undefined}
+                      onChange={() => toggleState('allowDelete')}
                       w="50%"
                     >
                       Allow Delete
@@ -472,8 +532,8 @@ function App() {
                     <Checkbox
                       id="allowAddCheckbox"
                       isChecked={allowAdd}
-                      disabled={demoData[selectedData].restrictAdd !== undefined}
-                      onChange={() => setAllowAdd(!allowAdd)}
+                      disabled={dataDefinition.restrictAdd !== undefined}
+                      onChange={() => toggleState('allowAdd')}
                       w="50%"
                     >
                       Allow Add
@@ -481,7 +541,7 @@ function App() {
                     <Checkbox
                       id="allowCopyCheckbox"
                       isChecked={allowCopy}
-                      onChange={() => setAllowCopy(!allowCopy)}
+                      onChange={() => toggleState('allowCopy')}
                       w="50%"
                     >
                       Enable clipboard
@@ -491,7 +551,7 @@ function App() {
                     <Checkbox
                       id="showStringQuotesCheckbox"
                       isChecked={showStringQuotes}
-                      onChange={() => setShowStringQuotes(!showStringQuotes)}
+                      onChange={() => toggleState('showStringQuotes')}
                       w="50%"
                     >
                       Show String quotes
@@ -499,7 +559,7 @@ function App() {
                     <Checkbox
                       id="showIndicesCheckbox"
                       isChecked={showIndices}
-                      onChange={() => setShowIndices(!showIndices)}
+                      onChange={() => toggleState('showIndices')}
                       w="50%"
                     >
                       Show Array indices
@@ -509,7 +569,7 @@ function App() {
                     <Checkbox
                       id="sortKeysCheckbox"
                       isChecked={sortKeys}
-                      onChange={() => setSortKeys(!sortKeys)}
+                      onChange={() => toggleState('sortKeys')}
                       w="50%"
                     >
                       Sort Object keys
@@ -521,10 +581,10 @@ function App() {
                     </FormLabel>
                     <Input
                       className="inputWidth"
-                      disabled={demoData[selectedData].defaultValue !== undefined}
+                      disabled={dataDefinition.defaultValue !== undefined}
                       type="text"
                       value={defaultNewValue}
-                      onChange={(e) => setDefaultNewValue(e.target.value)}
+                      onChange={(e) => updateState({ defaultNewValue: e.target.value })}
                     />
                   </HStack>
                 </CheckboxGroup>
@@ -532,7 +592,7 @@ function App() {
             </FormControl>
           </VStack>
           <Box maxW={350} pt={4}>
-            {demoData[selectedData].description}
+            {dataDefinition.description}
           </Box>
         </VStack>
       </Flex>

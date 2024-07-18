@@ -57,7 +57,7 @@ export interface DemoData {
   styles?: Partial<ThemeStyles>
 }
 
-export const demoData: Record<string, DemoData> = {
+export const demoDataDefinitions: Record<string, DemoData> = {
   intro: {
     name: '📘 Intro',
     description: (
@@ -318,6 +318,7 @@ export const demoData: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'liveData',
+    data: ['Loading...'],
     collapse: 3,
     restrictEdit: ({ key, value, level, parentData }) => {
       if (level < 3) return true
@@ -390,7 +391,6 @@ export const demoData: Record<string, DemoData> = {
       } else return true
     },
     searchPlaceholder: 'Search guestbook',
-    data: {},
     customNodeDefinitions: [
       {
         condition: dateNodeDefinition.condition,

@@ -23,7 +23,7 @@ export default [
       styles(),
       peerDepsExternal({ includeDependencies: true }),
       typescript({ module: 'ESNext', target: 'es6' }),
-      terser({ mangle: false }),
+      terser(),
       bundleSize(),
       sizes(),
     ],

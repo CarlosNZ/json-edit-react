@@ -2,6 +2,7 @@ import { getFirestore, doc, setDoc } from 'firebase/firestore'
 import { initializeApp } from 'firebase/app'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import firebaseConfig from './firebaseConfig.json'
+import { useMemo } from 'react'
 
 const firebaseApp = initializeApp(firebaseConfig)
 
@@ -12,16 +13,26 @@ export const useDatabase = () => {
     doc(getFirestore(firebaseApp), 'json-edit-react', 'live_json_data')
   )
 
-  const { Guestbook, lastEdited, messages } = value?.data() ?? {}
+  const liveData = useMemo(() => {
+    const { Guestbook, lastEdited, messages } = value?.data() ?? {}
 
-  const messagesTidied = messages
-    ? messages.map(({ timeStamp, name, message, ...rest }) => ({
-        message,
-        name,
-        ...rest,
-        timeStamp,
-      }))
-    : []
+    const messagesTidied = messages
+      ? messages.map(({ timeStamp, name, message, ...rest }) => ({
+          message,
+          name,
+          ...rest,
+          timeStamp,
+        }))
+      : []
+
+    return Guestbook
+      ? {
+          Guestbook,
+          lastEdited,
+          messages: messagesTidied,
+        }
+      : null
+  }, [value])
 
   const updateLiveData = async (data) => {
     await setDoc(
@@ -32,11 +43,7 @@ export const useDatabase = () => {
   }
 
   return {
-    liveData: {
-      Guestbook,
-      lastEdited,
-      messages: messagesTidied,
-    },
+    liveData,
     loading,
     error,
     updateLiveData,

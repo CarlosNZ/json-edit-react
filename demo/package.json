@@ -19,7 +19,6 @@
     "firebase": "^10.7.2",
     "framer-motion": "^11.0.3",
     "json-edit-react": "^1.14.0",
-    "just-compare": "^2.3.0",
     "react": "^18.2.0",
     "react-datepicker": "^5.0.0",
     "react-dom": "^18.2.0",
@@ -28,7 +27,8 @@
     "react-scripts": "5.0.1",
     "typescript": "^5.3.3",
     "use-undo": "^1.1.1",
-    "web-vitals": "^3.5.2"
+    "web-vitals": "^3.5.2",
+    "wouter": "^3.3.1"
   },
   "scripts": {
     "start": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && concurrently --kill-others-on-fail  \"PORT=3008 react-scripts start\" \"nodemon watch.js\"",
