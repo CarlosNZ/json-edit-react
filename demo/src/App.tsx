@@ -93,9 +93,13 @@ function App() {
 
   const { liveData, loading, updateLiveData } = useDatabase()
 
-  const [{ present: data }, { set: setData, reset, undo, redo, canUndo, canRedo }] = useUndo(
-    dataDefinition.data
-  )
+  const [
+    { present: data, past, future },
+    { set: setData, reset, undo: undoData, redo: redoData, canUndo, canRedo },
+  ] = useUndo(selectedDataSet === 'editTheme' ? themes.default : dataDefinition.data)
+  // Provides a named version of these methods (i.e undo.name = "undo")
+  const undo = () => undoData()
+  const redo = () => redoData()
 
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
@@ -180,6 +184,14 @@ function App() {
       setData(themes[selected])
       previousThemeName.current = selected
     }
+  }
+
+  const handleHistory = (method: () => void) => {
+    if (selectedDataSet === 'editTheme') {
+      const theme = (method.name === 'undo' ? past.slice(-1)[0] : future[0]) as Theme
+      updateState({ theme })
+    }
+    method()
   }
 
   const handleReset = async () => {
@@ -296,8 +308,7 @@ function App() {
                 if (result) return result
                 else {
                   const { newData } = nodeData
-                  if (selectedDataSet === 'editTheme')
-                    updateState({ theme: newData as ThemeName | Theme })
+                  if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
                 }
               }}
               onEdit={dataDefinition?.onEdit ?? undefined}
@@ -358,7 +369,7 @@ function App() {
               <Button
                 colorScheme="primaryScheme"
                 leftIcon={<ArrowBackIcon />}
-                onClick={() => undo()}
+                onClick={() => handleHistory(undo)}
                 isDisabled={!canUndo}
               >
                 Undo
@@ -367,7 +378,7 @@ function App() {
               <Button
                 colorScheme="primaryScheme"
                 rightIcon={<ArrowForwardIcon />}
-                onClick={() => redo()}
+                onClick={() => handleHistory(redo)}
                 isDisabled={!canRedo}
               >
                 Redo
