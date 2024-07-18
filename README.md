@@ -139,7 +139,7 @@ The only *required* value is `data` (although you will need to provide a `setDat
 
 ## Managing state
 
-It is recommended that you manage the `data` state yourself outside this component. Pass in a `setData` method, which is called internally to update your `data`. However, this is not compulsory -- if you don't provide a `setData` method, the data will be managed internally, which would be fine if you're not doing anything with the data. The alternative is to use the [Update functions](#update-functions) to update your `data` externally, but this is not recommended except in special circumstances as you can run into issues keeping your data in sync with the internal state (which is what is displayed), as well as unnecessary re-renders.
+It is recommended that you manage the `data` state yourself outside this component -- just pass in a `setData` method, which is called internally to update your `data`. However, this is not compulsory -- if you don't provide a `setData` method, the data will be managed internally, which would be fine if you're not doing anything with the data. The alternative is to use the [Update functions](#update-functions) to update your `data` externally, but this is not recommended except in special circumstances as you can run into issues keeping your data in sync with the internal state (which is what is displayed), as well as unnecessary re-renders. Update functions should be ideally be used only for implementing side effects, checking for errors, or mutating the data before setting it with `setData`.
 
 ## Update functions
 
