@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { useSearch, useLocation } from 'wouter'
+import JSON5 from 'json5'
 import 'react-datepicker/dist/react-datepicker.css'
 import {
   JsonEditor,
@@ -362,6 +363,7 @@ function App() {
               customNodeDefinitions={dataDefinition?.customNodeDefinitions}
               customText={dataDefinition?.customTextDefinitions}
               onChange={dataDefinition?.onChange ?? undefined}
+              jsonParse={JSON5.parse}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>

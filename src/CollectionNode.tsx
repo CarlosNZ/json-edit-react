@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react'
-import JSON5 from 'json5'
 import extractProperty from 'object-property-extractor'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
@@ -43,8 +42,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     defaultValue,
     translate,
     customNodeDefinitions,
+    jsonParse,
+    jsonStringify,
   } = props
-  const [stringifiedValue, setStringifiedValue] = useState(JSON.stringify(data, null, 2))
+  const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
 
   const startCollapsed = collapseFilter(incomingNodeData)
   const [collapsed, setCollapsed] = useState(startCollapsed)
@@ -80,7 +81,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
-    setStringifiedValue(JSON.stringify(data, null, 2))
+    setStringifiedValue(jsonStringify(data))
   }, [data])
 
   useEffect(() => {
@@ -150,7 +151,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   const handleEdit = () => {
     try {
-      const value = JSON5.parse(stringifiedValue)
+      const value = jsonParse(stringifiedValue)
       setCurrentlyEditingElement(null)
       setError(null)
       if (JSON.stringify(value) === JSON.stringify(data)) return
@@ -205,7 +206,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const handleCancel = () => {
     setCurrentlyEditingElement(null)
     setError(null)
-    setStringifiedValue(JSON.stringify(data, null, 2))
+    setStringifiedValue(jsonStringify(data))
   }
 
   // DERIVED VALUES (this makes the JSX conditional logic easier to follow)

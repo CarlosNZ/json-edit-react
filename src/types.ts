@@ -43,6 +43,8 @@ export interface JsonEditorProps {
   translations?: Partial<LocalisedStrings>
   customNodeDefinitions?: CustomNodeDefinition[]
   customText?: CustomTextDefinitions
+  jsonParse?: (input: string) => JsonData
+  jsonStringify?: (input: JsonData) => string
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -196,6 +198,8 @@ export interface CollectionNodeProps extends BaseNodeProps {
   showCollectionCount: boolean | 'when-closed'
   showStringQuotes: boolean
   defaultValue: unknown
+  jsonParse: (input: string) => JsonData
+  jsonStringify: (data: JsonData) => string
 }
 
 export type ValueData = string | number | boolean
