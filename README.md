@@ -91,7 +91,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
 - For Number inputs, arrow-up and down keys will increment/decrement the value
 - Drag and drop items to change the structure or modify display order
-- JSON text input can accept the more convenient [JSON5](https://json5.org/) syntax as input
+- JSON text input can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
 
 ## Props overview
 
