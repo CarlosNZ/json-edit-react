@@ -22,6 +22,7 @@ export interface JsonEditorProps {
   id?: string
   indent?: number
   collapse?: boolean | number | FilterFunction
+  collapseAnimationTime?: number // ms
   showCollectionCount?: boolean | 'when-closed'
   restrictEdit?: boolean | FilterFunction
   restrictDelete?: boolean | FilterFunction

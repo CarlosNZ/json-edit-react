@@ -330,6 +330,7 @@ function App() {
               }
               showErrorMessages={dataDefinition.showErrorMessages}
               collapse={collapseLevel}
+              // collapseAnimationTime={100}
               showCollectionCount={
                 showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
               }
