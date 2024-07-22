@@ -20,6 +20,7 @@ import {
   type ValueData,
   type JsonData,
   CollectionKey,
+  TabDirection,
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
@@ -157,8 +158,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     }
   }
 
-  const handleEdit = () => {
-    setCurrentlyEditingElement(null)
+  const handleEdit = (nextNode?: string) => {
+    setCurrentlyEditingElement(nextNode ?? null)
     let newValue: JsonData
     switch (dataType) {
       case 'object':
@@ -192,11 +193,11 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setDataType(getDataType(data, customNodeData))
   }
 
-  const handleTab = () => {
-    const nextNode = getNext(nodeData.fullData, path)
+  const handleTab = (dir: TabDirection) => {
+    const nextNode = dir === 'forward' ? getNext(nodeData.fullData, path) : null
     if (nextNode) {
-      handleEdit()
-      setCurrentlyEditingElement(toPathString(nextNode))
+      handleEdit(toPathString(nextNode))
+      // setCurrentlyEditingElement(toPathString(nextNode))
     }
   }
 
@@ -429,8 +430,9 @@ const getNext = (fullData: JsonData, path: CollectionKey[]): CollectionKey[] | n
   }
 }
 
+// If the node at "path" is a collection, tries the first child of that
+// collection recursively until a Value node is found
 const getValueNodePath = (fullData: JsonData, path: CollectionKey[]) => {
-  console.log('Path', path)
   const node = extractProperty(fullData, path)
   if (!isCollection(node)) return path
   const firstChild = Object.keys(node)[0]

@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { type InputProps } from './types'
 import { useTheme } from './theme'
+import { type TabDirection, type InputProps } from './types'
 import './style.css'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
@@ -23,25 +23,37 @@ export const toPathString = (path: Array<string | number>) =>
     .map((part) => (part === '' ? String.fromCharCode(0) : part))
     .join('.')
 
+interface KeyboardHandlers {
+  handleTab: (dir: TabDirection) => void
+  handleEdit: () => void
+  handleCancel: () => void
+}
+
+const handleCommonKeyEvents = (
+  e: React.KeyboardEvent,
+  { handleEdit, handleCancel, handleTab }: KeyboardHandlers
+) => {
+  if (e.key === 'Tab') {
+    e.preventDefault()
+    if (e.shiftKey) handleTab('back')
+    else handleTab('forward')
+  } else if (e.key === 'Enter' && !e.shiftKey) handleEdit()
+  else if (e.key === 'Escape') handleCancel()
+}
+
 export const StringValue: React.FC<InputProps & { value: string }> = ({
   value,
   setValue,
   isEditing,
   path,
   setIsEditing,
-  handleEdit,
-  handleCancel,
-  handleTab,
   stringTruncate,
   showStringQuotes,
   nodeData,
+  ...keyboardHandlers
 }) => {
   const { getStyles } = useTheme()
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Tab') handleTab()
-    else if (e.key === 'Enter' && !e.shiftKey) handleEdit()
-    else if (e.key === 'Escape') handleCancel()
-  }
+
   const pathString = toPathString(path)
 
   const quoteChar = showStringQuotes ? '"' : ''
@@ -53,7 +65,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       value={value}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       isEditing={isEditing}
-      handleKeyPress={handleKeyPress}
+      handleKeyPress={(e) => handleCommonKeyEvents(e, keyboardHandlers)}
       styles={getStyles('input', nodeData)}
     />
   ) : (
@@ -79,19 +91,13 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
   isEditing,
   path,
   setIsEditing,
-  handleEdit,
-  handleCancel,
   nodeData,
+  ...keyboardHandlers
 }) => {
   const { getStyles } = useTheme()
   const handleKeyPress = (e: React.KeyboardEvent) => {
+    handleCommonKeyEvents(e, keyboardHandlers)
     switch (e.key) {
-      case 'Enter':
-        handleEdit()
-        break
-      case 'Escape':
-        handleCancel()
-        break
       case 'ArrowUp':
         e.preventDefault()
         setValue(Number(value) + 1)
@@ -135,13 +141,12 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   isEditing,
   path,
   setIsEditing,
-  handleEdit,
-  handleCancel,
   nodeData,
+  ...keyboardHandlers
 }) => {
   const { getStyles } = useTheme()
 
-  useKeyboardListener(isEditing, handleEdit, handleCancel)
+  useKeyboardListener(isEditing, keyboardHandlers)
 
   return isEditing ? (
     <input
@@ -166,13 +171,12 @@ export const NullValue: React.FC<InputProps> = ({
   value,
   isEditing,
   setIsEditing,
-  handleEdit,
-  handleCancel,
   nodeData,
+  ...keyboardHandlers
 }) => {
   const { getStyles } = useTheme()
 
-  useKeyboardListener(isEditing, handleEdit, handleCancel)
+  useKeyboardListener(isEditing, keyboardHandlers)
 
   return (
     <div
@@ -189,11 +193,10 @@ export const ObjectValue: React.FC<InputProps> = ({
   value,
   translate,
   isEditing,
-  handleEdit,
-  handleCancel,
   nodeData,
+  ...keyboardHandlers
 }) => {
-  useKeyboardListener(isEditing, handleEdit, handleCancel)
+  useKeyboardListener(isEditing, keyboardHandlers)
 
   return (
     <span className="jer-value-object">{`{${translate('DEFAULT_NEW_KEY', nodeData)}: "${String(
@@ -202,32 +205,21 @@ export const ObjectValue: React.FC<InputProps> = ({
   )
 }
 
-export const ArrayValue: React.FC<InputProps> = ({
-  value,
-  isEditing,
-  handleEdit,
-  handleCancel,
-}) => {
-  useKeyboardListener(isEditing, handleEdit, handleCancel)
+export const ArrayValue: React.FC<InputProps> = ({ value, isEditing, ...keyboardHandlers }) => {
+  useKeyboardListener(isEditing, keyboardHandlers)
 
   return <span className="jer-value-array">{`[${value === null ? '' : String(value)}]`}</span>
 }
 
 // Used for inputs that don't naturally register keyboard events
-const useKeyboardListener = (
-  isEditing: boolean,
-  handleEdit: () => void,
-  handleCancel: () => void
-) => {
+const useKeyboardListener = (isEditing: boolean, keyboardHandlers: KeyboardHandlers) => {
   useEffect(() => {
     if (isEditing) document.addEventListener('keydown', listenForSubmit)
     return () => document.removeEventListener('keydown', listenForSubmit)
   }, [isEditing])
 
   const listenForSubmit = (event: any) => {
-    if (event.key === 'Enter') {
-      handleEdit()
-    } else if (event.key === 'Escape') handleCancel()
+    handleCommonKeyEvents(event, keyboardHandlers)
   }
 }
 

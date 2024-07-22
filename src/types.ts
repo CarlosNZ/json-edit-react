@@ -243,6 +243,8 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>
 
+export type TabDirection = 'forward' | 'back'
+
 export interface InputProps {
   value: unknown
   setValue: (value: ValueData) => void
@@ -250,7 +252,7 @@ export interface InputProps {
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void
   handleCancel: () => void
-  handleTab: () => void
+  handleTab: (dir: TabDirection) => void
   path: CollectionKey[]
   stringTruncate: number
   showStringQuotes: boolean
