@@ -18,13 +18,15 @@ import {
   type CollectionData,
   type ValueData,
   type JsonData,
+  CollectionKey,
 } from './types'
 import { useTheme } from './theme'
 import './style.css'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
-import { filterNode } from './filterHelpers'
+import { filterNode, isCollection } from './filterHelpers'
 import { useTreeState } from './TreeStateProvider'
 import { useCommon, useDragNDrop } from './hooks'
+import extractProperty from 'object-property-extractor'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -156,6 +158,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleEdit = () => {
     setCurrentlyEditingElement(null)
+    console.log('Next path', getNext(nodeData.fullData, path as string[]))
     let newValue: JsonData
     switch (dataType) {
       case 'object':
@@ -391,4 +394,38 @@ const convertValue = (
     default:
       return String(value)
   }
+}
+
+const getNext = (fullData: JsonData, path: string[]) => {
+  console.log('In path', path)
+
+  const parentPath = path.slice(0, path.length - 1)
+  const thisKey = path.slice(-1)[0]
+  if (thisKey === undefined) return null
+  console.log('This key', thisKey)
+
+  const parentData = extractProperty(fullData, parentPath)
+
+  if (Array.isArray(parentData)) {
+    // Do array stuff
+  } else {
+    const parentKeys = Object.keys(parentData)
+    console.log('parentKeys', parentKeys)
+
+    const indexOfThisNode = parentKeys.findIndex((k) => k === String(thisKey))
+
+    if (indexOfThisNode < parentKeys.length - 1) {
+      return getValueNodePath(fullData, [...parentPath, parentKeys[indexOfThisNode + 1]])
+    }
+
+    return getNext(fullData, parentPath)
+  }
+}
+
+const getValueNodePath = (fullData: JsonData, path: CollectionKey[]) => {
+  console.log('Path', path)
+  const node = extractProperty(fullData, path)
+  if (!isCollection(node)) return path
+  const firstChild = Object.keys(node)[0]
+  return getValueNodePath(fullData, [...path, firstChild])
 }
