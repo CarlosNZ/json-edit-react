@@ -8,6 +8,7 @@ import {
   InvalidValue,
   ArrayValue,
   INVALID_FUNCTION_STRING,
+  toPathString,
 } from './ValueNodes'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import {
@@ -158,7 +159,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleEdit = () => {
     setCurrentlyEditingElement(null)
-    console.log('Next path', getNext(nodeData.fullData, path as string[]))
     let newValue: JsonData
     switch (dataType) {
       case 'object':
@@ -192,6 +192,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setDataType(getDataType(data, customNodeData))
   }
 
+  const handleTab = () => {
+    const nextNode = getNext(nodeData.fullData, path)
+    if (nextNode) {
+      handleEdit()
+      setCurrentlyEditingElement(toPathString(nextNode))
+    }
+  }
+
   const handleDelete = () => {
     onDelete(value, path).then((error) => {
       if (error) onError({ code: 'DELETE_ERROR', message: error }, value as ValueData)
@@ -215,6 +223,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setIsEditing: canEdit ? () => setCurrentlyEditingElement(pathString) : () => {},
     handleEdit,
     handleCancel,
+    handleTab,
     path,
     stringTruncate,
     showStringQuotes,
@@ -396,28 +405,26 @@ const convertValue = (
   }
 }
 
-const getNext = (fullData: JsonData, path: string[]) => {
-  console.log('In path', path)
-
+const getNext = (fullData: JsonData, path: CollectionKey[]): CollectionKey[] | null => {
   const parentPath = path.slice(0, path.length - 1)
   const thisKey = path.slice(-1)[0]
   if (thisKey === undefined) return null
-  console.log('This key', thisKey)
 
   const parentData = extractProperty(fullData, parentPath)
 
   if (Array.isArray(parentData)) {
-    // Do array stuff
+    const indexOfThisNode = Number(thisKey)
+    if (indexOfThisNode < parentData.length - 1) {
+      return getValueNodePath(fullData, [...parentPath, indexOfThisNode + 1])
+    }
+    return getNext(fullData, parentPath)
   } else {
-    const parentKeys = Object.keys(parentData)
-    console.log('parentKeys', parentKeys)
-
-    const indexOfThisNode = parentKeys.findIndex((k) => k === String(thisKey))
+    const parentKeys = Object.keys(parentData as CollectionData)
+    const indexOfThisNode = parentKeys.findIndex((k) => k === thisKey)
 
     if (indexOfThisNode < parentKeys.length - 1) {
       return getValueNodePath(fullData, [...parentPath, parentKeys[indexOfThisNode + 1]])
     }
-
     return getNext(fullData, parentPath)
   }
 }

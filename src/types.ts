@@ -250,6 +250,7 @@ export interface InputProps {
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void
   handleCancel: () => void
+  handleTab: () => void
   path: CollectionKey[]
   stringTruncate: number
   showStringQuotes: boolean

@@ -31,13 +31,15 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   setIsEditing,
   handleEdit,
   handleCancel,
+  handleTab,
   stringTruncate,
   showStringQuotes,
   nodeData,
 }) => {
   const { getStyles } = useTheme()
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) handleEdit()
+    if (e.key === 'Tab') handleTab()
+    else if (e.key === 'Enter' && !e.shiftKey) handleEdit()
     else if (e.key === 'Escape') handleCancel()
   }
   const pathString = toPathString(path)
