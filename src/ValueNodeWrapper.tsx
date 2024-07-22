@@ -194,11 +194,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   const handleTab = (dir: TabDirection) => {
-    const nextNode = dir === 'forward' ? getNext(nodeData.fullData, path) : null
-    if (nextNode) {
-      handleEdit(toPathString(nextNode))
-      // setCurrentlyEditingElement(toPathString(nextNode))
-    }
+    const nextNode =
+      dir === 'forward' ? getNext(nodeData.fullData, path) : getPrevious(nodeData.fullData, path)
+    if (nextNode) handleEdit(toPathString(nextNode))
   }
 
   const handleDelete = () => {
@@ -414,7 +412,7 @@ const getNext = (fullData: JsonData, path: CollectionKey[]): CollectionKey[] | n
   const parentData = extractProperty(fullData, parentPath)
 
   if (Array.isArray(parentData)) {
-    const indexOfThisNode = Number(thisKey)
+    const indexOfThisNode = thisKey as number
     if (indexOfThisNode < parentData.length - 1) {
       return getValueNodePath(fullData, [...parentPath, indexOfThisNode + 1])
     }
@@ -425,6 +423,30 @@ const getNext = (fullData: JsonData, path: CollectionKey[]): CollectionKey[] | n
 
     if (indexOfThisNode < parentKeys.length - 1) {
       return getValueNodePath(fullData, [...parentPath, parentKeys[indexOfThisNode + 1]])
+    }
+    return getNext(fullData, parentPath)
+  }
+}
+
+const getPrevious = (fullData: JsonData, path: CollectionKey[]): CollectionKey[] | null => {
+  const parentPath = path.slice(0, path.length - 1)
+  const thisKey = path.slice(-1)[0]
+  if (thisKey === undefined) return null
+
+  const parentData = extractProperty(fullData, parentPath)
+
+  if (Array.isArray(parentData)) {
+    const indexOfThisNode = thisKey as number
+    if (indexOfThisNode > 0) {
+      return getValueNodePath(fullData, [...parentPath, indexOfThisNode - 1])
+    }
+    return getPrevious(fullData, parentPath)
+  } else {
+    const parentKeys = Object.keys(parentData as CollectionData)
+    const indexOfThisNode = parentKeys.findIndex((k) => k === thisKey)
+
+    if (indexOfThisNode > 0) {
+      return getValueNodePath(fullData, [...parentPath, parentKeys[indexOfThisNode - 1]])
     }
     return getNext(fullData, parentPath)
   }
