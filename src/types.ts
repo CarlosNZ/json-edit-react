@@ -193,6 +193,7 @@ interface BaseNodeProps {
 export interface CollectionNodeProps extends BaseNodeProps {
   data: CollectionData
   collapseFilter: FilterFunction
+  collapseAnimationTime: number
   onAdd: InternalUpdateFunction
   keySort: boolean | CompareFunction
   showArrayIndices: boolean

@@ -32,6 +32,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     onDelete,
     canDragOnto,
     collapseFilter,
+    collapseAnimationTime,
     onMove,
     enableClipboard,
     searchFilter,
@@ -145,7 +146,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       hasBeenOpened.current = true
       setCollapsed(!collapsed)
       setCollapseState(null)
-      setTimeout(() => setIsAnimating(false), 500)
+      setTimeout(() => setIsAnimating(false), collapseAnimationTime)
     }
   }
 

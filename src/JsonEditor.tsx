@@ -37,7 +37,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   enableClipboard = true,
   indent = 3,
   collapse = false,
-  collapseAnimationTime,
+  collapseAnimationTime = 500,
   showCollectionCount = true,
   restrictEdit = false,
   restrictDelete = false,
@@ -77,10 +77,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   const transitionTime = getComputedStyle(document.documentElement).getPropertyValue(
     '--jer-expand-transition-time'
   )
-  if (
-    collapseAnimationTime !== undefined &&
-    parseFloat(transitionTime) * 1000 !== collapseAnimationTime
-  ) {
+  if (parseFloat(transitionTime) * 1000 !== collapseAnimationTime) {
     docRoot?.style.setProperty('--jer-expand-transition-time', `${collapseAnimationTime / 1000}s`)
   }
 
@@ -261,6 +258,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     onMove,
     showCollectionCount,
     collapseFilter,
+    collapseAnimationTime,
     restrictEditFilter,
     restrictDeleteFilter,
     restrictAddFilter,
