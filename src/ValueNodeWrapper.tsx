@@ -4,9 +4,7 @@ import {
   NumberValue,
   BooleanValue,
   NullValue,
-  ObjectValue,
   InvalidValue,
-  ArrayValue,
   INVALID_FUNCTION_STRING,
 } from './ValueNodes'
 import { EditButtons, InputButtons } from './ButtonPanels'
@@ -358,10 +356,6 @@ const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
       return <BooleanValue {...inputProps} value={value as boolean} />
     case 'null':
       return <NullValue {...inputProps} />
-    case 'object':
-      return <ObjectValue {...inputProps} value={value} />
-    case 'array':
-      return <ArrayValue {...inputProps} />
     default:
       return <InvalidValue {...inputProps} />
   }

@@ -139,7 +139,10 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
 }) => {
   const { getStyles } = useTheme()
 
-  useKeyboardListener(isEditing, handleEdit, handleCancel)
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleEdit()
+    else if (e.key === 'Escape') handleCancel()
+  }
 
   return isEditing ? (
     <input
@@ -148,6 +151,8 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       name={toPathString(path)}
       checked={value}
       onChange={() => setValue(!value)}
+      onKeyDown={handleKeyPress}
+      autoFocus
     />
   ) : (
     <span
@@ -170,53 +175,6 @@ export const NullValue: React.FC<InputProps> = ({
 }) => {
   const { getStyles } = useTheme()
 
-  useKeyboardListener(isEditing, handleEdit, handleCancel)
-
-  return (
-    <div
-      onDoubleClick={() => setIsEditing(true)}
-      className="jer-value-null"
-      style={getStyles('null', nodeData)}
-    >
-      {String(value)}
-    </div>
-  )
-}
-
-export const ObjectValue: React.FC<InputProps> = ({
-  value,
-  translate,
-  isEditing,
-  handleEdit,
-  handleCancel,
-  nodeData,
-}) => {
-  useKeyboardListener(isEditing, handleEdit, handleCancel)
-
-  return (
-    <span className="jer-value-object">{`{${translate('DEFAULT_NEW_KEY', nodeData)}: "${String(
-      value
-    )}" }`}</span>
-  )
-}
-
-export const ArrayValue: React.FC<InputProps> = ({
-  value,
-  isEditing,
-  handleEdit,
-  handleCancel,
-}) => {
-  useKeyboardListener(isEditing, handleEdit, handleCancel)
-
-  return <span className="jer-value-array">{`[${value === null ? '' : String(value)}]`}</span>
-}
-
-// Used for inputs that don't naturally register keyboard events
-const useKeyboardListener = (
-  isEditing: boolean,
-  handleEdit: () => void,
-  handleCancel: () => void
-) => {
   useEffect(() => {
     if (isEditing) document.addEventListener('keydown', listenForSubmit)
     return () => document.removeEventListener('keydown', listenForSubmit)
@@ -227,6 +185,16 @@ const useKeyboardListener = (
       handleEdit()
     } else if (event.key === 'Escape') handleCancel()
   }
+
+  return (
+    <div
+      onDoubleClick={() => setIsEditing(true)}
+      className="jer-value-null"
+      style={getStyles('null', nodeData)}
+    >
+      {String(value)}
+    </div>
+  )
 }
 
 export const InvalidValue: React.FC<InputProps> = ({ value }) => {
