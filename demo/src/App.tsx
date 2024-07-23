@@ -51,6 +51,7 @@ interface AppState {
   rootName: string
   indent: number
   collapseLevel: number
+  collapseTime: number
   showCount: 'Yes' | 'No' | 'When closed'
   theme: ThemeName | Theme
   allowEdit: boolean
@@ -75,6 +76,7 @@ function App() {
     rootName: dataDefinition.rootName ?? 'data',
     indent: 3,
     collapseLevel: dataDefinition.collapse ?? 2,
+    collapseTime: 500,
     showCount: 'When closed',
     theme: 'default',
     allowEdit: true,
@@ -116,6 +118,7 @@ function App() {
     theme,
     indent,
     collapseLevel,
+    collapseTime,
     showCount,
     showIndices,
     sortKeys,
@@ -330,7 +333,7 @@ function App() {
               }
               showErrorMessages={dataDefinition.showErrorMessages}
               collapse={collapseLevel}
-              // collapseAnimationTime={100}
+              collapseAnimationTime={collapseTime}
               showCollectionCount={
                 showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
               }
@@ -476,6 +479,20 @@ function App() {
                       <NumberIncrementStepper />
                       <NumberDecrementStepper />
                     </NumberInputStepper>
+                  </NumberInput>
+                </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Collapse animation time
+                  </FormLabel>
+                  <NumberInput
+                    id="collapseTime"
+                    className="inputWidth"
+                    min={0}
+                    value={collapseTime}
+                    onChange={(value) => updateState({ collapseTime: Number(value) })}
+                  >
+                    <NumberInputField />
                   </NumberInput>
                 </HStack>
                 <HStack className="inputRow">
