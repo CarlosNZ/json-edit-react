@@ -687,7 +687,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 ## Changelog
 
 
-- **1.15.1**:
+- **1.15.2**:
   - Collapse animation timing is configurable (#96)
   - Bug fix for non-responsive keyboard submit for boolean values (#97)
 - **1.15.0**: Remove ([JSON5](https://json5.org/)) from the package, and provided props for passing in *any* alternative JSON parsing and stringifying methods.
