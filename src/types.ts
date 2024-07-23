@@ -22,6 +22,7 @@ export interface JsonEditorProps {
   id?: string
   indent?: number
   collapse?: boolean | number | FilterFunction
+  collapseAnimationTime?: number // ms
   showCollectionCount?: boolean | 'when-closed'
   restrictEdit?: boolean | FilterFunction
   restrictDelete?: boolean | FilterFunction
@@ -192,6 +193,7 @@ interface BaseNodeProps {
 export interface CollectionNodeProps extends BaseNodeProps {
   data: CollectionData
   collapseFilter: FilterFunction
+  collapseAnimationTime: number
   onAdd: InternalUpdateFunction
   keySort: boolean | CompareFunction
   showArrayIndices: boolean

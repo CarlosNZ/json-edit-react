@@ -37,6 +37,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   enableClipboard = true,
   indent = 3,
   collapse = false,
+  collapseAnimationTime = 500,
   showCollectionCount = true,
   restrictEdit = false,
   restrictDelete = false,
@@ -71,6 +72,14 @@ const Editor: React.FC<JsonEditorProps> = ({
   const [debouncedSearchText, setDebouncedSearchText] = useState(searchText)
 
   const [data, setData] = useData<JsonData>({ setData: srcSetData, data: srcData })
+
+  const docRoot = document.querySelector(':root') as HTMLElement
+  const transitionTime = getComputedStyle(document.documentElement).getPropertyValue(
+    '--jer-expand-transition-time'
+  )
+  if (parseFloat(transitionTime) * 1000 !== collapseAnimationTime) {
+    docRoot?.style.setProperty('--jer-expand-transition-time', `${collapseAnimationTime / 1000}s`)
+  }
 
   useEffect(() => {
     const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
@@ -249,6 +258,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     onMove,
     showCollectionCount,
     collapseFilter,
+    collapseAnimationTime,
     restrictEditFilter,
     restrictDeleteFilter,
     restrictAddFilter,
