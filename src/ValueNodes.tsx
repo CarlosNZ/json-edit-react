@@ -146,11 +146,6 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
 }) => {
   const { getStyles } = useTheme()
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleEdit()
-    else if (e.key === 'Escape') handleCancel()
-  }
-
   return isEditing ? (
     <input
       className="jer-input-boolean"
@@ -158,7 +153,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       name={toPathString(path)}
       checked={value}
       onChange={() => setValue(!value)}
-      onKeyDown={handleKeyPress}
+      onKeyDown={(e) => handleCommonKeyEvents(e, keyboardHandlers)}
       autoFocus
     />
   ) : (
