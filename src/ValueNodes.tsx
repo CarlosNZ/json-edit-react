@@ -146,7 +146,10 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
 }) => {
   const { getStyles } = useTheme()
 
-  useKeyboardListener(isEditing, keyboardHandlers)
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleEdit()
+    else if (e.key === 'Escape') handleCancel()
+  }
 
   return isEditing ? (
     <input
@@ -155,6 +158,8 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       name={toPathString(path)}
       checked={value}
       onChange={() => setValue(!value)}
+      onKeyDown={handleKeyPress}
+      autoFocus
     />
   ) : (
     <span
@@ -176,7 +181,14 @@ export const NullValue: React.FC<InputProps> = ({
 }) => {
   const { getStyles } = useTheme()
 
-  useKeyboardListener(isEditing, keyboardHandlers)
+  useEffect(() => {
+    if (isEditing) document.addEventListener('keydown', listenForSubmit)
+    return () => document.removeEventListener('keydown', listenForSubmit)
+  }, [isEditing])
+
+  const listenForSubmit = (event: any) => {
+    handleCommonKeyEvents(event, keyboardHandlers)
+  }
 
   return (
     <div
@@ -187,40 +199,6 @@ export const NullValue: React.FC<InputProps> = ({
       {String(value)}
     </div>
   )
-}
-
-export const ObjectValue: React.FC<InputProps> = ({
-  value,
-  translate,
-  isEditing,
-  nodeData,
-  ...keyboardHandlers
-}) => {
-  useKeyboardListener(isEditing, keyboardHandlers)
-
-  return (
-    <span className="jer-value-object">{`{${translate('DEFAULT_NEW_KEY', nodeData)}: "${String(
-      value
-    )}" }`}</span>
-  )
-}
-
-export const ArrayValue: React.FC<InputProps> = ({ value, isEditing, ...keyboardHandlers }) => {
-  useKeyboardListener(isEditing, keyboardHandlers)
-
-  return <span className="jer-value-array">{`[${value === null ? '' : String(value)}]`}</span>
-}
-
-// Used for inputs that don't naturally register keyboard events
-const useKeyboardListener = (isEditing: boolean, keyboardHandlers: KeyboardHandlers) => {
-  useEffect(() => {
-    if (isEditing) document.addEventListener('keydown', listenForSubmit)
-    return () => document.removeEventListener('keydown', listenForSubmit)
-  }, [isEditing])
-
-  const listenForSubmit = (event: any) => {
-    handleCommonKeyEvents(event, keyboardHandlers)
-  }
 }
 
 export const InvalidValue: React.FC<InputProps> = ({ value }) => {
