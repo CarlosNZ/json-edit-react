@@ -4,10 +4,16 @@
 
 A [React](https://github.com/facebook/react) component for editing or viewing JSON/object data
 
+**[Explore the Demo](https://carlosnz.github.io/json-edit-react/)**
+
+![NPM Version](https://img.shields.io/npm/v/json-edit-react)
+![GitHub License](https://img.shields.io/github/license/carlosnz/json-edit-react)
+![NPM Downloads](https://img.shields.io/npm/dm/json-edit-react)
+
 > [!IMPORTANT]
 > **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state).
 
-Features include:
+### Features include:
 
  - edit individual values, or whole objects as JSON text
  - fine-grained control over which elements can be edited, deleted, or added to
@@ -18,8 +24,6 @@ Features include:
  - provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
  - [localisable](#localisation) UI
  - **NEW!** [Drag-n-drop](#drag-n-drop) editing! (*experimental*)
-
-**[Explore the Demo](https://carlosnz.github.io/json-edit-react/)**
 
 <img width="392" alt="screenshot" src="image/screenshot.png">
 
@@ -213,7 +217,7 @@ Normally, the component will display simple error messages whenever an error con
     }
 }
 ```
- (An example of a custom Error UI can be seen in the [Demo](#https://carlosnz.github.io/json-edit-react/) with the "Custom Nodes" data set -- when you enter invalid JSON input a "Toast" notification is displayed instead of the normal component error message.)
+ (An example of a custom Error UI can be seen in the [Demo](#https://carlosnz.github.io/json-edit-react/?data=customNodes) with the "Custom Nodes" data set -- when you enter invalid JSON input a "Toast" notification is displayed instead of the normal component error message.)
 
 ### Copy function
 
@@ -308,7 +312,7 @@ restrictTypeSelection = { ({ path, value }) => {
 
 ### JSON Schema validation
 
-As well as dynamically controlling *access* to the various edit tools as described above, it's possible to do full [JSON Schema](https://json-schema.org/) validation by creating an [Update Function](#update-functions) that passes the data to a 3rd-party schema validation library (e.g. [Ajv](https://ajv.js.org/)). This will then reject any invalid input, and display an error in the UI (or via a custom [onError](#onerror-function) function). You can see an example of this in the [Demo](https://carlosnz.github.io/json-edit-react/) with the "JSON Schema Validation" data set (and the "Custom Nodes" data set). 
+As well as dynamically controlling *access* to the various edit tools as described above, it's possible to do full [JSON Schema](https://json-schema.org/) validation by creating an [Update Function](#update-functions) that passes the data to a 3rd-party schema validation library (e.g. [Ajv](https://ajv.js.org/)). This will then reject any invalid input, and display an error in the UI (or via a custom [onError](#onerror-function) function). You can see an example of this in the [Demo](https://carlosnz.github.io/json-edit-react/?data=jsonSchemaValidation) with the "JSON Schema Validation" data set (and the "Custom Nodes" data set). 
 
 An example `onUpdate` validation function (using Ajv) could be something like this:
 
@@ -372,7 +376,7 @@ You can specify what should be matched by setting `searchFilter` to either `"key
 
 There are two helper functions (`matchNode()` and `matchNodeKey()`) exported with the package that might make creating your search function easier (these are the functions used internally for the `"key"` and `"value"` matches described above). You can see what they do [here](https://github.com/CarlosNZ/json-edit-react/blob/574f2c1ba3e724c93ce8ab9cdba2fe8ebbbbf806/src/filterHelpers.ts#L64-L95).
 
-An example custom search function can be seen in the [Demo](#https://carlosnz.github.io/json-edit-react/) with the "Client list" data set -- the search function matches by name and username, and makes the entire "Client" object visible when one of those matches, so it can be used to find a particular person and edit their specific details:
+An example custom search function can be seen in the [Demo](#https://carlosnz.github.io/json-edit-react/?data=jsonPlaceholder) with the "Client list" data set -- the search function matches by name and username, and makes the entire "Client" object visible when one of those matches, so it can be used to find a particular person and edit their specific details:
 
 ```js 
 ({ path, fullData }, searchText) => {
@@ -542,7 +546,7 @@ Localise your implementation by passing in a `translations` object to replace th
 
 ## Custom Nodes
 
-You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/) to see it in action. (There is also a custom Date picker that appears when editing ISO strings in the other data sets.)
+You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) to see it in action. (There is also a custom Date picker that appears when editing ISO strings in the other data sets.)
 
 Custom nodes are provided in the `customNodeDefinitions` prop, as an array of objects of following structure:
 
@@ -594,7 +598,7 @@ return (
 
 ### Custom Collection nodes
 
-In most cases it will be preferable (and simpler) to create custom nodes to match *value* nodes (i.e. not `array` or `object` *collection* nodes), which is what all the [Demo](https://carlosnz.github.io/json-edit-react/) examples show. However, if you *do* wish to target a whole collection node, there are a couple of other things to know:
+In most cases it will be preferable (and simpler) to create custom nodes to match *value* nodes (i.e. not `array` or `object` *collection* nodes), which is what all the [Demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) examples show. However, if you *do* wish to target a whole collection node, there are a couple of other things to know:
 - The normal descendants of this node can still be displayed using the [React `children`](https://react.dev/learn/passing-props-to-a-component#passing-jsx-as-children) property, it just becomes your component's responsibility to handle it.
 - You can specify two different components in the definition:
   - the regular `element` prop, which will be displayed *inside* the collection brackets (i.e. it appears as the *contents* of the collection)
@@ -605,7 +609,7 @@ In most cases it will be preferable (and simpler) to create custom nodes to matc
 
 ## Custom Text
 
-It's possible to change the various text strings displayed by the component. You can [localise it](#localisation), but you can also specify functions to override the displayed text based on certain conditions. For example, say we want the property count text (e.g. `6 items` by default) to give a summary of a certain type of node, which can look nice when collapsed. For example (taken from the [Demo](https://carlosnz.github.io/json-edit-react/)):
+It's possible to change the various text strings displayed by the component. You can [localise it](#localisation), but you can also specify functions to override the displayed text based on certain conditions. For example, say we want the property count text (e.g. `6 items` by default) to give a summary of a certain type of node, which can look nice when collapsed. For example (taken from the [Demo](https://carlosnz.github.io/json-edit-react/?data=customNodes)):
 
 <img width="391" alt="Custom text example" src="image/custom_text.png">
 

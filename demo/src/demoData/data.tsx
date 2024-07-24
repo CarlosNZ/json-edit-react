@@ -4,6 +4,7 @@ export const data: Record<string, object> = {
     number: 99,
     boolean: true,
     nothing: null,
+    undefined: undefined,
     Usage: [
       'Edit a value by clicking the "edit" icon, or double-clicking the value.',
       'You can change the type of any value',
