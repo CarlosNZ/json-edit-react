@@ -76,7 +76,7 @@ function App() {
     rootName: dataDefinition.rootName ?? 'data',
     indent: 3,
     collapseLevel: dataDefinition.collapse ?? 2,
-    collapseTime: 500,
+    collapseTime: 300,
     showCount: 'When closed',
     theme: 'default',
     allowEdit: true,

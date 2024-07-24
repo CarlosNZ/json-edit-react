@@ -4,7 +4,7 @@
   --jer-select-arrow: #777;
   --jer-form-border: 1px solid #ededf0;
   --jer-form-border-focus: 1px solid #e2e2e2;
-  --jer-expand-transition-time: 0.5s;
+  --jer-expand-transition-time: 0.3s;
   --jer-highlight-color: #b3d8ff;
 }
 
@@ -158,6 +158,7 @@ select:focus + .focus {
 
 .jer-collection-inner {
   position: relative;
+  transition: var(--jer-expand-transition-time);
 }
 
 .jer-collection-text-edit {

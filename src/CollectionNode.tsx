@@ -10,7 +10,7 @@ import './style.css'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useTreeState } from './TreeStateProvider'
-import { useCommon, useDragNDrop } from './hooks'
+import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
@@ -49,7 +49,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
 
   const startCollapsed = collapseFilter(incomingNodeData)
-  const [collapsed, setCollapsed] = useState(startCollapsed)
+
+  const { contentRef, isAnimating, maxHeight, collapsed, animateCollapse } = useCollapseTransition(
+    data,
+    collapseAnimationTime,
+    startCollapsed
+  )
 
   const {
     pathString,
@@ -77,24 +82,20 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   // the animation transition when opening and closing the accordion
   const hasBeenOpened = useRef(!startCollapsed)
 
-  // Allows us to delay the overflow visibility of the collapsed element until
-  // the animation has completed
-  const [isAnimating, setIsAnimating] = useState(false)
-
   useEffect(() => {
     setStringifiedValue(jsonStringify(data))
   }, [data])
 
   useEffect(() => {
-    const isCollapsed = collapseFilter(nodeData) && !derivedValues.isEditing
-    hasBeenOpened.current = !isCollapsed
-    setCollapsed(isCollapsed)
+    const shouldBeCollapsed = collapseFilter(nodeData) && !derivedValues.isEditing
+    hasBeenOpened.current = !shouldBeCollapsed
+    animateCollapse(shouldBeCollapsed)
   }, [collapseFilter])
 
   useEffect(() => {
     if (collapseState !== null && doesPathMatch(path)) {
       hasBeenOpened.current = true
-      setCollapsed(collapseState.collapsed)
+      animateCollapse(collapseState.collapsed)
     }
   }, [collapseState])
 
@@ -126,10 +127,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
-  const transitionTime = getComputedStyle(document.documentElement).getPropertyValue(
-    '--jer-expand-transition-time'
-  )
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.shiftKey || e.ctrlKey)) handleEdit()
     else if (e.key === 'Escape') handleCancel()
@@ -142,11 +139,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       return
     }
     if (!(currentlyEditingElement && currentlyEditingElement.includes(pathString))) {
-      setIsAnimating(true)
       hasBeenOpened.current = true
-      setCollapsed(!collapsed)
       setCollapseState(null)
-      setTimeout(() => setIsAnimating(false), collapseAnimationTime)
+      animateCollapse(!collapsed)
     }
   }
 
@@ -175,7 +170,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const handleAdd = (key: string) => {
-    setCollapsed(false)
+    animateCollapse(false)
     const newValue = getDefaultNewValue(nodeData)
     if (collectionType === 'array') {
       onAdd(newValue, [...path, (data as unknown[]).length]).then((error) => {
@@ -230,12 +225,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       typeof keySort === 'function' ? (a: string[], b) => keySort(a[0], b[0] as string) : undefined
     )
   }
-
-  // A crude measure to estimate the approximate height of the block, for
-  // setting the max-height in the collapsible interior.
-  // The Regexp replacement is to parse escaped line breaks *within* the JSON
-  // into *actual* line breaks before splitting
-  const numOfLines = JSON.stringify(data, null, 2).replace(/\\n/g, '\n').split('\n').length
 
   const CollectionChildren = !hasBeenOpened.current ? null : !isEditing ? (
     keyValueArray.map(([key, value], index) => {
@@ -365,7 +354,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           ? () => {
               hasBeenOpened.current = true
               setCurrentlyEditingElement(pathString)
-              setCollapsed(false)
             }
           : undefined
       }
@@ -437,21 +425,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       <div
         className={'jer-collection-inner'}
         style={{
-          // Don't limit the height when collection or any of its children are
-          // being edited, so it won't overlap lower elements if the editing
-          // input gets too large. This won't cause problems, as it can't be
-          // collapsed while being edited anyway.
-          maxHeight: isCollapsed
-            ? 0
-            : !areChildrenBeingEdited(pathString)
-            ? `${numOfLines * 3}em`
-            : undefined,
           overflowY: isCollapsed || isAnimating ? 'hidden' : 'visible',
-          // Need to use max-height for animation to work, unfortunately
-          // "height: auto" doesn't 😔
-          transition: `max-height ${transitionTime}`,
+          // Prevent collapse if this node or any children are being edited
+          maxHeight: areChildrenBeingEdited(pathString) ? undefined : maxHeight,
           ...getStyles('collectionInner', nodeData),
         }}
+        ref={contentRef}
       >
         {CollectionContents}
         <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
