@@ -25,7 +25,6 @@ import { Input } from 'object-property-assigner/build'
 import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'
 import Ajv from 'ajv'
-import { undefinedNodeDefinition } from '../customComponents/Undefined'
 
 const ajv = new Ajv()
 const validateJsonSchema = ajv.compile(jsonSchema)
@@ -91,7 +90,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'data',
     collapse: 2,
     data: data.intro,
-    customNodeDefinitions: [dateNodeDefinition, undefinedNodeDefinition],
+    customNodeDefinitions: [dateNodeDefinition],
   },
   starWars: {
     name: '🚀 Star Wars',
