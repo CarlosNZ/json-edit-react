@@ -10,9 +10,6 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
 ![GitHub License](https://img.shields.io/github/license/carlosnz/json-edit-react)
 ![NPM Downloads](https://img.shields.io/npm/dm/json-edit-react)
 
-> [!IMPORTANT]
-> **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state).
-
 ### Features include:
 
  - edit individual values, or whole objects as JSON text
@@ -27,6 +24,10 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
 
 <img width="392" alt="screenshot" src="image/screenshot.png">
 
+> [!IMPORTANT]
+> **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state).
+
+## Contents
 - [Installation](#installation)
 - [Implementation](#implementation)
 - [Usage](#usage)
