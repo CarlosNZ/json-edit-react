@@ -90,9 +90,9 @@ export type UpdateFunction = (
 ) =>
   | void
   | ErrorString
-  | false
+  | boolean
   | UpdateFunctionReturn
-  | Promise<false | ErrorString | void | UpdateFunctionReturn>
+  | Promise<boolean | ErrorString | void | UpdateFunctionReturn>
 
 export type OnChangeFunction = (props: {
   currentData: JsonData

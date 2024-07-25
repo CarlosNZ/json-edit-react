@@ -165,9 +165,8 @@ The function will receive the following object as a parameter:
                   // (e.g. [ "user", "friends", 1, "name" ] ) (equivalent to "user.friends[1].name")
 }
 ```
-
-The function needn't return anything, in which case the data is updated normally. However, you can return either an Error value, or a modified data value, which will be used instead of the input data. The return value can be one of the following:
-- `void` / `undefined`: data continues update as normal
+The function can return nothing (in which case the data is updated normally), or a value to represent success/failure, error value, or modified data. The return value can be one of the following, and handled accordingly:
+- `true` / `void` / `undefined`: data continues update as normal
 - `false`: considers the update to be an error, so data is not updated (reverts to previous value), and a generic error message is displayed in the UI
 - `string`: also considered an error, so no data update, but the UI error message will be your provided string
 - `[ "value", <value> ]`: tells the component to use the returned `<value>` instead of the input data. You might use this to automatically modify user input -- for example, sorting an array, or inserting a timestamp field into an object.

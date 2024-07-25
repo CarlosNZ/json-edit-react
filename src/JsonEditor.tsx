@@ -103,7 +103,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   const handleEdit = async (updateMethod: UpdateFunction, input: UpdateFunctionProps) => {
     const result = await updateMethod(input)
 
-    if (result === undefined) {
+    if (result === true || result === undefined) {
       setData(input.newData)
       return
     }
@@ -373,7 +373,7 @@ const getSearchFilter = (
 }
 
 const isUpdateReturnTuple = (
-  input: UpdateFunctionReturn | string | false | undefined
+  input: UpdateFunctionReturn | string | boolean | undefined
 ): input is UpdateFunctionReturn => {
   return Array.isArray(input) && input.length === 2 && ['error', 'value'].includes(input[0])
 }

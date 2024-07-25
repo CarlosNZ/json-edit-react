@@ -45,7 +45,7 @@ export interface DemoData {
   onUpdate?: (
     props: UpdateFunctionProps,
     toast: (options: unknown) => void
-  ) => void | ErrorString | false | Promise<false | ErrorString | void>
+  ) => void | ErrorString | boolean | Promise<boolean | ErrorString | void>
   onAdd?: UpdateFunction
   onEdit?: UpdateFunction
   onChange?: OnChangeFunction
