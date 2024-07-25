@@ -689,7 +689,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-
+- **1.15.3**:
+  - Allow [UpdateFunction](#update-functions) to return `true` to represent success
+  - Refactor collapse animation to improve lag and accuracy
 - **1.15.2**:
   - Collapse animation timing is configurable (#96)
   - Bug fix for non-responsive keyboard submit for boolean values (#97)
