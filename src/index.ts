@@ -20,6 +20,8 @@ import {
   type ThemeInput,
   type NodeData,
   type JsonData,
+  type TypeFilterFunction
+  type DataType
 } from './types'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { themes } from './theme'
@@ -55,6 +57,8 @@ export {
   type CustomNodeDefinition,
   type CustomTextDefinitions,
   type JsonData,
+  type TypeFilterFunction,
+  type DataType,
   LinkCustomComponent,
   LinkCustomNodeDefinition,
   IconAdd,
