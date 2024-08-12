@@ -74,7 +74,7 @@ function App() {
 
   const [state, setState] = useState<AppState>({
     rootName: dataDefinition.rootName ?? 'data',
-    indent: 3,
+    indent: 2,
     collapseLevel: dataDefinition.collapse ?? 2,
     collapseTime: 300,
     showCount: 'When closed',
