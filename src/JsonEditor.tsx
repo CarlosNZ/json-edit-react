@@ -35,7 +35,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   onError,
   showErrorMessages = true,
   enableClipboard = true,
-  indent = 3,
+  indent = 2,
   collapse = false,
   collapseAnimationTime = 300, // must be equivalent to CSS value
   showCollectionCount = true,
