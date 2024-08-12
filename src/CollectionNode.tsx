@@ -425,7 +425,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       <div
         className={'jer-collection-inner'}
         style={{
-          overflowY: isCollapsed || isAnimating ? 'hidden' : 'visible',
+          overflowY: isCollapsed || isAnimating ? 'clip' : 'visible',
           // Prevent collapse if this node or any children are being edited
           maxHeight: areChildrenBeingEdited(pathString) ? undefined : maxHeight,
           ...getStyles('collectionInner', nodeData),
