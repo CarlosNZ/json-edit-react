@@ -5,3 +5,4 @@ git checkout -b gh-pages
 git merge main
 yarn build
 cp -r build ../docs
+git add .
