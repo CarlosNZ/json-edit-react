@@ -692,8 +692,10 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.15.6**: Small bug fix for `overflow: clip` setting based on animating
+- **1.15.7**:
+  - Small bug fix for `overflow: clip` setting based on animating
   state
+  - Small tweak to outer bracket positioning
 - **1.15.5**: Bug fix for collapse icon being clipped when indent is low #104
 - **1.15.3**:
   - Allow [UpdateFunction](#update-functions) to return `true` to represent success

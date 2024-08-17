@@ -441,7 +441,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           )}
         </div>
         {!isEditing && showCollectionWrapper && (
-          <div className="jer-brackets jer-bracket-outside" style={getStyles('bracket', nodeData)}>
+          <div
+            className="jer-brackets jer-bracket-outside"
+            style={{
+              ...getStyles('bracket', nodeData),
+              marginLeft: `${indent < 3 ? -1 : indent < 6 ? -0.5 : 0}em`,
+            }}
+          >
             {brackets.close}
           </div>
         )}
