@@ -93,7 +93,7 @@ export const useCollapseTransition = (
 
   return {
     contentRef,
-    isAnimating,
+    isAnimating: isAnimating.current,
     animateCollapse,
     maxHeight,
     collapsed,
