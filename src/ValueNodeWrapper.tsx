@@ -45,7 +45,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     customNodeDefinitions,
   } = props
   const { getStyles } = useTheme()
-  const { setCurrentlyEditingElement } = useTreeState()
+  const { setCurrentlyEditingElement, setCollapseState } = useTreeState()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
@@ -133,6 +133,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     if (customNode) {
       onEdit(customNode.defaultValue, path)
       setDataType(type)
+      // Custom nodes will be instantiated expanded and NOT editing
+      setCurrentlyEditingElement(null)
+      setCollapseState({ path, collapsed: false })
     } else {
       const newValue = convertValue(
         value,
