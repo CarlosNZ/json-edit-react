@@ -363,6 +363,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       type={collectionType}
       nodeData={nodeData}
       translate={translate}
+      customButtons={props.customButtons}
     />
   )
 

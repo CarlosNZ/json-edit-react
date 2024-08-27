@@ -304,6 +304,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 handleDelete={canDelete ? handleDelete : undefined}
                 enableClipboard={enableClipboard}
                 translate={translate}
+                customButtons={props.customButtons}
                 nodeData={nodeData}
               />
             )

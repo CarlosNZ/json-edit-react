@@ -60,6 +60,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   id,
   customText = {},
   customNodeDefinitions = [],
+  customButtons = [],
   jsonParse = JSON.parse,
   jsonStringify = (data: JsonData) => JSON.stringify(data, null, 2),
 }) => {
@@ -276,6 +277,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     stringTruncate,
     translate,
     customNodeDefinitions,
+    customButtons,
     parentData: null,
     jsonParse,
     jsonStringify,

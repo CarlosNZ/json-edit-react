@@ -8,6 +8,7 @@ import {
   type CopyFunction,
   type CopyType,
   type NodeData,
+  type CustomButtonDefinition,
 } from './types'
 import './style.css'
 
@@ -19,6 +20,7 @@ interface EditButtonProps {
   type?: CollectionDataType
   nodeData: NodeData
   translate: TranslateFunction
+  customButtons: CustomButtonDefinition[]
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
@@ -27,6 +29,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   handleAdd,
   enableClipboard,
   type,
+  customButtons,
   nodeData,
   translate,
 }) => {
@@ -98,6 +101,11 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           <Icon name="add" nodeData={nodeData} />
         </div>
       )}
+      {customButtons?.map(({ Element, onClick }, i) => (
+        <div key={i} onClick={(e) => onClick(nodeData, e)}>
+          <Element />
+        </div>
+      ))}
       {isAdding && handleAdd && type === 'object' && (
         <>
           <input

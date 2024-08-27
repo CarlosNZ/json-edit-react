@@ -366,6 +366,22 @@ function App() {
               stringTruncate={90}
               customNodeDefinitions={dataDefinition?.customNodeDefinitions}
               customText={dataDefinition?.customTextDefinitions}
+              // customButtons={[
+              //   {
+              //     Element: () => (
+              //       <svg fill="none" viewBox="0 0 24 24" height="1em" width="1em">
+              //         <path
+              //           fill="currentColor"
+              //           fillRule="evenodd"
+              //           d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 2c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11z"
+              //           clipRule="evenodd"
+              //         />
+              //         <path fill="currentColor" d="M16 12l-6 4.33V7.67L16 12z" />
+              //       </svg>
+              //     ),
+              //     onClick: (nodeData) => console.log(nodeData),
+              //   },
+              // ]}
               onChange={dataDefinition?.onChange ?? undefined}
               jsonParse={JSON5.parse}
             />

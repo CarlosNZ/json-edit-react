@@ -43,6 +43,7 @@ export interface JsonEditorProps {
   translations?: Partial<LocalisedStrings>
   customNodeDefinitions?: CustomNodeDefinition[]
   customText?: CustomTextDefinitions
+  customButtons?: CustomButtonDefinition[]
   jsonParse?: (input: string) => JsonData
   jsonStringify?: (input: JsonData) => string
 }
@@ -187,6 +188,7 @@ interface BaseNodeProps {
   indent: number
   translate: TranslateFunction
   customNodeDefinitions: CustomNodeDefinition[]
+  customButtons: CustomButtonDefinition[]
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -243,6 +245,11 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
 }
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>
+
+export interface CustomButtonDefinition {
+  Element: React.FC
+  onClick: (nodeData: NodeData, e: React.MouseEvent) => void
+}
 
 export interface InputProps {
   value: unknown
