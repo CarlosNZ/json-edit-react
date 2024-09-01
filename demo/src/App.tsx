@@ -379,7 +379,7 @@ function App() {
               //         <path fill="currentColor" d="M16 12l-6 4.33V7.67L16 12z" />
               //       </svg>
               //     ),
-              //     onClick: (nodeData) => console.log(nodeData),
+              //     onClick: (nodeData, e) => console.log(nodeData),
               //   },
               // ]}
               onChange={dataDefinition?.onChange ?? undefined}

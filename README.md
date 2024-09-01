@@ -38,6 +38,7 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
   - [OnChange function](#onchange-function)
   - [OnError function](#onerror-function)
   - [Copy function](#copy-function)
+  - [Custom Buttons](#custom-buttons)
 - [Filter functions](#filter-functions)
   - [Examples](#examples-1)
   - [JSON Schema validation](#json-schema-validation)
@@ -143,6 +144,7 @@ The only *required* value is `data` (although you will need to provide a `setDat
 | `rootFontSize`          | `number\|string` (CSS value)                  | `16px`                                    | The "base" font size from which all other sizings are derived (in `em`s). By changing this you will scale the entire component. container.                                                                                                                                                                                                     |
 | `customNodeDefinitions` | `CustomNodeDefinition[]`                      |                                           | You can provide customised components to override specific nodes in the data tree, according to a condition function. See see [Custom nodes](#custom-nodes) for more detail. (A simple custom component to turn url strings into active links is provided in the main package  -- see [here](#active-hyperlinks))                              |
 | `customText`            | `CustomTextDefinitions`                       |                                           | In addition to [localising the component](#localisation) text strings, you can also *dynamically* alter it, depending on the data. See [Custom Text](#custom-text) for more detail.                                                                                                                                                            |
+| `customButtons`         | `CustomButtonDefinition[]`                    | `[]`                                      | You can add your own buttons to the Edit Buttons panel if you'd like to be able to perform a custom operation on the data. See [Custom Button](#custom-buttons)                                                                                                                                                                                |
 | `jsonParse`             | `(input: string) => JsonData`                 | `JSON.parse`                              | When editing a block of JSON directly, you may wish to allow some "looser" input -- e.g. 'single quotes', trailing commas, or unquoted field names. In this case, you can provide a third-party JSON parsing method. I recommend [JSON5](https://json5.org/), which is what is used in the [Demo](https://carlosnz.github.io/json-edit-react/) |
 | `jsonStringify`         | `(data: JsonData) => string`                  | `(data) => JSON.stringify(data, null, 2)` | Similarly, you can override the default presentation of the JSON string when starting editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                                                                           |
 
@@ -234,6 +236,18 @@ A similar callback is executed whenever an item is copied to the clipboard (if p
 ```
 
 Since there is very little user feedback when clicking "Copy", a good idea would be to present some kind of notification in this callback.
+
+### Custom Buttons
+
+In addition to the "Copy", "Edit" and "Delete" buttons that appear by each value, you can add your own buttons if you need to allow some custom operations on the data. Provide an array of button definitions in the `customButtons` prop, in the following definition structure:
+
+```js
+{
+  Element: React.FC,
+  onClick: (nodeData: NodeData, e: React.MouseEvent) => void
+}
+```
+Where `NodeData` is the same data structure received by the previous "Update Functions".
 
 ## Filter functions
 
