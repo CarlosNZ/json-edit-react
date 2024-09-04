@@ -170,13 +170,7 @@ export const Icon: React.FC<IconSharedProps> = ({ name, nodeData, rotate }): JSX
       )
     case 'chevron':
       return (
-        icons?.chevron ?? (
-          <IconChevron
-            className={`jer-accordion-icon${rotate ? ' jer-rotate-90' : ''}`}
-            size="1em"
-            style={getStyles('iconCollection', nodeData)}
-          />
-        )
+        icons?.chevron ?? <IconChevron size="1em" style={getStyles('iconCollection', nodeData)} />
       )
     default:
       return <></>

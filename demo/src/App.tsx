@@ -366,6 +366,7 @@ function App() {
               stringTruncate={90}
               customNodeDefinitions={dataDefinition?.customNodeDefinitions}
               customText={dataDefinition?.customTextDefinitions}
+              // icons={{ chevron: <IconCancel size="1.2em" /> }}
               // customButtons={[
               //   {
               //     Element: () => (

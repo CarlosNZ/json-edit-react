@@ -384,7 +384,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       {showCollectionWrapper ? (
         <div className="jer-collection-header-row" style={{ position: 'relative' }}>
           <div className="jer-collection-name">
-            <div className="jer-collapse-icon" onClick={(e) => handleCollapse(e)}>
+            <div
+              className={`jer-collapse-icon jer-accordion-icon${collapsed ? ' jer-rotate-90' : ''}`}
+              onClick={(e) => handleCollapse(e)}
+            >
               <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
             </div>
             {KeyDisplay}
