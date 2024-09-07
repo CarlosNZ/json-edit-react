@@ -706,6 +706,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.15.12**:
+  - [Custom buttons](#custom-buttons)
+  - Misc small bug fixes
 - **1.15.7**:
   - Small bug fix for `overflow: clip` setting based on animating
   state
