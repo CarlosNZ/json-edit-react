@@ -3624,9 +3624,9 @@
     undici-types "~6.19.2"
 
 "@types/node@^20.11.6":
-  version "20.16.2"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.16.2.tgz#9e388f503a5af306e8c63319334887390966a11e"
-  integrity sha512-91s/n4qUPV/wg8eE9KHYW1kouTfDk2FPGjXbBMfRWP/2vg1rCXNQL1OCabwGs0XSdukuK+MwCDXE30QpSeMUhQ==
+  version "20.16.5"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.16.5.tgz#d43c7f973b32ffdf9aa7bd4f80e1072310fd7a53"
+  integrity sha512-VwYCweNo3ERajwy0IUlqqcyZ8/A7Zwa9ZP3MnENWcB11AejO+tLy3pu850goUW2FC/IJMdZUfKpX/yxL1gymCA==
   dependencies:
     undici-types "~6.19.2"
 
@@ -3676,9 +3676,9 @@
     csstype "^3.0.2"
 
 "@types/react@^18.2.48":
-  version "18.3.4"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.3.4.tgz#dfdd534a1d081307144c00e325c06e00312c93a3"
-  integrity sha512-J7W30FTdfCxDDjmfRM+/JqLHBIyl7xUIp9kwK637FGmY7+mkSFSe6L4jpZzhj5QMfLssSDP4/i75AKkrdC7/Jw==
+  version "18.3.5"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.3.5.tgz#5f524c2ad2089c0ff372bbdabc77ca2c4dbadf8f"
+  integrity sha512-WeqMfGJLGuLCqHGYRGHxnKrXcTitc6L/nBUWfWPcTarG3t9PsquqUMuVeXZeca+mglY4Vo5GZjCi0A3Or2lnxA==
   dependencies:
     "@types/prop-types" "*"
     csstype "^3.0.2"
@@ -6559,9 +6559,9 @@ fraction.js@^4.3.7:
   integrity sha512-ZsDfxO51wGAXREY55a7la9LScWpwv9RxIrYABrlvOFBlH/ShPnrtsXeuUIfXKKOVicNxQ+o8JTbJvjS4M89yew==
 
 framer-motion@^11.0.3:
-  version "11.3.31"
-  resolved "https://registry.yarnpkg.com/framer-motion/-/framer-motion-11.3.31.tgz#b49334b072c6c238d84c372e3c8f04ca59e03a88"
-  integrity sha512-Xmxs08WBXnc2tNzNZbFSpquI33lvleJg4Y+hmZ+vFkn+laN9ZnR3gbZnNGKDtuz7c/x3u8dLg05OU3EhLobCsg==
+  version "11.5.4"
+  resolved "https://registry.yarnpkg.com/framer-motion/-/framer-motion-11.5.4.tgz#521b551bb6003918e7b24af3141626f6f443e2b3"
+  integrity sha512-E+tb3/G6SO69POkdJT+3EpdMuhmtCh9EWuK4I1DnIC23L7tFPrl8vxP+LSovwaw6uUr73rUbpb4FgK011wbRJQ==
   dependencies:
     tslib "^2.4.0"
 
@@ -8109,10 +8109,10 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@^1.15.11:
-  version "1.15.11"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.15.11.tgz#c2816695ec043353be1697a9e01460fe20ff749d"
-  integrity sha512-X/6BHbb9rYdqoDlkGRvQEn99YiO8/1ONP1HbriDnZtKfsPkIfDm+d7+OpsA19j8k6bA4qD3RKmqOp89P0kSTKw==
+json-edit-react@^1.15.12:
+  version "1.15.12"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.15.12.tgz#4a894e18e14ae8582761bb1be44725b8df9d60f8"
+  integrity sha512-kdWUuo9VPaHrv3trrqjGgmSD0A5znz+0Omo8PdIFCXST+tHJ+4TKFDi902vUQ9Ai9ScTMH21Unt7Y7j6/KUf5Q==
   dependencies:
     object-property-assigner "^1.3.0"
     object-property-extractor "^1.0.11"
@@ -8730,14 +8730,14 @@ object-keys@^1.1.1:
   integrity sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==
 
 object-property-assigner@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.3.0.tgz#c306d3388ee69bf306170be83dd34049d9f50087"
-  integrity sha512-19A0RsC9rP9klCKHDPL/MeERxeopV9wyMNfP+eD2uKOafzLjF+OUEN4FoP6RAlCFHmerBPJ4ohNv/WrgaNpeIA==
+  version "1.3.1"
+  resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.3.1.tgz#3f6be71be5fcfdaf2053bd11c08e745a57d38809"
+  integrity sha512-3R6x1l1sQA4jQBOqxkxH3DHw0PMh7K5UY4x1Yc5QYbbkzZpAJ8l9w+Trq/64ZRe2thiOsa8JpB4M7D61hnkjRA==
 
 object-property-extractor@^1.0.11:
-  version "1.0.11"
-  resolved "https://registry.yarnpkg.com/object-property-extractor/-/object-property-extractor-1.0.11.tgz#53cd9661266b4d6b5c7d32197b1824d2c5ecea60"
-  integrity sha512-VnDQcyN0FTXZ0hMZS/CTb2QkIssZ9XKB8zlf5rnFh1HjFQX1P73EHawavSztBOiPDGqAPNXebv4agjhF9eACAw==
+  version "1.0.12"
+  resolved "https://registry.yarnpkg.com/object-property-extractor/-/object-property-extractor-1.0.12.tgz#d3824be4a01e8d4489d3cdcbd1dfc45828d1ad97"
+  integrity sha512-X6rMK1O6O3EU4O06BtATezWKr+5idX6Yo0PndVqr8NlED3Eoa2YE+VKQgQL4EK0+vh+YA83Sjj9Nsi/PuXXeDQ==
 
 object.assign@^4.1.4, object.assign@^4.1.5:
   version "4.1.5"
