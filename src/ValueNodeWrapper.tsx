@@ -272,13 +272,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
           >
             {name === '' ? (
-              <span className="jer-empty-string">
+              <span className={path.length > 0 ? 'jer-empty-string' : undefined}>
                 {/* display "<empty string>" using pseudo class CSS */}
               </span>
             ) : (
-              name
+              `${name}:`
             )}
-            :
           </span>
         )}
         {showKeyEdit && (

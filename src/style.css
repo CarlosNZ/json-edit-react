@@ -393,7 +393,7 @@ select:focus + .focus {
 
 /* For displaying keys that are purely <empty string> "" */
 .jer-empty-string::after {
-  content: '<empty string>';
+  content: '<empty string>:';
   font-style: italic;
   font-size: 90%;
 }
