@@ -378,7 +378,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       draggable={canDrag}
       {...dragSourceProps}
       {...getDropTargetProps('above')}
-      onClick={(e) => handleCollapse(e)}
     >
       {!isEditing && BottomDropTarget}
       <DropTargetPadding position="above" nodeData={nodeData} />
