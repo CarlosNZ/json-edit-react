@@ -22,6 +22,7 @@ import {
   type ThemeName,
   type Theme,
   type ThemeInput,
+  type ThemeStyles,
   type NodeData,
   type JsonData,
 } from './types'
@@ -40,6 +41,7 @@ export {
   type ThemeName,
   type Theme,
   type ThemeInput,
+  type ThemeStyles,
   type JsonEditorProps,
   type UpdateFunction,
   type OnChangeFunction,
