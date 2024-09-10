@@ -706,6 +706,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.16.0**: Extend the "click" zone for collapsing nodes to the header bar and left margin (not just the collapse icon)
 - **1.15.12**:
   - [Custom buttons](#custom-buttons)
   - Misc small bug fixes
