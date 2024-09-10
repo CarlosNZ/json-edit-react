@@ -408,6 +408,7 @@ collapse/expand node*/
 .jer-clickzone {
   position: absolute;
   left: -1em;
+  top: 1.2em;
   /* border: 1px solid red; */
-  height: 100%;
+  height: calc(100% - 0.8em);
 }
