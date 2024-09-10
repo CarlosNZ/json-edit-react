@@ -9,7 +9,6 @@
  */
 
 import React from 'react'
-import './style.css'
 
 interface TextAreaProps {
   className: string

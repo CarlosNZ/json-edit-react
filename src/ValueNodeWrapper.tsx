@@ -18,9 +18,8 @@ import {
   type JsonData,
 } from './types'
 import { useTheme } from './theme'
-import './style.css'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
-import { filterNode } from './filterHelpers'
+import { filterNode } from './helpers'
 import { useTreeState } from './TreeStateProvider'
 import { useCommon, useDragNDrop } from './hooks'
 

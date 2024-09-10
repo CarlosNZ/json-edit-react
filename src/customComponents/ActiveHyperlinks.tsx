@@ -7,7 +7,7 @@
  */
 
 import React from 'react'
-import { truncate } from '../../src/ValueNodes'
+import { truncate } from '../../src/helpers'
 import { type CustomNodeProps, type CustomNodeDefinition } from '../types'
 
 export const LinkCustomComponent: React.FC<CustomNodeProps<{ stringTruncate?: number }>> = ({

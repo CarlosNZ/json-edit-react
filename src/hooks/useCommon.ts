@@ -14,7 +14,7 @@ import {
   type JsonData,
   ERROR_DISPLAY_TIME,
 } from '../types'
-import { toPathString } from '../ValueNodes'
+import { toPathString } from '../helpers'
 
 export interface CommonProps {
   props: CollectionNodeProps | ValueNodeProps

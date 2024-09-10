@@ -10,7 +10,6 @@ import {
   type NodeData,
   type CustomButtonDefinition,
 } from './types'
-import './style.css'
 
 interface EditButtonProps {
   startEdit?: () => void
@@ -52,6 +51,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   }
 
   const handleCopy = (e: React.MouseEvent<HTMLElement>) => {
+    e.stopPropagation()
     let copyType: CopyType = 'value'
     let value
     let stringValue = ''
@@ -81,18 +81,29 @@ export const EditButtons: React.FC<EditButtonProps> = ({
         </div>
       )}
       {startEdit && (
-        <div onClick={startEdit}>
+        <div
+          onClick={(e) => {
+            e.stopPropagation()
+            startEdit()
+          }}
+        >
           <Icon name="edit" nodeData={nodeData} />
         </div>
       )}
       {handleDelete && (
-        <div onClick={handleDelete}>
+        <div
+          onClick={(e) => {
+            e.stopPropagation()
+            handleDelete()
+          }}
+        >
           <Icon name="delete" nodeData={nodeData} />
         </div>
       )}
       {handleAdd && (
         <div
-          onClick={() => {
+          onClick={(e) => {
+            e.stopPropagation()
             if (type === 'object') setIsAdding(true)
             // For arrays, we don't need to add a key
             else handleAdd('')

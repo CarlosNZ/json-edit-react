@@ -5,8 +5,7 @@ import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
 import { type CollectionNodeProps, type NodeData, type CollectionData } from './types'
 import { Icon } from './Icons'
-import { filterNode, isCollection } from './filterHelpers'
-import './style.css'
+import { filterNode, isCollection } from './helpers'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useTreeState } from './TreeStateProvider'
@@ -334,6 +333,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       <span
         className="jer-key-text"
         style={getStyles('property', nodeData)}
+        onClick={(e) => e.stopPropagation()}
         onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
       >
         {name === '' ? (
@@ -379,13 +379,26 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       {...dragSourceProps}
       {...getDropTargetProps('above')}
     >
+      <div
+        className="jer-clickzone"
+        style={{
+          width: `${indent / 2 + 1}em`,
+          zIndex: 10 + nodeData.level * 2,
+        }}
+        onClick={(e) => handleCollapse(e)}
+      />
       {!isEditing && BottomDropTarget}
       <DropTargetPadding position="above" nodeData={nodeData} />
       {showCollectionWrapper ? (
-        <div className="jer-collection-header-row" style={{ position: 'relative' }}>
+        <div
+          className="jer-collection-header-row"
+          style={{ position: 'relative' }}
+          onClick={(e) => handleCollapse(e)}
+        >
           <div className="jer-collection-name">
             <div
               className={`jer-collapse-icon jer-accordion-icon${collapsed ? ' jer-rotate-90' : ''}`}
+              style={{ zIndex: 11 + nodeData.level * 2 }}
               onClick={(e) => handleCollapse(e)}
             >
               <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />

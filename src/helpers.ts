@@ -4,6 +4,10 @@ export const isCollection = (value: unknown): value is Record<string, unknown> |
   value !== null && typeof value === 'object'
 
 /**
+ * FILTERING
+ */
+
+/**
  * Handles the overall logic for whether a node should be visible or not, and
  * returns true/false accordingly. Collections must be handled differently to
  * primitive values, as they must also check their children (recursively)
@@ -93,3 +97,23 @@ export const matchNodeKey: SearchFilterFunction = ({ key, path }, searchText = '
   if (path.some((field) => matchNode({ value: field }, searchText))) return true
   return false
 }
+
+/**
+ * Truncates a string to a specified length, appends `...` if truncated
+ */
+export const truncate = (string: string, length = 200) =>
+  typeof string === 'string'
+    ? string.length < length
+      ? string
+      : `${string.slice(0, length - 2).trim()}...`
+    : string
+
+/**
+ * Converts a part expressed as an array of properties to a single single
+ */
+export const toPathString = (path: Array<string | number>) =>
+  path
+    // An empty string in a part will "disappear", so replace it with a
+    // non-printable char
+    .map((part) => (part === '' ? String.fromCharCode(0) : part))
+    .join('.')

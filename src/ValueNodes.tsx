@@ -1,27 +1,10 @@
 import React, { useEffect } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { type InputProps } from './types'
+import { toPathString, truncate } from './helpers'
 import { useTheme } from './theme'
-import './style.css'
+import { type InputProps } from './types'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
-
-/**
- * Truncates a string to a specified length, appends `...` if truncated
- */
-export const truncate = (string: string, length = 200) =>
-  typeof string === 'string'
-    ? string.length < length
-      ? string
-      : `${string.slice(0, length - 2).trim()}...`
-    : string
-
-export const toPathString = (path: Array<string | number>) =>
-  path
-    // An empty string in a part will "disappear", so replace it with a
-    // non-printable char
-    .map((part) => (part === '' ? String.fromCharCode(0) : part))
-    .join('.')
 
 export const StringValue: React.FC<InputProps & { value: string }> = ({
   value,

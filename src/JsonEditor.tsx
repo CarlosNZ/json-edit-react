@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import assign, { type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import { CollectionNode } from './CollectionNode'
-import { isCollection, matchNode, matchNodeKey } from './filterHelpers'
+import { isCollection, matchNode, matchNodeKey } from './helpers'
 import {
   type CollectionData,
   type JsonEditorProps,
@@ -20,8 +20,8 @@ import { useTheme, ThemeProvider } from './theme'
 import { TreeStateProvider } from './TreeStateProvider'
 import { useData } from './hooks/useData'
 import { getTranslateFunction } from './localisation'
-import './style.css'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
+import './style.css'
 
 const Editor: React.FC<JsonEditorProps> = ({
   data: srcData,
@@ -302,7 +302,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   )
 }
 
-const JsonEditor: React.FC<JsonEditorProps> = (props) => {
+export const JsonEditor: React.FC<JsonEditorProps> = (props) => {
   return (
     <ThemeProvider theme={props.theme} icons={props.icons}>
       <TreeStateProvider>
@@ -379,5 +379,3 @@ const isUpdateReturnTuple = (
 ): input is UpdateFunctionReturn => {
   return Array.isArray(input) && input.length === 2 && ['error', 'value'].includes(input[0])
 }
-
-export default JsonEditor

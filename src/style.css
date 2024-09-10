@@ -68,7 +68,6 @@ select::-ms-expand {
   width: 0.8em;
   height: 0.5em;
   background-color: var(--jer-select-arrow);
-  -webkit-clip-path: polygon(100% 0%, 0 0%, 50% 100%);
   clip-path: polygon(100% 0%, 0 0%, 50% 100%);
 }
 
@@ -402,4 +401,13 @@ select:focus + .focus {
   height: 0.5em;
   border: 1px dashed #e0e0e0;
   border-radius: 0.3em;
+}
+
+/* Region to left of Collection node contents that is clickable to
+collapse/expand node*/
+.jer-clickzone {
+  position: absolute;
+  left: -1em;
+  /* border: 1px solid red; */
+  height: 100%;
 }

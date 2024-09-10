@@ -20,14 +20,14 @@ export default [
       },
     ],
     plugins: [
-      styles(),
+      styles({ minimize: true }),
       peerDepsExternal({ includeDependencies: true }),
       typescript({ module: 'ESNext', target: 'es6' }),
       terser(),
       bundleSize(),
       sizes(),
     ],
-    external: ['json5', 'object-property-assigner', 'object-property-extractor'],
+    external: ['object-property-assigner', 'object-property-extractor'],
   },
   {
     input: './build/dts/index.d.ts',

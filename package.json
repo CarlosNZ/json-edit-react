@@ -1,9 +1,11 @@
 {
   "name": "json-edit-react",
-  "version": "1.15.12",
+  "version": "1.15.13-0",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
+  "type": "module",
+  "sideEffects": false,
   "types": "build/index.d.ts",
   "files": [
     "build/**/*"
@@ -16,7 +18,7 @@
     "demo": "cd demo && node ./scripts/getVersion.js && yarn && yarn start",
     "build": "rimraf ./build && rollup -c && rimraf ./build/dts",
     "lint": "npx eslint \"src/**\"",
-    "postbuild": "node ./scripts/cleanBuildTypes.js",
+    "postbuild": "node ./scripts/cleanBuildTypes.cjs",
     "prepublish": "yarn build",
     "compile": "rimraf ./build && tsc",
     "release": "yarn publish",
