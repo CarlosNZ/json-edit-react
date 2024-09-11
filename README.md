@@ -4,7 +4,8 @@
 
 A [React](https://github.com/facebook/react) component for editing or viewing JSON/object data
 
-**[Explore the Demo](https://carlosnz.github.io/json-edit-react/)**
+
+## [Explore the Demo](https://carlosnz.github.io/json-edit-react/) <!-- omit in toc -->
 
 ![NPM Version](https://img.shields.io/npm/v/json-edit-react)
 ![GitHub License](https://img.shields.io/github/license/carlosnz/json-edit-react)
@@ -27,8 +28,7 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
 > [!IMPORTANT]
 > **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state).
 
-## Contents
-- [Contents](#contents)
+## Contents  <!-- omit in toc -->
 - [Installation](#installation)
 - [Implementation](#implementation)
 - [Usage](#usage)
