@@ -154,20 +154,8 @@ export const themes: Record<ThemeName, Theme> = {
   psychedelic: {
     displayName: 'Psychedelic',
     fragments: {
-      minty: {
-        backgroundColor: '#F1FAEE',
-      },
       pale: {
         color: '#A8DADC',
-      },
-      mid: {
-        color: '#457B9D',
-      },
-      dark: {
-        color: '#1D3557',
-      },
-      pop: {
-        color: '#E63946',
       },
       fluroYellow: 'rgb(242, 228, 21)',
       fluroGreen: 'rgb(68, 255, 62)',
