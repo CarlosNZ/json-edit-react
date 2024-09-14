@@ -1,7 +1,5 @@
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 
-export const ERROR_DISPLAY_TIME = 2500 // ms
-
 export type JsonData = CollectionData | ValueData
 
 export interface JsonEditorProps {
@@ -46,6 +44,7 @@ export interface JsonEditorProps {
   customButtons?: CustomButtonDefinition[]
   jsonParse?: (input: string) => JsonData
   jsonStringify?: (input: JsonData) => string
+  errorMessageTimeout?: number // ms
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -189,6 +188,7 @@ interface BaseNodeProps {
   translate: TranslateFunction
   customNodeDefinitions: CustomNodeDefinition[]
   customButtons: CustomButtonDefinition[]
+  errorMessageTimeout: number
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {

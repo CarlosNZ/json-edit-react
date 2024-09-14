@@ -63,6 +63,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   customButtons = [],
   jsonParse = JSON.parse,
   jsonStringify = (data: JsonData) => JSON.stringify(data, null, 2),
+  errorMessageTimeout = 2500,
 }) => {
   const { getStyles } = useTheme()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
@@ -281,6 +282,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     parentData: null,
     jsonParse,
     jsonStringify,
+    errorMessageTimeout,
   }
 
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }

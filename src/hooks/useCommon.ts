@@ -12,7 +12,6 @@ import {
   type ValueData,
   type ValueNodeProps,
   type JsonData,
-  ERROR_DISPLAY_TIME,
 } from '../types'
 import { toPathString } from '../helpers'
 
@@ -34,6 +33,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     restrictAddFilter,
     restrictDragFilter,
     translate,
+    errorMessageTimeout,
   } = props
   const { currentlyEditingElement, setCurrentlyEditingElement } = useTreeState()
   const [error, setError] = useState<string | null>(null)
@@ -54,7 +54,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const showError = (errorString: ErrorString) => {
     if (showErrorMessages) {
       setError(errorString)
-      setTimeout(() => setError(null), ERROR_DISPLAY_TIME)
+      setTimeout(() => setError(null), errorMessageTimeout)
     }
     console.warn('Error', errorString)
   }
