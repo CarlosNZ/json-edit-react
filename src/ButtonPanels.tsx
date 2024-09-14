@@ -131,13 +131,15 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             style={getStyles('input', nodeData)}
           />
           <InputButtons
-            onOk={() => {
+            onOk={(e) => {
               if (newKey) {
+                e.stopPropagation()
                 setIsAdding(false)
                 handleAdd(newKey)
               }
             }}
-            onCancel={() => {
+            onCancel={(e) => {
+              e.stopPropagation()
               setIsAdding(false)
             }}
             nodeData={nodeData}
@@ -149,8 +151,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 }
 
 export const InputButtons: React.FC<{
-  onOk: () => void
-  onCancel: () => void
+  onOk: (e: React.MouseEvent<HTMLElement>) => void
+  onCancel: (e: React.MouseEvent<HTMLElement>) => void
   nodeData: NodeData
 }> = ({ onOk, onCancel, nodeData }) => {
   return (

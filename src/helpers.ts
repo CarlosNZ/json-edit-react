@@ -109,7 +109,7 @@ export const truncate = (string: string, length = 200) =>
     : string
 
 /**
- * Converts a part expressed as an array of properties to a single single
+ * Converts a part expressed as an array of properties to a single string
  */
 export const toPathString = (path: Array<string | number>) =>
   path
