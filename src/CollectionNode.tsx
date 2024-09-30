@@ -99,9 +99,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   }, [collapseState])
 
   const getDefaultNewValue = useMemo(
-    () => (nodeData: NodeData) => {
+    () => (nodeData: NodeData, newKey: string) => {
       if (typeof defaultValue !== 'function') return defaultValue
-      return defaultValue(nodeData)
+      return defaultValue(nodeData, newKey)
     },
     [defaultValue]
   )
@@ -170,7 +170,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   const handleAdd = (key: string) => {
     animateCollapse(false)
-    const newValue = getDefaultNewValue(nodeData)
+    const newValue = getDefaultNewValue(nodeData, key)
     if (collectionType === 'array') {
       onAdd(newValue, [...path, (data as unknown[]).length]).then((error) => {
         if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
