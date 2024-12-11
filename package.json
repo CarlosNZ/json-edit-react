@@ -1,16 +1,18 @@
 {
   "name": "json-edit-react",
-  "version": "1.17.2",
+  "version": "1.17.3-0",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
   "sideEffects": false,
   "types": "build/index.d.ts",
   "exports": {
-    "types": "./build/index.d.ts",
-    "import": "./build/index.esm.js",
-    "require": "./dist/index.cjs.js",
-    "default": "./dist/index.esm.js"
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.esm.js",
+      "require": "./build/index.cjs.js",
+      "default": "./build/index.esm.js"
+    }
   },
   "files": [
     "build/**/*"
