@@ -8109,10 +8109,10 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@^1.17.1:
-  version "1.17.1"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.17.1.tgz#4a4c10a3c1c7e4046e175e414a5b6eb784936639"
-  integrity sha512-UDGkBpgPoJplyT2MaPbGbKQhQjgvswaDWNbKCEkorq3r72DVm5qQErvribrc/ioZsqSnzCeDT8EwzMi4L2Az1g==
+json-edit-react@^1.17.2:
+  version "1.17.2"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.17.2.tgz#5ab900f0d5a992bf54769a02a9a44a6adcd13d2a"
+  integrity sha512-dEVSa4TCvNz0MsfHDTnxbP5jDjE5kQUSPlPfzQ5NwCuSdUQHfVqXqe7i6dQZFIdG6RYmpQon/h9rELaC0NeuWw==
   dependencies:
     object-property-assigner "^1.3.0"
     object-property-extractor "^1.0.11"
