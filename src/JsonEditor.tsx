@@ -2,7 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import assign, { type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import { CollectionNode } from './CollectionNode'
-import { getFullKeyboardControlMap, isCollection, matchNode, matchNodeKey } from './helpers'
+import {
+  getFullKeyboardControlMap,
+  handleKeyPress,
+  isCollection,
+  matchNode,
+  matchNodeKey,
+} from './helpers'
 import {
   type CollectionData,
   type JsonEditorProps,
@@ -15,6 +21,7 @@ import {
   type UpdateFunction,
   type UpdateFunctionProps,
   type JsonData,
+  type KeyboardControls,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { TreeStateProvider } from './TreeStateProvider'
@@ -249,6 +256,11 @@ const Editor: React.FC<JsonEditorProps> = ({
   const restrictDragFilter = useMemo(() => getFilterFunction(restrictDrag), [restrictDrag])
   const searchFilter = useMemo(() => getSearchFilter(searchFilterInput), [searchFilterInput])
 
+  const fullKeyboardControls = useMemo(
+    () => getFullKeyboardControlMap(keyboardControls),
+    [keyboardControls]
+  )
+
   const otherProps = {
     name: rootName,
     nodeData,
@@ -284,7 +296,10 @@ const Editor: React.FC<JsonEditorProps> = ({
     jsonParse,
     jsonStringify,
     errorMessageTimeout,
-    keyboardControls: getFullKeyboardControlMap(keyboardControls),
+    handleKeyPress: (
+      e: React.KeyboardEvent,
+      eventMap: Partial<Record<keyof KeyboardControls, () => void>>
+    ) => handleKeyPress(fullKeyboardControls, eventMap, e),
   }
 
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }

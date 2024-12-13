@@ -42,7 +42,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     indent,
     translate,
     customNodeDefinitions,
-    keyboardControls,
+    handleKeyPress,
   } = props
   const { getStyles } = useTheme()
   const { setCurrentlyEditingElement, setCollapseState } = useTreeState()
@@ -179,11 +179,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleEditKey((e.target as HTMLInputElement).value)
-    else if (e.key === 'Escape') handleCancel()
-  }
-
   const handleCancel = () => {
     setCurrentlyEditingElement(null)
     setValue(data)
@@ -218,7 +213,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     showStringQuotes,
     nodeData,
     translate,
-    keyboardControls,
+    handleKeyPress,
   }
 
   const ValueComponent = showCustomNode ? (
@@ -229,10 +224,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       setValue={updateValue}
       handleEdit={handleEdit}
       handleCancel={handleCancel}
-      handleKeyPress={(e: React.KeyboardEvent) => {
-        if (e.key === 'Enter') handleEdit()
-        else if (e.key === 'Escape') handleCancel()
-      }}
+      handleKeyPress={(e: React.KeyboardEvent) =>
+        handleKeyPress(e, { stringConfirm: handleEdit, cancel: handleCancel })
+      }
       isEditing={isEditing}
       setIsEditing={() => setCurrentlyEditingElement(pathString)}
       getStyles={getStyles}
@@ -289,7 +283,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             defaultValue={name}
             autoFocus
             onFocus={(e) => e.target.select()}
-            onKeyDown={handleKeyPress}
+            onKeyDown={(e: React.KeyboardEvent) =>
+              handleKeyPress(e, {
+                stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
+                cancel: handleCancel,
+              })
+            }
             style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
           />
         )}

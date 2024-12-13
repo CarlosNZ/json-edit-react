@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { handleKeyPress, toPathString, truncate } from './helpers'
+import { toPathString, truncate } from './helpers'
 import { useTheme } from './theme'
 import { type InputProps } from './types'
 
@@ -17,7 +17,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   stringTruncate,
   showStringQuotes,
   nodeData,
-  keyboardControls,
+  handleKeyPress,
 }) => {
   const { getStyles } = useTheme()
 
@@ -32,9 +32,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       value={value}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       isEditing={isEditing}
-      handleKeyPress={(e) =>
-        handleKeyPress(keyboardControls, { stringConfirm: handleEdit, cancel: handleCancel }, e)
-      }
+      handleKeyPress={(e) => handleKeyPress(e, { stringConfirm: handleEdit, cancel: handleCancel })}
       styles={getStyles('input', nodeData)}
     />
   ) : (
@@ -63,25 +61,9 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
   handleEdit,
   handleCancel,
   nodeData,
+  handleKeyPress,
 }) => {
   const { getStyles } = useTheme()
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    switch (e.key) {
-      case 'Enter':
-        handleEdit()
-        break
-      case 'Escape':
-        handleCancel()
-        break
-      case 'ArrowUp':
-        e.preventDefault()
-        setValue(Number(value) + 1)
-        break
-      case 'ArrowDown':
-        e.preventDefault()
-        setValue(Number(value) - 1)
-    }
-  }
 
   const validateNumber = (input: string) => {
     return input.replace(/[^0-9.-]/g, '')
@@ -96,7 +78,14 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
       onChange={(e) => setValue(validateNumber(e.target.value))}
       autoFocus
       onFocus={(e) => e.target.select()}
-      onKeyDown={handleKeyPress}
+      onKeyDown={(e) =>
+        handleKeyPress(e, {
+          numberConfirm: handleEdit,
+          cancel: handleCancel,
+          numberUp: () => setValue(Number(value) + 1),
+          numberDown: () => setValue(Number(value) - 1),
+        })
+      }
       style={{ width: `${String(value).length / 1.5 + 2}em`, ...getStyles('input', nodeData) }}
     />
   ) : (
@@ -119,13 +108,9 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   handleEdit,
   handleCancel,
   nodeData,
+  handleKeyPress,
 }) => {
   const { getStyles } = useTheme()
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleEdit()
-    else if (e.key === 'Escape') handleCancel()
-  }
 
   return isEditing ? (
     <input
@@ -134,7 +119,12 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       name={toPathString(path)}
       checked={value}
       onChange={() => setValue(!value)}
-      onKeyDown={handleKeyPress}
+      onKeyDown={(e) =>
+        handleKeyPress(e, {
+          booleanConfirm: handleEdit,
+          cancel: handleCancel,
+        })
+      }
       autoFocus
     />
   ) : (
@@ -155,6 +145,7 @@ export const NullValue: React.FC<InputProps> = ({
   handleEdit,
   handleCancel,
   nodeData,
+  handleKeyPress,
 }) => {
   const { getStyles } = useTheme()
 
@@ -163,11 +154,8 @@ export const NullValue: React.FC<InputProps> = ({
     return () => document.removeEventListener('keydown', listenForSubmit)
   }, [isEditing])
 
-  const listenForSubmit = (event: any) => {
-    if (event.key === 'Enter') {
-      handleEdit()
-    } else if (event.key === 'Escape') handleCancel()
-  }
+  const listenForSubmit = (e: unknown) =>
+    handleKeyPress(e as React.KeyboardEvent, { confirm: handleEdit, cancel: handleCancel })
 
   return (
     <div

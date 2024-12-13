@@ -162,8 +162,8 @@ export interface KeyboardControls {
   objectLineBreak?: KeyEvent | string
   stringConfirm?: KeyEvent | string
   stringLineBreak?: KeyEvent | string // for Value nodes
-  numberConfirm?: KeyEvent | string
   booleanConfirm?: KeyEvent | string
+  numberConfirm?: KeyEvent | string
   numberUp?: KeyEvent | string
   numberDown?: KeyEvent | string
   clipboardModifier?: React.ModifierKey | React.ModifierKey[]
@@ -217,7 +217,10 @@ interface BaseNodeProps {
   customNodeDefinitions: CustomNodeDefinition[]
   customButtons: CustomButtonDefinition[]
   errorMessageTimeout: number
-  keyboardControls: KeyboardControlsFull
+  handleKeyPress: (
+    e: React.KeyboardEvent,
+    eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
+  ) => void
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -292,7 +295,10 @@ export interface InputProps {
   showStringQuotes: boolean
   nodeData: NodeData
   translate: TranslateFunction
-  keyboardControls: KeyboardControlsFull
+  handleKeyPress: (
+    e: React.KeyboardEvent,
+    eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
+  ) => void
 }
 
 /**
