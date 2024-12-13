@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import assign, { type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import { CollectionNode } from './CollectionNode'
-import { isCollection, matchNode, matchNodeKey } from './helpers'
+import { getFullKeyboardControlMap, isCollection, matchNode, matchNodeKey } from './helpers'
 import {
   type CollectionData,
   type JsonEditorProps,
@@ -64,6 +64,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   jsonParse = JSON.parse,
   jsonStringify = (data: JsonData) => JSON.stringify(data, null, 2),
   errorMessageTimeout = 2500,
+  keyboardControls = {},
 }) => {
   const { getStyles } = useTheme()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
@@ -283,6 +284,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     jsonParse,
     jsonStringify,
     errorMessageTimeout,
+    keyboardControls: getFullKeyboardControlMap(keyboardControls),
   }
 
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }

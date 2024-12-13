@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { toPathString, truncate } from './helpers'
+import { handleKeyPress, toPathString, truncate } from './helpers'
 import { useTheme } from './theme'
 import { type InputProps } from './types'
 
@@ -17,12 +17,10 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   stringTruncate,
   showStringQuotes,
   nodeData,
+  keyboardControls,
 }) => {
   const { getStyles } = useTheme()
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) handleEdit()
-    else if (e.key === 'Escape') handleCancel()
-  }
+
   const pathString = toPathString(path)
 
   const quoteChar = showStringQuotes ? '"' : ''
@@ -34,7 +32,9 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       value={value}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       isEditing={isEditing}
-      handleKeyPress={handleKeyPress}
+      handleKeyPress={(e) =>
+        handleKeyPress(keyboardControls, { stringConfirm: handleEdit, cancel: handleCancel }, e)
+      }
       styles={getStyles('input', nodeData)}
     />
   ) : (

@@ -1,4 +1,11 @@
-import { type SearchFilterFunction, type NodeData, type SearchFilterInputFunction } from './types'
+import {
+  type SearchFilterFunction,
+  type NodeData,
+  type SearchFilterInputFunction,
+  type KeyboardControls,
+  type KeyEvent,
+  type KeyboardControlsFull,
+} from './types'
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
   value !== null && typeof value === 'object'
@@ -117,3 +124,90 @@ export const toPathString = (path: Array<string | number>) =>
     // non-printable char
     .map((part) => (part === '' ? String.fromCharCode(0) : part))
     .join('.')
+
+/**
+ * KEYBOARD INTERACTION
+ */
+
+// A general keyboard handler function
+export const handleKeyPress = (
+  controls: KeyboardControlsFull,
+  eventMap: Partial<Record<keyof KeyboardControls, () => void>>,
+  e: React.KeyboardEvent
+) => {
+  console.log('keyboardControls', controls)
+  const definitions = Object.entries(eventMap)
+
+  for (const [definition, action] of definitions) {
+    if (eventMatch(e, controls[definition as keyof KeyboardControlsFull])) {
+      console.log('Match', e.key, getModifier(e))
+      e.preventDefault()
+      action()
+      break
+    }
+  }
+}
+
+// Returns the currently pressed modifier key. Only returns one, so the first
+// match in the list is returned
+const getModifier = (e: React.KeyboardEvent): React.ModifierKey | undefined => {
+  if (e.shiftKey) return 'Shift'
+  if (e.metaKey) return 'Meta'
+  if (e.ctrlKey) return 'Control'
+  if (e.altKey) return 'Alt'
+  return undefined
+}
+
+// Determines whether a keyboard event matches a predefined value
+const eventMatch = (e: React.KeyboardEvent, definition: KeyEvent | React.ModifierKey[]) => {
+  const eventKey = e.key
+  const eventModifier = getModifier(e)
+  console.log(eventKey, eventModifier)
+  if (Array.isArray(definition)) return eventModifier ? definition.includes(eventModifier) : false
+  const { key, modifier } = definition
+  console.log(definition)
+
+  return (
+    eventKey === key &&
+    (modifier === eventModifier ||
+      (Array.isArray(modifier) && modifier.includes(eventModifier as React.ModifierKey)))
+  )
+}
+
+const ENTER = { key: 'Enter' }
+
+const defaultKeyboardControls: KeyboardControlsFull = {
+  confirm: ENTER,
+  cancel: { key: 'Escape' },
+  objectConfirm: { ...ENTER, modifier: ['Meta', 'Shift', 'Control'] },
+  objectLineBreak: ENTER,
+  stringConfirm: ENTER,
+  stringLineBreak: { ...ENTER, modifier: ['Shift'] },
+  numberConfirm: ENTER,
+  booleanConfirm: ENTER,
+  numberUp: { key: 'ArrowUp' },
+  numberDown: { key: 'ArrowDown' },
+  clipboardModifier: ['Meta', 'Control'],
+  collapseModifier: ['Alt'],
+}
+
+export const getFullKeyboardControlMap = (userControls: KeyboardControls): KeyboardControlsFull => {
+  const controls = { ...defaultKeyboardControls }
+  for (const key of Object.keys(defaultKeyboardControls)) {
+    const typedKey = key as keyof KeyboardControls
+    if (userControls[typedKey]) {
+      const value = userControls[typedKey]
+
+      const definition = (() => {
+        if (['clipboardModifier', 'collapseModifier'].includes(key))
+          return Array.isArray(value) ? value : [value]
+        if (typeof value === 'string') return { key: value }
+        return value
+      })() as KeyEvent & React.ModifierKey[]
+
+      controls[typedKey] = definition
+    }
+  }
+
+  return controls
+}

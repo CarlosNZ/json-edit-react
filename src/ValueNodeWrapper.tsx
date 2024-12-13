@@ -42,6 +42,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     indent,
     translate,
     customNodeDefinitions,
+    keyboardControls,
   } = props
   const { getStyles } = useTheme()
   const { setCurrentlyEditingElement, setCollapseState } = useTreeState()
@@ -217,6 +218,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     showStringQuotes,
     nodeData,
     translate,
+    keyboardControls,
   }
 
   const ValueComponent = showCustomNode ? (

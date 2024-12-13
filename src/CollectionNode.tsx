@@ -5,7 +5,7 @@ import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
 import { type CollectionNodeProps, type NodeData, type CollectionData } from './types'
 import { Icon } from './Icons'
-import { filterNode, isCollection } from './helpers'
+import { filterNode, handleKeyPress as handleKeyPressFn, isCollection } from './helpers'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useTreeState } from './TreeStateProvider'
@@ -44,6 +44,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     customNodeDefinitions,
     jsonParse,
     jsonStringify,
+    keyboardControls,
   } = props
   const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
 
@@ -126,10 +127,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.shiftKey || e.ctrlKey)) handleEdit()
-    else if (e.key === 'Escape') handleCancel()
-  }
+  const handleKeyPress = (e: React.KeyboardEvent) =>
+    handleKeyPressFn(
+      keyboardControls,
+      {
+        stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
+        cancel: handleCancel,
+      },
+      e
+    )
 
   const handleCollapse = (e: React.MouseEvent) => {
     if (e.getModifierState('Alt')) {
@@ -161,11 +167,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         stringifiedValue
       )
     }
-  }
-
-  const handleKeyPressKeyEdit = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleEditKey((e.target as HTMLInputElement).value)
-    else if (e.key === 'Escape') handleCancel()
   }
 
   const handleAdd = (key: string) => {
@@ -325,7 +326,16 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       defaultValue={name}
       autoFocus
       onFocus={(e) => e.target.select()}
-      onKeyDown={handleKeyPressKeyEdit}
+      onKeyDown={(e) =>
+        handleKeyPressFn(
+          keyboardControls,
+          {
+            stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
+            cancel: handleCancel,
+          },
+          e
+        )
+      }
       style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
     />
   ) : (
