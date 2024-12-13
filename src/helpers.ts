@@ -129,7 +129,9 @@ export const toPathString = (path: Array<string | number>) =>
  * KEYBOARD INTERACTION
  */
 
-// A general keyboard handler function
+// A general keyboard handler. Matches keyboard events against the predefined
+// keyboard controls (defaults, or user-defined), and maps them to specific
+// actions, provided via the "eventMap"
 export const handleKeyPress = (
   controls: KeyboardControlsFull,
   eventMap: Partial<Record<keyof KeyboardControls, () => void>>,
@@ -182,9 +184,9 @@ const defaultKeyboardControls: KeyboardControlsFull = {
   stringConfirm: ENTER,
   stringLineBreak: { ...ENTER, modifier: ['Shift'] },
   numberConfirm: ENTER,
-  booleanConfirm: ENTER,
   numberUp: { key: 'ArrowUp' },
   numberDown: { key: 'ArrowDown' },
+  booleanConfirm: ENTER,
   clipboardModifier: ['Meta', 'Control'],
   collapseModifier: ['Alt'],
 }
@@ -204,6 +206,18 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
       })() as KeyEvent & React.ModifierKey[]
 
       controls[typedKey] = definition
+
+      // Set value node defaults to generic "confirm" if not specifically
+      // defined.
+      const fallbackKeys: Array<keyof KeyboardControls> = [
+        'stringConfirm',
+        'numberConfirm',
+        'booleanConfirm',
+      ]
+      fallbackKeys.forEach((key) => {
+        if (!userControls[key] && userControls.confirm)
+          controls[key] = controls.confirm as KeyEvent & React.ModifierKey[]
+      })
     }
   }
 
