@@ -385,11 +385,11 @@ function App() {
               // ]}
               onChange={dataDefinition?.onChange ?? undefined}
               jsonParse={JSON5.parse}
-              keyboardControls={{
-                cancel: 'Tab',
-                objectConfirm: { key: 'Enter', modifier: 'Shift' },
-                stringConfirm: 'Backspace',
-              }}
+              // keyboardControls={{
+              //   cancel: 'Tab',
+              //   objectConfirm: { key: 'Enter', modifier: 'Shift' },
+              //   stringConfirm: 'Backspace',
+              // }}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>

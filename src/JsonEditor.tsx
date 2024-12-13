@@ -261,6 +261,12 @@ const Editor: React.FC<JsonEditorProps> = ({
     [keyboardControls]
   )
 
+  const handleKeyboardCallback = useCallback(
+    (e: React.KeyboardEvent, eventMap: Partial<Record<keyof KeyboardControls, () => void>>) =>
+      handleKeyPress(fullKeyboardControls, eventMap, e),
+    [keyboardControls]
+  )
+
   const otherProps = {
     name: rootName,
     nodeData,
@@ -296,10 +302,8 @@ const Editor: React.FC<JsonEditorProps> = ({
     jsonParse,
     jsonStringify,
     errorMessageTimeout,
-    handleKeyPress: (
-      e: React.KeyboardEvent,
-      eventMap: Partial<Record<keyof KeyboardControls, () => void>>
-    ) => handleKeyPress(fullKeyboardControls, eventMap, e),
+    handleKeyboard: handleKeyboardCallback,
+    keyboardControls: fullKeyboardControls,
   }
 
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }

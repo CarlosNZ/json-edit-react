@@ -217,7 +217,8 @@ interface BaseNodeProps {
   customNodeDefinitions: CustomNodeDefinition[]
   customButtons: CustomButtonDefinition[]
   errorMessageTimeout: number
-  handleKeyPress: (
+  keyboardControls: KeyboardControlsFull
+  handleKeyboard: (
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
@@ -295,7 +296,7 @@ export interface InputProps {
   showStringQuotes: boolean
   nodeData: NodeData
   translate: TranslateFunction
-  handleKeyPress: (
+  handleKeyboard: (
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void

@@ -135,12 +135,10 @@ export const handleKeyPress = (
   eventMap: Partial<Record<keyof KeyboardControls, () => void>>,
   e: React.KeyboardEvent
 ) => {
-  console.log('keyboardControls', controls)
   const definitions = Object.entries(eventMap)
 
   for (const [definition, action] of definitions) {
     if (eventMatch(e, controls[definition as keyof KeyboardControlsFull])) {
-      console.log('Match', e.key, getModifier(e))
       e.preventDefault()
       action()
       break
@@ -150,7 +148,9 @@ export const handleKeyPress = (
 
 // Returns the currently pressed modifier key. Only returns one, so the first
 // match in the list is returned
-const getModifier = (e: React.KeyboardEvent): React.ModifierKey | undefined => {
+export const getModifier = (
+  e: React.KeyboardEvent | React.MouseEvent
+): React.ModifierKey | undefined => {
   if (e.shiftKey) return 'Shift'
   if (e.metaKey) return 'Meta'
   if (e.ctrlKey) return 'Control'
@@ -162,10 +162,8 @@ const getModifier = (e: React.KeyboardEvent): React.ModifierKey | undefined => {
 const eventMatch = (e: React.KeyboardEvent, definition: KeyEvent | React.ModifierKey[]) => {
   const eventKey = e.key
   const eventModifier = getModifier(e)
-  console.log(eventKey, eventModifier)
   if (Array.isArray(definition)) return eventModifier ? definition.includes(eventModifier) : false
   const { key, modifier } = definition
-  console.log(definition)
 
   return (
     eventKey === key &&

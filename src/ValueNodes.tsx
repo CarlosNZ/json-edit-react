@@ -17,7 +17,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   stringTruncate,
   showStringQuotes,
   nodeData,
-  handleKeyPress,
+  handleKeyboard,
 }) => {
   const { getStyles } = useTheme()
 
@@ -32,7 +32,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       value={value}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       isEditing={isEditing}
-      handleKeyPress={(e) => handleKeyPress(e, { stringConfirm: handleEdit, cancel: handleCancel })}
+      handleKeyPress={(e) => handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })}
       styles={getStyles('input', nodeData)}
     />
   ) : (
@@ -61,7 +61,7 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
   handleEdit,
   handleCancel,
   nodeData,
-  handleKeyPress,
+  handleKeyboard,
 }) => {
   const { getStyles } = useTheme()
 
@@ -79,7 +79,7 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
       autoFocus
       onFocus={(e) => e.target.select()}
       onKeyDown={(e) =>
-        handleKeyPress(e, {
+        handleKeyboard(e, {
           numberConfirm: handleEdit,
           cancel: handleCancel,
           numberUp: () => setValue(Number(value) + 1),
@@ -108,7 +108,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   handleEdit,
   handleCancel,
   nodeData,
-  handleKeyPress,
+  handleKeyboard,
 }) => {
   const { getStyles } = useTheme()
 
@@ -120,7 +120,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       checked={value}
       onChange={() => setValue(!value)}
       onKeyDown={(e) =>
-        handleKeyPress(e, {
+        handleKeyboard(e, {
           booleanConfirm: handleEdit,
           cancel: handleCancel,
         })
@@ -145,7 +145,7 @@ export const NullValue: React.FC<InputProps> = ({
   handleEdit,
   handleCancel,
   nodeData,
-  handleKeyPress,
+  handleKeyboard,
 }) => {
   const { getStyles } = useTheme()
 
@@ -155,7 +155,7 @@ export const NullValue: React.FC<InputProps> = ({
   }, [isEditing])
 
   const listenForSubmit = (e: unknown) =>
-    handleKeyPress(e as React.KeyboardEvent, { confirm: handleEdit, cancel: handleCancel })
+    handleKeyboard(e as React.KeyboardEvent, { confirm: handleEdit, cancel: handleCancel })
 
   return (
     <div

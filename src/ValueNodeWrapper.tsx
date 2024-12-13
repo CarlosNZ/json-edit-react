@@ -42,7 +42,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     indent,
     translate,
     customNodeDefinitions,
-    handleKeyPress,
+    handleKeyboard,
+    keyboardControls,
   } = props
   const { getStyles } = useTheme()
   const { setCurrentlyEditingElement, setCollapseState } = useTreeState()
@@ -213,7 +214,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     showStringQuotes,
     nodeData,
     translate,
-    handleKeyPress,
+    handleKeyboard,
   }
 
   const ValueComponent = showCustomNode ? (
@@ -225,7 +226,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       handleEdit={handleEdit}
       handleCancel={handleCancel}
       handleKeyPress={(e: React.KeyboardEvent) =>
-        handleKeyPress(e, { stringConfirm: handleEdit, cancel: handleCancel })
+        handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
       setIsEditing={() => setCurrentlyEditingElement(pathString)}
@@ -284,7 +285,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             autoFocus
             onFocus={(e) => e.target.select()}
             onKeyDown={(e: React.KeyboardEvent) =>
-              handleKeyPress(e, {
+              handleKeyboard(e, {
                 stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
                 cancel: handleCancel,
               })
@@ -305,6 +306,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 translate={translate}
                 customButtons={props.customButtons}
                 nodeData={nodeData}
+                handleKeyboard={handleKeyboard}
+                keyboardControls={keyboardControls}
               />
             )
           )}

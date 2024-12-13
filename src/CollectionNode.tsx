@@ -5,7 +5,7 @@ import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
 import { type CollectionNodeProps, type NodeData, type CollectionData } from './types'
 import { Icon } from './Icons'
-import { filterNode, isCollection } from './helpers'
+import { filterNode, getModifier, isCollection } from './helpers'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme } from './theme'
 import { useTreeState } from './TreeStateProvider'
@@ -44,7 +44,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     customNodeDefinitions,
     jsonParse,
     jsonStringify,
-    handleKeyPress,
+    keyboardControls,
+    handleKeyboard,
   } = props
   const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
 
@@ -127,14 +128,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
-  const handleKeyPressFn = (e: React.KeyboardEvent) =>
-    handleKeyPress(e, {
-      stringConfirm: handleEdit,
+  const handleKeyPressEdit = (e: React.KeyboardEvent) =>
+    handleKeyboard(e, {
+      objectConfirm: handleEdit,
       cancel: handleCancel,
     })
 
   const handleCollapse = (e: React.MouseEvent) => {
-    if (e.getModifierState('Alt')) {
+    const modifier = getModifier(e)
+    if (modifier && keyboardControls.collapseModifier.includes(modifier)) {
       hasBeenOpened.current = true
       setCollapseState({ collapsed: !collapsed, path })
       return
@@ -273,7 +275,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           value={stringifiedValue}
           setValue={setStringifiedValue}
           isEditing={isEditing}
-          handleKeyPress={handleKeyPressFn}
+          handleKeyPress={handleKeyPressEdit}
           styles={getStyles('input', nodeData)}
         />
         <div className="jer-collection-input-button-row">
@@ -299,7 +301,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     setValue: async (val: unknown) => await onEdit(val, path),
     handleEdit,
     handleCancel,
-    handleKeyPress: handleKeyPressFn,
+    handleKeyPress: handleKeyPressEdit,
     isEditing,
     setIsEditing: () => setCurrentlyEditingElement(pathString),
     getStyles,
@@ -323,7 +325,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       autoFocus
       onFocus={(e) => e.target.select()}
       onKeyDown={(e) =>
-        handleKeyPress(e, {
+        handleKeyboard(e, {
           stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
           cancel: handleCancel,
         })
@@ -366,6 +368,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       nodeData={nodeData}
       translate={translate}
       customButtons={props.customButtons}
+      keyboardControls={keyboardControls}
+      handleKeyboard={handleKeyboard}
     />
   )
 
