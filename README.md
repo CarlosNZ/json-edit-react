@@ -53,6 +53,7 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
   - [Active hyperlinks](#active-hyperlinks)
   - [Custom Collection nodes](#custom-collection-nodes)
 - [Custom Text](#custom-text)
+- [Keyboard customisation](#keyboard-customisation)
 - [Undo functionality](#undo-functionality)
 - [Exported helpers](#exported-helpers)
   - [Functions \& Components](#functions--components)
@@ -148,6 +149,7 @@ The only *required* value is `data` (although you will need to provide a `setDat
 | `jsonParse`             | `(input: string) => JsonData`                 | `JSON.parse`                              | When editing a block of JSON directly, you may wish to allow some "looser" input -- e.g. 'single quotes', trailing commas, or unquoted field names. In this case, you can provide a third-party JSON parsing method. I recommend [JSON5](https://json5.org/), which is what is used in the [Demo](https://carlosnz.github.io/json-edit-react/)       |
 | `jsonStringify`         | `(data: JsonData) => string`                  | `(data) => JSON.stringify(data, null, 2)` | Similarly, you can override the default presentation of the JSON string when starting editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                                                                                 |
 | `errorMessageTimeout`   | `number`                                      | `2500`                                    | Time (in milliseconds) to display the error message in the UI.                                                                                                                                                                                                                                                                                       |  |
+| `keyboardControls`      | `KeyboardControls`                            | As explained [above](#usage)              | Override some or all of the keyboard controls. See [Keyboard customisation](#keyboard-customisation) for details.                                                                                                                                                                                                                                    |  |
 
 ## Managing state
 
@@ -655,6 +657,10 @@ customText = {
 }
 ```
 
+## Keyboard customisation
+
+<!-- TO-DO -->
+
  
 ## Undo functionality
 
@@ -709,6 +715,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.18.0**: Ability to customise keyboard controls
 - **1.17.0**: `defaultValue` function takes the new `key` as second parameter
 - **1.16.0**: Extend the "click" zone for collapsing nodes to the header bar and left margin (not just the collapse icon)
 - **1.15.12**:
