@@ -140,7 +140,7 @@ export const handleKeyPress = (
   const definitions = Object.entries(eventMap)
 
   for (const [definition, action] of definitions) {
-    if (eventMatch(e, controls[definition as keyof KeyboardControlsFull])) {
+    if (eventMatch(e, controls[definition as keyof KeyboardControlsFull], definition)) {
       e.preventDefault()
       action()
       break
@@ -161,11 +161,27 @@ export const getModifier = (
 }
 
 // Determines whether a keyboard event matches a predefined value
-const eventMatch = (e: React.KeyboardEvent, definition: KeyEvent | React.ModifierKey[]) => {
+const eventMatch = (
+  e: React.KeyboardEvent,
+  keyEvent: KeyEvent | React.ModifierKey[],
+  definition: string
+) => {
   const eventKey = e.key
   const eventModifier = getModifier(e)
-  if (Array.isArray(definition)) return eventModifier ? definition.includes(eventModifier) : false
-  const { key, modifier } = definition
+  if (Array.isArray(keyEvent)) return eventModifier ? keyEvent.includes(eventModifier) : false
+  const { key, modifier } = keyEvent
+
+  if (
+    // If the stringLineBreak control is the default (Shift-Enter), don't do
+    // anything, just let normal text-area behaviour occur. This allows normal
+    // "Undo" behaviour for the text area to continue as normal
+    definition === 'stringLineBreak' &&
+    eventKey === 'Enter' &&
+    eventModifier === 'Shift' &&
+    key === 'Enter' &&
+    modifier?.includes('Shift')
+  )
+    return false
 
   return (
     eventKey === key &&

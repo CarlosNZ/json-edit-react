@@ -386,9 +386,10 @@ function App() {
               onChange={dataDefinition?.onChange ?? undefined}
               jsonParse={JSON5.parse}
               keyboardControls={{
-                cancel: 'Tab',
+                // cancel: 'Tab',
                 // confirm: 'Backspace',
                 objectConfirm: { key: 'Enter', modifier: 'Shift' },
+                stringLineBreak: { key: 'Tab' },
                 // stringConfirm: { key: 'Monkey', modifier: 'Shift' },
                 clipboardModifier: ['Alt', 'Shift'],
                 collapseModifier: 'Meta',
