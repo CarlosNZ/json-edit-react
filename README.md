@@ -731,6 +731,7 @@ A few helper functions, components and types that might be useful in your own im
 - `ValueNodeProps`: all props passed internally to "value" nodes (i.e. *not* objects/arrays)
 - `CustomNodeProps`: all props passed internally to [Custom nodes](#custom-nodes); basically the same as `CollectionNodeProps` with an extra `customNodeProps` field for passing props unique to your component`
 - `DataType`: `"string"` | `"number"` | `"boolean"` | `"null"` | `"object"` | `"array"`
+- `KeyboardControls`: structure for [keyboard customisation](#keyboard-customisation) prop
 
 ## Issues, bugs, suggestions?
 
@@ -749,7 +750,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.18.0**: Ability to customise keyboard controls
+- **1.18.0**: Ability to [customise keyboard controls](#keyboard-customisation)
 - **1.17.0**: `defaultValue` function takes the new `key` as second parameter
 - **1.16.0**: Extend the "click" zone for collapsing nodes to the header bar and left margin (not just the collapse icon)
 - **1.15.12**:
