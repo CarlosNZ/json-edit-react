@@ -42,7 +42,8 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
             ) as HTMLTextAreaElement
             if (textArea) {
               // Simulates standard text-area line break behaviour. Only
-              // required when control key is not the default (Shift-Enter)
+              // required when control key is not "standard" text-area
+              // behaviour ("Shift-Enter" or "Enter")
               const startPos: number = textArea?.selectionStart ?? Infinity
               const endPos: number = textArea?.selectionEnd ?? Infinity
               const strStart = value.slice(0, startPos)

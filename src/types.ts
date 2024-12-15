@@ -156,7 +156,7 @@ export interface KeyEvent {
   modifier?: React.ModifierKey | React.ModifierKey[]
 }
 export interface KeyboardControls {
-  confirm?: KeyEvent | string // buttons, and value node default
+  confirm?: KeyEvent | string // value node defaults, key entry
   cancel?: KeyEvent | string // all "Cancel" operations
   objectConfirm?: KeyEvent | string
   objectLineBreak?: KeyEvent | string
