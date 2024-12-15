@@ -193,7 +193,7 @@ const eventMatch = (
 const ENTER = { key: 'Enter' }
 
 const defaultKeyboardControls: KeyboardControlsFull = {
-  confirm: ENTER,
+  confirm: ENTER, // default for all Value nodes, and key entry
   cancel: { key: 'Escape' },
   objectConfirm: { ...ENTER, modifier: ['Meta', 'Shift', 'Control'] },
   objectLineBreak: ENTER,

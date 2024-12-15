@@ -659,8 +659,35 @@ customText = {
 
 ## Keyboard customisation
 
-<!-- TO-DO -->
+The default keyboard controls are [outlined above](#usage), but it's possible to customise/override these. Just pass in a `keyboardControls` prop with the actions you wish to override defined. The default config object is:
+```ts
+{
+  confirm: 'Enter',  // default for all Value nodes, and key entry
+  cancel: 'Escape',
+  objectConfirm: { key: 'Enter', modifier: ['Meta', 'Shift', 'Control'] },
+  objectLineBreak: 'Enter',
+  stringConfirm: 'Enter',
+  stringLineBreak: { key: 'Enter', modifier: 'Shift' },
+  numberConfirm: 'Enter',
+  numberUp: 'ArrowUp',
+  numberDown: 'ArrowDown',
+  booleanConfirm: 'Enter',
+  clipboardModifier: ['Meta', 'Control'],
+  collapseModifier: 'Alt',
+}
+```
 
+If (for example), you just wish to change the general "confirmation" action to "Cmd-Enter" (on Mac), or "Ctrl-Enter", you'd just pass in:
+```ts
+  keyboardControls = {confirm: "Enter", modifier: [ "Meta", "Control" ]}
+```
+
+- Key names come from [this list](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values)
+- Accepted modifiers are "Meta", "Control", "Alt", "Shift"
+- On Mac, "Meta" refers to the "Cmd" key, and "Alt" refers to "Option"
+- If multiple modifiers are specified (in an array), *any* of them will be accepted (multi-modifier commands not currently supported)
+- You only need to specify values for `stringConfirm`, `numberConfirm`, and `booleanConfirm` if they should *differ* from your `confirm` value. 
+- You won't be able to override system or browser behaviours: for example, on Mac "Ctrl-click" will perform a right-click, so using it as a click modifier won't work (hence we also accept "Meta"/"Cmd" as the default `clipboardModifier`).
  
 ## Undo functionality
 

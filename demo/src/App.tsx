@@ -392,7 +392,7 @@ function App() {
                 stringLineBreak: { key: 'Tab' },
                 // stringConfirm: { key: 'Monkey', modifier: 'Shift' },
                 clipboardModifier: ['Alt', 'Shift'],
-                collapseModifier: 'Meta',
+                collapseModifier: 'Control',
               }}
             />
           </Box>
