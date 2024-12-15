@@ -679,8 +679,15 @@ The default keyboard controls are [outlined above](#usage), but it's possible to
 
 If (for example), you just wish to change the general "confirmation" action to "Cmd-Enter" (on Mac), or "Ctrl-Enter", you'd just pass in:
 ```ts
-  keyboardControls = {confirm: "Enter", modifier: [ "Meta", "Control" ]}
+  keyboardControls = {
+    confirm: {
+      key: "Enter",
+      modifier: [ "Meta", "Control" ]
+    }
+  }
 ```
+
+**Considerations**:
 
 - Key names come from [this list](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values)
 - Accepted modifiers are "Meta", "Control", "Alt", "Shift"
