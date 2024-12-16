@@ -53,6 +53,7 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
   - [Active hyperlinks](#active-hyperlinks)
   - [Custom Collection nodes](#custom-collection-nodes)
 - [Custom Text](#custom-text)
+- [Keyboard customisation](#keyboard-customisation)
 - [Undo functionality](#undo-functionality)
 - [Exported helpers](#exported-helpers)
   - [Functions \& Components](#functions--components)
@@ -148,6 +149,7 @@ The only *required* value is `data` (although you will need to provide a `setDat
 | `jsonParse`             | `(input: string) => JsonData`                 | `JSON.parse`                              | When editing a block of JSON directly, you may wish to allow some "looser" input -- e.g. 'single quotes', trailing commas, or unquoted field names. In this case, you can provide a third-party JSON parsing method. I recommend [JSON5](https://json5.org/), which is what is used in the [Demo](https://carlosnz.github.io/json-edit-react/)       |
 | `jsonStringify`         | `(data: JsonData) => string`                  | `(data) => JSON.stringify(data, null, 2)` | Similarly, you can override the default presentation of the JSON string when starting editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                                                                                 |
 | `errorMessageTimeout`   | `number`                                      | `2500`                                    | Time (in milliseconds) to display the error message in the UI.                                                                                                                                                                                                                                                                                       |  |
+| `keyboardControls`      | `KeyboardControls`                            | As explained [above](#usage)              | Override some or all of the keyboard controls. See [Keyboard customisation](#keyboard-customisation) for details.                                                                                                                                                                                                                                    |  |
 
 ## Managing state
 
@@ -655,6 +657,44 @@ customText = {
 }
 ```
 
+## Keyboard customisation
+
+The default keyboard controls are [outlined above](#usage), but it's possible to customise/override these. Just pass in a `keyboardControls` prop with the actions you wish to override defined. The default config object is:
+```ts
+{
+  confirm: 'Enter',  // default for all Value nodes, and key entry
+  cancel: 'Escape',
+  objectConfirm: { key: 'Enter', modifier: ['Meta', 'Shift', 'Control'] },
+  objectLineBreak: 'Enter',
+  stringConfirm: 'Enter',
+  stringLineBreak: { key: 'Enter', modifier: 'Shift' },
+  numberConfirm: 'Enter',
+  numberUp: 'ArrowUp',
+  numberDown: 'ArrowDown',
+  booleanConfirm: 'Enter',
+  clipboardModifier: ['Meta', 'Control'],
+  collapseModifier: 'Alt',
+}
+```
+
+If (for example), you just wish to change the general "confirmation" action to "Cmd-Enter" (on Mac), or "Ctrl-Enter", you'd just pass in:
+```ts
+  keyboardControls = {
+    confirm: {
+      key: "Enter",
+      modifier: [ "Meta", "Control" ]
+    }
+  }
+```
+
+**Considerations**:
+
+- Key names come from [this list](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values)
+- Accepted modifiers are "Meta", "Control", "Alt", "Shift"
+- On Mac, "Meta" refers to the "Cmd" key, and "Alt" refers to "Option"
+- If multiple modifiers are specified (in an array), *any* of them will be accepted (multi-modifier commands not currently supported)
+- You only need to specify values for `stringConfirm`, `numberConfirm`, and `booleanConfirm` if they should *differ* from your `confirm` value. 
+- You won't be able to override system or browser behaviours: for example, on Mac "Ctrl-click" will perform a right-click, so using it as a click modifier won't work (hence we also accept "Meta"/"Cmd" as the default `clipboardModifier`).
  
 ## Undo functionality
 
@@ -691,6 +731,7 @@ A few helper functions, components and types that might be useful in your own im
 - `ValueNodeProps`: all props passed internally to "value" nodes (i.e. *not* objects/arrays)
 - `CustomNodeProps`: all props passed internally to [Custom nodes](#custom-nodes); basically the same as `CollectionNodeProps` with an extra `customNodeProps` field for passing props unique to your component`
 - `DataType`: `"string"` | `"number"` | `"boolean"` | `"null"` | `"object"` | `"array"`
+- `KeyboardControls`: structure for [keyboard customisation](#keyboard-customisation) prop
 
 ## Issues, bugs, suggestions?
 
@@ -709,6 +750,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.18.0**: Ability to [customise keyboard controls](#keyboard-customisation)
 - **1.17.0**: `defaultValue` function takes the new `key` as second parameter
 - **1.16.0**: Extend the "click" zone for collapsing nodes to the header bar and left margin (not just the collapse icon)
 - **1.15.12**:

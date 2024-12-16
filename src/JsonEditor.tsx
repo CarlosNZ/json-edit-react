@@ -2,7 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import assign, { type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import { CollectionNode } from './CollectionNode'
-import { isCollection, matchNode, matchNodeKey } from './helpers'
+import {
+  getFullKeyboardControlMap,
+  handleKeyPress,
+  isCollection,
+  matchNode,
+  matchNodeKey,
+} from './helpers'
 import {
   type CollectionData,
   type JsonEditorProps,
@@ -15,6 +21,7 @@ import {
   type UpdateFunction,
   type UpdateFunctionProps,
   type JsonData,
+  type KeyboardControls,
 } from './types'
 import { useTheme, ThemeProvider } from './theme'
 import { TreeStateProvider } from './TreeStateProvider'
@@ -64,6 +71,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   jsonParse = JSON.parse,
   jsonStringify = (data: JsonData) => JSON.stringify(data, null, 2),
   errorMessageTimeout = 2500,
+  keyboardControls = {},
 }) => {
   const { getStyles } = useTheme()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
@@ -248,6 +256,17 @@ const Editor: React.FC<JsonEditorProps> = ({
   const restrictDragFilter = useMemo(() => getFilterFunction(restrictDrag), [restrictDrag])
   const searchFilter = useMemo(() => getSearchFilter(searchFilterInput), [searchFilterInput])
 
+  const fullKeyboardControls = useMemo(
+    () => getFullKeyboardControlMap(keyboardControls),
+    [keyboardControls]
+  )
+
+  const handleKeyboardCallback = useCallback(
+    (e: React.KeyboardEvent, eventMap: Partial<Record<keyof KeyboardControls, () => void>>) =>
+      handleKeyPress(fullKeyboardControls, eventMap, e),
+    [keyboardControls]
+  )
+
   const otherProps = {
     name: rootName,
     nodeData,
@@ -283,6 +302,8 @@ const Editor: React.FC<JsonEditorProps> = ({
     jsonParse,
     jsonStringify,
     errorMessageTimeout,
+    handleKeyboard: handleKeyboardCallback,
+    keyboardControls: fullKeyboardControls,
   }
 
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }
