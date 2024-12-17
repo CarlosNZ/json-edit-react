@@ -1,3 +1,4 @@
+import { type Options as AssignOptions } from 'object-property-assigner'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 
 export type JsonData = CollectionData | ValueData
@@ -46,6 +47,7 @@ export interface JsonEditorProps {
   jsonStringify?: (input: JsonData) => string
   errorMessageTimeout?: number // ms
   keyboardControls?: KeyboardControls
+  insertAtBeginning?: boolean | 'array' | 'object'
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -140,7 +142,8 @@ export type CompareFunction = (a: string, b: string) => number
 // Internal update
 export type InternalUpdateFunction = (
   value: unknown,
-  path: CollectionKey[]
+  path: CollectionKey[],
+  options?: AssignOptions
 ) => Promise<string | void>
 
 // For drag-n-drop
@@ -236,6 +239,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   defaultValue: unknown
   jsonParse: (input: string) => JsonData
   jsonStringify: (data: JsonData) => string
+  insertAtBeginning: { object: boolean; array: boolean }
 }
 
 export type ValueData = string | number | boolean
