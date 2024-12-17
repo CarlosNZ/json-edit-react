@@ -8109,13 +8109,13 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@^1.18.0:
-  version "1.18.0"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.18.0.tgz#396254d9e56e75e2ab0c0f104b6fa506bb77ad78"
-  integrity sha512-PJyaJfCWHf9qyAjgIBBeKfF8Vxl2GhfPaFP+Lw3tMfj5SNq81gnO5pU0M+mRUmkqVpYqmUiuipJeqwIKYFv2og==
+json-edit-react@^1.19.0-beta1:
+  version "1.19.0-beta1"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.19.0-beta1.tgz#ea8930704c4b11304b760fef1257a7717e36c01c"
+  integrity sha512-8kCuXISfk3sOTC+P9UvWSYodDDnvLZB+robPhFM0Igh32L3BQo7pkvvhhvROEuWWbVabRhxeaJUa0FJ/ADXTfg==
   dependencies:
-    object-property-assigner "^1.3.1"
-    object-property-extractor "^1.0.12"
+    object-property-assigner "^1.3.5"
+    object-property-extractor "^1.0.13"
 
 json-parse-even-better-errors@^2.3.0, json-parse-even-better-errors@^2.3.1:
   version "2.3.1"
@@ -8729,12 +8729,12 @@ object-keys@^1.1.1:
   resolved "https://registry.yarnpkg.com/object-keys/-/object-keys-1.1.1.tgz#1c47f272df277f3b1daf061677d9c82e2322c60e"
   integrity sha512-NuAESUOUMrlIXOfHKzD6bpPu3tYt3xvjNdRIQ+FeT0lNb4K8WR70CaDxhuNguS2XG+GjkyMwOzsN5ZktImfhLA==
 
-object-property-assigner@^1.3.1:
+object-property-assigner@^1.3.5:
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.3.5.tgz#f5037ff73b7b015a42e4059c3ff5c84017413ca2"
   integrity sha512-DIzHzNSTnpoG8QPQCDNrHa6O3vLMhktK3Igirqpk523UYIVe8JNCKcn5C9WyLQxJc58EGsAIiiEu10gqPrud8w==
 
-object-property-extractor@^1.0.12:
+object-property-extractor@^1.0.13:
   version "1.0.13"
   resolved "https://registry.yarnpkg.com/object-property-extractor/-/object-property-extractor-1.0.13.tgz#fff188d6308ac5574eb2610221af906eb87b4f38"
   integrity sha512-9kgEjTWDhTPuPn7nyof+5mLmCKBPKdU0c7IVpTbOvYKYSdXQ5skH4Pa/8MPbZXeyXBGrqS82JyWecsh6tMxiLw==

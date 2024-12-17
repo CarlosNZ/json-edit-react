@@ -44,6 +44,7 @@
     "object-property-extractor": "^1.0.13"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^20.11.17",

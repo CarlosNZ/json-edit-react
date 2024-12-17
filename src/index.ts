@@ -33,3 +33,12 @@ export {
   type KeyboardControls,
 } from './types'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
+
+export {
+  githubDarkTheme,
+  githubLightTheme,
+  monoDarkTheme,
+  monoLightTheme,
+  candyWrapperTheme,
+  psychedelicTheme,
+} from './additionalThemes'

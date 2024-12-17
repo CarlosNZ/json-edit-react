@@ -10,15 +10,13 @@ import {
   OnErrorFunction,
   defaultTheme,
   // Additional Themes
-} from './_imports'
-import {
   githubDarkTheme,
   githubLightTheme,
   monoLightTheme,
   monoDarkTheme,
   candyWrapperTheme,
   psychedelicTheme,
-} from 'json-edit-react/themes'
+} from './_imports'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'

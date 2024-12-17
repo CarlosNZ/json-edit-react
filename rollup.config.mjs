@@ -37,26 +37,4 @@ export default [
     external: [/\.css$/],
     plugins: [dts()],
   },
-  // Additional Themes
-  {
-    input: 'src/additionalThemes/index.ts',
-    output: [
-      {
-        file: 'build/themes.cjs.js',
-        format: 'cjs',
-      },
-      {
-        file: 'build/themes.esm.js',
-        format: 'esm',
-      },
-    ],
-    plugins: [
-      styles({ minimize: true }),
-      peerDepsExternal({ includeDependencies: true }),
-      typescript({ module: 'ESNext', target: 'es6', tsconfig: 'tsconfig.themes.json' }),
-      terser(),
-      bundleSize(),
-      sizes(),
-    ],
-  },
 ]
