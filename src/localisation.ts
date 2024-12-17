@@ -1,4 +1,4 @@
-import { type CustomTextDefinitions, type CustomTextFunction, type NodeData } from './types'
+import { type CustomTextDefinitions, type NodeData } from './types'
 
 const localisedStrings = {
   ITEM_SINGLE: '{{count}} item',
@@ -28,7 +28,7 @@ const translate = (
   count?: number
 ): string => {
   if (customText[key]) {
-    const output = (customText[key] as CustomTextFunction)(customTextData)
+    const output = customText[key](customTextData)
     if (output !== null) return output
   }
 
