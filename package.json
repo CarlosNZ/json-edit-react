@@ -20,6 +20,7 @@
   "repository": "https://github.com/CarlosNZ/json-edit-react.git",
   "author": "Carl Smith <5456533+CarlosNZ@users.noreply.github.com>",
   "license": "MIT",
+  "homepage": "https://carlosnz.github.io/json-edit-react",
   "scripts": {
     "setup": "yarn install && cd demo && yarn install",
     "demo": "cd demo && node ./scripts/getVersion.js && yarn && yarn start",
