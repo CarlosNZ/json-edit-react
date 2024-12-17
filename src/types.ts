@@ -47,7 +47,7 @@ export interface JsonEditorProps {
   jsonStringify?: (input: JsonData) => string
   errorMessageTimeout?: number // ms
   keyboardControls?: KeyboardControls
-  insertAtBeginning?: boolean | 'array' | 'object'
+  insertAtTop?: boolean | 'array' | 'object'
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -239,7 +239,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   defaultValue: unknown
   jsonParse: (input: string) => JsonData
   jsonStringify: (data: JsonData) => string
-  insertAtBeginning: { object: boolean; array: boolean }
+  insertAtTop: { object: boolean; array: boolean }
 }
 
 export type ValueData = string | number | boolean

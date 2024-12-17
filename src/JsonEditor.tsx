@@ -72,7 +72,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   jsonStringify = (data: JsonData) => JSON.stringify(data, null, 2),
   errorMessageTimeout = 2500,
   keyboardControls = {},
-  insertAtBeginning = false,
+  insertAtTop = false,
 }) => {
   const { getStyles } = useTheme()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
@@ -306,9 +306,9 @@ const Editor: React.FC<JsonEditorProps> = ({
     errorMessageTimeout,
     handleKeyboard: handleKeyboardCallback,
     keyboardControls: fullKeyboardControls,
-    insertAtBeginning: {
-      object: insertAtBeginning === true || insertAtBeginning === 'object',
-      array: insertAtBeginning === true || insertAtBeginning === 'array',
+    insertAtTop: {
+      object: insertAtTop === true || insertAtTop === 'object',
+      array: insertAtTop === true || insertAtTop === 'array',
     },
   }
 
