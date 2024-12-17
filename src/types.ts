@@ -1,3 +1,4 @@
+import { type Options as AssignOptions } from 'object-property-assigner'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 
 export type JsonData = CollectionData | ValueData
@@ -45,6 +46,8 @@ export interface JsonEditorProps {
   jsonParse?: (input: string) => JsonData
   jsonStringify?: (input: JsonData) => string
   errorMessageTimeout?: number // ms
+  keyboardControls?: KeyboardControls
+  insertAtTop?: boolean | 'array' | 'object'
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -139,7 +142,8 @@ export type CompareFunction = (a: string, b: string) => number
 // Internal update
 export type InternalUpdateFunction = (
   value: unknown,
-  path: CollectionKey[]
+  path: CollectionKey[],
+  options?: AssignOptions
 ) => Promise<string | void>
 
 // For drag-n-drop
@@ -149,6 +153,33 @@ export type InternalMoveFunction = (
   dest: CollectionKey[],
   position: Position
 ) => Promise<string | void>
+
+export interface KeyEvent {
+  key: string
+  modifier?: React.ModifierKey | React.ModifierKey[]
+}
+export interface KeyboardControls {
+  confirm?: KeyEvent | string // value node defaults, key entry
+  cancel?: KeyEvent | string // all "Cancel" operations
+  objectConfirm?: KeyEvent | string
+  objectLineBreak?: KeyEvent | string
+  stringConfirm?: KeyEvent | string
+  stringLineBreak?: KeyEvent | string // for Value nodes
+  booleanConfirm?: KeyEvent | string
+  numberConfirm?: KeyEvent | string
+  numberUp?: KeyEvent | string
+  numberDown?: KeyEvent | string
+  clipboardModifier?: React.ModifierKey | React.ModifierKey[]
+  collapseModifier?: React.ModifierKey | React.ModifierKey[]
+}
+
+export type KeyboardControlsFull = Omit<
+  Required<{ [Property in keyof KeyboardControls]: KeyEvent }>,
+  'clipboardModifier' | 'collapseModifier'
+> & {
+  clipboardModifier: React.ModifierKey[]
+  collapseModifier: React.ModifierKey[]
+}
 
 /**
  * NODES
@@ -189,6 +220,11 @@ interface BaseNodeProps {
   customNodeDefinitions: CustomNodeDefinition[]
   customButtons: CustomButtonDefinition[]
   errorMessageTimeout: number
+  keyboardControls: KeyboardControlsFull
+  handleKeyboard: (
+    e: React.KeyboardEvent,
+    eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
+  ) => void
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -203,6 +239,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   defaultValue: unknown
   jsonParse: (input: string) => JsonData
   jsonStringify: (data: JsonData) => string
+  insertAtTop: { object: boolean; array: boolean }
 }
 
 export type ValueData = string | number | boolean
@@ -263,6 +300,10 @@ export interface InputProps {
   showStringQuotes: boolean
   nodeData: NodeData
   translate: TranslateFunction
+  handleKeyboard: (
+    e: React.KeyboardEvent,
+    eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
+  ) => void
 }
 
 /**

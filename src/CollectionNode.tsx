@@ -5,7 +5,7 @@ import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
 import { type CollectionNodeProps, type NodeData, type CollectionData } from './types'
 import { Icon } from './Icons'
-import { filterNode, isCollection } from './helpers'
+import { filterNode, getModifier, isCollection } from './helpers'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme, useTreeState } from './contexts'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
@@ -43,6 +43,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     customNodeDefinitions,
     jsonParse,
     jsonStringify,
+    keyboardControls,
+    handleKeyboard,
+    insertAtTop,
   } = props
   const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
 
@@ -98,9 +101,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   }, [collapseState])
 
   const getDefaultNewValue = useMemo(
-    () => (nodeData: NodeData) => {
+    () => (nodeData: NodeData, newKey: string) => {
       if (typeof defaultValue !== 'function') return defaultValue
-      return defaultValue(nodeData)
+      return defaultValue(nodeData, newKey)
     },
     [defaultValue]
   )
@@ -125,13 +128,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.shiftKey || e.ctrlKey)) handleEdit()
-    else if (e.key === 'Escape') handleCancel()
-  }
+  const handleKeyPressEdit = (e: React.KeyboardEvent) =>
+    handleKeyboard(e, {
+      objectConfirm: handleEdit,
+      cancel: handleCancel,
+    })
 
   const handleCollapse = (e: React.MouseEvent) => {
-    if (e.getModifierState('Alt')) {
+    const modifier = getModifier(e)
+    if (modifier && keyboardControls.collapseModifier.includes(modifier)) {
       hasBeenOpened.current = true
       setCollapseState({ collapsed: !collapsed, path })
       return
@@ -162,22 +167,20 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     }
   }
 
-  const handleKeyPressKeyEdit = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleEditKey((e.target as HTMLInputElement).value)
-    else if (e.key === 'Escape') handleCancel()
-  }
-
   const handleAdd = (key: string) => {
     animateCollapse(false)
-    const newValue = getDefaultNewValue(nodeData)
+    const newValue = getDefaultNewValue(nodeData, key)
     if (collectionType === 'array') {
-      onAdd(newValue, [...path, (data as unknown[]).length]).then((error) => {
+      const index = insertAtTop.array ? 0 : (data as unknown[]).length
+      const options = insertAtTop.array ? { insert: true } : {}
+      onAdd(newValue, [...path, index], options).then((error) => {
         if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
       })
     } else if (key in data) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
     } else {
-      onAdd(newValue, [...path, key]).then((error) => {
+      const options = insertAtTop.object ? { insertBefore: 0 } : {}
+      onAdd(newValue, [...path, key], options).then((error) => {
         if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
       })
     }
@@ -275,7 +278,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           value={stringifiedValue}
           setValue={setStringifiedValue}
           isEditing={isEditing}
-          handleKeyPress={handleKeyPress}
+          handleKeyPress={handleKeyPressEdit}
           styles={getStyles('input', nodeData)}
         />
         <div className="jer-collection-input-button-row">
@@ -301,7 +304,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     setValue: async (val: unknown) => await onEdit(val, path),
     handleEdit,
     handleCancel,
-    handleKeyPress,
+    handleKeyPress: handleKeyPressEdit,
     isEditing,
     setIsEditing: () => setCurrentlyEditingElement(pathString),
     getStyles,
@@ -324,7 +327,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       defaultValue={name}
       autoFocus
       onFocus={(e) => e.target.select()}
-      onKeyDown={handleKeyPressKeyEdit}
+      onKeyDown={(e) =>
+        handleKeyboard(e, {
+          stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
+          cancel: handleCancel,
+        })
+      }
       style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
     />
   ) : (
@@ -363,6 +371,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       nodeData={nodeData}
       translate={translate}
       customButtons={props.customButtons}
+      keyboardControls={keyboardControls}
+      handleKeyboard={handleKeyboard}
     />
   )
 

@@ -30,5 +30,6 @@ export {
   type ThemeStyles,
   type NodeData,
   type JsonData,
+  type KeyboardControls,
 } from './types'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'

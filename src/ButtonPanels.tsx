@@ -9,7 +9,9 @@ import {
   type CopyType,
   type NodeData,
   type CustomButtonDefinition,
+  type KeyboardControlsFull,
 } from './types'
+import { getModifier } from './helpers'
 
 interface EditButtonProps {
   startEdit?: () => void
@@ -20,6 +22,11 @@ interface EditButtonProps {
   nodeData: NodeData
   translate: TranslateFunction
   customButtons: CustomButtonDefinition[]
+  keyboardControls: KeyboardControlsFull
+  handleKeyboard: (
+    e: React.KeyboardEvent,
+    eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
+  ) => void
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
@@ -31,6 +38,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   customButtons,
   nodeData,
   translate,
+  keyboardControls,
+  handleKeyboard,
 }) => {
   const { getStyles } = useTheme()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
@@ -40,14 +49,19 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const { key, path, value: data } = nodeData
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && handleAdd) {
-      setIsAdding(false)
-      handleAdd(newKey)
-      setNewKey(NEW_KEY_PROMPT)
-    } else if (e.key === 'Escape') {
-      setIsAdding(false)
-      setNewKey(NEW_KEY_PROMPT)
-    }
+    handleKeyboard(e, {
+      stringConfirm: () => {
+        if (handleAdd) {
+          setIsAdding(false)
+          handleAdd(newKey)
+          setNewKey(NEW_KEY_PROMPT)
+        }
+      },
+      cancel: () => {
+        setIsAdding(false)
+        setNewKey(NEW_KEY_PROMPT)
+      },
+    })
   }
 
   const handleCopy = (e: React.MouseEvent<HTMLElement>) => {
@@ -56,15 +70,14 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     let value
     let stringValue = ''
     if (enableClipboard) {
-      switch (e.ctrlKey || e.metaKey) {
-        case true:
-          value = stringifyPath(path)
-          stringValue = value
-          copyType = 'path'
-          break
-        default:
-          value = data
-          stringValue = type ? JSON.stringify(data, null, 2) : String(value)
+      const modifier = getModifier(e)
+      if (modifier && keyboardControls.clipboardModifier.includes(modifier)) {
+        value = stringifyPath(path)
+        stringValue = value
+        copyType = 'path'
+      } else {
+        value = data
+        stringValue = type ? JSON.stringify(data, null, 2) : String(value)
       }
       void navigator.clipboard.writeText(stringValue)
     }
