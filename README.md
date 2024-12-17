@@ -150,6 +150,7 @@ The only *required* value is `data` (although you will need to provide a `setDat
 | `jsonStringify`         | `(data: JsonData) => string`                  | `(data) => JSON.stringify(data, null, 2)` | Similarly, you can override the default presentation of the JSON string when starting editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                                                                                 |
 | `errorMessageTimeout`   | `number`                                      | `2500`                                    | Time (in milliseconds) to display the error message in the UI.                                                                                                                                                                                                                                                                                       |  |
 | `keyboardControls`      | `KeyboardControls`                            | As explained [above](#usage)              | Override some or all of the keyboard controls. See [Keyboard customisation](#keyboard-customisation) for details.                                                                                                                                                                                                                                    |  |
+| `insertAtTop`           | `boolean\| "object \| "array"`                | `false`                                   | If `true`, inserts new values at the *top* rather than bottom. Can set the behaviour just for arrays or objects by setting to `"object"` or `"array"` respectively.                                                                                                                                                                                  |  |
 
 ## Managing state
 
@@ -750,7 +751,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.18.0**: Ability to [customise keyboard controls](#keyboard-customisation)
+- **1.18.0**:
+  - Ability to [customise keyboard controls](#keyboard-customisation)
+  - Option to insert new values at the top
 - **1.17.0**: `defaultValue` function takes the new `key` as second parameter
 - **1.16.0**: Extend the "click" zone for collapsing nodes to the header bar and left margin (not just the collapse icon)
 - **1.15.12**:
