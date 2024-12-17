@@ -46,6 +46,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     jsonStringify,
     keyboardControls,
     handleKeyboard,
+    insertAtTop,
   } = props
   const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
 
@@ -171,13 +172,16 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     animateCollapse(false)
     const newValue = getDefaultNewValue(nodeData, key)
     if (collectionType === 'array') {
-      onAdd(newValue, [...path, (data as unknown[]).length]).then((error) => {
+      const index = insertAtTop.array ? 0 : (data as unknown[]).length
+      const options = insertAtTop.array ? { insert: true } : {}
+      onAdd(newValue, [...path, index], options).then((error) => {
         if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
       })
     } else if (key in data) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
     } else {
-      onAdd(newValue, [...path, key]).then((error) => {
+      const options = insertAtTop.object ? { insertBefore: 0 } : {}
+      onAdd(newValue, [...path, key], options).then((error) => {
         if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
       })
     }
