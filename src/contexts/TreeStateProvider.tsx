@@ -8,7 +8,7 @@
  */
 
 import React, { createContext, useContext, useState } from 'react'
-import { type CollectionKey } from './types'
+import { type CollectionKey } from '../types'
 
 interface CollapseAllState {
   path: CollectionKey[]

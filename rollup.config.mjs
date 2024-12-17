@@ -7,6 +7,7 @@ import bundleSize from 'rollup-plugin-bundle-size'
 import sizes from 'rollup-plugin-sizes'
 
 export default [
+  // Main Package
   {
     input: 'src/index.ts',
     output: [
@@ -29,10 +30,33 @@ export default [
     ],
     external: ['object-property-assigner', 'object-property-extractor'],
   },
+  // Types
   {
     input: './build/dts/index.d.ts',
     output: [{ file: 'build/index.d.ts', format: 'es' }],
     external: [/\.css$/],
     plugins: [dts()],
+  },
+  // Additional Themes
+  {
+    input: 'src/additionalThemes/index.ts',
+    output: [
+      {
+        file: 'build/themes.cjs.js',
+        format: 'cjs',
+      },
+      {
+        file: 'build/themes.esm.js',
+        format: 'esm',
+      },
+    ],
+    plugins: [
+      styles({ minimize: true }),
+      peerDepsExternal({ includeDependencies: true }),
+      typescript({ module: 'ESNext', target: 'es6', tsconfig: 'tsconfig.themes.json' }),
+      terser(),
+      bundleSize(),
+      sizes(),
+    ],
   },
 ]

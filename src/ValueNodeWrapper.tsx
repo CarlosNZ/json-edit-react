@@ -17,10 +17,9 @@ import {
   type ValueData,
   type JsonData,
 } from './types'
-import { useTheme } from './theme'
+import { useTheme, useTreeState } from './contexts'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
 import { filterNode } from './helpers'
-import { useTreeState } from './TreeStateProvider'
 import { useCommon, useDragNDrop } from './hooks'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {

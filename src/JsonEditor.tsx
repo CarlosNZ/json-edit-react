@@ -16,8 +16,7 @@ import {
   type UpdateFunctionProps,
   type JsonData,
 } from './types'
-import { useTheme, ThemeProvider } from './theme'
-import { TreeStateProvider } from './TreeStateProvider'
+import { useTheme, ThemeProvider, TreeStateProvider } from './contexts'
 import { useData } from './hooks/useData'
 import { getTranslateFunction } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'

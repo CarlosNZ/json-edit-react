@@ -324,18 +324,5 @@ export interface DefaultTheme extends Theme {
 // CSS "Style" object before being passed to components
 export type CompiledStyles = Record<ThemeableElement, ThemeFunction | React.CSSProperties>
 
-export type ThemeName =
-  | 'default'
-  | 'githubDark'
-  | 'githubLight'
-  | 'monoDark'
-  | 'monoLight'
-  | 'candyWrapper'
-  | 'psychedelic'
-
 // Value(s) passed to "setTheme" function
-export type ThemeInput =
-  | ThemeName
-  | Theme
-  | Partial<ThemeStyles>
-  | Array<ThemeName | Theme | Partial<ThemeStyles>>
+export type ThemeInput = Theme | Partial<ThemeStyles> | Array<Theme | Partial<ThemeStyles>>

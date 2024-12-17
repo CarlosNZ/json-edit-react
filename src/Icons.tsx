@@ -1,5 +1,5 @@
 import React from 'react'
-import { useTheme } from './theme'
+import { useTheme } from './contexts'
 import { type NodeData } from './types'
 
 // All icons from: https://reactsvgicons.com/

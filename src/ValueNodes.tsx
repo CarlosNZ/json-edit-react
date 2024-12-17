@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { toPathString, truncate } from './helpers'
-import { useTheme } from './theme'
+import { useTheme } from './contexts'
 import { type InputProps } from './types'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
