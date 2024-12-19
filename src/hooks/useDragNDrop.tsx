@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { useTreeState } from '../TreeStateProvider'
-import { useTheme } from '../theme'
+import { useTreeState, useTheme } from '../contexts'
 import { toPathString } from '../helpers'
 import {
   type NodeData,

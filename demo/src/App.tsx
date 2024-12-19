@@ -4,12 +4,18 @@ import JSON5 from 'json5'
 import 'react-datepicker/dist/react-datepicker.css'
 import {
   JsonEditor,
-  themes,
-  ThemeName,
   Theme,
   FilterFunction,
   JsonData,
   OnErrorFunction,
+  defaultTheme,
+  // Additional Themes
+  githubDarkTheme,
+  githubLightTheme,
+  monoLightTheme,
+  monoDarkTheme,
+  candyWrapperTheme,
+  psychedelicTheme,
 } from './_imports'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
@@ -53,7 +59,7 @@ interface AppState {
   collapseLevel: number
   collapseTime: number
   showCount: 'Yes' | 'No' | 'When closed'
-  theme: ThemeName | Theme
+  theme: Theme
   allowEdit: boolean
   allowDelete: boolean
   allowAdd: boolean
@@ -64,6 +70,16 @@ interface AppState {
   defaultNewValue: string
   searchText: string
 }
+
+const themes = [
+  defaultTheme,
+  githubDarkTheme,
+  githubLightTheme,
+  monoLightTheme,
+  monoDarkTheme,
+  candyWrapperTheme,
+  psychedelicTheme,
+]
 
 function App() {
   const navigate = useLocation()[1]
@@ -78,7 +94,7 @@ function App() {
     collapseLevel: dataDefinition.collapse ?? 2,
     collapseTime: 300,
     showCount: 'When closed',
-    theme: 'default',
+    theme: defaultTheme,
     allowEdit: true,
     allowDelete: true,
     allowAdd: true,
@@ -91,7 +107,7 @@ function App() {
   })
 
   const [isSaving, setIsSaving] = useState(false)
-  const previousThemeName = useRef('') // Used when resetting after theme editing
+  const previousTheme = useRef<Theme>() // Used when resetting after theme editing
   const toast = useToast()
 
   const { liveData, loading, updateLiveData } = useDatabase()
@@ -99,7 +115,7 @@ function App() {
   const [
     { present: data, past, future },
     { set: setData, reset, undo: undoData, redo: redoData, canUndo, canRedo },
-  ] = useUndo(selectedDataSet === 'editTheme' ? themes.default : dataDefinition.data)
+  ] = useUndo(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data)
   // Provides a named version of these methods (i.e undo.name = "undo")
   const undo = () => undoData()
   const redo = () => redoData()
@@ -166,8 +182,8 @@ function App() {
 
     switch (selected) {
       case 'editTheme':
-        previousThemeName.current = theme as string
-        reset(typeof theme === 'string' ? themes[theme] : theme)
+        previousTheme.current = theme
+        reset(theme)
         break
       case 'liveData':
         if (!liveData) reset({ 'Oops!': "We couldn't load this data, sorry " })
@@ -182,11 +198,12 @@ function App() {
   }
 
   const handleThemeChange = (e) => {
-    const selected = e.target.value
-    updateState({ theme: selected })
+    const theme = themes.find((th) => th.displayName === e.target.value)
+    if (!theme) return
+    updateState({ theme })
     if (selectedDataSet === 'editTheme') {
-      setData(themes[selected])
-      previousThemeName.current = selected
+      setData(theme)
+      previousTheme.current = theme
     }
   }
 
@@ -204,8 +221,8 @@ function App() {
 
     switch (selectedDataSet) {
       case 'editTheme':
-        reset(themes[previousThemeName.current])
-        newState.theme = themes[previousThemeName.current]
+        reset(previousTheme.current ?? defaultTheme)
+        newState.theme = previousTheme.current ?? defaultTheme
         break
       case 'liveData':
         setIsSaving(true)
@@ -468,14 +485,12 @@ function App() {
                     Theme
                   </FormLabel>
                   <div className="inputWidth" style={{ flexGrow: 1 }}>
-                    <Select id="themeSelect" onChange={handleThemeChange} value={theme}>
-                      {(Object.entries(themes) as [ThemeName, Theme][]).map(
-                        ([theme, { displayName }]) => (
-                          <option value={theme} key={theme}>
-                            {displayName}
-                          </option>
-                        )
-                      )}
+                    <Select id="themeSelect" onChange={handleThemeChange} value={theme.displayName}>
+                      {themes.map((theme) => (
+                        <option value={theme.displayName} key={theme.displayName}>
+                          {theme.displayName}
+                        </option>
+                      ))}
                     </Select>
                   </div>
                 </HStack>

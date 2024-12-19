@@ -7,6 +7,7 @@ import bundleSize from 'rollup-plugin-bundle-size'
 import sizes from 'rollup-plugin-sizes'
 
 export default [
+  // Main Package
   {
     input: 'src/index.ts',
     output: [
@@ -29,6 +30,7 @@ export default [
     ],
     external: ['object-property-assigner', 'object-property-extractor'],
   },
+  // Types
   {
     input: './build/dts/index.d.ts',
     output: [{ file: 'build/index.d.ts', format: 'es' }],

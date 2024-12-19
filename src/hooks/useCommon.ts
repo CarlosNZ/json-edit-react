@@ -4,7 +4,7 @@
  */
 
 import { useMemo, useState } from 'react'
-import { useTreeState } from '../TreeStateProvider'
+import { useTreeState } from '../contexts'
 import {
   type CollectionNodeProps,
   type ErrorString,

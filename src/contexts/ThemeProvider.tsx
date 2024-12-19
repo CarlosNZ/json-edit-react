@@ -1,5 +1,4 @@
 import React, { createContext, useContext } from 'react'
-import { themes } from './themes'
 import {
   type Theme,
   type ThemeableElement,
@@ -12,7 +11,37 @@ import {
   type IconReplacements,
 } from '../types'
 
-const defaultTheme = themes.default
+export const defaultTheme: Theme = {
+  displayName: 'Default',
+  fragments: { edit: 'rgb(42, 161, 152)' },
+  styles: {
+    container: {
+      backgroundColor: '#f6f6f6',
+      fontFamily: 'monospace',
+    },
+    collection: {},
+    collectionInner: {},
+    collectionElement: {},
+    dropZone: {},
+    property: '#292929',
+    bracket: { color: 'rgb(0, 43, 54)', fontWeight: 'bold' },
+    itemCount: { color: 'rgba(0, 0, 0, 0.3)', fontStyle: 'italic' },
+    string: 'rgb(203, 75, 22)',
+    number: 'rgb(38, 139, 210)',
+    boolean: 'green',
+    null: { color: 'rgb(220, 50, 47)', fontVariant: 'small-caps', fontWeight: 'bold' },
+    input: ['#292929'],
+    inputHighlight: '#b3d8ff',
+    error: { fontSize: '0.8em', color: 'red', fontWeight: 'bold' },
+    iconCollection: 'rgb(0, 43, 54)',
+    iconEdit: 'edit',
+    iconDelete: 'rgb(203, 75, 22)',
+    iconAdd: 'edit',
+    iconCopy: 'rgb(38, 139, 210)',
+    iconOk: 'green',
+    iconCancel: 'rgb(203, 75, 22)',
+  },
+}
 
 interface ThemeContext {
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
@@ -26,7 +55,7 @@ const initialContext: ThemeContext = {
 const ThemeProviderContext = createContext(initialContext)
 
 export const ThemeProvider = ({
-  theme = 'default',
+  theme = defaultTheme,
   icons = {},
   children,
 }: {
@@ -61,8 +90,6 @@ const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
   // First collect all elements into an array of the same type of thing -- style
   // objects
   const stylesArray = (Array.isArray(themeInput) ? themeInput : [themeInput]).map((theme) => {
-    if (themeInput === 'default') return {}
-    if (typeof theme === 'string') return buildStyleObject(themes[theme], collectedFunctions)
     if (isStyleObject(theme)) {
       return buildStyleObject({ fragments: {}, styles: theme }, collectedFunctions)
     }
@@ -130,7 +157,7 @@ const buildStyleObject = (
         const style = fragments?.[curr] ?? curr
         switch (typeof style) {
           case 'string':
-            return { ...acc, [defaultStyleProperties[key as ThemeableElement]]: style }
+            return { ...acc, [defaultStyleProperties[key as ThemeableElement] ?? 'color']: style }
           default:
             return { ...acc, ...style }
         }
@@ -147,27 +174,13 @@ const isStyleObject = (
   return !('styles' in overrideObject)
 }
 
-const defaultStyleProperties: { [Property in ThemeableElement]: keyof React.CSSProperties } = {
+const defaultStyleProperties: Partial<{
+  [Property in ThemeableElement]: keyof React.CSSProperties
+}> = {
   container: 'backgroundColor',
   collection: 'backgroundColor',
   collectionInner: 'backgroundColor',
   collectionElement: 'backgroundColor',
   dropZone: 'borderColor',
-  property: 'color',
-  bracket: 'color',
-  itemCount: 'color',
-  string: 'color',
-  number: 'color',
-  boolean: 'color',
-  null: 'color',
-  input: 'color',
   inputHighlight: 'backgroundColor',
-  error: 'color',
-  iconCollection: 'color',
-  iconEdit: 'color',
-  iconDelete: 'color',
-  iconAdd: 'color',
-  iconCopy: 'color',
-  iconOk: 'color',
-  iconCancel: 'color',
 }

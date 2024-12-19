@@ -1,11 +1,11 @@
 {
   "name": "json-edit-react",
-  "version": "1.18.0",
+  "version": "1.19.0-beta1",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
-  "sideEffects": false,
   "types": "build/index.d.ts",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./build/index.d.ts",
@@ -45,6 +45,7 @@
     "object-property-extractor": "^1.0.13"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^20.11.17",

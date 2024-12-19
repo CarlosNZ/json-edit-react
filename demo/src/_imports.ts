@@ -10,3 +10,5 @@ export * from 'json-edit-react'
 
 /* Compiled local package */
 // export * from './package/build'
+
+// export * from './json-edit-react/src/additionalThemes/themes'

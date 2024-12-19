@@ -26,7 +26,14 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
 <img width="392" alt="screenshot" src="image/screenshot.png">
 
 > [!IMPORTANT]
-> **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state).
+> Breaking changes:
+> - **Version 1.19.0** has a change to the `theme` input. Built-in themes must now
+> be imported separately and passed in, rather than just naming the theme as a
+> string. This is better for tree-shaking, so unused themes won't be bundled
+> with your build. See [Themes & Styles](#themes--styles)
+> - **Version 1.14.0** has a change which recommends you provide a `setData` prop
+> and not use `onUpdate` for updating your data externally. See [Managing
+> state](#managing-state).
 
 ## Contents  <!-- omit in toc -->
 - [Installation](#installation)
@@ -136,7 +143,7 @@ The only *required* value is `data` (although you will need to provide a `setDat
 | `defaultValue`          | `any\|DefaultValueFilterFunction`             | `null`                                    | When a new property is added, it is initialised with this value. A [function can be provided](#filter-functions) with the almost the same input as the `FilterFunction`s, but should output a value. This allows a different default value to be used depending on the data state (e.g. default for top level is an object, but a string elsewhere.) |
 | `stringTruncate`        | `number`                                      | `250`                                     | String values longer than this many characters will be displayed truncated (with `...`). The full string will always be visible when editing.                                                                                                                                                                                                        |
 | `translations`          | `LocalisedStrings` object                     | `{ }`                                     | UI strings (such as error messages) can be translated by passing an object containing localised string values (there are only a few). See [Localisation](#localisation)                                                                                                                                                                              |
-| `theme`                 | `string\|ThemeObject\|[string, ThemeObject]`  | `"default"`                               | Either the name of one of the built-in themes, or an object specifying some or all theme properties. See [Themes](#themes--styles).                                                                                                                                                                                                                  |
+| `theme`                 | `ThemeInput`                                  | `default`                                 | Either one of the built-in themes (imported separately), or an object specifying some or all theme properties. See [Themes](#themes--styles).                                                                                                                                                                                                        |
 | `className`             | `string`                                      |                                           | Name of a CSS class to apply to the component. In most cases, specifying `theme` properties will be more straightforward.                                                                                                                                                                                                                            |
 | `id`                    | `string`                                      |                                           | Name for the HTML `id` attribute on the main component container.                                                                                                                                                                                                                                                                                    |
 | `icons`                 | `{[iconName]: JSX.Element, ... }`             | `{ }`                                     | Replace the built-in icons by specifying them here. See [Themes](#themes--styles).                                                                                                                                                                                                                                                                   |  |
@@ -414,14 +421,31 @@ An example custom search function can be seen in the [Demo](#https://carlosnz.gi
 
 ## Themes & Styles
 
-There is a small selection of built-in themes (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react/)). In order to use one of these, just pass the name into the `theme` prop (although realistically, these exist more to showcase the capabilities  — I'm open to better built-in themes, so feel free to [create an issue](https://github.com/CarlosNZ/json-edit-react/issues) with suggestions). The available themes are:
-- `default`
-- `githubDark`
-- `githubLight`
-- `monoDark`
-- `monoLight`
-- `candyWrapper`
-- `psychedelic`
+There is a small selection of built-in themes (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react/)). In order to use one of these, just import it from the package and pass it as the theme prop:
+
+```js
+import { JsonEditor, githubDarkTheme } from 'json-edit-react'
+// ...other imports
+
+const MyApp = () => {
+  const [ data, setData ] = useState({ one: 1, two: 2 })
+
+  return <JsonEditor
+    data={data}
+    setData={setData}
+    theme={githubDarkTheme}
+    // other props...
+    />
+}
+```
+
+The following themes are available in the package (although realistically, these exist more to showcase the capabilities  — I'm open to better built-in themes, so feel free to [create an issue](https://github.com/CarlosNZ/json-edit-react/issues) with suggestions):
+- `githubDarkTheme`
+- `githubLightTheme`
+- `monoDarkTheme`
+- `monoLightTheme`
+- `candyWrapperTheme`
+- `psychedelicTheme`
 
 However, you can pass in your own theme object, or part thereof. The theme structure is as follows (this is the "default" theme definition):
 
@@ -471,7 +495,7 @@ For a simple example, if you want to use the "githubDark" theme, but just change
 ```js
 // in <JsonEditor /> props
 theme={[
-        'githubDark',
+        githubDarkTheme,
         {
             iconEdit: 'grey',
             boolean: { color: 'red', fontStyle: 'italic', fontWeight: 'bold', fontSize: '80%' },
@@ -488,7 +512,7 @@ Or you could create your own theme from scratch and overwrite the whole theme ob
 
 So, to summarise, the `theme` prop can take *either*:
 
-- a theme name e.g. `"candyWrapper"`
+- an imported theme, e.g `"candyWrapperTheme"`
 - a theme object:
   - can be structured as above with `fragments`, `styles`, `displayName` etc., or just the `styles` part (at the root level)
 - a theme name *and* an override object in an array, i.e. `[ "<themeName>, {...overrides } ]`
@@ -751,6 +775,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.19.0**: Built-in [themes](#themes--styles) must now be imported separately -- this improves tree-shaking to prevent unused themes being bundled with your build
 - **1.18.0**:
   - Ability to [customise keyboard controls](#keyboard-customisation)
   - Option to insert new values at the top

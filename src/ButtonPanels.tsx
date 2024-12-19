@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Icon } from './Icons'
-import { useTheme } from './theme'
+import { useTheme } from './contexts'
 import { type TranslateFunction } from './localisation'
 import {
   type CollectionKey,

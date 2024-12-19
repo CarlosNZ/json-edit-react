@@ -310,6 +310,9 @@ export interface InputProps {
  * THEMES
  */
 
+// Object passed to main "theme" prop
+export type ThemeInput = Theme | Partial<ThemeStyles> | Array<Theme | Partial<ThemeStyles>>
+
 const themeableElements = [
   'container',
   'collection',
@@ -364,19 +367,3 @@ export interface DefaultTheme extends Theme {
 // All the fragments and shorthand defined in Theme is compiled into a single
 // CSS "Style" object before being passed to components
 export type CompiledStyles = Record<ThemeableElement, ThemeFunction | React.CSSProperties>
-
-export type ThemeName =
-  | 'default'
-  | 'githubDark'
-  | 'githubLight'
-  | 'monoDark'
-  | 'monoLight'
-  | 'candyWrapper'
-  | 'psychedelic'
-
-// Value(s) passed to "setTheme" function
-export type ThemeInput =
-  | ThemeName
-  | Theme
-  | Partial<ThemeStyles>
-  | Array<ThemeName | Theme | Partial<ThemeStyles>>

@@ -23,11 +23,11 @@ import {
   type JsonData,
   type KeyboardControls,
 } from './types'
-import { useTheme, ThemeProvider } from './theme'
-import { TreeStateProvider } from './TreeStateProvider'
+import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme } from './contexts'
 import { useData } from './hooks/useData'
 import { getTranslateFunction } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
+
 import './style.css'
 
 const Editor: React.FC<JsonEditorProps> = ({
@@ -333,7 +333,7 @@ const Editor: React.FC<JsonEditorProps> = ({
 
 export const JsonEditor: React.FC<JsonEditorProps> = (props) => {
   return (
-    <ThemeProvider theme={props.theme} icons={props.icons}>
+    <ThemeProvider theme={props.theme ?? defaultTheme} icons={props.icons}>
       <TreeStateProvider>
         <Editor {...props} />
       </TreeStateProvider>

@@ -7,8 +7,7 @@ import { type CollectionNodeProps, type NodeData, type CollectionData } from './
 import { Icon } from './Icons'
 import { filterNode, getModifier, isCollection } from './helpers'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { useTheme } from './theme'
-import { useTreeState } from './TreeStateProvider'
+import { useTheme, useTreeState } from './contexts'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {

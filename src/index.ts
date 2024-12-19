@@ -1,5 +1,5 @@
 export { JsonEditor } from './JsonEditor'
-export { themes } from './theme'
+export { defaultTheme } from './contexts/ThemeProvider'
 export { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 export { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
 export { matchNode, matchNodeKey, isCollection, truncate } from './helpers'
@@ -25,7 +25,6 @@ export {
   type CustomTextDefinitions,
   type CustomTextFunction,
   type DefaultValueFunction,
-  type ThemeName,
   type Theme,
   type ThemeInput,
   type ThemeStyles,
@@ -34,3 +33,12 @@ export {
   type KeyboardControls,
 } from './types'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
+
+export {
+  githubDarkTheme,
+  githubLightTheme,
+  monoDarkTheme,
+  monoLightTheme,
+  candyWrapperTheme,
+  psychedelicTheme,
+} from './additionalThemes'
