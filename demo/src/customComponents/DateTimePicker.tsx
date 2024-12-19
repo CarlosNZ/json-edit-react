@@ -18,7 +18,12 @@ import 'react-datepicker/dist/react-datepicker.css'
 // For better matching with Chakra-UI
 import './style.css'
 
-export const DateTimePicker: React.FC<CustomNodeProps> = ({
+interface DatePickerCustomProps {
+  dateFormat: string
+  showTimeSelect: boolean
+}
+
+export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = ({
   value,
   setValue,
   handleEdit,
@@ -51,11 +56,11 @@ export const DateTimePicker: React.FC<CustomNodeProps> = ({
       selected={isNaN(date as any) ? null : date}
       showTimeSelect={showTimeSelect}
       dateFormat={dateFormat}
-      onChange={(date: Date) => setValue(date.toISOString())}
+      onChange={(date: Date | null) => date && setValue(date.toISOString())}
       open={true}
       onKeyDown={handleKeyPress}
     >
-      <div style={{ display: 'flex', gap: 20 }}>
+      <div style={{ display: 'inline-flex', gap: 10 }}>
         {/* These buttons are not really necessary -- you can either use the
         standard Ok/Cancel icons, or keyboard Enter/Esc, but shown for demo
         purposes */}

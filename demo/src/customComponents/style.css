@@ -78,6 +78,10 @@ react-datepicker__navigation--next--with-time:not(
   }
 }
 
+.react-datepicker__time-list {
+  height: 210px !important;
+}
+
 .react-datepicker__day:hover {
   background: #edf2f7;
 }

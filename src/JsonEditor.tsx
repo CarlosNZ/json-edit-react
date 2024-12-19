@@ -321,7 +321,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   mainContainerStyles.fontSize = rootFontSize ?? mainContainerStyles.fontSize
 
   return (
-    <div id={id} className={'jer-editor-container ' + className} style={mainContainerStyles}>
+    <div id={id} className={`jer-editor-container ${className ?? ''}`} style={mainContainerStyles}>
       {isCollection(data) ? (
         <CollectionNode data={data} {...otherProps} />
       ) : (
