@@ -191,10 +191,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       ? () => {
           onDelete(data, path).then((error) => {
             if (error) {
-              onError(
-                { code: 'DELETE_ERROR', message: error },
-                extractProperty(data, path) as CollectionData
-              )
+              onError({ code: 'DELETE_ERROR', message: error }, data)
             }
           })
         }
