@@ -21,7 +21,7 @@ import {
   UpdateFunction,
   UpdateFunctionProps,
 } from '../json-edit-react/src/types'
-import { Input } from 'object-property-assigner/build'
+import { type Input } from 'object-property-assigner'
 import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'
 import Ajv from 'ajv'

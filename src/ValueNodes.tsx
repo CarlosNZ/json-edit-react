@@ -13,7 +13,6 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   path,
   setIsEditing,
   handleEdit,
-  handleCancel,
   stringTruncate,
   showStringQuotes,
   nodeData,
