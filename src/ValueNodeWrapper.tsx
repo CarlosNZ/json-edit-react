@@ -19,7 +19,7 @@ import {
 } from './types'
 import { useTheme, useTreeState } from './contexts'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
-import { filterNode } from './helpers'
+import { filterNode, getNextOrPrevious, getPrevious } from './helpers'
 import { useCommon, useDragNDrop } from './hooks'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {

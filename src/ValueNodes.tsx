@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { toPathString, truncate } from './helpers'
-import { useTheme } from './contexts'
+import { getNextOrPrevious, getPrevious, toPathString, truncate } from './helpers'
+import { useTheme, useTreeState } from './contexts'
 import { type InputProps } from './types'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
@@ -20,6 +20,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   handleKeyboard,
 }) => {
   const { getStyles } = useTheme()
+  const { setCurrentlyEditingElement } = useTreeState()
 
   const pathString = toPathString(path)
 
@@ -52,6 +53,17 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
               textArea.setSelectionRange(startPos + 1, startPos + 1)
               setValue(strStart + '\n' + strEnd)
             }
+          },
+          tabForward: () => {
+            const next = getNextOrPrevious(nodeData.fullData, path)
+            // if (next) {
+            //   handleEdit()
+            //   setCurrentlyEditingElement(toPathString(next))
+            // }
+            console.log('NExt', next)
+          },
+          tabBack: () => {
+            console.log('PReb', getNextOrPrevious(nodeData.fullData, path, 'prev'))
           },
         })
       }}

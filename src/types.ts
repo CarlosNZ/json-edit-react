@@ -169,6 +169,8 @@ export interface KeyboardControls {
   numberConfirm?: KeyEvent | string
   numberUp?: KeyEvent | string
   numberDown?: KeyEvent | string
+  tabForward?: KeyEvent | string
+  tabBack?: KeyEvent | string
   clipboardModifier?: React.ModifierKey | React.ModifierKey[]
   collapseModifier?: React.ModifierKey | React.ModifierKey[]
 }

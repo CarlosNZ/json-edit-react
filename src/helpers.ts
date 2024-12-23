@@ -1,3 +1,4 @@
+import extractProperty from 'object-property-extractor'
 import {
   type SearchFilterFunction,
   type NodeData,
@@ -5,6 +6,9 @@ import {
   type KeyboardControls,
   type KeyEvent,
   type KeyboardControlsFull,
+  type JsonData,
+  type CollectionKey,
+  type CollectionData,
 } from './types'
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
@@ -202,6 +206,8 @@ const defaultKeyboardControls: KeyboardControlsFull = {
   numberConfirm: ENTER,
   numberUp: { key: 'ArrowUp' },
   numberDown: { key: 'ArrowDown' },
+  tabForward: { key: 'Tab' },
+  tabBack: { key: 'Tab', modifier: 'Shift' },
   booleanConfirm: ENTER,
   clipboardModifier: ['Meta', 'Control'],
   collapseModifier: ['Alt'],
@@ -238,4 +244,57 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
   }
 
   return controls
+}
+
+/**
+ * TAB key helpers
+ */
+
+export const getNextOrPrevious = (
+  fullData: JsonData,
+  path: CollectionKey[],
+  nextOrPrev: 'next' | 'prev' = 'next'
+): CollectionKey[] | null => {
+  const parentPath = path.slice(0, path.length - 1)
+  const thisKey = path.slice(-1)[0]
+  if (thisKey === undefined) return null
+
+  const parentData = extractProperty(fullData, parentPath)
+  const collection = transformCollection(parentData as JsonData)
+
+  const thisIndex = collection.findIndex((el) => el.key === thisKey)
+  const destinationIndex = nextOrPrev === 'next' ? thisIndex + 1 : thisIndex - 1
+
+  const destination = collection[destinationIndex]
+
+  if (!destination) {
+    if (parentPath.length === 0) return null
+    return getNextOrPrevious(fullData, parentPath, nextOrPrev)
+  }
+
+  if (isCollection(destination.value)) {
+    return getChildRecursive(fullData, [...parentPath, destination.key], nextOrPrev)
+  } else return [...parentPath, destination.key]
+}
+
+// If the node at "path" is a collection, tries the first/last child of that
+// collection recursively until a Value node is found
+const getChildRecursive = (
+  fullData: JsonData,
+  path: CollectionKey[],
+  nextOrPrev: 'next' | 'prev' = 'next'
+) => {
+  const node = extractProperty(fullData, path)
+  if (!isCollection(node)) return path
+  const keys = Array.isArray(node) ? node.map((_, index) => index) : Object.keys(node)
+  const child = nextOrPrev === 'next' ? keys[0] : keys[keys.length - 1]
+  return getChildRecursive(fullData, [...path, child], nextOrPrev)
+}
+
+// Transform a collections (Array or Object) into a structure that is easier to
+// navigate forward and back within
+const transformCollection = (collection: JsonData) => {
+  if (Array.isArray(collection))
+    return collection.map((value, index) => ({ index, value, key: index }))
+  return Object.entries(collection).map(([key, value], index) => ({ key, value, index }))
 }
