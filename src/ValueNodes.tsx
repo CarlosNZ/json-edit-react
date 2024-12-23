@@ -172,12 +172,19 @@ export const NullValue: React.FC<InputProps> = ({
   const { getStyles } = useTheme()
 
   useEffect(() => {
-    if (isEditing) document.addEventListener('keydown', listenForSubmit)
+    if (isEditing) {
+      // Small delay to prevent registering keyboard input from previous element
+      // if switched using "Tab"
+      setTimeout(() => document.addEventListener('keydown', listenForSubmit), 50)
+    }
     return () => document.removeEventListener('keydown', listenForSubmit)
   }, [isEditing])
 
   const listenForSubmit = (e: unknown) =>
-    handleKeyboard(e as React.KeyboardEvent, { confirm: handleEdit, ...keyboardCommon })
+    handleKeyboard(e as React.KeyboardEvent, {
+      confirm: handleEdit,
+      ...keyboardCommon,
+    })
 
   return (
     <div

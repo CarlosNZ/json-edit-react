@@ -45,7 +45,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     keyboardControls,
   } = props
   const { getStyles } = useTheme()
-  const { setCurrentlyEditingElement, setCollapseState } = useTreeState()
+  const { setCurrentlyEditingElement, setCollapseState, currentlyEditingElement } = useTreeState()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
@@ -126,7 +126,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }, [nodeData, restrictTypeSelection])
 
   // Early return if this node is filtered out
-  if (!filterNode('value', nodeData, searchFilter, searchText)) return null
+  const isVisible = filterNode('value', nodeData, searchFilter, searchText)
+  if (!isVisible) {
+    if (currentlyEditingElement === pathString) {
+      const next = getNextOrPrevious(nodeData.fullData, path)
+      setCurrentlyEditingElement(next ? toPathString(next) : next)
+    }
+    return null
+  }
 
   const handleChangeDataType = (type: DataType) => {
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
