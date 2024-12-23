@@ -316,7 +316,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           ) : (
             showEditButtons && (
               <EditButtons
-                startEdit={canEdit ? () => setCurrentlyEditingElement(pathString) : undefined}
+                startEdit={
+                  canEdit ? () => setCurrentlyEditingElement(pathString, handleCancel) : undefined
+                }
                 handleDelete={canDelete ? handleDelete : undefined}
                 enableClipboard={enableClipboard}
                 translate={translate}
