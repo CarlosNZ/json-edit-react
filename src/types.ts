@@ -306,6 +306,7 @@ export interface InputProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
+  keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
 }
 
 /**

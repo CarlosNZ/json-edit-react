@@ -19,7 +19,7 @@ import {
 } from './types'
 import { useTheme, useTreeState } from './contexts'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
-import { filterNode, getNextOrPrevious, getPrevious } from './helpers'
+import { filterNode, getNextOrPrevious, toPathString } from './helpers'
 import { useCommon, useDragNDrop } from './hooks'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
@@ -214,6 +214,23 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     nodeData,
     translate,
     handleKeyboard,
+    keyboardCommon: {
+      cancel: handleCancel,
+      tabForward: () => {
+        const next = getNextOrPrevious(nodeData.fullData, path)
+        if (next) {
+          handleEdit()
+          setCurrentlyEditingElement(toPathString(next))
+        }
+      },
+      tabBack: () => {
+        const prev = getNextOrPrevious(nodeData.fullData, path, 'prev')
+        if (prev) {
+          handleEdit()
+          setCurrentlyEditingElement(toPathString(prev))
+        }
+      },
+    },
   }
 
   const ValueComponent = showCustomNode ? (

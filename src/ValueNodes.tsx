@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { getNextOrPrevious, getPrevious, toPathString, truncate } from './helpers'
-import { useTheme, useTreeState } from './contexts'
+import { toPathString, truncate } from './helpers'
+import { useTheme } from './contexts'
 import { type InputProps } from './types'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
@@ -18,9 +18,9 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   showStringQuotes,
   nodeData,
   handleKeyboard,
+  keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
-  const { setCurrentlyEditingElement } = useTreeState()
 
   const pathString = toPathString(path)
 
@@ -36,7 +36,6 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       handleKeyPress={(e) => {
         handleKeyboard(e, {
           stringConfirm: handleEdit,
-          cancel: handleCancel,
           stringLineBreak: () => {
             const textArea = document.getElementById(
               `${pathString}_textarea`
@@ -54,17 +53,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
               setValue(strStart + '\n' + strEnd)
             }
           },
-          tabForward: () => {
-            const next = getNextOrPrevious(nodeData.fullData, path)
-            // if (next) {
-            //   handleEdit()
-            //   setCurrentlyEditingElement(toPathString(next))
-            // }
-            console.log('NExt', next)
-          },
-          tabBack: () => {
-            console.log('PReb', getNextOrPrevious(nodeData.fullData, path, 'prev'))
-          },
+          ...keyboardCommon,
         })
       }}
       styles={getStyles('input', nodeData)}
@@ -93,9 +82,9 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
   path,
   setIsEditing,
   handleEdit,
-  handleCancel,
   nodeData,
   handleKeyboard,
+  keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
 
@@ -115,9 +104,9 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
       onKeyDown={(e) =>
         handleKeyboard(e, {
           numberConfirm: handleEdit,
-          cancel: handleCancel,
           numberUp: () => setValue(Number(value) + 1),
           numberDown: () => setValue(Number(value) - 1),
+          ...keyboardCommon,
         })
       }
       style={{ width: `${String(value).length / 1.5 + 2}em`, ...getStyles('input', nodeData) }}
@@ -140,9 +129,9 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   path,
   setIsEditing,
   handleEdit,
-  handleCancel,
   nodeData,
   handleKeyboard,
+  keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
 
@@ -156,7 +145,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       onKeyDown={(e) =>
         handleKeyboard(e, {
           booleanConfirm: handleEdit,
-          cancel: handleCancel,
+          ...keyboardCommon,
         })
       }
       autoFocus
@@ -177,9 +166,9 @@ export const NullValue: React.FC<InputProps> = ({
   isEditing,
   setIsEditing,
   handleEdit,
-  handleCancel,
   nodeData,
   handleKeyboard,
+  keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
 
@@ -189,7 +178,7 @@ export const NullValue: React.FC<InputProps> = ({
   }, [isEditing])
 
   const listenForSubmit = (e: unknown) =>
-    handleKeyboard(e as React.KeyboardEvent, { confirm: handleEdit, cancel: handleCancel })
+    handleKeyboard(e as React.KeyboardEvent, { confirm: handleEdit, ...keyboardCommon })
 
   return (
     <div
