@@ -288,7 +288,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
               minWidth: `${Math.min(String(name).length + 1, 5)}ch`,
               flexShrink: (name as string).length > 10 ? 1 : 0,
             }}
-            onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
+            onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
           >
             {name === '' ? (
               <span className={path.length > 0 ? 'jer-empty-string' : undefined}>

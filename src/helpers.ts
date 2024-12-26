@@ -122,7 +122,8 @@ export const truncate = (string: string, length = 200) =>
 /**
  * Converts a part expressed as an array of properties to a single string
  */
-export const toPathString = (path: Array<string | number>) =>
+export const toPathString = (path: Array<string | number>, key?: 'key_') =>
+  (key ?? '') +
   path
     // An empty string in a part will "disappear", so replace it with a
     // non-printable char

@@ -341,7 +341,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         className="jer-key-text"
         style={getStyles('property', nodeData)}
         onClick={(e) => e.stopPropagation()}
-        onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
+        onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
       >
         {name === '' ? (
           <span className={path.length > 0 ? 'jer-empty-string' : undefined}>
