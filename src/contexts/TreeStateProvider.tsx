@@ -9,6 +9,7 @@
 
 import React, { createContext, useContext, useRef, useState } from 'react'
 import { type CollectionKey } from '../types'
+import { toPathString } from '../helpers'
 
 interface CollapseAllState {
   path: CollectionKey[]
@@ -25,7 +26,7 @@ interface TreeStateContext {
   setCollapseState: (collapseState: CollapseAllState | null) => void
   doesPathMatch: (path: CollectionKey[]) => boolean
   currentlyEditingElement: string | null
-  setCurrentlyEditingElement: (newElement: string | null, cancelOp?: () => void) => void
+  setCurrentlyEditingElement: (path: CollectionKey[] | null, cancelOp?: () => void) => void
   areChildrenBeingEdited: (pathString: string) => boolean
   dragSource: DragSource
   setDragSource: (newState: DragSource) => void
@@ -52,13 +53,17 @@ export const TreeStateProvider = ({ children }: { children: React.ReactNode }) =
   })
   const cancelOp = useRef<(() => void) | null>(null)
 
-  const updateCurrentlyEditingElement = (newElement: string | null, newCancel?: () => void) => {
+  const updateCurrentlyEditingElement = (path: CollectionKey[] | null, newCancel?: () => void) => {
+    const pathString = path === null ? null : toPathString(path)
+    // TO-DO: Ensure new element is definitely open
+    // if (path !== null) setCollapseState({ path: path.slice(0, path.length - 1), collapsed: false })
+
     // The "Cancel" allows the UI to reset the element that was previously being
     // edited if the user clicks another "Edit" button elsewhere
-    if (currentlyEditingElement !== null && newElement !== null && cancelOp.current !== null) {
+    if (currentlyEditingElement !== null && pathString !== null && cancelOp.current !== null) {
       cancelOp.current()
     }
-    setCurrentlyEditingElement(newElement)
+    setCurrentlyEditingElement(pathString)
     cancelOp.current = newCancel ?? null
   }
 

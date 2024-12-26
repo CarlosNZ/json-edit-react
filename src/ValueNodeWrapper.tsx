@@ -130,7 +130,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   if (!isVisible) {
     if (currentlyEditingElement === pathString) {
       const next = getNextOrPrevious(nodeData.fullData, path)
-      setCurrentlyEditingElement(next ? toPathString(next) : next)
+      setCurrentlyEditingElement(next)
     }
     return null
   }
@@ -212,7 +212,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     parentData,
     setValue: updateValue,
     isEditing,
-    setIsEditing: canEdit ? () => setCurrentlyEditingElement(pathString) : () => {},
+    setIsEditing: canEdit ? () => setCurrentlyEditingElement(path) : () => {},
     handleEdit,
     handleCancel,
     path,
@@ -227,14 +227,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         const next = getNextOrPrevious(nodeData.fullData, path)
         if (next) {
           handleEdit()
-          setCurrentlyEditingElement(toPathString(next))
+          setCurrentlyEditingElement(next)
         }
       },
       tabBack: () => {
         const prev = getNextOrPrevious(nodeData.fullData, path, 'prev')
         if (prev) {
           handleEdit()
-          setCurrentlyEditingElement(toPathString(prev))
+          setCurrentlyEditingElement(prev)
         }
       },
     },
@@ -252,7 +252,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
-      setIsEditing={() => setCurrentlyEditingElement(pathString)}
+      setIsEditing={() => setCurrentlyEditingElement(path)}
       getStyles={getStyles}
     />
   ) : (
@@ -324,7 +324,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             showEditButtons && (
               <EditButtons
                 startEdit={
-                  canEdit ? () => setCurrentlyEditingElement(pathString, handleCancel) : undefined
+                  canEdit ? () => setCurrentlyEditingElement(path, handleCancel) : undefined
                 }
                 handleDelete={canDelete ? handleDelete : undefined}
                 enableClipboard={enableClipboard}

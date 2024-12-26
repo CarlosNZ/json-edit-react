@@ -119,6 +119,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     showCollectionWrapper = true,
   } = useMemo(() => getCustomNode(customNodeDefinitions, nodeData), [])
 
+  const childrenEditing = areChildrenBeingEdited(pathString)
+
   // Early return if this node is filtered out
   if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0)
     return null
@@ -288,7 +290,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   // no way to open a collapsed custom node, so this ensures it will stay open.
   // It can still be displayed collapsed by handling it internally if this is
   // desired.
-  const isCollapsed = !showCollectionWrapper ? false : collapsed
+  // Also, if the node is editing via "Tab" key, it's parent must be opened,
+  // hence `childrenEditing` check
+  const isCollapsed = !showCollectionWrapper ? false : collapsed && !childrenEditing
   if (!isCollapsed) hasBeenOpened.current = true
 
   const customNodeAllProps = {
@@ -302,7 +306,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
-    setIsEditing: () => setCurrentlyEditingElement(pathString),
+    setIsEditing: () => setCurrentlyEditingElement(path),
     getStyles,
     canDragOnto: canEdit,
   }
@@ -356,7 +360,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         canEdit
           ? () => {
               hasBeenOpened.current = true
-              setCurrentlyEditingElement(pathString)
+              setCurrentlyEditingElement(path)
             }
           : undefined
       }
@@ -449,7 +453,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         style={{
           overflowY: isCollapsed || isAnimating ? 'clip' : 'visible',
           // Prevent collapse if this node or any children are being edited
-          maxHeight: areChildrenBeingEdited(pathString) ? undefined : maxHeight,
+          maxHeight: childrenEditing ? undefined : maxHeight,
           ...getStyles('collectionInner', nodeData),
         }}
         ref={contentRef}
