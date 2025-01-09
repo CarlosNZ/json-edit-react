@@ -284,7 +284,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>
 
 export interface CustomButtonDefinition {
-  Element: React.FC
+  Element: React.FC<{ nodeData: NodeData }>
   onClick: (nodeData: NodeData, e: React.MouseEvent) => void
 }
 
