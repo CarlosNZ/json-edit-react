@@ -203,6 +203,7 @@ const defaultKeyboardControls: KeyboardControlsFull = {
   numberUp: { key: 'ArrowUp' },
   numberDown: { key: 'ArrowDown' },
   booleanConfirm: ENTER,
+  booleanToggle: { key: ' ' },
   clipboardModifier: ['Meta', 'Control'],
   collapseModifier: ['Alt'],
 }

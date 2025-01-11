@@ -411,6 +411,7 @@ function App() {
               //   clipboardModifier: ['Alt', 'Shift'],
               //   collapseModifier: 'Control',
               //   booleanConfirm: 'Enter',
+              //   booleanToggle: 'r',
               // }}
               // insertAtBeginning="object"
             />

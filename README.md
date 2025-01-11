@@ -105,6 +105,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - When clicking the "clipboard" icon, holding down `Cmd/Ctrl` will copy the *path* to the selected node rather than its value
 - When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
 - For Number inputs, arrow-up and down keys will increment/decrement the value
+- For Boolean inputs, space bar will toggle the value
 - Drag and drop items to change the structure or modify display order
 - JSON text input can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
 
@@ -699,6 +700,7 @@ The default keyboard controls are [outlined above](#usage), but it's possible to
   numberUp: 'ArrowUp',
   numberDown: 'ArrowDown',
   booleanConfirm: 'Enter',
+  booleanToggle: ' ', // Space bar
   clipboardModifier: ['Meta', 'Control'],
   collapseModifier: 'Alt',
 }

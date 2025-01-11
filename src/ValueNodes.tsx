@@ -141,12 +141,16 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       name={toPathString(path)}
       checked={value}
       onChange={() => setValue(!value)}
-      onKeyDown={(e) =>
+      onKeyDown={(e) => {
+        // If we don't explicitly suppress normal checkbox keyboard behaviour,
+        // the default key (Space) will continue to work even if re-defined
+        if (e.key === ' ') e.preventDefault()
         handleKeyboard(e, {
           booleanConfirm: handleEdit,
           cancel: handleCancel,
+          booleanToggle: () => setValue(!value),
         })
-      }
+      }}
       autoFocus
     />
   ) : (

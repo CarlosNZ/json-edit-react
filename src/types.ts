@@ -166,6 +166,7 @@ export interface KeyboardControls {
   stringConfirm?: KeyEvent | string
   stringLineBreak?: KeyEvent | string // for Value nodes
   booleanConfirm?: KeyEvent | string
+  booleanToggle?: KeyEvent | string
   numberConfirm?: KeyEvent | string
   numberUp?: KeyEvent | string
   numberDown?: KeyEvent | string
