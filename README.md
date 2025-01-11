@@ -252,13 +252,15 @@ Since there is very little user feedback when clicking "Copy", a good idea would
 
 In addition to the "Copy", "Edit" and "Delete" buttons that appear by each value, you can add your own buttons if you need to allow some custom operations on the data. Provide an array of button definitions in the `customButtons` prop, in the following definition structure:
 
-```js
+```ts
 {
-  Element: React.FC,
-  onClick: (nodeData: NodeData, e: React.MouseEvent) => void
+  Element: React.FC<{ nodeData: NodeData }>,
+  onClick?: (nodeData: NodeData, e: React.MouseEvent) => void
 }
 ```
 Where `NodeData` is the same data structure received by the previous "Update Functions".
+
+The `onClick` is optional -- don't provide it if you have your own `onClick` handler within your button component.
 
 ## Filter functions
 
