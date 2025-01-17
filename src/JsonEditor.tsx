@@ -345,14 +345,12 @@ export const JsonEditor: React.FC<JsonEditorProps> = (props) => {
 
   const { collapseAnimationTime = 300 } = props
 
-  const transitionTime = docRoot
-    ? getComputedStyle(docRoot).getPropertyValue('--jer-expand-transition-time')
-    : '1000'
-  if (parseFloat(transitionTime) * 1000 !== collapseAnimationTime) {
-    docRoot?.style.setProperty('--jer-expand-transition-time', `${collapseAnimationTime / 1000}s`)
-  }
-
   if (!docRoot) return null
+
+  const transitionTime = getComputedStyle(docRoot).getPropertyValue('--jer-expand-transition-time')
+  if (parseFloat(transitionTime) * 1000 !== collapseAnimationTime) {
+    docRoot.style.setProperty('--jer-expand-transition-time', `${collapseAnimationTime / 1000}s`)
+  }
 
   return (
     <ThemeProvider theme={props.theme ?? defaultTheme} icons={props.icons} docRoot={docRoot}>
