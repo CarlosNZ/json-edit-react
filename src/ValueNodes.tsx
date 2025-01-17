@@ -175,8 +175,8 @@ export const NullValue: React.FC<InputProps> = ({
   const { getStyles } = useTheme()
 
   useEffect(() => {
-    if (isEditing) document.addEventListener('keydown', listenForSubmit)
-    return () => document.removeEventListener('keydown', listenForSubmit)
+    if (isEditing) window.addEventListener('keydown', listenForSubmit)
+    return () => window.removeEventListener('keydown', listenForSubmit)
   }, [isEditing])
 
   const listenForSubmit = (e: unknown) =>

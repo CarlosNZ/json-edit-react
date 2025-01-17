@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import assign, { type Options as AssignOptions, type Input } from 'object-property-assigner'
 import extract from 'object-property-extractor'
 import { CollectionNode } from './CollectionNode'
@@ -84,13 +84,7 @@ const Editor: React.FC<JsonEditorProps> = ({
 
   const [data, setData] = useData<JsonData>({ setData: srcSetData, data: srcData })
 
-  const docRoot = document.querySelector(':root') as HTMLElement
-  const transitionTime = getComputedStyle(document.documentElement).getPropertyValue(
-    '--jer-expand-transition-time'
-  )
-  if (parseFloat(transitionTime) * 1000 !== collapseAnimationTime) {
-    docRoot?.style.setProperty('--jer-expand-transition-time', `${collapseAnimationTime / 1000}s`)
-  }
+  const mainContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
@@ -270,6 +264,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   )
 
   const otherProps = {
+    mainContainerRef: mainContainerRef as React.MutableRefObject<Element>,
     name: rootName,
     nodeData,
     onEdit,
@@ -321,7 +316,12 @@ const Editor: React.FC<JsonEditorProps> = ({
   mainContainerStyles.fontSize = rootFontSize ?? mainContainerStyles.fontSize
 
   return (
-    <div id={id} className={`jer-editor-container ${className ?? ''}`} style={mainContainerStyles}>
+    <div
+      id={id}
+      ref={mainContainerRef}
+      className={`jer-editor-container ${className ?? ''}`}
+      style={mainContainerStyles}
+    >
       {isCollection(data) ? (
         <CollectionNode data={data} {...otherProps} />
       ) : (
@@ -332,8 +332,30 @@ const Editor: React.FC<JsonEditorProps> = ({
 }
 
 export const JsonEditor: React.FC<JsonEditorProps> = (props) => {
+  const [docRoot, setDocRoot] = useState<HTMLElement>()
+
+  // We want access to the global document.documentElement object, but can't
+  // access it directly when used with SSR. So we set it inside a `useEffect`,
+  // which won't run server-side (it'll just be undefined) until client
+  // hydration
+  useEffect(() => {
+    const root = document.documentElement
+    setDocRoot(root)
+  }, [])
+
+  const { collapseAnimationTime = 300 } = props
+
+  const transitionTime = docRoot
+    ? getComputedStyle(docRoot).getPropertyValue('--jer-expand-transition-time')
+    : '1000'
+  if (parseFloat(transitionTime) * 1000 !== collapseAnimationTime) {
+    docRoot?.style.setProperty('--jer-expand-transition-time', `${collapseAnimationTime / 1000}s`)
+  }
+
+  if (!docRoot) return null
+
   return (
-    <ThemeProvider theme={props.theme ?? defaultTheme} icons={props.icons}>
+    <ThemeProvider theme={props.theme ?? defaultTheme} icons={props.icons} docRoot={docRoot}>
       <TreeStateProvider>
         <Editor {...props} />
       </TreeStateProvider>
