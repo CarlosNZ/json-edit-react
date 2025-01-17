@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { toPathString, truncate } from './helpers'
 import { useTheme } from './contexts'
@@ -21,6 +21,8 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
 }) => {
   const { getStyles } = useTheme()
 
+  const textAreaRef = useRef<HTMLTextAreaElement>(null)
+
   const pathString = toPathString(path)
 
   const quoteChar = showStringQuotes ? '"' : ''
@@ -28,6 +30,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   return isEditing ? (
     <AutogrowTextArea
       className="jer-input-text"
+      textAreaRef={textAreaRef}
       name={pathString}
       value={value}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
@@ -37,21 +40,17 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
           stringConfirm: handleEdit,
           cancel: handleCancel,
           stringLineBreak: () => {
-            const textArea = document.getElementById(
-              `${pathString}_textarea`
-            ) as HTMLTextAreaElement
-            if (textArea) {
-              // Simulates standard text-area line break behaviour. Only
-              // required when control key is not "standard" text-area
-              // behaviour ("Shift-Enter" or "Enter")
-              const startPos: number = textArea?.selectionStart ?? Infinity
-              const endPos: number = textArea?.selectionEnd ?? Infinity
-              const strStart = value.slice(0, startPos)
-              const strEnd = value.slice(endPos)
-              ;(e.target as HTMLInputElement).value = strStart + '\n' + strEnd
-              textArea.setSelectionRange(startPos + 1, startPos + 1)
-              setValue(strStart + '\n' + strEnd)
-            }
+            const textArea = textAreaRef.current
+            // Simulates standard text-area line break behaviour. Only
+            // required when control key is not "standard" text-area
+            // behaviour ("Shift-Enter" or "Enter")
+            const startPos: number = textArea?.selectionStart ?? Infinity
+            const endPos: number = textArea?.selectionEnd ?? Infinity
+            const strStart = value.slice(0, startPos)
+            const strEnd = value.slice(endPos)
+            ;(e.target as HTMLInputElement).value = strStart + '\n' + strEnd
+            textArea?.setSelectionRange(startPos + 1, startPos + 1)
+            setValue(strStart + '\n' + strEnd)
           },
         })
       }}

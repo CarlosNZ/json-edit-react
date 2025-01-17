@@ -18,6 +18,7 @@ interface TextAreaProps {
   isEditing: boolean
   handleKeyPress: (e: React.KeyboardEvent) => void
   styles: React.CSSProperties
+  textAreaRef?: React.MutableRefObject<HTMLTextAreaElement | null>
 }
 
 export const AutogrowTextArea: React.FC<TextAreaProps> = ({
@@ -27,6 +28,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   setValue,
   handleKeyPress,
   styles,
+  textAreaRef,
 }) => {
   // Adding extra (hidden) char when adding new lines to input prevents
   // mis-alignment between real value and dummy value
@@ -37,6 +39,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
     <div style={{ display: 'grid' }}>
       <textarea
         id={`${name}_textarea`}
+        ref={textAreaRef}
         style={{
           height: 'auto',
           gridArea: '1 / 1 / 2 / 2',

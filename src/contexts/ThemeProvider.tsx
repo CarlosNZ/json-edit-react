@@ -67,10 +67,10 @@ export const ThemeProvider = ({
 
   const getStyles = (element: ThemeableElement, nodeData: NodeData) => {
     if (typeof styles[element] === 'function') {
-      return (styles[element] as ThemeFunction)(nodeData) as React.CSSProperties
+      return styles[element](nodeData) as React.CSSProperties
     }
 
-    return styles[element] as React.CSSProperties
+    return styles[element]
   }
 
   return (
