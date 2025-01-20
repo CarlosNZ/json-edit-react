@@ -17,11 +17,12 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
  - fine-grained control over which elements can be edited, deleted, or added to
  - full [JSON Schema](https://json-schema.org/) validation (using 3rd-party validation library)
  - customisable UI, through simple, pre-defined [themes](#themes--styles), specific CSS overrides for UI components, or by targeting CSS classes
- - self-contained — rendered with plain HTML/CSS, so no dependance on external UI libraries
+ - self-contained — rendered with plain HTML/CSS, so no dependence on external UI libraries
  - search/filter data by key, value or custom function
  - provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
  - [localisable](#localisation) UI
- - **NEW!** [Drag-n-drop](#drag-n-drop) editing! (*experimental*)
+ - [Drag-n-drop](#drag-n-drop) editing
+ - [Keyboard customisation](#keyboard-customisation)
 
 <img width="392" alt="screenshot" src="image/screenshot.png">
 
