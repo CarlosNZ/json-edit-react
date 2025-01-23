@@ -20,6 +20,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     areChildrenBeingEdited,
   } = useTreeState()
   const {
+    mainContainerRef,
     data,
     nodeData: incomingNodeData,
     parentData,
@@ -53,7 +54,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const { contentRef, isAnimating, maxHeight, collapsed, animateCollapse } = useCollapseTransition(
     data,
     collapseAnimationTime,
-    startCollapsed
+    startCollapsed,
+    mainContainerRef
   )
 
   const {

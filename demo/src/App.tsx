@@ -414,6 +414,7 @@ function App() {
               //   booleanToggle: 'r',
               // }}
               // insertAtBeginning="object"
+              // rootFontSize={20}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>
