@@ -134,6 +134,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     }
     return null
   }
+  if (!canEdit && currentlyEditingElement === pathString) {
+    const next = getNextOrPrevious(nodeData.fullData, path)
+    setCurrentlyEditingElement(next)
+  }
 
   const handleChangeDataType = (type: DataType) => {
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
@@ -311,6 +315,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
               handleKeyboard(e, {
                 stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
                 cancel: handleCancel,
+                tabForward: () => {
+                  handleEditKey((e.target as HTMLInputElement).value)
+                  setCurrentlyEditingElement(path)
+                },
               })
             }
             style={{ width: `${String(name).length / 1.5 + 0.5}em` }}

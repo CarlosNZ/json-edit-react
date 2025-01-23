@@ -147,6 +147,7 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
         handleKeyboard(e, {
           booleanConfirm: handleEdit,
           booleanToggle: () => setValue(!value),
+          ...keyboardCommon,
         })
       }}
       autoFocus

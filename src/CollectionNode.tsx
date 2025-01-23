@@ -4,7 +4,7 @@ import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
 import { type CollectionNodeProps, type NodeData, type CollectionData } from './types'
 import { Icon } from './Icons'
-import { filterNode, getModifier, isCollection } from './helpers'
+import { filterNode, getModifier, getNextOrPrevious, isCollection } from './helpers'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme, useTreeState } from './contexts'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
@@ -333,6 +333,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         handleKeyboard(e, {
           stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
           cancel: handleCancel,
+          tabForward: () => {
+            const next = getNextOrPrevious(nodeData.fullData, path)
+            console.log('Next', next)
+            if (next) {
+              handleEditKey((e.target as HTMLInputElement).value)
+              setCurrentlyEditingElement(next, 'key')
+            }
+          },
+          tabBack: () => console.log(path),
         })
       }
       style={{ width: `${String(name).length / 1.5 + 0.5}em` }}

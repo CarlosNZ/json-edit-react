@@ -91,6 +91,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     collapse: 2,
     data: data.intro,
     customNodeDefinitions: [dateNodeDefinition],
+    // restrictEdit: ({ key }) => key === 'number',
   },
   starWars: {
     name: '🚀 Star Wars',
