@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { toPathString, truncate } from './helpers'
 import { useTheme } from './contexts'
@@ -21,6 +21,8 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
 }) => {
   const { getStyles } = useTheme()
 
+  const textAreaRef = useRef<HTMLTextAreaElement>(null)
+
   const pathString = toPathString(path)
 
   const quoteChar = showStringQuotes ? '"' : ''
@@ -28,6 +30,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   return isEditing ? (
     <AutogrowTextArea
       className="jer-input-text"
+      textAreaRef={textAreaRef}
       name={pathString}
       value={value}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
@@ -36,21 +39,17 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
         handleKeyboard(e, {
           stringConfirm: handleEdit,
           stringLineBreak: () => {
-            const textArea = document.getElementById(
-              `${pathString}_textarea`
-            ) as HTMLTextAreaElement
-            if (textArea) {
-              // Simulates standard text-area line break behaviour. Only
-              // required when control key is not "standard" text-area
-              // behaviour ("Shift-Enter" or "Enter")
-              const startPos: number = textArea?.selectionStart ?? Infinity
-              const endPos: number = textArea?.selectionEnd ?? Infinity
-              const strStart = value.slice(0, startPos)
-              const strEnd = value.slice(endPos)
-              ;(e.target as HTMLInputElement).value = strStart + '\n' + strEnd
-              textArea.setSelectionRange(startPos + 1, startPos + 1)
-              setValue(strStart + '\n' + strEnd)
-            }
+            const textArea = textAreaRef.current
+            // Simulates standard text-area line break behaviour. Only
+            // required when control key is not "standard" text-area
+            // behaviour ("Shift-Enter" or "Enter")
+            const startPos: number = textArea?.selectionStart ?? Infinity
+            const endPos: number = textArea?.selectionEnd ?? Infinity
+            const strStart = value.slice(0, startPos)
+            const strEnd = value.slice(endPos)
+            ;(e.target as HTMLInputElement).value = strStart + '\n' + strEnd
+            textArea?.setSelectionRange(startPos + 1, startPos + 1)
+            setValue(strStart + '\n' + strEnd)
           },
           ...keyboardCommon,
         })
@@ -141,12 +140,15 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       name={toPathString(path)}
       checked={value}
       onChange={() => setValue(!value)}
-      onKeyDown={(e) =>
+      onKeyDown={(e) => {
+        // If we don't explicitly suppress normal checkbox keyboard behaviour,
+        // the default key (Space) will continue to work even if re-defined
+        if (e.key === ' ') e.preventDefault()
         handleKeyboard(e, {
           booleanConfirm: handleEdit,
-          ...keyboardCommon,
+          booleanToggle: () => setValue(!value),
         })
-      }
+      }}
       autoFocus
     />
   ) : (
@@ -175,9 +177,9 @@ export const NullValue: React.FC<InputProps> = ({
     if (isEditing) {
       // Small delay to prevent registering keyboard input from previous element
       // if switched using "Tab"
-      setTimeout(() => document.addEventListener('keydown', listenForSubmit), 50)
+      setTimeout(() => window.addEventListener('keydown', listenForSubmit), 50)
     }
-    return () => document.removeEventListener('keydown', listenForSubmit)
+    return () => window.removeEventListener('keydown', listenForSubmit)
   }, [isEditing])
 
   const listenForSubmit = (e: unknown) =>

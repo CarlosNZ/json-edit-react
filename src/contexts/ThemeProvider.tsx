@@ -57,20 +57,22 @@ const ThemeProviderContext = createContext(initialContext)
 export const ThemeProvider = ({
   theme = defaultTheme,
   icons = {},
+  docRoot,
   children,
 }: {
   theme?: ThemeInput
   icons?: IconReplacements
+  docRoot: HTMLElement
   children: React.ReactNode
 }) => {
-  const styles = compileStyles(theme)
+  const styles = compileStyles(theme, docRoot)
 
   const getStyles = (element: ThemeableElement, nodeData: NodeData) => {
     if (typeof styles[element] === 'function') {
-      return (styles[element] as ThemeFunction)(nodeData) as React.CSSProperties
+      return styles[element](nodeData) as React.CSSProperties
     }
 
-    return styles[element] as React.CSSProperties
+    return styles[element]
   }
 
   return (
@@ -84,7 +86,7 @@ export const useTheme = () => useContext(ThemeProviderContext)
 
 // Combines a named theme (or none) with any custom overrides into a single
 // Theme object
-const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
+const compileStyles = (themeInput: ThemeInput, docRoot: HTMLElement): CompiledStyles => {
   const collectedFunctions: Partial<Record<ThemeableElement, ThemeFunction>> = {}
 
   // First collect all elements into an array of the same type of thing -- style
@@ -123,16 +125,10 @@ const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
     typeof finalStyles?.inputHighlight !== 'function' &&
     finalStyles?.inputHighlight?.backgroundColor
   ) {
-    document.documentElement.style.setProperty(
-      '--jer-highlight-color',
-      finalStyles?.inputHighlight?.backgroundColor
-    )
+    docRoot.style.setProperty('--jer-highlight-color', finalStyles?.inputHighlight?.backgroundColor)
   }
   if (typeof finalStyles?.iconCopy !== 'function' && finalStyles?.iconCopy?.color) {
-    document.documentElement.style.setProperty(
-      '--jer-icon-copy-color',
-      finalStyles?.iconCopy?.color
-    )
+    docRoot.style.setProperty('--jer-icon-copy-color', finalStyles?.iconCopy?.color)
   }
 
   return finalStyles as CompiledStyles

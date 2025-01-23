@@ -210,6 +210,7 @@ const defaultKeyboardControls: KeyboardControlsFull = {
   tabForward: { key: 'Tab' },
   tabBack: { key: 'Tab', modifier: 'Shift' },
   booleanConfirm: ENTER,
+  booleanToggle: { key: ' ' },
   clipboardModifier: ['Meta', 'Control'],
   collapseModifier: ['Alt'],
 }

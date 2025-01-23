@@ -17,11 +17,12 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
  - fine-grained control over which elements can be edited, deleted, or added to
  - full [JSON Schema](https://json-schema.org/) validation (using 3rd-party validation library)
  - customisable UI, through simple, pre-defined [themes](#themes--styles), specific CSS overrides for UI components, or by targeting CSS classes
- - self-contained — rendered with plain HTML/CSS, so no dependance on external UI libraries
+ - self-contained — rendered with plain HTML/CSS, so no dependence on external UI libraries
  - search/filter data by key, value or custom function
  - provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
  - [localisable](#localisation) UI
- - **NEW!** [Drag-n-drop](#drag-n-drop) editing! (*experimental*)
+ - [Drag-n-drop](#drag-n-drop) editing
+ - [Keyboard customisation](#keyboard-customisation)
 
 <img width="392" alt="screenshot" src="image/screenshot.png">
 
@@ -105,6 +106,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - When clicking the "clipboard" icon, holding down `Cmd/Ctrl` will copy the *path* to the selected node rather than its value
 - When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
 - For Number inputs, arrow-up and down keys will increment/decrement the value
+- For Boolean inputs, space bar will toggle the value
 - Drag and drop items to change the structure or modify display order
 - JSON text input can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
 
@@ -252,13 +254,15 @@ Since there is very little user feedback when clicking "Copy", a good idea would
 
 In addition to the "Copy", "Edit" and "Delete" buttons that appear by each value, you can add your own buttons if you need to allow some custom operations on the data. Provide an array of button definitions in the `customButtons` prop, in the following definition structure:
 
-```js
+```ts
 {
-  Element: React.FC,
-  onClick: (nodeData: NodeData, e: React.MouseEvent) => void
+  Element: React.FC<{ nodeData: NodeData }>,
+  onClick?: (nodeData: NodeData, e: React.MouseEvent) => void
 }
 ```
 Where `NodeData` is the same data structure received by the previous "Update Functions".
+
+The `onClick` is optional -- don't provide it if you have your own `onClick` handler within your button component.
 
 ## Filter functions
 
@@ -697,6 +701,7 @@ The default keyboard controls are [outlined above](#usage), but it's possible to
   numberUp: 'ArrowUp',
   numberDown: 'ArrowDown',
   booleanConfirm: 'Enter',
+  booleanToggle: ' ', // Space bar
   clipboardModifier: ['Meta', 'Control'],
   collapseModifier: 'Alt',
 }
@@ -775,6 +780,10 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.20.0**: Refactor out direct access of global `document` object, which allows component to work with server-side rendering
+- **1.19.2**:
+  - Boolean toggle key can be customised [#150](https://github.com/CarlosNZ/json-edit-react/issues/150)
+  - Pass `nodeData` to [custom buttons](#custom-buttons) [#146](https://github.com/CarlosNZ/json-edit-react/issues/146)
 - **1.19.0**: Built-in [themes](#themes--styles) must now be imported separately -- this improves tree-shaking to prevent unused themes being bundled with your build
 - **1.18.0**:
   - Ability to [customise keyboard controls](#keyboard-customisation)
@@ -856,4 +865,3 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 - **0.9.3**: Bundle as ES6 module
 - **0.9.1**: Export more Types from the package
 - **0.9.0**: Initial release
-

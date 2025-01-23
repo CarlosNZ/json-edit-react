@@ -47,7 +47,8 @@ import { type JsonData } from '../types'
 export const useCollapseTransition = (
   data: JsonData,
   collapseAnimationTime: number,
-  startCollapsed: boolean
+  startCollapsed: boolean,
+  mainContainerRef: React.MutableRefObject<Element>
 ) => {
   const [maxHeight, setMaxHeight] = useState<string | number | undefined>(
     startCollapsed ? 0 : undefined
@@ -81,7 +82,7 @@ export const useCollapseTransition = (
       }
       case false:
         // Opening...
-        setMaxHeight(prevHeight.current || estimateHeight(data, contentRef))
+        setMaxHeight(prevHeight.current || estimateHeight(data, contentRef, mainContainerRef))
     }
 
     setCollapsed(!collapsed)
@@ -104,13 +105,16 @@ export const useCollapseTransition = (
 // been opened. Essentially, it estimates how many lines of text the full JSON
 // would take up, and converts that to a pixel value based on the current
 // fontSize
-const estimateHeight = (data: JsonData, ref: React.RefObject<HTMLDivElement>) => {
-  const component = document.getElementsByClassName('jer-editor-container')
+const estimateHeight = (
+  data: JsonData,
+  contentRef: React.RefObject<HTMLDivElement>,
+  containerRef: React.MutableRefObject<Element>
+) => {
   const baseFontSize = parseInt(
-    component.length > 0 ? getComputedStyle(component[0]).getPropertyValue('line-height') : '16px'
+    getComputedStyle(containerRef.current).getPropertyValue('line-height') ?? '16px'
   )
 
-  const width = ref.current?.offsetWidth ?? 0
+  const width = contentRef.current?.offsetWidth ?? 0
   const charsPerLine = width / (baseFontSize * 0.5)
 
   const lines = JSON.stringify(data, null, 2)

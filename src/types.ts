@@ -166,6 +166,7 @@ export interface KeyboardControls {
   stringConfirm?: KeyEvent | string
   stringLineBreak?: KeyEvent | string // for Value nodes
   booleanConfirm?: KeyEvent | string
+  booleanToggle?: KeyEvent | string
   numberConfirm?: KeyEvent | string
   numberUp?: KeyEvent | string
   numberDown?: KeyEvent | string
@@ -230,6 +231,7 @@ interface BaseNodeProps {
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
+  mainContainerRef: React.MutableRefObject<Element>
   data: CollectionData
   collapseFilter: FilterFunction
   collapseAnimationTime: number
@@ -286,7 +288,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>
 
 export interface CustomButtonDefinition {
-  Element: React.FC
+  Element: React.FC<{ nodeData: NodeData }>
   onClick: (nodeData: NodeData, e: React.MouseEvent) => void
 }
 

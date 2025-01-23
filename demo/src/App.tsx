@@ -411,8 +411,10 @@ function App() {
               //   clipboardModifier: ['Alt', 'Shift'],
               //   collapseModifier: 'Control',
               //   booleanConfirm: 'Enter',
+              //   booleanToggle: 'r',
               // }}
               // insertAtBeginning="object"
+              // rootFontSize={20}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>
