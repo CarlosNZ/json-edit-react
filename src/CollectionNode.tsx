@@ -124,8 +124,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const childrenEditing = areChildrenBeingEdited(pathString)
 
   // Early return if this node is filtered out
-  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0)
-    return null
+  const isVisible =
+    filterNode('collection', nodeData, searchFilter, searchText) || nodeData.level === 0
+  if (!isVisible && !childrenEditing) return null
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
@@ -335,7 +336,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           cancel: handleCancel,
           tabForward: () => {
             const next = getNextOrPrevious(nodeData.fullData, path)
-            console.log('Next', next)
             if (next) {
               handleEditKey((e.target as HTMLInputElement).value)
               setCurrentlyEditingElement(next, 'key')

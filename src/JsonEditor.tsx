@@ -23,7 +23,7 @@ import {
   type JsonData,
   type KeyboardControls,
 } from './types'
-import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme } from './contexts'
+import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useTreeState } from './contexts'
 import { useData } from './hooks/useData'
 import { getTranslateFunction } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
@@ -75,6 +75,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   insertAtTop = false,
 }) => {
   const { getStyles } = useTheme()
+  const { setCurrentlyEditingElement } = useTreeState()
   const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
   const translate = useCallback(getTranslateFunction(translations, customText), [
     translations,
@@ -87,6 +88,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   const mainContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    setCurrentlyEditingElement(null)
     const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
     return () => clearTimeout(debounce)
   }, [searchText, searchDebounceTime])

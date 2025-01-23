@@ -63,8 +63,6 @@ export const TreeStateProvider = ({ children }: { children: React.ReactNode }) =
     const pathString =
       path === null ? null : toPathString(path, newCancelOrKey === 'key' ? 'key_' : undefined)
 
-    console.log('pathString', pathString)
-
     // The "Cancel" function allows the UI to reset the element that was
     // previously being edited if the user clicks another "Edit" button
     // elsewhere

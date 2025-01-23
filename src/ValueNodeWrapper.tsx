@@ -19,7 +19,7 @@ import {
 } from './types'
 import { useTheme, useTreeState } from './contexts'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
-import { filterNode, getNextOrPrevious, toPathString } from './helpers'
+import { filterNode, getNextOrPrevious } from './helpers'
 import { useCommon, useDragNDrop } from './hooks'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
@@ -127,10 +127,13 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   // Early return if this node is filtered out
   const isVisible = filterNode('value', nodeData, searchFilter, searchText)
+  console.log('currentlyEditingElement', currentlyEditingElement)
+  if (currentlyEditingElement === pathString) console.log(pathString, 'Visible?', isVisible)
   if (!isVisible) {
     if (currentlyEditingElement === pathString) {
       const next = getNextOrPrevious(nodeData.fullData, path)
       setCurrentlyEditingElement(next)
+      console.log('NEXT', next)
     }
     return null
   }
