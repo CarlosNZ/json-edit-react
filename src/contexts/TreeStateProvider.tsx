@@ -8,7 +8,7 @@
  */
 
 import React, { createContext, useContext, useRef, useState } from 'react'
-import { type CollectionKey } from '../types'
+import { type TabDirection, type CollectionKey } from '../types'
 import { toPathString } from '../helpers'
 
 interface CollapseAllState {
@@ -27,12 +27,16 @@ interface TreeStateContext {
   doesPathMatch: (path: CollectionKey[]) => boolean
   currentlyEditingElement: string | null
   setCurrentlyEditingElement: (
-    path: CollectionKey[] | null,
+    path: CollectionKey[] | string | null,
     cancelOpOrKey?: (() => void) | 'key'
   ) => void
+  previouslyEditedElement: string | null
+  setPreviouslyEditedElement: (path: string) => void
   areChildrenBeingEdited: (pathString: string) => boolean
   dragSource: DragSource
   setDragSource: (newState: DragSource) => void
+  tabDirection: TabDirection
+  setTabDirection: (dir: TabDirection) => void
 }
 const initialContext: TreeStateContext = {
   collapseState: null,
@@ -40,9 +44,13 @@ const initialContext: TreeStateContext = {
   doesPathMatch: () => false,
   currentlyEditingElement: null,
   setCurrentlyEditingElement: () => {},
+  previouslyEditedElement: null,
+  setPreviouslyEditedElement: () => {},
   areChildrenBeingEdited: () => false,
   dragSource: { path: null, pathString: null },
   setDragSource: () => {},
+  tabDirection: 'next',
+  setTabDirection: () => {},
 }
 
 const TreeStateProviderContext = createContext(initialContext)
@@ -56,12 +64,23 @@ export const TreeStateProvider = ({ children }: { children: React.ReactNode }) =
   })
   const cancelOp = useRef<(() => void) | null>(null)
 
+  // tabDirection and previouslyEdited are used in Tab navigation. Each node can
+  // find the "previous" or "next" node on Tab detection, but has no way to know
+  // whether that node is actually visible or editable. So each node runs this
+  // check on itself on render, and if it has been set to "isEditing" when it
+  // shouldn't be, it immediately goes to the next (and the next, etc...). These
+  // two values hold some state which is useful in this slightly messy process.
+  const tabDirection = useRef<TabDirection>('next')
+  const previouslyEdited = useRef<string | null>(null)
+
   const updateCurrentlyEditingElement = (
-    path: CollectionKey[] | null,
+    path: CollectionKey[] | string | null,
     newCancelOrKey?: (() => void) | 'key'
   ) => {
     const pathString =
-      path === null ? null : toPathString(path, newCancelOrKey === 'key' ? 'key_' : undefined)
+      typeof path === 'string' || path === null
+        ? path
+        : toPathString(path, newCancelOrKey === 'key' ? 'key_' : undefined)
 
     // The "Cancel" function allows the UI to reset the element that was
     // previously being edited if the user clicks another "Edit" button
@@ -103,6 +122,14 @@ export const TreeStateProvider = ({ children }: { children: React.ReactNode }) =
         currentlyEditingElement,
         setCurrentlyEditingElement: updateCurrentlyEditingElement,
         areChildrenBeingEdited,
+        previouslyEditedElement: previouslyEdited.current,
+        setPreviouslyEditedElement: (path: string) => {
+          previouslyEdited.current = path
+        },
+        tabDirection: tabDirection.current,
+        setTabDirection: (dir: TabDirection) => {
+          tabDirection.current = dir
+        },
         // Drag-n-drop
         dragSource,
         setDragSource,

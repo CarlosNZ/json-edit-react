@@ -8,7 +8,7 @@ import {
   type KeyboardControlsFull,
   type JsonData,
   type CollectionKey,
-  type CollectionData,
+  type TabDirection,
 } from './types'
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
@@ -255,7 +255,7 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
 export const getNextOrPrevious = (
   fullData: JsonData,
   path: CollectionKey[],
-  nextOrPrev: 'next' | 'prev' = 'next'
+  nextOrPrev: TabDirection = 'next'
 ): CollectionKey[] | null => {
   const parentPath = path.slice(0, path.length - 1)
   const thisKey = path.slice(-1)[0]
@@ -284,7 +284,7 @@ export const getNextOrPrevious = (
 const getChildRecursive = (
   fullData: JsonData,
   path: CollectionKey[],
-  nextOrPrev: 'next' | 'prev' = 'next'
+  nextOrPrev: TabDirection = 'next'
 ) => {
   const node = extractProperty(fullData, path)
   if (!isCollection(node)) return path

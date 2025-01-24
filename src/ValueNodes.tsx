@@ -173,13 +173,21 @@ export const NullValue: React.FC<InputProps> = ({
   keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
+  const timer = useRef<number | undefined>()
 
   useEffect(() => {
-    if (isEditing) {
-      // Small delay to prevent registering keyboard input from previous element
-      // if switched using "Tab"
-      setTimeout(() => window.addEventListener('keydown', listenForSubmit), 50)
+    if (!isEditing) {
+      // The listener messes with other elements when switching rapidly (e.g. when "getNext" called repeatedly on inaccessible elements), so we cancel the listener load before it even happens if this node gets switched from isEditing to not in less than 100ms
+      window.clearTimeout(timer.current)
+      return
     }
+    // Small delay to prevent registering keyboard input from previous element
+    // if switched using "Tab"
+    timer.current = window.setTimeout(
+      () => window.addEventListener('keydown', listenForSubmit),
+      100
+    )
+
     return () => window.removeEventListener('keydown', listenForSubmit)
   }, [isEditing])
 

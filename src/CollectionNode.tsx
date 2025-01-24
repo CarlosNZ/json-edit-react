@@ -123,6 +123,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   const childrenEditing = areChildrenBeingEdited(pathString)
 
+  // For when children are accessed via Tab
+  if (childrenEditing && collapsed) animateCollapse(false)
+
   // Early return if this node is filtered out
   const isVisible =
     filterNode('collection', nodeData, searchFilter, searchText) || nodeData.level === 0
@@ -335,13 +338,16 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
           cancel: handleCancel,
           tabForward: () => {
-            const next = getNextOrPrevious(nodeData.fullData, path)
-            if (next) {
-              handleEditKey((e.target as HTMLInputElement).value)
-              setCurrentlyEditingElement(next, 'key')
-            }
+            handleEditKey((e.target as HTMLInputElement).value)
+            const firstChildKey = Object.keys(data)[0]
+            setCurrentlyEditingElement(
+              firstChildKey ? [...path, firstChildKey] : getNextOrPrevious(nodeData.fullData, path)
+            )
           },
-          tabBack: () => console.log(path),
+          tabBack: () => {
+            handleEditKey((e.target as HTMLInputElement).value)
+            setCurrentlyEditingElement(getNextOrPrevious(nodeData.fullData, path, 'prev'))
+          },
         })
       }
       style={{ width: `${String(name).length / 1.5 + 0.5}em` }}

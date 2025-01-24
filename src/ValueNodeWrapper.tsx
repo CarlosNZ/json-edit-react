@@ -45,7 +45,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     keyboardControls,
   } = props
   const { getStyles } = useTheme()
-  const { setCurrentlyEditingElement, setCollapseState, currentlyEditingElement } = useTreeState()
+  const {
+    setCurrentlyEditingElement,
+    setCollapseState,
+    previouslyEditedElement,
+    setPreviouslyEditedElement,
+    tabDirection,
+    setTabDirection,
+  } = useTreeState()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
@@ -125,22 +132,20 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     return result
   }, [nodeData, restrictTypeSelection])
 
+  const { isEditing } = derivedValues
+
   // Early return if this node is filtered out
   const isVisible = filterNode('value', nodeData, searchFilter, searchText)
-  console.log('currentlyEditingElement', currentlyEditingElement)
-  if (currentlyEditingElement === pathString) console.log(pathString, 'Visible?', isVisible)
-  if (!isVisible) {
-    if (currentlyEditingElement === pathString) {
-      const next = getNextOrPrevious(nodeData.fullData, path)
-      setCurrentlyEditingElement(next)
-      console.log('NEXT', next)
-    }
-    return null
+
+  // This prevents hidden or uneditable nodes being set to editing via Tab
+  // navigation
+  if (isEditing && (!isVisible || !canEdit)) {
+    const next = getNextOrPrevious(nodeData.fullData, path, tabDirection)
+    if (next) setCurrentlyEditingElement(next)
+    else setCurrentlyEditingElement(previouslyEditedElement)
   }
-  if (!canEdit && currentlyEditingElement === pathString) {
-    const next = getNextOrPrevious(nodeData.fullData, path)
-    setCurrentlyEditingElement(next)
-  }
+
+  if (!isVisible) return null
 
   const handleChangeDataType = (type: DataType) => {
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
@@ -206,7 +211,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   // DERIVED VALUES (this makes the JSX logic less messy)
-  const { isEditing, isEditingKey, canEditKey } = derivedValues
+  const { isEditingKey, canEditKey } = derivedValues
   const showErrorString = !isEditing && error
   const showTypeSelector = isEditing && allowedDataTypes.length > 0
   const showEditButtons = dataType !== 'invalid' && !error && showEditTools
@@ -231,6 +236,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     keyboardCommon: {
       cancel: handleCancel,
       tabForward: () => {
+        setTabDirection('next')
+        setPreviouslyEditedElement(pathString)
         const next = getNextOrPrevious(nodeData.fullData, path)
         if (next) {
           handleEdit()
@@ -238,6 +245,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         }
       },
       tabBack: () => {
+        setTabDirection('prev')
+        setPreviouslyEditedElement(pathString)
         const prev = getNextOrPrevious(nodeData.fullData, path, 'prev')
         if (prev) {
           handleEdit()
@@ -321,6 +330,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 tabForward: () => {
                   handleEditKey((e.target as HTMLInputElement).value)
                   setCurrentlyEditingElement(path)
+                },
+                tabBack: () => {
+                  handleEditKey((e.target as HTMLInputElement).value)
+                  setCurrentlyEditingElement(getNextOrPrevious(nodeData.fullData, path, 'prev'))
                 },
               })
             }

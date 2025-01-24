@@ -62,6 +62,8 @@ export type CollectionData = object | unknown[]
 
 export type ErrorString = string
 
+export type TabDirection = 'next' | 'prev'
+
 export interface IconReplacements {
   add?: JSX.Element
   edit?: JSX.Element
