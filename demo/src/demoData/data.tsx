@@ -22,6 +22,7 @@ export const data: Record<string, object> = {
       'To start a new line': 'Shift/Ctrl/Cmd-Enter (or just "Enter" when editing JSON nodes)',
       'When copying to clipboard': 'Hold down "Ctrl/Cmd" to copy path instead of data',
       'When opening/closing a node': 'Hold down "Alt/Option" to open/close ALL child nodes at once',
+      'Tab navigation': 'Use "Tab" and "Shift-Tab" to quickly move between values.',
     },
   },
   starWars: {
