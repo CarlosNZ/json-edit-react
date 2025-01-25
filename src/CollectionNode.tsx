@@ -2,7 +2,12 @@ import React, { useEffect, useState, useMemo, useRef } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
-import { type CollectionNodeProps, type NodeData, type CollectionData } from './types'
+import {
+  type CollectionNodeProps,
+  type NodeData,
+  type CollectionData,
+  type ValueData,
+} from './types'
 import { Icon } from './Icons'
 import { filterNode, getModifier, getNextOrPrevious, isCollection } from './helpers'
 import { AutogrowTextArea } from './AutogrowTextArea'
@@ -36,7 +41,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     searchFilter,
     searchText,
     indent,
-    keySort,
+    sort,
     showArrayIndices,
     defaultValue,
     translate,
@@ -218,18 +223,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const showKey = showLabel && !hideKey && name !== undefined
   const showCustomNodeContents =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
-  const sortKeys = keySort && collectionType === 'object'
 
-  const keyValueArray = Object.entries(data).map(([key, value]) => [
-    collectionType === 'array' ? Number(key) : key,
-    value,
-  ])
+  const keyValueArray = Object.entries(data).map(
+    ([key, value]) =>
+      [collectionType === 'array' ? Number(key) : key, value] as [string | number, ValueData]
+  )
 
-  if (sortKeys) {
-    keyValueArray.sort(
-      typeof keySort === 'function' ? (a: string[], b) => keySort(a[0], b[0] as string) : undefined
-    )
-  }
+  if (collectionType === 'object') sort<[string | number, ValueData]>(keyValueArray, (_) => _)
 
   const CollectionChildren = !hasBeenOpened.current ? null : !isEditing ? (
     keyValueArray.map(([key, value], index) => {
@@ -339,14 +339,16 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           cancel: handleCancel,
           tabForward: () => {
             handleEditKey((e.target as HTMLInputElement).value)
-            const firstChildKey = Object.keys(data)[0]
+            const firstChildKey = keyValueArray?.[0][0]
             setCurrentlyEditingElement(
-              firstChildKey ? [...path, firstChildKey] : getNextOrPrevious(nodeData.fullData, path)
+              firstChildKey
+                ? [...path, firstChildKey]
+                : getNextOrPrevious(nodeData.fullData, path, 'next', sort)
             )
           },
           tabBack: () => {
             handleEditKey((e.target as HTMLInputElement).value)
-            setCurrentlyEditingElement(getNextOrPrevious(nodeData.fullData, path, 'prev'))
+            setCurrentlyEditingElement(getNextOrPrevious(nodeData.fullData, path, 'prev', sort))
           },
         })
       }

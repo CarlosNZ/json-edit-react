@@ -265,6 +265,34 @@ const Editor: React.FC<JsonEditorProps> = ({
     [keyboardControls]
   )
 
+  // Common "sort" method for ordering nodes, based on the `keySort` prop
+  // - If it's false (the default), we do nothing
+  // - If true, use default array sort on the node's key
+  // - Otherwise sort via the defined comparison function
+  // The "nodeMap" is due  to the fact that this sort is performed on different
+  //   shaped arrays in different places, so in each implementation we pass a
+  //   function to convert each element into a [key, value] tuple, the shape
+  //   expected by the comparison function
+  const sort = useCallback(
+    <T,>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => {
+      if (keySort === false) return
+
+      if (typeof keySort === 'function') {
+        arr.sort((a, b) => keySort(nodeMap(a), nodeMap(b)))
+        return
+      }
+
+      arr.sort((a, b) => {
+        const A = nodeMap(a)[0]
+        const B = nodeMap(b)[0]
+        if (A < B) return -1
+        if (A > B) return 1
+        return 0
+      })
+    },
+    [keySort]
+  )
+
   const otherProps = {
     mainContainerRef: mainContainerRef as React.MutableRefObject<Element>,
     name: rootName,
@@ -289,6 +317,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     searchText: debouncedSearchText,
     enableClipboard,
     keySort,
+    sort,
     showArrayIndices,
     showStringQuotes,
     indent,

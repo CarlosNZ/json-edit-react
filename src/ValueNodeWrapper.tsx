@@ -43,6 +43,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     customNodeDefinitions,
     handleKeyboard,
     keyboardControls,
+    sort,
   } = props
   const { getStyles } = useTheme()
   const {
@@ -140,7 +141,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   // This prevents hidden or uneditable nodes being set to editing via Tab
   // navigation
   if (isEditing && (!isVisible || !canEdit)) {
-    const next = getNextOrPrevious(nodeData.fullData, path, tabDirection)
+    const next = getNextOrPrevious(nodeData.fullData, path, tabDirection, sort)
     if (next) setCurrentlyEditingElement(next)
     else setCurrentlyEditingElement(previouslyEditedElement)
   }
@@ -238,7 +239,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       tabForward: () => {
         setTabDirection('next')
         setPreviouslyEditedElement(pathString)
-        const next = getNextOrPrevious(nodeData.fullData, path)
+        const next = getNextOrPrevious(nodeData.fullData, path, 'next', sort)
         if (next) {
           handleEdit()
           setCurrentlyEditingElement(next)
@@ -247,7 +248,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       tabBack: () => {
         setTabDirection('prev')
         setPreviouslyEditedElement(pathString)
-        const prev = getNextOrPrevious(nodeData.fullData, path, 'prev')
+        const prev = getNextOrPrevious(nodeData.fullData, path, 'prev', sort)
         if (prev) {
           handleEdit()
           setCurrentlyEditingElement(prev)
@@ -333,7 +334,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 },
                 tabBack: () => {
                   handleEditKey((e.target as HTMLInputElement).value)
-                  setCurrentlyEditingElement(getNextOrPrevious(nodeData.fullData, path, 'prev'))
+                  setCurrentlyEditingElement(
+                    getNextOrPrevious(nodeData.fullData, path, 'prev', sort)
+                  )
                 },
               })
             }
