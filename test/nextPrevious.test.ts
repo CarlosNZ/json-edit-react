@@ -1,8 +1,9 @@
 import { getNextOrPrevious } from '../demo/src/json-edit-react/src/helpers'
 
-const getNext = getNextOrPrevious
+const getNext = (data: object, path: (string | number)[]) =>
+  getNextOrPrevious(data, path, 'next', () => {})
 const getPrevious = (data: object, path: (string | number)[]) =>
-  getNextOrPrevious(data, path, 'prev')
+  getNextOrPrevious(data, path, 'prev', () => {})
 
 const data = {
   a: 1,
