@@ -367,6 +367,7 @@ function App() {
                   : false
               }
               restrictEdit={restrictEdit}
+              // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
               restrictDelete={restrictDelete}
               restrictAdd={restrictAdd}
               restrictTypeSelection={dataDefinition?.restrictTypeSelection}
@@ -374,6 +375,21 @@ function App() {
               searchFilter={dataDefinition?.searchFilter}
               searchText={searchText}
               keySort={sortKeys}
+              // keySort={
+              //   sortKeys
+              //     ? (a, b) => {
+              //         const nameRev1 = String(a[0]).length
+              //         const nameRev2 = String(b[0]).length
+              //         if (nameRev1 < nameRev2) {
+              //           return -1
+              //         }
+              //         if (nameRev1 > nameRev2) {
+              //           return 1
+              //         }
+              //         return 0
+              //       }
+              //     : false
+              // }
               defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
               showArrayIndices={showIndices}
               showStringQuotes={showStringQuotes}

@@ -2,9 +2,20 @@ import React, { useEffect, useState, useMemo, useRef } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
-import { type CollectionNodeProps, type NodeData, type CollectionData } from './types'
+import {
+  type CollectionNodeProps,
+  type NodeData,
+  type CollectionData,
+  type ValueData,
+} from './types'
 import { Icon } from './Icons'
-import { filterNode, getModifier, isCollection } from './helpers'
+import {
+  filterNode,
+  getModifier,
+  getNextOrPrevious,
+  insertCharInTextArea,
+  isCollection,
+} from './helpers'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme, useTreeState } from './contexts'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
@@ -36,7 +47,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     searchFilter,
     searchText,
     indent,
-    keySort,
+    sort,
     showArrayIndices,
     defaultValue,
     translate,
@@ -101,6 +112,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     }
   }, [collapseState])
 
+  // For JSON-editing TextArea
+  const textAreaRef = useRef<HTMLTextAreaElement>(null)
+
   const getDefaultNewValue = useMemo(
     () => (nodeData: NodeData, newKey: string) => {
       if (typeof defaultValue !== 'function') return defaultValue
@@ -121,19 +135,38 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     showCollectionWrapper = true,
   } = useMemo(() => getCustomNode(customNodeDefinitions, nodeData), [])
 
+  const childrenEditing = areChildrenBeingEdited(pathString)
+
+  // For when children are accessed via Tab
+  if (childrenEditing && collapsed) animateCollapse(false)
+
   // Early return if this node is filtered out
-  if (!filterNode('collection', nodeData, searchFilter, searchText) && nodeData.level > 0)
-    return null
+  const isVisible =
+    filterNode('collection', nodeData, searchFilter, searchText) || nodeData.level === 0
+  if (!isVisible && !childrenEditing) return null
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
-  const handleKeyPressEdit = (e: React.KeyboardEvent) =>
+  const handleKeyPressEdit = (e: React.KeyboardEvent) => {
+    // Normal "Tab" key functionality in TextArea
+    // Defined here explicitly rather than in handleKeyboard as we *don't* want
+    // to override the normal Tab key with the custom "Tab" key value
+    if (e.key === 'Tab' && !e.getModifierState('Shift')) {
+      e.preventDefault()
+      const newValue = insertCharInTextArea(
+        textAreaRef as React.MutableRefObject<HTMLTextAreaElement>,
+        '\t'
+      )
+      setStringifiedValue(newValue)
+      return
+    }
     handleKeyboard(e, {
       objectConfirm: handleEdit,
       cancel: handleCancel,
     })
+  }
 
   const handleCollapse = (e: React.MouseEvent) => {
     const modifier = getModifier(e)
@@ -212,18 +245,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const showKey = showLabel && !hideKey && name !== undefined
   const showCustomNodeContents =
     CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
-  const sortKeys = keySort && collectionType === 'object'
 
-  const keyValueArray = Object.entries(data).map(([key, value]) => [
-    collectionType === 'array' ? Number(key) : key,
-    value,
-  ])
+  const keyValueArray = Object.entries(data).map(
+    ([key, value]) =>
+      [collectionType === 'array' ? Number(key) : key, value] as [string | number, ValueData]
+  )
 
-  if (sortKeys) {
-    keyValueArray.sort(
-      typeof keySort === 'function' ? (a: string[], b) => keySort(a[0], b[0] as string) : undefined
-    )
-  }
+  if (collectionType === 'object') sort<[string | number, ValueData]>(keyValueArray, (_) => _)
 
   const CollectionChildren = !hasBeenOpened.current ? null : !isEditing ? (
     keyValueArray.map(([key, value], index) => {
@@ -271,6 +299,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     <div className="jer-collection-text-edit">
       <div>
         <AutogrowTextArea
+          textAreaRef={textAreaRef}
           className="jer-collection-text-area"
           name={pathString}
           value={stringifiedValue}
@@ -290,7 +319,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   // no way to open a collapsed custom node, so this ensures it will stay open.
   // It can still be displayed collapsed by handling it internally if this is
   // desired.
-  const isCollapsed = !showCollectionWrapper ? false : collapsed
+  // Also, if the node is editing via "Tab" key, it's parent must be opened,
+  // hence `childrenEditing` check
+  const isCollapsed = !showCollectionWrapper ? false : collapsed && !childrenEditing
   if (!isCollapsed) hasBeenOpened.current = true
 
   const customNodeAllProps = {
@@ -304,7 +335,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
-    setIsEditing: () => setCurrentlyEditingElement(pathString),
+    setIsEditing: () => setCurrentlyEditingElement(path),
     getStyles,
     canDragOnto: canEdit,
   }
@@ -329,6 +360,19 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         handleKeyboard(e, {
           stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
           cancel: handleCancel,
+          tabForward: () => {
+            handleEditKey((e.target as HTMLInputElement).value)
+            const firstChildKey = keyValueArray?.[0][0]
+            setCurrentlyEditingElement(
+              firstChildKey
+                ? [...path, firstChildKey]
+                : getNextOrPrevious(nodeData.fullData, path, 'next', sort)
+            )
+          },
+          tabBack: () => {
+            handleEditKey((e.target as HTMLInputElement).value)
+            setCurrentlyEditingElement(getNextOrPrevious(nodeData.fullData, path, 'prev', sort))
+          },
         })
       }
       style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
@@ -339,7 +383,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         className="jer-key-text"
         style={getStyles('property', nodeData)}
         onClick={(e) => e.stopPropagation()}
-        onDoubleClick={() => canEditKey && setCurrentlyEditingElement(`key_${pathString}`)}
+        onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
       >
         {name === '' ? (
           <span className={path.length > 0 ? 'jer-empty-string' : undefined}>
@@ -358,7 +402,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         canEdit
           ? () => {
               hasBeenOpened.current = true
-              setCurrentlyEditingElement(pathString)
+              setCurrentlyEditingElement(path)
             }
           : undefined
       }
@@ -451,7 +495,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         style={{
           overflowY: isCollapsed || isAnimating ? 'clip' : 'visible',
           // Prevent collapse if this node or any children are being edited
-          maxHeight: areChildrenBeingEdited(pathString) ? undefined : maxHeight,
+          maxHeight: childrenEditing ? undefined : maxHeight,
           ...getStyles('collectionInner', nodeData),
         }}
         ref={contentRef}

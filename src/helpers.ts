@@ -1,3 +1,4 @@
+import extractProperty from 'object-property-extractor'
 import {
   type SearchFilterFunction,
   type NodeData,
@@ -5,6 +6,10 @@ import {
   type KeyboardControls,
   type KeyEvent,
   type KeyboardControlsFull,
+  type JsonData,
+  type CollectionKey,
+  type TabDirection,
+  type SortFunction,
 } from './types'
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
@@ -118,7 +123,8 @@ export const truncate = (string: string, length = 200) =>
 /**
  * Converts a part expressed as an array of properties to a single string
  */
-export const toPathString = (path: Array<string | number>) =>
+export const toPathString = (path: Array<string | number>, key?: 'key_') =>
+  (key ?? '') +
   path
     // An empty string in a part will "disappear", so replace it with a
     // non-printable char
@@ -202,6 +208,8 @@ const defaultKeyboardControls: KeyboardControlsFull = {
   numberConfirm: ENTER,
   numberUp: { key: 'ArrowUp' },
   numberDown: { key: 'ArrowDown' },
+  tabForward: { key: 'Tab' },
+  tabBack: { key: 'Tab', modifier: 'Shift' },
   booleanConfirm: ENTER,
   booleanToggle: { key: ' ' },
   clipboardModifier: ['Meta', 'Control'],
@@ -239,4 +247,96 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
   }
 
   return controls
+}
+
+/**
+ * TAB key helpers
+ */
+
+export const getNextOrPrevious = (
+  fullData: JsonData,
+  path: CollectionKey[],
+  nextOrPrev: TabDirection = 'next',
+  sort: SortFunction
+): CollectionKey[] | null => {
+  const parentPath = path.slice(0, path.length - 1)
+  const thisKey = path.slice(-1)[0]
+  if (thisKey === undefined) return null
+
+  const parentData = extractProperty(fullData, parentPath)
+  const collection = transformCollection(parentData as JsonData)
+
+  if (!Array.isArray(parentData))
+    sort<TransformedCollection>(collection, ({ key, value }) => [key, value])
+
+  const thisIndex = collection.findIndex((el) => el.key === thisKey)
+  const destinationIndex = nextOrPrev === 'next' ? thisIndex + 1 : thisIndex - 1
+
+  const destination = collection[destinationIndex]
+
+  if (!destination) {
+    if (parentPath.length === 0) return null
+    return getNextOrPrevious(fullData, parentPath, nextOrPrev, sort)
+  }
+
+  if (isCollection(destination.value))
+    return getChildRecursive(fullData, [...parentPath, destination.key], nextOrPrev, sort)
+  else return [...parentPath, destination.key]
+}
+
+// If the node at "path" is a collection, tries the first/last child of that
+// collection recursively until a Value node is found
+const getChildRecursive = (
+  fullData: JsonData,
+  path: CollectionKey[],
+  nextOrPrev: TabDirection = 'next',
+  sort: SortFunction
+) => {
+  const node = extractProperty(fullData, path)
+  if (!isCollection(node)) return path
+  const keys = Array.isArray(node) ? node.map((_, index) => index) : Object.keys(node)
+
+  sort<string | number>(keys, (key) => [key, extractProperty(fullData, path)])
+
+  const child = nextOrPrev === 'next' ? keys[0] : keys[keys.length - 1]
+  return getChildRecursive(fullData, [...path, child], nextOrPrev, sort)
+}
+
+// Transform a collections (Array or Object) into a structure that is easier to
+// navigate forward and back within
+const transformCollection = (collection: JsonData) => {
+  if (Array.isArray(collection))
+    return collection.map((value, index) => ({ index, value, key: index }))
+  return Object.entries(collection).map(([key, value], index) => ({ key, value, index }))
+}
+
+type TransformedCollection =
+  | {
+      index: number
+      value: any
+      key: number
+    }
+  | {
+      key: string
+      value: any
+      index: number
+    }
+
+// Manipulates a TextArea (ref) directly by inserting a string at the current
+// cursor/selection position. Used to insert Line break and Tab characters via
+// keyboard control.
+export const insertCharInTextArea = (
+  textAreaRef: React.MutableRefObject<HTMLTextAreaElement>,
+  insertionString: string
+) => {
+  const textArea = textAreaRef.current
+  const startPos: number = textArea?.selectionStart ?? Infinity
+  const endPos: number = textArea?.selectionEnd ?? Infinity
+  const strStart = textArea?.textContent?.slice(0, startPos)
+  const strEnd = textArea?.textContent?.slice(endPos)
+
+  const newString = strStart + insertionString + strEnd
+  textArea.value = newString
+  textArea?.setSelectionRange(startPos + 1, startPos + 1)
+  return newString
 }

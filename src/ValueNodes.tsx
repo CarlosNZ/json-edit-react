@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { toPathString, truncate } from './helpers'
+import { insertCharInTextArea, toPathString, truncate } from './helpers'
 import { useTheme } from './contexts'
 import { type InputProps } from './types'
 
@@ -13,11 +13,11 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   path,
   setIsEditing,
   handleEdit,
-  handleCancel,
   stringTruncate,
   showStringQuotes,
   nodeData,
   handleKeyboard,
+  keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
 
@@ -38,20 +38,17 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       handleKeyPress={(e) => {
         handleKeyboard(e, {
           stringConfirm: handleEdit,
-          cancel: handleCancel,
           stringLineBreak: () => {
-            const textArea = textAreaRef.current
             // Simulates standard text-area line break behaviour. Only
             // required when control key is not "standard" text-area
             // behaviour ("Shift-Enter" or "Enter")
-            const startPos: number = textArea?.selectionStart ?? Infinity
-            const endPos: number = textArea?.selectionEnd ?? Infinity
-            const strStart = value.slice(0, startPos)
-            const strEnd = value.slice(endPos)
-            ;(e.target as HTMLInputElement).value = strStart + '\n' + strEnd
-            textArea?.setSelectionRange(startPos + 1, startPos + 1)
-            setValue(strStart + '\n' + strEnd)
+            const newValue = insertCharInTextArea(
+              textAreaRef as React.MutableRefObject<HTMLTextAreaElement>,
+              '\n'
+            )
+            setValue(newValue)
           },
+          ...keyboardCommon,
         })
       }}
       styles={getStyles('input', nodeData)}
@@ -80,9 +77,9 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
   path,
   setIsEditing,
   handleEdit,
-  handleCancel,
   nodeData,
   handleKeyboard,
+  keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
 
@@ -102,9 +99,9 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
       onKeyDown={(e) =>
         handleKeyboard(e, {
           numberConfirm: handleEdit,
-          cancel: handleCancel,
           numberUp: () => setValue(Number(value) + 1),
           numberDown: () => setValue(Number(value) - 1),
+          ...keyboardCommon,
         })
       }
       style={{ width: `${String(value).length / 1.5 + 2}em`, ...getStyles('input', nodeData) }}
@@ -127,9 +124,9 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   path,
   setIsEditing,
   handleEdit,
-  handleCancel,
   nodeData,
   handleKeyboard,
+  keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
 
@@ -146,8 +143,8 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
         if (e.key === ' ') e.preventDefault()
         handleKeyboard(e, {
           booleanConfirm: handleEdit,
-          cancel: handleCancel,
           booleanToggle: () => setValue(!value),
+          ...keyboardCommon,
         })
       }}
       autoFocus
@@ -168,19 +165,34 @@ export const NullValue: React.FC<InputProps> = ({
   isEditing,
   setIsEditing,
   handleEdit,
-  handleCancel,
   nodeData,
   handleKeyboard,
+  keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
+  const timer = useRef<number | undefined>()
 
   useEffect(() => {
-    if (isEditing) window.addEventListener('keydown', listenForSubmit)
+    if (!isEditing) {
+      // The listener messes with other elements when switching rapidly (e.g. when "getNext" called repeatedly on inaccessible elements), so we cancel the listener load before it even happens if this node gets switched from isEditing to not in less than 100ms
+      window.clearTimeout(timer.current)
+      return
+    }
+    // Small delay to prevent registering keyboard input from previous element
+    // if switched using "Tab"
+    timer.current = window.setTimeout(
+      () => window.addEventListener('keydown', listenForSubmit),
+      100
+    )
+
     return () => window.removeEventListener('keydown', listenForSubmit)
   }, [isEditing])
 
   const listenForSubmit = (e: unknown) =>
-    handleKeyboard(e as React.KeyboardEvent, { confirm: handleEdit, cancel: handleCancel })
+    handleKeyboard(e as React.KeyboardEvent, {
+      confirm: handleEdit,
+      ...keyboardCommon,
+    })
 
   return (
     <div

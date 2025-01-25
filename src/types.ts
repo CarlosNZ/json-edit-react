@@ -62,6 +62,8 @@ export type CollectionData = object | unknown[]
 
 export type ErrorString = string
 
+export type TabDirection = 'next' | 'prev'
+
 export interface IconReplacements {
   add?: JSX.Element
   edit?: JSX.Element
@@ -137,7 +139,13 @@ export type CopyFunction = (input: {
   type: CopyType
 }) => void
 
-export type CompareFunction = (a: string, b: string) => number
+// Only using `any` here as that's the type expected by the JS "sort" method.
+export type CompareFunction = (
+  a: [string | number, unknown],
+  b: [string | number, unknown]
+) => number
+
+export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
 
 // Internal update
 export type InternalUpdateFunction = (
@@ -170,6 +178,8 @@ export interface KeyboardControls {
   numberConfirm?: KeyEvent | string
   numberUp?: KeyEvent | string
   numberDown?: KeyEvent | string
+  tabForward?: KeyEvent | string
+  tabBack?: KeyEvent | string
   clipboardModifier?: React.ModifierKey | React.ModifierKey[]
   collapseModifier?: React.ModifierKey | React.ModifierKey[]
 }
@@ -217,6 +227,7 @@ interface BaseNodeProps {
   restrictTypeSelection: boolean | DataType[] | TypeFilterFunction
   stringTruncate: number
   indent: number
+  sort: SortFunction
   translate: TranslateFunction
   customNodeDefinitions: CustomNodeDefinition[]
   customButtons: CustomButtonDefinition[]
@@ -234,7 +245,6 @@ export interface CollectionNodeProps extends BaseNodeProps {
   collapseFilter: FilterFunction
   collapseAnimationTime: number
   onAdd: InternalUpdateFunction
-  keySort: boolean | CompareFunction
   showArrayIndices: boolean
   showCollectionCount: boolean | 'when-closed'
   showStringQuotes: boolean
@@ -296,7 +306,6 @@ export interface InputProps {
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void
-  handleCancel: () => void
   path: CollectionKey[]
   stringTruncate: number
   showStringQuotes: boolean
@@ -306,6 +315,7 @@ export interface InputProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
+  keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
 }
 
 /**
