@@ -10,7 +10,6 @@ import {
   type CollectionKey,
   type TabDirection,
   type SortFunction,
-  ValueData,
 } from './types'
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
@@ -322,3 +321,22 @@ type TransformedCollection =
       value: any
       index: number
     }
+
+// Manipulates a TextArea (ref) directly by inserting a string at the current
+// cursor/selection position. Used to insert Line break and Tab characters via
+// keyboard control.
+export const insertCharInTextArea = (
+  textAreaRef: React.MutableRefObject<HTMLTextAreaElement>,
+  insertionString: string
+) => {
+  const textArea = textAreaRef.current
+  const startPos: number = textArea?.selectionStart ?? Infinity
+  const endPos: number = textArea?.selectionEnd ?? Infinity
+  const strStart = textArea?.textContent?.slice(0, startPos)
+  const strEnd = textArea?.textContent?.slice(endPos)
+
+  const newString = strStart + insertionString + strEnd
+  textArea.value = newString
+  textArea?.setSelectionRange(startPos + 1, startPos + 1)
+  return newString
+}

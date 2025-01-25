@@ -9,7 +9,13 @@ import {
   type ValueData,
 } from './types'
 import { Icon } from './Icons'
-import { filterNode, getModifier, getNextOrPrevious, isCollection } from './helpers'
+import {
+  filterNode,
+  getModifier,
+  getNextOrPrevious,
+  insertCharInTextArea,
+  isCollection,
+} from './helpers'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { useTheme, useTreeState } from './contexts'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
@@ -106,6 +112,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     }
   }, [collapseState])
 
+  // For JSON-editing TextArea
+  const textAreaRef = useRef<HTMLTextAreaElement>(null)
+
   const getDefaultNewValue = useMemo(
     () => (nodeData: NodeData, newKey: string) => {
       if (typeof defaultValue !== 'function') return defaultValue
@@ -140,11 +149,24 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
-  const handleKeyPressEdit = (e: React.KeyboardEvent) =>
+  const handleKeyPressEdit = (e: React.KeyboardEvent) => {
+    // Normal "Tab" key functionality in TextArea
+    // Defined here explicitly rather than in handleKeyboard as we *don't* want
+    // to override the normal Tab key with the custom "Tab" key value
+    if (e.key === 'Tab' && !e.getModifierState('Shift')) {
+      e.preventDefault()
+      const newValue = insertCharInTextArea(
+        textAreaRef as React.MutableRefObject<HTMLTextAreaElement>,
+        '\t'
+      )
+      setStringifiedValue(newValue)
+      return
+    }
     handleKeyboard(e, {
       objectConfirm: handleEdit,
       cancel: handleCancel,
     })
+  }
 
   const handleCollapse = (e: React.MouseEvent) => {
     const modifier = getModifier(e)
@@ -277,6 +299,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     <div className="jer-collection-text-edit">
       <div>
         <AutogrowTextArea
+          textAreaRef={textAreaRef}
           className="jer-collection-text-area"
           name={pathString}
           value={stringifiedValue}

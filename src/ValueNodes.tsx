@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { toPathString, truncate } from './helpers'
+import { insertCharInTextArea, toPathString, truncate } from './helpers'
 import { useTheme } from './contexts'
 import { type InputProps } from './types'
 
@@ -39,17 +39,14 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
         handleKeyboard(e, {
           stringConfirm: handleEdit,
           stringLineBreak: () => {
-            const textArea = textAreaRef.current
             // Simulates standard text-area line break behaviour. Only
             // required when control key is not "standard" text-area
             // behaviour ("Shift-Enter" or "Enter")
-            const startPos: number = textArea?.selectionStart ?? Infinity
-            const endPos: number = textArea?.selectionEnd ?? Infinity
-            const strStart = value.slice(0, startPos)
-            const strEnd = value.slice(endPos)
-            ;(e.target as HTMLInputElement).value = strStart + '\n' + strEnd
-            textArea?.setSelectionRange(startPos + 1, startPos + 1)
-            setValue(strStart + '\n' + strEnd)
+            const newValue = insertCharInTextArea(
+              textAreaRef as React.MutableRefObject<HTMLTextAreaElement>,
+              '\n'
+            )
+            setValue(newValue)
           },
           ...keyboardCommon,
         })
