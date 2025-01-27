@@ -98,6 +98,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   useEffect(() => {
     setStringifiedValue(jsonStringify(data))
+    if (isEditing) setCurrentlyEditingElement(null)
   }, [data])
 
   useEffect(() => {
