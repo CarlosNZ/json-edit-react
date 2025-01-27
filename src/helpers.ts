@@ -270,7 +270,8 @@ export const getNextOrPrevious = (
     sort<TransformedCollection>(collection, ({ key, value }) => [key, value])
 
   const thisIndex = collection.findIndex((el) => el.key === thisKey)
-  const destinationIndex = nextOrPrev === 'next' ? thisIndex + 1 : thisIndex - 1
+
+  const destinationIndex = thisIndex + (nextOrPrev === 'next' ? 1 : -1)
 
   const destination = collection[destinationIndex]
 
@@ -279,9 +280,12 @@ export const getNextOrPrevious = (
     return getNextOrPrevious(fullData, parentPath, nextOrPrev, sort)
   }
 
-  if (isCollection(destination.value))
+  if (isCollection(destination.value)) {
+    if (Object.keys(destination.value).length === 0) {
+      return getNextOrPrevious(fullData, [...parentPath, destination.key], nextOrPrev, sort)
+    }
     return getChildRecursive(fullData, [...parentPath, destination.key], nextOrPrev, sort)
-  else return [...parentPath, destination.key]
+  } else return [...parentPath, destination.key]
 }
 
 // If the node at "path" is a collection, tries the first/last child of that
@@ -296,9 +300,10 @@ const getChildRecursive = (
   if (!isCollection(node)) return path
   const keys = Array.isArray(node) ? node.map((_, index) => index) : Object.keys(node)
 
-  sort<string | number>(keys, (key) => [key, extractProperty(fullData, path)])
+  sort<string | number>(keys, (key) => [key, node])
 
   const child = nextOrPrev === 'next' ? keys[0] : keys[keys.length - 1]
+
   return getChildRecursive(fullData, [...path, child], nextOrPrev, sort)
 }
 

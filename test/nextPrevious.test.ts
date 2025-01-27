@@ -77,3 +77,21 @@ test('Traverse from within array', () => {
     'innerDeep',
   ])
 })
+
+test('Traverse into empty object/array', () => {
+  const d = {
+    displayName: 'Default',
+    styles: {
+      container: {
+        backgroundColor: '#f6f6f6',
+        fontFamily: 'monospace',
+      },
+      collection: {},
+      collectionInner: [],
+      lastOne: 1,
+      empty: {},
+    },
+  }
+  expect(getNext(d, ['styles', 'container', 'fontFamily'])).toEqual(['styles', 'lastOne'])
+  expect(getNext(d, ['styles', 'lastOne'])).toEqual(null)
+})
