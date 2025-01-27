@@ -45,13 +45,15 @@ import {
   NumberIncrementStepper,
   NumberDecrementStepper,
   useToast,
+  Tooltip,
 } from '@chakra-ui/react'
 import logo from './image/logo_400.png'
-import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
+import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { version } from './version'
+import { CodeEditor } from './CodeEditor'
 
 interface AppState {
   rootName: string
@@ -69,6 +71,7 @@ interface AppState {
   showStringQuotes: boolean
   defaultNewValue: string
   searchText: string
+  customTextEditor: boolean
 }
 
 const themes = [
@@ -104,6 +107,7 @@ function App() {
     showStringQuotes: true,
     defaultNewValue: 'New data!',
     searchText: '',
+    customTextEditor: false,
   })
 
   const [isSaving, setIsSaving] = useState(false)
@@ -144,6 +148,7 @@ function App() {
     allowEdit,
     allowDelete,
     allowAdd,
+    customTextEditor,
   } = state
 
   const restrictEdit: FilterFunction | boolean = (() => {
@@ -178,6 +183,7 @@ function App() {
       searchText: '',
       collapseLevel: newDataDefinition.collapse ?? state.collapseLevel,
       rootName: newDataDefinition.rootName ?? 'data',
+      customTextEditor: false,
     })
 
     switch (selected) {
@@ -431,6 +437,7 @@ function App() {
               // }}
               // insertAtBeginning="object"
               // rootFontSize={20}
+              TextEditor={customTextEditor ? CodeEditor : undefined}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>
@@ -666,6 +673,19 @@ function App() {
                     >
                       Sort Object keys
                     </Checkbox>
+                    <HStack>
+                      <Checkbox
+                        id="customEditorCheckbox"
+                        isChecked={customTextEditor}
+                        onChange={() => toggleState('customTextEditor')}
+                        disabled={!dataDefinition.customTextEditorAvailable}
+                      >
+                        Custom Text Editor
+                      </Checkbox>
+                      <Tooltip label="When in full JSON object edit">
+                        <InfoIcon color="primaryScheme.500" />
+                      </Tooltip>
+                    </HStack>
                   </Flex>
                   <HStack className="inputRow" pt={2}>
                     <FormLabel className="labelWidth" textAlign="right">

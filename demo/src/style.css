@@ -44,3 +44,12 @@ footer {
   font-weight: 600;
   color: dimgray;
 }
+
+.cm-theme-light {
+  width: 100%;
+}
+
+.cm-content,
+.cm-gutters {
+  font-size: 80%;
+}

@@ -55,6 +55,7 @@ export interface DemoData {
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
   styles?: Partial<ThemeStyles>
+  customTextEditorAvailable?: boolean
 }
 
 export const demoDataDefinitions: Record<string, DemoData> = {
@@ -92,6 +93,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     data: data.intro,
     customNodeDefinitions: [dateNodeDefinition],
     // restrictEdit: ({ key }) => key === 'number',
+    customTextEditorAvailable: true,
   },
   starWars: {
     name: '🚀 Star Wars',
@@ -280,6 +282,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         return 'JSON Schema error'
       }
     },
+    customTextEditorAvailable: true,
   },
   liveData: {
     name: '📖 Live Data (from database)',
@@ -441,6 +444,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     searchFilter: 'key',
     searchPlaceholder: 'Search Theme keys',
     data: {},
+    customTextEditorAvailable: true,
   },
   customNodes: {
     name: '🔧 Custom Nodes',
@@ -626,5 +630,6 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     styles: {
       string: ({ key }) => (key === 'name' ? { fontWeight: 'bold', fontSize: '120%' } : null),
     },
+    customTextEditorAvailable: true,
   },
 }
