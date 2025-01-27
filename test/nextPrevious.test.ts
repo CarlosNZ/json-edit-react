@@ -87,15 +87,11 @@ test('Traverse into empty object/array', () => {
         fontFamily: 'monospace',
       },
       collection: {},
-      collectionInner: {},
+      collectionInner: [],
       lastOne: 1,
       empty: {},
     },
   }
   expect(getNext(d, ['styles', 'container', 'fontFamily'])).toEqual(['styles', 'lastOne'])
-  // expect(getPrevious(data, ['dee', 'inner3', 'innerArray', 0, 'one'])).toEqual([
-  //   'dee',
-  //   'inner3',
-  //   'innerBool',
-  // ])
+  expect(getNext(d, ['styles', 'lastOne'])).toEqual(null)
 })
