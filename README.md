@@ -780,7 +780,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.21.0**: Users can now navigate between nodes using "Tab"/"Shift-Tab" key
+- **1.21.1**: Users can now navigate between nodes using "Tab"/"Shift-Tab" key
 - **1.20.0**: Refactor out direct access of global `document` object, which allows component to work with server-side rendering
 - **1.19.2**:
   - Boolean toggle key can be customised [#150](https://github.com/CarlosNZ/json-edit-react/issues/150)
