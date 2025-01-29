@@ -31,6 +31,7 @@ export {
   type NodeData,
   type JsonData,
   type KeyboardControls,
+  type TextEditorProps,
 } from './types'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
 

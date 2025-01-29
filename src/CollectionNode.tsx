@@ -54,6 +54,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     customNodeDefinitions,
     jsonParse,
     jsonStringify,
+    TextEditor,
     keyboardControls,
     handleKeyboard,
     insertAtTop,
@@ -97,6 +98,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   useEffect(() => {
     setStringifiedValue(jsonStringify(data))
+    if (isEditing) setCurrentlyEditingElement(null)
   }, [data])
 
   useEffect(() => {
@@ -297,7 +299,18 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     })
   ) : (
     <div className="jer-collection-text-edit">
-      <div>
+      {TextEditor ? (
+        <TextEditor
+          value={stringifiedValue}
+          onChange={setStringifiedValue}
+          onKeyDown={(e) =>
+            handleKeyboard(e, {
+              objectConfirm: handleEdit,
+              cancel: handleCancel,
+            })
+          }
+        />
+      ) : (
         <AutogrowTextArea
           textAreaRef={textAreaRef}
           className="jer-collection-text-area"
@@ -308,9 +321,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           handleKeyPress={handleKeyPressEdit}
           styles={getStyles('input', nodeData)}
         />
-        <div className="jer-collection-input-button-row">
-          <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
-        </div>
+      )}
+      <div className="jer-collection-input-button-row">
+        <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
       </div>
     </div>
   )
