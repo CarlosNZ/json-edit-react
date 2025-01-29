@@ -45,6 +45,7 @@ footer {
   color: dimgray;
 }
 
+/* For CodeMirror */
 .cm-theme-light,
 .cm-theme {
   width: 100%;
@@ -55,6 +56,7 @@ footer {
   font-size: 80%;
 }
 
+/* Loading component for CodeMirror */
 .loading {
   width: 100%;
   display: flex;
