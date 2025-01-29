@@ -802,6 +802,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.22.0**:
+  - Option for [custom text/code editor](#full-object-editing) when editing full JSON object [#157](https://github.com/CarlosNZ/json-edit-react/issues/157)
+  - Handle clipboard copy errors [#159](https://github.com/CarlosNZ/json-edit-react/pull/159) (thanks @dm-xai) [#160](https://github.com/CarlosNZ/json-edit-react/issues/160)
 - **1.21.1**: Users can now navigate between nodes using "Tab"/"Shift-Tab" key
 - **1.20.0**: Refactor out direct access of global `document` object, which allows component to work with server-side rendering
 - **1.19.2**:
