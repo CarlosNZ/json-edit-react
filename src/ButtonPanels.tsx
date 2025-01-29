@@ -10,7 +10,7 @@ import {
   type NodeData,
   type CustomButtonDefinition,
   type KeyboardControlsFull,
-  JsonData,
+  type JsonData,
 } from './types'
 import { getModifier } from './helpers'
 
