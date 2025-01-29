@@ -410,8 +410,7 @@ The user can edit the entire JSON object (or a sub-node) as raw text (provided y
 
 You can see an example in the [demo](https://carlosnz.github.io/json-edit-react/) where I have implemented [**CodeMirror**](https://codemirror.net/) when the "Custom Text Editor" option is checked. It changes the native editor (on the left) into the one shown on the right:
 
-<img height="350" alt="Plain text editor" src="image/text_edit-normal.png">  
-<img height="350" alt="Plain text editor" src="image/text_edit-new.png">
+<img width="800" alt="Text editor comparison" src="image/text-editor-comparison.png">  
 
 See the codebase for the exact implementation details:
 
