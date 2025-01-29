@@ -53,3 +53,10 @@ footer {
 .cm-gutters {
   font-size: 80%;
 }
+
+.loading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

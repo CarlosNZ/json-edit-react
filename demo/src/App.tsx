@@ -441,7 +441,13 @@ function App() {
               TextEditor={
                 customTextEditor
                   ? (props) => (
-                      <Suspense>
+                      <Suspense
+                        fallback={
+                          <div className="loading" style={{ height: `${getLineHeight(data)}lh` }}>
+                            Loading code editor...
+                          </div>
+                        }
+                      >
                         <CodeEditor {...props} />
                       </Suspense>
                     )
@@ -729,3 +735,5 @@ export default App
 
 export const truncate = (string: string, length = 200) =>
   string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
+
+const getLineHeight = (data: JsonData) => JSON.stringify(data, null, 2).split('\n').length
