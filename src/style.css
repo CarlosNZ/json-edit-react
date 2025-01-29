@@ -165,6 +165,7 @@ select:focus + .focus {
   flex-direction: column;
   gap: 0.3em;
   align-items: flex-start;
+  line-height: 1.1em;
 }
 
 .jer-collection-text-area {

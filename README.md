@@ -763,6 +763,8 @@ The default keyboard controls are [outlined above](#usage), but it's possible to
   numberConfirm: 'Enter',
   numberUp: 'ArrowUp',
   numberDown: 'ArrowDown',
+  tabForward: 'Tab',
+  tabBack: { key: 'Tab', modifier: 'Shift' },
   booleanConfirm: 'Enter',
   booleanToggle: ' ', // Space bar
   clipboardModifier: ['Meta', 'Control'],
@@ -812,7 +814,6 @@ A few helper functions, components and types that might be useful in your own im
 
 ### Types
 
-- `ThemeName`: string literal list of built-in theme names
 - `Theme`: a full [Theme](#themes--styles) object
 - `ThemeInput`: input type for the `theme` prop
 - `JsonEditorProps`: all input props for the Json Editor component

@@ -40,6 +40,7 @@
   "scripts": {
     "start": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && concurrently --kill-others-on-fail  \"PORT=3008 react-scripts start\" \"nodemon watch.js\"",
     "build": "react-scripts build",
+    "analyze": "source-map-explorer 'build/static/js/*.js'",
     "prebuild": "node ./scripts/getVersion.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
@@ -75,6 +76,7 @@
     "concurrently": "^8.2.2",
     "gh-pages": "^6.1.1",
     "node-fetch": "^3.3.2",
-    "nodemon": "^3.0.3"
+    "nodemon": "^3.0.3",
+    "source-map-explorer": "^2.5.3"
   }
 }
