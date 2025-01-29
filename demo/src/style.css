@@ -45,7 +45,8 @@ footer {
   color: dimgray;
 }
 
-.cm-theme-light {
+.cm-theme-light,
+.cm-theme {
   width: 100%;
 }
 
