@@ -448,7 +448,7 @@ function App() {
                           </div>
                         }
                       >
-                        <CodeEditor {...props} />
+                        <CodeEditor {...props} theme={theme?.displayName ?? ''} />
                       </Suspense>
                     )
                   : undefined

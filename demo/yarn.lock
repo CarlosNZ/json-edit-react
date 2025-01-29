@@ -3995,6 +3995,43 @@
     "@codemirror/state" "^6.0.0"
     "@codemirror/view" "^6.0.0"
 
+"@uiw/codemirror-theme-console@^4.23.7":
+  version "4.23.7"
+  resolved "https://registry.yarnpkg.com/@uiw/codemirror-theme-console/-/codemirror-theme-console-4.23.7.tgz#60902d2b5f658fd677cff648174169811740eedb"
+  integrity sha512-5o23Pxer0DsuSTbzToUw73Y3b9sBI06e7e9c4SeBqI+tiYWdRefYu3M+hZZYi7L67b5bKlakMitCKvDNo3TqyQ==
+  dependencies:
+    "@uiw/codemirror-themes" "4.23.7"
+
+"@uiw/codemirror-theme-github@^4.23.7":
+  version "4.23.7"
+  resolved "https://registry.yarnpkg.com/@uiw/codemirror-theme-github/-/codemirror-theme-github-4.23.7.tgz#a52d4f4677e629956915c4a55d8dc9db496a1290"
+  integrity sha512-r9SstBZD7Ow1sQ8F0EpsRGx9b11K552M2FayvyLWTkal64YJmQMKW0S2KcWykgCMKLWhmDFi7LX+h8cg6nek8g==
+  dependencies:
+    "@uiw/codemirror-themes" "4.23.7"
+
+"@uiw/codemirror-theme-monokai@^4.23.7":
+  version "4.23.7"
+  resolved "https://registry.yarnpkg.com/@uiw/codemirror-theme-monokai/-/codemirror-theme-monokai-4.23.7.tgz#16c3b6f3b9ee54d466b7c6ec74fd35f470fcf4a0"
+  integrity sha512-IkflZncpj0rmQCXdDOn3O2wD516Isx12BQA/xkCfMQtgIQ7QgsqKKCPV83MiOiQFizioBNswjvXns7i5jlaJ7g==
+  dependencies:
+    "@uiw/codemirror-themes" "4.23.7"
+
+"@uiw/codemirror-theme-quietlight@^4.23.7":
+  version "4.23.7"
+  resolved "https://registry.yarnpkg.com/@uiw/codemirror-theme-quietlight/-/codemirror-theme-quietlight-4.23.7.tgz#426e1490d98c0c6dac7b6ece20a43e465bb6a2f5"
+  integrity sha512-C8C2vjk5uTkSvrqGdhwzGJN4a9vNai4YQrrRpJ3MscNi3KwLu4akE67U8kE5ZcThki9aHL9K2NXoP0SWt70Fag==
+  dependencies:
+    "@uiw/codemirror-themes" "4.23.7"
+
+"@uiw/codemirror-themes@4.23.7":
+  version "4.23.7"
+  resolved "https://registry.yarnpkg.com/@uiw/codemirror-themes/-/codemirror-themes-4.23.7.tgz#33d09a2d9df3eda3e3affcb68d91672e41bf646a"
+  integrity sha512-UNf1XOx1hG9OmJnrtT86PxKcdcwhaNhbrcD+nsk8WxRJ3n5c8nH6euDvgVPdVLPwbizsaQcZTILACgA/FjRpVg==
+  dependencies:
+    "@codemirror/language" "^6.0.0"
+    "@codemirror/state" "^6.0.0"
+    "@codemirror/view" "^6.0.0"
+
 "@uiw/react-codemirror@^4.23.7":
   version "4.23.7"
   resolved "https://registry.yarnpkg.com/@uiw/react-codemirror/-/react-codemirror-4.23.7.tgz#b7fe2085936c593514f5e238865989bfef65e504"
