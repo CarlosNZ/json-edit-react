@@ -18,6 +18,8 @@ const themeMap = {
   Psychedelic: monokai,
 }
 
+// Styles defined in /demo/src/style.css
+
 const CodeEditor: React.FC<TextEditorProps & { theme: string }> = ({
   value,
   onChange,

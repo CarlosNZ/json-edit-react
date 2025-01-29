@@ -415,8 +415,8 @@ You can see an example in the [demo](https://carlosnz.github.io/json-edit-react/
 
 See the codebase for the exact implementation details:
 
-- [Simple component that wraps CodeMirror](https://github.com/CarlosNZ/json-edit-react/blob/157-custom-text-editor/demo/src/CodeEditor.tsx)
-- [Prop passed to json-edit-react](https://github.com/CarlosNZ/json-edit-react/blob/6e3d21d20750b4a6519eea1f472be9a2a41b8a7c/demo/src/App.tsx#L441-L454)
+- [Simple component that wraps CodeMirror](https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/CodeEditor.tsx)
+- [Prop passed to json-edit-react](https://github.com/CarlosNZ/json-edit-react/blob/d6e3c39d1fe876fa8ed267301ebecf128132b602/demo/src/App.tsx#L450-L465)
 
 ## Search/Filtering
 
@@ -784,6 +784,7 @@ A few helper functions, components and types that might be useful in your own im
 - `CustomNodeProps`: all props passed internally to [Custom nodes](#custom-nodes); basically the same as `CollectionNodeProps` with an extra `customNodeProps` field for passing props unique to your component`
 - `DataType`: `"string"` | `"number"` | `"boolean"` | `"null"` | `"object"` | `"array"`
 - `KeyboardControls`: structure for [keyboard customisation](#keyboard-customisation) prop
+- `TextEditorProps`: props for custom [Text Editor](#full-object-editing)
 
 ## Issues, bugs, suggestions?
 
