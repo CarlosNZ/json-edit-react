@@ -1,14 +1,18 @@
 {
   "files": {
-    "main.css": "/json-edit-react/static/css/main.c95bf924.css",
-    "main.js": "/json-edit-react/static/js/main.73b97c28.js",
+    "main.css": "/json-edit-react/static/css/main.4826be4d.css",
+    "main.js": "/json-edit-react/static/js/main.e2604bef.js",
+    "static/js/532.067d4249.chunk.js": "/json-edit-react/static/js/532.067d4249.chunk.js",
+    "static/js/856.92e614fa.chunk.js": "/json-edit-react/static/js/856.92e614fa.chunk.js",
     "static/media/logo_400.png": "/json-edit-react/static/media/logo_400.8a91f110688ad1aa0011.png",
     "index.html": "/json-edit-react/index.html",
-    "main.c95bf924.css.map": "/json-edit-react/static/css/main.c95bf924.css.map",
-    "main.73b97c28.js.map": "/json-edit-react/static/js/main.73b97c28.js.map"
+    "main.4826be4d.css.map": "/json-edit-react/static/css/main.4826be4d.css.map",
+    "main.e2604bef.js.map": "/json-edit-react/static/js/main.e2604bef.js.map",
+    "532.067d4249.chunk.js.map": "/json-edit-react/static/js/532.067d4249.chunk.js.map",
+    "856.92e614fa.chunk.js.map": "/json-edit-react/static/js/856.92e614fa.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.c95bf924.css",
-    "static/js/main.73b97c28.js"
+    "static/css/main.4826be4d.css",
+    "static/js/main.e2604bef.js"
   ]
 }
