@@ -79,10 +79,10 @@ export const EditButtons: React.FC<EditButtonProps> = ({
         value = data
         stringValue = type ? JSON.stringify(data, null, 2) : String(value)
       }
-      void navigator.clipboard.writeText(stringValue)
-    }
-    if (typeof enableClipboard === 'function') {
-      enableClipboard({ value, stringValue, path, key, type: copyType })
+      void navigator.clipboard?.writeText(stringValue)
+      if (typeof enableClipboard === 'function') {
+        enableClipboard({ value, stringValue, path, key, type: copyType })
+      }
     }
   }
 
