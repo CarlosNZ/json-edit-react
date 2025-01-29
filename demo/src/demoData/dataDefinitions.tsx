@@ -265,6 +265,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     ),
     rootName: 'data',
     data: data.jsonSchemaValidation,
+    collapse: 2,
     onUpdate: ({ newData }, toast) => {
       const valid = validateJsonSchema(newData)
       if (!valid) {
@@ -565,7 +566,6 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         },
         hideKey: true,
       },
-
       {
         ...dateNodeDefinition,
         showOnView: true,
