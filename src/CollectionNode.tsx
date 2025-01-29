@@ -299,31 +299,34 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     })
   ) : (
     <div className="jer-collection-text-edit">
-      {TextEditor ? (
-        <TextEditor
-          value={stringifiedValue}
-          onChange={setStringifiedValue}
-          onKeyDown={(e) =>
-            handleKeyboard(e, {
-              objectConfirm: handleEdit,
-              cancel: handleCancel,
-            })
-          }
-        />
-      ) : (
-        <AutogrowTextArea
-          textAreaRef={textAreaRef}
-          className="jer-collection-text-area"
-          name={pathString}
-          value={stringifiedValue}
-          setValue={setStringifiedValue}
-          isEditing={isEditing}
-          handleKeyPress={handleKeyPressEdit}
-          styles={getStyles('input', nodeData)}
-        />
-      )}
-      <div className="jer-collection-input-button-row">
-        <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
+      {/* This single child div is necessary to preserve justification/positioning of buttons */}
+      <div>
+        {TextEditor ? (
+          <TextEditor
+            value={stringifiedValue}
+            onChange={setStringifiedValue}
+            onKeyDown={(e) =>
+              handleKeyboard(e, {
+                objectConfirm: handleEdit,
+                cancel: handleCancel,
+              })
+            }
+          />
+        ) : (
+          <AutogrowTextArea
+            textAreaRef={textAreaRef}
+            className="jer-collection-text-area"
+            name={pathString}
+            value={stringifiedValue}
+            setValue={setStringifiedValue}
+            isEditing={isEditing}
+            handleKeyPress={handleKeyPressEdit}
+            styles={getStyles('input', nodeData)}
+          />
+        )}
+        <div className="jer-collection-input-button-row">
+          <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
+        </div>
       </div>
     </div>
   )
