@@ -51,6 +51,7 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
   - [Examples](#examples-1)
   - [JSON Schema validation](#json-schema-validation)
   - [Drag-n-drop](#drag-n-drop)
+- [Full object editing](#full-object-editing)
 - [Search/Filtering](#searchfiltering)
 - [Themes \& Styles](#themes--styles)
   - [Fragments](#fragments)
@@ -157,13 +158,14 @@ The only *required* value is `data` (although you will need to provide a `setDat
 | `customButtons`         | `CustomButtonDefinition[]`                    | `[]`                                      | You can add your own buttons to the Edit Buttons panel if you'd like to be able to perform a custom operation on the data. See [Custom Buttons](#custom-buttons)                                                                                                                                                                                                                                          |
 | `jsonParse`             | `(input: string) => JsonData`                 | `JSON.parse`                              | When editing a block of JSON directly, you may wish to allow some "looser" input -- e.g. 'single quotes', trailing commas, or unquoted field names. In this case, you can provide a third-party JSON parsing method. I recommend [JSON5](https://json5.org/), which is what is used in the [Demo](https://carlosnz.github.io/json-edit-react/)                                                            |
 | `jsonStringify`         | `(data: JsonData) => string`                  | `(data) => JSON.stringify(data, null, 2)` | Similarly, you can override the default presentation of the JSON string when starting editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                                                                                                                                      |
+| `TextEditor`            | `ReactComponent<TextEditorProps>`             |                                           | Pass a component to offer a custom text/code editor when editing full JSON object as text. [See details](#full-object-editing)                                                                                                                                                                                                                                                                            |
 | `errorMessageTimeout`   | `number`                                      | `2500`                                    | Time (in milliseconds) to display the error message in the UI.                                                                                                                                                                                                                                                                                                                                            |  |
 | `keyboardControls`      | `KeyboardControls`                            | As explained [above](#usage)              | Override some or all of the keyboard controls. See [Keyboard customisation](#keyboard-customisation) for details.                                                                                                                                                                                                                                                                                         |  |
 | `insertAtTop`           | `boolean\| "object \| "array"`                | `false`                                   | If `true`, inserts new values at the *top* rather than bottom. Can set the behaviour just for arrays or objects by setting to `"object"` or `"array"` respectively.                                                                                                                                                                                                                                       |  |
 
 ## Managing state
 
-It is recommended that you manage the `data` state yourself outside this component -- just pass in a `setData` method, which is called internally to update your `data`. However, this is not compulsory -- if you don't provide a `setData` method, the data will be managed internally, which would be fine if you're not doing anything with the data. The alternative is to use the [Update functions](#update-functions) to update your `data` externally, but this is not recommended except in special circumstances as you can run into issues keeping your data in sync with the internal state (which is what is displayed), as well as unnecessary re-renders. Update functions should be ideally be used only for implementing side effects, checking for errors, or mutating the data before setting it with `setData`.
+It is recommended that you manage the `data` state yourself outside this component -- just pass in a `setData` method, which is called internally to update your `data`. However, this is not compulsory -- if you don't provide a `setData` method, the data will be managed internally, which would be fine if you're not doing anything with the data. The alternative is to use the [Update functions](#update-functions) to update your `data` externally, but this is not recommended except in special circumstances as you can run into issues keeping your data in sync with the internal state (which is what is displayed), as well as unnecessary re-renders. Update functions should be ideally be used only for implementing side effects (e.g. notifications), validation, or mutating the data before setting it with `setData`.
 
 ## Update functions
 
@@ -397,6 +399,24 @@ The `restrictDrag` property controls which items (if any) can be dragged into ne
 - The `restrictDrag` filter applies to the *source* element (i.e. the node being dragged), not the destination.
 - To be draggable, the node must *also* be delete-able (via the `restrictDelete` prop), as dragging a node to a new destination is essentially just deleting it and adding it back elsewhere.
 - Similarly, the destination collection must be editable in order to drop it in there. This means that, if you've gone to the trouble of configuring restrictive editing constraints using Filter functions, you can be confident that they can't be circumvented via drag-n-drop.
+
+## Full object editing
+
+The user can edit the entire JSON object (or a sub-node) as raw text (provided you haven't restricted it using a [`restrictEdit` function](#filter-functions)). By default, we just display a native HTML [textarea](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea) element for plain-text editing. However, you can offer a more sophisticated text/code editor by passing the component into the `TextEditor` prop. Your component must provide the following props for json-edit-react to use:
+
+- `value: string` // the current text
+- `onChange: (value: string) => void`  // should be called on every keystroke to update `value`
+- `onKeyDown: (e: React.KeyboardEvent) => void` // should be called on every keystroke to detect "Accept"/"Cancel" keys
+
+You can see an example in the [demo](https://carlosnz.github.io/json-edit-react/) where I have implemented [**CodeMirror**](https://codemirror.net/) when the "Custom Text Editor" option is checked. It changes the native editor (on the left) into the one shown on the right:
+
+<img height="350" alt="Plain text editor" src="image/text_edit-normal.png">  
+<img height="350" alt="Plain text editor" src="image/text_edit-new.png">
+
+See the codebase for the exact implementation details:
+
+- [Simple component that wraps CodeMirror](https://github.com/CarlosNZ/json-edit-react/blob/157-custom-text-editor/demo/src/CodeEditor.tsx)
+- [Prop passed to json-edit-react](https://github.com/CarlosNZ/json-edit-react/blob/6e3d21d20750b4a6519eea1f472be9a2a41b8a7c/demo/src/App.tsx#L441-L454)
 
 ## Search/Filtering
 

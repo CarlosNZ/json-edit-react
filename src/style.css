@@ -182,6 +182,7 @@ select:focus + .focus {
 .jer-collection-input-button-row {
   display: flex;
   justify-content: flex-end;
+  width: 100%;
   font-size: 150%;
   margin-top: 0.4em;
 }

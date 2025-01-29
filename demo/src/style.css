@@ -44,3 +44,22 @@ footer {
   font-weight: 600;
   color: dimgray;
 }
+
+/* For CodeMirror */
+.cm-theme-light,
+.cm-theme {
+  width: 100%;
+}
+
+.cm-content,
+.cm-gutters {
+  font-size: 80%;
+}
+
+/* Loading component for CodeMirror */
+.loading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -45,6 +45,7 @@ export interface JsonEditorProps {
   customButtons?: CustomButtonDefinition[]
   jsonParse?: (input: string) => JsonData
   jsonStringify?: (input: JsonData) => string
+  TextEditor?: React.FC<TextEditorProps>
   errorMessageTimeout?: number // ms
   keyboardControls?: KeyboardControls
   insertAtTop?: boolean | 'array' | 'object'
@@ -72,6 +73,12 @@ export interface IconReplacements {
   ok?: JSX.Element
   cancel?: JSX.Element
   chevron?: JSX.Element
+}
+
+export interface TextEditorProps {
+  value: string
+  onChange: (value: string) => void
+  onKeyDown: (e: React.KeyboardEvent) => void
 }
 
 /**
@@ -254,6 +261,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   jsonParse: (input: string) => JsonData
   jsonStringify: (data: JsonData) => string
   insertAtTop: { object: boolean; array: boolean }
+  TextEditor?: React.FC<TextEditorProps>
 }
 
 export type ValueData = string | number | boolean
