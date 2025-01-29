@@ -3,7 +3,7 @@ import CodeMirror from '@uiw/react-codemirror'
 import { json } from '@codemirror/lang-json'
 import { TextEditorProps } from './_imports'
 
-export const CodeEditor: React.FC<TextEditorProps> = ({ value, onChange, onKeyDown }) => {
+const CodeEditor: React.FC<TextEditorProps> = ({ value, onChange, onKeyDown }) => {
   return (
     <CodeMirror
       value={value}
@@ -14,3 +14,5 @@ export const CodeEditor: React.FC<TextEditorProps> = ({ value, onChange, onKeyDo
     />
   )
 }
+
+export default CodeEditor

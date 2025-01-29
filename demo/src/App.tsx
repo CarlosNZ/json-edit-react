@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, lazy, Suspense } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -53,7 +53,8 @@ import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { version } from './version'
-import { CodeEditor } from './CodeEditor'
+
+const CodeEditor = lazy(() => import('./CodeEditor'))
 
 interface AppState {
   rootName: string
@@ -437,7 +438,15 @@ function App() {
               // }}
               // insertAtBeginning="object"
               // rootFontSize={20}
-              TextEditor={customTextEditor ? CodeEditor : undefined}
+              TextEditor={
+                customTextEditor
+                  ? (props) => (
+                      <Suspense>
+                        <CodeEditor {...props} />
+                      </Suspense>
+                    )
+                  : undefined
+              }
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>
