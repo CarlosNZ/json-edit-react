@@ -132,6 +132,8 @@ export type SearchFilterInputFunction = (
 
 export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
+  success: boolean
+  errorMessage: string | null
   key: CollectionKey
   path: CollectionKey[]
   value: unknown
@@ -201,7 +203,7 @@ export interface NodeData {
   path: CollectionKey[]
   level: number
   index: number
-  value: unknown
+  value: JsonData
   size: number | null
   parentData: object | null
   fullData: JsonData

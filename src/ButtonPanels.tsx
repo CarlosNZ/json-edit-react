@@ -10,6 +10,7 @@ import {
   type NodeData,
   type CustomButtonDefinition,
   type KeyboardControlsFull,
+  JsonData,
 } from './types'
 import { getModifier } from './helpers'
 
@@ -67,8 +68,10 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const handleCopy = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation()
     let copyType: CopyType = 'value'
-    let value
+    let value: JsonData
     let stringValue = ''
+    let success: boolean
+    let errorMessage: string | null = null
     if (enableClipboard) {
       const modifier = getModifier(e)
       if (modifier && keyboardControls.clipboardModifier.includes(modifier)) {
@@ -79,10 +82,39 @@ export const EditButtons: React.FC<EditButtonProps> = ({
         value = data
         stringValue = type ? JSON.stringify(data, null, 2) : String(value)
       }
-      void navigator.clipboard?.writeText(stringValue)
-      if (typeof enableClipboard === 'function') {
-        enableClipboard({ value, stringValue, path, key, type: copyType })
+      if (!navigator.clipboard) {
+        if (typeof enableClipboard === 'function')
+          enableClipboard({
+            success: false,
+            value,
+            stringValue,
+            path,
+            key,
+            type: copyType,
+            errorMessage: "Can't access clipboard API",
+          })
+        return
       }
+      navigator.clipboard
+        ?.writeText(stringValue)
+        .then(() => (success = true))
+        .catch((err) => {
+          success = false
+          errorMessage = err.message
+        })
+        .finally(() => {
+          if (typeof enableClipboard === 'function') {
+            enableClipboard({
+              success,
+              errorMessage,
+              value,
+              stringValue,
+              path,
+              key,
+              type: copyType,
+            })
+          }
+        })
     }
   }
 
