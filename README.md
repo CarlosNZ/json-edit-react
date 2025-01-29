@@ -118,6 +118,8 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - Drag and drop items to change the structure or modify display order
 - JSON text input can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
 
+[Have a play with the Demo app](https://carlosnz.github.io/json-edit-react/) to get a feel for it!
+
 ## Props overview
 
 The only *required* property is `data` (although you will need to provide a `setData` method to update your data).
