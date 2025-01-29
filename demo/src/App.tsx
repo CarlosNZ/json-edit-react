@@ -363,14 +363,23 @@ function App() {
               }
               enableClipboard={
                 allowCopy
-                  ? ({ stringValue, type }) =>
-                      toast({
-                        title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
-                        description: truncate(String(stringValue)),
-                        status: 'success',
-                        duration: 5000,
-                        isClosable: true,
-                      })
+                  ? ({ stringValue, type, success, errorMessage }) => {
+                      success
+                        ? toast({
+                            title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
+                            description: truncate(String(stringValue)),
+                            status: 'success',
+                            duration: 5000,
+                            isClosable: true,
+                          })
+                        : toast({
+                            title: 'Problem copying to clipboard',
+                            description: errorMessage,
+                            status: 'error',
+                            duration: 5000,
+                            isClosable: true,
+                          })
+                    }
                   : false
               }
               restrictEdit={restrictEdit}

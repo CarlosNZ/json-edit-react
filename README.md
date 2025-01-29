@@ -248,9 +248,11 @@ A similar callback is executed whenever an item is copied to the clipboard (if p
     type        // Either "path" or "value" depending on whether "Cmd/Ctrl" was pressed 
     stringValue // A nicely stringified version of `value`  
                 // (i.e. what the clipboard actually receives)
+    success     // true/false -- whether clipboard copy action actually succeeded
+    errorMessage// Error detail if success === false
 ```
 
-Since there is very little user feedback when clicking "Copy", a good idea would be to present some kind of notification in this callback.
+Since there is very little user feedback when clicking "Copy", a good idea would be to present some kind of notification in this callback. There are situations (such as an insecure environment) where the browser won't actually permit any clipboard actions. In this case, the `success` property will be `false`, so you can handle it appropriately.
 
 ### Custom Buttons
 
