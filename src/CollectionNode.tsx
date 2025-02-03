@@ -135,7 +135,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     showOnEdit,
     showOnView,
     showCollectionWrapper = true,
-  } = useMemo(() => getCustomNode(customNodeDefinitions, nodeData), [])
+  } = useMemo(() => getCustomNode(customNodeDefinitions, nodeData), [data])
 
   const childrenEditing = areChildrenBeingEdited(pathString)
 
