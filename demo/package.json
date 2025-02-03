@@ -24,7 +24,7 @@
     "ajv": "^8.16.0",
     "firebase": "^10.13.0",
     "framer-motion": "^11.0.3",
-    "json-edit-react": "^1.22.0",
+    "json-edit-react": "^1.22.1",
     "json5": "^2.2.3",
     "react": "^18.2.0",
     "react-datepicker": "^7.5.0",
