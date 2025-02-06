@@ -62,6 +62,8 @@ export const useCollapseTransition = (
   const prevHeight = useRef<string | number>(0)
   const timerId = useRef<number>()
 
+  const cssTransitionValue = `${collapseAnimationTime / 1000}s`
+
   // Method to change the collapse state and manage the animated transition
   const animateCollapse = (collapse: boolean) => {
     if (collapsed === collapse) return
@@ -98,6 +100,7 @@ export const useCollapseTransition = (
     animateCollapse,
     maxHeight,
     collapsed,
+    cssTransitionValue,
   }
 }
 

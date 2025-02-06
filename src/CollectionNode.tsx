@@ -63,12 +63,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   const startCollapsed = collapseFilter(incomingNodeData)
 
-  const { contentRef, isAnimating, maxHeight, collapsed, animateCollapse } = useCollapseTransition(
-    data,
-    collapseAnimationTime,
-    startCollapsed,
-    mainContainerRef
-  )
+  const { contentRef, isAnimating, maxHeight, collapsed, animateCollapse, cssTransitionValue } =
+    useCollapseTransition(data, collapseAnimationTime, startCollapsed, mainContainerRef)
 
   const {
     pathString,
@@ -462,7 +458,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           <div className="jer-collection-name">
             <div
               className={`jer-collapse-icon jer-accordion-icon${collapsed ? ' jer-rotate-90' : ''}`}
-              style={{ zIndex: 11 + nodeData.level * 2 }}
+              style={{ zIndex: 11 + nodeData.level * 2, transition: cssTransitionValue }}
               onClick={(e) => handleCollapse(e)}
             >
               <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
@@ -480,7 +476,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           {!isEditing && showCount && (
             <div
               className={`jer-collection-item-count${showCount ? ' jer-visible' : ' jer-hidden'}`}
-              style={getStyles('itemCount', nodeData)}
+              style={{ ...getStyles('itemCount', nodeData), transition: cssTransitionValue }}
             >
               {size === 1
                 ? translate('ITEM_SINGLE', { ...nodeData, size: 1 }, 1)
@@ -489,7 +485,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           )}
           <div
             className={`jer-brackets${isCollapsed ? ' jer-visible' : ' jer-hidden'}`}
-            style={getStyles('bracket', nodeData)}
+            style={{ ...getStyles('bracket', nodeData), transition: cssTransitionValue }}
           >
             {brackets.close}
           </div>
@@ -510,6 +506,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           // Prevent collapse if this node or any children are being edited
           maxHeight: childrenEditing ? undefined : maxHeight,
           ...getStyles('collectionInner', nodeData),
+          transition: cssTransitionValue,
         }}
         ref={contentRef}
       >
