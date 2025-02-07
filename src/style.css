@@ -4,18 +4,15 @@
   --jer-select-arrow: #777;
   --jer-form-border: 1px solid #ededf0;
   --jer-form-border-focus: 1px solid #e2e2e2;
-  --jer-expand-transition-time: 0.3s;
   --jer-highlight-color: #b3d8ff;
 }
 
 .jer-visible {
   opacity: 1;
-  transition: var(--jer-expand-transition-time);
 }
 
 .jer-hidden {
   opacity: 0;
-  transition: var(--jer-expand-transition-time);
 }
 
 /* Select styled as per:
@@ -157,7 +154,6 @@ select:focus + .focus {
 
 .jer-collection-inner {
   position: relative;
-  transition: var(--jer-expand-transition-time);
 }
 
 .jer-collection-text-edit {
@@ -339,7 +335,7 @@ select:focus + .focus {
 
 .jer-copy-pulse {
   position: relative;
-  transition: transform var(--jer-expand-transition-time);
+  transition: 0.3s;
 }
 
 .jer-copy-pulse:hover {
@@ -378,12 +374,10 @@ select:focus + .focus {
 
 .jer-rotate-90 {
   transform: rotate(-90deg);
-  transition: transform var(--jer-expand-transition-time);
 }
 
 .jer-accordion-icon {
   /* font-size: '2em'; */
-  transition: transform var(--jer-expand-transition-time);
 }
 
 .jer-icon:hover {
