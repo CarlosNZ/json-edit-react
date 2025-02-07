@@ -845,6 +845,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.22.1**: Make `collapseAnimationTime` use local value rather than global CSS variable [#163](https://github.com/CarlosNZ/json-edit-react/issues/163)
 - **1.22.1**: Fix custom nodes not re-calculating condition when `data` changes
 - **1.22.0**:
   - Option for [custom text/code editor](#full-object-editing) when editing full JSON object [#157](https://github.com/CarlosNZ/json-edit-react/issues/157)
