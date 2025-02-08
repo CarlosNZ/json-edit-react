@@ -17,4 +17,7 @@ assignees: ''
 <!--- If applicable, add screenshots to help explain your problem. -->
 
 **Online demo**
-<!--- Please try and reproduce problem using a fork of [this sandbox](https://codesandbox.io/p/sandbox/json-edit-react-demo-g5qlym?file=%2Fsrc%2FApp.js%3A11%2C11), and post the link here. If you can't reproduce the problem there, it's likely to be due to something outside of the component itself. -->
+<!--- Please try and reproduce the problem using a fork of this Code Sandbox, and post the link here. If you can't reproduce the problem there, it's likely to be due to something outside of the component itself.
+
+https://codesandbox.io/p/sandbox/json-edit-react-demo-g5qlym?file=%2Fsrc%2FApp.js%3A11%2C11
+-->
