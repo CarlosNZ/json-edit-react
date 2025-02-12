@@ -275,7 +275,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones
     // when fetching a non-custom component
-    getInputComponent(getDataType(data) as DataType, inputProps)
+      getInputComponent(data, getDataType(data) as DataType, inputProps)
   )
 
   return (
@@ -403,15 +403,14 @@ const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
   return 'invalid'
 }
 
-const getInputComponent = (dataType: DataType, inputProps: InputProps) => {
-  const value = inputProps.value
+const getInputComponent = (data:unknown, dataType: DataType, inputProps: InputProps) => {
   switch (dataType) {
     case 'string':
-      return <StringValue {...inputProps} value={value as string} />
+      return <StringValue {...inputProps} value={data as string} />
     case 'number':
-      return <NumberValue {...inputProps} value={value as number} />
+      return <NumberValue {...inputProps} value={data as number} />
     case 'boolean':
-      return <BooleanValue {...inputProps} value={value as boolean} />
+      return <BooleanValue {...inputProps} value={data as boolean} />
     case 'null':
       return <NullValue {...inputProps} />
     default:
