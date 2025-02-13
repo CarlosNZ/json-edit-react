@@ -403,7 +403,8 @@ const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
   return 'invalid'
 }
 
-const getInputComponent = (data:unknown, dataType: DataType, inputProps: InputProps) => {
+const getInputComponent = (data: JsonData, inputProps: InputProps) => {
+  const dataType = getDataType(data)
   switch (dataType) {
     case 'string':
       return <StringValue {...inputProps} value={data as string} />
