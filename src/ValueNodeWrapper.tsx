@@ -165,7 +165,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         // that won't match the custom node condition any more
         customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
       )
-      updateValue(newValue as ValueData)
       onEdit(newValue, path).then((error) => {
         if (error) {
           onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
@@ -405,13 +404,14 @@ const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
 
 const getInputComponent = (data: JsonData, inputProps: InputProps) => {
   const dataType = getDataType(data)
+  const { value } = inputProps
   switch (dataType) {
     case 'string':
-      return <StringValue {...inputProps} value={data as string} />
+      return <StringValue {...inputProps} value={value as string} />
     case 'number':
-      return <NumberValue {...inputProps} value={data as number} />
+      return <NumberValue {...inputProps} value={value as number} />
     case 'boolean':
-      return <BooleanValue {...inputProps} value={data as boolean} />
+      return <BooleanValue {...inputProps} value={value as boolean} />
     case 'null':
       return <NullValue {...inputProps} />
     default:
