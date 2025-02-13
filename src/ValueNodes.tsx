@@ -95,7 +95,7 @@ export const NumberValue: React.FC<InputProps & { value: number }> = ({
       value={value}
       onChange={(e) => setValue(validateNumber(e.target.value))}
       autoFocus
-      onFocus={(e) => e.target.select()}
+      onFocus={(e) => setTimeout(() => e.target.select(), 10)}
       onKeyDown={(e) =>
         handleKeyboard(e, {
           numberConfirm: handleEdit,
