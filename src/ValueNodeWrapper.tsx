@@ -275,7 +275,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones
     // when fetching a non-custom component
-      getInputComponent(data, getDataType(data) as DataType, inputProps)
+    getInputComponent(data, inputProps)
   )
 
   return (
