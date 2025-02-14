@@ -201,7 +201,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const handleCancel = () => {
     setCurrentlyEditingElement(null)
     setValue(data)
-    setDataType(getDataType(data, customNodeData))
   }
 
   const handleDelete = () => {
@@ -274,7 +273,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones
     // when fetching a non-custom component
-    getInputComponent(data, inputProps)
+    getInputComponent(dataType, inputProps)
   )
 
   return (
@@ -402,8 +401,7 @@ const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
   return 'invalid'
 }
 
-const getInputComponent = (data: JsonData, inputProps: InputProps) => {
-  const dataType = getDataType(data)
+const getInputComponent = (dataType: string, inputProps: InputProps) => {
   const { value } = inputProps
   switch (dataType) {
     case 'string':
