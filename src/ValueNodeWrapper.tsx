@@ -209,7 +209,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     }
     setValue(data)
     setPreviousValue(null)
-    setDataType(getDataType(data, customNodeData))
   }
 
   const handleDelete = () => {
