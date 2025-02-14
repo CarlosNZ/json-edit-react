@@ -53,6 +53,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setPreviouslyEditedElement,
     tabDirection,
     setTabDirection,
+    previousValue,
+    setPreviousValue,
   } = useTreeState()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
@@ -176,6 +178,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleEdit = () => {
     setCurrentlyEditingElement(null)
+    setPreviousValue(null)
     let newValue: JsonData
     switch (dataType) {
       case 'object':
@@ -200,7 +203,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleCancel = () => {
     setCurrentlyEditingElement(null)
+    if (previousValue !== null) {
+      onEdit(previousValue, path)
+      return
+    }
     setValue(data)
+    setPreviousValue(null)
     setDataType(getDataType(data, customNodeData))
   }
 
@@ -274,7 +282,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones
     // when fetching a non-custom component
-    getInputComponent(data, inputProps)
+    getInputComponent(dataType, inputProps)
   )
 
   return (
@@ -350,7 +358,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             showEditButtons && (
               <EditButtons
                 startEdit={
-                  canEdit ? () => setCurrentlyEditingElement(path, handleCancel) : undefined
+                  canEdit
+                    ? () => {
+                        setPreviousValue(value)
+                        setCurrentlyEditingElement(path, handleCancel)
+                      }
+                    : undefined
                 }
                 handleDelete={canDelete ? handleDelete : undefined}
                 enableClipboard={enableClipboard}
@@ -402,8 +415,7 @@ const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
   return 'invalid'
 }
 
-const getInputComponent = (data: JsonData, inputProps: InputProps) => {
-  const dataType = getDataType(data)
+const getInputComponent = (dataType: string, inputProps: InputProps) => {
   const { value } = inputProps
   switch (dataType) {
     case 'string':

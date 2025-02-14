@@ -93,8 +93,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const hasBeenOpened = useRef(!startCollapsed)
 
   useEffect(() => {
+    console.log('Change', data)
     setStringifiedValue(jsonStringify(data))
-    if (isEditing) setCurrentlyEditingElement(null)
+    // if (isEditing) setCurrentlyEditingElement(null)
   }, [data])
 
   useEffect(() => {

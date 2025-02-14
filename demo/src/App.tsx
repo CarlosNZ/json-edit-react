@@ -383,7 +383,7 @@ function App() {
                   : false
               }
               restrictEdit={restrictEdit}
-              // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
+              // restrictEdit={(nodeData) => typeof nodeData.value === 'object'}
               restrictDelete={restrictDelete}
               restrictAdd={restrictAdd}
               restrictTypeSelection={dataDefinition?.restrictTypeSelection}
