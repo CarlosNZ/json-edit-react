@@ -382,6 +382,7 @@ function App() {
                     }
                   : false
               }
+              // viewOnly
               restrictEdit={restrictEdit}
               // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
               restrictDelete={restrictDelete}

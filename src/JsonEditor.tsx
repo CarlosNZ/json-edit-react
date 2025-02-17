@@ -51,6 +51,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   restrictAdd = false,
   restrictTypeSelection = false,
   restrictDrag = true,
+  viewOnly,
   searchFilter: searchFilterInput,
   searchText,
   searchDebounceTime = 350,
@@ -249,10 +250,22 @@ const Editor: React.FC<JsonEditorProps> = ({
     })
   }
 
-  const restrictEditFilter = useMemo(() => getFilterFunction(restrictEdit), [restrictEdit])
-  const restrictDeleteFilter = useMemo(() => getFilterFunction(restrictDelete), [restrictDelete])
-  const restrictAddFilter = useMemo(() => getFilterFunction(restrictAdd), [restrictAdd])
-  const restrictDragFilter = useMemo(() => getFilterFunction(restrictDrag), [restrictDrag])
+  const restrictEditFilter = useMemo(
+    () => getFilterFunction(restrictEdit, viewOnly),
+    [restrictEdit, viewOnly]
+  )
+  const restrictDeleteFilter = useMemo(
+    () => getFilterFunction(restrictDelete, viewOnly),
+    [restrictDelete, viewOnly]
+  )
+  const restrictAddFilter = useMemo(
+    () => getFilterFunction(restrictAdd, viewOnly),
+    [restrictAdd, viewOnly]
+  )
+  const restrictDragFilter = useMemo(
+    () => getFilterFunction(restrictDrag, viewOnly),
+    [restrictDrag, viewOnly]
+  )
   const searchFilter = useMemo(() => getSearchFilter(searchFilterInput), [searchFilterInput])
 
   const fullKeyboardControls = useMemo(
@@ -426,7 +439,11 @@ const updateDataObject = (
   }
 }
 
-const getFilterFunction = (propValue: boolean | number | FilterFunction): FilterFunction => {
+const getFilterFunction = (
+  propValue: boolean | number | FilterFunction,
+  viewOnly?: boolean
+): FilterFunction => {
+  if (viewOnly) return () => true
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
   return propValue
