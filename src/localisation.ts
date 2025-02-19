@@ -11,6 +11,7 @@ const localisedStrings = {
   ERROR_ADD: 'Adding node unsuccessful',
   DEFAULT_STRING: 'New data!',
   DEFAULT_NEW_KEY: 'key',
+  SHOW_LESS: '(Show less)',
 }
 
 export type LocalisedStrings = typeof localisedStrings

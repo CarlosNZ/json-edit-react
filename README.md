@@ -116,6 +116,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - For Boolean inputs, space bar will toggle the value
 - Easily move to the next/previous node (for editing) using the `Tab`/`Shift-Tab` key
 - Drag and drop items to change the structure or modify display order
+- When editing is not permitted, double-clicking a string value will expand the text to the full value if it is truncated due to length (there is also a clickable "..." for long strings)
 - JSON text input can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
 
 [Have a play with the Demo app](https://carlosnz.github.io/json-edit-react/) to get a feel for it!
@@ -639,6 +640,7 @@ Localise your implementation by passing in a `translations` object to replace th
   ERROR_ADD: 'Adding node unsuccessful',
   DEFAULT_STRING: 'New data!',
   DEFAULT_NEW_KEY: 'key',
+  SHOW_LESS: '(Show less)',
 }
 
 ```
@@ -809,9 +811,9 @@ A few helper functions, components and types that might be useful in your own im
 - `themes`: an object containing all the built-in theme definitions
 - `LinkCustomComponent`: the component used to render [hyperlinks](#active-hyperlinks)
 - `LinkCustomNodeDefinition`: custom node definition for [hyperlinks](#active-hyperlinks)
+- `StringDisplay`: main component used to display a string value, re-used in the above "Link" Custom Component
 - `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron`: all the built-in [icon](#icons) components
 - `matchNode`, `matchNodeKey`: helpers for defining custom [Search](#searchfiltering) functions
-- `truncate`: function to truncate a string to a specified length. See [here](https://github.com/CarlosNZ/json-edit-react/blob/d5fdbdfed6da7152f5802c67fbb3577810d13adc/src/ValueNodes.tsx#L9-L13)
 - `extract`: function to extract a deeply nested object value from a string path. See [here](https://github.com/CarlosNZ/object-property-extractor)
 - `assign`: function to set a deep object value from a string path. See [here](https://github.com/CarlosNZ/object-property-assigner)
 

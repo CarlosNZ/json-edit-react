@@ -298,6 +298,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   showOnEdit?: boolean // default false
   showOnView?: boolean // default true
   showEditTools?: boolean // default true
+
   // For collection nodes only:
   showCollectionWrapper?: boolean // default true
   wrapperElement?: React.FC<CustomNodeProps<U>>
@@ -314,6 +315,7 @@ export interface CustomButtonDefinition {
 export interface InputProps {
   value: unknown
   setValue: (value: ValueData) => void
+  canEdit: boolean
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void

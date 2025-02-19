@@ -225,6 +225,16 @@ select:focus + .focus {
   overflow-wrap: anywhere;
 }
 
+.jer-string-expansion {
+  cursor: pointer;
+  opacity: 0.6;
+  filter: saturate(50%);
+}
+
+.jer-show-less {
+  font-size: 80%;
+}
+
 .jer-hyperlink {
   text-decoration: underline;
 }
