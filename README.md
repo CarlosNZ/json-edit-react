@@ -116,6 +116,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - For Boolean inputs, space bar will toggle the value
 - Easily move to the next/previous node (for editing) using the `Tab`/`Shift-Tab` key
 - Drag and drop items to change the structure or modify display order
+- When editing is not permitted, double-clicking a string value will expand the text to the full value if it is truncated due to length
 - JSON text input can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
 
 [Have a play with the Demo app](https://carlosnz.github.io/json-edit-react/) to get a feel for it!
@@ -639,6 +640,7 @@ Localise your implementation by passing in a `translations` object to replace th
   ERROR_ADD: 'Adding node unsuccessful',
   DEFAULT_STRING: 'New data!',
   DEFAULT_NEW_KEY: 'key',
+  SHOW_LESS: '(Show less)',
 }
 
 ```

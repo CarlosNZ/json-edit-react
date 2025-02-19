@@ -223,6 +223,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     parentData,
     setValue: updateValue,
     isEditing,
+    canEdit,
     setIsEditing: canEdit ? () => setCurrentlyEditingElement(path) : () => {},
     handleEdit,
     handleCancel,

@@ -314,6 +314,7 @@ export interface CustomButtonDefinition {
 export interface InputProps {
   value: unknown
   setValue: (value: ValueData) => void
+  canEdit: boolean
   isEditing: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void
