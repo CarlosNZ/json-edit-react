@@ -148,6 +148,7 @@ The only *required* property is `data` (although you will need to provide a `set
 | `restrictAdd`           | `boolean\|FilterFunction`                 | `false` | As with `restrictEdit` but for adding new properties                                                                                                                                                                            |
 | `restrictTypeSelection` | `boolean\|DataType[]\|TypeFilterFunction` | `false` | For restricting the data types the user can select. Can be a list of data types (e.g. `[ 'string', 'number', 'boolean', 'array', 'object', 'null' ]`), a boolean. or a function — see [TypeFilterFunction](#typefilterfunction) |
 | `restrictDrag`          | `boolean\|FilterFunction`                 | `true`  | Set to `false` to enable drag and drop functionality — see [Drag-n-drop](#drag-n-drop)                                                                                                                                          |
+| `viewOnly`              | `boolean`                                 |         | A shorthand if you just want the component to be a viewer, with no editing. Overrides any values of the above edit restrictions.                                                                                                |
 
 ### Look and Feel / UI
 
@@ -329,7 +330,7 @@ For restricting data types, the (Type) filter function is slightly more sophisti
 - `"object"`
 - `"array"`
 
-There is no specific restriction function for editing object key names, but they must return `true` for *both* `restrictEdit` and `restrictDelete` (and `restrictAdd` for collections), since changing a key name is equivalent to deleting a property and adding a new one.
+There is no specific restriction function for editing object key names, but they must return `false` for *both* `restrictEdit` and `restrictDelete` (and `restrictAdd` for collections), since changing a key name is equivalent to deleting a property and adding a new one.
 
 You can also set a dynamic default value by passing a filter function to the `defaultValue` prop -- the input is the same as the above, but also takes the new `key` value as its second parameter, so the new value can depend on the new key added.
 

@@ -28,6 +28,7 @@ export interface JsonEditorProps {
   restrictAdd?: boolean | FilterFunction
   restrictTypeSelection?: boolean | DataType[] | TypeFilterFunction
   restrictDrag?: boolean | FilterFunction
+  viewOnly?: boolean
   searchText?: string
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
   searchDebounceTime?: number
