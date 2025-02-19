@@ -273,7 +273,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones
     // when fetching a non-custom component
-    getInputComponent(dataType, inputProps)
+    getInputComponent(data, inputProps)
   )
 
   return (
@@ -401,9 +401,14 @@ const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
   return 'invalid'
 }
 
-const getInputComponent = (dataType: string, inputProps: InputProps) => {
+const getInputComponent = (data: JsonData, inputProps: InputProps) => {
+  // Need to check for DataType again -- if it's a custom component it could
+  // have a custom type, but it we're rendering this (a standard component),
+  // then it must be set to not show in current condition (editing or view), so
+  // we need interpret it as a simple type, not the Custom type.
+  const rawDataType = getDataType(data)
   const { value } = inputProps
-  switch (dataType) {
+  switch (rawDataType) {
     case 'string':
       return <StringValue {...inputProps} value={value as string} />
     case 'number':
