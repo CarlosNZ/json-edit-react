@@ -92,13 +92,17 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   // the animation transition when opening and closing the accordion
   const hasBeenOpened = useRef(!startCollapsed)
 
+  // DERIVED VALUES (this makes the JSX conditional logic easier to follow
+  // further down)
+  const { isEditing, isEditingKey, isArray, canEditKey } = derivedValues
+
   useEffect(() => {
     setStringifiedValue(jsonStringify(data))
     if (isEditing) setCurrentlyEditingElement(null)
   }, [data])
 
   useEffect(() => {
-    const shouldBeCollapsed = collapseFilter(nodeData) && !derivedValues.isEditing
+    const shouldBeCollapsed = collapseFilter(nodeData) && !isEditing
     hasBeenOpened.current = !shouldBeCollapsed
     animateCollapse(shouldBeCollapsed)
   }, [collapseFilter])
@@ -235,8 +239,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     setStringifiedValue(jsonStringify(data))
   }
 
-  // DERIVED VALUES (this makes the JSX conditional logic easier to follow)
-  const { isEditing, isEditingKey, isArray, canEditKey } = derivedValues
   const showLabel = showArrayIndices || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
