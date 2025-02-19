@@ -2,31 +2,33 @@ import React, { useEffect, useRef, useState } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { insertCharInTextArea, toPathString } from './helpers'
 import { useTheme } from './contexts'
-import { type InputProps } from './types'
+import { type NodeData, type InputProps } from './types'
+import { type TranslateFunction } from './localisation'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
 
-export const StringValue: React.FC<InputProps & { value: string }> = ({
-  value,
-  setValue,
-  isEditing,
-  path,
+interface StringDisplayProps {
+  nodeData: NodeData
+  styles: React.CSSProperties
+  pathString: string
+  showStringQuotes?: boolean
+  stringTruncate?: number
+  canEdit: boolean
+  setIsEditing: (value: React.SetStateAction<boolean>) => void
+  translate: TranslateFunction
+}
+export const StringDisplay: React.FC<StringDisplayProps> = ({
+  nodeData,
+  showStringQuotes = true,
+  stringTruncate = 200,
+  pathString,
   canEdit,
   setIsEditing,
-  handleEdit,
-  stringTruncate,
-  showStringQuotes,
-  nodeData,
-  handleKeyboard,
-  keyboardCommon,
+  styles,
   translate,
 }) => {
-  const { getStyles } = useTheme()
+  const value = nodeData.value as string
   const [isExpanded, setIsExpanded] = useState(false)
-
-  const textAreaRef = useRef<HTMLTextAreaElement>(null)
-
-  const pathString = toPathString(path)
 
   const quoteChar = showStringQuotes ? '"' : ''
 
@@ -35,6 +37,60 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   const handleMaybeEdit = () => {
     canEdit ? setIsEditing(true) : setIsExpanded(!isExpanded)
   }
+
+  return (
+    <div
+      id={`${pathString}_display`}
+      onDoubleClick={handleMaybeEdit}
+      onClick={(e) => {
+        if (e.getModifierState('Control') || e.getModifierState('Meta')) handleMaybeEdit()
+      }}
+      className="jer-value-string"
+      style={styles}
+    >
+      {quoteChar}
+      {!requiresTruncation ? (
+        `${value}${quoteChar}`
+      ) : isExpanded ? (
+        <>
+          <span>
+            {value}
+            {quoteChar}
+          </span>
+          <span className="jer-string-expansion jer-show-less" onClick={() => setIsExpanded(false)}>
+            {' '}
+            {translate('SHOW_LESS', nodeData)}
+          </span>
+        </>
+      ) : (
+        <>
+          <span>{value.slice(0, stringTruncate - 2).trimEnd()}</span>
+          <span className="jer-string-expansion jer-ellipsis" onClick={() => setIsExpanded(true)}>
+            ...
+          </span>
+          {quoteChar}
+        </>
+      )}
+    </div>
+  )
+}
+
+export const StringValue: React.FC<InputProps & { value: string }> = ({
+  value,
+  setValue,
+  isEditing,
+  path,
+  handleEdit,
+  nodeData,
+  handleKeyboard,
+  keyboardCommon,
+  ...props
+}) => {
+  const { getStyles } = useTheme()
+
+  const textAreaRef = useRef<HTMLTextAreaElement>(null)
+
+  const pathString = toPathString(path)
 
   return isEditing ? (
     <AutogrowTextArea
@@ -63,39 +119,12 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
       styles={getStyles('input', nodeData)}
     />
   ) : (
-    <div
-      id={`${pathString}_display`}
-      onDoubleClick={handleMaybeEdit}
-      onClick={(e) => {
-        if (e.getModifierState('Control') || e.getModifierState('Meta')) handleMaybeEdit()
-      }}
-      className="jer-value-string"
-      style={getStyles('string', nodeData)}
-    >
-      {quoteChar}
-      {!requiresTruncation ? (
-        `${value}${quoteChar}`
-      ) : isExpanded ? (
-        <>
-          <span>
-            {value}
-            {quoteChar}
-          </span>
-          <span className="jer-string-expansion jer-show-less" onClick={() => setIsExpanded(false)}>
-            {' '}
-            {translate('SHOW_LESS', nodeData)}
-          </span>
-        </>
-      ) : (
-        <>
-          <span>{value.slice(0, stringTruncate - 2).trimEnd()}</span>
-          <span className="jer-string-expansion jer-ellipsis" onClick={() => setIsExpanded(true)}>
-            ...
-          </span>
-          {quoteChar}
-        </>
-      )}
-    </div>
+    <StringDisplay
+      nodeData={nodeData}
+      pathString={pathString}
+      styles={getStyles('string', nodeData)}
+      {...props}
+    />
   )
 }
 

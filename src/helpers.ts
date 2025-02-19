@@ -111,16 +111,6 @@ export const matchNodeKey: SearchFilterFunction = ({ key, path }, searchText = '
 }
 
 /**
- * Truncates a string to a specified length, appends `...` if truncated
- */
-export const truncate = (string: string, length = 200) =>
-  typeof string === 'string'
-    ? string.length < length
-      ? string
-      : `${string.slice(0, length - 2).trim()}...`
-    : string
-
-/**
  * Converts a part expressed as an array of properties to a single string
  */
 export const toPathString = (path: Array<string | number>, key?: 'key_') =>
