@@ -7,18 +7,17 @@
  */
 
 import React from 'react'
-import { truncate } from '../../src/helpers'
-import { type CustomNodeProps, type CustomNodeDefinition } from '../types'
+import { StringDisplay } from '../../src/ValueNodes'
+import { toPathString } from '../helpers'
+import { type CustomNodeProps, type CustomNodeDefinition, type ValueNodeProps } from '../types'
+import { useCommon } from '../hooks'
 
-export const LinkCustomComponent: React.FC<CustomNodeProps<{ stringTruncate?: number }>> = ({
-  value,
-  setIsEditing,
-  getStyles,
-  customNodeProps,
-  nodeData,
-}) => {
-  const stringTruncateLength = customNodeProps?.stringTruncate ?? 100
+export const LinkCustomComponent: React.FC<
+  CustomNodeProps<{ stringTruncate?: number }> & ValueNodeProps
+> = (props) => {
+  const { value, setIsEditing, getStyles, nodeData } = props
   const styles = getStyles('string', nodeData)
+  const { canEdit } = useCommon({ props })
   return (
     <div
       onDoubleClick={() => setIsEditing(true)}
@@ -34,7 +33,13 @@ export const LinkCustomComponent: React.FC<CustomNodeProps<{ stringTruncate?: nu
         rel="noreferrer"
         style={{ color: styles.color ?? undefined }}
       >
-        &quot;{truncate(value as string, stringTruncateLength)}&quot;
+        <StringDisplay
+          {...props}
+          nodeData={nodeData}
+          pathString={toPathString(nodeData.path)}
+          styles={styles}
+          canEdit={canEdit}
+        />
       </a>
     </div>
   )
@@ -44,7 +49,7 @@ export const LinkCustomComponent: React.FC<CustomNodeProps<{ stringTruncate?: nu
 export const LinkCustomNodeDefinition: CustomNodeDefinition = {
   // Condition is a regex to match url strings
   condition: ({ value }) => typeof value === 'string' && /^https?:\/\/.+\..+$/.test(value),
-  element: LinkCustomComponent, // the component defined above
+  element: LinkCustomComponent as React.FC<CustomNodeProps>, // the component defined above
   showOnView: true,
   showOnEdit: false,
 }

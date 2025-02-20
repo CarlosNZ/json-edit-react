@@ -116,6 +116,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - For Boolean inputs, space bar will toggle the value
 - Easily move to the next/previous node (for editing) using the `Tab`/`Shift-Tab` key
 - Drag and drop items to change the structure or modify display order
+- When editing is not permitted, double-clicking a string value will expand the text to the full value if it is truncated due to length (there is also a clickable "..." for long strings)
 - JSON text input can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
 
 [Have a play with the Demo app](https://carlosnz.github.io/json-edit-react/) to get a feel for it!
@@ -148,6 +149,7 @@ The only *required* property is `data` (although you will need to provide a `set
 | `restrictAdd`           | `boolean\|FilterFunction`                 | `false` | As with `restrictEdit` but for adding new properties                                                                                                                                                                            |
 | `restrictTypeSelection` | `boolean\|DataType[]\|TypeFilterFunction` | `false` | For restricting the data types the user can select. Can be a list of data types (e.g. `[ 'string', 'number', 'boolean', 'array', 'object', 'null' ]`), a boolean. or a function — see [TypeFilterFunction](#typefilterfunction) |
 | `restrictDrag`          | `boolean\|FilterFunction`                 | `true`  | Set to `false` to enable drag and drop functionality — see [Drag-n-drop](#drag-n-drop)                                                                                                                                          |
+| `viewOnly`              | `boolean`                                 |         | A shorthand if you just want the component to be a viewer, with no editing. Overrides any values of the above edit restrictions.                                                                                                |
 
 ### Look and Feel / UI
 
@@ -329,7 +331,7 @@ For restricting data types, the (Type) filter function is slightly more sophisti
 - `"object"`
 - `"array"`
 
-There is no specific restriction function for editing object key names, but they must return `true` for *both* `restrictEdit` and `restrictDelete` (and `restrictAdd` for collections), since changing a key name is equivalent to deleting a property and adding a new one.
+There is no specific restriction function for editing object key names, but they must return `false` for *both* `restrictEdit` and `restrictDelete` (and `restrictAdd` for collections), since changing a key name is equivalent to deleting a property and adding a new one.
 
 You can also set a dynamic default value by passing a filter function to the `defaultValue` prop -- the input is the same as the above, but also takes the new `key` value as its second parameter, so the new value can depend on the new key added.
 
@@ -638,6 +640,7 @@ Localise your implementation by passing in a `translations` object to replace th
   ERROR_ADD: 'Adding node unsuccessful',
   DEFAULT_STRING: 'New data!',
   DEFAULT_NEW_KEY: 'key',
+  SHOW_LESS: '(Show less)',
 }
 
 ```
@@ -808,9 +811,9 @@ A few helper functions, components and types that might be useful in your own im
 - `themes`: an object containing all the built-in theme definitions
 - `LinkCustomComponent`: the component used to render [hyperlinks](#active-hyperlinks)
 - `LinkCustomNodeDefinition`: custom node definition for [hyperlinks](#active-hyperlinks)
+- `StringDisplay`: main component used to display a string value, re-used in the above "Link" Custom Component
 - `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron`: all the built-in [icon](#icons) components
 - `matchNode`, `matchNodeKey`: helpers for defining custom [Search](#searchfiltering) functions
-- `truncate`: function to truncate a string to a specified length. See [here](https://github.com/CarlosNZ/json-edit-react/blob/d5fdbdfed6da7152f5802c67fbb3577810d13adc/src/ValueNodes.tsx#L9-L13)
 - `extract`: function to extract a deeply nested object value from a string path. See [here](https://github.com/CarlosNZ/object-property-extractor)
 - `assign`: function to set a deep object value from a string path. See [here](https://github.com/CarlosNZ/object-property-assigner)
 
@@ -847,6 +850,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.23.0**:
+  - Add `viewOnly` prop as a shorthand for restricting all editing [#168](https://github.com/CarlosNZ/json-edit-react/issues/168)
+  - Add a toggle on the "..." of long strings so they can be expanded to full length in the UI [#172](https://github.com/CarlosNZ/json-edit-react/issues/172)
 - **1.22.5**: Fix for crash when trying to switch to object type if new data is rejected by `onUpdate` function [#169](https://github.com/CarlosNZ/json-edit-react/issues/169) (thanks @kyaw-t) [#170](https://github.com/CarlosNZ/json-edit-react/pulls/170)
 - **1.22.2**: Make `collapseAnimationTime` use local value rather than global CSS variable [#163](https://github.com/CarlosNZ/json-edit-react/issues/163)
 - **1.22.1**: Fix custom nodes not re-calculating condition when `data` changes
