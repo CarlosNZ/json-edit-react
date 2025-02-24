@@ -24,7 +24,7 @@ import {
   type KeyboardControls,
 } from './types'
 import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useTreeState } from './contexts'
-import { useData } from './hooks/useData'
+import { useData, useTriggers } from './hooks'
 import { getTranslateFunction } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
@@ -74,6 +74,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   TextEditor,
   errorMessageTimeout = 2500,
   keyboardControls = {},
+  externalTriggers,
   insertAtTop = false,
 }) => {
   const { getStyles } = useTheme()
@@ -279,6 +280,9 @@ const Editor: React.FC<JsonEditorProps> = ({
     [keyboardControls]
   )
 
+  const editConfirmRef = useRef<HTMLDivElement>(null)
+  useTriggers(externalTriggers, editConfirmRef)
+
   // Common "sort" method for ordering nodes, based on the `keySort` prop
   // - If it's false (the default), we do nothing
   // - If true, use default array sort on the node's key
@@ -351,6 +355,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       object: insertAtTop === true || insertAtTop === 'object',
       array: insertAtTop === true || insertAtTop === 'array',
     },
+    editConfirmRef,
   }
 
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }

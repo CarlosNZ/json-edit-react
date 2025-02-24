@@ -1,5 +1,6 @@
 import { type Options as AssignOptions } from 'object-property-assigner'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
+import { ExternalTriggers } from './hooks'
 
 export type JsonData = CollectionData | ValueData
 
@@ -49,6 +50,7 @@ export interface JsonEditorProps {
   TextEditor?: React.FC<TextEditorProps>
   errorMessageTimeout?: number // ms
   keyboardControls?: KeyboardControls
+  externalTriggers?: ExternalTriggers
   insertAtTop?: boolean | 'array' | 'object'
 }
 

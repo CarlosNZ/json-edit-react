@@ -11,7 +11,7 @@ import React, { createContext, useContext, useRef, useState } from 'react'
 import { type TabDirection, type CollectionKey } from '../types'
 import { toPathString } from '../helpers'
 
-interface CollapseAllState {
+export interface CollapseAllState {
   path: CollectionKey[]
   collapsed: boolean
 }

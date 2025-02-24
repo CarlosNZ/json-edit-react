@@ -28,6 +28,7 @@ interface EditButtonProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
+  editConfirmRef: React.RefObject<HTMLDivElement>
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
@@ -41,6 +42,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   translate,
   keyboardControls,
   handleKeyboard,
+  editConfirmRef,
 }) => {
   const { getStyles } = useTheme()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
@@ -188,6 +190,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
               setIsAdding(false)
             }}
             nodeData={nodeData}
+            editConfirmRef={editConfirmRef}
           />
         </>
       )}
@@ -199,10 +202,11 @@ export const InputButtons: React.FC<{
   onOk: (e: React.MouseEvent<HTMLElement>) => void
   onCancel: (e: React.MouseEvent<HTMLElement>) => void
   nodeData: NodeData
-}> = ({ onOk, onCancel, nodeData }) => {
+  editConfirmRef: React.RefObject<HTMLDivElement>
+}> = ({ onOk, onCancel, nodeData, editConfirmRef }) => {
   return (
     <div className="jer-confirm-buttons">
-      <div onClick={onOk}>
+      <div onClick={onOk} ref={editConfirmRef}>
         <Icon name="ok" nodeData={nodeData} />
       </div>
       <div onClick={onCancel}>
