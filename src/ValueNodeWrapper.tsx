@@ -167,7 +167,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         // that won't match the custom node condition any more
         customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
       )
-      onEdit(newValue, path).then((error) => {
+      console.log('Change data type', newValue)
+      onEdit(newValue, path, false).then((error) => {
         if (error) {
           onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
           setCurrentlyEditingElement(null)
@@ -196,15 +197,17 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       default:
         newValue = value
     }
+    console.log('Normal edit', newValue)
     onEdit(newValue, path).then((error) => {
       if (error) onError({ code: 'UPDATE_ERROR', message: error }, newValue)
     })
   }
 
   const handleCancel = () => {
+    console.log('previousValue', previousValue)
     setCurrentlyEditingElement(null)
     if (previousValue !== null) {
-      onEdit(previousValue, path)
+      onEdit(previousValue, path, false)
       return
     }
     setValue(data)

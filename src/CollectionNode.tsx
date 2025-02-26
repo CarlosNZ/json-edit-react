@@ -97,7 +97,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const { isEditing, isEditingKey, isArray, canEditKey } = derivedValues
 
   useEffect(() => {
-    console.log('Change', data)
     setStringifiedValue(jsonStringify(data))
     // if (isEditing) setCurrentlyEditingElement(null)
   }, [data])

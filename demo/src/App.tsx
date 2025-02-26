@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, lazy, Suspense } from 'react'
+import React, { useEffect, useRef, lazy, Suspense, useCallback } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -119,11 +119,17 @@ function App() {
 
   const [
     { present: data, past, future },
-    { set: setData, reset, undo: undoData, redo: redoData, canUndo, canRedo },
-  ] = useUndo(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data)
+    { set, reset, undo: undoData, redo: redoData, canUndo, canRedo },
+  ] = useUndo(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data, {
+    useCheckpoints: true,
+  })
   // Provides a named version of these methods (i.e undo.name = "undo")
   const undo = () => undoData()
   const redo = () => redoData()
+
+  console.log('Past', past)
+
+  const setData = useCallback((value: any, noUndo: boolean = false) => set(value, !noUndo), [set])
 
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
@@ -384,7 +390,7 @@ function App() {
               }
               // viewOnly
               restrictEdit={restrictEdit}
-              // restrictEdit={(nodeData) => typeof nodeData.value === 'object'}
+              // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
               restrictDelete={restrictDelete}
               restrictAdd={restrictAdd}
               restrictTypeSelection={dataDefinition?.restrictTypeSelection}
@@ -435,6 +441,7 @@ function App() {
               // ]}
               onChange={dataDefinition?.onChange ?? undefined}
               jsonParse={JSON5.parse}
+              // undo={undo}
               // keyboardControls={{
               //   cancel: 'Tab',
               //   confirm: { key: 'Enter', modifier: 'Meta' },
