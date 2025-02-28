@@ -168,7 +168,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
       )
       console.log('Change data type', newValue)
-      onEdit(newValue, path, false).then((error) => {
+      onEdit(newValue, path).then((error) => {
         if (error) {
           onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
           setCurrentlyEditingElement(null)
@@ -207,7 +207,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     console.log('previousValue', previousValue)
     setCurrentlyEditingElement(null)
     if (previousValue !== null) {
-      onEdit(previousValue, path, false)
+      onEdit(previousValue, path)
       return
     }
     setValue(data)

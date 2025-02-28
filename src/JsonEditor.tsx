@@ -109,18 +109,12 @@ const Editor: React.FC<JsonEditorProps> = ({
   // Common method for handling data update. It runs the updated data through
   // provided "onUpdate" function, then updates data state or returns error
   // information accordingly
-  const handleEdit = async (
-    updateMethod: UpdateFunction,
-    input: UpdateFunctionProps,
-    shouldUpdateUndo: boolean = true
-  ) => {
+  const handleEdit = async (updateMethod: UpdateFunction, input: UpdateFunctionProps) => {
     const result = await updateMethod(input)
 
-    // const shouldUpdateUndo = typeof input.newValue === typeof input.currentValue
-
     if (result === true || result === undefined) {
-      console.log('Setting', input.newValue, shouldUpdateUndo)
-      setData(input.newData, !shouldUpdateUndo)
+      console.log('Setting', input.newValue)
+      setData(input.newData)
       return
     }
 
@@ -135,28 +129,23 @@ const Editor: React.FC<JsonEditorProps> = ({
     setData(resultValue)
   }
 
-  const onEdit: InternalUpdateFunction = async (value, path, shouldUpdateUndo: boolean = true) => {
+  const onEdit: InternalUpdateFunction = async (value, path) => {
     const { currentData, newData, currentValue, newValue } = updateDataObject(
       data,
       path,
       value,
       'update'
     )
-    console.log('EDIT', value, shouldUpdateUndo)
-    if (currentValue === newValue && !shouldUpdateUndo) return
+    if (currentValue === newValue) return
 
-    return await handleEdit(
-      srcEdit,
-      {
-        currentData,
-        newData,
-        currentValue,
-        newValue,
-        name: path.slice(-1)[0],
-        path,
-      },
-      shouldUpdateUndo
-    )
+    return await handleEdit(srcEdit, {
+      currentData,
+      newData,
+      currentValue,
+      newValue,
+      name: path.slice(-1)[0],
+      path,
+    })
   }
 
   const onDelete: InternalUpdateFunction = async (value, path) => {

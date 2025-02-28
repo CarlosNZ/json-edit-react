@@ -6,7 +6,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 interface UseDataProps<T> {
-  setData?: (data: T, shouldUpdateUndo?: boolean) => void
+  setData?: (data: T) => void
   data: T
 }
 
@@ -14,8 +14,8 @@ export const useData = <T>({ setData, data }: UseDataProps<T>) => {
   const [localData, setLocalData] = useState<T | undefined>(setData ? undefined : data)
 
   const setDataMethod = useCallback(
-    (data: T, shouldUpdateUndo?: boolean) => {
-      if (setData) setData(data, shouldUpdateUndo)
+    (data: T) => {
+      if (setData) setData(data)
       else setLocalData(data)
     },
     [setData]
@@ -25,8 +25,5 @@ export const useData = <T>({ setData, data }: UseDataProps<T>) => {
     if (!setData) setLocalData(data)
   }, [data])
 
-  return [setData ? data : localData, setDataMethod] as [
-    T,
-    (data: T, shouldUpdateUndo?: boolean) => void
-  ]
+  return [setData ? data : localData, setDataMethod] as [T, (data: T) => void]
 }
