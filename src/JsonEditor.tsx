@@ -113,7 +113,6 @@ const Editor: React.FC<JsonEditorProps> = ({
     const result = await updateMethod(input)
 
     if (result === true || result === undefined) {
-      console.log('Setting', input.newValue)
       setData(input.newData)
       return
     }
