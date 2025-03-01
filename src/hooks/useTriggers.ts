@@ -32,11 +32,11 @@ export const useTriggers = (
 
     if (collapse) setCollapseState(collapse)
 
-    const isPathIncluded = edit?.path ? toPathString(edit.path) === currentlyEditingElement : true
+    const doesPathMatch = edit?.path ? toPathString(edit.path) === currentlyEditingElement : true
 
     switch (edit?.action) {
       case 'accept': {
-        if (isPathIncluded) {
+        if (doesPathMatch) {
           if (editConfirmRef.current) editConfirmRef.current.click()
           setCurrentlyEditingElement(null)
         }
@@ -44,7 +44,7 @@ export const useTriggers = (
         break
       }
       case 'cancel': {
-        if (isPathIncluded) setCurrentlyEditingElement(null)
+        if (doesPathMatch) setCurrentlyEditingElement(null)
         break
       }
       default: {
