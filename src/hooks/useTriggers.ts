@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useTreeState, type CollapseAllState } from '../contexts'
+import { useTreeState } from '../contexts'
 import { type CollectionKey } from '../types'
 import { toPathString } from '../helpers'
 
@@ -8,8 +8,14 @@ export interface EditState {
   action?: 'accept' | 'cancel'
 }
 
+export interface CollapseState {
+  path: CollectionKey[]
+  collapsed: boolean
+  includeChildren: boolean
+}
+
 export interface ExternalTriggers {
-  collapse?: CollapseAllState | CollapseAllState[]
+  collapse?: CollapseState | CollapseState[]
   edit?: EditState
 }
 
