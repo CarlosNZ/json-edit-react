@@ -29,6 +29,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     currentlyEditingElement,
     setCurrentlyEditingElement,
     areChildrenBeingEdited,
+    previousValue,
+    setPreviousValue,
   } = useTreeState()
   const {
     mainContainerRef,
@@ -188,6 +190,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     try {
       const value = jsonParse(stringifiedValue)
       setCurrentlyEditingElement(null)
+      setPreviousValue(null)
       setError(null)
       if (JSON.stringify(value) === JSON.stringify(data)) return
       onEdit(value, path).then((error) => {
@@ -235,8 +238,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   const handleCancel = () => {
     setCurrentlyEditingElement(null)
+    if (previousValue !== null) {
+      onEdit(previousValue, path)
+      return
+    }
     setError(null)
     setStringifiedValue(jsonStringify(data))
+    setPreviousValue(null)
   }
 
   const showLabel = showArrayIndices || !isArray
@@ -413,6 +421,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         canEdit
           ? () => {
               hasBeenOpened.current = true
+              setPreviousValue(null)
               setCurrentlyEditingElement(path)
             }
           : undefined
