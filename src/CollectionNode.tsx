@@ -183,7 +183,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     if (!(currentlyEditingElement && currentlyEditingElement.includes(pathString))) {
       hasBeenOpened.current = true
       setCollapseState(null)
-      if (onCollapse) onCollapse({ path, collapse: !collapsed, includeChildren: false })
+      if (onCollapse) onCollapse({ path, collapsed: !collapsed, includesChildren: false })
       animateCollapse(!collapsed)
     }
   }
