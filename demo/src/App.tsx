@@ -53,6 +53,7 @@ import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { version } from './version'
+import { ExternalTriggers } from './json-edit-react/src/types'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 
@@ -110,6 +111,9 @@ function App() {
     searchText: '',
     customTextEditor: false,
   })
+
+  const [triggerText, setTriggerText] = useState<string>('')
+  const [externalTriggers, setExternalTriggers] = useState<Record<string, any> | null>(null)
 
   const [isSaving, setIsSaving] = useState(false)
   const previousTheme = useRef<Theme>() // Used when resetting after theme editing
@@ -463,6 +467,7 @@ function App() {
                     )
                   : undefined
               }
+              externalTriggers={externalTriggers as ExternalTriggers | null}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>
@@ -512,6 +517,38 @@ function App() {
           <VStack backgroundColor="#f6f6f6" borderRadius={10} className="block-shadow">
             <FormControl>
               <VStack align="flex-start" m={4}>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Trigger Text
+                  </FormLabel>
+                  <Input
+                    id="dataNameInput"
+                    className="inputWidth"
+                    type="text"
+                    value={triggerText}
+                    onChange={(e) => setTriggerText(e.target.value)}
+                  />
+                  <Button
+                    onClick={() => {
+                      if (triggerText === '') {
+                        setExternalTriggers(null)
+                        return
+                      }
+                      try {
+                        const trigger = JSON.parse(triggerText)
+                        if (trigger === null || typeof trigger !== 'object') {
+                          console.log('Invalid input', trigger)
+                          return
+                        }
+                        setExternalTriggers(trigger)
+                      } catch (e) {
+                        console.log('Invalid string', e.message)
+                      }
+                    }}
+                  >
+                    Update
+                  </Button>
+                </HStack>
                 <HStack className="inputRow">
                   <FormLabel className="labelWidth" textAlign="right">
                     Demo data
