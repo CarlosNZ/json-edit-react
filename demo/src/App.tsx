@@ -127,8 +127,6 @@ function App() {
   const undo = () => undoData()
   const redo = () => redoData()
 
-  console.log('Past', past)
-
   const setData = useCallback((value: any, noUndo: boolean = false) => set(value, !noUndo), [set])
 
   useEffect(() => {
