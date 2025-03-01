@@ -463,6 +463,8 @@ function App() {
                     )
                   : undefined
               }
+              onEditEvent={(path) => console.log('Editing path', path)}
+              onCollapse={(input) => console.log('Collapse', input)}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>
