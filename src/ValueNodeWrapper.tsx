@@ -196,7 +196,6 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       default:
         newValue = value
     }
-    console.log('Normal edit', newValue)
     onEdit(newValue, path).then((error) => {
       if (error) onError({ code: 'UPDATE_ERROR', message: error }, newValue)
     })

@@ -89,7 +89,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'data',
-    collapse: 1,
+    collapse: 2,
     data: data.intro,
     customNodeDefinitions: [dateNodeDefinition],
     // restrictEdit: ({ key }) => key === 'number',
