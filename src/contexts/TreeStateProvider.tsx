@@ -1,6 +1,6 @@
 /**
  * Captures state that is required to be shared between nodes. In particular:
- * - global collapse state for triggering whole tree expansions/closures
+ * - global collapse state for triggering whole tree expansions/collapses
  * - the currently editing node (to ensure only one node at a time can be
  *   edited)
  * - the value of the node currently being dragged (so that the target it is

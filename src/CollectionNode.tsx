@@ -61,6 +61,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     handleKeyboard,
     insertAtTop,
     onCollapse,
+    editConfirmRef,
   } = props
   const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
 
@@ -331,7 +332,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         />
       )}
       <div className="jer-collection-input-button-row">
-        <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
+        <InputButtons
+          onOk={handleEdit}
+          onCancel={handleCancel}
+          nodeData={nodeData}
+          editConfirmRef={editConfirmRef}
+        />
       </div>
     </div>
   )
@@ -437,6 +443,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       customButtons={props.customButtons}
       keyboardControls={keyboardControls}
       handleKeyboard={handleKeyboard}
+      editConfirmRef={editConfirmRef}
     />
   )
 

@@ -260,6 +260,7 @@ interface BaseNodeProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
+  editConfirmRef: React.RefObject<HTMLDivElement>
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
