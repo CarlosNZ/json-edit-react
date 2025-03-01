@@ -17,7 +17,7 @@ import {
 } from '../types'
 import { toPathString } from '../helpers'
 
-interface CollapseAllState {
+export interface CollapseAllState {
   path: CollectionKey[]
   collapsed: boolean
 }
