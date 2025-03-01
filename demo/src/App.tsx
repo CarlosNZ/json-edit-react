@@ -119,15 +119,11 @@ function App() {
 
   const [
     { present: data, past, future },
-    { set, reset, undo: undoData, redo: redoData, canUndo, canRedo },
-  ] = useUndo(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data, {
-    useCheckpoints: true,
-  })
+    { set: setData, reset, undo: undoData, redo: redoData, canUndo, canRedo },
+  ] = useUndo(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data)
   // Provides a named version of these methods (i.e undo.name = "undo")
   const undo = () => undoData()
   const redo = () => redoData()
-
-  const setData = useCallback((value: any, noUndo: boolean = false) => set(value, !noUndo), [set])
 
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
@@ -439,7 +435,6 @@ function App() {
               // ]}
               onChange={dataDefinition?.onChange ?? undefined}
               jsonParse={JSON5.parse}
-              // undo={undo}
               // keyboardControls={{
               //   cancel: 'Tab',
               //   confirm: { key: 'Enter', modifier: 'Meta' },
