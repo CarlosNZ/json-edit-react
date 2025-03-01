@@ -8,7 +8,7 @@
  */
 
 import React, { createContext, useContext, useRef, useState } from 'react'
-import { type TabDirection, type CollectionKey, JsonData } from '../types'
+import { type TabDirection, type CollectionKey, type JsonData } from '../types'
 import { toPathString } from '../helpers'
 
 interface CollapseAllState {
