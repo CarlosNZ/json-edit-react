@@ -135,7 +135,7 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
         setCollapseState: (state) => {
           setCollapseState(state)
           if (onCollapse && state !== null)
-            onCollapse({ path: state.path, collapse: state.collapsed, includeChildren: true })
+            onCollapse({ path: state.path, collapsed: state.collapsed, includesChildren: true })
           // Reset after 2 seconds, which is enough time for all child nodes to
           // have opened/closed, but still allows collapse reset if data changes
           // externally

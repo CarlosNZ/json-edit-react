@@ -166,8 +166,8 @@ export type OnEditEventFunction = (path: CollectionKey[] | string | null) => voi
 
 export type OnCollapseFunction = (input: {
   path: CollectionKey[]
-  collapse: boolean
-  includeChildren: boolean
+  collapsed: boolean
+  includesChildren: boolean
 }) => void
 
 // Internal update
