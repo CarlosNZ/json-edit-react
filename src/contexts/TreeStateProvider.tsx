@@ -47,24 +47,8 @@ interface TreeStateContext {
   previousValue: JsonData | null
   setPreviousValue: (value: JsonData | null) => void
 }
-const initialContext: TreeStateContext = {
-  collapseState: null,
-  setCollapseState: () => {},
-  getMatchingCollapseState: () => null,
-  currentlyEditingElement: null,
-  setCurrentlyEditingElement: () => {},
-  previouslyEditedElement: null,
-  setPreviouslyEditedElement: () => {},
-  areChildrenBeingEdited: () => false,
-  dragSource: { path: null, pathString: null },
-  setDragSource: () => {},
-  tabDirection: 'next',
-  setTabDirection: () => {},
-  previousValue: null,
-  setPreviousValue: () => {},
-}
 
-const TreeStateProviderContext = createContext(initialContext)
+const TreeStateProviderContext = createContext<TreeStateContext | null>(null)
 
 interface TreeStateProps {
   children: React.ReactNode
@@ -188,4 +172,8 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
   )
 }
 
-export const useTreeState = () => useContext(TreeStateProviderContext)
+export const useTreeState = () => {
+  const context = useContext(TreeStateProviderContext)
+  if (!context) throw new Error('Must be used within Context Provider')
+  return context
+}
