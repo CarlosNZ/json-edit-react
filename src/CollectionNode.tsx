@@ -25,7 +25,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const {
     collapseState,
     setCollapseState,
-    doesPathMatch,
+    getMatchingCollapseState,
     currentlyEditingElement,
     setCurrentlyEditingElement,
     areChildrenBeingEdited,
@@ -112,9 +112,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   }, [collapseFilter])
 
   useEffect(() => {
-    if (collapseState !== null && doesPathMatch(path)) {
-      hasBeenOpened.current = true
-      animateCollapse(collapseState.collapsed)
+    if (collapseState !== null) {
+      const matchingCollapse = getMatchingCollapseState(path)
+      if (matchingCollapse) {
+        hasBeenOpened.current = true
+        animateCollapse(matchingCollapse.collapsed)
+      }
     }
   }, [collapseState])
 

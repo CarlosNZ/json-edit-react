@@ -26,17 +26,19 @@ export const useTriggers = (
   const { setCurrentlyEditingElement, currentlyEditingElement, setCollapseState } = useTreeState()
 
   useEffect(() => {
-    console.log('Trigger....')
+    // console.log('Trigger....')
     if (!triggers) return
 
-    console.log('Processing triggers', triggers)
+    // console.log('Processing triggers', triggers)
     const { collapse, edit } = triggers
 
-    if (Array.isArray(collapse)) {
-      return // For now
+    // COLLAPSE
+
+    if (collapse) {
+      setCollapseState(collapse)
     }
 
-    if (collapse) setCollapseState(collapse)
+    // EDIT
 
     const doesPathMatch = edit?.path ? toPathString(edit.path) === currentlyEditingElement : true
 

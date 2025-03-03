@@ -20,6 +20,7 @@ import { toPathString } from '../helpers'
 export interface CollapseAllState {
   path: CollectionKey[]
   collapsed: boolean
+  includeChildren?: boolean
 }
 
 export interface DragSource {
@@ -28,9 +29,9 @@ export interface DragSource {
 }
 
 interface TreeStateContext {
-  collapseState: CollapseAllState | null
-  setCollapseState: (collapseState: CollapseAllState | null) => void
-  doesPathMatch: (path: CollectionKey[]) => boolean
+  collapseState: CollapseAllState | CollapseAllState[] | null
+  setCollapseState: (collapseState: CollapseAllState | CollapseAllState[] | null) => void
+  getMatchingCollapseState: (path: CollectionKey[]) => CollapseAllState | null
   currentlyEditingElement: string | null
   setCurrentlyEditingElement: (
     path: CollectionKey[] | string | null,
@@ -49,7 +50,7 @@ interface TreeStateContext {
 const initialContext: TreeStateContext = {
   collapseState: null,
   setCollapseState: () => {},
-  doesPathMatch: () => false,
+  getMatchingCollapseState: () => null,
   currentlyEditingElement: null,
   setCurrentlyEditingElement: () => {},
   previouslyEditedElement: null,
@@ -72,7 +73,9 @@ interface TreeStateProps {
 }
 
 export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeStateProps) => {
-  const [collapseState, setCollapseState] = useState<CollapseAllState | null>(null)
+  const [collapseState, setCollapseState] = useState<CollapseAllState | CollapseAllState[] | null>(
+    null
+  )
   const [currentlyEditingElement, setCurrentlyEditingElement] = useState<string | null>(null)
 
   // This value holds the "previous" value when user changes type. Because
@@ -114,8 +117,25 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
     cancelOp.current = typeof newCancelOrKey === 'function' ? newCancelOrKey : null
   }
 
-  const doesPathMatch = (path: CollectionKey[]) => {
+  const getMatchingCollapseState = (path: CollectionKey[]) => {
+    if (Array.isArray(collapseState)) {
+      for (const cs of collapseState) {
+        if (pathMatchSingle(path, cs)) return cs
+      }
+      return null
+    }
+
+    return pathMatchSingle(path, collapseState) ? collapseState : null
+  }
+
+  const pathMatchSingle = (path: CollectionKey[], collapseState: CollapseAllState | null) => {
     if (collapseState === null) return false
+
+    if (!collapseState.includeChildren)
+      return (
+        collapseState.path.every((part, index) => path[index] === part) &&
+        collapseState.path.length === path.length
+      )
 
     for (const [index, value] of collapseState.path.entries()) {
       if (value !== path[index]) return false
@@ -141,7 +161,7 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
           // externally
           if (state !== null) setTimeout(() => setCollapseState(null), 2000)
         },
-        doesPathMatch,
+        getMatchingCollapseState,
         // Editing
         currentlyEditingElement,
         setCurrentlyEditingElement: updateCurrentlyEditingElement,
