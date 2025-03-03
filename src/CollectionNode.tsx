@@ -181,13 +181,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     const modifier = getModifier(e)
     if (modifier && keyboardControls.collapseModifier.includes(modifier)) {
       hasBeenOpened.current = true
-      setCollapseState({ collapsed: !collapsed, path })
+      setCollapseState({ collapsed: !collapsed, path, includeChildren: true })
       return
     }
     if (!(currentlyEditingElement && currentlyEditingElement.includes(pathString))) {
       hasBeenOpened.current = true
       setCollapseState(null)
-      if (onCollapse) onCollapse({ path, collapsed: !collapsed, includesChildren: false })
+      if (onCollapse) onCollapse({ path, collapsed: !collapsed, includeChildren: false })
       animateCollapse(!collapsed)
     }
   }

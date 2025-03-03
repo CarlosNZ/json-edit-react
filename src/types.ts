@@ -1,6 +1,7 @@
 import { type Options as AssignOptions } from 'object-property-assigner'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { ExternalTriggers } from './hooks'
+import { CollapseAllState } from './contexts'
 
 export type JsonData = CollectionData | ValueData
 
@@ -164,11 +165,7 @@ export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number
 
 export type OnEditEventFunction = (path: CollectionKey[] | string | null) => void
 
-export type OnCollapseFunction = (input: {
-  path: CollectionKey[]
-  collapsed: boolean
-  includesChildren: boolean
-}) => void
+export type OnCollapseFunction = (input: CollapseAllState) => void
 
 // Internal update
 export type InternalUpdateFunction = (
