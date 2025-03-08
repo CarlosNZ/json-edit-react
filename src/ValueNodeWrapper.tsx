@@ -54,6 +54,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setPreviouslyEditedElement,
     tabDirection,
     setTabDirection,
+    previousValue,
+    setPreviousValue,
   } = useTreeState()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
@@ -178,6 +180,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleEdit = () => {
     setCurrentlyEditingElement(null)
+    setPreviousValue(null)
     let newValue: JsonData
     switch (dataType) {
       case 'object':
@@ -202,7 +205,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleCancel = () => {
     setCurrentlyEditingElement(null)
+    if (previousValue !== null) {
+      onEdit(previousValue, path)
+      return
+    }
     setValue(data)
+    setPreviousValue(null)
   }
 
   const handleDelete = () => {
@@ -322,7 +330,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             showEditButtons && (
               <EditButtons
                 startEdit={
-                  canEdit ? () => setCurrentlyEditingElement(path, handleCancel) : undefined
+                  canEdit
+                    ? () => {
+                        setPreviousValue(value)
+                        setCurrentlyEditingElement(path, handleCancel)
+                      }
+                    : undefined
                 }
                 handleDelete={canDelete ? handleDelete : undefined}
                 enableClipboard={enableClipboard}

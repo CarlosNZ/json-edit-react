@@ -8,7 +8,7 @@
  */
 
 import React, { createContext, useContext, useRef, useState } from 'react'
-import { type TabDirection, type CollectionKey } from '../types'
+import { type TabDirection, type CollectionKey, type JsonData } from '../types'
 import { toPathString } from '../helpers'
 
 interface CollapseAllState {
@@ -37,6 +37,8 @@ interface TreeStateContext {
   setDragSource: (newState: DragSource) => void
   tabDirection: TabDirection
   setTabDirection: (dir: TabDirection) => void
+  previousValue: JsonData | null
+  setPreviousValue: (value: JsonData | null) => void
 }
 const initialContext: TreeStateContext = {
   collapseState: null,
@@ -51,6 +53,8 @@ const initialContext: TreeStateContext = {
   setDragSource: () => {},
   tabDirection: 'next',
   setTabDirection: () => {},
+  previousValue: null,
+  setPreviousValue: () => {},
 }
 
 const TreeStateProviderContext = createContext(initialContext)
@@ -58,6 +62,11 @@ const TreeStateProviderContext = createContext(initialContext)
 export const TreeStateProvider = ({ children }: { children: React.ReactNode }) => {
   const [collapseState, setCollapseState] = useState<CollapseAllState | null>(null)
   const [currentlyEditingElement, setCurrentlyEditingElement] = useState<string | null>(null)
+
+  // This value holds the "previous" value when user changes type. Because
+  // changing data type causes a proper data update, cancelling afterwards
+  // doesn't revert to the previous type. This value allows us to do that.
+  const [previousValue, setPreviousValue] = useState<JsonData | null>(null)
   const [dragSource, setDragSource] = useState<DragSource>({
     path: null,
     pathString: null,
@@ -130,6 +139,8 @@ export const TreeStateProvider = ({ children }: { children: React.ReactNode }) =
         setTabDirection: (dir: TabDirection) => {
           tabDirection.current = dir
         },
+        previousValue,
+        setPreviousValue,
         // Drag-n-drop
         dragSource,
         setDragSource,
