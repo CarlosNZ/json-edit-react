@@ -21,6 +21,7 @@ import { useTheme, useTreeState } from './contexts'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
 import { filterNode, getNextOrPrevious } from './helpers'
 import { useCommon, useDragNDrop } from './hooks'
+import { KeyDisplay } from './KeyDisplay'
 
 export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const {
@@ -113,6 +114,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     showEditTools = true,
     showOnEdit,
     showOnView,
+    passOriginalNode,
   } = customNodeData
 
   // Include custom node options in dataType list
@@ -222,8 +224,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const showErrorString = !isEditing && error
   const showTypeSelector = isEditing && allowedDataTypes.length > 0
   const showEditButtons = dataType !== 'invalid' && !error && showEditTools
-  const showKeyEdit = showLabel && isEditingKey
-  const showKey = showLabel && !isEditingKey && !hideKey
+  const showKey = showLabel && !hideKey
   const showCustomNode = CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
   const inputProps = {
@@ -264,6 +265,20 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     },
   }
 
+  const keyDisplayProps = {
+    canEditKey,
+    isEditingKey,
+    pathString,
+    path,
+    name: name as string,
+    handleKeyboard,
+    handleEditKey,
+    handleCancel,
+    styles: getStyles('property', nodeData),
+    getNextOrPrevious: (type: 'next' | 'prev') =>
+      getNextOrPrevious(nodeData.fullData, path, type, sort),
+  }
+
   const ValueComponent = showCustomNode ? (
     <CustomNode
       {...props}
@@ -278,6 +293,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       isEditing={isEditing}
       setIsEditing={() => setCurrentlyEditingElement(path)}
       getStyles={getStyles}
+      originalNode={passOriginalNode ? getInputComponent(data, inputProps) : undefined}
+      originalNodeKey={passOriginalNode ? <KeyDisplay {...keyDisplayProps} /> : undefined}
     />
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones
@@ -304,52 +321,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
           flexWrap: (name as string).length > 10 ? 'wrap' : 'nowrap',
         }}
       >
-        {showKey && (
-          <span
-            className="jer-key-text"
-            style={{
-              ...getStyles('property', nodeData),
-              minWidth: `${Math.min(String(name).length + 1, 5)}ch`,
-              flexShrink: (name as string).length > 10 ? 1 : 0,
-            }}
-            onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
-          >
-            {name === '' ? (
-              <span className={path.length > 0 ? 'jer-empty-string' : undefined}>
-                {/* display "<empty string>" using pseudo class CSS */}
-              </span>
-            ) : (
-              `${name}:`
-            )}
-          </span>
-        )}
-        {showKeyEdit && (
-          <input
-            className="jer-input-text jer-key-edit"
-            type="text"
-            name={pathString}
-            defaultValue={name}
-            autoFocus
-            onFocus={(e) => e.target.select()}
-            onKeyDown={(e: React.KeyboardEvent) =>
-              handleKeyboard(e, {
-                stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
-                cancel: handleCancel,
-                tabForward: () => {
-                  handleEditKey((e.target as HTMLInputElement).value)
-                  setCurrentlyEditingElement(path)
-                },
-                tabBack: () => {
-                  handleEditKey((e.target as HTMLInputElement).value)
-                  setCurrentlyEditingElement(
-                    getNextOrPrevious(nodeData.fullData, path, 'prev', sort)
-                  )
-                },
-              })
-            }
-            style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
-          />
-        )}
+        {showKey && <KeyDisplay {...keyDisplayProps} />}
         <div className="jer-value-and-buttons">
           <div className="jer-input-component">{ValueComponent}</div>
           {isEditing ? (
