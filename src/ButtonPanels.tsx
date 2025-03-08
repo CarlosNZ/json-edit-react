@@ -170,6 +170,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             name="new-object-key"
             value={newKey}
             onChange={(e) => setNewKey(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
             autoFocus
             onFocus={(e) => e.target.select()}
             onKeyDown={handleKeyPress}
