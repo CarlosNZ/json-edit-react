@@ -294,6 +294,20 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     getInputComponent(data, inputProps)
   )
 
+  const keyDisplayProps = {
+    canEditKey,
+    isEditingKey,
+    pathString,
+    path,
+    name: name as string,
+    handleKeyboard,
+    handleEditKey,
+    handleCancel,
+    styles: getStyles('property', nodeData),
+    getNextOrPrevious: (type: 'next' | 'prev') =>
+      getNextOrPrevious(nodeData.fullData, path, type, sort),
+  }
+
   return (
     <div
       className="jer-component jer-value-component"
