@@ -414,7 +414,22 @@ function App() {
               maxWidth="min(670px, 90vw)"
               className="block-shadow"
               stringTruncate={90}
-              customNodeDefinitions={dataDefinition?.customNodeDefinitions}
+              // customNodeDefinitions={dataDefinition?.customNodeDefinitions}
+              customNodeDefinitions={[
+                {
+                  condition: ({ key }) => key === 'string',
+                  element: ({ value, originalNode, originalKeyNode }) => (
+                    <div style={{ display: 'flex' }}>
+                      {originalKeyNode}
+                      <span>ICON</span>
+                      {originalNode}
+                    </div>
+                  ),
+                  hideKey: true,
+                  passOriginalNode: true,
+                  showOnEdit: true,
+                },
+              ]}
               customText={dataDefinition?.customTextDefinitions}
               // icons={{ chevron: <IconCancel size="1.2em" /> }}
               // customButtons={[

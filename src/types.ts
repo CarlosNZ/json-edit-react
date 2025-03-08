@@ -285,6 +285,8 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
   children?: JSX.Element | JSX.Element[] | null
+  originalNode?: JSX.Element
+  originalKeyNode?: JSX.Element
 }
 
 export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<string, unknown>> {
@@ -298,6 +300,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   showOnEdit?: boolean // default false
   showOnView?: boolean // default true
   showEditTools?: boolean // default true
+  passOriginalNode?: boolean // default false
 
   // For collection nodes only:
   showCollectionWrapper?: boolean // default true
