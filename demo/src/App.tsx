@@ -415,6 +415,29 @@ function App() {
               className="block-shadow"
               stringTruncate={90}
               customNodeDefinitions={dataDefinition?.customNodeDefinitions}
+              // customNodeDefinitions={[
+              //   {
+              //     condition: ({ key }) => key === 'string',
+              //     element: ({ nodeData, value, originalNode, originalNodeKey }) => (
+              //       <div
+              //         style={{
+              //           display: 'flex',
+              //           // border: '1px solid red',
+              //           margin: '-0.5em',
+              //           alignItems: 'center',
+              //         }}
+              //       >
+              //         {originalNodeKey}
+              //         {/* {nodeData.key} */}
+              //         <span>ICON</span>:{' '}
+              //         <span style={{ lineHeight: 'unset !important' }}>{originalNode}</span>
+              //       </div>
+              //     ),
+              //     hideKey: true,
+              //     passOriginalNode: true,
+              //     showOnEdit: true,
+              //   },
+              // ]}
               customText={dataDefinition?.customTextDefinitions}
               // icons={{ chevron: <IconCancel size="1.2em" /> }}
               // customButtons={[
