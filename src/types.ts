@@ -286,7 +286,7 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
   children?: JSX.Element | JSX.Element[] | null
   originalNode?: JSX.Element
-  originalKeyNode?: JSX.Element
+  originalNodeKey?: JSX.Element
 }
 
 export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<string, unknown>> {

@@ -257,6 +257,20 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     },
   }
 
+  const keyDisplayProps = {
+    canEditKey,
+    isEditingKey,
+    pathString,
+    path,
+    name: name as string,
+    handleKeyboard,
+    handleEditKey,
+    handleCancel,
+    styles: getStyles('property', nodeData),
+    getNextOrPrevious: (type: 'next' | 'prev') =>
+      getNextOrPrevious(nodeData.fullData, path, type, sort),
+  }
+
   const ValueComponent = showCustomNode ? (
     <CustomNode
       {...props}
@@ -272,27 +286,13 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       setIsEditing={() => setCurrentlyEditingElement(path)}
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, inputProps) : undefined}
-      originalKeyNode={passOriginalNode ? KeyDisplay : undefined}
+      originalNodeKey={passOriginalNode ? <KeyDisplay {...keyDisplayProps} /> : undefined}
     />
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones
     // when fetching a non-custom component
     getInputComponent(data, inputProps)
   )
-
-  const keyDisplayProps = {
-    canEditKey,
-    isEditingKey,
-    pathString,
-    path,
-    name: name as string,
-    handleKeyboard,
-    handleEditKey,
-    handleCancel,
-    styles: getStyles('property', nodeData),
-    getNextOrPrevious: (type: 'next' | 'prev') =>
-      getNextOrPrevious(nodeData.fullData, path, type, sort),
-  }
 
   return (
     <div

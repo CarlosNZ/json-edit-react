@@ -414,22 +414,30 @@ function App() {
               maxWidth="min(670px, 90vw)"
               className="block-shadow"
               stringTruncate={90}
-              // customNodeDefinitions={dataDefinition?.customNodeDefinitions}
-              customNodeDefinitions={[
-                {
-                  condition: ({ key }) => key === 'string',
-                  element: ({ value, originalNode, originalKeyNode }) => (
-                    <div style={{ display: 'flex' }}>
-                      {originalKeyNode}
-                      <span>ICON</span>
-                      {originalNode}
-                    </div>
-                  ),
-                  hideKey: true,
-                  passOriginalNode: true,
-                  showOnEdit: true,
-                },
-              ]}
+              customNodeDefinitions={dataDefinition?.customNodeDefinitions}
+              // customNodeDefinitions={[
+              //   {
+              //     condition: ({ key }) => key === 'string',
+              //     element: ({ nodeData, value, originalNode, originalNodeKey }) => (
+              //       <div
+              //         style={{
+              //           display: 'flex',
+              //           // border: '1px solid red',
+              //           margin: '-0.5em',
+              //           alignItems: 'center',
+              //         }}
+              //       >
+              //         {originalNodeKey}
+              //         {/* {nodeData.key} */}
+              //         <span>ICON</span>:{' '}
+              //         <span style={{ lineHeight: 'unset !important' }}>{originalNode}</span>
+              //       </div>
+              //     ),
+              //     hideKey: true,
+              //     passOriginalNode: true,
+              //     showOnEdit: true,
+              //   },
+              // ]}
               customText={dataDefinition?.customTextDefinitions}
               // icons={{ chevron: <IconCancel size="1.2em" /> }}
               // customButtons={[

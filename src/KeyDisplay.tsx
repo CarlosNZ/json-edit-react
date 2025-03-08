@@ -54,8 +54,9 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
             {/* display "<empty string>" using pseudo class CSS */}
           </span>
         ) : (
-          `${name}:`
+          `${name}`
         )}
+        <span className="jer-key-colon">:</span>
       </span>
     )
 
