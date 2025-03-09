@@ -175,6 +175,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const handleCollapse = (e: React.MouseEvent) => {
+    e.stopPropagation()
     const modifier = getModifier(e)
     if (modifier && keyboardControls.collapseModifier.includes(modifier)) {
       hasBeenOpened.current = true
