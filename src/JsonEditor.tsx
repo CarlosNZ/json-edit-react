@@ -77,6 +77,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   externalTriggers,
   insertAtTop = false,
   onCollapse,
+  collapseClickZones = ['header', 'left'],
 }) => {
   const { getStyles } = useTheme()
   const { setCurrentlyEditingElement } = useTreeState()
@@ -358,6 +359,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     },
     onCollapse,
     editConfirmRef,
+    collapseClickZones,
   }
 
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }

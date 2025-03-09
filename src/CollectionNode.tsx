@@ -17,6 +17,7 @@ import {
   isCollection,
 } from './helpers'
 import { AutogrowTextArea } from './AutogrowTextArea'
+import { KeyDisplay } from './KeyDisplay'
 import { useTheme, useTreeState } from './contexts'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
@@ -62,6 +63,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     insertAtTop,
     onCollapse,
     editConfirmRef,
+    collapseClickZones,
   } = props
   const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
 
@@ -178,6 +180,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const handleCollapse = (e: React.MouseEvent) => {
+    e.stopPropagation()
     const modifier = getModifier(e)
     if (modifier && keyboardControls.collapseModifier.includes(modifier)) {
       hasBeenOpened.current = true
@@ -378,54 +381,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     CollectionChildren
   )
 
-  const KeyDisplay = isEditingKey ? (
-    <input
-      className="jer-input-text jer-key-edit"
-      type="text"
-      name={pathString}
-      defaultValue={name}
-      autoFocus
-      onFocus={(e) => e.target.select()}
-      onKeyDown={(e) =>
-        handleKeyboard(e, {
-          stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
-          cancel: handleCancel,
-          tabForward: () => {
-            handleEditKey((e.target as HTMLInputElement).value)
-            const firstChildKey = keyValueArray?.[0][0]
-            setCurrentlyEditingElement(
-              firstChildKey
-                ? [...path, firstChildKey]
-                : getNextOrPrevious(nodeData.fullData, path, 'next', sort)
-            )
-          },
-          tabBack: () => {
-            handleEditKey((e.target as HTMLInputElement).value)
-            setCurrentlyEditingElement(getNextOrPrevious(nodeData.fullData, path, 'prev', sort))
-          },
-        })
-      }
-      style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
-    />
-  ) : (
-    showKey && (
-      <span
-        className="jer-key-text"
-        style={getStyles('property', nodeData)}
-        onClick={(e) => e.stopPropagation()}
-        onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
-      >
-        {name === '' ? (
-          <span className={path.length > 0 ? 'jer-empty-string' : undefined}>
-            {/* display "<empty string>" using pseudo class CSS */}
-          </span>
-        ) : (
-          `${name}:`
-        )}
-      </span>
-    )
-  )
-
   const EditButtonDisplay = showEditButtons && (
     <EditButtons
       startEdit={
@@ -450,6 +405,27 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     />
   )
 
+  const keyDisplayProps = {
+    canEditKey,
+    isEditingKey,
+    pathString,
+    path,
+    name: name as string,
+    handleKeyboard,
+    handleEditKey,
+    handleCancel,
+    keyValueArray,
+    styles: getStyles('property', nodeData),
+    getNextOrPrevious: (type: 'next' | 'prev') =>
+      getNextOrPrevious(nodeData.fullData, path, type, sort),
+    handleClick: collapseClickZones.includes('property')
+      ? handleCollapse
+      : // The "property" area is technically part of the "header" div, so this
+        // prevents clicks being passed through when "property" is not enabled
+        // but "header" is
+        (e: React.MouseEvent) => e.stopPropagation(),
+  }
+
   const CollectionNodeComponent = (
     <div
       className="jer-component jer-collection-component"
@@ -468,7 +444,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           width: `${indent / 2 + 1}em`,
           zIndex: 10 + nodeData.level * 2,
         }}
-        onClick={(e) => handleCollapse(e)}
+        onClick={collapseClickZones.includes('left') ? handleCollapse : undefined}
       />
       {!isEditing && BottomDropTarget}
       <DropTargetPadding position="above" nodeData={nodeData} />
@@ -476,17 +452,17 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         <div
           className="jer-collection-header-row"
           style={{ position: 'relative' }}
-          onClick={(e) => handleCollapse(e)}
+          onClick={collapseClickZones.includes('header') ? handleCollapse : undefined}
         >
           <div className="jer-collection-name">
             <div
               className={`jer-collapse-icon jer-accordion-icon${collapsed ? ' jer-rotate-90' : ''}`}
               style={{ zIndex: 11 + nodeData.level * 2, transition: cssTransitionValue }}
-              onClick={(e) => handleCollapse(e)}
+              onClick={handleCollapse}
             >
               <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
             </div>
-            {KeyDisplay}
+            {showKey && <KeyDisplay {...keyDisplayProps} />}
             {!isEditing && (
               <span
                 className="jer-brackets jer-bracket-open"
@@ -518,7 +494,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         <></>
       ) : (
         <div className="jer-collection-header-row" style={{ position: 'relative' }}>
-          {KeyDisplay}
+          <KeyDisplay {...keyDisplayProps} />
           {EditButtonDisplay}
         </div>
       )}

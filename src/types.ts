@@ -53,6 +53,7 @@ export interface JsonEditorProps {
   keyboardControls?: KeyboardControls
   externalTriggers?: ExternalTriggers
   insertAtTop?: boolean | 'array' | 'object'
+  collapseClickZones?: Array<'left' | 'header' | 'property'>
   // Additional events
   onEditEvent?: OnEditEventFunction
   onCollapse?: OnCollapseFunction
@@ -163,7 +164,7 @@ export type CompareFunction = (
 
 export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
 
-export type OnEditEventFunction = (path: CollectionKey[] | string | null) => void
+export type OnEditEventFunction = (path: CollectionKey[] | string | null, isKey: boolean) => void
 
 export type OnCollapseFunction = (input: CollapseAllState) => void
 
@@ -275,6 +276,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   insertAtTop: { object: boolean; array: boolean }
   TextEditor?: React.FC<TextEditorProps>
   onCollapse?: OnCollapseFunction
+  collapseClickZones: Array<'left' | 'header' | 'property'>
 }
 
 export type ValueData = string | number | boolean
@@ -297,6 +299,8 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
   children?: JSX.Element | JSX.Element[] | null
+  originalNode?: JSX.Element
+  originalNodeKey?: JSX.Element
 }
 
 export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<string, unknown>> {
@@ -310,6 +314,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   showOnEdit?: boolean // default false
   showOnView?: boolean // default true
   showEditTools?: boolean // default true
+  passOriginalNode?: boolean // default false
 
   // For collection nodes only:
   showCollectionWrapper?: boolean // default true
