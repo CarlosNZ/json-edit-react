@@ -160,7 +160,7 @@ export type CompareFunction = (
 
 export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
 
-export type OnEditEventFunction = (path: CollectionKey[] | string | null) => void
+export type OnEditEventFunction = (path: CollectionKey[] | string | null, isKey: boolean) => void
 
 export type OnCollapseFunction = (input: {
   path: CollectionKey[]

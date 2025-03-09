@@ -486,7 +486,7 @@ function App() {
                     )
                   : undefined
               }
-              onEditEvent={(path) => console.log('Editing path', path)}
+              onEditEvent={(path, isKey) => console.log('Editing path', path, isKey)}
               onCollapse={(input) => console.log('Collapse', input)}
             />
           </Box>
