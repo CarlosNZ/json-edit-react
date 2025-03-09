@@ -488,6 +488,7 @@ function App() {
               }
               onEditEvent={(path, isKey) => console.log('Editing path', path, isKey)}
               onCollapse={(input) => console.log('Collapse', input)}
+              // collapseClickZones={['property', 'header']}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>

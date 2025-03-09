@@ -76,6 +76,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   keyboardControls = {},
   insertAtTop = false,
   onCollapse,
+  collapseClickZones = ['header', 'left'],
 }) => {
   const { getStyles } = useTheme()
   const { setCurrentlyEditingElement } = useTreeState()
@@ -353,6 +354,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       array: insertAtTop === true || insertAtTop === 'array',
     },
     onCollapse,
+    collapseClickZones,
   }
 
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }

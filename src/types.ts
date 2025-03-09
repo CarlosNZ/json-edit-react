@@ -50,6 +50,7 @@ export interface JsonEditorProps {
   errorMessageTimeout?: number // ms
   keyboardControls?: KeyboardControls
   insertAtTop?: boolean | 'array' | 'object'
+  collapseClickZones?: Array<'left' | 'header' | 'property'>
   // Additional events
   onEditEvent?: OnEditEventFunction
   onCollapse?: OnCollapseFunction
@@ -275,6 +276,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   insertAtTop: { object: boolean; array: boolean }
   TextEditor?: React.FC<TextEditorProps>
   onCollapse?: OnCollapseFunction
+  collapseClickZones: Array<'left' | 'header' | 'property'>
 }
 
 export type ValueData = string | number | boolean

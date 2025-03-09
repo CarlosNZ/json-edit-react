@@ -62,6 +62,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     handleKeyboard,
     insertAtTop,
     onCollapse,
+    collapseClickZones,
   } = props
   const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
 
@@ -407,6 +408,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     styles: getStyles('property', nodeData),
     getNextOrPrevious: (type: 'next' | 'prev') =>
       getNextOrPrevious(nodeData.fullData, path, type, sort),
+    handleClick: collapseClickZones.includes('property')
+      ? handleCollapse
+      : (e: React.MouseEvent) => e.stopPropagation(),
   }
 
   const CollectionNodeComponent = (
@@ -427,7 +431,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           width: `${indent / 2 + 1}em`,
           zIndex: 10 + nodeData.level * 2,
         }}
-        onClick={(e) => handleCollapse(e)}
+        onClick={collapseClickZones.includes('left') ? handleCollapse : undefined}
       />
       {!isEditing && BottomDropTarget}
       <DropTargetPadding position="above" nodeData={nodeData} />
@@ -435,13 +439,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         <div
           className="jer-collection-header-row"
           style={{ position: 'relative' }}
-          onClick={(e) => handleCollapse(e)}
+          onClick={collapseClickZones.includes('header') ? handleCollapse : undefined}
         >
           <div className="jer-collection-name">
             <div
               className={`jer-collapse-icon jer-accordion-icon${collapsed ? ' jer-rotate-90' : ''}`}
               style={{ zIndex: 11 + nodeData.level * 2, transition: cssTransitionValue }}
-              onClick={(e) => handleCollapse(e)}
+              onClick={handleCollapse}
             >
               <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
             </div>

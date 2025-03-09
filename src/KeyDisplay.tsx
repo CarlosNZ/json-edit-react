@@ -18,6 +18,7 @@ interface KeyDisplayProps {
   ) => void
   handleEditKey: (newKey: string) => void
   handleCancel: () => void
+  handleClick?: (e: React.MouseEvent) => void
   keyValueArray?: Array<[string | number, ValueData]>
   styles: React.CSSProperties
   getNextOrPrevious: (type: 'next' | 'prev') => CollectionKey[] | null
@@ -32,6 +33,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   handleKeyboard,
   handleEditKey,
   handleCancel,
+  handleClick,
   keyValueArray,
   styles,
   getNextOrPrevious,
@@ -48,6 +50,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
           flexShrink: name.length > 10 ? 1 : 0,
         }}
         onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
+        onClick={handleClick}
       >
         {name === '' ? (
           <span className={path.length > 0 ? 'jer-empty-string' : undefined}>
