@@ -8,7 +8,13 @@
  */
 
 import React, { createContext, useContext, useRef, useState } from 'react'
-import { type TabDirection, type CollectionKey, type JsonData } from '../types'
+import {
+  type TabDirection,
+  type CollectionKey,
+  type JsonData,
+  type OnEditEventFunction,
+  type OnCollapseFunction,
+} from '../types'
 import { toPathString } from '../helpers'
 
 interface CollapseAllState {
@@ -59,7 +65,13 @@ const initialContext: TreeStateContext = {
 
 const TreeStateProviderContext = createContext(initialContext)
 
-export const TreeStateProvider = ({ children }: { children: React.ReactNode }) => {
+interface TreeStateProps {
+  children: React.ReactNode
+  onEditEvent?: OnEditEventFunction
+  onCollapse?: OnCollapseFunction
+}
+
+export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeStateProps) => {
   const [collapseState, setCollapseState] = useState<CollapseAllState | null>(null)
   const [currentlyEditingElement, setCurrentlyEditingElement] = useState<string | null>(null)
 
@@ -98,6 +110,7 @@ export const TreeStateProvider = ({ children }: { children: React.ReactNode }) =
       cancelOp.current()
     }
     setCurrentlyEditingElement(pathString)
+    if (onEditEvent) onEditEvent(path, newCancelOrKey === 'key')
     cancelOp.current = typeof newCancelOrKey === 'function' ? newCancelOrKey : null
   }
 
@@ -121,6 +134,8 @@ export const TreeStateProvider = ({ children }: { children: React.ReactNode }) =
         collapseState,
         setCollapseState: (state) => {
           setCollapseState(state)
+          if (onCollapse && state !== null)
+            onCollapse({ path: state.path, collapsed: state.collapsed, includesChildren: true })
           // Reset after 2 seconds, which is enough time for all child nodes to
           // have opened/closed, but still allows collapse reset if data changes
           // externally

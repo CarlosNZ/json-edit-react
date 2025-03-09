@@ -75,6 +75,8 @@ const Editor: React.FC<JsonEditorProps> = ({
   errorMessageTimeout = 2500,
   keyboardControls = {},
   insertAtTop = false,
+  onCollapse,
+  collapseClickZones = ['header', 'left'],
 }) => {
   const { getStyles } = useTheme()
   const { setCurrentlyEditingElement } = useTreeState()
@@ -351,6 +353,8 @@ const Editor: React.FC<JsonEditorProps> = ({
       object: insertAtTop === true || insertAtTop === 'object',
       array: insertAtTop === true || insertAtTop === 'array',
     },
+    onCollapse,
+    collapseClickZones,
   }
 
   const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }
@@ -393,7 +397,7 @@ export const JsonEditor: React.FC<JsonEditorProps> = (props) => {
 
   return (
     <ThemeProvider theme={props.theme ?? defaultTheme} icons={props.icons} docRoot={docRoot}>
-      <TreeStateProvider>
+      <TreeStateProvider onEditEvent={props.onEditEvent} onCollapse={props.onCollapse}>
         <Editor {...props} />
       </TreeStateProvider>
     </ThemeProvider>

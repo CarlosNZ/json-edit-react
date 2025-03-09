@@ -50,6 +50,10 @@ export interface JsonEditorProps {
   errorMessageTimeout?: number // ms
   keyboardControls?: KeyboardControls
   insertAtTop?: boolean | 'array' | 'object'
+  collapseClickZones?: Array<'left' | 'header' | 'property'>
+  // Additional events
+  onEditEvent?: OnEditEventFunction
+  onCollapse?: OnCollapseFunction
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -157,6 +161,14 @@ export type CompareFunction = (
 
 export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
 
+export type OnEditEventFunction = (path: CollectionKey[] | string | null, isKey: boolean) => void
+
+export type OnCollapseFunction = (input: {
+  path: CollectionKey[]
+  collapsed: boolean
+  includesChildren: boolean
+}) => void
+
 // Internal update
 export type InternalUpdateFunction = (
   value: unknown,
@@ -263,6 +275,8 @@ export interface CollectionNodeProps extends BaseNodeProps {
   jsonStringify: (data: JsonData) => string
   insertAtTop: { object: boolean; array: boolean }
   TextEditor?: React.FC<TextEditorProps>
+  onCollapse?: OnCollapseFunction
+  collapseClickZones: Array<'left' | 'header' | 'property'>
 }
 
 export type ValueData = string | number | boolean
