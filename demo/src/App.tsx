@@ -486,8 +486,8 @@ function App() {
                     )
                   : undefined
               }
-              onEditEvent={(path, isKey) => console.log('Editing path', path, isKey)}
-              onCollapse={(input) => console.log('Collapse', input)}
+              // onEditEvent={(path, isKey) => console.log('Editing path', path, isKey)}
+              // onCollapse={(input) => console.log('Collapse', input)}
               // collapseClickZones={['property', 'header']}
             />
           </Box>

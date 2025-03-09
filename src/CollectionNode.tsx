@@ -410,7 +410,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       getNextOrPrevious(nodeData.fullData, path, type, sort),
     handleClick: collapseClickZones.includes('property')
       ? handleCollapse
-      : (e: React.MouseEvent) => e.stopPropagation(),
+      : // The "property" area is technically part of the "header" div, so this
+        // prevents clicks being passed through when "property" is not enabled
+        // but "header" is
+        (e: React.MouseEvent) => e.stopPropagation(),
   }
 
   const CollectionNodeComponent = (
