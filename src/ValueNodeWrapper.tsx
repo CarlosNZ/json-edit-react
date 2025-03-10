@@ -160,7 +160,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       setDataType(type)
       // Custom nodes will be instantiated expanded and NOT editing
       setCurrentlyEditingElement(null)
-      setCollapseState({ path, collapsed: false })
+      setCollapseState({ path, collapsed: false, includeChildren: false })
     } else {
       const newValue = convertValue(
         value,

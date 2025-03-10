@@ -14,14 +14,9 @@ import {
   type JsonData,
   type OnEditEventFunction,
   type OnCollapseFunction,
+  type CollapseState,
 } from '../types'
 import { toPathString } from '../helpers'
-
-export interface CollapseAllState {
-  path: CollectionKey[]
-  collapsed: boolean
-  includeChildren?: boolean
-}
 
 export interface DragSource {
   path: CollectionKey[] | null
@@ -29,9 +24,9 @@ export interface DragSource {
 }
 
 interface TreeStateContext {
-  collapseState: CollapseAllState | CollapseAllState[] | null
-  setCollapseState: (collapseState: CollapseAllState | CollapseAllState[] | null) => void
-  getMatchingCollapseState: (path: CollectionKey[]) => CollapseAllState | null
+  collapseState: CollapseState | CollapseState[] | null
+  setCollapseState: (collapseState: CollapseState | CollapseState[] | null) => void
+  getMatchingCollapseState: (path: CollectionKey[]) => CollapseState | null
   currentlyEditingElement: string | null
   setCurrentlyEditingElement: (
     path: CollectionKey[] | string | null,
@@ -57,9 +52,7 @@ interface TreeStateProps {
 }
 
 export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeStateProps) => {
-  const [collapseState, setCollapseState] = useState<CollapseAllState | CollapseAllState[] | null>(
-    null
-  )
+  const [collapseState, setCollapseState] = useState<CollapseState | CollapseState[] | null>(null)
   const [currentlyEditingElement, setCurrentlyEditingElement] = useState<string | null>(null)
 
   // This value holds the "previous" value when user changes type. Because
@@ -112,7 +105,7 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
     return pathMatchSingle(path, collapseState) ? collapseState : null
   }
 
-  const pathMatchSingle = (path: CollectionKey[], collapseState: CollapseAllState | null) => {
+  const pathMatchSingle = (path: CollectionKey[], collapseState: CollapseState | null) => {
     if (collapseState === null) return false
 
     if (!collapseState.includeChildren)

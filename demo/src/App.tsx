@@ -16,6 +16,7 @@ import {
   monoDarkTheme,
   candyWrapperTheme,
   psychedelicTheme,
+  // type CollapseState
 } from './_imports'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
@@ -53,7 +54,6 @@ import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { version } from './version'
-import { ExternalTriggers } from './json-edit-react/src/types'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 
@@ -112,8 +112,10 @@ function App() {
     customTextEditor: false,
   })
 
-  const [triggerText, setTriggerText] = useState<string>('')
-  const [externalTriggers, setExternalTriggers] = useState<Record<string, any> | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+
+  // const collapseState = useRef<Record<string, CollapseState>>({})
+  // const [collapseData, setCollapseData] = useState<CollapseState[]>()
 
   const [isSaving, setIsSaving] = useState(false)
   const previousTheme = useRef<Theme>() // Used when resetting after theme editing
@@ -132,6 +134,19 @@ function App() {
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
   }, [loading, liveData, reset, selectedDataSet])
+
+  // useEffect(() => {
+  //   const localStorageState = localStorage.getItem('collapseState')
+  //   if (localStorageState) {
+  //     setTimeout(() => {
+  //       const data = JSON.parse(localStorageState) as Record<string, CollapseState>
+  //       collapseState.current = data
+  //       const collapseArray = Object.values(data)
+  //       setCollapseData(collapseArray)
+  //       // console.log('collapseArray', collapseArray)
+  //     }, 500)
+  //   }
+  // }, [])
 
   const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
 
@@ -490,10 +505,15 @@ function App() {
                     )
                   : undefined
               }
-              onEditEvent={(path, isKey) => console.log('Editing path', path, isKey)}
-              onCollapse={(input) => console.log('Collapse', input)}
-              externalTriggers={externalTriggers as ExternalTriggers | null}
               // collapseClickZones={['property', 'header']}
+              onEditEvent={(path) => setIsEditing(path ? true : false)}
+              // onCollapse={(input) => {
+              //   const path = JSON.stringify(input.path)
+              //   const newCollapseState = { ...collapseState.current, [path]: input }
+              //   collapseState.current = newCollapseState
+              //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
+              // }}
+              // externalTriggers={{ collapse: collapseData }}
             />
           </Box>
           <VStack w="100%" align="flex-end" gap={4}>
@@ -530,6 +550,7 @@ function App() {
                 onClick={handleReset}
                 visibility={canUndo ? 'visible' : 'hidden'}
                 isLoading={isSaving}
+                isDisabled={isEditing}
               >
                 {selectedDataSet === 'liveData' ? 'Push to the cloud' : 'Reset'}
               </Button>
@@ -543,38 +564,6 @@ function App() {
           <VStack backgroundColor="#f6f6f6" borderRadius={10} className="block-shadow">
             <FormControl>
               <VStack align="flex-start" m={4}>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Trigger Text
-                  </FormLabel>
-                  <Input
-                    id="dataNameInput"
-                    className="inputWidth"
-                    type="text"
-                    value={triggerText}
-                    onChange={(e) => setTriggerText(e.target.value)}
-                  />
-                  <Button
-                    onClick={() => {
-                      if (triggerText === '') {
-                        setExternalTriggers(null)
-                        return
-                      }
-                      try {
-                        const trigger = JSON.parse(triggerText)
-                        if (trigger === null || typeof trigger !== 'object') {
-                          console.log('Invalid input', trigger)
-                          return
-                        }
-                        setExternalTriggers(trigger)
-                      } catch (e) {
-                        console.log('Invalid string', e.message)
-                      }
-                    }}
-                  >
-                    Update
-                  </Button>
-                </HStack>
                 <HStack className="inputRow">
                   <FormLabel className="labelWidth" textAlign="right">
                     Demo data

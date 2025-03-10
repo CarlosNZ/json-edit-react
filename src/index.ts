@@ -33,6 +33,7 @@ export {
   type JsonData,
   type KeyboardControls,
   type TextEditorProps,
+  type CollapseState,
 } from './types'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
 

@@ -1,17 +1,11 @@
 import { useEffect } from 'react'
 import { useTreeState } from '../contexts'
-import { type CollectionKey } from '../types'
+import { type CollectionKey, type CollapseState } from '../types'
 import { toPathString } from '../helpers'
 
 export interface EditState {
   path?: CollectionKey[]
   action?: 'accept' | 'cancel'
-}
-
-export interface CollapseState {
-  path: CollectionKey[]
-  collapsed: boolean
-  includeChildren: boolean
 }
 
 export interface ExternalTriggers {
@@ -26,10 +20,8 @@ export const useTriggers = (
   const { setCurrentlyEditingElement, currentlyEditingElement, setCollapseState } = useTreeState()
 
   useEffect(() => {
-    // console.log('Trigger....')
     if (!triggers) return
 
-    // console.log('Processing triggers', triggers)
     const { collapse, edit } = triggers
 
     // COLLAPSE
