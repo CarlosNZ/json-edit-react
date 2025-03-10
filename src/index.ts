@@ -35,6 +35,7 @@ export {
   type TextEditorProps,
   type CollapseState,
 } from './types'
+export { type EditState, type ExternalTriggers } from './hooks'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
 
 export {

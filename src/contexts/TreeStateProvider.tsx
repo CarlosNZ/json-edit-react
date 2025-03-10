@@ -94,31 +94,18 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
     cancelOp.current = typeof newCancelOrKey === 'function' ? newCancelOrKey : null
   }
 
+  // Returns the current "CollapseState" value to Collection Node if it matches
+  // that node. If the current "CollapseState" is an array, will return the one
+  // matching one
   const getMatchingCollapseState = (path: CollectionKey[]) => {
     if (Array.isArray(collapseState)) {
       for (const cs of collapseState) {
-        if (pathMatchSingle(path, cs)) return cs
+        if (doesCollapseStateMatchPath(path, cs)) return cs
       }
       return null
     }
 
-    return pathMatchSingle(path, collapseState) ? collapseState : null
-  }
-
-  const pathMatchSingle = (path: CollectionKey[], collapseState: CollapseState | null) => {
-    if (collapseState === null) return false
-
-    if (!collapseState.includeChildren)
-      return (
-        collapseState.path.every((part, index) => path[index] === part) &&
-        collapseState.path.length === path.length
-      )
-
-    for (const [index, value] of collapseState.path.entries()) {
-      if (value !== path[index]) return false
-    }
-
-    return true
+    return doesCollapseStateMatchPath(path, collapseState) ? collapseState : null
   }
 
   const areChildrenBeingEdited = (pathString: string) =>
@@ -167,6 +154,22 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
 
 export const useTreeState = () => {
   const context = useContext(TreeStateProviderContext)
-  if (!context) throw new Error('Must be used within Context Provider')
+  if (!context) throw new Error('Missing Context Provider')
   return context
+}
+
+const doesCollapseStateMatchPath = (path: CollectionKey[], collapseState: CollapseState | null) => {
+  if (collapseState === null) return false
+
+  if (!collapseState.includeChildren)
+    return (
+      collapseState.path.every((part, index) => path[index] === part) &&
+      collapseState.path.length === path.length
+    )
+
+  for (const [index, value] of collapseState.path.entries()) {
+    if (value !== path[index]) return false
+  }
+
+  return true
 }

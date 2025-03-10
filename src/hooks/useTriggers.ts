@@ -1,3 +1,8 @@
+/**
+ * Hook to handle changes to the `externalTriggers` prop in order to set
+ * "collapse" state, as well as start/stop editing
+ */
+
 import { useEffect } from 'react'
 import { useTreeState } from '../contexts'
 import { type CollectionKey, type CollapseState } from '../types'
