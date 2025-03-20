@@ -11,6 +11,8 @@ export {
   type UpdateFunction,
   type OnChangeFunction,
   type OnErrorFunction,
+  type OnEditEventFunction,
+  type OnCollapseFunction,
   type JerError,
   type DataType,
   type CopyFunction,

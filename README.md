@@ -13,16 +13,17 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
 
 ### Features include:
 
- - edit individual values, or whole objects as JSON text
- - fine-grained control over which elements can be edited, deleted, or added to
- - full [JSON Schema](https://json-schema.org/) validation (using 3rd-party validation library)
- - customisable UI, through simple, pre-defined [themes](#themes--styles), specific CSS overrides for UI components, or by targeting CSS classes
- - self-contained — rendered with plain HTML/CSS, so no dependence on external UI libraries
- - search/filter data by key, value or custom function
- - provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
+ - Edit individual values, or whole objects as JSON text
+ - Fine-grained control over which elements can be edited, deleted, or added to
+ - Full [JSON Schema](https://json-schema.org/) validation (using 3rd-party validation library)
+ - Customisable UI, through simple, pre-defined [themes](#themes--styles), specific CSS overrides for UI components, or by targeting CSS classes
+ - Self-contained — rendered with plain HTML/CSS, so no dependence on external UI libraries
+ - Search/filter data by key, value or custom function
+ - Provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
  - [localisable](#localisation) UI
  - [Drag-n-drop](#drag-n-drop) editing
  - [Keyboard customisation](#keyboard-customisation)
+ - [External control](#external-control-1) via callbacks and triggers
 
 <img width="392" alt="screenshot" src="image/screenshot.png">
 
@@ -46,6 +47,7 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
   - [Look and Feel / UI](#look-and-feel--ui)
   - [Search and Filtering](#search-and-filtering)
   - [Custom components \& overrides (incl. Localisation)](#custom-components--overrides-incl-localisation)
+  - [External control](#external-control)
   - [Miscellaneous](#miscellaneous)
 - [Managing state](#managing-state)
 - [Update functions](#update-functions)
@@ -70,6 +72,9 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
 - [Custom Text](#custom-text)
 - [Custom Buttons](#custom-buttons)
 - [Keyboard customisation](#keyboard-customisation)
+- [External control](#external-control-1)
+  - [Event callbacks](#event-callbacks)
+  - [Event triggers](#event-triggers)
 - [Undo functionality](#undo-functionality)
 - [Exported helpers](#exported-helpers)
   - [Functions \& Components](#functions--components)
@@ -195,7 +200,16 @@ The only *required* property is `data` (although you will need to provide a `set
 | `TextEditor`            | `ReactComponent<TextEditorProps>` |                                           | Pass a component to offer a custom text/code editor when editing full JSON object as text. [See details](#full-object-editing)                                                                                                                                                                                                                 |
 | `jsonParse`             | `(input: string) => JsonData`     | `JSON.parse`                              | When editing a block of JSON directly, you may wish to allow some "looser" input -- e.g. 'single quotes', trailing commas, or unquoted field names. In this case, you can provide a third-party JSON parsing method. I recommend [JSON5](https://json5.org/), which is what is used in the [Demo](https://carlosnz.github.io/json-edit-react/) |
 | `jsonStringify`         | `(data: JsonData) => string`      | `(data) => JSON.stringify(data, null, 2)` | Similarly, you can override the default presentation of the JSON string when starting editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                                                                           |
-| `keyboardControls`      | `KeyboardControls`                | As explained [above](#usage)              | Override some or all of the keyboard controls. See [Keyboard customisation](#keyboard-customisation) for details.                                                                                                                                                                                                                              |  |
+| `keyboardControls`      | `KeyboardControls`                | As explained [above](#usage)              | Override some or all of the keyboard controls. See [Keyboard customisation](#keyboard-customisation) for details.                                                                                                                                                                                                                              |
+### External control
+
+More detail [below](#external-control-1)
+
+| Prop               | Type                  | Default | Description                                                          |
+| ------------------ | --------------------- | ------- | -------------------------------------------------------------------- |
+| `onEditEvent`      | `OnEditEventFunction` | none    | Callback to execute whenever the user starts or stops editing a node |
+| `onCollapse`       | `OnCollapseFunction`  | none    | Callback to execute whenever the user collapses or opens a node      |
+| `externalTriggers` | `ExternalTriggers`    | none    | Specify a node to collapse/open, or to start/stop editing            |  |
 
 ### Miscellaneous
 
@@ -798,7 +812,71 @@ If (for example), you just wish to change the general "confirmation" action to "
 - If multiple modifiers are specified (in an array), *any* of them will be accepted (multi-modifier commands not currently supported)
 - You only need to specify values for `stringConfirm`, `numberConfirm`, and `booleanConfirm` if they should *differ* from your `confirm` value. 
 - You won't be able to override system or browser behaviours: for example, on Mac "Ctrl-click" will perform a right-click, so using it as a click modifier won't work (hence we also accept "Meta"/"Cmd" as the default `clipboardModifier`).
- 
+
+## External control
+
+You can interact with the component externally, with event callbacks and triggers to set/get the collapse or editing state of any node.
+
+### Event callbacks
+
+Pass in a function to the props `onEditEvent` and `onCollapse` if you want your app to be able to respond to these events.
+
+The `onEditEvent` callback is executed whenever the user starts or stops editing a node, and has the following signature:
+
+```ts
+type OnEditEventFunction = 
+  (path: CollectionKey[] | null, isKey: boolean) => void
+```
+
+The `path` will be an array representing the path components when starting to edit, and `null` when ending the edit. The `isKey` indicates whether the edit is for the property `key` rather than `value`.
+
+The `onCollapse` callback is executed when user opens or collapses a node, and has the following signature:
+
+```ts
+type OnCollapseFunction = (
+  {
+    path: CollectionKey[],
+    collapsed: boolean, // closing = true, opening = false
+    includeChildren: boolean // if was clicked with Modifier key to
+                             // open/close all descendants as well
+  }
+) => void
+```
+
+### Event triggers
+
+You can *trigger* collapse and editing actions by changing the the `externalTriggers` prop.
+
+The shape of the `externalTriggers` object is:
+
+```ts
+interface ExternalTriggers  {
+  collapse?: CollapseState | CollapseState[]
+  edit?: EditState
+}
+
+// CollapseState same as `onCollapseFunction` (above) input
+interface CollapseState {
+  path: CollectionKey[]
+  collapsed: boolean
+  includeChildren: boolean
+}
+
+interface EditState {
+  path?: CollectionKey[]
+  action?: 'accept' | 'cancel'
+}
+```
+
+For the `edit` trigger, the `path` is only required when *starting* to edit, and
+the `action` is only required when *stopping* the edit, to determine whether the
+component should cancel or submit the current changes.
+
+> [!WARNING]
+> Ensure that your `externalTriggers` object is stable (i.e. doesn't create new instances on each render) so as to not cause unwanted triggering -- you may need to wrap it in `useMemo`.
+> You should also be careful that your event callbacks and triggers don't cause an infinite loop!
+
+
 ## Undo functionality
 
 Even though Undo/Redo functionality is probably desirable in most cases, this is not built in to the component, for two main reasons:

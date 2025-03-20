@@ -50,12 +50,12 @@ export interface JsonEditorProps {
   TextEditor?: React.FC<TextEditorProps>
   errorMessageTimeout?: number // ms
   keyboardControls?: KeyboardControls
-  externalTriggers?: ExternalTriggers
   insertAtTop?: boolean | 'array' | 'object'
   collapseClickZones?: Array<'left' | 'header' | 'property'>
   // Additional events
   onEditEvent?: OnEditEventFunction
   onCollapse?: OnCollapseFunction
+  externalTriggers?: ExternalTriggers
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const

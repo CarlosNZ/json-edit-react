@@ -16,6 +16,7 @@ import {
   monoDarkTheme,
   candyWrapperTheme,
   psychedelicTheme,
+  ExternalTriggers,
   // type CollapseState
 } from './_imports'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
@@ -116,6 +117,7 @@ function App() {
 
   // const collapseState = useRef<Record<string, CollapseState>>({})
   // const [collapseData, setCollapseData] = useState<CollapseState[]>()
+  // const [triggers, setTriggers] = useState<ExternalTriggers>()
 
   const [isSaving, setIsSaving] = useState(false)
   const previousTheme = useRef<Theme>() // Used when resetting after theme editing
@@ -506,16 +508,22 @@ function App() {
                   : undefined
               }
               // collapseClickZones={['property', 'header']}
-              onEditEvent={(path) => setIsEditing(path ? true : false)}
+              onEditEvent={(path) => {
+                console.log(path)
+                setIsEditing(path ? true : false)
+              }}
               // onCollapse={(input) => {
               //   const path = JSON.stringify(input.path)
               //   const newCollapseState = { ...collapseState.current, [path]: input }
               //   collapseState.current = newCollapseState
               //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
               // }}
-              // externalTriggers={{ collapse: collapseData }}
+              // externalTriggers={triggers}
             />
           </Box>
+          {/* <Button onClick={() => setTriggers({ edit: { action: 'accept' } })}>
+            Click to stop edit
+          </Button> */}
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
               <Button
