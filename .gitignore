@@ -48,3 +48,5 @@ demo/src/firebaseConfig.json
 
 # Built package in demo
 demo/src/package
+.original-readme.md
+.npm-readme.md
