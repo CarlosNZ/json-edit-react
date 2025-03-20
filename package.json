@@ -28,7 +28,9 @@
     "build": "rimraf ./build && rollup -c && rimraf ./build/dts",
     "lint": "npx eslint \"src/**\"",
     "postbuild": "node ./scripts/cleanBuildTypes.cjs",
-    "prepublish": "yarn build",
+    "prepareReadme": "python3 scripts/github-to-npm-markdown.py README.md -o .npm-readme.md",
+    "prepublishOnly": "yarn build && npm run prepareReadme && python3 scripts/use-npm-readme.py prepare",
+    "postpublish": "python3 scripts/use-npm-readme.py restore",
     "compile": "rimraf ./build && tsc",
     "release": "yarn publish",
     "release-demo": "cd demo && yarn deploy"
