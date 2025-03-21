@@ -1,6 +1,6 @@
 /**
  * Captures state that is required to be shared between nodes. In particular:
- * - global collapse state for triggering whole tree expansions/closures
+ * - global collapse state for triggering whole tree expansions/collapses
  * - the currently editing node (to ensure only one node at a time can be
  *   edited)
  * - the value of the node currently being dragged (so that the target it is
@@ -14,13 +14,9 @@ import {
   type JsonData,
   type OnEditEventFunction,
   type OnCollapseFunction,
+  type CollapseState,
 } from '../types'
 import { toPathString } from '../helpers'
-
-interface CollapseAllState {
-  path: CollectionKey[]
-  collapsed: boolean
-}
 
 export interface DragSource {
   path: CollectionKey[] | null
@@ -28,9 +24,9 @@ export interface DragSource {
 }
 
 interface TreeStateContext {
-  collapseState: CollapseAllState | null
-  setCollapseState: (collapseState: CollapseAllState | null) => void
-  doesPathMatch: (path: CollectionKey[]) => boolean
+  collapseState: CollapseState | CollapseState[] | null
+  setCollapseState: (collapseState: CollapseState | CollapseState[] | null) => void
+  getMatchingCollapseState: (path: CollectionKey[]) => CollapseState | null
   currentlyEditingElement: string | null
   setCurrentlyEditingElement: (
     path: CollectionKey[] | string | null,
@@ -46,24 +42,8 @@ interface TreeStateContext {
   previousValue: JsonData | null
   setPreviousValue: (value: JsonData | null) => void
 }
-const initialContext: TreeStateContext = {
-  collapseState: null,
-  setCollapseState: () => {},
-  doesPathMatch: () => false,
-  currentlyEditingElement: null,
-  setCurrentlyEditingElement: () => {},
-  previouslyEditedElement: null,
-  setPreviouslyEditedElement: () => {},
-  areChildrenBeingEdited: () => false,
-  dragSource: { path: null, pathString: null },
-  setDragSource: () => {},
-  tabDirection: 'next',
-  setTabDirection: () => {},
-  previousValue: null,
-  setPreviousValue: () => {},
-}
 
-const TreeStateProviderContext = createContext(initialContext)
+const TreeStateProviderContext = createContext<TreeStateContext | null>(null)
 
 interface TreeStateProps {
   children: React.ReactNode
@@ -72,7 +52,7 @@ interface TreeStateProps {
 }
 
 export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeStateProps) => {
-  const [collapseState, setCollapseState] = useState<CollapseAllState | null>(null)
+  const [collapseState, setCollapseState] = useState<CollapseState | CollapseState[] | null>(null)
   const [currentlyEditingElement, setCurrentlyEditingElement] = useState<string | null>(null)
 
   // This value holds the "previous" value when user changes type. Because
@@ -114,14 +94,18 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
     cancelOp.current = typeof newCancelOrKey === 'function' ? newCancelOrKey : null
   }
 
-  const doesPathMatch = (path: CollectionKey[]) => {
-    if (collapseState === null) return false
-
-    for (const [index, value] of collapseState.path.entries()) {
-      if (value !== path[index]) return false
+  // Returns the current "CollapseState" value to Collection Node if it matches
+  // that node. If the current "CollapseState" is an array, will return the one
+  // matching one
+  const getMatchingCollapseState = (path: CollectionKey[]) => {
+    if (Array.isArray(collapseState)) {
+      for (const cs of collapseState) {
+        if (doesCollapseStateMatchPath(path, cs)) return cs
+      }
+      return null
     }
 
-    return true
+    return doesCollapseStateMatchPath(path, collapseState) ? collapseState : null
   }
 
   const areChildrenBeingEdited = (pathString: string) =>
@@ -135,13 +119,15 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
         setCollapseState: (state) => {
           setCollapseState(state)
           if (onCollapse && state !== null)
-            onCollapse({ path: state.path, collapsed: state.collapsed, includesChildren: true })
+            if (Array.isArray(state)) {
+              state.forEach((cs) => onCollapse(cs))
+            } else onCollapse(state)
           // Reset after 2 seconds, which is enough time for all child nodes to
           // have opened/closed, but still allows collapse reset if data changes
           // externally
           if (state !== null) setTimeout(() => setCollapseState(null), 2000)
         },
-        doesPathMatch,
+        getMatchingCollapseState,
         // Editing
         currentlyEditingElement,
         setCurrentlyEditingElement: updateCurrentlyEditingElement,
@@ -166,4 +152,24 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
   )
 }
 
-export const useTreeState = () => useContext(TreeStateProviderContext)
+export const useTreeState = () => {
+  const context = useContext(TreeStateProviderContext)
+  if (!context) throw new Error('Missing Context Provider')
+  return context
+}
+
+const doesCollapseStateMatchPath = (path: CollectionKey[], collapseState: CollapseState | null) => {
+  if (collapseState === null) return false
+
+  if (!collapseState.includeChildren)
+    return (
+      collapseState.path.every((part, index) => path[index] === part) &&
+      collapseState.path.length === path.length
+    )
+
+  for (const [index, value] of collapseState.path.entries()) {
+    if (value !== path[index]) return false
+  }
+
+  return true
+}

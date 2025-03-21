@@ -45,6 +45,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     handleKeyboard,
     keyboardControls,
     sort,
+    editConfirmRef,
   } = props
   const { getStyles } = useTheme()
   const {
@@ -159,7 +160,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       setDataType(type)
       // Custom nodes will be instantiated expanded and NOT editing
       setCurrentlyEditingElement(null)
-      setCollapseState({ path, collapsed: false })
+      setCollapseState({ path, collapsed: false, includeChildren: false })
     } else {
       const newValue = convertValue(
         value,
@@ -325,7 +326,12 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         <div className="jer-value-and-buttons">
           <div className="jer-input-component">{ValueComponent}</div>
           {isEditing ? (
-            <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
+            <InputButtons
+              onOk={handleEdit}
+              onCancel={handleCancel}
+              nodeData={nodeData}
+              editConfirmRef={editConfirmRef}
+            />
           ) : (
             showEditButtons && (
               <EditButtons
@@ -344,6 +350,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 nodeData={nodeData}
                 handleKeyboard={handleKeyboard}
                 keyboardControls={keyboardControls}
+                editConfirmRef={editConfirmRef}
               />
             )
           )}

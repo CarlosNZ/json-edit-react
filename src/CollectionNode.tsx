@@ -26,7 +26,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const {
     collapseState,
     setCollapseState,
-    doesPathMatch,
+    getMatchingCollapseState,
     currentlyEditingElement,
     setCurrentlyEditingElement,
     areChildrenBeingEdited,
@@ -62,6 +62,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     handleKeyboard,
     insertAtTop,
     onCollapse,
+    editConfirmRef,
     collapseClickZones,
   } = props
   const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
@@ -113,9 +114,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   }, [collapseFilter])
 
   useEffect(() => {
-    if (collapseState !== null && doesPathMatch(path)) {
-      hasBeenOpened.current = true
-      animateCollapse(collapseState.collapsed)
+    if (collapseState !== null) {
+      const matchingCollapse = getMatchingCollapseState(path)
+      if (matchingCollapse) {
+        hasBeenOpened.current = true
+        animateCollapse(matchingCollapse.collapsed)
+      }
     }
   }, [collapseState])
 
@@ -180,13 +184,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     const modifier = getModifier(e)
     if (modifier && keyboardControls.collapseModifier.includes(modifier)) {
       hasBeenOpened.current = true
-      setCollapseState({ collapsed: !collapsed, path })
+      setCollapseState({ collapsed: !collapsed, path, includeChildren: true })
       return
     }
     if (!(currentlyEditingElement && currentlyEditingElement.includes(pathString))) {
       hasBeenOpened.current = true
       setCollapseState(null)
-      if (onCollapse) onCollapse({ path, collapsed: !collapsed, includesChildren: false })
+      if (onCollapse) onCollapse({ path, collapsed: !collapsed, includeChildren: false })
       animateCollapse(!collapsed)
     }
   }
@@ -334,7 +338,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         />
       )}
       <div className="jer-collection-input-button-row">
-        <InputButtons onOk={handleEdit} onCancel={handleCancel} nodeData={nodeData} />
+        <InputButtons
+          onOk={handleEdit}
+          onCancel={handleCancel}
+          nodeData={nodeData}
+          editConfirmRef={editConfirmRef}
+        />
       </div>
     </div>
   )
@@ -392,6 +401,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       customButtons={props.customButtons}
       keyboardControls={keyboardControls}
       handleKeyboard={handleKeyboard}
+      editConfirmRef={editConfirmRef}
     />
   )
 

@@ -11,6 +11,8 @@ export {
   type UpdateFunction,
   type OnChangeFunction,
   type OnErrorFunction,
+  type OnEditEventFunction,
+  type OnCollapseFunction,
   type JerError,
   type DataType,
   type CopyFunction,
@@ -33,7 +35,9 @@ export {
   type JsonData,
   type KeyboardControls,
   type TextEditorProps,
+  type CollapseState,
 } from './types'
+export { type EditState, type ExternalTriggers } from './hooks'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
 
 export {

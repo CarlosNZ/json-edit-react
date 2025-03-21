@@ -1,5 +1,6 @@
 import { type Options as AssignOptions } from 'object-property-assigner'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
+import { type ExternalTriggers } from './hooks'
 
 export type JsonData = CollectionData | ValueData
 
@@ -54,6 +55,7 @@ export interface JsonEditorProps {
   // Additional events
   onEditEvent?: OnEditEventFunction
   onCollapse?: OnCollapseFunction
+  externalTriggers?: ExternalTriggers
 }
 
 const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
@@ -163,11 +165,15 @@ export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number
 
 export type OnEditEventFunction = (path: CollectionKey[] | string | null, isKey: boolean) => void
 
-export type OnCollapseFunction = (input: {
+// Definition to externally set Collapse state -- also passed to OnCollapse
+// function
+export interface CollapseState {
   path: CollectionKey[]
   collapsed: boolean
-  includesChildren: boolean
-}) => void
+  includeChildren: boolean
+}
+
+export type OnCollapseFunction = (input: CollapseState) => void
 
 // Internal update
 export type InternalUpdateFunction = (
@@ -259,6 +265,7 @@ interface BaseNodeProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
+  editConfirmRef: React.RefObject<HTMLDivElement>
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {

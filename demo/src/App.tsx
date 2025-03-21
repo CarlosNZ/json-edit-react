@@ -16,6 +16,8 @@ import {
   monoDarkTheme,
   candyWrapperTheme,
   psychedelicTheme,
+  // ExternalTriggers,
+  // type CollapseState
 } from './_imports'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
@@ -111,6 +113,11 @@ function App() {
     customTextEditor: false,
   })
 
+  // const [isEditing, setIsEditing] = useState(false)
+  // const collapseState = useRef<Record<string, CollapseState>>({})
+  // const [collapseData, setCollapseData] = useState<CollapseState[]>()
+  // const [triggers, setTriggers] = useState<ExternalTriggers>()
+
   const [isSaving, setIsSaving] = useState(false)
   const previousTheme = useRef<Theme>() // Used when resetting after theme editing
   const toast = useToast()
@@ -128,6 +135,19 @@ function App() {
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
   }, [loading, liveData, reset, selectedDataSet])
+
+  // useEffect(() => {
+  //   const localStorageState = localStorage.getItem('collapseState')
+  //   if (localStorageState) {
+  //     setTimeout(() => {
+  //       const data = JSON.parse(localStorageState) as Record<string, CollapseState>
+  //       collapseState.current = data
+  //       const collapseArray = Object.values(data)
+  //       setCollapseData(collapseArray)
+  //       // console.log('collapseArray', collapseArray)
+  //     }, 500)
+  //   }
+  // }, [])
 
   const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
 
@@ -486,11 +506,23 @@ function App() {
                     )
                   : undefined
               }
-              // onEditEvent={(path, isKey) => console.log('Editing path', path, isKey)}
-              // onCollapse={(input) => console.log('Collapse', input)}
               // collapseClickZones={['property', 'header']}
+              // onEditEvent={(path) => {
+              //   console.log(path)
+              //   setIsEditing(path ? true : false)
+              // }}
+              // onCollapse={(input) => {
+              //   const path = JSON.stringify(input.path)
+              //   const newCollapseState = { ...collapseState.current, [path]: input }
+              //   collapseState.current = newCollapseState
+              //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
+              // }}
+              // externalTriggers={triggers}
             />
           </Box>
+          {/* <Button onClick={() => setTriggers({ edit: { action: 'accept' } })}>
+            Click to stop edit
+          </Button> */}
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
               <Button
@@ -525,6 +557,7 @@ function App() {
                 onClick={handleReset}
                 visibility={canUndo ? 'visible' : 'hidden'}
                 isLoading={isSaving}
+                // isDisabled={isEditing}
               >
                 {selectedDataSet === 'liveData' ? 'Push to the cloud' : 'Reset'}
               </Button>
