@@ -16,7 +16,7 @@ import {
   monoDarkTheme,
   candyWrapperTheme,
   psychedelicTheme,
-  ExternalTriggers,
+  // ExternalTriggers,
   // type CollapseState
 } from './_imports'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
@@ -113,8 +113,7 @@ function App() {
     customTextEditor: false,
   })
 
-  const [isEditing, setIsEditing] = useState(false)
-
+  // const [isEditing, setIsEditing] = useState(false)
   // const collapseState = useRef<Record<string, CollapseState>>({})
   // const [collapseData, setCollapseData] = useState<CollapseState[]>()
   // const [triggers, setTriggers] = useState<ExternalTriggers>()
@@ -508,10 +507,10 @@ function App() {
                   : undefined
               }
               // collapseClickZones={['property', 'header']}
-              onEditEvent={(path) => {
-                console.log(path)
-                setIsEditing(path ? true : false)
-              }}
+              // onEditEvent={(path) => {
+              //   console.log(path)
+              //   setIsEditing(path ? true : false)
+              // }}
               // onCollapse={(input) => {
               //   const path = JSON.stringify(input.path)
               //   const newCollapseState = { ...collapseState.current, [path]: input }
@@ -558,7 +557,7 @@ function App() {
                 onClick={handleReset}
                 visibility={canUndo ? 'visible' : 'hidden'}
                 isLoading={isSaving}
-                isDisabled={isEditing}
+                // isDisabled={isEditing}
               >
                 {selectedDataSet === 'liveData' ? 'Push to the cloud' : 'Reset'}
               </Button>
