@@ -407,7 +407,24 @@ function App() {
               // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
               restrictDelete={restrictDelete}
               restrictAdd={restrictAdd}
-              restrictTypeSelection={dataDefinition?.restrictTypeSelection}
+              // restrictTypeSelection={dataDefinition?.restrictTypeSelection}
+              restrictTypeSelection={[
+                'string',
+                'number',
+                'boolean',
+                'null',
+                { enum: 'Option', values: ['One', 'Two', 'Three'] },
+                {
+                  enum: 'Hobby',
+                  values: ['partying', 'building stuff', 'avenging', 'time travel'],
+                  matchPriority: 1,
+                },
+                {
+                  enum: 'Other activities that could be quite long',
+                  values: ['changing', 'building stuff', 'avenging', 'money money money money'],
+                  matchPriority: 2,
+                },
+              ]}
               restrictDrag={false}
               searchFilter={dataDefinition?.searchFilter}
               searchText={searchText}

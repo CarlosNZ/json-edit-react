@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { insertCharInTextArea, toPathString } from './helpers'
 import { useTheme } from './contexts'
-import { type NodeData, type InputProps } from './types'
+import { type NodeData, type InputProps, EnumDefinition } from './types'
 import { type TranslateFunction } from './localisation'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
@@ -75,7 +75,7 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
   )
 }
 
-export const StringValue: React.FC<InputProps & { value: string }> = ({
+export const StringValue: React.FC<InputProps & { value: string; enumType?: EnumDefinition }> = ({
   value,
   setValue,
   isEditing,
@@ -84,6 +84,7 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   nodeData,
   handleKeyboard,
   keyboardCommon,
+  enumType,
   ...props
 }) => {
   const { getStyles } = useTheme()
@@ -91,6 +92,28 @@ export const StringValue: React.FC<InputProps & { value: string }> = ({
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
 
   const pathString = toPathString(path)
+
+  if (isEditing && enumType) {
+    return (
+      <div className="jer-select">
+        <select
+          name={`${pathString}-value-select`}
+          className="jer-select-inner"
+          onChange={(e) => setValue(e.target.value)}
+          value={value}
+        >
+          {enumType.values.map((val) => {
+            return (
+              <option value={val} key={val}>
+                {val}
+              </option>
+            )
+          })}
+        </select>
+        <span className="focus"></span>
+      </div>
+    )
+  }
 
   return isEditing ? (
     <AutogrowTextArea

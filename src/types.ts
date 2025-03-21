@@ -27,7 +27,7 @@ export interface JsonEditorProps {
   restrictEdit?: boolean | FilterFunction
   restrictDelete?: boolean | FilterFunction
   restrictAdd?: boolean | FilterFunction
-  restrictTypeSelection?: boolean | DataType[] | TypeFilterFunction
+  restrictTypeSelection?: boolean | TypeOptions | TypeFilterFunction
   restrictDrag?: boolean | FilterFunction
   viewOnly?: boolean
   searchText?: string
@@ -58,15 +58,23 @@ export interface JsonEditorProps {
   externalTriggers?: ExternalTriggers
 }
 
-const ValueDataTypes = ['string', 'number', 'boolean', 'null'] as const
-const CollectionDataTypes = ['object', 'array'] as const
-export const DataTypes = [...ValueDataTypes, ...CollectionDataTypes] as const
+const valueDataTypes = ['string', 'number', 'boolean', 'null'] as const
+const collectionDataTypes = ['object', 'array'] as const
+export const standardDataTypes = [...valueDataTypes, ...collectionDataTypes] as const
 
-export type CollectionDataType = (typeof CollectionDataTypes)[number]
-export type DataType = (typeof DataTypes)[number] | 'invalid'
+export type CollectionDataType = (typeof collectionDataTypes)[number]
+export type DataType = (typeof standardDataTypes)[number] | 'invalid'
 
 export type CollectionKey = string | number
 export type CollectionData = object | unknown[]
+
+export interface EnumDefinition {
+  enum: string
+  values: string[]
+  matchPriority?: number
+}
+
+export type TypeOptions = Array<DataType | string | EnumDefinition>
 
 export type ErrorString = string
 
@@ -135,7 +143,7 @@ export type OnErrorFunction = (props: {
 }) => unknown
 
 export type FilterFunction = (input: NodeData) => boolean
-export type TypeFilterFunction = (input: NodeData) => boolean | DataType[]
+export type TypeFilterFunction = (input: NodeData) => boolean | TypeOptions
 export type CustomTextFunction = (input: NodeData) => string | null
 export type DefaultValueFunction = (input: NodeData) => unknown
 export type SearchFilterFunction = (inputData: NodeData, searchText: string) => boolean

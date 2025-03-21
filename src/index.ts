@@ -7,6 +7,7 @@ export { matchNode, matchNodeKey, isCollection } from './helpers'
 export { default as assign } from 'object-property-assigner'
 export { default as extract } from 'object-property-extractor'
 export {
+  standardDataTypes,
   type JsonEditorProps,
   type UpdateFunction,
   type OnChangeFunction,

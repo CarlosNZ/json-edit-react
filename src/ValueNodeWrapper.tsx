@@ -9,17 +9,18 @@ import {
 } from './ValueNodes'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import {
-  DataTypes,
+  standardDataTypes,
   type DataType,
   type ValueNodeProps,
   type InputProps,
   type CollectionData,
   type ValueData,
   type JsonData,
+  type EnumDefinition,
 } from './types'
 import { useTheme, useTreeState } from './contexts'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
-import { filterNode, getNextOrPrevious } from './helpers'
+import { filterNode, getNextOrPrevious, matchEnumType } from './helpers'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'
 
@@ -120,10 +121,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   // Include custom node options in dataType list
   const allDataTypes = [
-    ...DataTypes,
+    ...standardDataTypes,
     ...customNodeDefinitions
       .filter(({ showInTypesSelector = false, name }) => showInTypesSelector && !!name)
-      .map(({ name }) => name),
+      .map(({ name }) => name as string),
   ]
 
   const allowedDataTypes = useMemo(() => {
@@ -137,6 +138,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
     return result
   }, [nodeData, restrictTypeSelection])
+
+  const [enumType, setEnumType] = useState<EnumDefinition | null>(
+    matchEnumType(value, allowedDataTypes)
+  )
 
   const { isEditing } = derivedValues
 
@@ -158,25 +163,43 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     if (customNode) {
       onEdit(customNode.defaultValue, path)
       setDataType(type)
+      setEnumType(null)
       // Custom nodes will be instantiated expanded and NOT editing
       setCurrentlyEditingElement(null)
       setCollapseState({ path, collapsed: false, includeChildren: false })
-    } else {
-      const newValue = convertValue(
-        value,
-        type,
-        translate('DEFAULT_NEW_KEY', nodeData),
-        // If coming *FROM* a custom type, need to change value to something
-        // that won't match the custom node condition any more
-        customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
-      )
-      onEdit(newValue, path).then((error) => {
-        if (error) {
-          onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
-          setCurrentlyEditingElement(null)
-        }
-      })
+      return
     }
+
+    const enumType = allowedDataTypes.find((dt) => {
+      if (dt instanceof Object) return dt.enum === type
+      return false
+    }) as EnumDefinition | undefined
+    if (enumType) {
+      if (typeof value !== 'string' || !enumType.values.includes(value))
+        onEdit(enumType.values[0], path).then((error) => {
+          if (error) {
+            onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
+            setCurrentlyEditingElement(null)
+          }
+        })
+      setEnumType(enumType)
+      return
+    }
+
+    const newValue = convertValue(
+      value,
+      type,
+      translate('DEFAULT_NEW_KEY', nodeData),
+      // If coming *FROM* a custom type, need to change value to something
+      // that won't match the custom node condition any more
+      customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
+    )
+    onEdit(newValue, path).then((error) => {
+      if (error) {
+        onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
+        setCurrentlyEditingElement(null)
+      } else setEnumType(null)
+    })
   }
 
   const handleEdit = () => {
@@ -241,6 +264,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     stringTruncate,
     showStringQuotes,
     nodeData,
+    enumType,
     translate,
     handleKeyboard,
     keyboardCommon: {
@@ -358,15 +382,24 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             <div className="jer-select">
               <select
                 name={`${name}-type-select`}
-                className="jer-type-select"
+                className="jer-select-inner"
                 onChange={(e) => handleChangeDataType(e.target.value as DataType)}
-                value={dataType}
+                value={enumType ? enumType.enum : dataType}
               >
-                {allowedDataTypes.map((type) => (
-                  <option value={type} key={type}>
-                    {type}
-                  </option>
-                ))}
+                {allowedDataTypes.map((type) => {
+                  if (type instanceof Object && 'enum' in type) {
+                    return (
+                      <option value={type.enum} key={type.enum}>
+                        {type.enum}
+                      </option>
+                    )
+                  }
+                  return (
+                    <option value={type} key={type}>
+                      {type}
+                    </option>
+                  )
+                })}
               </select>
               <span className="focus"></span>
             </div>
@@ -396,7 +429,7 @@ const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
 
 const getInputComponent = (data: JsonData, inputProps: InputProps) => {
   // Need to check for DataType again -- if it's a custom component it could
-  // have a custom type, but it we're rendering this (a standard component),
+  // have a custom type, but if we're rendering this (a standard component),
   // then it must be set to not show in current condition (editing or view), so
   // we need interpret it as a simple type, not the Custom type.
   const rawDataType = getDataType(data)
