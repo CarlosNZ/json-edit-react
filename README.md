@@ -13,17 +13,19 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
 
 ### Features include:
 
- - Edit individual values, or whole objects as JSON text
- - Fine-grained control over which elements can be edited, deleted, or added to
- - Full [JSON Schema](https://json-schema.org/) validation (using 3rd-party validation library)
- - Customisable UI, through simple, pre-defined [themes](#themes--styles), specific CSS overrides for UI components, or by targeting CSS classes
- - Self-contained — rendered with plain HTML/CSS, so no dependence on external UI libraries
- - Search/filter data by key, value or custom function
- - Provide your own [custom component](#custom-nodes) to integrate specialised UI for certain data.
- - [localisable](#localisation) UI
- - [Drag-n-drop](#drag-n-drop) editing
- - [Keyboard customisation](#keyboard-customisation)
- - [External control](#external-control-1) via callbacks and triggers
+ - ✅ **Easy inline editing** of individual values or whole blocks of JSON text 
+ - 🔒 **Granular control** – restrict edits, deletions, or additions per element
+ - 📏 **[JSON Schema](https://json-schema.org/) validation** (using 3rd-party validation library)
+ - 🎨 **Customisable UI** — built-in or custom [themes](#themes--styles), CSS overrides or targeted classes
+ - 📦 **Self-contained** — plain HTML/CSS, so no dependence on external UI libraries
+ - 🔍 **Search & filter** — find data by key, value or custom function
+ - 🚧 **[Custom components](#custom-nodes)** — replace specific nodes with specialised components (e.g. date picker, links, images)
+ - 🌏 **[Localisation](#localisation)** — easily translate UI labels and messages
+ - 🔄 **[Drag-n-drop](#drag-n-drop)** re-ordering within objects/arrays
+ - 🎹 **[Keyboard customisation](#keyboard-customisation)** — define your own key bindings
+ - 🎮 **[External control](#external-control-1)** via callbacks and triggers
+
+💡 Try the **[Live Demo](https://carlosnz.github.io/json-edit-react/)** to see these features in action!
 
 <img width="392" alt="screenshot" src="image/screenshot.png">
 
@@ -81,11 +83,13 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
 
 ## Installation
 
-`npm i json-edit-react`
+```sh
+# Depending on your package manager:
 
-or 
-
-`yarn add json-edit-react`
+npm i json-edit-react
+# OR
+yarn add json-edit-react
+```
 
 ## Implementation
 
@@ -93,11 +97,12 @@ or
 import { JsonEditor } from 'json-edit-react'
 
 // In your React component:
-return 
+return (
   <JsonEditor
     data={ jsonData }
     setData={ setJsonData } // optional
     { ...otherProps } />
+);
 ```
 
 ## Usage
