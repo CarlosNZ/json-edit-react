@@ -38,9 +38,9 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
 - [Installation](#installation)
 - [Implementation](#implementation)
 - [Usage](#usage)
-- [Props overview](#props-overview)
-  - [Data management](#data-management)
-  - [Restricting editing](#restricting-editing)
+- [Props Reference](#props-reference)
+  - [Data Management](#data-management)
+  - [Restricting Editing](#restricting-editing)
   - [Look and Feel / UI](#look-and-feel--ui)
   - [Search and Filtering](#search-and-filtering)
   - [Custom components \& overrides (incl. Localisation)](#custom-components--overrides-incl-localisation)
@@ -126,11 +126,16 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 
 [Have a play with the Demo app](https://carlosnz.github.io/json-edit-react/) to get a feel for it!
 
-## Props overview
+## Props Reference
 
 The only *required* property is `data` (although you will need to provide a `setData` method to update your data).
 
-### Data management
+<details>
+<summary>
+
+### Data Management
+
+</summary>
 
 | Prop              | Type                    | Default | Description                                                                                                                                                                                                    |
 | ----------------- | ----------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -144,19 +149,31 @@ The only *required* property is `data` (although you will need to provide a `set
 | `onError`         | `OnErrorFunction`       | none    | A function to run whenever the component reports an error — see [OnErrorFunction](#onerror-function).                                                                                                          |
 | `enableClipboard` | `boolean\|CopyFunction` | `true`  | Whether or not to enable the "Copy to clipboard" button in the UI. If a function is provided, `true` is assumed and this function will be run whenever an item is copied — see [Copy Function](#copy-function) |
 
+</details>
+<details>
+<summary>
 
-### Restricting editing
+### Restricting Editing
 
-| Prop                    | Type                                      | Default | Description                                                                                                                                                                                                                     |
-| ----------------------- | ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `restrictEdit`          | `boolean\|FilterFunction`                 | `false` | If `true`, no editing at all is permitted. A function can be provided for more specificity — see [Filter functions](#filter-functions)                                                                                          |
-| `restrictDelete`        | `boolean\|FilterFunction`                 | `false` | As with `restrictEdit` but for deletion                                                                                                                                                                                         |
-| `restrictAdd`           | `boolean\|FilterFunction`                 | `false` | As with `restrictEdit` but for adding new properties                                                                                                                                                                            |
-| `restrictTypeSelection` | `boolean\|DataType[]\|TypeFilterFunction` | `false` | For restricting the data types the user can select. Can be a list of data types (e.g. `[ 'string', 'number', 'boolean', 'array', 'object', 'null' ]`), a boolean. or a function — see [TypeFilterFunction](#typefilterfunction) |
-| `restrictDrag`          | `boolean\|FilterFunction`                 | `true`  | Set to `false` to enable drag and drop functionality — see [Drag-n-drop](#drag-n-drop)                                                                                                                                          |
-| `viewOnly`              | `boolean`                                 |         | A shorthand if you just want the component to be a viewer, with no editing. Overrides any values of the above edit restrictions.                                                                                                |
+</summary>
+
+| Prop                    | Type                                      | Default | Description                                                                                                                                                                                                                                                                                  |
+| ----------------------- | ----------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `restrictEdit`          | `boolean\|FilterFunction`                 | `false` | If `true`, no editing at all is permitted. A function can be provided for more specificity — see [Filter functions](#filter-functions)                                                                                                                                                       |
+| `restrictDelete`        | `boolean\|FilterFunction`                 | `false` | As with `restrictEdit` but for deletion                                                                                                                                                                                                                                                      |
+| `restrictAdd`           | `boolean\|FilterFunction`                 | `false` | As with `restrictEdit` but for adding new properties                                                                                                                                                                                                                                         |
+| `restrictTypeSelection` | `boolean\|DataType[]\|TypeFilterFunction` | `false` | For restricting the data types the user can select, including [Custom Node](#custom-nodes) types, and **Enums**. Can be a list of data types (e.g. `[ 'string', 'number', 'boolean', 'array', 'object', 'null' ]`), a boolean. or a function — see [TypeFilterFunction](#typefilterfunction) |
+| `newKeyOptions`         | `string[] \| NewKeyOptionsFunction`       | none    | New keys can be restricted to certain values, or a function can be provided for more detailed conditions. See ??                                                                                                                                                                             |
+| `restrictDrag`          | `boolean\|FilterFunction`                 | `true`  | Set to `false` to enable drag and drop functionality — see [Drag-n-drop](#drag-n-drop)                                                                                                                                                                                                       |
+| `viewOnly`              | `boolean`                                 |         | A shorthand if you just want the component to be a viewer, with no editing. Overrides any values of the above edit restrictions.                                                                                                                                                             |
+
+</details>
+
+<details>
+<summary>
 
 ### Look and Feel / UI
+</summary>
 
 | Prop                    | Type                                      | Default              | Description                                                                                                                                                                                                                                                                                                                                                                                               |
 | ----------------------- | ----------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -178,9 +195,12 @@ The only *required* property is `data` (although you will need to provide a `set
 | `insertAtTop`           | `boolean\| "object \| "array"`            | `false`              | If `true`, inserts new values at the *top* rather than bottom. Can set the behaviour just for arrays or objects by setting to `"object"` or `"array"` respectively.                                                                                                                                                                                                                                       |  |
 | `errorMessageTimeout`   | `number`                                  | `2500`               | Time (in milliseconds) to display the error message in the UI.                                                                                                                                                                                                                                                                                                                                            |  |
 | `showErrorMessages`     | `boolean `                                | `true`               | Whether or not the component should display its own error messages (you'd probably only want to disable this if you provided your own `onError` function)                                                                                                                                                                                                                                                 |
-
+</details>
+<details>
+<summary>
 
 ### Search and Filtering
+</summary>
 
 | Prop                 | Type                                          | Default     | Description                                                                                                     |
 | -------------------- | --------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------- |
@@ -188,8 +208,12 @@ The only *required* property is `data` (although you will need to provide a `set
 | `searchFilter`       | `"key"\|"value"\|"all"\|SearchFilterFunction` | `undefined` | Define how `searchText` should be matched to filter the visible items. See [Search/Filtering](#searchfiltering) |
 | `searchDebounceTime` | `number`                                      | `350`       | Debounce time when `searchText` changes                                                                         |
 
+</details>
+<details>
+<summary>
 
 ### Custom components & overrides (incl. Localisation)
+</summary>
 
 | Prop                    | Type                              | Default                                   | Description                                                                                                                                                                                                                                                                                                                                    |
 | ----------------------- | --------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -201,24 +225,37 @@ The only *required* property is `data` (although you will need to provide a `set
 | `jsonParse`             | `(input: string) => JsonData`     | `JSON.parse`                              | When editing a block of JSON directly, you may wish to allow some "looser" input -- e.g. 'single quotes', trailing commas, or unquoted field names. In this case, you can provide a third-party JSON parsing method. I recommend [JSON5](https://json5.org/), which is what is used in the [Demo](https://carlosnz.github.io/json-edit-react/) |
 | `jsonStringify`         | `(data: JsonData) => string`      | `(data) => JSON.stringify(data, null, 2)` | Similarly, you can override the default presentation of the JSON string when starting editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                                                                           |
 | `keyboardControls`      | `KeyboardControls`                | As explained [above](#usage)              | Override some or all of the keyboard controls. See [Keyboard customisation](#keyboard-customisation) for details.                                                                                                                                                                                                                              |
+
+</details>
+<details>
+<summary>
+
 ### External control
+
+</summary>
 
 More detail [below](#external-control-1)
 
-| Prop               | Type                  | Default | Description                                                          |
-| ------------------ | --------------------- | ------- | -------------------------------------------------------------------- |
-| `onEditEvent`      | `OnEditEventFunction` | none    | Callback to execute whenever the user starts or stops editing a node |
-| `onCollapse`       | `OnCollapseFunction`  | none    | Callback to execute whenever the user collapses or opens a node      |
-| `externalTriggers` | `ExternalTriggers`    | none    | Specify a node to collapse/open, or to start/stop editing            |  |
+| Prop               | Type                  | Default | Description                                                                                            |
+| ------------------ | --------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
+| `onEditEvent`      | `OnEditEventFunction` | none    | Callback to execute whenever the user starts or stops editing a node                                   |
+| `onCollapse`       | `OnCollapseFunction`  | none    | Callback to execute whenever the user collapses or opens a node                                        |
+| `externalTriggers` | `ExternalTriggers`    | none    | Specify a node to collapse/open, or to start/stop editing. See [External control](#external-control-1) |  |
+
+</details>
+
+<details>
+<summary>
 
 ### Miscellaneous
+</summary>
 
 | Prop           | Type                              | Default | Description                                                                                                                                                                                                                                                                                                                                          |
 | -------------- | --------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `defaultValue` | `any\|DefaultValueFilterFunction` | `null`  | When a new property is added, it is initialised with this value. A [function can be provided](#filter-functions) with the almost the same input as the `FilterFunction`s, but should output a value. This allows a different default value to be used depending on the data state (e.g. default for top level is an object, but a string elsewhere.) |
 | `id`           | `string`                          | none    | Name for the HTML `id` attribute on the main component container.                                                                                                                                                                                                                                                                                    |
 | `className`    | `string`                          | none    | Name of a CSS class to apply to the overall component. In most cases, specifying `theme` properties will be more straightforward.                                                                                                                                                                                                                    |
-
+</details>
 
 ----
 
@@ -642,12 +679,14 @@ The Icon components will need to have their own styles defined, as the theme sty
 
 ## Localisation
 
-Localise your implementation by passing in a `translations` object to replace the default strings. The keys and default (English) values are as follows:
+Localise your implementation (or just customise the default messages) by passing in a `translations` object to replace the default strings. The keys and default (English) values are as follows:
 ```js
 {
   ITEM_SINGLE: '{{count}} item',
   ITEMS_MULTIPLE: '{{count}} items',
   KEY_NEW: 'Enter new key',
+  KEY_SELECT: 'Select key',
+  NO_KEY_OPTIONS: 'No key options',
   ERROR_KEY_EXISTS: 'Key already exists',
   ERROR_INVALID_JSON: 'Invalid JSON',
   ERROR_UPDATE: 'Update unsuccessful',
@@ -657,8 +696,9 @@ Localise your implementation by passing in a `translations` object to replace th
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
 }
-
 ```
+
+Your `translations` object doesn't have to be exhaustive — only define the keys you want to modify.
 
 ## Custom Nodes
 

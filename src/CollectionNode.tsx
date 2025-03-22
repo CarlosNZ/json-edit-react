@@ -130,7 +130,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const getDefaultNewValue = useCallback(
     (nodeData: NodeData, newKey: string) => {
       if (typeof defaultValue !== 'function') return defaultValue
-      return defaultValue(nodeData, newKey)
+      const customDefault = defaultValue(nodeData, newKey)
+      return customDefault !== undefined ? customDefault : null
     },
     [defaultValue]
   )

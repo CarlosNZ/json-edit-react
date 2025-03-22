@@ -397,10 +397,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       if (key === 'address') return ['street', 'suburb', 'city', 'state', 'postalCode', 'country']
     },
     defaultValue: (_, newKey) => {
-      console.log('PROPS', newKey)
       // if (newKey === 'category') return 'human'
       if (newKey === 'country') return 'United States'
-      if (newKey === 'suburb') return 'Enter suburb'
+      if (newKey === 'suburb') return 'Enter a suburb'
     },
     customTextEditorAvailable: true,
   },
