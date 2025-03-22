@@ -29,7 +29,7 @@ interface EditButtonProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
-  getNewKeyOptions: (nodeDate: NodeData) => string[] | null | void
+  getNewKeyOptions?: (nodeDate: NodeData) => string[] | null | void
   editConfirmRef: React.RefObject<HTMLDivElement>
 }
 
@@ -187,27 +187,33 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       {addingState && handleAdd && type === 'object' && (
         <>
           {hasKeyOptionsList ? (
-            <div className="jer-select">
+            <div className="jer-select jer-select-keys">
               <select
                 name="new-key-select"
                 className="jer-select-inner"
-                onChange={(e) => setNewKey(e.target.value)}
-                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  handleAdd(e.target.value)
+                  updateAddingState(false)
+                }}
                 defaultValue=""
+                autoFocus
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  handleKeyboard(e, {
+                    cancel: () => updateAddingState(false),
+                  })
+                }}
               >
                 <option value="" disabled>
-                  {translate('KEY_SELECT', nodeData)}
+                  {addingState.length > 0
+                    ? translate('KEY_SELECT', nodeData)
+                    : translate('NO_KEY_OPTIONS', nodeData)}
                 </option>
                 {addingState.map((val) => (
                   <option value={val} key={val}>
                     {val}
                   </option>
                 ))}
-                {addingState.length === 0 && (
-                  <option value="" disabled>
-                    {translate('NO_KEY_OPTIONS', nodeData)}
-                  </option>
-                )}
               </select>
               <span className="focus"></span>
             </div>
@@ -239,6 +245,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             }}
             nodeData={nodeData}
             editConfirmRef={editConfirmRef}
+            hideOk={hasKeyOptionsList}
           />
         </>
       )}
@@ -251,12 +258,15 @@ export const InputButtons: React.FC<{
   onCancel: (e: React.MouseEvent<HTMLElement>) => void
   nodeData: NodeData
   editConfirmRef: React.RefObject<HTMLDivElement>
-}> = ({ onOk, onCancel, nodeData, editConfirmRef }) => {
+  hideOk?: boolean
+}> = ({ onOk, onCancel, nodeData, editConfirmRef, hideOk = false }) => {
   return (
     <div className="jer-confirm-buttons">
-      <div onClick={onOk} ref={editConfirmRef}>
-        <Icon name="ok" nodeData={nodeData} />
-      </div>
+      {!hideOk && (
+        <div onClick={onOk} ref={editConfirmRef}>
+          <Icon name="ok" nodeData={nodeData} />
+        </div>
+      )}
       <div onClick={onCancel}>
         <Icon name="cancel" nodeData={nodeData} />
       </div>

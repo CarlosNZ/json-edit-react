@@ -407,24 +407,24 @@ function App() {
               // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
               restrictDelete={restrictDelete}
               restrictAdd={restrictAdd}
-              // restrictTypeSelection={dataDefinition?.restrictTypeSelection}
-              restrictTypeSelection={[
-                'string',
-                'number',
-                'boolean',
-                'null',
-                { enum: 'Option', values: ['One', 'Two', 'Three'] },
-                {
-                  enum: 'Hobby',
-                  values: ['partying', 'building stuff', 'avenging', 'time travel'],
-                  matchPriority: 1,
-                },
-                {
-                  enum: 'Other activities that could be quite long',
-                  values: ['changing', 'building stuff', 'avenging', 'money money money money'],
-                  matchPriority: 2,
-                },
-              ]}
+              restrictTypeSelection={dataDefinition?.restrictTypeSelection}
+              // restrictTypeSelection={[
+              //   'string',
+              //   'number',
+              //   'boolean',
+              //   'null',
+              //   { enum: 'Option', values: ['One', 'Two', 'Three'] },
+              //   {
+              //     enum: 'Hobby',
+              //     values: ['partying', 'building stuff', 'avenging', 'time travel'],
+              //     matchPriority: 1,
+              //   },
+              //   {
+              //     enum: 'Other activities that could be quite long',
+              //     values: ['changing', 'building stuff', 'avenging', 'money money money money'],
+              //     matchPriority: 2,
+              //   },
+              // ]}
               restrictDrag={false}
               searchFilter={dataDefinition?.searchFilter}
               searchText={searchText}
@@ -445,11 +445,8 @@ function App() {
               //     : false
               // }
               defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
-              newKeyOptions={(nodeData) => {
-                console.log('Node data', nodeData)
-                if (nodeData.key === 'address') return ['one', 'two', 'three']
-                // return
-              }}
+              // defaultValue={'NEWWWW'}
+              newKeyOptions={dataDefinition?.newKeyOptions}
               showArrayIndices={showIndices}
               showStringQuotes={showStringQuotes}
               minWidth={'min(500px, 95vw)'}

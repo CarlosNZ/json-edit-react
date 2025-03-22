@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { insertCharInTextArea, toPathString } from './helpers'
 import { useTheme } from './contexts'
-import { type NodeData, type InputProps, EnumDefinition } from './types'
+import { type NodeData, type InputProps, type EnumDefinition } from './types'
 import { type TranslateFunction } from './localisation'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
@@ -95,12 +95,19 @@ export const StringValue: React.FC<InputProps & { value: string; enumType?: Enum
 
   if (isEditing && enumType) {
     return (
-      <div className="jer-select">
+      <div className="jer-select jer-select-enums">
         <select
           name={`${pathString}-value-select`}
           className="jer-select-inner"
           onChange={(e) => setValue(e.target.value)}
           value={value}
+          autoFocus
+          onKeyDown={(e: React.KeyboardEvent) => {
+            handleKeyboard(e, {
+              stringConfirm: handleEdit,
+              ...keyboardCommon,
+            })
+          }}
         >
           {enumType.values.map((val) => {
             return (

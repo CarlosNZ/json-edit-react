@@ -11,13 +11,15 @@ import {
   matchNode,
 } from '../_imports'
 import {
-  DataType,
   DefaultValueFunction,
   ErrorString,
+  NewKeyOptionsFunction,
   OnChangeFunction,
   OnErrorFunction,
   SearchFilterFunction,
   ThemeStyles,
+  TypeFilterFunction,
+  TypeOptions,
   UpdateFunction,
   UpdateFunctionProps,
 } from '../json-edit-react/src/types'
@@ -39,7 +41,7 @@ export interface DemoData {
   restrictEdit?: boolean | FilterFunction
   restrictDelete?: boolean | FilterFunction
   restrictAdd?: boolean | FilterFunction
-  restrictTypeSelection?: boolean | DataType[]
+  restrictTypeSelection?: boolean | TypeOptions | TypeFilterFunction
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
   searchPlaceholder?: string
   onUpdate?: (
@@ -52,6 +54,7 @@ export interface DemoData {
   onError?: OnErrorFunction
   showErrorMessages?: boolean
   defaultValue?: unknown | DefaultValueFunction
+  newKeyOptions?: string[] | NewKeyOptionsFunction
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
   styles?: Partial<ThemeStyles>
@@ -282,6 +285,28 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         })
         return 'JSON Schema error'
       }
+    },
+    restrictTypeSelection: ({ key }) => {
+      if (key === 'category')
+        return [
+          {
+            enum: 'Category',
+            values: ['human', 'enhanced human', 'extra-terrestrial'],
+            matchPriority: 1,
+          },
+        ]
+      return false
+    },
+    newKeyOptions: ({ key }) => {
+      if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category']
+      if (key === 'address') return ['street', 'suburb', 'city', 'state', 'postalCode', 'country']
+    },
+    defaultValue: (_, newKey) => {
+      console.log('PROPS', newKey)
+      if (newKey === 'category') return 'human'
+      if (newKey === 'country') return 'United States'
+      if (newKey === 'suburb') return 'Malibu'
+      return 'TESTING'
     },
     customTextEditorAvailable: true,
   },

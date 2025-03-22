@@ -246,7 +246,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   // DERIVED VALUES (this makes the JSX logic less messy)
   const { isEditingKey, canEditKey } = derivedValues
   const showErrorString = !isEditing && error
-  const showTypeSelector = isEditing && allowedDataTypes.length > 0
+  const showTypeSelector = isEditing && allowedDataTypes.length > 1
   const showEditButtons = dataType !== 'invalid' && !error && showEditTools
   const showKey = showLabel && !hideKey
   const showCustomNode = CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
@@ -379,7 +379,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
             )
           )}
           {showTypeSelector && (
-            <div className="jer-select">
+            <div className="jer-select jer-select-types">
               <select
                 name={`${name}-type-select`}
                 className="jer-select-inner"

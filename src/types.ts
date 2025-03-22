@@ -36,7 +36,7 @@ export interface JsonEditorProps {
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
   showStringQuotes?: boolean
-  defaultValue?: unknown
+  defaultValue?: string | number | boolean | null | object | DefaultValueFunction
   newKeyOptions?: string[] | NewKeyOptionsFunction
   minWidth?: string | number
   maxWidth?: string | number
@@ -146,7 +146,7 @@ export type OnErrorFunction = (props: {
 export type FilterFunction = (input: NodeData) => boolean
 export type TypeFilterFunction = (input: NodeData) => boolean | TypeOptions
 export type CustomTextFunction = (input: NodeData) => string | null
-export type DefaultValueFunction = (input: NodeData) => unknown
+export type DefaultValueFunction = (input: NodeData, newKey?: string) => unknown
 export type SearchFilterFunction = (inputData: NodeData, searchText: string) => boolean
 export type SearchFilterInputFunction = (
   inputData: Partial<NodeData>,
