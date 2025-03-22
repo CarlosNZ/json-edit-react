@@ -141,36 +141,29 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   }
 
   return (
-    <div className="jer-edit-buttons" style={{ opacity: addingState ? 1 : undefined }}>
+    <div
+      className="jer-edit-buttons"
+      style={{ opacity: addingState ? 1 : undefined }}
+      onClick={(e) => e.stopPropagation()}
+    >
       {enableClipboard && (
         <div onClick={handleCopy} className="jer-copy-pulse">
           <Icon name="copy" nodeData={nodeData} />
         </div>
       )}
       {startEdit && (
-        <div
-          onClick={(e) => {
-            e.stopPropagation()
-            startEdit()
-          }}
-        >
+        <div onClick={startEdit}>
           <Icon name="edit" nodeData={nodeData} />
         </div>
       )}
       {handleDelete && (
-        <div
-          onClick={(e) => {
-            e.stopPropagation()
-            handleDelete()
-          }}
-        >
+        <div onClick={handleDelete}>
           <Icon name="delete" nodeData={nodeData} />
         </div>
       )}
       {handleAdd && (
         <div
-          onClick={(e) => {
-            e.stopPropagation()
+          onClick={() => {
             if (type === 'object') updateAddingState(true)
             // For arrays, we don't need to add a key
             else handleAdd('')
@@ -197,7 +190,6 @@ export const EditButtons: React.FC<EditButtonProps> = ({
                 }}
                 defaultValue=""
                 autoFocus
-                onClick={(e) => e.stopPropagation()}
                 onKeyDown={(e: React.KeyboardEvent) => {
                   handleKeyboard(e, {
                     cancel: () => updateAddingState(false),
@@ -224,7 +216,6 @@ export const EditButtons: React.FC<EditButtonProps> = ({
               name="new-object-key"
               value={newKey}
               onChange={(e) => setNewKey(e.target.value)}
-              onClick={(e) => e.stopPropagation()}
               autoFocus
               onFocus={(e) => e.target.select()}
               onKeyDown={handleKeyPress}
@@ -232,15 +223,13 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             />
           )}
           <InputButtons
-            onOk={(e) => {
-              e.stopPropagation()
+            onOk={() => {
               if (hasKeyOptionsList && !newKey) return
 
               updateAddingState(false)
               handleAdd(newKey)
             }}
-            onCancel={(e) => {
-              e.stopPropagation()
+            onCancel={() => {
               updateAddingState(false)
             }}
             nodeData={nodeData}

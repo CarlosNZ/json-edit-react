@@ -4,6 +4,7 @@ export const data: Record<string, object> = {
     number: 99,
     boolean: true,
     nothing: null,
+    enum: 'Option B',
     Usage: [
       'Edit a value by clicking the "edit" icon, or double-clicking the value.',
       'You can change the type of any value',
@@ -1700,6 +1701,7 @@ export const data: Record<string, object> = {
       postalCode: '90265',
     },
     hobbies: ['partying', 'building stuff', 'avenging'],
+    category: 'human',
   },
   customNodes: [
     {

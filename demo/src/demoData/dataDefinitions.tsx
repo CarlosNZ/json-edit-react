@@ -17,6 +17,7 @@ import {
   OnChangeFunction,
   OnErrorFunction,
   SearchFilterFunction,
+  standardDataTypes,
   ThemeStyles,
   TypeFilterFunction,
   TypeOptions,
@@ -97,6 +98,19 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     customNodeDefinitions: [dateNodeDefinition],
     // restrictEdit: ({ key }) => key === 'number',
     customTextEditorAvailable: true,
+    restrictTypeSelection: ({ key }) => {
+      if (key === 'enum')
+        return [
+          ...standardDataTypes,
+          'Date',
+          {
+            enum: 'Custom Type',
+            values: ['Option A', 'Option B', 'Option C'],
+            matchPriority: 1,
+          },
+        ]
+      return false
+    },
   },
   starWars: {
     name: '🚀 Star Wars',
@@ -131,7 +145,82 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
     restrictDelete: ({ value }) => typeof value === 'object' && value !== null,
     restrictAdd: ({ value }) => !Array.isArray(value),
-    restrictTypeSelection: true,
+    restrictTypeSelection: ({ key, path }) => {
+      if (path.slice(-2)[0] === 'films' || (path.slice(-3)[0] === 'films' && key === 'title'))
+        return [
+          {
+            enum: 'Film',
+            values: [
+              'A New Hope',
+              'The Empire Strikes Back',
+              'Return of the Jedi',
+              'The Phantom Menace',
+              'Attack of the Clones',
+              'Revenge of the Sith',
+              'The Force Awakens',
+              'The Last Jedi',
+              'The Rise of Skywalker',
+            ],
+            matchPriority: 1,
+          },
+        ]
+      if (key === 'eye_color')
+        return [
+          {
+            enum: 'Eye colour',
+            values: [
+              'blue',
+              'brown',
+              'green',
+              'hazel',
+              'red',
+              'yellow',
+              'black',
+              'white',
+              'orange',
+              'pink',
+              'purple',
+              'grey',
+              'gold',
+              'unknown',
+            ],
+            matchPriority: 1,
+          },
+        ]
+      if (key === 'hair_color')
+        return [
+          {
+            enum: 'Hair colour',
+            values: ['black', 'blond', 'brown', 'auburn', 'grey', 'white', 'unknown'],
+            matchPriority: 1,
+          },
+        ]
+      if (key === 'skin_color')
+        return [
+          {
+            enum: 'Skin colour',
+            values: [
+              'fair',
+              'brown',
+              'dark',
+              'gold',
+              'white',
+              'blue',
+              'red',
+              'yellow',
+              'green',
+              'pale',
+              'metal',
+              'orange',
+              'grey',
+              'mottled',
+              'unknown',
+            ],
+            matchPriority: 1,
+          },
+        ]
+      return true
+    },
     collapse: 1,
     customNodeDefinitions: [dateNodeDefinition, LinkCustomNodeDefinition],
     data: data.starWars,
@@ -264,6 +353,11 @@ export const demoDataDefinitions: Record<string, DemoData> = {
             this one.
           </Link>
         </Text>
+        <Text>
+          Also, notice if you try to add additional keys to the{' '}
+          <span className="code">address</span> field, you'll be limited to allowed options via a
+          drop-down.
+        </Text>
       </Flex>
     ),
     rootName: 'data',
@@ -289,6 +383,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     restrictTypeSelection: ({ key }) => {
       if (key === 'category')
         return [
+          ...standardDataTypes,
           {
             enum: 'Category',
             values: ['human', 'enhanced human', 'extra-terrestrial'],
@@ -298,15 +393,14 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return false
     },
     newKeyOptions: ({ key }) => {
-      if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category']
+      // if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category']
       if (key === 'address') return ['street', 'suburb', 'city', 'state', 'postalCode', 'country']
     },
     defaultValue: (_, newKey) => {
       console.log('PROPS', newKey)
-      if (newKey === 'category') return 'human'
+      // if (newKey === 'category') return 'human'
       if (newKey === 'country') return 'United States'
-      if (newKey === 'suburb') return 'Malibu'
-      return 'TESTING'
+      if (newKey === 'suburb') return 'Enter suburb'
     },
     customTextEditorAvailable: true,
   },

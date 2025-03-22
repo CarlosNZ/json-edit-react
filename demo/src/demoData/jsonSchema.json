@@ -47,5 +47,6 @@
       "enum": ["human", "enhanced human", "extra-terrestrial"]
     }
   },
+  "additionalProperties": false,
   "required": ["name", "age"]
 }
