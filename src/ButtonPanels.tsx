@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import extract from 'object-property-extractor'
 import { Icon } from './Icons'
 import { useTheme } from './contexts'
 import { type TranslateFunction } from './localisation'
@@ -28,6 +29,7 @@ interface EditButtonProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
+  getNewKeyOptions: (nodeDate: NodeData) => string[] | null | void
   editConfirmRef: React.RefObject<HTMLDivElement>
 }
 
@@ -43,25 +45,43 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   keyboardControls,
   handleKeyboard,
   editConfirmRef,
+  getNewKeyOptions,
 }) => {
   const { getStyles } = useTheme()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
-  const [isAdding, setIsAdding] = useState(false)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
+  const [addingState, setAddingState] = useState<string[] | boolean>(false)
 
   const { key, path, value: data } = nodeData
+
+  const hasKeyOptionsList = Array.isArray(addingState)
+
+  const updateAddingState = (active: boolean) => {
+    if (!active) {
+      setAddingState(false)
+      return
+    }
+
+    const existingKeys = Object.keys(extract(nodeData.fullData, path) as object)
+
+    const options = getNewKeyOptions
+      ? getNewKeyOptions(nodeData)?.filter((key) => !existingKeys.includes(key))
+      : null
+    if (options) setNewKey('')
+    setAddingState(options ?? true)
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     handleKeyboard(e, {
       stringConfirm: () => {
         if (handleAdd) {
-          setIsAdding(false)
+          updateAddingState(false)
           handleAdd(newKey)
           setNewKey(NEW_KEY_PROMPT)
         }
       },
       cancel: () => {
-        setIsAdding(false)
+        updateAddingState(false)
         setNewKey(NEW_KEY_PROMPT)
       },
     })
@@ -121,7 +141,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   }
 
   return (
-    <div className="jer-edit-buttons" style={{ opacity: isAdding ? 1 : undefined }}>
+    <div className="jer-edit-buttons" style={{ opacity: addingState ? 1 : undefined }}>
       {enableClipboard && (
         <div onClick={handleCopy} className="jer-copy-pulse">
           <Icon name="copy" nodeData={nodeData} />
@@ -151,7 +171,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
         <div
           onClick={(e) => {
             e.stopPropagation()
-            if (type === 'object') setIsAdding(true)
+            if (type === 'object') updateAddingState(true)
             // For arrays, we don't need to add a key
             else handleAdd('')
           }}
@@ -164,31 +184,58 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           <Element nodeData={nodeData} />
         </div>
       ))}
-      {isAdding && handleAdd && type === 'object' && (
+      {addingState && handleAdd && type === 'object' && (
         <>
-          <input
-            className="jer-input-new-key"
-            type="text"
-            name="new-object-key"
-            value={newKey}
-            onChange={(e) => setNewKey(e.target.value)}
-            onClick={(e) => e.stopPropagation()}
-            autoFocus
-            onFocus={(e) => e.target.select()}
-            onKeyDown={handleKeyPress}
-            style={getStyles('input', nodeData)}
-          />
+          {hasKeyOptionsList ? (
+            <div className="jer-select">
+              <select
+                name="new-key-select"
+                className="jer-select-inner"
+                onChange={(e) => setNewKey(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                defaultValue=""
+              >
+                <option value="" disabled>
+                  {translate('KEY_SELECT', nodeData)}
+                </option>
+                {addingState.map((val) => (
+                  <option value={val} key={val}>
+                    {val}
+                  </option>
+                ))}
+                {addingState.length === 0 && (
+                  <option value="" disabled>
+                    {translate('NO_KEY_OPTIONS', nodeData)}
+                  </option>
+                )}
+              </select>
+              <span className="focus"></span>
+            </div>
+          ) : (
+            <input
+              className="jer-input-new-key"
+              type="text"
+              name="new-object-key"
+              value={newKey}
+              onChange={(e) => setNewKey(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              autoFocus
+              onFocus={(e) => e.target.select()}
+              onKeyDown={handleKeyPress}
+              style={getStyles('input', nodeData)}
+            />
+          )}
           <InputButtons
             onOk={(e) => {
-              if (newKey) {
-                e.stopPropagation()
-                setIsAdding(false)
-                handleAdd(newKey)
-              }
+              e.stopPropagation()
+              if (hasKeyOptionsList && !newKey) return
+
+              updateAddingState(false)
+              handleAdd(newKey)
             }}
             onCancel={(e) => {
               e.stopPropagation()
-              setIsAdding(false)
+              updateAddingState(false)
             }}
             nodeData={nodeData}
             editConfirmRef={editConfirmRef}

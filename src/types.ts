@@ -37,6 +37,7 @@ export interface JsonEditorProps {
   showArrayIndices?: boolean
   showStringQuotes?: boolean
   defaultValue?: unknown
+  newKeyOptions?: string[] | NewKeyOptionsFunction
   minWidth?: string | number
   maxWidth?: string | number
   rootFontSize?: string | number
@@ -151,6 +152,7 @@ export type SearchFilterInputFunction = (
   inputData: Partial<NodeData>,
   searchText: string
 ) => boolean
+export type NewKeyOptionsFunction = (input: NodeData) => string[] | null | void
 
 export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
@@ -260,7 +262,7 @@ interface BaseNodeProps {
   canDragOnto: boolean
   searchFilter?: SearchFilterFunction
   searchText?: string
-  restrictTypeSelection: boolean | DataType[] | TypeFilterFunction
+  restrictTypeSelection: boolean | TypeOptions | TypeFilterFunction
   stringTruncate: number
   indent: number
   sort: SortFunction
@@ -286,6 +288,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   showCollectionCount: boolean | 'when-closed'
   showStringQuotes: boolean
   defaultValue: unknown
+  newKeyOptions?: string[] | NewKeyOptionsFunction
   jsonParse: (input: string) => JsonData
   jsonStringify: (data: JsonData) => string
   insertAtTop: { object: boolean; array: boolean }

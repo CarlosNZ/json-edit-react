@@ -445,6 +445,11 @@ function App() {
               //     : false
               // }
               defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
+              newKeyOptions={(nodeData) => {
+                console.log('Node data', nodeData)
+                if (nodeData.key === 'address') return ['one', 'two', 'three']
+                // return
+              }}
               showArrayIndices={showIndices}
               showStringQuotes={showStringQuotes}
               minWidth={'min(500px, 95vw)'}
