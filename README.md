@@ -51,10 +51,13 @@ A [React](https://github.com/facebook/react) component for editing or viewing JS
   - [OnChange function](#onchange-function)
   - [OnError function](#onerror-function)
   - [Copy function](#copy-function)
-- [Filter functions](#filter-functions)
-  - [TypeFilterFunction](#typefilterfunction)
-  - [Examples](#examples-1)
   - [JSON Schema validation](#json-schema-validation)
+- [Advanced Editing Control](#advanced-editing-control)
+  - [`restrictEdit`, `restrictDelete` \& `restrictAdd`](#restrictedit-restrictdelete--restrictadd)
+  - [Edit restriction examples](#edit-restriction-examples)
+  - [`collapse`](#collapse)
+  - [Data Type Restrictions](#data-type-restrictions)
+  - [New Key Restrictions \& Default Values](#new-key-restrictions--default-values)
   - [Drag-n-drop](#drag-n-drop)
 - [Full object editing](#full-object-editing)
 - [Search/Filtering](#searchfiltering)
@@ -129,6 +132,8 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 ## Props Reference
 
 The only *required* property is `data` (although you will need to provide a `setData` method to update your data).
+
+This is a reference list of *all* possible props, divided into related sections. Most of them provide a link to a section below in which the concepts are explored in more detail.
 
 <details open>
 <summary>
@@ -261,11 +266,16 @@ More detail [below](#external-control-1)
 
 ## Managing state
 
-It is recommended that you manage the `data` state yourself outside this component — just pass in a `setData` method, which is called internally to update your `data`. However, this is not compulsory -- if you don't provide a `setData` method, the data will be managed internally, which would be fine if you're not doing anything with the data. The alternative is to use the [Update functions](#update-functions) to update your `data` externally, but this is not recommended except in special circumstances as you can run into issues keeping your data in sync with the internal state (which is what is displayed), as well as unnecessary re-renders. Update functions should ideally be used only for implementing side effects (e.g. notifications), validation, or mutating the data before setting it with `setData`.
+It is recommended that you manage the `data` state yourself outside this component — just pass in a `setData` method, which is called internally to update your `data`. However, this is not compulsory — if you don't provide a `setData` method, the data will be managed internally, which is fine if you're not really doing anything with the data. The alternative is to use the [Update functions](#update-functions) to update your `data` externally, but this is not recommended except in special circumstances as you can run into issues keeping your data in sync with the internal state (which is what is displayed), as well as unnecessary re-renders.
+
+> [!TIP]
+> Update functions should ideally be used only for implementing side effects (e.g. notifications), validation, or mutating the data before setting it with `setData`.
 
 ## Update functions
 
-A callback to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update some external state, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema. If you want the same function for all updates, then just the `onUpdate` prop is sufficient. However, should you require something different for editing, deletion and addition, then you can provide separate Update functions via the `onEdit`, `onDelete` and `onAdd` props.
+A **callback** to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update some external state, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema.
+
+If you want the same function for all updates, then just the `onUpdate` prop is sufficient. However, should you require something different for **editing**, **deletion** and **addition**, then you can provide separate Update functions via the `onEdit`, `onDelete` and `onAdd` props.
 
 The function will receive the following object as a parameter:
 
@@ -289,11 +299,15 @@ The function can return nothing (in which case the data is updated normally), or
 
 ### OnChange function
 
-Similar to the Update functions, the `onChange` function is executed as the user input changes. You can use this to restrict or constrain user input -- e.g. limiting numbers to positive values, or preventing line breaks in strings. The function *must* return a value in order to update the user input field, so if no changes are to made, just return it unmodified.
+Similar to the Update functions, the `onChange` function is executed as the user input changes. You can use this to restrict or constrain user input -- e.g. limiting numbers to positive values, or preventing line breaks in strings. The function *must* return a value in order to update the user input field, so if no changes are to be made, just return it unmodified.
 
 The input object is similar to the Update function input, but with no `newData` field (since this operation occurs before the data is updated).
 
+<details>
+<summary>
+
 #### Examples
+</summary>
 
 - Restrict "age" inputs to positive values up to 100:  
   ```js
@@ -312,10 +326,11 @@ The input object is similar to the Update function input, but with no `newData` 
       return newValue;
     }
   ```
+</details>
 
 ### OnError function
 
-Normally, the component will display simple error messages whenever an error condition is detected (e.g. invalid JSON input, duplicate keys, or custom errors returned by the [`onUpdate` functions)](#update-functions)). However, you can provide your own `onError` callback in order to implement your own error UI, or run additional side effects. (In the former case, you'd probably want to disable the `showErrorMessages` prop, too.) The input to the callback is similar to the other callbacks:
+Normally, the component will display simple error messages whenever an error condition is detected (e.g. invalid JSON input, duplicate keys, or custom errors returned by the [`onUpdate` functions)](#update-functions)). However, you can provide your own `onError` callback in order to implement your own error UI, or run additional side effects. (In the former case, you'd probably want to disable the `showErrorMessages` prop, too.) The input is similar to the other callbacks:
 
 ```js
 {
@@ -331,13 +346,15 @@ Normally, the component will display simple error messages whenever an error con
     }
 }
 ```
- (An example of a custom Error UI can be seen in the [Demo](#https://carlosnz.github.io/json-edit-react/?data=customNodes) with the "Custom Nodes" data set -- when you enter invalid JSON input a "Toast" notification is displayed instead of the normal component error message.)
+> [!NOTE]
+> An example of a custom Error UI can be seen in the [Demo](#https://carlosnz.github.io/json-edit-react/?data=customNodes) with the "Custom Nodes" data set -- when you enter invalid JSON input a "Toast" notification is displayed instead of the normal component error message.
 
 ### Copy function
 
-A similar callback is executed whenever an item is copied to the clipboard (if passed to the `enableClipboard` prop), but with a different input parameter:
+A similar callback is executed whenever an item is **copied** to the clipboard (if passed to the `enableClipboard` prop), but with a slightly different input object:
 
 ```js
+{
     key          // name of the property being copied  
     path         // path to the property
     value        // the value copied to the clipboard
@@ -346,94 +363,16 @@ A similar callback is executed whenever an item is copied to the clipboard (if p
                  // (i.e. what the clipboard actually receives)
     success      // true/false -- whether clipboard copy action actually succeeded
     errorMessage // Error detail if `success === false`
-```
-
-Since there is very little user feedback when clicking "Copy", a good idea would be to present some kind of notification in this callback (see [Demo](https://carlosnz.github.io/json-edit-react/)). There are situations (such as an insecure environment) where the browser won't actually permit any clipboard actions. In this case, the `success` property will be `false`, so you can handle it appropriately.
-
-
-## Filter functions
-
-You can control which nodes of the data structure can be edited, deleted, or added to, or have their data type changed, by passing Filter functions. These will be called on each property in the data and the attribute will be enforced depending on whether the function returns `true` or `false` (`true` means *cannot* be edited).
-
-The function receives the following object:
-```js
-{
-    key,   // name of the property
-    path,  // path to the property (as an array of property keys)
-    level, // depth of the property (with 0 being the root)
-    index, // index of the node within its collection (based on display order)
-    value, // value of the property
-    size ,  // if a collection (object, array), the number of items (null for non-collections)
-    parentData, // parent object containing the current node
-    fullData // the full (overall) data object
-    collapsed // whether or not the current node is in a
-              // "collapsed" state (only for Collection nodes)
 }
 ```
 
-A Filter function is available for the `collapse` prop as well, so you can have your data appear with deeply-nested collections opened up, while collapsing everything else, for example.
+> [!TIP]
+> Since there is very little user feedback when clicking "Copy", a good idea would be to present some kind of notification (see [Demo](https://carlosnz.github.io/json-edit-react/)). There are situations (such as an insecure environment) where the browser won't actually permit any clipboard actions. In this case, the `success` property will be `false`, so you can handle it appropriately.
 
-### TypeFilterFunction
-
-For restricting data types, the (Type) filter function is slightly more sophisticated. The input is the same, but the output can be either a `boolean` (which would restrict the available types for a given node to either *all* or *none*), or an array of data types to be restricted to. The available values are:
-- `"string"`
-- `"number"`
-- `"boolean"`
-- `"null"`
-- `"object"`
-- `"array"`
-
-There is no specific restriction function for editing object key names, but they must return `false` for *both* `restrictEdit` and `restrictDelete` (and `restrictAdd` for collections), since changing a key name is equivalent to deleting a property and adding a new one.
-
-You can also set a dynamic default value by passing a filter function to the `defaultValue` prop -- the input is the same as the above, but also takes the new `key` value as its second parameter, so the new value can depend on the new key added.
-
-Using all these restriction filters together can allow you to enforce a reasonably sophisticated data schema.
-
-### Examples
-
-- A good case would be ensure your root node is not directly editable:
-
-```js
-// in <JsonEditor /> props
-restrictEdit = { ({ level }) => level === 0 }
-```
-
-- Don't let the `id` field be edited:
-
-```js
-restrictEdit = { ({ key }) => key === "id" }
-// You'd probably want to include this in `restrictDelete` as well
-```
-
-- Only individual properties can be deleted, not objects or arrays:
-
-```js
-restrictDelete = { ({ size }) => size !== null }
-```
-
-- The only collections that can have new items added are the "address" object and the "users" array:
-```js
-restrictAdd = { ({ key }) => key !== "address" && key !== "users" }
-// "Adding" is irrelevant for non-collection nodes
-```
-
-- Multiple type restrictions:
-  - `string` values can only be changed to strings or objects (for nesting)
-  - `null` is not allowed anywhere
-  - `boolean` values must remain boolean
-  - data nested below the "user" field can be any simple property (i.e. not objects or arrays), and doesn't have to follow the above rules (except no "null")
-```js
-restrictTypeSelection = { ({ path, value }) => {
-  if (path.includes('user')) return ['string', 'number', 'boolean']
-  if (typeof value === 'boolean') return false
-  if (typeof value === 'string') return ['string', 'object']
-  return ['string', 'number', 'boolean', 'array', 'object'] // no "null"
-} }
-```
 
 ### JSON Schema validation
 
-As well as dynamically controlling *access* to the various edit tools as described above, it's possible to do full [JSON Schema](https://json-schema.org/) validation by creating an [Update Function](#update-functions) that passes the data to a 3rd-party schema validation library (e.g. [Ajv](https://ajv.js.org/)). This will then reject any invalid input, and display an error in the UI (or via a custom [onError](#onerror-function) function). You can see an example of this in the [Demo](https://carlosnz.github.io/json-edit-react/?data=jsonSchemaValidation) with the "JSON Schema Validation" data set (and the "Custom Nodes" data set). 
+It's possible to do full [JSON Schema](https://json-schema.org/) validation by creating an [Update Function](#update-functions) that passes the data to a 3rd-party schema validation library (e.g. [Ajv](https://ajv.js.org/)). This will then reject any invalid input, and display an error in the UI (or via a custom [onError](#onerror-function) function). You can see an example of this in the [Demo](https://carlosnz.github.io/json-edit-react/?data=jsonSchemaValidation) with the "JSON Schema Validation" data set (and the "Custom Nodes" data set). 
 
 An example `onUpdate` validation function (using Ajv) could be something like this:
 
@@ -469,7 +408,166 @@ return
       }
     }}
   { ...otherProps } />
+``` 
+
+
+## Advanced Editing Control
+
+As well as configuring which nodes of can be **edited**, **deleted**, or **added** to, you can also specify:
+
+- the data types (if any) available to each node (including *enums*),
+- a restricted set of available keys that can be added to a node,
+- default values for specific nodes and data types,
+- drag 'n' drop restrictions
+- which nodes appear open or closed ("collapsed")
+
+As outlined in the [props list](#restricting-editing) above, most of these props can take either:
+
+- a `boolean` (in which case `true` means that edit mode is fully restricted, `false` means no restrictions)
+- a `FilterFunction` callback, which allows edit controls to be defined dynamically
+
+The callback for each type of restriction is slightly different, so let's look at each in turn:
+
+### `restrictEdit`, `restrictDelete` & `restrictAdd`
+
+> [!TIP]
+> As a shorthand, if you want to restrict *all* editing completely, you can just pass the `viewOnly` prop, which will supersede any other defined editing restrictions
+
+These each take a `boolean` value, or a `FilterFunction` callback, with the following input parameter object:
+
+```js
+{
+    key,        // name of the property
+    path,       // path to the property (as an array of property keys)
+    level,      // depth of the property (with 0 being the root)
+    index,      // index of the node within its collection (based on display order)
+    value,      // value of the property
+    size ,      // if a collection (object, array), the number of items (null for non-collections)
+    parentData, // parent object containing the current node
+    fullData    // the full (overall) data object
+    collapsed   // whether or not the current node is in a
+                // "collapsed" state (only for Collection nodes)
+}
 ```
+
+The callback must return a `boolean` value -- if `true` that node will **not** be editable.
+
+> [!TIP]
+> There is no specific restriction function for editing object key names, but the node must return `false` for *both* `restrictEdit` and `restrictDelete` (and `restrictAdd` for collections), since changing a key name is equivalent to deleting a property and adding a new one.
+
+<details>
+<summary>
+
+### Edit restriction examples
+</summary>
+
+- A good case would be ensure your root node is not directly editable:
+
+```js
+// in <JsonEditor /> props
+restrictEdit = { ({ level }) => level === 0 }
+```
+
+- Don't let the `id` field be edited:
+
+```js
+restrictEdit = { ({ key }) => key === "id" }
+// You'd probably want to include this in `restrictDelete` as well
+```
+
+- Only individual properties can be deleted, not objects or arrays:
+
+```js
+restrictDelete = { ({ size }) => size !== null }
+```
+
+- The only collections that can have new items added are the "address" object and the "users" array:
+```js
+restrictAdd = { ({ key }) => key !== "address" && key !== "users" }
+// "Adding" is irrelevant for non-collection nodes
+```
+</details>
+
+### `collapse`
+
+As well as `boolean` or a `FilterFunction` with the same signature as the edit restrictions, the `collapse` prop can also take a `number` value, which specifies a nesting depth after which nodes will be closed.
+
+### Data Type Restrictions
+
+The `restrictDataType` prop can take either a `boolean` (`true` means data type can **not** be changed at all) or a (slightly different) `FilterFunction` as a above, or an **array** of available data types. The core types are:
+
+- `"string"`
+- `"number"`
+- `"boolean"`
+- `"null"`
+- `"object"`
+- `"array"`
+
+The data type array can also specify [Custom Node](#custom-nodes) types (as defined in the custom node's `name` prop), as we as Enum options (see [Enums](#enums) below).
+
+Similarly, the `FilterFunction` for data types, while it takes the same input shape, can return either a simple `boolean` *or* an `array` of available types.
+
+> [!NOTE]
+> If `restrictTypeSelection` returns less than two available types for a given node, the "Type Selector" drop-down won't appear at all.
+
+<details>
+<summary>
+
+#### Type restriction example
+</summary>
+
+This `restrictTypeSelection` function defines the following restrictions:
+  - `string` values can only be changed to strings or objects (for nesting)
+  - `null` is not allowed anywhere
+  - `boolean` values must remain boolean
+  - data nested below the "user" field can be any simple property (i.e. not objects or arrays), and doesn't have to follow the above rules (except no "null")
+
+```js
+restrictTypeSelection = { ({ path, value }) => {
+  if (path.includes('user')) return ['string', 'number', 'boolean']
+  if (typeof value === 'boolean') return false
+  if (typeof value === 'string') return ['string', 'object']
+  return ['string', 'number', 'boolean', 'array', 'object'] // no "null"
+} }
+```
+</details>
+
+#### Enums
+
+By defining an **Enum** type, you can restrict the available values to a pre-defined list:
+
+<img width="331" alt="Eye colour enum example" src="image/enum_example.png">
+
+To define an Enum, just add an object with the following structure to your "Types" array (either directly in the prop, or returned from the callback):
+
+```js
+{
+  enum: "My Enum Type" // name that will appear in the Types selector drop-down
+  values: [  // the list of allowed values
+    "Option A",
+    "Option B",
+    "Option C"
+  ]
+  matchPriority: 1 // (Optional) used to recognize existing string values as the particular type (see below)
+}
+```
+
+What is `matchPriority`? Well, when a data object is initialised, we have no way to know whether a given string value is "just a string" or is supposed to be one of the values of an Enum type (and we don't want to assume that if it's listed somewhere in an Enum `values` list that it definitely *should* be restricted to that type). So, if `matchPriority` is not defined, then that Enum type will *never* be assigned to a potentially matching value when editing. If `matchPriority` is defined, then the highest value Enum that has the value in its `values` list will be assigned (so if multiple Enums have overlapping `values`, the highest one takes priority).
+
+If the type of a given node is going to be *restricted* to a particular Enum type (i.e. the `restrictEditType` prop returns *only* one value), then a `matchPriority` is essential, otherwise it wouldn't be possible to switch a `string` to that type.
+
+You can see examples of this in the [Star Wars data set](https://carlosnz.github.io/json-edit-react/?data=starWars) of the Demo — the `eye_color`, `skin_color`, `hair_color` and `films` values are all restricted to a single, matching Enum type.
+
+> [!NOTE]
+> When editing, once an Enum type is selected from the Types selector, that node will continue to be displayed as that type for subsequent edits in the same session -- the `matchPriority` is purely for automatic recognition of a given value as a specific type when *first* editing it
+
+
+
+
+### New Key Restrictions & Default Values
+
+You can also set a dynamic default value by passing a filter function to the `defaultValue` prop -- the input is the same as the above, but also takes the new `key` value as its second parameter, so the new value can depend on the new key added.
+
 
 ### Drag-n-drop
 
