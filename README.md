@@ -130,7 +130,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 
 The only *required* property is `data` (although you will need to provide a `setData` method to update your data).
 
-<details>
+<details open>
 <summary>
 
 ### Data Management

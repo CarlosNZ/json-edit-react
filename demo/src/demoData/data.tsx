@@ -10,7 +10,7 @@ export const data: Record<string, object> = {
       'You can change the type of any value',
       'You can add new values to objects or arrays',
       'You can edit individual values, or even a whole object node at once (as JSON text)',
-      'You can also drag and drop! 🆕',
+      'You can also drag and drop!',
       {
         nested: 'An object inside an array',
         basic: false,
