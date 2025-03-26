@@ -12,4 +12,4 @@ The {{BLOCKS}} below are replaced from the equivalent blocks in the main README 
 
 ---
 
-For **FULL DOCUMENTATION**, visit [https://github.com/CarlosNZ/json-edit-react](https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#json-edit-react)
+For **FULL DOCUMENTATION**, visit [https://github.com/CarlosNZ/json-edit-react](https://github.com/CarlosNZ/json-edit-react#json-edit-react)

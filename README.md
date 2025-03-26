@@ -18,14 +18,14 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
  - ✅ **Easy inline editing** of individual values or whole blocks of JSON text 
  - 🔒 **Granular control** – restrict edits, deletions, or additions per element
  - 📏 **[JSON Schema](https://json-schema.org/) validation** (using 3rd-party validation library)
- - 🎨 **Customisable UI** — built-in or custom [themes](https://github.com/CarlosNZ/json-edit-react#themes--styles), CSS overrides or targeted classes
+ - 🎨 **Customisable UI** — built-in or custom [themes](#themes--styles), CSS overrides or targeted classes
  - 📦 **Self-contained** — plain HTML/CSS, so no dependence on external UI libraries
  - 🔍 **Search & filter** — find data by key, value or custom function
- - 🚧 **[Custom components](https://github.com/CarlosNZ/json-edit-react#custom-nodes)** — replace specific nodes with specialised components (e.g. date picker, links, images)
- - 🌏 **[Localisation](https://github.com/CarlosNZ/json-edit-react#localisation)** — easily translate UI labels and messages
- - 🔄 **[Drag-n-drop](https://github.com/CarlosNZ/json-edit-react#drag-n-drop)** re-ordering within objects/arrays
- - 🎹 **[Keyboard customisation](https://github.com/CarlosNZ/json-edit-react#keyboard-customisation)** — define your own key bindings
- - 🎮 **[External control](https://github.com/CarlosNZ/json-edit-react#external-control-1)** via callbacks and triggers
+ - 🚧 **[Custom components](#custom-nodes)** — replace specific nodes with specialised components (e.g. date picker, links, images)
+ - 🌏 **[Localisation](#localisation)** — easily translate UI labels and messages
+ - 🔄 **[Drag-n-drop](#drag-n-drop)** re-ordering within objects/arrays
+ - 🎹 **[Keyboard customisation](#keyboard-customisation)** — define your own key bindings
+ - 🎮 **[External control](#external-control-1)** via callbacks and triggers
 
 💡 Try the **[Live Demo](https://carlosnz.github.io/json-edit-react/)** to see these features in action!
 
@@ -34,8 +34,8 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 
 > [!IMPORTANT]
 > Breaking changes:
-> - **Version 1.19.0** has a change to the `theme` input. Built-in themes must now be imported separately and passed in, rather than just naming the theme as a string. This is better for tree-shaking, so unused themes won't be bundled with your build. See [Themes & Styles](https://github.com/CarlosNZ/json-edit-react#themes--styles).
-> - **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](https://github.com/CarlosNZ/json-edit-react#managing-state).
+> - **Version 1.19.0** has a change to the `theme` input. Built-in themes must now be imported separately and passed in, rather than just naming the theme as a string. This is better for tree-shaking, so unused themes won't be bundled with your build. See [Themes & Styles](#themes--styles).
+> - **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state).
 
 <!-- NPM INTRO -->
 
