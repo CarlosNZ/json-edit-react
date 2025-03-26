@@ -18,14 +18,14 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
  - ✅ **Easy inline editing** of individual values or whole blocks of JSON text 
  - 🔒 **Granular control** – restrict edits, deletions, or additions per element
  - 📏 **[JSON Schema](https://json-schema.org/) validation** (using 3rd-party validation library)
- - 🎨 **Customisable UI** — built-in or custom [themes](https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#themes--styles), CSS overrides or targeted classes
+ - 🎨 **Customisable UI** — built-in or custom [themes](https://github.com/CarlosNZ/json-edit-react#themes--styles), CSS overrides or targeted classes
  - 📦 **Self-contained** — plain HTML/CSS, so no dependence on external UI libraries
  - 🔍 **Search & filter** — find data by key, value or custom function
- - 🚧 **[Custom components](https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#custom-nodes)** — replace specific nodes with specialised components (e.g. date picker, links, images)
- - 🌏 **[Localisation](https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#localisation)** — easily translate UI labels and messages
- - 🔄 **[Drag-n-drop](https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#drag-n-drop)** re-ordering within objects/arrays
- - 🎹 **[Keyboard customisation](https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#keyboard-customisation)** — define your own key bindings
- - 🎮 **[External control](https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#external-control-1)** via callbacks and triggers
+ - 🚧 **[Custom components](https://github.com/CarlosNZ/json-edit-react#custom-nodes)** — replace specific nodes with specialised components (e.g. date picker, links, images)
+ - 🌏 **[Localisation](https://github.com/CarlosNZ/json-edit-react#localisation)** — easily translate UI labels and messages
+ - 🔄 **[Drag-n-drop](https://github.com/CarlosNZ/json-edit-react#drag-n-drop)** re-ordering within objects/arrays
+ - 🎹 **[Keyboard customisation](https://github.com/CarlosNZ/json-edit-react#keyboard-customisation)** — define your own key bindings
+ - 🎮 **[External control](https://github.com/CarlosNZ/json-edit-react#external-control-1)** via callbacks and triggers
 
 💡 Try the **[Live Demo](https://carlosnz.github.io/json-edit-react/)** to see these features in action!
 
@@ -34,8 +34,8 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 
 > [!IMPORTANT]
 > Breaking changes:
-> - **Version 1.19.0** has a change to the `theme` input. Built-in themes must now be imported separately and passed in, rather than just naming the theme as a string. This is better for tree-shaking, so unused themes won't be bundled with your build. See [Themes & Styles](https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#themes--styles).
-> - **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#managing-state).
+> - **Version 1.19.0** has a change to the `theme` input. Built-in themes must now be imported separately and passed in, rather than just naming the theme as a string. This is better for tree-shaking, so unused themes won't be bundled with your build. See [Themes & Styles](https://github.com/CarlosNZ/json-edit-react#themes--styles).
+> - **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](https://github.com/CarlosNZ/json-edit-react#managing-state).
 
 <!-- NPM INTRO -->
 
@@ -128,7 +128,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
 - For Number inputs, arrow-up and down keys will increment/decrement the value
 - For Boolean inputs, space bar will toggle the value
-- Easily move to the next/previous node (for editing) using the `Tab`/`Shift-Tab` key
+- Easily navigate to the next or previous node for editing using the `Tab`/`Shift-Tab` keys.
 - Drag and drop items to change the structure or modify display order
 - When editing is not permitted, double-clicking a string value will expand the text to the full value if it is truncated due to length (there is also a clickable "..." for long strings)
 - JSON text input can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
@@ -160,7 +160,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | `onAdd`           | `UpdateFunction`        | none    | A function to run whenever a new property is **added**.                                                                             |
 | `onChange`        | `OnChangeFunction`      | none    | A function to modify/constrain user input as they type — see [OnChange functions](#onchange-function).                              |
 | `onError`         | `OnErrorFunction`       | none    | A function to run whenever the component reports an error — see [OnErrorFunction](#onerror-function).                               |
-| `enableClipboard` | `boolean\|CopyFunction` | `true`  | Whether or not to enable the "Copy to clipboard" button in the UI — see [Copy Function](#copy-function)                             |
+| `enableClipboard` | `boolean\|CopyFunction` | `true`  | Enable or disable the "Copy to clipboard" button in the UI. — see [Copy Function](#copy-function)                                   |
 
 </details>
 <details>
@@ -560,7 +560,7 @@ To define an Enum, just add an object with the following structure to your "Type
 }
 ```
 
-What is `matchPriority`? Well, when the data object is initialised, we have no way to know whether a given string value is "just a string" or is supposed to be one of the values of an Enum type (and we don't want to assume that if it's listed somewhere in an Enum `values` list that it definitely *should* be restricted to that type). So, if `matchPriority` is not defined, then that Enum type will *never* be initially assigned to a potentially matching Enum value when editing. If `matchPriority` is defined, then the highest priority Enum that has the value in its `values` list will be assigned (so if multiple Enums have overlapping `values`, the highest one takes priority).
+What is `matchPriority`? Well, when the data object is initialised, we have no way to know whether a given string value is "just a string" or is supposed to be one of the values of an Enum type (and we don't want to assume that if it's listed somewhere in an Enum `values` list that it definitely *should* be restricted to that type). So, if `matchPriority` is not defined, then that Enum type will *never* be initially assigned to a potentially matching Enum value when editing. If `matchPriority` is defined, then the highest priority Enum that has the value in its `values` list will be assigned (so if multiple Enums have overlapping `values`, the one with the highest priority will be applied.).
 
 If the type of a given node is going to be *restricted* to a particular Enum type (i.e. the `restrictEditType` prop returns *only* one value), then a `matchPriority` is essential, otherwise it wouldn't be possible to switch a `string` to that type.
 
