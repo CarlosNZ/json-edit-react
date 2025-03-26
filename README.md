@@ -672,7 +672,7 @@ defaultValue = (_, newKey) => { // Ignoring normal first parameter in this case
 
 The `restrictDrag` property controls which items (if any) can be dragged into new positions. By default, this is *off*, so you must set `restrictDrag = false` to enable this functionality. Like the Edit restrictions above, this property can also take a Filter function for fine-grained control. There are a couple of additional considerations, though:
 
-- Javascript does *not* guarantee object property order, so enabling this feature may yield unpredictable results. See [here](https://dev.to/frehner/the-order-of-js-object-keys-458d) for an explanation of how key ordering is handled.
+- JavaScript does *not* guarantee object property order, so enabling this feature may yield unpredictable results. See [here](https://dev.to/frehner/the-order-of-js-object-keys-458d) for an explanation of how key ordering is handled.
 > [!WARNING]
 > It is strongly advised that you only enable drag-and-drop functionality if:
 > 1. you're sure object keys will always be simple strings (i.e. not digits or non-standard characters)
@@ -923,8 +923,8 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   showEditTools         // boolean, default true
   name                  // string (appears in Types selector)
   showInTypesSelector   // boolean (optional), default false
-  passOriginalNode      // boolean (optional), default false -- if `true` makes the original node
-                        //   for rendering within Custom Node
+  passOriginalNode      // boolean (optional), default false -- if `true`, makes the original
+                        // node available for rendering within Custom Node
   
   // Only affects Collection nodes:
   showCollectionWrapper // boolean (optional), default true
