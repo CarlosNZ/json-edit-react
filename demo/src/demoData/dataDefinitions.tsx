@@ -396,11 +396,21 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category', 'isAlive']
       if (key === 'address') return ['street', 'suburb', 'city', 'state', 'postalCode', 'country']
     },
-    defaultValue: (_, newKey) => {
+    defaultValue: ({ key }, newKey) => {
+      if (key === 'hobbies') return 'Enter a hobby'
+
       if (newKey === 'country') return 'United States'
       if (newKey === 'suburb') return 'Enter a suburb'
       if (newKey === 'category') return 'human'
       if (newKey === 'isAlive') return true
+      if (newKey === 'hobbies') return ['avenging', '...add more']
+      if (newKey === 'address')
+        return {
+          street: 'Enter street address',
+          city: 'City',
+          state: 'CA',
+          postalCode: '12345',
+        }
     },
     customTextEditorAvailable: true,
   },
