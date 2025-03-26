@@ -7,6 +7,7 @@ export { matchNode, matchNodeKey, isCollection } from './helpers'
 export { default as assign } from 'object-property-assigner'
 export { default as extract } from 'object-property-extractor'
 export {
+  standardDataTypes,
   type JsonEditorProps,
   type UpdateFunction,
   type OnChangeFunction,
@@ -19,6 +20,8 @@ export {
   type FilterFunction,
   type SearchFilterFunction,
   type TypeFilterFunction,
+  type NewKeyOptionsFunction,
+  type DefaultValueFunction,
   type CompareFunction,
   type IconReplacements,
   type CollectionNodeProps,
@@ -27,7 +30,6 @@ export {
   type CustomNodeDefinition,
   type CustomTextDefinitions,
   type CustomTextFunction,
-  type DefaultValueFunction,
   type Theme,
   type ThemeInput,
   type ThemeStyles,
@@ -36,6 +38,7 @@ export {
   type KeyboardControls,
   type TextEditorProps,
   type CollapseState,
+  type EnumDefinition,
 } from './types'
 export { type EditState, type ExternalTriggers } from './hooks'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'

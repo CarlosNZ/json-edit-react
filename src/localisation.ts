@@ -4,6 +4,8 @@ const localisedStrings = {
   ITEM_SINGLE: '{{count}} item',
   ITEMS_MULTIPLE: '{{count}} items',
   KEY_NEW: 'Enter new key',
+  KEY_SELECT: 'Select key',
+  NO_KEY_OPTIONS: 'No key options',
   ERROR_KEY_EXISTS: 'Key already exists',
   ERROR_INVALID_JSON: 'Invalid JSON',
   ERROR_UPDATE: 'Update unsuccessful',

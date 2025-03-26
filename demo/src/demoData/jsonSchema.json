@@ -16,6 +16,9 @@
         "street": {
           "type": "string"
         },
+        "suburb": {
+          "type": "string"
+        },
         "city": {
           "type": "string"
         },
@@ -25,16 +28,28 @@
         "postalCode": {
           "type": "string",
           "pattern": "\\d{5}"
+        },
+        "country": {
+          "type": "string"
         }
       },
-      "required": ["street", "city", "state", "postalCode"]
+      "required": ["street", "city", "state", "postalCode"],
+      "additionalProperties": false
     },
     "hobbies": {
       "type": "array",
       "items": {
         "type": "string"
       }
+    },
+    "category": {
+      "type": "string",
+      "enum": ["human", "enhanced human", "extra-terrestrial"]
+    },
+    "isAlive": {
+      "type": "boolean"
     }
   },
+  "additionalProperties": false,
   "required": ["name", "age"]
 }

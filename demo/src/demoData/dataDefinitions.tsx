@@ -11,13 +11,16 @@ import {
   matchNode,
 } from '../_imports'
 import {
-  DataType,
   DefaultValueFunction,
   ErrorString,
+  NewKeyOptionsFunction,
   OnChangeFunction,
   OnErrorFunction,
   SearchFilterFunction,
+  standardDataTypes,
   ThemeStyles,
+  TypeFilterFunction,
+  TypeOptions,
   UpdateFunction,
   UpdateFunctionProps,
 } from '../json-edit-react/src/types'
@@ -39,7 +42,7 @@ export interface DemoData {
   restrictEdit?: boolean | FilterFunction
   restrictDelete?: boolean | FilterFunction
   restrictAdd?: boolean | FilterFunction
-  restrictTypeSelection?: boolean | DataType[]
+  restrictTypeSelection?: boolean | TypeOptions | TypeFilterFunction
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
   searchPlaceholder?: string
   onUpdate?: (
@@ -52,6 +55,7 @@ export interface DemoData {
   onError?: OnErrorFunction
   showErrorMessages?: boolean
   defaultValue?: unknown | DefaultValueFunction
+  newKeyOptions?: string[] | NewKeyOptionsFunction
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
   styles?: Partial<ThemeStyles>
@@ -94,6 +98,19 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     customNodeDefinitions: [dateNodeDefinition],
     // restrictEdit: ({ key }) => key === 'number',
     customTextEditorAvailable: true,
+    restrictTypeSelection: ({ key }) => {
+      if (key === 'enum')
+        return [
+          ...standardDataTypes,
+          'Date',
+          {
+            enum: 'Custom Type',
+            values: ['Option A', 'Option B', 'Option C'],
+            matchPriority: 1,
+          },
+        ]
+      return false
+    },
   },
   starWars: {
     name: '🚀 Star Wars',
@@ -128,7 +145,82 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
     restrictDelete: ({ value }) => typeof value === 'object' && value !== null,
     restrictAdd: ({ value }) => !Array.isArray(value),
-    restrictTypeSelection: true,
+    restrictTypeSelection: ({ key, path }) => {
+      if (path.slice(-2)[0] === 'films' || (path.slice(-3)[0] === 'films' && key === 'title'))
+        return [
+          {
+            enum: 'Film',
+            values: [
+              'A New Hope',
+              'The Empire Strikes Back',
+              'Return of the Jedi',
+              'The Phantom Menace',
+              'Attack of the Clones',
+              'Revenge of the Sith',
+              'The Force Awakens',
+              'The Last Jedi',
+              'The Rise of Skywalker',
+            ],
+            matchPriority: 1,
+          },
+        ]
+      if (key === 'eye_color')
+        return [
+          {
+            enum: 'Eye colour',
+            values: [
+              'blue',
+              'brown',
+              'green',
+              'hazel',
+              'red',
+              'yellow',
+              'black',
+              'white',
+              'orange',
+              'pink',
+              'purple',
+              'grey',
+              'gold',
+              'unknown',
+            ],
+            matchPriority: 1,
+          },
+        ]
+      if (key === 'hair_color')
+        return [
+          {
+            enum: 'Hair colour',
+            values: ['black', 'blond', 'brown', 'auburn', 'grey', 'white', 'unknown'],
+            matchPriority: 1,
+          },
+        ]
+      if (key === 'skin_color')
+        return [
+          {
+            enum: 'Skin colour',
+            values: [
+              'fair',
+              'brown',
+              'dark',
+              'gold',
+              'white',
+              'blue',
+              'red',
+              'yellow',
+              'green',
+              'pale',
+              'metal',
+              'orange',
+              'grey',
+              'mottled',
+              'unknown',
+            ],
+            matchPriority: 1,
+          },
+        ]
+      return true
+    },
     collapse: 1,
     customNodeDefinitions: [dateNodeDefinition, LinkCustomNodeDefinition],
     data: data.starWars,
@@ -261,6 +353,11 @@ export const demoDataDefinitions: Record<string, DemoData> = {
             this one.
           </Link>
         </Text>
+        <Text>
+          Also, notice if you try to add additional keys to the{' '}
+          <span className="code">address</span> field or the root node, you'll be limited to allowed
+          options via a drop-down.
+        </Text>
       </Flex>
     ),
     rootName: 'data',
@@ -282,6 +379,38 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         })
         return 'JSON Schema error'
       }
+    },
+    restrictTypeSelection: ({ key }) => {
+      if (key === 'category')
+        return [
+          ...standardDataTypes,
+          {
+            enum: 'Category',
+            values: ['human', 'enhanced human', 'extra-terrestrial'],
+            matchPriority: 1,
+          },
+        ]
+      return false
+    },
+    newKeyOptions: ({ key }) => {
+      if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category', 'isAlive']
+      if (key === 'address') return ['street', 'suburb', 'city', 'state', 'postalCode', 'country']
+    },
+    defaultValue: ({ key }, newKey) => {
+      if (key === 'hobbies') return 'Enter a hobby'
+
+      if (newKey === 'country') return 'United States'
+      if (newKey === 'suburb') return 'Enter a suburb'
+      if (newKey === 'category') return 'human'
+      if (newKey === 'isAlive') return true
+      if (newKey === 'hobbies') return ['avenging', '...add more']
+      if (newKey === 'address')
+        return {
+          street: 'Enter street address',
+          city: 'City',
+          state: 'CA',
+          postalCode: '12345',
+        }
     },
     customTextEditorAvailable: true,
   },

@@ -122,6 +122,8 @@ function App() {
   const previousTheme = useRef<Theme>() // Used when resetting after theme editing
   const toast = useToast()
 
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
+
   const { liveData, loading, updateLiveData } = useDatabase()
 
   const [
@@ -331,18 +333,24 @@ function App() {
           <Box position="relative">
             <Input
               id="searchTextInput"
-              placeholder={dataDefinition.searchPlaceholder ?? 'Search values'}
+              placeholder={
+                isSearchFocused ? dataDefinition.searchPlaceholder ?? 'Search values' : '🔍'
+              }
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
               bgColor={'#f6f6f6'}
               borderColor="gainsboro"
               borderRadius={50}
               size="sm"
-              w={60}
+              w={20}
               value={searchText}
               onChange={(e) => updateState({ searchText: e.target.value })}
               position="absolute"
               right={2}
               top={2}
               zIndex={100}
+              _focus={{ w: '45%' }}
+              transition={'width 0.3s'}
             />
             <JsonEditor
               data={data}
@@ -408,6 +416,23 @@ function App() {
               restrictDelete={restrictDelete}
               restrictAdd={restrictAdd}
               restrictTypeSelection={dataDefinition?.restrictTypeSelection}
+              // restrictTypeSelection={[
+              //   'string',
+              //   'number',
+              //   'boolean',
+              //   'null',
+              //   { enum: 'Option', values: ['One', 'Two', 'Three'] },
+              //   {
+              //     enum: 'Hobby',
+              //     values: ['partying', 'building stuff', 'avenging', 'time travel'],
+              //     matchPriority: 1,
+              //   },
+              //   {
+              //     enum: 'Other activities that could be quite long',
+              //     values: ['changing', 'building stuff', 'avenging', 'money money money money'],
+              //     matchPriority: 2,
+              //   },
+              // ]}
               restrictDrag={false}
               searchFilter={dataDefinition?.searchFilter}
               searchText={searchText}
@@ -428,6 +453,7 @@ function App() {
               //     : false
               // }
               defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
+              newKeyOptions={dataDefinition?.newKeyOptions}
               showArrayIndices={showIndices}
               showStringQuotes={showStringQuotes}
               minWidth={'min(500px, 95vw)'}

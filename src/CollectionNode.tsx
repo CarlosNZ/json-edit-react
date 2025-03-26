@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react'
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
@@ -53,6 +53,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     sort,
     showArrayIndices,
     defaultValue,
+    newKeyOptions,
     translate,
     customNodeDefinitions,
     jsonParse,
@@ -126,12 +127,22 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   // For JSON-editing TextArea
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
 
-  const getDefaultNewValue = useMemo(
-    () => (nodeData: NodeData, newKey: string) => {
+  const getDefaultNewValue = useCallback(
+    (nodeData: NodeData, newKey: string) => {
       if (typeof defaultValue !== 'function') return defaultValue
-      return defaultValue(nodeData, newKey)
+      const customDefault = defaultValue(nodeData, newKey)
+      return customDefault !== undefined ? customDefault : null
     },
     [defaultValue]
+  )
+
+  const getNewKeyOptions = useCallback(
+    (nodeData: NodeData) => {
+      if (!newKeyOptions) return null
+      if (typeof newKeyOptions !== 'function') return newKeyOptions
+      return newKeyOptions(nodeData)
+    },
+    [newKeyOptions]
   )
 
   const {
@@ -401,6 +412,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       customButtons={props.customButtons}
       keyboardControls={keyboardControls}
       handleKeyboard={handleKeyboard}
+      getNewKeyOptions={getNewKeyOptions}
       editConfirmRef={editConfirmRef}
     />
   )

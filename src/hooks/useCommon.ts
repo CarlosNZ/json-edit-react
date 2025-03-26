@@ -3,7 +3,7 @@
  * Nodes and Value Nodes
  */
 
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTreeState } from '../contexts'
 import {
   type CollectionNodeProps,
@@ -59,8 +59,8 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     console.warn('Error', errorString)
   }
 
-  const onError = useMemo(
-    () => (error: JerError, errorValue: JsonData | string) => {
+  const onError = useCallback(
+    (error: JerError, errorValue: JsonData | string) => {
       showError(error.message)
       if (onErrorCallback) {
         onErrorCallback({

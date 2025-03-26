@@ -10,6 +10,10 @@ import {
   type CollectionKey,
   type TabDirection,
   type SortFunction,
+  type TypeOptions,
+  type EnumDefinition,
+  type CollectionData,
+  type ValueData,
 } from './types'
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
@@ -334,4 +338,21 @@ export const insertCharInTextArea = (
   textArea.value = newString
   textArea?.setSelectionRange(startPos + 1, startPos + 1)
   return newString
+}
+
+// Compares the current (string) data value against the possible data types to
+// see if it matches any Enum types, and returns the highest priority match if
+// so.
+export const matchEnumType = (
+  value: CollectionData | ValueData,
+  dataTypes: TypeOptions
+): EnumDefinition | null => {
+  if (typeof value !== 'string') return null
+
+  const candidates = dataTypes.filter(
+    (type) =>
+      type instanceof Object && type.enum && type.values.includes(value) && type.matchPriority
+  ) as EnumDefinition[]
+  candidates.sort((a, b) => (b.matchPriority ?? 0) - (a.matchPriority ?? 0))
+  return candidates[0] ?? null
 }

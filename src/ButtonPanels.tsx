@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import extract from 'object-property-extractor'
 import { Icon } from './Icons'
 import { useTheme } from './contexts'
 import { type TranslateFunction } from './localisation'
@@ -28,6 +29,7 @@ interface EditButtonProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
+  getNewKeyOptions?: (nodeDate: NodeData) => string[] | null | void
   editConfirmRef: React.RefObject<HTMLDivElement>
 }
 
@@ -43,25 +45,50 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   keyboardControls,
   handleKeyboard,
   editConfirmRef,
+  getNewKeyOptions,
 }) => {
   const { getStyles } = useTheme()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
-  const [isAdding, setIsAdding] = useState(false)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
 
+  // This value indicates whether the user is adding a new key to an object.
+  // Normally such an indicator would be a boolean, but in this case it can also
+  // be an array of strings. This is to avoid having to have a separate state
+  // value for the list of key options as well as an "are we adding a key?"
+  // state value.
+  const [addingKeyState, setAddingKeyState] = useState<string[] | boolean>(false)
+
   const { key, path, value: data } = nodeData
+
+  const hasKeyOptionsList = Array.isArray(addingKeyState)
+
+  const updateAddingState = (active: boolean) => {
+    if (!active) {
+      setAddingKeyState(false)
+      return
+    }
+
+    // Don't show keys that already exist in the object
+    const existingKeys = Object.keys(extract(nodeData.fullData, path) as object)
+
+    const options = getNewKeyOptions
+      ? getNewKeyOptions(nodeData)?.filter((key) => !existingKeys.includes(key))
+      : null
+    if (options) setNewKey('')
+    setAddingKeyState(options ?? true)
+  }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     handleKeyboard(e, {
       stringConfirm: () => {
         if (handleAdd) {
-          setIsAdding(false)
+          updateAddingState(false)
           handleAdd(newKey)
           setNewKey(NEW_KEY_PROMPT)
         }
       },
       cancel: () => {
-        setIsAdding(false)
+        updateAddingState(false)
         setNewKey(NEW_KEY_PROMPT)
       },
     })
@@ -121,37 +148,30 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   }
 
   return (
-    <div className="jer-edit-buttons" style={{ opacity: isAdding ? 1 : undefined }}>
+    <div
+      className="jer-edit-buttons"
+      style={{ opacity: addingKeyState ? 1 : undefined }}
+      onClick={(e) => e.stopPropagation()}
+    >
       {enableClipboard && (
         <div onClick={handleCopy} className="jer-copy-pulse">
           <Icon name="copy" nodeData={nodeData} />
         </div>
       )}
       {startEdit && (
-        <div
-          onClick={(e) => {
-            e.stopPropagation()
-            startEdit()
-          }}
-        >
+        <div onClick={startEdit}>
           <Icon name="edit" nodeData={nodeData} />
         </div>
       )}
       {handleDelete && (
-        <div
-          onClick={(e) => {
-            e.stopPropagation()
-            handleDelete()
-          }}
-        >
+        <div onClick={handleDelete}>
           <Icon name="delete" nodeData={nodeData} />
         </div>
       )}
       {handleAdd && (
         <div
-          onClick={(e) => {
-            e.stopPropagation()
-            if (type === 'object') setIsAdding(true)
+          onClick={() => {
+            if (type === 'object') updateAddingState(true)
             // For arrays, we don't need to add a key
             else handleAdd('')
           }}
@@ -164,34 +184,64 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           <Element nodeData={nodeData} />
         </div>
       ))}
-      {isAdding && handleAdd && type === 'object' && (
+      {addingKeyState && handleAdd && type === 'object' && (
         <>
-          <input
-            className="jer-input-new-key"
-            type="text"
-            name="new-object-key"
-            value={newKey}
-            onChange={(e) => setNewKey(e.target.value)}
-            onClick={(e) => e.stopPropagation()}
-            autoFocus
-            onFocus={(e) => e.target.select()}
-            onKeyDown={handleKeyPress}
-            style={getStyles('input', nodeData)}
-          />
+          {hasKeyOptionsList ? (
+            <div className="jer-select jer-select-keys">
+              <select
+                name="new-key-select"
+                className="jer-select-inner"
+                onChange={(e) => {
+                  handleAdd(e.target.value)
+                  updateAddingState(false)
+                }}
+                defaultValue=""
+                autoFocus
+                onKeyDown={(e: React.KeyboardEvent) => {
+                  handleKeyboard(e, {
+                    cancel: () => updateAddingState(false),
+                  })
+                }}
+              >
+                <option value="" disabled>
+                  {addingKeyState.length > 0
+                    ? translate('KEY_SELECT', nodeData)
+                    : translate('NO_KEY_OPTIONS', nodeData)}
+                </option>
+                {addingKeyState.map((val) => (
+                  <option value={val} key={val}>
+                    {val}
+                  </option>
+                ))}
+              </select>
+              <span className="focus"></span>
+            </div>
+          ) : (
+            <input
+              className="jer-input-new-key"
+              type="text"
+              name="new-object-key"
+              value={newKey}
+              onChange={(e) => setNewKey(e.target.value)}
+              autoFocus
+              onFocus={(e) => e.target.select()}
+              onKeyDown={handleKeyPress}
+              style={getStyles('input', nodeData)}
+            />
+          )}
           <InputButtons
-            onOk={(e) => {
-              if (newKey) {
-                e.stopPropagation()
-                setIsAdding(false)
-                handleAdd(newKey)
-              }
+            onOk={() => {
+              if (hasKeyOptionsList && !newKey) return
+
+              updateAddingState(false)
+              handleAdd(newKey)
             }}
-            onCancel={(e) => {
-              e.stopPropagation()
-              setIsAdding(false)
+            onCancel={() => {
+              updateAddingState(false)
             }}
             nodeData={nodeData}
             editConfirmRef={editConfirmRef}
+            hideOk={hasKeyOptionsList}
           />
         </>
       )}
@@ -204,12 +254,15 @@ export const InputButtons: React.FC<{
   onCancel: (e: React.MouseEvent<HTMLElement>) => void
   nodeData: NodeData
   editConfirmRef: React.RefObject<HTMLDivElement>
-}> = ({ onOk, onCancel, nodeData, editConfirmRef }) => {
+  hideOk?: boolean
+}> = ({ onOk, onCancel, nodeData, editConfirmRef, hideOk = false }) => {
   return (
     <div className="jer-confirm-buttons">
-      <div onClick={onOk} ref={editConfirmRef}>
-        <Icon name="ok" nodeData={nodeData} />
-      </div>
+      {!hideOk && (
+        <div onClick={onOk} ref={editConfirmRef}>
+          <Icon name="ok" nodeData={nodeData} />
+        </div>
+      )}
       <div onClick={onCancel}>
         <Icon name="cancel" nodeData={nodeData} />
       </div>
