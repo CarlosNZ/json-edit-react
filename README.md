@@ -1186,6 +1186,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 ## Changelog
 
 - **1.25.0**:
+  - Implement [External control](#external-control) via event callbacks and triggers ([#138](https://github.com/CarlosNZ/json-edit-react/issues/138), [#145](https://github.com/CarlosNZ/json-edit-react/issues/145))
   - Define [enum](#enums) types ([#109](https://github.com/CarlosNZ/json-edit-react/issues/109))
   - Define [`newKeyOptions`](#new-key-restrictions--default-values) to restrict adding new properties to a pre-defined list ([#95](https://github.com/CarlosNZ/json-edit-react/issues/95))
 - **1.24.0**:
