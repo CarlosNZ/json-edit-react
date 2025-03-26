@@ -355,8 +355,8 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         </Text>
         <Text>
           Also, notice if you try to add additional keys to the{' '}
-          <span className="code">address</span> field, you'll be limited to allowed options via a
-          drop-down.
+          <span className="code">address</span> field or the root node, you'll be limited to allowed
+          options via a drop-down.
         </Text>
       </Flex>
     ),
