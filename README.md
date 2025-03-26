@@ -1173,10 +1173,11 @@ Please open an issue: https://github.com/CarlosNZ/json-edit-react/issues
 
 ## Roadmap
 
-Features currently planned:
+Things in the pipeline:
 
-1. I'm working on a script that can take a JSON Schema and return the suite of [Filter Functions](#advanced-editing-control) required to fully restrict editing to this schema in the component. I don't think it'll part of the main package, as I don't want to increase the bundle size for a companion script -- I may release it in its own package, or just publish the code here in the repo.
+1. I'm working on a script that can take a JSON Schema and return the suite of [Filter Functions](#advanced-editing-control) required to fully constrain the component's editing UI to comply with this schema (we can already do [validation](#json-schema-validation), but this prevent most invalid data from ever being entered). I don't think it'll part of the main package, as I don't want to increase the bundle size for a companion script -- I may release it in its own package, or just publish the code here in the repo.
 2. Alternative line wrapping for array data [#2](https://github.com/CarlosNZ/json-edit-react/issues/2)
+3. Start thinking about V2
 
 ## Inspiration
 
@@ -1186,7 +1187,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 - **1.25.0**:
   - Define [enum](#enums) types ([#109](https://github.com/CarlosNZ/json-edit-react/issues/109))
-  - Define [`newKeyOptions`](#new-key-restrictions--default-values) for when adding new keys ([#95](https://github.com/CarlosNZ/json-edit-react/issues/95))
+  - Define [`newKeyOptions`](#new-key-restrictions--default-values) to restrict adding new properties to a pre-defined list ([#95](https://github.com/CarlosNZ/json-edit-react/issues/95))
 - **1.24.0**:
   - Option to access (and render) the original node (and its key) within a [Custom Node](#custom-nodes) ([#180](https://github.com/CarlosNZ/json-edit-react/issues/180))
   - Cancelling edit after changing type correctly reverts to previous value ([#122](https://github.com/CarlosNZ/json-edit-react/issues/122))
