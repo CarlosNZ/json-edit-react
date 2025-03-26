@@ -10,10 +10,10 @@ import {
   type CollectionKey,
   type TabDirection,
   type SortFunction,
-  TypeOptions,
-  EnumDefinition,
-  CollectionData,
-  ValueData,
+  type TypeOptions,
+  type EnumDefinition,
+  type CollectionData,
+  type ValueData,
 } from './types'
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>

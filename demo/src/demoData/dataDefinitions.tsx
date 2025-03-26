@@ -393,13 +393,14 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return false
     },
     newKeyOptions: ({ key }) => {
-      // if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category']
+      if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category', 'isAlive']
       if (key === 'address') return ['street', 'suburb', 'city', 'state', 'postalCode', 'country']
     },
     defaultValue: (_, newKey) => {
-      // if (newKey === 'category') return 'human'
       if (newKey === 'country') return 'United States'
       if (newKey === 'suburb') return 'Enter a suburb'
+      if (newKey === 'category') return 'human'
+      if (newKey === 'isAlive') return true
     },
     customTextEditorAvailable: true,
   },
