@@ -50,25 +50,32 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const { getStyles } = useTheme()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
-  const [addingState, setAddingState] = useState<string[] | boolean>(false)
+
+  // This value indicates whether the user is adding a new key to an object.
+  // Normally such an indicator would be a boolean, but in this case it can also
+  // be an array of strings. This is to avoid having to have a separate state
+  // value for the list of key options as well as an "are we adding a key?"
+  // state value.
+  const [addingKeyState, setAddingKeyState] = useState<string[] | boolean>(false)
 
   const { key, path, value: data } = nodeData
 
-  const hasKeyOptionsList = Array.isArray(addingState)
+  const hasKeyOptionsList = Array.isArray(addingKeyState)
 
   const updateAddingState = (active: boolean) => {
     if (!active) {
-      setAddingState(false)
+      setAddingKeyState(false)
       return
     }
 
+    // Don't show keys that already exist in the object
     const existingKeys = Object.keys(extract(nodeData.fullData, path) as object)
 
     const options = getNewKeyOptions
       ? getNewKeyOptions(nodeData)?.filter((key) => !existingKeys.includes(key))
       : null
     if (options) setNewKey('')
-    setAddingState(options ?? true)
+    setAddingKeyState(options ?? true)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -143,7 +150,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   return (
     <div
       className="jer-edit-buttons"
-      style={{ opacity: addingState ? 1 : undefined }}
+      style={{ opacity: addingKeyState ? 1 : undefined }}
       onClick={(e) => e.stopPropagation()}
     >
       {enableClipboard && (
@@ -177,7 +184,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           <Element nodeData={nodeData} />
         </div>
       ))}
-      {addingState && handleAdd && type === 'object' && (
+      {addingKeyState && handleAdd && type === 'object' && (
         <>
           {hasKeyOptionsList ? (
             <div className="jer-select jer-select-keys">
@@ -197,11 +204,11 @@ export const EditButtons: React.FC<EditButtonProps> = ({
                 }}
               >
                 <option value="" disabled>
-                  {addingState.length > 0
+                  {addingKeyState.length > 0
                     ? translate('KEY_SELECT', nodeData)
                     : translate('NO_KEY_OPTIONS', nodeData)}
                 </option>
-                {addingState.map((val) => (
+                {addingKeyState.map((val) => (
                   <option value={val} key={val}>
                     {val}
                   </option>

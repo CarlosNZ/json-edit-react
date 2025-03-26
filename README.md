@@ -120,18 +120,18 @@ return (
 
 It's pretty self explanatory (click the "edit" icon to edit, etc.), but there are a few not-so-obvious ways of interacting with the editor:
 
-- Double-click a value (or a key) to edit it
+- **Double-click** a value (or a key) to edit it
 - When editing a string, use `Cmd/Ctrl/Shift-Enter` to add a new line (`Enter` submits the value)
-- It's the opposite when editing a full object/array node (which you do by clicking "edit" on an object or array value) — `Enter` for new line, and `Cmd/Ctrl/Shift-Enter` for submit
-- `Escape` to cancel editing
-- When clicking the "clipboard" icon, holding down `Cmd/Ctrl` will copy the *path* to the selected node rather than its value
+- It's the opposite when editing a full object/array node (which you do by **clicking "edit"** on an object or array value) — `Enter` for new line, and `Cmd/Ctrl/Shift-Enter` for submit
+- `Escape` to **cancel** editing
+- When clicking the "**clipboard**" icon, holding down `Cmd/Ctrl` will copy the *path* to the selected node rather than its value
 - When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
-- For Number inputs, arrow-up and down keys will increment/decrement the value
-- For Boolean inputs, space bar will toggle the value
+- For Number inputs, **arrow-up** and **down** keys will increment/decrement the value
+- For Boolean inputs, **space bar** will toggle the value
 - Easily navigate to the next or previous node for editing using the `Tab`/`Shift-Tab` keys.
-- Drag and drop items to change the structure or modify display order
+- **Drag and drop** items to change the structure or modify display order
 - When editing is not permitted, double-clicking a string value will expand the text to the full value if it is truncated due to length (there is also a clickable "..." for long strings)
-- JSON text input can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
+- **JSON text input** can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
 
 [Have a play with the Demo app](https://carlosnz.github.io/json-edit-react/) to get a feel for it!
 

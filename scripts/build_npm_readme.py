@@ -1,3 +1,15 @@
+"""
+Github README to NPM README transformation script
+
+This script takes the README_npm.md file and replaces the content blocks (marked
+by {{ }}) with the corresponding blocks from the main README.md file, which is
+for Github. This is so we can re-use the introductory content in both READMEs
+without duplicating it.
+
+It also converts Github-style admonition blocks to HTML that mimics Github
+styling.
+"""
+
 import re
 
 def extract_block_from_source(source_content, block_name):

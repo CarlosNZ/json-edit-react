@@ -453,7 +453,6 @@ function App() {
               //     : false
               // }
               defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
-              // defaultValue={'NEWWWW'}
               newKeyOptions={dataDefinition?.newKeyOptions}
               showArrayIndices={showIndices}
               showStringQuotes={showStringQuotes}
