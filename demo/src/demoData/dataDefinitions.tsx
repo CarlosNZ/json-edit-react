@@ -38,7 +38,7 @@ export interface DemoData {
   description: JSX.Element
   data: object
   rootName?: string
-  collapse?: number
+  collapse?: number | FilterFunction
   restrictEdit?: boolean | FilterFunction
   restrictDelete?: boolean | FilterFunction
   restrictAdd?: boolean | FilterFunction
@@ -415,7 +415,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     customTextEditorAvailable: true,
   },
   liveData: {
-    name: '📖 Live Data (from database)',
+    name: '📖 Live Guestbook',
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>
@@ -453,7 +453,13 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     ),
     rootName: 'liveData',
     data: ['Loading...'],
-    collapse: 3,
+    collapse: ({ key, parentData }) => {
+      if (typeof key !== 'number') return false
+      // Expand only the most recent and the last item (my one)
+      if (key === 0) return false
+      if (Array.isArray(parentData) && key === parentData.length - 1) return false
+      return true
+    },
     restrictEdit: ({ key, value, level, parentData }) => {
       if (level < 3) return true
       if (parentData && 'timeStamp' in parentData) {

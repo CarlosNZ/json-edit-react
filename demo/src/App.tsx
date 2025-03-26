@@ -649,7 +649,8 @@ function App() {
                     id="collapseInput"
                     className="inputWidth"
                     min={0}
-                    value={collapseLevel}
+                    isDisabled={typeof collapseLevel !== 'number'}
+                    value={typeof collapseLevel === 'number' ? collapseLevel : 'Custom function'}
                     onChange={(value) => updateState({ collapseLevel: Number(value) })}
                   >
                     <NumberInputField />
