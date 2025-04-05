@@ -607,22 +607,8 @@ restrictTypeSelection = [
 ]
 ```
 
-<div style="padding: 16px; margin-bottom: 16px; border-left: 4px solid #3FB950; background-color: #E6F6E6; border-radius: 4px;">
-  <div style="display: flex; align-items: flex-start;">
-    <svg style="margin-right: 8px; flex-shrink: 0;" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16Z" fill="#2DA44E"/>
-      <path d="M8 3.59998V9.59998M8 12.4V12.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
-    </svg>
-    <div>
-      <strong style="color: #1F2328; font-weight: 600;">TIP</strong>
-      <p style="margin-top: 4px; margin-bottom: 0; color: #24292F;">
-        For convenience, the core set of data types is exported from the package as <code>standardDataTypes</code>, so the previous example could simply have been: <code>restrictTypeSelection = [...standardDataTypes, ...enumDefinitionsAsAbove]</code>
-      </p>
-    </div>
-  </div>
-</div>
-
-> [!TIP]
+> **💡 TIP**
+> 
 > For convenience, the core set of data types is exported from the package as `standardDataTypes`, so the previous example could simply have been: `restrictTypeSelection = [...standardDataTypes, ...enumDefinitionsAsAbove]`
 
 - *Types cannot be changed on any node, and there is an Enum for "Eye colour" if the key matches:*
