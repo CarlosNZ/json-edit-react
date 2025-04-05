@@ -8,6 +8,8 @@ The {{BLOCKS}} below are replaced from the equivalent blocks in the main README 
 
 {{NPM INTRO}}
 
+<img width="838" alt="breaking changes" src="image/admonition_npm.png">
+
 {{NPM USAGE}}
 
 ---

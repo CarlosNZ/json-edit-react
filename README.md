@@ -31,13 +31,12 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 
 <img width="392" alt="screenshot" src="image/screenshot.png">
 
+<!-- NPM INTRO -->
 
 > [!IMPORTANT]
 > Breaking changes:
 > - **Version 1.19.0** has a change to the `theme` input. Built-in themes must now be imported separately and passed in, rather than just naming the theme as a string. This is better for tree-shaking, so unused themes won't be bundled with your build. See [Themes & Styles](#themes--styles).
 > - **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state).
-
-<!-- NPM INTRO -->
 
 ## Contents  <!-- omit in toc -->
 - [Installation](#installation)
@@ -229,16 +228,16 @@ This is a reference list of *all* possible props, divided into related sections.
 ### Custom components & overrides (incl. Localisation)
 </summary>
 
-| Prop                    | Type                              | Default                                   | Description                                                                                                                                                                                                                                                                                    |
-| ----------------------- | --------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `customNodeDefinitions` | `CustomNodeDefinition[]`          |                                           | You can provide custom React components to override specific nodes in the data tree, according to a condition function — see [Custom nodes](#custom-nodes). (A simple custom component to turn url strings into active links is provided in the main package — see [here](#active-hyperlinks)) |
-| `customButtons`         | `CustomButtonDefinition[]`        | `[]`                                      | You can add your own buttons to the Edit Buttons panel if you'd like to be able to perform a custom operation on the data — see [Custom Buttons](#custom-buttons)                                                                                                                              |
-| `translations`          | `LocalisedStrings` object         | `{ }`                                     | UI strings (such as error messages) can be translated by passing an object containing localised string values (there are only a few) — see [Localisation](#localisation)                                                                                                                       |
-| `customText`            | `CustomTextDefinitions`           |                                           | In addition to [localising the component](#localisation) text strings, you can also *dynamically* alter them, depending on the data — see [Custom Text](#custom-text)                                                                                                                          |
-| `TextEditor`            | `ReactComponent<TextEditorProps>` |                                           | Pass a component to offer a custom text/code editor when editing full JSON object as text. [See details](#full-object-editing)                                                                                                                                                                 |
-| `jsonParse`             | `(input: string) => JsonData`     | `JSON.parse`                              | Provide an alternative JSON parser (e.g. [JSON5](https://json5.org/)), to allow "looser" text input when editing JSON blocks.                                                                                                                                                                  |
-| `jsonStringify`         | `(data: JsonData) => string`      | `(data) => JSON.stringify(data, null, 2)` | Similarly, you can override the presentation of the text when editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                                                   |
-| `keyboardControls`      | `KeyboardControls`                | As explained [above](#usage)              | Override some or all of the keyboard controls — see [Keyboard customisation](#keyboard-customisation)                                                                                                                                                                                          |
+| Prop                    | Type                                                | Default                                   | Description                                                                                                                                                                                                                                                                                    |
+| ----------------------- | --------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `customNodeDefinitions` | `CustomNodeDefinition[]`                            |                                           | You can provide custom React components to override specific nodes in the data tree, according to a condition function — see [Custom nodes](#custom-nodes). (A simple custom component to turn url strings into active links is provided in the main package — see [here](#active-hyperlinks)) |
+| `customButtons`         | `CustomButtonDefinition[]`                          | `[]`                                      | You can add your own buttons to the Edit Buttons panel if you'd like to be able to perform a custom operation on the data — see [Custom Buttons](#custom-buttons)                                                                                                                              |
+| `translations`          | `LocalisedStrings` object                           | `{ }`                                     | UI strings (such as error messages) can be translated by passing an object containing localised string values (there are only a few) — see [Localisation](#localisation)                                                                                                                       |
+| `customText`            | `CustomTextDefinitions`                             |                                           | In addition to [localising the component](#localisation) text strings, you can also *dynamically* alter them, depending on the data — see [Custom Text](#custom-text)                                                                                                                          |
+| `TextEditor`            | `ReactComponent`<br>&nbsp;&nbsp;`<TextEditorProps>` |                                           | Pass a component to offer a custom text/code editor when editing full JSON object as text. [See details](#full-object-editing)                                                                                                                                                                 |
+| `jsonParse`             | `(input: string) => JsonData`                       | `JSON.parse`                              | Provide an alternative JSON parser (e.g. [JSON5](https://json5.org/)), to allow "looser" text input when editing JSON blocks.                                                                                                                                                                  |
+| `jsonStringify`         | `(data: JsonData) => string`                        | `(data) => JSON.stringify(data, null, 2)` | Similarly, you can override the presentation of the text when editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                                                   |
+| `keyboardControls`      | `KeyboardControls`                                  | As explained [above](#usage)              | Override some or all of the keyboard controls — see [Keyboard customisation](#keyboard-customisation)                                                                                                                                                                                          |
 
 </details>
 <details>
@@ -293,8 +292,10 @@ The function will receive the following object as a parameter:
     newValue,     // the new value of the property being updated
     currentValue, // the current value of the property being updated
     name,         // name of the property being updated
-    path          // full path to the property being updated, as an array of property keys
-                  // (e.g. [ "user", "friends", 1, "name" ] ) (equivalent to "user.friends[1].name")
+    path          // full path to the property being updated,
+                  //   as an array of property keys
+                  //   (e.g. [ "user", "friends", 1, "name" ])
+                  //   (equivalent to "user.friends[1].name")
 }
 ```
 The function can return nothing (in which case the data is updated normally), or a value to represent success/failure, error value, or modified data. The return value can be one of the following, and handled accordingly:
@@ -345,10 +346,13 @@ Normally, the component will display simple error messages whenever an error con
     currentValue, // the current value of the property being updated
     errorValue,   // the erroneous value that failed to update the property
     name,         // name of the property being updated
-    path,         // full path to the property being updated, as an array of property keys
-                  // (e.g. [ "user", "friends", 1, "name" ] ) (equivalent to "user.friends[1].name"),
+    path,         // full path to the property being updated,
+                  //   as an array of property keys
+                  //   (e.g. [ "user", "friends", 1, "name" ] )
+                  //   (equivalent to "user.friends[1].name"),
     error: {
-      code,       // one of 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR' | 'INVALID_JSON' | 'KEY_EXISTS'
+      code,       // one of 'UPDATE_ERROR' | 'DELETE_ERROR' |
+                  //   'ADD_ERROR' | 'INVALID_JSON' | 'KEY_EXISTS'
       message     // the (localised) error message that would be displayed
     }
 }
@@ -403,9 +407,11 @@ return
       if (!valid) {
         console.log('Errors', validate.errors)
         const errorMessage = validate.errors
-          ?.map((error) => `${error.instancePath}${error.instancePath ? ': ' : ''}${error.message}`)
+          ?.map((error) => `${error.instancePath}${error.instancePath ? ': '
+            : ''}${error.message}`)
           .join('\n')
-        // Send detailed error message to an external UI element, such as a "Toast" notification
+        // Send detailed error message to an external UI element,
+        // such as a "Toast" notification
          displayError({
           title: 'Not compliant with JSON Schema',
           description: errorMessage,
@@ -450,7 +456,8 @@ These each take a `boolean` value, or a `FilterFunction` callback, with the foll
     level,      // depth of the property (with 0 being the root)
     index,      // index of the node within its collection (based on display order)
     value,      // value of the property
-    size ,      // if a collection (object, array), the number of items (null for non-collections)
+    size ,      // if a collection (object, array), the number of items
+                //   (null for non-collections)
     parentData, // parent object containing the current node
     fullData    // the full (overall) data object
     collapsed   // whether or not the current node is in a
@@ -466,7 +473,7 @@ The callback must return a `boolean` value -- if `true` that node will **not** b
 <details>
 <summary>
 
-#### Edit restriction examples
+**Edit restriction examples**
 </summary>
 
 - *A good case would be ensure your root node is not directly editable:*
@@ -521,7 +528,7 @@ Similarly, the `FilterFunction` for data types, while it takes the same input sh
 <details>
 <summary>
 
-#### Type restriction example
+**Type restriction example**
 </summary>
 
 This `restrictTypeSelection` function defines the following restrictions:
@@ -556,7 +563,8 @@ To define an Enum, just add an object with the following structure to your "Type
     "Option B",
     "Option C"
   ]
-  matchPriority: 1 // (Optional) used to recognize existing string values as the particular type (see below)
+  matchPriority: 1 // (Optional) used to recognize existing string values
+                   //   as the particular type (see below)
 }
 ```
 
@@ -572,7 +580,7 @@ You can see examples of this in the [Star Wars data set](https://carlosnz.github
 <details>
 <summary>
 
-#### Enum definition examples
+**Enum definition examples**
 </summary>
 
 - *All nodes can be any of the standard data types plus a couple of custom Enum types:*
@@ -598,6 +606,21 @@ restrictTypeSelection = [
   },
 ]
 ```
+
+<div style="padding: 16px; margin-bottom: 16px; border-left: 4px solid #3FB950; background-color: #E6F6E6; border-radius: 4px;">
+  <div style="display: flex; align-items: flex-start;">
+    <svg style="margin-right: 8px; flex-shrink: 0;" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16Z" fill="#2DA44E"/>
+      <path d="M8 3.59998V9.59998M8 12.4V12.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <strong style="color: #1F2328; font-weight: 600;">TIP</strong>
+      <p style="margin-top: 4px; margin-bottom: 0; color: #24292F;">
+        For convenience, the core set of data types is exported from the package as <code>standardDataTypes</code>, so the previous example could simply have been: <code>restrictTypeSelection = [...standardDataTypes, ...enumDefinitionsAsAbove]</code>
+      </p>
+    </div>
+  </div>
+</div>
 
 > [!TIP]
 > For convenience, the core set of data types is exported from the package as `standardDataTypes`, so the previous example could simply have been: `restrictTypeSelection = [...standardDataTypes, ...enumDefinitionsAsAbove]`
