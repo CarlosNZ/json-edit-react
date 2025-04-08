@@ -3,6 +3,7 @@
   "version": "1.25.0",
   "private": true,
   "homepage": "https://carlosnz.github.io/json-edit-react",
+  "type": "module",
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.2",
@@ -39,9 +40,9 @@
   "scripts": {
     "serve": "vite preview",
     "type-check": "tsc --noEmit",
-    "start": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && concurrently --kill-others-on-fail  \"vite\" \"nodemon watch.js\"",
+    "start": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && concurrently --kill-others-on-fail  \"vite\" \"nodemon watch.cjs\"",
     "build": "tsc && vite build",
-    "prebuild": "node ./scripts/getVersion.js",
+    "prebuild": "node ./scripts/getVersion.cjs",
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build"
   },
