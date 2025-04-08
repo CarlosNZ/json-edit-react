@@ -54,14 +54,14 @@ import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
-import { version } from './version'
+import { timestamp, version } from './version'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 
 interface AppState {
   rootName: string
   indent: number
-  collapseLevel: number
+  collapseLevel: number | FilterFunction
   collapseTime: number
   showCount: 'Yes' | 'No' | 'When closed'
   theme: Theme
@@ -86,6 +86,9 @@ const themes = [
   candyWrapperTheme,
   psychedelicTheme,
 ]
+
+console.log(`json-edit-react v${version}`)
+console.log('Site built:', timestamp)
 
 function App() {
   const navigate = useLocation()[1]
@@ -119,7 +122,7 @@ function App() {
   // const [triggers, setTriggers] = useState<ExternalTriggers>()
 
   const [isSaving, setIsSaving] = useState(false)
-  const previousTheme = useRef<Theme>() // Used when resetting after theme editing
+  const previousTheme = useRef<Theme>(null) // Used when resetting after theme editing
   const toast = useToast()
 
   const [isSearchFocused, setIsSearchFocused] = useState(false)

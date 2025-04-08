@@ -14,8 +14,8 @@
     "@testing-library/user-event": "^14.5.2",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.11.6",
-    "@types/react": "^18.2.48",
-    "@types/react-dom": "^18.2.18",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.1",
     "@uiw/codemirror-theme-console": "^4.23.7",
     "@uiw/codemirror-theme-github": "^4.23.7",
     "@uiw/codemirror-theme-monokai": "^4.23.7",
@@ -31,19 +31,17 @@
     "react-dom": "^18.2.0",
     "react-firebase-hooks": "^5.1.1",
     "react-icons": "^5.0.1",
-    "react-scripts": "5.0.1",
-    "typescript": "^5.3.3",
+    "typescript": "^5.8.3",
     "use-undo": "^1.1.1",
     "web-vitals": "^3.5.2",
     "wouter": "^3.3.1"
   },
   "scripts": {
-    "start": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && concurrently --kill-others-on-fail  \"PORT=3008 react-scripts start\" \"nodemon watch.js\"",
-    "build": "react-scripts build",
-    "analyze": "source-map-explorer 'build/static/js/*.js'",
+    "serve": "vite preview",
+    "type-check": "tsc --noEmit",
+    "start": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && concurrently --kill-others-on-fail  \"vite\" \"nodemon watch.js\"",
+    "build": "tsc && vite build",
     "prebuild": "node ./scripts/getVersion.js",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build"
   },
@@ -73,10 +71,12 @@
     ]
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^8.2.2",
     "gh-pages": "^6.1.1",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.0.3",
-    "source-map-explorer": "^2.5.3"
+    "source-map-explorer": "^2.5.3",
+    "vite": "^6.2.5"
   }
 }
