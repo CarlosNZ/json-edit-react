@@ -24,7 +24,7 @@
   "scripts": {
     "setup": "yarn install && cd demo && yarn install",
     "test": "jest",
-    "demo": "cd demo && node ./scripts/getVersion.js && yarn && yarn start",
+    "demo": "cd demo && node ./scripts/getVersion.cjs && yarn && yarn start",
     "build": "rimraf ./build && rollup -c && rimraf ./build/dts",
     "lint": "npx eslint \"src/**\"",
     "postbuild": "node ./scripts/cleanBuildTypes.cjs",
