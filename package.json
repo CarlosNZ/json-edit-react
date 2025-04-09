@@ -1,6 +1,6 @@
 {
   "name": "json-edit-react",
-  "version": "1.25.1",
+  "version": "1.25.2-beta1",
   "description": "React component for editing or viewing JSON/object data",
   "type": "module",
   "main": "build/index.cjs",
