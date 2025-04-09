@@ -12,7 +12,7 @@ export default [
     input: 'src/index.ts',
     output: [
       {
-        file: 'build/index.cjs.js',
+        file: 'build/index.cjs',
         format: 'cjs',
       },
       {
