@@ -320,7 +320,7 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   originalNode?: JSX.Element
   originalNodeKey?: JSX.Element
   canEdit: boolean
-  keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
+  keyboardCommon?: Partial<Record<keyof KeyboardControlsFull, () => void>>
 }
 
 export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<string, unknown>> {

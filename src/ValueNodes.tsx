@@ -2,7 +2,12 @@ import React, { useEffect, useRef, useState } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { insertCharInTextArea, toPathString } from './helpers'
 import { useTheme } from './contexts'
-import { type NodeData, type InputProps, type EnumDefinition, KeyboardControlsFull } from './types'
+import {
+  type NodeData,
+  type InputProps,
+  type EnumDefinition,
+  type KeyboardControlsFull,
+} from './types'
 import { type TranslateFunction } from './localisation'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'

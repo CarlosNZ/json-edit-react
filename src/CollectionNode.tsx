@@ -343,7 +343,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           name={pathString}
           value={stringifiedValue}
           setValue={setStringifiedValue}
-          isEditing={isEditing}
           handleKeyPress={handleKeyPressEdit}
           styles={getStyles('input', nodeData)}
         />
@@ -382,6 +381,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     setIsEditing: () => setCurrentlyEditingElement(path),
     getStyles,
     canDragOnto: canEdit,
+    canEdit,
   }
 
   const CollectionContents = showCustomNodeContents ? (

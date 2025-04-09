@@ -10,14 +10,12 @@ import React from 'react'
 import { StringDisplay } from '../../src/ValueNodes'
 import { toPathString } from '../helpers'
 import { type CustomNodeProps, type CustomNodeDefinition, type ValueNodeProps } from '../types'
-import { useCommon } from '../hooks'
 
 export const LinkCustomComponent: React.FC<
   CustomNodeProps<{ stringTruncate?: number }> & ValueNodeProps
 > = (props) => {
   const { value, setIsEditing, getStyles, nodeData } = props
   const styles = getStyles('string', nodeData)
-  const { canEdit } = useCommon({ props })
   return (
     <div
       onDoubleClick={() => setIsEditing(true)}
@@ -35,10 +33,9 @@ export const LinkCustomComponent: React.FC<
       >
         <StringDisplay
           {...props}
-          nodeData={nodeData}
           pathString={toPathString(nodeData.path)}
           styles={styles}
-          canEdit={canEdit}
+          value={nodeData.value as string}
         />
       </a>
     </div>
