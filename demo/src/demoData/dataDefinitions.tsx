@@ -38,7 +38,7 @@ export interface DemoData {
   description: JSX.Element
   data: object
   rootName?: string
-  collapse?: number
+  collapse?: number | FilterFunction
   restrictEdit?: boolean | FilterFunction
   restrictDelete?: boolean | FilterFunction
   restrictAdd?: boolean | FilterFunction
@@ -355,8 +355,8 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         </Text>
         <Text>
           Also, notice if you try to add additional keys to the{' '}
-          <span className="code">address</span> field, you'll be limited to allowed options via a
-          drop-down.
+          <span className="code">address</span> field or the root node, you'll be limited to allowed
+          options via a drop-down.
         </Text>
       </Flex>
     ),
@@ -393,18 +393,29 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return false
     },
     newKeyOptions: ({ key }) => {
-      // if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category']
+      if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category', 'isAlive']
       if (key === 'address') return ['street', 'suburb', 'city', 'state', 'postalCode', 'country']
     },
-    defaultValue: (_, newKey) => {
-      // if (newKey === 'category') return 'human'
+    defaultValue: ({ key }, newKey) => {
+      if (key === 'hobbies') return 'Enter a hobby'
+
       if (newKey === 'country') return 'United States'
       if (newKey === 'suburb') return 'Enter a suburb'
+      if (newKey === 'category') return 'human'
+      if (newKey === 'isAlive') return true
+      if (newKey === 'hobbies') return ['avenging', '...add more']
+      if (newKey === 'address')
+        return {
+          street: 'Enter street address',
+          city: 'City',
+          state: 'CA',
+          postalCode: '12345',
+        }
     },
     customTextEditorAvailable: true,
   },
   liveData: {
-    name: '📖 Live Data (from database)',
+    name: '📖 Live Guestbook',
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>
@@ -442,7 +453,13 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     ),
     rootName: 'liveData',
     data: ['Loading...'],
-    collapse: 3,
+    collapse: ({ key, parentData }) => {
+      if (typeof key !== 'number') return false
+      // Expand only the most recent and the last item (my one)
+      if (key === 0) return false
+      if (Array.isArray(parentData) && key === parentData.length - 1) return false
+      return true
+    },
     restrictEdit: ({ key, value, level, parentData }) => {
       if (level < 3) return true
       if (parentData && 'timeStamp' in parentData) {

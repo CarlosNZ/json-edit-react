@@ -362,7 +362,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 startEdit={
                   canEdit
                     ? () => {
-                        setPreviousValue(value)
+                        setPreviousValue(previousValue)
                         setCurrentlyEditingElement(path, handleCancel)
                       }
                     : undefined

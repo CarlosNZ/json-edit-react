@@ -45,6 +45,9 @@
     "category": {
       "type": "string",
       "enum": ["human", "enhanced human", "extra-terrestrial"]
+    },
+    "isAlive": {
+      "type": "boolean"
     }
   },
   "additionalProperties": false,
