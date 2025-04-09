@@ -15,7 +15,6 @@ interface TextAreaProps {
   name: string
   value: string
   setValue: React.Dispatch<React.SetStateAction<string>>
-  isEditing: boolean
   handleKeyPress: (e: React.KeyboardEvent) => void
   styles: React.CSSProperties
   textAreaRef?: React.MutableRefObject<HTMLTextAreaElement | null>

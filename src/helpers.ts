@@ -17,7 +17,7 @@ import {
 } from './types'
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
-  value !== null && typeof value === 'object'
+  value !== null && typeof value === 'object' && !(value instanceof Date)
 
 /**
  * FILTERING

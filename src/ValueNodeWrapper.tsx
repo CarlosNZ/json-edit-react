@@ -202,25 +202,28 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
-  const handleEdit = () => {
+  const handleEdit = (inputValue?: unknown) => {
     setCurrentlyEditingElement(null)
     setPreviousValue(null)
     let newValue: JsonData
-    switch (dataType) {
-      case 'object':
-        newValue = { [translate('DEFAULT_NEW_KEY', nodeData)]: value }
-        break
-      case 'array':
-        newValue = value ?? []
-        break
-      case 'number': {
-        const n = Number(value)
-        if (isNaN(n)) newValue = 0
-        else newValue = n
-        break
+    if (inputValue !== undefined) newValue = inputValue as JsonData
+    else {
+      switch (dataType) {
+        case 'object':
+          newValue = { [translate('DEFAULT_NEW_KEY', nodeData)]: value }
+          break
+        case 'array':
+          newValue = value ?? []
+          break
+        case 'number': {
+          const n = Number(value)
+          if (isNaN(n)) newValue = 0
+          else newValue = n
+          break
+        }
+        default:
+          newValue = value
       }
-      default:
-        newValue = value
     }
     onEdit(newValue, path).then((error) => {
       if (error) onError({ code: 'UPDATE_ERROR', message: error }, newValue)
@@ -247,7 +250,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const { isEditingKey, canEditKey } = derivedValues
   const showErrorString = !isEditing && error
   const showTypeSelector = isEditing && allowedDataTypes.length > 1
-  const showEditButtons = dataType !== 'invalid' && !error && showEditTools
+  const showEditButtons = (dataType !== 'invalid' || CustomNode) && !error && showEditTools
   const showKey = showLabel && !hideKey
   const showCustomNode = CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
@@ -320,6 +323,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, inputProps) : undefined}
       originalNodeKey={passOriginalNode ? <KeyDisplay {...keyDisplayProps} /> : undefined}
+      canEdit={canEdit}
+      keyboardCommon={inputProps.keyboardCommon}
     />
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones
