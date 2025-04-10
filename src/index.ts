@@ -1,9 +1,9 @@
 export { JsonEditor } from './JsonEditor'
 export { defaultTheme } from './contexts/ThemeProvider'
 export { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
-export { StringDisplay } from './ValueNodes'
+export { StringDisplay, StringEdit } from './ValueNodes'
 export { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
-export { matchNode, matchNodeKey, isCollection } from './helpers'
+export { matchNode, matchNodeKey, isCollection, toPathString } from './helpers'
 export { default as assign } from 'object-property-assigner'
 export { default as extract } from 'object-property-extractor'
 export {

@@ -5,6 +5,7 @@ export const data: Record<string, object> = {
     boolean: true,
     nothing: null,
     enum: 'Option B',
+    // Date: new Date(),
     Usage: [
       'Edit a value by clicking the "edit" icon, or double-clicking the value.',
       'You can change the type of any value',

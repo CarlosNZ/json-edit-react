@@ -2,7 +2,12 @@ import React, { useEffect, useRef, useState } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { insertCharInTextArea, toPathString } from './helpers'
 import { useTheme } from './contexts'
-import { type NodeData, type InputProps, type EnumDefinition } from './types'
+import {
+  type NodeData,
+  type InputProps,
+  type EnumDefinition,
+  type KeyboardControlsFull,
+} from './types'
 import { type TranslateFunction } from './localisation'
 
 export const INVALID_FUNCTION_STRING = '**INVALID_FUNCTION**'
@@ -16,6 +21,9 @@ interface StringDisplayProps {
   canEdit: boolean
   setIsEditing: (value: React.SetStateAction<boolean>) => void
   translate: TranslateFunction
+  // Can override nodeDate.value if we need to modify it for specific display
+  // purposes
+  value?: string
 }
 export const StringDisplay: React.FC<StringDisplayProps> = ({
   nodeData,
@@ -26,8 +34,9 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
   setIsEditing,
   styles,
   translate,
+  value: displayValue,
 }) => {
-  const value = nodeData.value as string
+  const value = displayValue ?? (nodeData.value as string)
   const [isExpanded, setIsExpanded] = useState(false)
 
   const quoteChar = showStringQuotes ? '"' : ''
@@ -75,23 +84,68 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
   )
 }
 
-export const StringValue: React.FC<InputProps & { value: string; enumType?: EnumDefinition }> = ({
+interface StringEditProps {
+  styles: React.CSSProperties
+  pathString: string
+  value: string
+  setValue: React.Dispatch<React.SetStateAction<string>>
+  handleEdit: () => void
+  handleKeyboard: (
+    e: React.KeyboardEvent,
+    eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
+  ) => void
+  keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
+}
+export const StringEdit: React.FC<StringEditProps> = ({
+  styles,
+  pathString,
   value,
   setValue,
-  isEditing,
-  path,
   handleEdit,
-  nodeData,
   handleKeyboard,
   keyboardCommon,
+}) => {
+  const textAreaRef = useRef<HTMLTextAreaElement>(null)
+
+  return (
+    <AutogrowTextArea
+      className="jer-input-text"
+      textAreaRef={textAreaRef}
+      name={pathString}
+      value={value}
+      setValue={setValue}
+      handleKeyPress={(e) => {
+        handleKeyboard(e, {
+          stringConfirm: handleEdit,
+          stringLineBreak: () => {
+            // Simulates standard text-area line break behaviour. Only
+            // required when control key is not "standard" text-area
+            // behaviour ("Shift-Enter" or "Enter")
+            const newValue = insertCharInTextArea(
+              textAreaRef as React.MutableRefObject<HTMLTextAreaElement>,
+              '\n'
+            )
+            setValue(newValue)
+          },
+          ...keyboardCommon,
+        })
+      }}
+      styles={styles}
+    />
+  )
+}
+
+export const StringValue: React.FC<InputProps & { value: string; enumType?: EnumDefinition }> = ({
+  isEditing,
+  path,
   enumType,
   ...props
 }) => {
   const { getStyles } = useTheme()
 
-  const textAreaRef = useRef<HTMLTextAreaElement>(null)
-
   const pathString = toPathString(path)
+
+  const { value, setValue, nodeData, handleEdit, handleKeyboard, keyboardCommon } = props
 
   if (isEditing && enumType) {
     return (
@@ -123,38 +177,14 @@ export const StringValue: React.FC<InputProps & { value: string; enumType?: Enum
   }
 
   return isEditing ? (
-    <AutogrowTextArea
-      className="jer-input-text"
-      textAreaRef={textAreaRef}
-      name={pathString}
-      value={value}
-      setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
-      isEditing={isEditing}
-      handleKeyPress={(e) => {
-        handleKeyboard(e, {
-          stringConfirm: handleEdit,
-          stringLineBreak: () => {
-            // Simulates standard text-area line break behaviour. Only
-            // required when control key is not "standard" text-area
-            // behaviour ("Shift-Enter" or "Enter")
-            const newValue = insertCharInTextArea(
-              textAreaRef as React.MutableRefObject<HTMLTextAreaElement>,
-              '\n'
-            )
-            setValue(newValue)
-          },
-          ...keyboardCommon,
-        })
-      }}
+    <StringEdit
       styles={getStyles('input', nodeData)}
+      pathString={pathString}
+      {...props}
+      setValue={props.setValue as React.Dispatch<React.SetStateAction<string>>}
     />
   ) : (
-    <StringDisplay
-      nodeData={nodeData}
-      pathString={pathString}
-      styles={getStyles('string', nodeData)}
-      {...props}
-    />
+    <StringDisplay pathString={pathString} styles={getStyles('string', nodeData)} {...props} />
   )
 }
 

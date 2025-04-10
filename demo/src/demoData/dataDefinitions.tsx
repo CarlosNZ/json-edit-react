@@ -9,6 +9,9 @@ import {
   LinkCustomNodeDefinition,
   assign,
   matchNode,
+  StringDisplay,
+  StringEdit,
+  toPathString,
 } from '../_imports'
 import {
   DefaultValueFunction,
@@ -95,7 +98,38 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'data',
     collapse: 2,
     data: data.intro,
-    customNodeDefinitions: [dateNodeDefinition],
+    customNodeDefinitions: [
+      dateNodeDefinition,
+      // {
+      //   condition: (nodeData) => nodeData.value instanceof Date,
+      //   element: (props) => {
+      //     const { nodeData, isEditing, setValue, getStyles, canEdit, value, handleEdit } = props
+      //     return isEditing ? (
+      //       <StringEdit
+      //         styles={getStyles('input', nodeData)}
+      //         pathString={toPathString(nodeData.path)}
+      //         {...props}
+      //         value={value instanceof Date ? value.toISOString() : (value as string)}
+      //         setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
+      //         handleEdit={() => {
+      //           const newDate = new Date(value as string)
+      //           handleEdit(newDate as any)
+      //         }}
+      //       />
+      //     ) : (
+      //       <StringDisplay
+      //         {...props}
+      //         styles={getStyles('string', nodeData)}
+      //         canEdit={canEdit}
+      //         pathString={toPathString(nodeData.path)}
+      //         value={nodeData.value.toLocaleString()}
+      //       />
+      //     )
+      //   },
+      //   showEditTools: true,
+      //   showOnEdit: true,
+      // },
+    ],
     // restrictEdit: ({ key }) => key === 'number',
     customTextEditorAvailable: true,
     restrictTypeSelection: ({ key }) => {
