@@ -473,7 +473,7 @@ The callback must return a `boolean` value -- if `true` that node will **not** b
 <details>
 <summary>
 
-**Edit restriction examples**
+#### Edit restriction examples
 </summary>
 
 - *A good case would be ensure your root node is not directly editable:*
@@ -528,7 +528,7 @@ Similarly, the `FilterFunction` for data types, while it takes the same input sh
 <details>
 <summary>
 
-**Type restriction example**
+#### Type restriction example
 </summary>
 
 This `restrictTypeSelection` function defines the following restrictions:
@@ -580,7 +580,7 @@ You can see examples of this in the [Star Wars data set](https://carlosnz.github
 <details>
 <summary>
 
-**Enum definition examples**
+#### Enum definition examples
 </summary>
 
 - *All nodes can be any of the standard data types plus a couple of custom Enum types:*
