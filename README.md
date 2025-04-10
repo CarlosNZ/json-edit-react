@@ -1149,11 +1149,13 @@ A few helper functions, components and types that might be useful in your own im
 - `LinkCustomComponent`: the component used to render [hyperlinks](#active-hyperlinks)
 - `LinkCustomNodeDefinition`: custom node definition for [hyperlinks](#active-hyperlinks)
 - `StringDisplay`: main component used to display a string value, re-used in the above "Link" Custom Component
+- `StringEdit`: component used when editing a string value, can be useful for custom components
 - `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron`: all the built-in [icon](#icons) components
 - `matchNode`, `matchNodeKey`: helpers for defining custom [Search](#searchfiltering) functions
 - `extract`: function to extract a deeply nested object value from a string path. See [here](https://github.com/CarlosNZ/object-property-extractor)
 - `assign`: function to set a deep object value from a string path. See [here](https://github.com/CarlosNZ/object-property-assigner)
 - `isCollection`: simple utility that returns `true` if input is a "Collection" (i.e. an Object or Array)
+- `toPathString`: transforms a path array to a string representation, e.g.  `["data", 0, "property1", "name"] => "data.0.property1.name"`
 - `defaultTheme`, `githubDarkTheme`, `monoDarkTheme`, `monoLightTheme`, `candyWrapperTheme`, `psychedelicTheme`: all built-in themes
 - `standardDataTypes`: array containing all standard data types: `[ 'string','number', 'boolean', 'null', 'object', 'array' ]`
 
