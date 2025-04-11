@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, lazy, Suspense } from 'react'
+import { useEffect, useRef, lazy, Suspense } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -18,7 +18,7 @@ import {
   psychedelicTheme,
   // ExternalTriggers,
   // type CollapseState
-} from './_imports'
+} from '@package'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'

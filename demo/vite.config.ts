@@ -7,7 +7,7 @@ export default defineConfig({
   base: 'https://carlosnz.github.io/json-edit-react/',
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@package': path.resolve(__dirname, '../src'),
     },
   },
   server: {
