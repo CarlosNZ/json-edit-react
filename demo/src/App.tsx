@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -48,6 +48,7 @@ import {
   useToast,
   Tooltip,
 } from '@chakra-ui/react'
+// @ts-ignore
 import logo from './image/logo_400.png'
 import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'

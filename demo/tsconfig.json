@@ -17,10 +17,10 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@package/*": ["../src/*"],
-      "@package": ["../src/index"]
+      "json-edit-react-import/*": ["../src/*"],
+      "json-edit-react-import": ["../src/index"]
     }
   },
-  "include": ["demo/src"],
+  "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }, { "path": "../" }]
 }
