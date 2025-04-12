@@ -6,7 +6,7 @@
     "declarationDir": "build/dts",
     "lib": ["dom", "es6"],
     "esModuleInterop": true,
-    "outDir": "build",
+    "outDir": "build/js",
     "rootDir": "src",
     "target": "ESNext",
     "module": "ESNext",
@@ -15,9 +15,9 @@
     "noImplicitAny": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "composite": true
+    "composite": true,
+    "tsBuildInfoFile": "./.tsbuildinfo"
   },
-  // "include": ["src"]
+  "include": ["src", "src/types.ts"],
   "files": ["src/index.ts"]
-  // "include": ["src/types.ts"]
 }

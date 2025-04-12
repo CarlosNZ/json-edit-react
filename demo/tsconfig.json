@@ -17,13 +17,10 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@package/*": ["/Users/carl/GitHub/json-edit-react/src/*"],
-      "@package": ["/Users/carl/GitHub/json-edit-react/src/index"]
+      "@package/*": ["../src/*"],
+      "@package": ["../src/index"]
     }
   },
-  "include": ["demo/src", "/Users/carl/GitHub/json-edit-react"],
-  "references": [
-    { "path": "./tsconfig.node.json" },
-    { "path": "/Users/carl/GitHub/json-edit-react" }
-  ]
+  "include": ["demo/src"],
+  "references": [{ "path": "./tsconfig.node.json" }, { "path": "../" }]
 }

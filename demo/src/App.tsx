@@ -18,7 +18,7 @@ import {
   psychedelicTheme,
   // ExternalTriggers,
   // type CollapseState
-} from '@package'
+} from 'json-edit-react-import'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
