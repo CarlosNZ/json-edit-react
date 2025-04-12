@@ -1,5 +1,3 @@
-import React from 'react'
-
 const SourceIndicator = () => {
   // Directly check if we're using the local source
   if (import.meta.env.VITE_USE_LOCAL_SRC !== 'true') return null
