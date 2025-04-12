@@ -30,11 +30,12 @@ export default [
     ],
     external: ['object-property-assigner', 'object-property-extractor'],
   },
-  // Types
+  // Types get exported by tsc command, but this bundles them into a single
+  // .d.ts file
   {
     input: './build/dts/index.d.ts',
     output: [{ file: 'build/index.d.ts', format: 'es' }],
-    external: [/\.css$/],
     plugins: [dts()],
+    external: [/\.css$/],
   },
 ]

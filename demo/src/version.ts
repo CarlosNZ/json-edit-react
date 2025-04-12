@@ -1,2 +1,2 @@
-export const version = '1.25.1'
-export const timestamp = '9/04/2025, 12:09:44 pm'
+export const version = '1.25.4-beta1'
+export const timestamp = '12/04/2025, 11:32:42 pm'

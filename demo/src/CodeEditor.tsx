@@ -1,14 +1,14 @@
 import React from 'react'
-import CodeMirror from '@uiw/react-codemirror'
+import { TextEditorProps } from 'json-edit-react-import'
+import CodeMirror, { Extension } from '@uiw/react-codemirror'
 import { json } from '@codemirror/lang-json'
-import { TextEditorProps } from './_imports'
 import { githubLight, githubDark } from '@uiw/codemirror-theme-github'
 import { consoleDark } from '@uiw/codemirror-theme-console/dark'
 import { consoleLight } from '@uiw/codemirror-theme-console/light'
 import { quietlight } from '@uiw/codemirror-theme-quietlight'
 import { monokai } from '@uiw/codemirror-theme-monokai'
 
-const themeMap = {
+const themeMap: Record<string, Extension | undefined> = {
   Default: undefined,
   'Github Light': githubLight,
   'Github Dark': githubDark,
