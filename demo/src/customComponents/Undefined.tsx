@@ -3,7 +3,7 @@
 // type selector
 
 import React from 'react'
-import { CustomNodeProps, CustomNodeDefinition } from 'json-edit-react'
+import { CustomNodeProps, CustomNodeDefinition } from 'json-edit-react-import'
 
 export const Undefined: React.FC<CustomNodeProps> = ({ children }) => {
   return <>{children}</>
