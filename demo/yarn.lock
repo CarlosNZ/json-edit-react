@@ -3549,10 +3549,10 @@ jsesc@^3.0.2:
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-3.1.0.tgz#74d335a234f67ed19907fdadfac7ccf9d409825d"
   integrity sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==
 
-json-edit-react@^1.25.1:
-  version "1.25.1"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.25.1.tgz#f218a7a6e2b156bd01a8d85f888e2f4324c5f861"
-  integrity sha512-9NJ+jrW2LDXxLnaWHDizNO34fL5rxi4dIdblKAqaOQDXhbzGDcZYYbvYpvkP+enkBTMqN2KnyI7QigmCcy1klg==
+json-edit-react@^1.25.3:
+  version "1.25.3"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.25.3.tgz#c9c9f46118cc07b763e2c791209b346d60e159ce"
+  integrity sha512-gTQKcbQpR0/L/rZ0fxgXDi1eqzQ6ecnejORlHRfDWIZNbUylRh/Mb0DhI7LvDxficodlvR+p9U9DxNGO5oKEbg==
   dependencies:
     object-property-assigner "^1.3.5"
     object-property-extractor "^1.0.13"
