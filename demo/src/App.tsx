@@ -291,7 +291,6 @@ function App() {
         <HStack w="100%" justify="space-between" align="flex-start">
           <SourceIndicator />
           <VStack align="flex-start" gap={3}>
-            {import.meta.env.VITE_USE_LOCAL_SRC === 'true' && <p>IT'S ON!!!!</p>}
             <HStack align="flex-end" mt={2} gap={4} flexWrap="wrap">
               <Flex gap={4} align="center">
                 <img src={logo} alt="logo" style={{ maxHeight: '3.5em' }} />
