@@ -250,8 +250,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 }
 
 export const InputButtons: React.FC<{
-  onOk: (e: React.MouseEvent<HTMLElement>) => void
-  onCancel: (e: React.MouseEvent<HTMLElement>) => void
+  onOk: () => void
+  onCancel: () => void
   nodeData: NodeData
   editConfirmRef: React.RefObject<HTMLDivElement>
   hideOk?: boolean
@@ -259,7 +259,8 @@ export const InputButtons: React.FC<{
   return (
     <div className="jer-confirm-buttons">
       {!hideOk && (
-        <div onClick={onOk} ref={editConfirmRef}>
+        // Pass an anonymous function to prevent passing event to onOk
+        <div onClick={() => onOk()} ref={editConfirmRef}>
           <Icon name="ok" nodeData={nodeData} />
         </div>
       )}
