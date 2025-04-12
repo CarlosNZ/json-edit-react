@@ -40,7 +40,9 @@
   "scripts": {
     "serve": "vite preview",
     "type-check": "tsc --noEmit",
-    "start": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && concurrently --kill-others-on-fail  \"vite\" \"nodemon watch.cjs\"",
+    "dev:local": "cross-env VITE_USE_LOCAL_SRC=true vite",
+    "dev:package": "vite",
+    "start": "yarn dev:local",
     "build": "tsc && vite build",
     "prebuild": "node ./scripts/getVersion.cjs",
     "predeploy": "yarn build",
@@ -51,13 +53,6 @@
       "react-app",
       "react-app/jest"
     ]
-  },
-  "nodemonConfig": {
-    "watch": [
-      "../src"
-    ],
-    "ext": "js, json, ts, tsx, css",
-    "delay": 200
   },
   "browserslist": {
     "production": [
@@ -73,10 +68,9 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "gh-pages": "^6.1.1",
     "node-fetch": "^3.3.2",
-    "nodemon": "^3.0.3",
     "source-map-explorer": "^2.5.3",
     "vite": "^6.2.5"
   }
