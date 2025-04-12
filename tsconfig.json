@@ -18,6 +18,6 @@
     "composite": true,
     "tsBuildInfoFile": "./.tsbuildinfo"
   },
-  "include": ["src", "src/types.ts"],
+  "include": ["src"],
   "files": ["src/index.ts"]
 }

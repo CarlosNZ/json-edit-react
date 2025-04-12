@@ -34,7 +34,7 @@ export default [
   {
     input: './build/dts/index.d.ts',
     output: [{ file: 'build/index.d.ts', format: 'es' }],
-    external: [/\.css$/],
     plugins: [dts()],
+    external: [/\.css$/],
   },
 ]
