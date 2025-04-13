@@ -3651,10 +3651,10 @@ jsesc@^3.0.2:
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-3.1.0.tgz#74d335a234f67ed19907fdadfac7ccf9d409825d"
   integrity sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==
 
-json-edit-react@1.25.4:
-  version "1.25.4"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.25.4.tgz#25ac178d8c5a027a9f7aefb7e8809142f00e7836"
-  integrity sha512-SO3BqE7/481roSwiCnHVWvAvv+JK6m3b2eeskra5fT1uQjvOUeDXw2HmKOBOMMnxxno8YK9NnA6BG64Fj6KTQw==
+json-edit-react@1.25.5:
+  version "1.25.5"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.25.5.tgz#903bd853c02e1a42e65205c8d576b14c6316b925"
+  integrity sha512-qJ1Jcfzu0gzt5gBSRuksOp2e7CFwqosFqz3j6P8Vr/VfGM0N2Gr9pkGnCgH1HSy3k5bdtriyY0XEaNHJDl9pwA==
   dependencies:
     object-property-assigner "^1.3.5"
     object-property-extractor "^1.0.13"
