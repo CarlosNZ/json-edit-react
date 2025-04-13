@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import React, { useEffect, useRef, lazy, Suspense } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -18,10 +18,11 @@ import {
   psychedelicTheme,
   // ExternalTriggers,
   // type CollapseState
-} from 'json-edit-react-import'
+} from './_imports'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
+import { useState } from 'react'
 import useUndo from 'use-undo'
 import {
   Box,
@@ -48,14 +49,12 @@ import {
   useToast,
   Tooltip,
 } from '@chakra-ui/react'
-// @ts-ignore
 import logo from './image/logo_400.png'
 import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { timestamp, version } from './version'
-import SourceIndicator from './SourceIndicator'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 
@@ -290,7 +289,6 @@ function App() {
         minH="100%"
       >
         <HStack w="100%" justify="space-between" align="flex-start">
-          <SourceIndicator />
           <VStack align="flex-start" gap={3}>
             <HStack align="flex-end" mt={2} gap={4} flexWrap="wrap">
               <Flex gap={4} align="center">

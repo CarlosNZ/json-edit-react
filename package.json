@@ -24,9 +24,8 @@
   "scripts": {
     "setup": "yarn install && cd demo && yarn install",
     "test": "jest",
-    "dev": "cd demo && yarn && yarn dev:local",
-    "demo": "cd demo && node ./scripts/getVersion.cjs && yarn && yarn dev:package",
-    "build": "rimraf ./build && yarn tsc --emitDeclarationOnly --declaration --declarationDir build/dts --outDir build && rollup -c && rimraf ./build/dts",
+    "demo": "cd demo && node ./scripts/getVersion.cjs && yarn && yarn start",
+    "build": "rimraf ./build && rollup -c && rimraf ./build/dts",
     "lint": "npx eslint \"src/**\"",
     "postbuild": "node ./scripts/cleanBuildTypes.cjs",
     "prepareReadme": "python3 scripts/build_npm_readme.py",

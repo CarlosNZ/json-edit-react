@@ -15,12 +15,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
-    "paths": {
-      "json-edit-react-import/*": ["../src/*"],
-      "json-edit-react-import": ["../src/index"]
-    }
+    "baseUrl": "."
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }, { "path": "../" }]
+  "include": ["demo/src"],
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

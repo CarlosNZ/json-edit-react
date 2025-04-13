@@ -12,7 +12,10 @@ import {
   StringDisplay,
   StringEdit,
   toPathString,
+} from '../_imports'
+import {
   DefaultValueFunction,
+  ErrorString,
   NewKeyOptionsFunction,
   OnChangeFunction,
   OnErrorFunction,
@@ -20,9 +23,10 @@ import {
   standardDataTypes,
   ThemeStyles,
   TypeFilterFunction,
+  TypeOptions,
   UpdateFunction,
-} from 'json-edit-react-import'
-import { ErrorString, TypeOptions, UpdateFunctionProps } from '../../../src/types'
+  UpdateFunctionProps,
+} from '../json-edit-react/src/types'
 import { type Input } from 'object-property-assigner'
 import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'

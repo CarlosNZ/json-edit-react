@@ -11,7 +11,7 @@
 import React from 'react'
 import DatePicker from 'react-datepicker'
 import { Button } from '@chakra-ui/react'
-import { CustomNodeProps, CustomNodeDefinition } from 'json-edit-react-import'
+import { CustomNodeProps, CustomNodeDefinition } from '../_imports'
 
 // Styles
 import 'react-datepicker/dist/react-datepicker.css'
