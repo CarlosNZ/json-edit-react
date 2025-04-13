@@ -50,3 +50,4 @@ demo/src/firebaseConfig.json
 demo/src/package
 .original-readme.md
 .npm-readme.md
+demo/src/imports/import.ts
