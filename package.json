@@ -31,7 +31,7 @@
     "postbuild": "node ./scripts/cleanBuildTypes.cjs",
     "prepareReadme": "python3 scripts/build_npm_readme.py",
     "prepublishOnly": "yarn build && yarn prepareReadme && python3 scripts/use_npm_readme.py prepare",
-    "postpublish": "python3 scripts/use_npm_readme.py restore",
+    "postpublish": "python3 scripts/use_npm_readme.py restore && cd demo && yarn add json-edit-react@latest",
     "compile": "rimraf ./build && tsc",
     "release": "yarn publish",
     "release-demo": "cd demo && yarn deploy"
