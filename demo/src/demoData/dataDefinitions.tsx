@@ -12,7 +12,7 @@ import {
   StringDisplay,
   StringEdit,
   toPathString,
-} from '../_imports'
+} from '../imports'
 import {
   DefaultValueFunction,
   ErrorString,

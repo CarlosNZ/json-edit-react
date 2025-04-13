@@ -25,7 +25,7 @@
     "ajv": "^8.16.0",
     "firebase": "^10.13.0",
     "framer-motion": "^11.0.3",
-    "json-edit-react": "^1.25.1",
+    "json-edit-react": "1.25.5",
     "json5": "^2.2.3",
     "react": "^18.2.0",
     "react-datepicker": "^7.5.0",
@@ -40,8 +40,11 @@
   "scripts": {
     "serve": "vite preview",
     "type-check": "tsc --noEmit",
-    "start": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && concurrently --kill-others-on-fail  \"vite\" \"nodemon watch.cjs\"",
-    "build": "tsc && vite build",
+    "prepareLaunch": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && node src/imports/swap_import.cjs",
+    "launch": "concurrently --kill-others-on-fail  \"vite\" \"nodemon watch.cjs\"",
+    "start": "yarn prepareLaunch && yarn launch",
+    "dev": "cross-env VITE_USE_LOCAL_SRC=true yarn prepareLaunch && VITE_USE_LOCAL_SRC=true yarn launch",
+    "build": "node src/imports/swap_import.cjs && tsc && vite build",
     "prebuild": "node ./scripts/getVersion.cjs",
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build"
@@ -74,6 +77,7 @@
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "gh-pages": "^6.1.1",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.0.3",

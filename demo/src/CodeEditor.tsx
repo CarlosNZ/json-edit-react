@@ -1,7 +1,7 @@
 import React from 'react'
 import CodeMirror from '@uiw/react-codemirror'
 import { json } from '@codemirror/lang-json'
-import { TextEditorProps } from './_imports'
+import { TextEditorProps } from './imports'
 import { githubLight, githubDark } from '@uiw/codemirror-theme-github'
 import { consoleDark } from '@uiw/codemirror-theme-console/dark'
 import { consoleLight } from '@uiw/codemirror-theme-console/light'

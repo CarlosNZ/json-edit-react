@@ -131,7 +131,7 @@ interface IconSharedProps {
   rotate?: boolean
 }
 
-export const Icon: React.FC<IconSharedProps> = ({ name, nodeData, rotate }): JSX.Element => {
+export const Icon: React.FC<IconSharedProps> = ({ name, nodeData }): JSX.Element => {
   const { getStyles, icons } = useTheme()
 
   const commonProps = { size: '1.4em', className: 'jer-icon' }

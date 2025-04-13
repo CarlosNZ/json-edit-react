@@ -473,7 +473,7 @@ The callback must return a `boolean` value -- if `true` that node will **not** b
 <details>
 <summary>
 
-**Edit restriction examples**
+#### Edit restriction examples
 </summary>
 
 - *A good case would be ensure your root node is not directly editable:*
@@ -528,7 +528,7 @@ Similarly, the `FilterFunction` for data types, while it takes the same input sh
 <details>
 <summary>
 
-**Type restriction example**
+#### Type restriction example
 </summary>
 
 This `restrictTypeSelection` function defines the following restrictions:
@@ -580,7 +580,7 @@ You can see examples of this in the [Star Wars data set](https://carlosnz.github
 <details>
 <summary>
 
-**Enum definition examples**
+#### Enum definition examples
 </summary>
 
 - *All nodes can be any of the standard data types plus a couple of custom Enum types:*
@@ -1149,11 +1149,13 @@ A few helper functions, components and types that might be useful in your own im
 - `LinkCustomComponent`: the component used to render [hyperlinks](#active-hyperlinks)
 - `LinkCustomNodeDefinition`: custom node definition for [hyperlinks](#active-hyperlinks)
 - `StringDisplay`: main component used to display a string value, re-used in the above "Link" Custom Component
+- `StringEdit`: component used when editing a string value, can be useful for custom components
 - `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron`: all the built-in [icon](#icons) components
 - `matchNode`, `matchNodeKey`: helpers for defining custom [Search](#searchfiltering) functions
 - `extract`: function to extract a deeply nested object value from a string path. See [here](https://github.com/CarlosNZ/object-property-extractor)
 - `assign`: function to set a deep object value from a string path. See [here](https://github.com/CarlosNZ/object-property-assigner)
 - `isCollection`: simple utility that returns `true` if input is a "Collection" (i.e. an Object or Array)
+- `toPathString`: transforms a path array to a string representation, e.g.  `["data", 0, "property1", "name"] => "data.0.property1.name"`
 - `defaultTheme`, `githubDarkTheme`, `monoDarkTheme`, `monoLightTheme`, `candyWrapperTheme`, `psychedelicTheme`: all built-in themes
 - `standardDataTypes`: array containing all standard data types: `[ 'string','number', 'boolean', 'null', 'object', 'array' ]`
 
@@ -1194,6 +1196,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.25.4**: Don't treat Date objects as collections, so they can be handled by custom components (#187)[https://github.com/CarlosNZ/json-edit-react/issues/187]
 - **1.25.1**: Small bug fix for incorrect resetting of cancelled edits (#184)[https://github.com/CarlosNZ/json-edit-react/issues/184]
 - **1.25.0**:
   - Implement [External control](#external-control) via event callbacks and triggers ([#138](https://github.com/CarlosNZ/json-edit-react/issues/138), [#145](https://github.com/CarlosNZ/json-edit-react/issues/145))
