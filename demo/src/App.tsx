@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, lazy, Suspense } from 'react'
+import { useEffect, useRef, lazy, Suspense } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import 'react-datepicker/dist/react-datepicker.css'
@@ -56,10 +56,9 @@ import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { timestamp, version } from './version'
+import { getLineHeight, truncate } from './helpers'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
-
-const usingLocalImport = import.meta.env.VITE_USE_LOCAL_SRC === 'true'
 
 interface AppState {
   rootName: string
@@ -232,7 +231,7 @@ function App() {
     else navigate(`./?data=${selected}`)
   }
 
-  const handleThemeChange = (e) => {
+  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const theme = themes.find((th) => th.displayName === e.target.value)
     if (!theme) return
     updateState({ theme })
@@ -292,7 +291,7 @@ function App() {
         minH="100%"
       >
         <HStack w="100%" justify="space-between" align="flex-start">
-          {usingLocalImport && <SourceIndicator />}
+          <SourceIndicator />
           <VStack align="flex-start" gap={3}>
             <HStack align="flex-end" mt={2} gap={4} flexWrap="wrap">
               <Flex gap={4} align="center">
@@ -382,7 +381,7 @@ function App() {
                       const error = (dataDefinition.onError as OnErrorFunction)(errorData)
                       toast({
                         title: 'ERROR 😢',
-                        description: error as any,
+                        description: error as string,
                         status: 'error',
                         duration: 5000,
                         isClosable: true,
@@ -398,7 +397,7 @@ function App() {
               }
               enableClipboard={
                 allowCopy
-                  ? ({ stringValue, type, success, errorMessage }) => {
+                  ? ({ stringValue, type, success, errorMessage }) =>
                       success
                         ? toast({
                             title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
@@ -414,7 +413,6 @@ function App() {
                             duration: 5000,
                             isClosable: true,
                           })
-                    }
                   : false
               }
               // viewOnly
@@ -835,8 +833,3 @@ function App() {
 }
 
 export default App
-
-export const truncate = (string: string, length = 200) =>
-  string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
-
-const getLineHeight = (data: JsonData) => JSON.stringify(data, null, 2).split('\n').length

@@ -53,7 +53,9 @@ export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = 
     <DatePicker
       // Check to prevent invalid date (from previous data value) crashing the
       // component
-      selected={isNaN(date as any) ? null : date}
+
+      // @ts-expect-error -- isNan can take any input
+      selected={isNaN(date) ? null : date}
       showTimeSelect={showTimeSelect}
       dateFormat={dateFormat}
       onChange={(date: Date | null) => date && setValue(date.toISOString())}
@@ -89,7 +91,8 @@ export const dateNodeDefinition: CustomNodeDefinition = {
   // Condition is a regex to match ISO strings
   condition: ({ value }) =>
     typeof value === 'string' &&
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[\d\.]*(Z?|[\+-][\d:]+)$/.test(value),
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[\d.]*(Z?|[+-][\d:]+)$/.test(value),
+  // @ts-expect-error To-DO
   element: DateTimePicker, // the component defined above
   showOnView: false,
   showOnEdit: true,

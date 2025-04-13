@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { type JSX } from 'react'
 import { useTheme } from './contexts'
 import { type NodeData } from './types'
 

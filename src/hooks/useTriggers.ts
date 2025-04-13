@@ -20,7 +20,7 @@ export interface ExternalTriggers {
 
 export const useTriggers = (
   triggers: ExternalTriggers | null | undefined,
-  editConfirmRef: React.RefObject<HTMLDivElement>
+  editConfirmRef: React.RefObject<HTMLDivElement | null>
 ) => {
   const { setCurrentlyEditingElement, currentlyEditingElement, setCollapseState } = useTreeState()
 

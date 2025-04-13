@@ -60,7 +60,7 @@ export const useCollapseTransition = (
   const isAnimating = useRef(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const prevHeight = useRef<string | number>(0)
-  const timerId = useRef<number>()
+  const timerId = useRef<number>(0)
 
   const cssTransitionValue = `${collapseAnimationTime / 1000}s`
 
@@ -110,9 +110,11 @@ export const useCollapseTransition = (
 // fontSize
 const estimateHeight = (
   data: JsonData,
-  contentRef: React.RefObject<HTMLDivElement>,
+  contentRef: React.RefObject<HTMLDivElement | null>,
   containerRef: React.MutableRefObject<Element>
 ) => {
+  if (!contentRef.current) return 0
+
   const baseFontSize = parseInt(
     getComputedStyle(containerRef.current).getPropertyValue('line-height') ?? '16px'
   )

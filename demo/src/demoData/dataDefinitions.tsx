@@ -9,13 +9,7 @@ import {
   LinkCustomNodeDefinition,
   assign,
   matchNode,
-  StringDisplay,
-  StringEdit,
-  toPathString,
-} from '../imports'
-import {
   DefaultValueFunction,
-  ErrorString,
   NewKeyOptionsFunction,
   OnChangeFunction,
   OnErrorFunction,
@@ -23,10 +17,14 @@ import {
   standardDataTypes,
   ThemeStyles,
   TypeFilterFunction,
-  TypeOptions,
   UpdateFunction,
+  // StringDisplay,
+  // StringEdit,
+  // toPathString,
+  ErrorString,
+  TypeOptions,
   UpdateFunctionProps,
-} from '../json-edit-react/src/types'
+} from '../imports'
 import { type Input } from 'object-property-assigner'
 import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'
@@ -38,7 +36,7 @@ const validateCustomNodes = ajv.compile(customNodesSchema)
 
 export interface DemoData {
   name: string
-  description: JSX.Element
+  description: React.JSX.Element
   data: object
   rootName?: string
   collapse?: number | FilterFunction
@@ -57,7 +55,7 @@ export interface DemoData {
   onChange?: OnChangeFunction
   onError?: OnErrorFunction
   showErrorMessages?: boolean
-  defaultValue?: unknown | DefaultValueFunction
+  defaultValue?: DefaultValueFunction
   newKeyOptions?: string[] | NewKeyOptionsFunction
   customNodeDefinitions?: CustomNodeDefinition[]
   customTextDefinitions?: CustomTextDefinitions
@@ -310,11 +308,12 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     restrictDelete: ({ level }) => level !== 1,
     collapse: 2,
     searchFilter: ({ path, fullData }, searchText) => {
+      const data = fullData as { name: string; username: string }[]
       if (path?.length >= 2) {
-        const index = path?.[0]
+        const index = path?.[0] as number
         return (
-          matchNode({ value: fullData[index].name }, searchText) ||
-          matchNode({ value: fullData[index].username }, searchText)
+          matchNode({ value: data[index].name }, searchText) ||
+          matchNode({ value: data[index].username }, searchText)
         )
       } else return false
     },
@@ -528,14 +527,16 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     onEdit: ({ newData, path }) => {
       if (path[0] !== 'messages' && path.length !== 3) return ['value', newData]
       const parentPath = [path[0], path[1]]
-      const messageObject = (newData as Record<string, any>)?.messages?.[path[1]]
+      const messageObject = (newData as { messages: { [key: number]: { timeStamp: string } } })
+        ?.messages?.[path[1] as number]
       messageObject.timeStamp = new Date().toISOString()
-      const data = assign(newData as any, parentPath, messageObject)
+      const data = assign(newData as Input, parentPath, messageObject)
       return ['value', data]
     },
     onAdd: ({ path, newData }) => {
       if (path[0] === 'messages' && path.length === 2) {
-        const messages = [...(newData as Record<string, any>)?.messages]
+        // @ts-expect-error TO-DO
+        const messages = [...(newData?.messages ?? [])]
         messages.sort((a, b) => new Date(b.timeStamp).getTime() - new Date(a.timeStamp).getTime())
         const data = assign(newData as Input, 'messages', messages)
         return ['value', data]
@@ -555,12 +556,16 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     },
     searchFilter: ({ path, fullData }, searchText) => {
       if (path?.length >= 2 && path[0] === 'messages') {
-        const index = path?.[1]
-        const messages = (fullData as { messages: unknown[] })?.messages
+        const index = path?.[1] as number
+        const messages = (
+          fullData as {
+            messages: Record<string, { message?: string; name?: string; from?: string }>[]
+          }
+        )?.messages
         return (
-          matchNode({ value: messages[index].message }, searchText) ||
-          matchNode({ value: messages[index].name }, searchText) ||
-          matchNode({ value: messages[index].from }, searchText)
+          matchNode({ value: messages[index]?.message }, searchText) ||
+          matchNode({ value: messages[index]?.name }, searchText) ||
+          matchNode({ value: messages[index]?.from }, searchText)
         )
       } else return true
     },
@@ -664,9 +669,10 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'Superheroes',
     collapse: 2,
     searchFilter: ({ path, fullData }, searchText = '') => {
+      const data = fullData as { name: string }[]
       if (path?.length >= 2) {
-        const index = path?.[0]
-        return matchNode({ value: fullData[index].name }, searchText)
+        const index = path?.[0] as number
+        return matchNode({ value: data[index].name }, searchText)
       } else return false
     },
     searchPlaceholder: 'Search by character name',
@@ -783,14 +789,16 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     customTextDefinitions: {
       ITEM_SINGLE: ({ key, value }) => {
         if (value instanceof Object && 'name' in value)
-          return `${value.name} (${(value as any)?.publisher ?? ''})`
+          // @ts-expect-error TO-DO
+          return `${value.name} (${value?.publisher ?? ''})`
         if (key === 'aliases' && Array.isArray(value)) return `One name`
         if (key === 'portrayedBy' && Array.isArray(value)) return `One actor`
         return null
       },
       ITEMS_MULTIPLE: ({ key, value, size }) => {
         if (value instanceof Object && 'name' in value)
-          return `${value.name} (${(value as any)?.publisher ?? ''})`
+          // @ts-expect-error TO-DO
+          return `${value.name} (${value?.publisher ?? ''})`
         if (key === 'aliases' && Array.isArray(value)) return `${size} names`
         if (key === 'portrayedBy' && Array.isArray(value)) return `${size} actors`
         return null

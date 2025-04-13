@@ -1,3 +1,4 @@
+import { type JSX } from 'react'
 import { type Options as AssignOptions } from 'object-property-assigner'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { type ExternalTriggers } from './hooks'
@@ -275,7 +276,7 @@ interface BaseNodeProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
-  editConfirmRef: React.RefObject<HTMLDivElement>
+  editConfirmRef: React.RefObject<HTMLDivElement | null>
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {

@@ -1,16 +1,19 @@
 /**
  * This script causes the correct version of json-edit-react to be imported to
- * the Demo app on launch, based on the environment variable VITE_USE_LOCAL_SRC.
+ * the Demo app on launch, based on the environment variable VITE_JRE_SOURCE.
  *
- * If VITE_USE_LOCAL_SRC=true, it will import from the local src directory.
- * Otherwise it will use the built package from npm
+ * - VITE_JRE_SOURCE = "local" => use from local src (import.local.ts)
+ * - VITE_JRE_SOURCE = "package" => use from locally built package
+ *   (import.package.ts)
+ * - VITE_JRE_SOURCE = "published" (or undefined) => use from package published
+ *   to npm (import.published.ts)
  */
 
 const fs = require('fs')
 const path = require('path')
 
 // Read the provider from the environment variable
-const provider = process.env.VITE_USE_LOCAL_SRC === 'true' ? 'local' : 'package'
+const provider = process.env.VITE_JRE_SOURCE ?? 'published'
 
 const src = path.resolve(__dirname, `import.${provider}.ts`)
 const dest = path.resolve(__dirname, 'import.ts')

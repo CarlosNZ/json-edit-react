@@ -288,7 +288,7 @@ export const NullValue: React.FC<InputProps> = ({
   keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
-  const timer = useRef<number | undefined>()
+  const timer = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     if (!isEditing) {
