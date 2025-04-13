@@ -18,7 +18,8 @@ import {
   psychedelicTheme,
   // ExternalTriggers,
   // type CollapseState
-} from './_imports'
+} from './imports'
+import SourceIndicator from './SourceIndicator'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -57,6 +58,8 @@ import './style.css'
 import { timestamp, version } from './version'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
+
+const usingLocalImport = import.meta.env.VITE_USE_LOCAL_SRC === 'true'
 
 interface AppState {
   rootName: string
@@ -289,6 +292,7 @@ function App() {
         minH="100%"
       >
         <HStack w="100%" justify="space-between" align="flex-start">
+          {usingLocalImport && <SourceIndicator />}
           <VStack align="flex-start" gap={3}>
             <HStack align="flex-end" mt={2} gap={4} flexWrap="wrap">
               <Flex gap={4} align="center">
