@@ -418,12 +418,6 @@ export interface Theme {
   styles: Partial<ThemeStyles>
 }
 
-// Same as "Theme", but we know every property in styles is defined
-export interface DefaultTheme extends Theme {
-  displayName: 'Default'
-  styles: ThemeStyles
-}
-
 // All the fragments and shorthand defined in Theme is compiled into a single
 // CSS "Style" object before being passed to components
 export type CompiledStyles = Record<ThemeableElement, ThemeFunction | React.CSSProperties>

@@ -15,7 +15,7 @@ import {
 } from '../types'
 import { toPathString } from '../helpers'
 
-export interface CommonProps {
+interface CommonProps {
   props: CollectionNodeProps | ValueNodeProps
   collapsed?: boolean
 }
