@@ -18,7 +18,7 @@ import {
 } from '../types'
 import { toPathString } from '../helpers'
 
-export interface DragSource {
+interface DragSource {
   path: CollectionKey[] | null
   pathString: string | null
 }

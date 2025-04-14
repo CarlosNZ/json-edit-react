@@ -44,6 +44,7 @@ export {
   type UpdateFunctionProps,
 } from './types'
 export { type EditState, type ExternalTriggers } from './hooks'
+export { type IconProps } from './Icons'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
 
 export {

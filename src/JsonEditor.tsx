@@ -22,6 +22,7 @@ import {
   type UpdateFunctionProps,
   type JsonData,
   type KeyboardControls,
+  ValueData,
 } from './types'
 import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useTreeState } from './contexts'
 import { useData, useTriggers } from './hooks'
@@ -82,11 +83,11 @@ const Editor: React.FC<JsonEditorProps> = ({
 }) => {
   const { getStyles } = useTheme()
   const { setCurrentlyEditingElement } = useTreeState()
-  const collapseFilter = useCallback(getFilterFunction(collapse), [collapse])
-  const translate = useCallback(getTranslateFunction(translations, customText), [
-    translations,
-    customText,
-  ])
+  const collapseFilter = useMemo(() => getFilterFunction(collapse), [collapse])
+  const translate = useMemo(
+    () => getTranslateFunction(translations, customText),
+    [translations, customText]
+  )
   const [debouncedSearchText, setDebouncedSearchText] = useState(searchText)
 
   const [data, setData] = useData<JsonData>({ setData: srcSetData, data: srcData })
@@ -97,6 +98,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     setCurrentlyEditingElement(null)
     const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
     return () => clearTimeout(debounce)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setCurrentlyEditingElement is a React state setter, and can't change
   }, [searchText, searchDebounceTime])
 
   const nodeData: NodeData = {
@@ -280,7 +282,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   const handleKeyboardCallback = useCallback(
     (e: React.KeyboardEvent, eventMap: Partial<Record<keyof KeyboardControls, () => void>>) =>
       handleKeyPress(fullKeyboardControls, eventMap, e),
-    [keyboardControls]
+    [fullKeyboardControls]
   )
 
   const editConfirmRef = useRef<HTMLDivElement>(null)
@@ -382,7 +384,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       {isCollection(data) ? (
         <CollectionNode data={data} {...otherProps} />
       ) : (
-        <ValueNodeWrapper data={data as any} showLabel {...otherProps} />
+        <ValueNodeWrapper data={data as ValueData} showLabel {...otherProps} />
       )}
     </div>
   )

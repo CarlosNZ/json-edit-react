@@ -3,6 +3,7 @@ import dts from 'rollup-plugin-dts'
 import peerDepsExternal from 'rollup-plugin-peer-deps-external'
 import styles from 'rollup-plugin-styles'
 import terser from '@rollup/plugin-terser'
+import del from 'rollup-plugin-delete'
 import bundleSize from 'rollup-plugin-bundle-size'
 import sizes from 'rollup-plugin-sizes'
 
@@ -21,6 +22,7 @@ export default [
       },
     ],
     plugins: [
+      del({ targets: 'build/*' }),
       styles({ minimize: true }),
       peerDepsExternal({ includeDependencies: true }),
       typescript({ module: 'ESNext', target: 'es6' }),

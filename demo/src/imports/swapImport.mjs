@@ -9,14 +9,14 @@
  *   to npm (import.published.ts)
  */
 
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
 
 // Read the provider from the environment variable
 const provider = process.env.VITE_JRE_SOURCE ?? 'published'
 
-const src = path.resolve(__dirname, `import.${provider}.ts`)
-const dest = path.resolve(__dirname, 'import.ts')
+const src = path.resolve('src/imports', `import.${provider}.ts`)
+const dest = path.resolve('src/imports', 'import.ts')
 
 if (!fs.existsSync(src)) {
   console.error(`❌ No file found for provider "${provider}". Expected at: ${src}`)

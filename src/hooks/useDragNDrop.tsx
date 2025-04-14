@@ -49,7 +49,8 @@ export const useDragNDrop = ({
         setDragSource({ path: null, pathString: null })
       },
     }
-  }, [canDrag])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canDrag, pathString])
 
   // Props for the items being dropped onto
   const getDropTargetProps = useMemo(
@@ -78,7 +79,8 @@ export const useDragNDrop = ({
         },
       }
     },
-    [dragSource, canDragOnto]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dragSource, canDragOnto, pathString]
   )
 
   // A dummy component to allow us to detect when dragging onto the *bottom*
@@ -100,7 +102,8 @@ export const useDragNDrop = ({
           {...getDropTargetProps('below')}
         ></div>
       ) : null,
-    [dragSource, canDragOnto]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dragSource, canDragOnto, path.length]
   )
 
   // "Padding" element displayed either above or below a node to indicate

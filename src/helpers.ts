@@ -312,12 +312,12 @@ const transformCollection = (collection: JsonData) => {
 type TransformedCollection =
   | {
       index: number
-      value: any
+      value: unknown
       key: number
     }
   | {
       key: string
-      value: any
+      value: unknown
       index: number
     }
 

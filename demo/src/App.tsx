@@ -9,17 +9,9 @@ import {
   JsonData,
   OnErrorFunction,
   defaultTheme,
-  // Additional Themes
-  githubDarkTheme,
-  githubLightTheme,
-  monoLightTheme,
-  monoDarkTheme,
-  candyWrapperTheme,
-  psychedelicTheme,
   // ExternalTriggers,
   // type CollapseState
 } from './imports'
-import SourceIndicator from './SourceIndicator'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -55,10 +47,10 @@ import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
-import { timestamp, version } from './version'
 import { getLineHeight, truncate } from './helpers'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
+const SourceIndicator = lazy(() => import('./SourceIndicator'))
 
 interface AppState {
   rootName: string
@@ -79,18 +71,23 @@ interface AppState {
   customTextEditor: boolean
 }
 
-const themes = [
-  defaultTheme,
-  githubDarkTheme,
-  githubLightTheme,
-  monoLightTheme,
-  monoDarkTheme,
-  candyWrapperTheme,
-  psychedelicTheme,
+// Additional themes are loaded dynamically when needed
+
+const themeNames = [
+  'Default',
+  'Github Dark',
+  'Github Light',
+  'White & Black',
+  'Black & White',
+  'Candy Wrapper',
+  'Psychedelic',
 ]
 
-console.log(`json-edit-react v${version}`)
-console.log('Site built:', timestamp)
+// Only default theme is loaded initially
+const themes = [defaultTheme]
+
+console.log(`json-edit-react v${__VERSION__}`)
+console.log(`Site built: ${__BUILD_TIME__}`)
 
 function App() {
   const navigate = useLocation()[1]
@@ -231,9 +228,39 @@ function App() {
     else navigate(`./?data=${selected}`)
   }
 
-  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const theme = themes.find((th) => th.displayName === e.target.value)
+  const handleThemeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const themeName = e.target.value
+
+    // If theme is already loaded, use it
+    let theme = themes.find((th) => th.displayName === themeName)
+
+    // If theme is not loaded yet, load it using LazyThemes
+    if (!theme && themeName !== 'Default') {
+      try {
+        // Create a function name for the getter based on theme name
+        const functionName = `get${themeName.replace(/\s+&\s+|\s+/g, '')}Theme`
+
+        // Dynamically import the themes module
+        const lazyThemesModule = await import('./theme/LazyThemes')
+
+        // Get the theme using the themeGetters map
+        if (lazyThemesModule.themeGetters[functionName]) {
+          const newTheme = lazyThemesModule.themeGetters[functionName]()
+
+          // Add to available themes to avoid loading again
+          if (newTheme) {
+            themes.push(newTheme)
+            theme = newTheme
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load theme:', error)
+        return
+      }
+    }
+
     if (!theme) return
+
     updateState({ theme })
     if (selectedDataSet === 'editTheme') {
       setData(theme)
@@ -291,7 +318,10 @@ function App() {
         minH="100%"
       >
         <HStack w="100%" justify="space-between" align="flex-start">
-          <SourceIndicator />
+          <Suspense fallback={null}>
+            <SourceIndicator />
+          </Suspense>
+
           <VStack align="flex-start" gap={3}>
             <HStack align="flex-end" mt={2} gap={4} flexWrap="wrap">
               <Flex gap={4} align="center">
@@ -626,9 +656,9 @@ function App() {
                   </FormLabel>
                   <div className="inputWidth" style={{ flexGrow: 1 }}>
                     <Select id="themeSelect" onChange={handleThemeChange} value={theme.displayName}>
-                      {themes.map((theme) => (
-                        <option value={theme.displayName} key={theme.displayName}>
-                          {theme.displayName}
+                      {themeNames.map((themeName) => (
+                        <option value={themeName} key={themeName}>
+                          {themeName}
                         </option>
                       ))}
                     </Select>
@@ -826,7 +856,7 @@ function App() {
       </Flex>
       <Box h={50} />
       <footer>
-        <Text fontSize="sm">{`json-edit-react v${version}`}</Text>
+        <Text fontSize="sm">{`json-edit-react v${__VERSION__}`}</Text>
       </footer>
     </div>
   )
