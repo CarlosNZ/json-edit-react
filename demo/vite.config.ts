@@ -23,6 +23,36 @@ export default defineConfig({
   build: {
     outDir: 'build',
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // UI library chunks
+          chakra: [
+            '@chakra-ui/react',
+            '@chakra-ui/icons',
+            '@emotion/react',
+            '@emotion/styled',
+            'framer-motion',
+          ],
+          // Code editor and related packages
+          codemirror: [
+            '@uiw/react-codemirror',
+            '@codemirror/lang-json',
+            '@uiw/codemirror-theme-github',
+            '@uiw/codemirror-theme-console',
+            '@uiw/codemirror-theme-quietlight',
+            '@uiw/codemirror-theme-monokai',
+          ],
+          // Icons library
+          icons: ['react-icons/fa', 'react-icons/bi', 'react-icons/ai'],
+          // Core React packages
+          vendor: ['react', 'react-dom', 'wouter', 'use-undo'],
+          // JSON utilities
+          json: ['json5', 'ajv'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 800,
   },
   define: {
     __BUILD_TIME__: JSON.stringify(
