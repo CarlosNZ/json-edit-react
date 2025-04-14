@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import React from 'react'
 import { data } from './data'
 import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'

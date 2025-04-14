@@ -9,13 +9,6 @@ import {
   JsonData,
   OnErrorFunction,
   defaultTheme,
-  // Additional Themes
-  githubDarkTheme,
-  githubLightTheme,
-  monoLightTheme,
-  monoDarkTheme,
-  candyWrapperTheme,
-  psychedelicTheme,
   // ExternalTriggers,
   // type CollapseState
 } from './imports'
@@ -78,15 +71,20 @@ interface AppState {
   customTextEditor: boolean
 }
 
-const themes = [
-  defaultTheme,
-  githubDarkTheme,
-  githubLightTheme,
-  monoLightTheme,
-  monoDarkTheme,
-  candyWrapperTheme,
-  psychedelicTheme,
+// Additional themes are loaded dynamically when needed
+
+const themeNames = [
+  'Default',
+  'Github Dark',
+  'Github Light',
+  'White & Black',
+  'Black & White',
+  'Candy Wrapper',
+  'Psychedelic',
 ]
+
+// Only default theme is loaded initially
+const themes = [defaultTheme]
 
 console.log(`json-edit-react v${__VERSION__}`)
 console.log(`Site built: ${__BUILD_TIME__}`)
@@ -230,9 +228,39 @@ function App() {
     else navigate(`./?data=${selected}`)
   }
 
-  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const theme = themes.find((th) => th.displayName === e.target.value)
+  const handleThemeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const themeName = e.target.value
+
+    // If theme is already loaded, use it
+    let theme = themes.find((th) => th.displayName === themeName)
+
+    // If theme is not loaded yet, load it using LazyThemes
+    if (!theme && themeName !== 'Default') {
+      try {
+        // Create a function name for the getter based on theme name
+        const functionName = `get${themeName.replace(/\s+&\s+|\s+/g, '')}Theme`
+
+        // Dynamically import the themes module
+        const lazyThemesModule = await import('./theme/LazyThemes')
+
+        // Get the theme using the themeGetters map
+        if (lazyThemesModule.themeGetters[functionName]) {
+          const newTheme = lazyThemesModule.themeGetters[functionName]()
+
+          // Add to available themes to avoid loading again
+          if (newTheme) {
+            themes.push(newTheme)
+            theme = newTheme
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load theme:', error)
+        return
+      }
+    }
+
     if (!theme) return
+
     updateState({ theme })
     if (selectedDataSet === 'editTheme') {
       setData(theme)
@@ -628,9 +656,9 @@ function App() {
                   </FormLabel>
                   <div className="inputWidth" style={{ flexGrow: 1 }}>
                     <Select id="themeSelect" onChange={handleThemeChange} value={theme.displayName}>
-                      {themes.map((theme) => (
-                        <option value={theme.displayName} key={theme.displayName}>
-                          {theme.displayName}
+                      {themeNames.map((themeName) => (
+                        <option value={themeName} key={themeName}>
+                          {themeName}
                         </option>
                       ))}
                     </Select>
