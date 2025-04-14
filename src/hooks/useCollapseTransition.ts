@@ -41,7 +41,7 @@
  *   change height automatically based on its changing contents
  */
 
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { type JsonData } from '../types'
 
 export const useCollapseTransition = (
@@ -65,34 +65,37 @@ export const useCollapseTransition = (
   const cssTransitionValue = `${collapseAnimationTime / 1000}s`
 
   // Method to change the collapse state and manage the animated transition
-  const animateCollapse = (collapse: boolean) => {
-    if (collapsed === collapse) return
+  const animateCollapse = useCallback(
+    (collapse: boolean) => {
+      if (collapsed === collapse) return
 
-    window.clearTimeout(timerId.current)
-    isAnimating.current = true
+      window.clearTimeout(timerId.current)
+      isAnimating.current = true
 
-    switch (collapse) {
-      case true: {
-        // Closing...
-        const current = contentRef.current?.offsetHeight ?? 0
-        prevHeight.current = current
-        setMaxHeight(current)
-        setTimeout(() => {
-          setMaxHeight(0)
-        }, 5)
-        break
+      switch (collapse) {
+        case true: {
+          // Closing...
+          const current = contentRef.current?.offsetHeight ?? 0
+          prevHeight.current = current
+          setMaxHeight(current)
+          setTimeout(() => {
+            setMaxHeight(0)
+          }, 5)
+          break
+        }
+        case false:
+          // Opening...
+          setMaxHeight(prevHeight.current || estimateHeight(data, contentRef, mainContainerRef))
       }
-      case false:
-        // Opening...
-        setMaxHeight(prevHeight.current || estimateHeight(data, contentRef, mainContainerRef))
-    }
 
-    setCollapsed(!collapsed)
-    timerId.current = window.setTimeout(() => {
-      isAnimating.current = false
-      if (!collapse) setMaxHeight(undefined)
-    }, collapseAnimationTime)
-  }
+      setCollapsed(!collapsed)
+      timerId.current = window.setTimeout(() => {
+        isAnimating.current = false
+        if (!collapse) setMaxHeight(undefined)
+      }, collapseAnimationTime)
+    },
+    [collapseAnimationTime, collapsed, data, mainContainerRef]
+  )
 
   return {
     contentRef,

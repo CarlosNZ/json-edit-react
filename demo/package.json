@@ -18,7 +18,7 @@
     "lint": "eslint .",
     "serve": "vite preview",
     "serve-local": "vite preview --base=/",
-    "check": "tsc -b --noEmit"
+    "compile": "tsc -b --noEmit"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",

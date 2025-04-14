@@ -56,5 +56,6 @@ export const useTriggers = (
         if (edit?.path) setCurrentlyEditingElement(edit.path)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [triggers])
 }

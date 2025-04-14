@@ -376,32 +376,29 @@ export interface InputProps {
 // Object passed to main "theme" prop
 export type ThemeInput = Theme | Partial<ThemeStyles> | Array<Theme | Partial<ThemeStyles>>
 
-const themeableElements = [
-  'container',
-  'collection',
-  'collectionInner',
-  'collectionElement',
-  'dropZone',
-  'property',
-  'bracket',
-  'itemCount',
-  'string',
-  'number',
-  'boolean',
-  'null',
-  'input',
-  'inputHighlight',
-  'error',
-  'iconCollection',
-  'iconEdit',
-  'iconDelete',
-  'iconAdd',
-  'iconCopy',
-  'iconOk',
-  'iconCancel',
-] as const
-
-export type ThemeableElement = (typeof themeableElements)[number]
+export type ThemeableElement =
+  | 'container'
+  | 'collection'
+  | 'collectionInner'
+  | 'collectionElement'
+  | 'dropZone'
+  | 'property'
+  | 'bracket'
+  | 'itemCount'
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'null'
+  | 'input'
+  | 'inputHighlight'
+  | 'error'
+  | 'iconCollection'
+  | 'iconEdit'
+  | 'iconDelete'
+  | 'iconAdd'
+  | 'iconCopy'
+  | 'iconOk'
+  | 'iconCancel'
 
 export type ThemeFunction = (nodeData: NodeData) => React.CSSProperties | null | undefined
 

@@ -23,6 +23,7 @@ export const useData = <T>({ setData, data }: UseDataProps<T>) => {
 
   useEffect(() => {
     if (!setData) setLocalData(data)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
   return [setData ? data : localData, setDataMethod] as [T, (data: T) => void]

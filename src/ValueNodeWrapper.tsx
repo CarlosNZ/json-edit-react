@@ -101,12 +101,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       })
       setValue(modifiedValue)
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [onChange]
   )
 
   useEffect(() => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
     setDataType(getDataType(data, customNodeData))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, error])
 
   const {
@@ -137,6 +139,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     if (typeof result === 'boolean') return result ? [] : allDataTypes
 
     return result
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodeData, restrictTypeSelection])
 
   const [enumType, setEnumType] = useState<EnumDefinition | null>(
