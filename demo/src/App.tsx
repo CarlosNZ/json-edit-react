@@ -19,7 +19,6 @@ import {
   // ExternalTriggers,
   // type CollapseState
 } from './imports'
-import SourceIndicator from './SourceIndicator'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -58,6 +57,7 @@ import './style.css'
 import { getLineHeight, truncate } from './helpers'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
+const SourceIndicator = lazy(() => import('./SourceIndicator'))
 
 interface AppState {
   rootName: string
@@ -290,7 +290,10 @@ function App() {
         minH="100%"
       >
         <HStack w="100%" justify="space-between" align="flex-start">
-          <SourceIndicator />
+          <Suspense fallback={null}>
+            <SourceIndicator />
+          </Suspense>
+
           <VStack align="flex-start" gap={3}>
             <HStack align="flex-end" mt={2} gap={4} flexWrap="wrap">
               <Flex gap={4} align="center">
