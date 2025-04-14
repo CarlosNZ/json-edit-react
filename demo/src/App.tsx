@@ -55,7 +55,6 @@ import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
-import { timestamp, version } from './version'
 import { getLineHeight, truncate } from './helpers'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
@@ -89,8 +88,8 @@ const themes = [
   psychedelicTheme,
 ]
 
-console.log(`json-edit-react v${version}`)
-console.log('Site built:', timestamp)
+console.log(`json-edit-react v${__VERSION__}`)
+console.log(`Site built: ${__BUILD_TIME__}`)
 
 function App() {
   const navigate = useLocation()[1]
@@ -826,7 +825,7 @@ function App() {
       </Flex>
       <Box h={50} />
       <footer>
-        <Text fontSize="sm">{`json-edit-react v${version}`}</Text>
+        <Text fontSize="sm">{`json-edit-react v${__VERSION__}`}</Text>
       </footer>
     </div>
   )
