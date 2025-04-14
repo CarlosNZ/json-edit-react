@@ -32,7 +32,7 @@ export default defineConfig({
             '@chakra-ui/icons',
             '@emotion/react',
             '@emotion/styled',
-            'framer-motion'
+            'framer-motion',
           ],
           // Code editor and related packages
           codemirror: [
@@ -41,29 +41,18 @@ export default defineConfig({
             '@uiw/codemirror-theme-github',
             '@uiw/codemirror-theme-console',
             '@uiw/codemirror-theme-quietlight',
-            '@uiw/codemirror-theme-monokai'
+            '@uiw/codemirror-theme-monokai',
           ],
           // Icons library
-          icons: [
-            'react-icons/fa',
-            'react-icons/bi',
-            'react-icons/ai'
-          ],
+          icons: ['react-icons/fa', 'react-icons/bi', 'react-icons/ai'],
           // Core React packages
-          vendor: [
-            'react',
-            'react-dom',
-            'wouter',
-            'use-undo'
-          ],
+          vendor: ['react', 'react-dom', 'wouter', 'use-undo'],
           // JSON utilities
-          json: [
-            'json5',
-            'ajv'
-          ]
-        }
-      }
-    }
+          json: ['json5', 'ajv'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 800,
   },
   define: {
     __BUILD_TIME__: JSON.stringify(
