@@ -19,12 +19,12 @@
 
 const fs = require('fs-extra')
 
-const exportTextMatch = /^export { type .+ };$/m
+const exportTextMatch = /^export type { .+ };$/m
 
 const cleanBuildTypes = async () => {
   const data = await fs.readFile('build/index.d.ts', 'utf8')
   const exportText = exportTextMatch.exec(data)[0]
-  const cleanedText = exportText.replace(/ type(.+?)/gm, '$1')
+  const cleanedText = '\n// Types\n' + exportText.replace('export type ', 'export ')
   const newData = data.replace(exportText, cleanedText)
   console.log('Cleaning up type declarations...')
 

@@ -1,6 +1,6 @@
 {
   "name": "json-edit-react",
-  "version": "1.25.5",
+  "version": "1.25.6-beta1",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
@@ -29,9 +29,9 @@
     "demo:package": "yarn build-package && cd demo && yarn && yarn start:package",
     "prebuild": "yarn lint",
     "build": "rollup -c && rm -R build/dts",
+    "postbuild": "node ./scripts/cleanBuildTypes.cjs",
     "build-package": "yarn build && yarn pack --filename package.tgz && tar -xzf package.tgz -C demo/src && rm package.tgz",
     "lint": "eslint",
-    "postbuild": "node ./scripts/cleanBuildTypes.cjs",
     "prepareReadme": "python3 scripts/build_npm_readme.py",
     "prepublishOnly": "yarn build && yarn prepareReadme && python3 scripts/use_npm_readme.py prepare",
     "postpublish": "python3 scripts/use_npm_readme.py restore && cd demo && yarn add json-edit-react@latest",
@@ -41,11 +41,6 @@
   },
   "peerDependencies": {
     "react": ">=16.0.0"
-  },
-  "resolutions": {
-    "strip-ansi": "6.0.1",
-    "string-width": "4.2.2",
-    "wrap-ansi": "7.0.0"
   },
   "dependencies": {
     "object-property-assigner": "^1.3.5",

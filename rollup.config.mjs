@@ -25,7 +25,12 @@ export default [
       del({ targets: 'build/*' }),
       styles({ minimize: true }),
       peerDepsExternal({ includeDependencies: true }),
-      typescript({ module: 'ESNext', target: 'es6' }),
+      typescript({
+        module: 'ESNext',
+        target: 'es6',
+        declaration: true,
+        declarationDir: 'build/dts',
+      }),
       terser(),
       bundleSize(),
       sizes(),
@@ -34,7 +39,7 @@ export default [
   },
   // Types
   {
-    input: './build/dts/index.d.ts',
+    input: 'build/dts/index.d.ts',
     output: [{ file: 'build/index.d.ts', format: 'es' }],
     external: [/\.css$/],
     plugins: [dts()],
