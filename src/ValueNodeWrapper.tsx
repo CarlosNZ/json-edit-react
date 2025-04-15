@@ -20,7 +20,7 @@ import {
 } from './types'
 import { useTheme, useTreeState } from './contexts'
 import { getCustomNode, type CustomNodeData } from './CustomNode'
-import { filterNode, getNextOrPrevious, matchEnumType } from './helpers'
+import { filterNode, getNextOrPrevious, isJsEvent, matchEnumType } from './helpers'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'
 
@@ -209,7 +209,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setCurrentlyEditingElement(null)
     setPreviousValue(null)
     let newValue: JsonData
-    if (inputValue !== undefined) newValue = inputValue as JsonData
+    if (inputValue !== undefined && !isJsEvent(inputValue)) newValue = inputValue as JsonData
     else {
       switch (dataType) {
         case 'object':
