@@ -39,8 +39,12 @@ export {
   type TextEditorProps,
   type CollapseState,
   type EnumDefinition,
+  type ErrorString,
+  type TypeOptions,
+  type UpdateFunctionProps,
 } from './types'
 export { type EditState, type ExternalTriggers } from './hooks'
+export { type IconProps } from './Icons'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
 
 export {

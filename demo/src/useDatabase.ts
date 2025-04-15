@@ -8,6 +8,12 @@ const firebaseApp = initializeApp(firebaseConfig)
 
 const db = getFirestore(firebaseApp)
 
+interface Message {
+  timeStamp?: string
+  name?: string
+  message?: string
+}
+
 export const useDatabase = () => {
   const [value, loading, error] = useDocument(
     doc(getFirestore(firebaseApp), 'json-edit-react', 'live_json_data')
@@ -17,7 +23,7 @@ export const useDatabase = () => {
     const { Guestbook, lastEdited, messages } = value?.data() ?? {}
 
     const messagesTidied = messages
-      ? messages.map(({ timeStamp, name, message, ...rest }) => ({
+      ? messages.map(({ timeStamp, name, message, ...rest }: Message) => ({
           message,
           name,
           ...rest,
@@ -34,7 +40,7 @@ export const useDatabase = () => {
       : null
   }, [value])
 
-  const updateLiveData = async (data) => {
+  const updateLiveData = async (data: object) => {
     await setDoc(
       doc(db, 'json-edit-react', 'live_json_data'),
       { ...data, lastEdited: new Date().toISOString() },

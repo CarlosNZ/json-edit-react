@@ -30,7 +30,7 @@ interface EditButtonProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   getNewKeyOptions?: (nodeDate: NodeData) => string[] | null | void
-  editConfirmRef: React.RefObject<HTMLDivElement>
+  editConfirmRef: React.RefObject<HTMLDivElement | null>
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
@@ -253,14 +253,14 @@ export const InputButtons: React.FC<{
   onOk: () => void
   onCancel: () => void
   nodeData: NodeData
-  editConfirmRef: React.RefObject<HTMLDivElement>
+  editConfirmRef: React.RefObject<HTMLDivElement | null>
   hideOk?: boolean
 }> = ({ onOk, onCancel, nodeData, editConfirmRef, hideOk = false }) => {
   return (
     <div className="jer-confirm-buttons">
       {!hideOk && (
         // Pass an anonymous function to prevent passing event to onOk
-        <div onClick={() => onOk()} ref={editConfirmRef}>
+        <div onClick={() => onOk()} ref={editConfirmRef as React.RefObject<HTMLDivElement>}>
           <Icon name="ok" nodeData={nodeData} />
         </div>
       )}

@@ -14,7 +14,10 @@
     "removeComments": true,
     "noImplicitAny": true,
     "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
   },
   // "include": ["src"]
   "files": ["src/index.ts"]

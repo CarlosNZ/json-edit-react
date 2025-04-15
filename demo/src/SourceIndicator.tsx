@@ -1,8 +1,10 @@
-import React from 'react'
-
 const SourceIndicator = () => {
-  // Directly check if we're using the local source
-  if (import.meta.env.VITE_USE_LOCAL_SRC !== 'true') return null
+  // Determine json-edit-react source from Env variable
+  // Default is "published", so don't display anything additional in that case
+  if (!['local', 'package'].includes(import.meta.env.VITE_JRE_SOURCE)) return null
+
+  const backgroundColor = import.meta.env.VITE_JRE_SOURCE === 'package' ? '#ff51ff' : '#ef4444'
+  const text = import.meta.env.VITE_JRE_SOURCE === 'package' ? 'BUILD' : 'LOCAL'
 
   return (
     <div
@@ -18,7 +20,7 @@ const SourceIndicator = () => {
     >
       <div
         style={{
-          backgroundColor: '#ef4444',
+          backgroundColor,
           color: 'white',
           fontSize: '12px',
           fontWeight: 'bold',
@@ -27,7 +29,7 @@ const SourceIndicator = () => {
           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
         }}
       >
-        LOCAL
+        {text}
       </div>
     </div>
   )

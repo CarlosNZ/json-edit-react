@@ -1,3 +1,4 @@
+import { type JSX } from 'react'
 import { type Options as AssignOptions } from 'object-property-assigner'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { type ExternalTriggers } from './hooks'
@@ -275,7 +276,7 @@ interface BaseNodeProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
-  editConfirmRef: React.RefObject<HTMLDivElement>
+  editConfirmRef: React.RefObject<HTMLDivElement | null>
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -375,32 +376,29 @@ export interface InputProps {
 // Object passed to main "theme" prop
 export type ThemeInput = Theme | Partial<ThemeStyles> | Array<Theme | Partial<ThemeStyles>>
 
-const themeableElements = [
-  'container',
-  'collection',
-  'collectionInner',
-  'collectionElement',
-  'dropZone',
-  'property',
-  'bracket',
-  'itemCount',
-  'string',
-  'number',
-  'boolean',
-  'null',
-  'input',
-  'inputHighlight',
-  'error',
-  'iconCollection',
-  'iconEdit',
-  'iconDelete',
-  'iconAdd',
-  'iconCopy',
-  'iconOk',
-  'iconCancel',
-] as const
-
-export type ThemeableElement = (typeof themeableElements)[number]
+export type ThemeableElement =
+  | 'container'
+  | 'collection'
+  | 'collectionInner'
+  | 'collectionElement'
+  | 'dropZone'
+  | 'property'
+  | 'bracket'
+  | 'itemCount'
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'null'
+  | 'input'
+  | 'inputHighlight'
+  | 'error'
+  | 'iconCollection'
+  | 'iconEdit'
+  | 'iconDelete'
+  | 'iconAdd'
+  | 'iconCopy'
+  | 'iconOk'
+  | 'iconCancel'
 
 export type ThemeFunction = (nodeData: NodeData) => React.CSSProperties | null | undefined
 
@@ -418,12 +416,6 @@ export interface Theme {
   displayName?: string
   fragments?: Fragments
   styles: Partial<ThemeStyles>
-}
-
-// Same as "Theme", but we know every property in styles is defined
-export interface DefaultTheme extends Theme {
-  displayName: 'Default'
-  styles: ThemeStyles
 }
 
 // All the fragments and shorthand defined in Theme is compiled into a single

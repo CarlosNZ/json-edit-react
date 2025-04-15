@@ -44,7 +44,8 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
   const requiresTruncation = value.length > stringTruncate
 
   const handleMaybeEdit = () => {
-    canEdit ? setIsEditing(true) : setIsExpanded(!isExpanded)
+    if (canEdit) setIsEditing(true)
+    else setIsExpanded(!isExpanded)
   }
 
   return (
@@ -288,7 +289,7 @@ export const NullValue: React.FC<InputProps> = ({
   keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
-  const timer = useRef<number | undefined>()
+  const timer = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     if (!isEditing) {
@@ -304,6 +305,7 @@ export const NullValue: React.FC<InputProps> = ({
     )
 
     return () => window.removeEventListener('keydown', listenForSubmit)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditing])
 
   const listenForSubmit = (e: unknown) =>

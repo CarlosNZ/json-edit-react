@@ -106,12 +106,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   useEffect(() => {
     setStringifiedValue(jsonStringify(data))
     // if (isEditing) setCurrentlyEditingElement(null)
-  }, [data])
+  }, [data, jsonStringify])
 
   useEffect(() => {
     const shouldBeCollapsed = collapseFilter(nodeData) && !isEditing
     hasBeenOpened.current = !shouldBeCollapsed
     animateCollapse(shouldBeCollapsed)
+    // eslint-disable-next-line
   }, [collapseFilter])
 
   useEffect(() => {
@@ -122,6 +123,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         animateCollapse(matchingCollapse.collapsed)
       }
     }
+    // eslint-disable-next-line
   }, [collapseState])
 
   // For JSON-editing TextArea
@@ -155,7 +157,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     showOnEdit,
     showOnView,
     showCollectionWrapper = true,
-  } = useMemo(() => getCustomNode(customNodeDefinitions, nodeData), [data])
+  } = useMemo(
+    () => getCustomNode(customNodeDefinitions, nodeData),
+    [nodeData, customNodeDefinitions]
+  )
 
   const childrenEditing = areChildrenBeingEdited(pathString)
 

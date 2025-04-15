@@ -3,7 +3,7 @@
  * Nodes and Value Nodes
  */
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useTreeState } from '../contexts'
 import {
   type CollectionNodeProps,
@@ -15,7 +15,7 @@ import {
 } from '../types'
 import { toPathString } from '../helpers'
 
-export interface CommonProps {
+interface CommonProps {
   props: CollectionNodeProps | ValueNodeProps
   collapsed?: boolean
 }
@@ -43,13 +43,10 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
 
   const pathString = toPathString(path)
 
-  const canEdit = useMemo(() => !restrictEditFilter(nodeData), [nodeData])
-  const canDelete = useMemo(() => !restrictDeleteFilter(nodeData), [nodeData])
-  const canAdd = useMemo(() => !restrictAddFilter(nodeData), [nodeData])
-  const canDrag = useMemo(
-    () => !restrictDragFilter(nodeData) && canDelete && currentlyEditingElement === null,
-    [nodeData]
-  )
+  const canEdit = !restrictEditFilter(nodeData)
+  const canDelete = !restrictDeleteFilter(nodeData)
+  const canAdd = !restrictAddFilter(nodeData)
+  const canDrag = !restrictDragFilter(nodeData) && canDelete && currentlyEditingElement === null
 
   const showError = (errorString: ErrorString) => {
     if (showErrorMessages) {
@@ -73,6 +70,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
         })
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [onErrorCallback, showErrorMessages]
   )
 

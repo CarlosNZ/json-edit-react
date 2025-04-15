@@ -20,7 +20,7 @@ export interface ExternalTriggers {
 
 export const useTriggers = (
   triggers: ExternalTriggers | null | undefined,
-  editConfirmRef: React.RefObject<HTMLDivElement>
+  editConfirmRef: React.RefObject<HTMLDivElement | null>
 ) => {
   const { setCurrentlyEditingElement, currentlyEditingElement, setCollapseState } = useTreeState()
 
@@ -56,5 +56,6 @@ export const useTriggers = (
         if (edit?.path) setCurrentlyEditingElement(edit.path)
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [triggers])
 }

@@ -2,21 +2,30 @@
   "name": "json-edit-react-demo",
   "version": "1.25.0",
   "private": true,
-  "homepage": "https://carlosnz.github.io/json-edit-react",
   "type": "module",
+  "homepage": "https://carlosnz.github.io/json-edit-react",
+  "scripts": {
+    "prepareLaunch": "node scripts/prepareLaunch.mjs && node src/imports/swapImport.mjs",
+    "launch": "concurrently --kill-others-on-fail \"vite\" \"nodemon watch.mjs\"",
+    "start": "yarn prepareLaunch && yarn launch",
+    "start:package": "cross-env VITE_JRE_SOURCE=package yarn prepareLaunch && VITE_JRE_SOURCE=package yarn launch",
+    "dev": "cross-env VITE_JRE_SOURCE=local yarn prepareLaunch && VITE_JRE_SOURCE=local yarn launch",
+    "prebuild": "yarn lint",
+    "build": "node src/imports/swapImport.mjs && tsc -b && vite build",
+    "build-local": "yarn build --base=/",
+    "predeploy": "yarn build",
+    "deploy": "gh-pages -d build",
+    "lint": "eslint .",
+    "serve": "vite preview",
+    "serve-local": "vite preview --base=/",
+    "compile": "tsc -b --noEmit"
+  },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.2",
     "@codemirror/lang-json": "^6.0.1",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
-    "@testing-library/jest-dom": "^6.3.0",
-    "@testing-library/react": "^14.1.2",
-    "@testing-library/user-event": "^14.5.2",
-    "@types/jest": "^29.5.11",
-    "@types/node": "^20.11.6",
-    "@types/react": "^19.1.0",
-    "@types/react-dom": "^19.1.1",
     "@uiw/codemirror-theme-console": "^4.23.7",
     "@uiw/codemirror-theme-github": "^4.23.7",
     "@uiw/codemirror-theme-monokai": "^4.23.7",
@@ -25,35 +34,36 @@
     "ajv": "^8.16.0",
     "firebase": "^10.13.0",
     "framer-motion": "^11.0.3",
-    "json-edit-react": "1.25.5",
+    "json-edit-react": "^1.25.6-beta1",
     "json5": "^2.2.3",
-    "react": "^18.2.0",
+    "react": "^19.0.0",
     "react-datepicker": "^7.5.0",
-    "react-dom": "^18.2.0",
+    "react-dom": "^19.0.0",
     "react-firebase-hooks": "^5.1.1",
     "react-icons": "^5.0.1",
-    "typescript": "^5.8.3",
     "use-undo": "^1.1.1",
-    "web-vitals": "^3.5.2",
     "wouter": "^3.3.1"
   },
-  "scripts": {
-    "serve": "vite preview",
-    "type-check": "tsc --noEmit",
-    "prepareLaunch": "rimraf ./src/json-edit-react && mkdir ./src/json-edit-react && mkdir ./src/json-edit-react/src && node src/imports/swap_import.cjs",
-    "launch": "concurrently --kill-others-on-fail  \"vite\" \"nodemon watch.cjs\"",
-    "start": "yarn prepareLaunch && yarn launch",
-    "dev": "cross-env VITE_USE_LOCAL_SRC=true yarn prepareLaunch && VITE_USE_LOCAL_SRC=true yarn launch",
-    "build": "node src/imports/swap_import.cjs && tsc && vite build",
-    "prebuild": "node ./scripts/getVersion.cjs",
-    "predeploy": "yarn build",
-    "deploy": "gh-pages -d build"
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "devDependencies": {
+    "@eslint/js": "^9.21.0",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.11.6",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.21.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "fs-extra": "^11.3.0",
+    "gh-pages": "^6.1.1",
+    "globals": "^15.15.0",
+    "node-fetch": "^3.3.2",
+    "nodemon": "^3.0.3",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.24.1",
+    "vite": "^6.2.0"
   },
   "nodemonConfig": {
     "watch": [
@@ -61,27 +71,5 @@
     ],
     "ext": "js, json, ts, tsx, css",
     "delay": 200
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.4",
-    "concurrently": "^8.2.2",
-    "cross-env": "^7.0.3",
-    "gh-pages": "^6.1.1",
-    "node-fetch": "^3.3.2",
-    "nodemon": "^3.0.3",
-    "source-map-explorer": "^2.5.3",
-    "vite": "^6.2.5"
   }
 }
