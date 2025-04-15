@@ -1151,10 +1151,10 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@^1.25.6-beta1:
-  version "1.25.6-beta1"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.25.6-beta1.tgz#50ad53add8eea4aeaefa585f4946f905c367cee4"
-  integrity sha512-Pnxj2h1wLmqnlu/XfRst3y5gPp5iIoikWDx35AMwfnbTwcSKFtB5IM53nplepk3jJTIL+9G61xGlqyxWdRITLA==
+json-edit-react@^1.25.6-beta2:
+  version "1.25.6-beta2"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.25.6-beta2.tgz#f47fcd52baa49c377d9d682d4dc685f53e17acd9"
+  integrity sha512-IAtJDp44pGETcr24UxQTWb/YhTdl16snWIAIHrwvPqIh3Mf7FasBEluoRPxK9jBIe6YCifV5/rLtLp+c1G6KSQ==
   dependencies:
     object-property-assigner "^1.3.5"
     object-property-extractor "^1.0.13"

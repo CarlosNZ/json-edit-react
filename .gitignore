@@ -46,8 +46,9 @@ temp.js
 .vscode/settings.json
 demo/src/firebaseConfig.json
 
-# Built package in demo
+# Built package in demo/custom library
 demo/src/package
+custom-component-library/components/package
 .original-readme.md
 .npm-readme.md
 demo/src/imports/import.ts

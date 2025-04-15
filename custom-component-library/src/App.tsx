@@ -8,12 +8,13 @@ function App() {
       <h1>json-edit-react</h1>
       <h2>Custom component library</h2>
       <JsonEditor
-        data={{ testData }}
+        data={testData}
         customNodeDefinitions={[
           LinkCustomNodeDefinition,
           DateObjectDefinition,
           UndefinedDefinition,
         ]}
+        rootName=""
       />
     </div>
   )
