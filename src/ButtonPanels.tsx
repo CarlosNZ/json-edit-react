@@ -260,7 +260,7 @@ export const InputButtons: React.FC<{
     <div className="jer-confirm-buttons">
       {!hideOk && (
         // Pass an anonymous function to prevent passing event to onOk
-        <div onClick={() => onOk()} ref={editConfirmRef as React.RefObject<HTMLDivElement>}>
+        <div onClick={onOk} ref={editConfirmRef as React.RefObject<HTMLDivElement>}>
           <Icon name="ok" nodeData={nodeData} />
         </div>
       )}

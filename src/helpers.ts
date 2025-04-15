@@ -19,6 +19,17 @@ import {
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
   value !== null && typeof value === 'object' && !(value instanceof Date)
 
+export const isJsEvent = (value: unknown) => {
+  return (
+    value &&
+    typeof value === 'object' &&
+    'type' in value &&
+    'target' in value &&
+    'preventDefault' in value &&
+    typeof value.preventDefault === 'function'
+  )
+}
+
 /**
  * FILTERING
  */
