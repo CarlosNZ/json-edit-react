@@ -3,6 +3,7 @@ import {
   DateObjectDefinition,
   UndefinedDefinition,
   DatePickerDefinition,
+  BooleanToggleDefinition,
 } from '@components'
 import { testData } from '@components/data'
 import { JsonData, JsonEditor } from 'json-edit-react'
@@ -31,6 +32,7 @@ function App() {
             ...DatePickerDefinition,
             customNodeProps: { showTime: (data as Record<string, unknown>)['Show Time in Dates?'] },
           },
+          BooleanToggleDefinition,
         ]}
         rootName=""
       />
