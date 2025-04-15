@@ -6,4 +6,7 @@ export const DateObjectDefinition: CustomNodeDefinition = {
   element: DateObjectCustomComponent,
   showEditTools: true,
   showOnEdit: true,
+  name: 'Date Object', // shown in the Type selector menu
+  showInTypesSelector: true,
+  defaultValue: new Date(),
 }

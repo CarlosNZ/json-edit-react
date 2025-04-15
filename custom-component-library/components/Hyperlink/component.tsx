@@ -25,7 +25,6 @@ export const LinkCustomComponent: React.FC<
       onClick={(e) => {
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
       }}
-      className="jer-value-string jer-hyperlink"
       style={styles}
     >
       <a

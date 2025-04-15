@@ -1,4 +1,4 @@
-import { LinkCustomNodeDefinition, DateObjectDefinition } from '@components'
+import { LinkCustomNodeDefinition, DateObjectDefinition, UndefinedDefinition } from '@components'
 import { testData } from '@components/data'
 import { JsonEditor } from 'json-edit-react'
 
@@ -9,7 +9,11 @@ function App() {
       <h2>Custom component library</h2>
       <JsonEditor
         data={{ testData }}
-        customNodeDefinitions={[LinkCustomNodeDefinition, DateObjectDefinition]}
+        customNodeDefinitions={[
+          LinkCustomNodeDefinition,
+          DateObjectDefinition,
+          UndefinedDefinition,
+        ]}
       />
     </div>
   )

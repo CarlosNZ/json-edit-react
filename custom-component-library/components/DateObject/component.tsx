@@ -1,23 +1,7 @@
-/**
- * An example Custom Component:
- * https://github.com/CarlosNZ/json-edit-react#custom-nodes
- *
- * A simple custom node which detects urls in data and makes them active
- * hyperlinks.
- */
-
 import React from 'react'
-import {
-  StringDisplay,
-  toPathString,
-  StringEdit,
-  type CustomNodeProps,
-  type ValueNodeProps,
-} from 'json-edit-react'
+import { StringDisplay, toPathString, StringEdit, type CustomNodeProps } from 'json-edit-react'
 
-export const DateObjectCustomComponent: React.FC<
-  CustomNodeProps<{ stringTruncate?: number }> & ValueNodeProps
-> = (props) => {
+export const DateObjectCustomComponent: React.FC<CustomNodeProps<unknown>> = (props) => {
   const { nodeData, isEditing, setValue, getStyles, canEdit, value, handleEdit } = props
   return isEditing ? (
     <StringEdit
