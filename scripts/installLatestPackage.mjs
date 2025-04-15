@@ -3,12 +3,13 @@
 import { execSync } from 'child_process'
 
 const foldersToInstall = ['demo', 'custom-component-library']
+const packageName = 'json-edit-react'
 
 /**
  * Installs the most recent version of a package (stable or beta)
  * @param {string} packageName - The name of the package to check
  */
-async function installLatestPackage(packageName = 'json-edit-react') {
+async function installLatestPackage() {
   console.log('Installing most recent version of the published package in apps...')
   try {
     // Get all package info in a single call
@@ -51,6 +52,9 @@ const installPackage = (packageName, version, installFolders) => {
   }
 }
 
-// Run the function with default package or pass a different package name
-const packageName = process.argv[2] || 'json-edit-react'
-installLatestPackage(packageName)
+const pause = process.argv[2] === 'pause'
+
+if (pause) {
+  console.log('Pausing installation to wait for newly published package...')
+  setTimeout(() => installLatestPackage(), 10_000)
+} else installLatestPackage(packageName)

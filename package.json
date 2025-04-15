@@ -35,7 +35,7 @@
     "lint": "eslint",
     "prepareReadme": "python3 scripts/build_npm_readme.py",
     "prepublishOnly": "yarn build && yarn prepareReadme && python3 scripts/use_npm_readme.py prepare",
-    "postpublish": "python3 scripts/use_npm_readme.py restore && node scripts/installLatestPackage.mjs",
+    "postpublish": "python3 scripts/use_npm_readme.py restore && node scripts/installLatestPackage.mjs pause &",
     "compile": "tsc --noEmit && ts-prune",
     "release": "yarn publish",
     "release-demo": "cd demo && yarn deploy"
