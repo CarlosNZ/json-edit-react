@@ -388,6 +388,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     canDragOnto: canEdit,
     canEdit,
     keyboardCommon: {},
+    onError,
   }
 
   const CollectionContents = showCustomNodeContents ? (

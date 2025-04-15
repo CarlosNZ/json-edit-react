@@ -1,6 +1,6 @@
 {
   "name": "json-edit-react",
-  "version": "1.25.6-beta1",
+  "version": "1.25.6-beta3",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
@@ -31,10 +31,11 @@
     "build": "rollup -c && rm -R build/dts",
     "postbuild": "node ./scripts/cleanBuildTypes.cjs",
     "build-package": "yarn build && yarn pack --filename package.tgz && tar -xzf package.tgz -C demo/src && rm package.tgz",
+    "build-package-library": "yarn build && yarn pack --filename package.tgz && tar -xzf package.tgz -C custom-component-library/components && rm package.tgz",
     "lint": "eslint",
     "prepareReadme": "python3 scripts/build_npm_readme.py",
     "prepublishOnly": "yarn build && yarn prepareReadme && python3 scripts/use_npm_readme.py prepare",
-    "postpublish": "python3 scripts/use_npm_readme.py restore && cd demo && yarn add json-edit-react@latest",
+    "postpublish": "python3 scripts/use_npm_readme.py restore && node scripts/installLatestPackage.mjs pause &",
     "compile": "tsc --noEmit && ts-prune",
     "release": "yarn publish",
     "release-demo": "cd demo && yarn deploy"

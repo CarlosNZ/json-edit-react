@@ -24,6 +24,8 @@ interface StringDisplayProps {
   // Can override nodeDate.value if we need to modify it for specific display
   // purposes
   value?: string
+  // For use in Custom components, e.g. Hyperlink
+  TextWrapper?: React.ComponentType<{ children: React.ReactNode }>
 }
 export const StringDisplay: React.FC<StringDisplayProps> = ({
   nodeData,
@@ -35,6 +37,7 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
   styles,
   translate,
   value: displayValue,
+  TextWrapper = ({ children }) => children,
 }) => {
   const value = displayValue ?? (nodeData.value as string)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -60,13 +63,15 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
     >
       {quoteChar}
       {!requiresTruncation ? (
-        `${value}${quoteChar}`
+        <TextWrapper>{`${value}${quoteChar}`}</TextWrapper>
       ) : isExpanded ? (
         <>
-          <span>
-            {value}
-            {quoteChar}
-          </span>
+          <TextWrapper>
+            <span>
+              {value}
+              {quoteChar}
+            </span>
+          </TextWrapper>
           <span className="jer-string-expansion jer-show-less" onClick={() => setIsExpanded(false)}>
             {' '}
             {translate('SHOW_LESS', nodeData)}
@@ -74,7 +79,9 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
         </>
       ) : (
         <>
-          <span>{value.slice(0, stringTruncate - 2).trimEnd()}</span>
+          <TextWrapper>
+            <span>{value.slice(0, stringTruncate - 2).trimEnd()}</span>{' '}
+          </TextWrapper>
           <span className="jer-string-expansion jer-ellipsis" onClick={() => setIsExpanded(true)}>
             ...
           </span>

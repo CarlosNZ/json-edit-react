@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint'
 export default tseslint.config(
   {
     // Adjust these ignores to match your component project structure
-    ignores: ['node_modules', 'dist', 'build', 'demo', '.rollup.cache'],
+    ignores: ['node_modules', 'dist', 'build', 'demo', '.rollup.cache', 'custom-component-library'],
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
