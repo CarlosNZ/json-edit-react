@@ -7,11 +7,10 @@
  */
 
 import React from 'react'
-import { StringDisplay } from '../../src/ValueNodes'
-// import { toPathString } from 'json-edit-react'
 import {
+  toPathString,
+  StringDisplay,
   type CustomNodeProps,
-  type CustomNodeDefinition,
   type ValueNodeProps,
 } from 'json-edit-react'
 
@@ -44,13 +43,4 @@ export const LinkCustomComponent: React.FC<
       </a>
     </div>
   )
-}
-
-// Definition for custom node behaviour
-export const LinkCustomNodeDefinition: CustomNodeDefinition = {
-  // Condition is a regex to match url strings
-  condition: ({ value }) => typeof value === 'string' && /^https?:\/\/.+\..+$/.test(value),
-  element: LinkCustomComponent as React.FC<CustomNodeProps>, // the component defined above
-  showOnView: true,
-  showOnEdit: false,
 }
