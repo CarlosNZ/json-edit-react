@@ -1,7 +1,7 @@
 import React from 'react'
 import { data } from './data'
 import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'
-import { dateNodeDefinition } from '../customComponents/DateTimePicker'
+import { dateNodeDefinition } from '../../../custom-component-library/components/DatePicker/DateTimePicker'
 import {
   CustomNodeDefinition,
   FilterFunction,

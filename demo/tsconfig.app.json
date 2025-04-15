@@ -22,6 +22,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src", "../custom-component-library/components/DatePicker/DateTimePicker.tsx"]
   // "exclude": ["src/json-edit-react/**/*"]
 }

@@ -10,17 +10,17 @@
 
 import React from 'react'
 import DatePicker from 'react-datepicker'
-import { Button } from '@chakra-ui/react'
-import { CustomNodeProps, CustomNodeDefinition } from '../imports'
+import { Button } from './Button'
+import { CustomNodeProps } from '../../../demo/src/imports'
 
 // Styles
 import 'react-datepicker/dist/react-datepicker.css'
-// For better matching with Chakra-UI
 import './style.css'
 
-interface DatePickerCustomProps {
-  dateFormat: string
-  showTimeSelect: boolean
+export interface DatePickerCustomProps {
+  dateFormat?: string
+  dateTimeFormat?: string
+  showTime?: boolean
 }
 
 export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = ({
@@ -35,7 +35,11 @@ export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = 
   nodeData,
   customNodeProps,
 }) => {
-  const { dateFormat = 'MMM d, yyyy h:mm aa', showTimeSelect = true } = customNodeProps ?? {}
+  const {
+    dateFormat = 'MMM d, yyyy',
+    dateTimeFormat = 'MMM d, yyyy h:mm aa',
+    showTime = true,
+  } = customNodeProps ?? {}
 
   const date = new Date(value as string)
 
@@ -56,8 +60,8 @@ export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = 
 
       // @ts-expect-error -- isNan can take any input
       selected={isNaN(date) ? null : date}
-      showTimeSelect={showTimeSelect}
-      dateFormat={dateFormat}
+      showTimeSelect={showTime}
+      dateFormat={showTime ? dateTimeFormat : dateFormat}
       onChange={(date: Date | null) => date && setValue(date.toISOString())}
       open={true}
       onKeyDown={handleKeyPress}
@@ -66,12 +70,8 @@ export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = 
         {/* These buttons are not really necessary -- you can either use the
         standard Ok/Cancel icons, or keyboard Enter/Esc, but shown for demo
         purposes */}
-        <Button color={textColour} backgroundColor={okColour} onClick={handleEdit}>
-          OK
-        </Button>
-        <Button color={textColour} backgroundColor={cancelColour} onClick={handleCancel}>
-          Cancel
-        </Button>
+        <Button textColor={textColour} color={okColour} onClick={handleEdit} text="OK" />
+        <Button textColor={textColour} color={cancelColour} onClick={handleCancel} text="Cancel" />
       </div>
     </DatePicker>
   ) : (
@@ -81,22 +81,7 @@ export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = 
       className="jer-value-string"
       style={stringStyle}
     >
-      "{new Date(value as string).toLocaleDateString()}"
+      "{showTime ? date.toLocaleString() : date.toLocaleDateString()}"
     </div>
   )
-}
-
-// Definition for custom node behaviour
-export const dateNodeDefinition: CustomNodeDefinition = {
-  // Condition is a regex to match ISO strings
-  condition: ({ value }) =>
-    typeof value === 'string' &&
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[\d.]*(Z?|[+-][\d:]+)$/.test(value),
-  // @ts-expect-error To-DO
-  element: DateTimePicker, // the component defined above
-  showOnView: false,
-  showOnEdit: true,
-  name: 'Date', // shown in the Type selector menu
-  showInTypesSelector: true,
-  defaultValue: new Date().toISOString(), // when instantiated, default to the current date/time
 }
