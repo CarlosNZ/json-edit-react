@@ -918,6 +918,9 @@ Your `translations` object doesn't have to be exhaustive — only define the key
 
 You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) to see it in action. (There is also a custom Date picker that appears when editing ISO strings in the other data sets.)
 
+> [!NOTE]
+> Coming soon: a **Custom Component** library
+
 Custom nodes are provided in the `customNodeDefinitions` prop, as an array of objects of following structure:
 
 ```js
@@ -1196,6 +1199,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.25.5**:
+  - Expose a few more components and props to custom components
+  - Start building Custom Component library (separate to main package)
 - **1.25.4**: Don't treat Date objects as collections, so they can be handled by custom components (#187)[https://github.com/CarlosNZ/json-edit-react/issues/187]
 - **1.25.1**: Small bug fix for incorrect resetting of cancelled edits (#184)[https://github.com/CarlosNZ/json-edit-react/issues/184]
 - **1.25.0**:
