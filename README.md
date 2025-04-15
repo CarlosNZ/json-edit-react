@@ -1199,7 +1199,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.25.5**:
+- **1.25.6**:
   - Expose a few more components and props to custom components
   - Start building Custom Component library (separate to main package)
 - **1.25.4**: Don't treat Date objects as collections, so they can be handled by custom components (#187)[https://github.com/CarlosNZ/json-edit-react/issues/187]
