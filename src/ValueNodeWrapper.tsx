@@ -328,6 +328,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       originalNodeKey={passOriginalNode ? <KeyDisplay {...keyDisplayProps} /> : undefined}
       canEdit={canEdit}
       keyboardCommon={inputProps.keyboardCommon}
+      onError={onError}
     />
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones

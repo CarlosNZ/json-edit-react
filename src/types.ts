@@ -306,7 +306,8 @@ export interface ValueNodeProps extends BaseNodeProps {
   onChange?: OnChangeFunction
 }
 
-export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodeProps {
+export interface CustomNodeProps<T = Record<string, unknown>>
+  extends Omit<BaseNodeProps, 'onError'> {
   value: JsonData
   customNodeProps?: T
   parentData: CollectionData | null
@@ -322,6 +323,7 @@ export interface CustomNodeProps<T = Record<string, unknown>> extends BaseNodePr
   originalNodeKey?: JSX.Element
   canEdit: boolean
   keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
+  onError: (error: JerError, errorValue: JsonData | string) => void
 }
 
 export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<string, unknown>> {
