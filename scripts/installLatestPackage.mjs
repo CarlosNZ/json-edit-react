@@ -24,7 +24,7 @@ async function installLatestPackage() {
     // Check if beta tag exists
     if (!packageData['dist-tags'].beta) {
       console.log('No beta version available. Installing stable version')
-      installPackage(packageName, betaVersion, foldersToInstall)
+      installPackage(packageName, stableVersion, foldersToInstall)
       return
     }
 
@@ -38,7 +38,7 @@ async function installLatestPackage() {
     if (betaDate > stableDate) {
       installPackage(packageName, betaVersion, foldersToInstall)
     } else {
-      installPackage(packageName, betaVersion, foldersToInstall)
+      installPackage(packageName, stableVersion, foldersToInstall)
     }
   } catch (error) {
     console.error('Error checking or installing package:', error.message)

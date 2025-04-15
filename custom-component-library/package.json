@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "json-edit-react": "1.25.6-beta3",
+    "json-edit-react": "1.25.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
