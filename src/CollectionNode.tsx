@@ -294,7 +294,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         path: [...path, key],
         level: path.length + 1,
         index,
-        size: isCollection(value) ? Object.keys(value as object).length : 1,
+        size: isCollection(value) ? Object.keys(value as object).length : null,
         parentData: data,
         fullData: nodeData.fullData,
       }
