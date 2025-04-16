@@ -44,7 +44,10 @@ export interface JsonEditorProps {
   rootFontSize?: string | number
   stringTruncate?: number
   translations?: Partial<LocalisedStrings>
-  customNodeDefinitions?: CustomNodeDefinition[]
+  // Using "any" here, as internal props don't matter, the generic is just for
+  // enforcing consistency between the component and the definition that uses it
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  customNodeDefinitions?: CustomNodeDefinition<Record<string, any>, Record<string, any>>[]
   customText?: CustomTextDefinitions
   customButtons?: CustomButtonDefinition[]
   jsonParse?: (input: string) => JsonData
@@ -166,7 +169,6 @@ export type CopyFunction = (input: {
   type: CopyType
 }) => void
 
-// Only using `any` here as that's the type expected by the JS "sort" method.
 export type CompareFunction = (
   a: [string | number, unknown],
   b: [string | number, unknown]

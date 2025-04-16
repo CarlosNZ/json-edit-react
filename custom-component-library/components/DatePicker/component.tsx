@@ -11,7 +11,7 @@
 import React from 'react'
 import DatePicker from 'react-datepicker'
 import { Button } from './Button'
-import { CustomNodeProps } from '../../../demo/src/imports'
+import { CustomNodeProps } from '../_imports'
 
 // Styles
 import 'react-datepicker/dist/react-datepicker.css'

@@ -8,7 +8,7 @@
  * rather than requiring the user to edit the ISO string directly.
  */
 
-import { CustomNodeDefinition } from 'json-edit-react'
+import { CustomNodeDefinition } from '../_imports'
 import { DatePickerCustomProps, DateTimePicker } from './component'
 
 // Styles

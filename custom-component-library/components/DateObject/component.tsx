@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { StringDisplay, toPathString, StringEdit, type CustomNodeProps } from 'json-edit-react'
+import { StringDisplay, toPathString, StringEdit, type CustomNodeProps } from '../_imports'
 
 export interface DateObjectProps {
   showTime?: boolean

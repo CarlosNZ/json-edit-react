@@ -1,14 +1,11 @@
-import { type CustomNodeDefinition } from 'json-edit-react'
-import { LinkCustomComponent } from './component'
+import { type CustomNodeDefinition } from '../_imports'
+import { LinkCustomComponent, LinkProps } from './component'
 
-export const LinkCustomNodeDefinition: CustomNodeDefinition<{
-  linkStyles?: React.CSSProperties
-  stringTruncate?: number
-}> = {
+export const LinkCustomNodeDefinition: CustomNodeDefinition<LinkProps> = {
   // Condition is a regex to match url strings
   condition: ({ value }) => typeof value === 'string' && /^https?:\/\/.+\..+$/.test(value),
   element: LinkCustomComponent,
-  // customNodeProps: { stringTruncate: 80 },
+  customNodeProps: { stringTruncate: 80 },
   showOnView: true,
   showOnEdit: false,
 }

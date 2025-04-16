@@ -6,7 +6,7 @@ import {
   BooleanToggleDefinition,
 } from '@components'
 import { testData } from '@components/data'
-import { JsonData, JsonEditor } from 'json-edit-react'
+import { JsonData, JsonEditor } from '@components/_imports'
 import { useState } from 'react'
 
 function App() {

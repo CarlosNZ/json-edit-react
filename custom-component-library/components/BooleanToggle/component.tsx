@@ -3,7 +3,7 @@
  */
 
 import React from 'react'
-import { toPathString, type CustomNodeProps } from 'json-edit-react'
+import { toPathString, type CustomNodeProps } from '../_imports'
 
 export const BooleanToggleComponent: React.FC<CustomNodeProps> = (props) => {
   const { nodeData, value, handleEdit, canEdit } = props

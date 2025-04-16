@@ -6,11 +6,15 @@
  */
 
 import React from 'react'
-import { toPathString, type CustomNodeProps, StringDisplay } from 'json-edit-react'
+import { toPathString, type CustomNodeProps, StringDisplay } from '../_imports'
 
-export const LinkCustomComponent: React.FC<
-  CustomNodeProps<{ linkStyles?: React.CSSProperties; stringTruncate?: number }>
-> = (props) => {
+export interface LinkProps {
+  linkStyles?: React.CSSProperties
+  stringTruncate?: number
+  [key: string]: unknown
+}
+
+export const LinkCustomComponent: React.FC<CustomNodeProps<LinkProps>> = (props) => {
   const { setIsEditing, getStyles, nodeData, customNodeProps = {} } = props
   const styles = getStyles('string', nodeData)
   const { linkStyles = { fontWeight: 'bold', textDecoration: 'underline' }, stringTruncate = 60 } =
