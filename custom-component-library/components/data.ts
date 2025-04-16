@@ -12,4 +12,5 @@ export const testData = {
   DateISOstring: new Date().toISOString(),
   'Show Time in Dates?': true,
   undefined: undefined,
+  'Not a Number': NaN,
 }

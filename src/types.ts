@@ -3,7 +3,7 @@ import { type Options as AssignOptions } from 'object-property-assigner'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { type ExternalTriggers } from './hooks'
 
-export type JsonData = CollectionData | ValueData
+export type JsonData = Record<string, unknown> | Array<unknown> | unknown
 
 export interface JsonEditorProps {
   data: JsonData

@@ -6,7 +6,7 @@
  */
 
 import React from 'react'
-import { toPathString, type CustomNodeProps, StringDisplay } from '../_imports'
+import { toPathString, StringDisplay, type CustomNodeProps } from '@json-edit-react'
 
 export interface LinkProps {
   linkStyles?: React.CSSProperties

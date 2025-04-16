@@ -1,5 +1,5 @@
 import React from 'react'
-import { type CustomNodeProps } from '../_imports'
+import { type CustomNodeProps } from '@json-edit-react'
 
 export interface UndefinedProps {
   style?: React.CSSProperties

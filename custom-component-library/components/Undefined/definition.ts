@@ -1,5 +1,5 @@
 import { UndefinedCustomComponent, UndefinedProps } from './component'
-import { type CustomNodeDefinition } from '../_imports'
+import { type CustomNodeDefinition } from '@json-edit-react'
 
 export const UndefinedDefinition: CustomNodeDefinition<UndefinedProps> = {
   condition: ({ value }) => value === undefined,

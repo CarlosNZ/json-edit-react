@@ -269,7 +269,7 @@ export const getNextOrPrevious = (
   if (thisKey === undefined) return null
 
   const parentData = extractProperty(fullData, parentPath)
-  const collection = transformCollection(parentData as JsonData)
+  const collection = transformCollection(parentData as CollectionData)
 
   if (!Array.isArray(parentData))
     sort<TransformedCollection>(collection, ({ key, value }) => [key, value])
@@ -314,7 +314,7 @@ const getChildRecursive = (
 
 // Transform a collections (Array or Object) into a structure that is easier to
 // navigate forward and back within
-const transformCollection = (collection: JsonData) => {
+const transformCollection = (collection: CollectionData) => {
   if (Array.isArray(collection))
     return collection.map((value, index) => ({ index, value, key: index }))
   return Object.entries(collection).map(([key, value], index) => ({ key, value, index }))

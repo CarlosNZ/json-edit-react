@@ -13,8 +13,8 @@ These are the ones I'm planning for now:
 - [x] Hyperlink/URL
 - [x] Undefined
 - [x] Date Object
-- [ ] Date/Time Picker (with ISO string)
-- [ ] Boolean Toggle
+- [x] Date/Time Picker (with ISO string)
+- [x] Boolean Toggle
 - [ ] `NaN`
 - [ ] BigInt
 

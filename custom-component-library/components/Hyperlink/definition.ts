@@ -1,4 +1,4 @@
-import { type CustomNodeDefinition } from '../_imports'
+import { type CustomNodeDefinition } from '@json-edit-react'
 import { LinkCustomComponent, LinkProps } from './component'
 
 export const LinkCustomNodeDefinition: CustomNodeDefinition<LinkProps> = {

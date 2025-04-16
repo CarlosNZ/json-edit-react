@@ -8,6 +8,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@components': path.resolve(__dirname, './components'),
+      '@json-edit-react': 'json-edit-react',
+      // '@json-edit-react': path.resolve(__dirname, './components/package'),
     },
   },
   server: {
