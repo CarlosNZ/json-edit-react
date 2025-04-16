@@ -5,6 +5,8 @@ import {
   DatePickerDefinition,
   BooleanToggleDefinition,
   NanDefinition,
+  SymbolDefinition,
+  // BigIntDefinition,
 } from '@components'
 import { testData } from '@components/data'
 import { JsonData, JsonEditor } from '@json-edit-react'
@@ -24,6 +26,18 @@ function App() {
       <JsonEditor
         data={data}
         setData={setData}
+        jsonStringify={(value) =>
+          JSON.stringify(
+            value,
+            (_, value) => {
+              if (typeof value === 'bigint') return `BIG_INT(${value})`
+              if (value === undefined) return 'THIS WAS UNDEFINED'
+              if (typeof value === 'symbol') return `SYMBOL("${value.description}")`
+              return value
+            },
+            2
+          )
+        }
         customNodeDefinitions={[
           LinkCustomNodeDefinition,
           {
@@ -37,6 +51,8 @@ function App() {
           },
           BooleanToggleDefinition,
           NanDefinition,
+          SymbolDefinition,
+          // BigIntDefinition,
         ]}
         rootName=""
       />

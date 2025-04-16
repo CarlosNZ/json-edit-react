@@ -30,7 +30,7 @@ export const DateObjectCustomComponent: React.FC<CustomNodeProps<DateObjectProps
         : value.toDateString()
       : (value as string)
   const displayValue = showTime
-    ? nodeData.value.toLocaleString()
+    ? (nodeData.value as Date).toLocaleString()
     : (nodeData.value as Date).toLocaleDateString()
 
   return isEditing ? (

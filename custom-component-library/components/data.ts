@@ -13,4 +13,7 @@ export const testData = {
   'Show Time in Dates?': true,
   undefined: undefined,
   'Not a Number': NaN,
+  Symbol1: Symbol('First one'),
+  Symbol2: Symbol('Second one'),
+  BigInt: 1234567890123456789012345678901234567890n,
 }

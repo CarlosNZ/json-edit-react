@@ -7,4 +7,4 @@ export interface NaNProps {
 
 export const NotANumberComponent: React.FC<CustomNodeProps<NaNProps>> = ({
   customNodeProps = {},
-}) => <div style={{ fontStyle: 'italic', color: '#9b9b9b', ...customNodeProps?.style }}>NaN</div>
+}) => <div style={{ color: 'rgb(220, 50, 47)', ...customNodeProps?.style }}>NaN</div>
