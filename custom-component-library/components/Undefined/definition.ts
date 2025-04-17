@@ -9,4 +9,8 @@ export const UndefinedDefinition: CustomNodeDefinition<UndefinedProps> = {
   name: 'undefined', // shown in the Type selector menu
   showInTypesSelector: true,
   defaultValue: undefined,
+  // These not required as "undefined" is a special case which won't work with a
+  // standard reviver, so is handled internally
+  // stringifyReplacer:
+  // parseReviver:
 }

@@ -50,8 +50,8 @@ export interface JsonEditorProps {
   customNodeDefinitions?: CustomNodeDefinition<Record<string, any>, Record<string, any>>[]
   customText?: CustomTextDefinitions
   customButtons?: CustomButtonDefinition[]
-  jsonParse?: (input: string) => JsonData
-  jsonStringify?: (input: JsonData) => string
+  jsonParse?: (input: string, reviver?: (key: string, value: string) => unknown) => JsonData
+  jsonStringify?: (input: JsonData, replacer?: (key: string, value: unknown) => unknown) => string
   TextEditor?: React.FC<TextEditorProps>
   errorMessageTimeout?: number // ms
   keyboardControls?: KeyboardControls
@@ -292,8 +292,16 @@ export interface CollectionNodeProps extends BaseNodeProps {
   showStringQuotes: boolean
   defaultValue: unknown
   newKeyOptions?: string[] | NewKeyOptionsFunction
-  jsonParse: (input: string) => JsonData
-  jsonStringify: (data: JsonData) => string
+  jsonParse: (
+    input: string,
+    // eslint-disable-next-line
+    reviver?: (this: any, key: string, value: string) => unknown
+  ) => JsonData
+  jsonStringify: (
+    data: JsonData,
+    // eslint-disable-next-line
+    replacer?: (this: any, key: string, value: unknown) => string
+  ) => string
   insertAtTop: { object: boolean; array: boolean }
   TextEditor?: React.FC<TextEditorProps>
   onCollapse?: OnCollapseFunction
@@ -345,6 +353,10 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   showCollectionWrapper?: boolean // default true
   wrapperElement?: React.FC<CustomNodeProps<U>>
   wrapperProps?: Record<string, unknown>
+
+  // For JSON stringify/parse
+  stringifyReplacer?: (value: unknown) => unknown
+  parseReviver?: (stringified: string) => unknown
 }
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>

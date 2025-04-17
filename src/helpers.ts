@@ -367,3 +367,28 @@ export const matchEnumType = (
   candidates.sort((a, b) => (b.matchPriority ?? 0) - (a.matchPriority ?? 0))
   return candidates[0] ?? null
 }
+
+// When running JSON.parse, a standard "reviver" function, which we can use for
+// other non-serializable types, doesn't work for `undefined` (it throws the
+// whole property away if the reviver returns `undefined`). So we leave it as
+// the serialized "__undefined__" (created in stringify method), and the
+// post-process the parsed data here to replace these with actual `undefined`
+// values
+export const restoreUndefined = (val: unknown): unknown => {
+  if (val === UNDEFINED) {
+    return undefined
+  } else if (Array.isArray(val)) {
+    return val.map((item) => restoreUndefined(item))
+  } else if (val && typeof val === 'object') {
+    for (const key in val) {
+      ;(val as Record<string, unknown>)[key] = restoreUndefined(
+        (val as Record<string, unknown>)[key]
+      )
+    }
+  }
+  return val
+}
+
+// Note additional hidden char included to distinguish it from actual string
+// value "__undefined__"
+export const UNDEFINED = '__\u200Bundefined__'

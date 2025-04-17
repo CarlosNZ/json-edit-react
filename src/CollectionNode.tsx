@@ -217,7 +217,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       setCurrentlyEditingElement(null)
       setPreviousValue(null)
       setError(null)
-      if (JSON.stringify(value) === JSON.stringify(data)) return
+      if (jsonStringify(value) === jsonStringify(data)) return
       onEdit(value, path).then((error) => {
         if (error) {
           onError({ code: 'UPDATE_ERROR', message: error }, value as CollectionData)

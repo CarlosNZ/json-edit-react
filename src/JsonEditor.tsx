@@ -8,6 +8,8 @@ import {
   isCollection,
   matchNode,
   matchNodeKey,
+  restoreUndefined,
+  UNDEFINED,
 } from './helpers'
 import {
   type CollectionData,
@@ -23,6 +25,7 @@ import {
   type JsonData,
   type KeyboardControls,
   ValueData,
+  CustomNodeDefinition,
 } from './types'
 import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useTreeState } from './contexts'
 import { useData, useTriggers } from './hooks'
@@ -72,7 +75,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   customNodeDefinitions = [],
   customButtons = [],
   jsonParse = JSON.parse,
-  jsonStringify = (data: JsonData) => JSON.stringify(data, null, 2),
+  jsonStringify = (data, replacer) => JSON.stringify(data, replacer, 2),
   TextEditor,
   errorMessageTimeout = 2500,
   keyboardControls = {},
@@ -285,6 +288,23 @@ const Editor: React.FC<JsonEditorProps> = ({
     [fullKeyboardControls]
   )
 
+  const jsonStringifyReplacement = useMemo(() => {
+    const replacerFn = getJsonReplacerFn<unknown, unknown>(
+      customNodeDefinitions,
+      'stringifyReplacer'
+    )
+    return (data: JsonData) => jsonStringify(data, replacerFn)
+  }, [customNodeDefinitions, jsonStringify])
+
+  const jsonParseReplacement = useMemo(() => {
+    const reviverFn = getJsonReplacerFn<string, unknown>(customNodeDefinitions, 'parseReviver')
+
+    return (data: string) => {
+      const parsed = jsonParse(data, reviverFn)
+      return restoreUndefined(parsed)
+    }
+  }, [customNodeDefinitions, jsonParse])
+
   const editConfirmRef = useRef<HTMLDivElement>(null)
   useTriggers(externalTriggers, editConfirmRef)
 
@@ -351,8 +371,8 @@ const Editor: React.FC<JsonEditorProps> = ({
     customNodeDefinitions,
     customButtons,
     parentData: null,
-    jsonParse,
-    jsonStringify,
+    jsonParse: jsonParseReplacement,
+    jsonStringify: jsonStringifyReplacement,
     TextEditor,
     errorMessageTimeout,
     handleKeyboard: handleKeyboardCallback,
@@ -483,4 +503,31 @@ const isUpdateReturnTuple = (
   input: UpdateFunctionReturn | string | boolean | undefined
 ): input is UpdateFunctionReturn => {
   return Array.isArray(input) && input.length === 2 && ['error', 'value'].includes(input[0])
+}
+
+const getJsonReplacerFn = <T, U>(
+  customNodeDefinitions: CustomNodeDefinition[],
+  method: 'stringifyReplacer' | 'parseReviver'
+): ((key: string, value: T) => U) | undefined => {
+  const replacers: (((value: unknown) => unknown) | ((stringified: string) => unknown))[] =
+    // For "undefined", we hard-code this stringify replacer, as the restore
+    // when parsing has to be handled internally (as reviver function can't
+    // return undefined)
+    method === 'stringifyReplacer'
+      ? [(value: unknown) => (value === undefined ? UNDEFINED : value)]
+      : []
+
+  replacers.push(...customNodeDefinitions.map((r) => r[method]).filter((r) => !!r))
+
+  if (replacers.length === 0) return undefined
+
+  return (_: string, value: T) => {
+    let result: unknown = value
+
+    for (const replacer of replacers) {
+      result = replacer(result as string)
+    }
+
+    return result as U
+  }
 }
