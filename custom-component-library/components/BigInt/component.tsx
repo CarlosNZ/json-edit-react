@@ -20,8 +20,6 @@ export const BigIntComponent: React.FC<CustomNodeProps<BigIntProps>> = (props) =
   const { path } = nodeData
   const { style = { color: '#006291', fontSize: '90%' } } = customNodeProps
 
-  console.log('BIG INT', value)
-
   const editDisplayValue = typeof value === 'bigint' ? String(value) : (value as string)
 
   return isEditing ? (
