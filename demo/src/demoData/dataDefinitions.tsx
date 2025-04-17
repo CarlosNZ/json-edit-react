@@ -1,7 +1,7 @@
 import React from 'react'
 import { data } from './data'
 import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'
-import { dateNodeDefinition } from '../../../custom-component-library/components/DatePicker/DateTimePicker'
+import { DatePickerDefinition } from '../../../custom-component-library/components/DatePicker/'
 import {
   CustomNodeDefinition,
   FilterFunction,
@@ -93,7 +93,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'data',
     collapse: 2,
     data: data.intro,
-    customNodeDefinitions: [dateNodeDefinition],
+    customNodeDefinitions: [DatePickerDefinition],
     // restrictEdit: ({ key }) => key === 'number',
     customTextEditorAvailable: true,
     restrictTypeSelection: ({ key }) => {
@@ -220,7 +220,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return true
     },
     collapse: 1,
-    customNodeDefinitions: [dateNodeDefinition, LinkCustomNodeDefinition],
+    customNodeDefinitions: [DatePickerDefinition, LinkCustomNodeDefinition],
     data: data.starWars,
   },
   jsonPlaceholder: {
@@ -538,7 +538,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     searchPlaceholder: 'Search guestbook',
     customNodeDefinitions: [
       {
-        condition: dateNodeDefinition.condition,
+        condition: DatePickerDefinition.condition,
         element: ({ data, getStyles, nodeData }) => {
           return (
             <p style={getStyles('string', nodeData)}>{new Date(data as string).toLocaleString()}</p>
@@ -708,7 +708,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         hideKey: true,
       },
       {
-        ...dateNodeDefinition,
+        ...DatePickerDefinition,
         showOnView: true,
         showInTypesSelector: true,
         customNodeProps: { showTimeSelect: false, dateFormat: 'MMM d, yyyy' },
