@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "VITE_JRE_SOURCE=local vite",
+    "dev:build": "VITE_JRE_SOURCE=build vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -12,6 +14,7 @@
   "dependencies": {
     "json-edit-react": "1.25.6",
     "react": "^19.0.0",
+    "react-datepicker": "^7.5.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {

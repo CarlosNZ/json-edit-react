@@ -1,7 +1,6 @@
 import { useEffect, useRef, lazy, Suspense } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
-import 'react-datepicker/dist/react-datepicker.css'
 import {
   JsonEditor,
   Theme,
@@ -11,7 +10,7 @@ import {
   defaultTheme,
   // ExternalTriggers,
   // type CollapseState
-} from './imports'
+} from '@json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -241,7 +240,7 @@ function App() {
         const functionName = `get${themeName.replace(/\s+&\s+|\s+/g, '')}Theme`
 
         // Dynamically import the themes module
-        const lazyThemesModule = await import('./theme/LazyThemes')
+        const lazyThemesModule = await import('./LazyThemes')
 
         // Get the theme using the themeGetters map
         if (lazyThemesModule.themeGetters[functionName]) {

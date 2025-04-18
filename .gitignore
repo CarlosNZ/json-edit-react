@@ -47,6 +47,7 @@ temp.js
 demo/src/firebaseConfig.json
 
 # Built package in demo/custom library
+build_package
 demo/src/package
 custom-component-library/components/package
 .original-readme.md

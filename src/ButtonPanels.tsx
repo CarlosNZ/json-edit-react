@@ -11,7 +11,7 @@ import {
   type NodeData,
   type CustomButtonDefinition,
   type KeyboardControlsFull,
-  type JsonData,
+  JsonData,
 } from './types'
 import { getModifier } from './helpers'
 
@@ -31,6 +31,11 @@ interface EditButtonProps {
   ) => void
   getNewKeyOptions?: (nodeDate: NodeData) => string[] | null | void
   editConfirmRef: React.RefObject<HTMLDivElement | null>
+  jsonStringify: (
+    data: JsonData,
+    // eslint-disable-next-line
+    replacer?: (this: any, key: string, value: unknown) => string
+  ) => string
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
@@ -46,6 +51,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   handleKeyboard,
   editConfirmRef,
   getNewKeyOptions,
+  jsonStringify,
 }) => {
   const { getStyles } = useTheme()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
@@ -97,7 +103,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const handleCopy = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation()
     let copyType: CopyType = 'value'
-    let value: JsonData
+    let value: unknown
     let stringValue = ''
     let success: boolean
     let errorMessage: string | null = null
@@ -105,11 +111,11 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       const modifier = getModifier(e)
       if (modifier && keyboardControls.clipboardModifier.includes(modifier)) {
         value = stringifyPath(path)
-        stringValue = value
+        stringValue = value as string
         copyType = 'path'
       } else {
         value = data
-        stringValue = type ? JSON.stringify(data, null, 2) : String(value)
+        stringValue = type ? jsonStringify(data) : String(value)
       }
       if (!navigator.clipboard) {
         if (typeof enableClipboard === 'function')

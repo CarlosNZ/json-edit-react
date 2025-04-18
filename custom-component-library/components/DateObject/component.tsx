@@ -1,18 +1,44 @@
 import React, { useRef } from 'react'
-import { StringDisplay, toPathString, StringEdit, type CustomNodeProps } from 'json-edit-react'
+import { StringDisplay, toPathString, StringEdit, type CustomNodeProps } from '@json-edit-react'
 
-export const DateObjectCustomComponent: React.FC<CustomNodeProps<unknown>> = (props) => {
-  const { nodeData, isEditing, setValue, getStyles, canEdit, value, handleEdit, onError } = props
+export interface DateObjectProps {
+  showTime?: boolean
+}
+
+export const DateObjectCustomComponent: React.FC<CustomNodeProps<DateObjectProps>> = (props) => {
+  const {
+    nodeData,
+    isEditing,
+    setValue,
+    getStyles,
+    canEdit,
+    value,
+    handleEdit,
+    onError,
+    customNodeProps = {},
+  } = props
   const lastValidDate = useRef(value)
 
+  const { showTime = true } = customNodeProps
+
   if (value instanceof Date) lastValidDate.current = value
+
+  const editDisplayValue =
+    value instanceof Date
+      ? showTime
+        ? value.toISOString()
+        : value.toDateString()
+      : (value as string)
+  const displayValue = showTime
+    ? (nodeData.value as Date).toLocaleString()
+    : (nodeData.value as Date).toLocaleDateString()
 
   return isEditing ? (
     <StringEdit
       styles={getStyles('input', nodeData)}
       pathString={toPathString(nodeData.path)}
       {...props}
-      value={value instanceof Date ? value.toISOString() : (value as string)}
+      value={editDisplayValue}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       handleEdit={() => {
         const newDate = new Date(value as string)
@@ -32,7 +58,7 @@ export const DateObjectCustomComponent: React.FC<CustomNodeProps<unknown>> = (pr
       styles={getStyles('string', nodeData)}
       canEdit={canEdit}
       pathString={toPathString(nodeData.path)}
-      value={nodeData.value.toLocaleString()}
+      value={displayValue}
     />
   )
 }

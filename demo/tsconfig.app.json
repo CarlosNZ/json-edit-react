@@ -14,7 +14,11 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-
+    "baseUrl": ".",
+    "paths": {
+      "@json-edit-react/*": ["../src/*"],
+      "@json-edit-react": ["../src/"]
+    },
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
@@ -22,6 +26,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src", "../custom-component-library/components/DatePicker/DateTimePicker.tsx"]
   // "exclude": ["src/json-edit-react/**/*"]
 }

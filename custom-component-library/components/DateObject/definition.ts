@@ -1,7 +1,7 @@
-import { DateObjectCustomComponent } from './component'
-import { type CustomNodeDefinition } from 'json-edit-react'
+import { DateObjectCustomComponent, DateObjectProps } from './component'
+import { type CustomNodeDefinition } from '@json-edit-react'
 
-export const DateObjectDefinition: CustomNodeDefinition = {
+export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   condition: (nodeData) => nodeData.value instanceof Date,
   element: DateObjectCustomComponent,
   showEditTools: true,

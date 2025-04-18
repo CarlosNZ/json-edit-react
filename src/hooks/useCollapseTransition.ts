@@ -48,7 +48,12 @@ export const useCollapseTransition = (
   data: JsonData,
   collapseAnimationTime: number,
   startCollapsed: boolean,
-  mainContainerRef: React.MutableRefObject<Element>
+  mainContainerRef: React.MutableRefObject<Element>,
+  jsonStringify: (
+    data: JsonData,
+    // eslint-disable-next-line
+    replacer?: (this: any, key: string, value: unknown) => string
+  ) => string
 ) => {
   const [maxHeight, setMaxHeight] = useState<string | number | undefined>(
     startCollapsed ? 0 : undefined
@@ -85,7 +90,9 @@ export const useCollapseTransition = (
         }
         case false:
           // Opening...
-          setMaxHeight(prevHeight.current || estimateHeight(data, contentRef, mainContainerRef))
+          setMaxHeight(
+            prevHeight.current || estimateHeight(data, contentRef, mainContainerRef, jsonStringify)
+          )
       }
 
       setCollapsed(!collapsed)
@@ -94,7 +101,7 @@ export const useCollapseTransition = (
         if (!collapse) setMaxHeight(undefined)
       }, collapseAnimationTime)
     },
-    [collapseAnimationTime, collapsed, data, mainContainerRef]
+    [collapseAnimationTime, collapsed, data, mainContainerRef, jsonStringify]
   )
 
   return {
@@ -114,7 +121,12 @@ export const useCollapseTransition = (
 const estimateHeight = (
   data: JsonData,
   contentRef: React.RefObject<HTMLDivElement | null>,
-  containerRef: React.MutableRefObject<Element>
+  containerRef: React.MutableRefObject<Element>,
+  jsonStringify: (
+    data: JsonData,
+    // eslint-disable-next-line
+    replacer?: (this: any, key: string, value: unknown) => string
+  ) => string
 ) => {
   if (!contentRef.current) return 0
 
@@ -125,7 +137,7 @@ const estimateHeight = (
   const width = contentRef.current?.offsetWidth ?? 0
   const charsPerLine = width / (baseFontSize * 0.5)
 
-  const lines = JSON.stringify(data, null, 2)
+  const lines = jsonStringify(data)
     // The Regexp replacement is to parse escaped line breaks
     // *within* the JSON into *actual* line breaks before splitting
     .replace(/\\n/g, '\n')

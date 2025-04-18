@@ -5,8 +5,8 @@ import {
   monoDarkTheme,
   candyWrapperTheme,
   psychedelicTheme,
-  Theme
-} from '../imports'
+  Theme,
+} from '@json-edit-react'
 
 // This file contains functions that return theme objects
 // Each function is dynamically imported when needed to reduce initial bundle size
@@ -30,5 +30,5 @@ export const themeGetters: ThemeGetters = {
   getWhiteBlackTheme,
   getBlackWhiteTheme,
   getCandyWrapperTheme,
-  getPsychedelicTheme
+  getPsychedelicTheme,
 }
