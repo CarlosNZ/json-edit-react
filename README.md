@@ -983,7 +983,7 @@ return (
 
 If you implement a Custom Node that uses a non-JSON data type (e.g. `BigInt`, `Date`), then if you edit your data as full JSON text, these values will be stripped out by the default `JSON.stringify` and `JSON.parse` methods. In this case, you can provide [**replacer**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#replacer) and [**reviver**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#the_reviver_parameter) methods to serialize and de-serialize your data as you see fit. For example the [`BigInt` component](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/components/BigInt/definition.ts) in the [custom component library](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/components/DateObject/definition.ts) serializes the value into JSON text like so:
 
-```
+```json
 {
   "__type": "BigInt",
   "value": 1234567890123456789012345678901234567890
