@@ -16,9 +16,8 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@components/*": ["./components/*"],
-      "@components": ["./components"],
-      "@json-edit-react": ["./components/package"]
+      "@json-edit-react/*": ["../src/*"],
+      "@json-edit-react": ["../src/"]
     },
 
     /* Linting */

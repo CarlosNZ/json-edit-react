@@ -7,8 +7,8 @@ import {
   NanDefinition,
   SymbolDefinition,
   BigIntDefinition,
-} from '@components'
-import { testData } from '@components/data'
+} from '../components'
+import { testData } from '../components/data'
 import { JsonData, JsonEditor } from '@json-edit-react'
 import { useState } from 'react'
 

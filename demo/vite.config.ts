@@ -17,6 +17,9 @@ const pkg = fs.readJsonSync(packageFile)
 export default defineConfig({
   plugins: [react()],
   base: 'https://carlosnz.github.io/json-edit-react/',
+  resolve: {
+    alias: { '@json-edit-react': 'json-edit-react' },
+  },
   server: {
     port: 5175,
   },

@@ -14,7 +14,11 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-
+    "baseUrl": ".",
+    "paths": {
+      "@json-edit-react/*": ["../src/*"],
+      "@json-edit-react": ["../src/"]
+    },
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

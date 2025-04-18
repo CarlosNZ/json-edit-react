@@ -10,7 +10,7 @@ import {
   defaultTheme,
   // ExternalTriggers,
   // type CollapseState
-} from './imports'
+} from '@json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'

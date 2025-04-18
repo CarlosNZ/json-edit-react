@@ -1,12 +1,14 @@
 import React from 'react'
 import { data } from './data'
 import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'
-import { DatePickerDefinition } from '../../../custom-component-library/components/DatePicker/'
+import {
+  DatePickerDefinition,
+  LinkCustomNodeDefinition,
+} from '../../../custom-component-library/components'
 import {
   CustomNodeDefinition,
   FilterFunction,
   CustomTextDefinitions,
-  LinkCustomNodeDefinition,
   assign,
   matchNode,
   DefaultValueFunction,
@@ -21,7 +23,7 @@ import {
   ErrorString,
   TypeOptions,
   UpdateFunctionProps,
-} from '../imports'
+} from '@json-edit-react'
 import { type Input } from 'object-property-assigner'
 import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'
