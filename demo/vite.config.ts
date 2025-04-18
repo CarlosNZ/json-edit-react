@@ -3,14 +3,29 @@ import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs-extra'
 
+type PackageOption = 'npm' | 'local' | 'build'
+
 // Get the appropriate package.json so we can determine the version
-const provider = process.env.VITE_JRE_SOURCE ?? 'published'
-const pkgSrc: Record<string, string> = {
-  local: path.join('src', 'json-edit-react', 'package.json'),
-  published: path.join('node_modules', 'json-edit-react', 'package.json'),
-  package: path.join('src', 'package', 'package.json'),
+const provider: PackageOption = (process.env.VITE_JRE_SOURCE as PackageOption) ?? 'npm'
+
+console.log(`Using json-edit-react from: ${provider}`)
+
+const srcMap: Record<PackageOption, { pkgJson: string; jsonEditReactSrc: string }> = {
+  npm: {
+    pkgJson: path.join('node_modules', 'json-edit-react', 'package.json'),
+    jsonEditReactSrc: 'json-edit-react',
+  },
+  local: {
+    pkgJson: path.join('..', 'package.json'),
+    jsonEditReactSrc: path.resolve(__dirname, '../src'),
+  },
+  build: {
+    pkgJson: path.join('..', 'build_package', 'package.json'),
+    jsonEditReactSrc: path.resolve(__dirname, '../build_package'),
+  },
 }
-const packageFile = pkgSrc[provider]
+const packageFile = srcMap[provider].pkgJson
+const jsonEditReactPath = srcMap[provider].jsonEditReactSrc
 const pkg = fs.readJsonSync(packageFile)
 
 // https://vite.dev/config/
@@ -18,7 +33,7 @@ export default defineConfig({
   plugins: [react()],
   base: 'https://carlosnz.github.io/json-edit-react/',
   resolve: {
-    alias: { '@json-edit-react': 'json-edit-react' },
+    alias: { '@json-edit-react': jsonEditReactPath },
   },
   server: {
     port: 5175,

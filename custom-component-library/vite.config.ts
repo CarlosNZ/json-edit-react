@@ -2,10 +2,10 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-const packageSource = process.env.VITE_PACKAGE_SOURCE || 'npm'
+const packageSource = process.env.VITE_JRE_SOURCE || 'npm'
 console.log(`Using json-edit-react from: ${packageSource}`)
 
-console.log('SOURCE:', process.env.VITE_PACKAGE_SOURCE)
+console.log('SOURCE:', process.env.VITE_JRE_SOURCE)
 console.log(`Using json-edit-react from: ${packageSource}`)
 
 const srcMap: Record<string, string> = {

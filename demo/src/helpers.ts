@@ -1,4 +1,4 @@
-import { JsonData } from './imports'
+import { JsonData } from '@json-edit-react'
 
 export const truncate = (string: string, length = 200) =>
   string.length < length ? string : `${string.slice(0, length - 2).trim()}...`

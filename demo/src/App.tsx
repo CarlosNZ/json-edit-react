@@ -240,7 +240,7 @@ function App() {
         const functionName = `get${themeName.replace(/\s+&\s+|\s+/g, '')}Theme`
 
         // Dynamically import the themes module
-        const lazyThemesModule = await import('./theme/LazyThemes')
+        const lazyThemesModule = await import('./LazyThemes')
 
         // Get the theme using the themeGetters map
         if (lazyThemesModule.themeGetters[functionName]) {
