@@ -56,7 +56,8 @@ export interface DemoData {
   showErrorMessages?: boolean
   defaultValue?: DefaultValueFunction
   newKeyOptions?: string[] | NewKeyOptionsFunction
-  customNodeDefinitions?: CustomNodeDefinition[]
+  // eslint-disable-next-line -- any is correct here
+  customNodeDefinitions?: CustomNodeDefinition<Record<string, any>>[]
   customTextDefinitions?: CustomTextDefinitions
   styles?: Partial<ThemeStyles>
   customTextEditorAvailable?: boolean

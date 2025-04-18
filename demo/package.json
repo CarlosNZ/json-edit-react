@@ -11,12 +11,12 @@
     "dev": "yarn start:local",
     "prebuild": "yarn lint",
     "build": "tsc -b && vite build",
-    "build-local": "yarn build --base=/",
+    "build:local": "yarn build --base=/",
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build",
     "lint": "eslint .",
     "serve": "vite preview",
-    "serve-local": "vite preview --base=/",
+    "serve:local": "vite preview --base=/",
     "compile": "tsc -b --noEmit"
   },
   "dependencies": {
@@ -49,7 +49,6 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^4.3.4",
-    "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "eslint": "^9.21.0",
     "eslint-plugin-react-hooks": "^5.1.0",
@@ -58,16 +57,8 @@
     "gh-pages": "^6.1.1",
     "globals": "^15.15.0",
     "node-fetch": "^3.3.2",
-    "nodemon": "^3.0.3",
     "typescript": "~5.7.2",
     "typescript-eslint": "^8.24.1",
     "vite": "^6.2.0"
-  },
-  "nodemonConfig": {
-    "watch": [
-      "../src"
-    ],
-    "ext": "js, json, ts, tsx, css",
-    "delay": 200
   }
 }

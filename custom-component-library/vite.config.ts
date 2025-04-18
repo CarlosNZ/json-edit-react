@@ -5,9 +5,6 @@ import path from 'path'
 const packageSource = process.env.VITE_JRE_SOURCE || 'npm'
 console.log(`Using json-edit-react from: ${packageSource}`)
 
-console.log('SOURCE:', process.env.VITE_JRE_SOURCE)
-console.log(`Using json-edit-react from: ${packageSource}`)
-
 const srcMap: Record<string, string> = {
   npm: 'json-edit-react',
   local: path.resolve(__dirname, '../src'),

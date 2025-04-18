@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:local": "VITE_JRE_SOURCE=local vite",
+    "dev:build": "VITE_JRE_SOURCE=build vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
