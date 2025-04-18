@@ -71,7 +71,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const startCollapsed = collapseFilter(incomingNodeData)
 
   const { contentRef, isAnimating, maxHeight, collapsed, animateCollapse, cssTransitionValue } =
-    useCollapseTransition(data, collapseAnimationTime, startCollapsed, mainContainerRef)
+    useCollapseTransition(
+      data,
+      collapseAnimationTime,
+      startCollapsed,
+      mainContainerRef,
+      jsonStringify
+    )
 
   const {
     pathString,
@@ -421,6 +427,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       handleKeyboard={handleKeyboard}
       getNewKeyOptions={getNewKeyOptions}
       editConfirmRef={editConfirmRef}
+      jsonStringify={jsonStringify}
     />
   )
 

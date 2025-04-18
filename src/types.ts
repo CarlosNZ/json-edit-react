@@ -279,6 +279,11 @@ interface BaseNodeProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   editConfirmRef: React.RefObject<HTMLDivElement | null>
+  jsonStringify: (
+    data: JsonData,
+    // eslint-disable-next-line
+    replacer?: (this: any, key: string, value: unknown) => string
+  ) => string
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -297,11 +302,6 @@ export interface CollectionNodeProps extends BaseNodeProps {
     // eslint-disable-next-line
     reviver?: (this: any, key: string, value: string) => unknown
   ) => JsonData
-  jsonStringify: (
-    data: JsonData,
-    // eslint-disable-next-line
-    replacer?: (this: any, key: string, value: unknown) => string
-  ) => string
   insertAtTop: { object: boolean; array: boolean }
   TextEditor?: React.FC<TextEditorProps>
   onCollapse?: OnCollapseFunction

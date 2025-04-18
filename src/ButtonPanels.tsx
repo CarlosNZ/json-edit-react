@@ -11,6 +11,7 @@ import {
   type NodeData,
   type CustomButtonDefinition,
   type KeyboardControlsFull,
+  JsonData,
 } from './types'
 import { getModifier } from './helpers'
 
@@ -30,6 +31,11 @@ interface EditButtonProps {
   ) => void
   getNewKeyOptions?: (nodeDate: NodeData) => string[] | null | void
   editConfirmRef: React.RefObject<HTMLDivElement | null>
+  jsonStringify: (
+    data: JsonData,
+    // eslint-disable-next-line
+    replacer?: (this: any, key: string, value: unknown) => string
+  ) => string
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
@@ -45,6 +51,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   handleKeyboard,
   editConfirmRef,
   getNewKeyOptions,
+  jsonStringify,
 }) => {
   const { getStyles } = useTheme()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
@@ -108,7 +115,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
         copyType = 'path'
       } else {
         value = data
-        stringValue = type ? JSON.stringify(data, null, 2) : String(value)
+        stringValue = type ? jsonStringify(data) : String(value)
       }
       if (!navigator.clipboard) {
         if (typeof enableClipboard === 'function')

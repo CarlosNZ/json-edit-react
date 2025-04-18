@@ -505,6 +505,9 @@ const isUpdateReturnTuple = (
   return Array.isArray(input) && input.length === 2 && ['error', 'value'].includes(input[0])
 }
 
+// Combines all the replacer or reviver functions from the Custom node
+// definitions into a single replacer/reviver function for the internal
+// jsonStringify and jsonParse methods
 const getJsonReplacerFn = <T, U>(
   customNodeDefinitions: CustomNodeDefinition[],
   method: 'stringifyReplacer' | 'parseReviver'

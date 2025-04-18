@@ -47,6 +47,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     keyboardControls,
     sort,
     editConfirmRef,
+    jsonStringify,
   } = props
   const { getStyles } = useTheme()
   const {
@@ -384,6 +385,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 handleKeyboard={handleKeyboard}
                 keyboardControls={keyboardControls}
                 editConfirmRef={editConfirmRef}
+                jsonStringify={jsonStringify}
               />
             )
           )}
