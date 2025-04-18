@@ -21,7 +21,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
  - 🎨 **Customisable UI** — built-in or custom [themes](#themes--styles), CSS overrides or targeted classes
  - 📦 **Self-contained** — plain HTML/CSS, so no dependence on external UI libraries
  - 🔍 **Search & filter** — find data by key, value or custom function
- - 🚧 **[Custom components](#custom-nodes)** — replace specific nodes with specialised components (e.g. date picker, links, images)
+ - 🚧 **[Custom components](#custom-nodes)** — replace specific nodes with specialised components (e.g. date picker, links, images, `undefined`, `BigInt`, `Symbol`)
  - 🌏 **[Localisation](#localisation)** — easily translate UI labels and messages
  - 🔄 **[Drag-n-drop](#drag-n-drop)** re-ordering within objects/arrays
  - 🎹 **[Keyboard customisation](#keyboard-customisation)** — define your own key bindings
@@ -71,6 +71,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 - [Localisation](#localisation)
 - [Custom Nodes](#custom-nodes)
   - [Active hyperlinks](#active-hyperlinks)
+  - [Handling JSON](#handling-json)
   - [Custom Collection nodes](#custom-collection-nodes)
 - [Custom Text](#custom-text)
 - [Custom Buttons](#custom-buttons)
@@ -918,8 +919,9 @@ Your `translations` object doesn't have to be exhaustive — only define the key
 
 You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) to see it in action. (There is also a custom Date picker that appears when editing ISO strings in the other data sets.)
 
-> [!NOTE]
-> Coming soon: a **Custom Component** library
+> [!TIP]
+> There are a selection of useful Custom components ready for you to use in my [Custom Component Library](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md).  
+> Please contribute your own if you think they'd be useful to others.
 
 Custom nodes are provided in the `customNodeDefinitions` prop, as an array of objects of following structure:
 
@@ -942,6 +944,10 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   showCollectionWrapper // boolean (optional), default true
   wrapperElement        // React component (optional) to wrap *outside* the normal collection wrapper
   wrapperProps          // object (optional) -- props for the above wrapper component
+
+  // For JSON conversion -- only needed if editing as JSON text
+  stringifyReplacer    // function for stringifying to JSON (if non-JSON data type)
+  parseReviver?:       // function for parsing as JSON (if non-JSON data type)
 }
 ```
 
@@ -971,6 +977,17 @@ return (
     customNodeDefinitions={[LinkCustomNodeDefinition, ...otherCustomDefinitions]}
   />
   )
+```
+
+### Handling JSON
+
+If you implement a Custom Node that uses a non-JSON data type (e.g. `BigInt`, `Date`), then if you edit your data as full JSON text, these values will be stripped out by the default `JSON.stringify` and `JSON.parse` methods. In this case, you can provide [**replacer**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#replacer) and [**reviver**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#the_reviver_parameter) methods to serialize and de-serialize your data as you see fit. For example the [`BigInt` component](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/components/BigInt/definition.ts) in the [custom component library](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/components/DateObject/definition.ts) serializes the value into JSON text like so:
+
+```
+{
+  "__type": "BigInt",
+  "value": 1234567890123456789012345678901234567890
+}
 ```
 
 ### Custom Collection nodes
@@ -1199,6 +1216,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.25.7**:
+  - Handle non-standard data types (e.g. `undefined`, `BigInt`) when stringifying/parsing JSON
+  - More custom components (See [library ReadMe](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md))
 - **1.25.6**:
   - Expose a few more components and props to custom components
   - Start building Custom Component library (separate to main package)

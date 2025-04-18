@@ -15,8 +15,8 @@ These are the ones I'm planning for now:
 - [x] Date Object
 - [x] Date/Time Picker (with ISO string)
 - [x] Boolean Toggle
-- [ ] `NaN`
-- [ ] BigInt
+- [x] `NaN`
+- [x] BigInt
 
 ## Development
 
