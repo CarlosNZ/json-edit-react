@@ -3,7 +3,7 @@ import { type Options as AssignOptions } from 'object-property-assigner'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { type ExternalTriggers } from './hooks'
 
-export type JsonData = CollectionData | ValueData
+export type JsonData = Record<string, unknown> | Array<unknown> | unknown
 
 export interface JsonEditorProps {
   data: JsonData
@@ -44,11 +44,14 @@ export interface JsonEditorProps {
   rootFontSize?: string | number
   stringTruncate?: number
   translations?: Partial<LocalisedStrings>
-  customNodeDefinitions?: CustomNodeDefinition[]
+  // Using "any" here, as internal props don't matter, the generic is just for
+  // enforcing consistency between the component and the definition that uses it
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  customNodeDefinitions?: CustomNodeDefinition<Record<string, any>, Record<string, any>>[]
   customText?: CustomTextDefinitions
   customButtons?: CustomButtonDefinition[]
-  jsonParse?: (input: string) => JsonData
-  jsonStringify?: (input: JsonData) => string
+  jsonParse?: (input: string, reviver?: (key: string, value: string) => unknown) => JsonData
+  jsonStringify?: (input: JsonData, replacer?: (key: string, value: unknown) => unknown) => string
   TextEditor?: React.FC<TextEditorProps>
   errorMessageTimeout?: number // ms
   keyboardControls?: KeyboardControls
@@ -166,7 +169,6 @@ export type CopyFunction = (input: {
   type: CopyType
 }) => void
 
-// Only using `any` here as that's the type expected by the JS "sort" method.
 export type CompareFunction = (
   a: [string | number, unknown],
   b: [string | number, unknown]
@@ -277,6 +279,11 @@ interface BaseNodeProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   editConfirmRef: React.RefObject<HTMLDivElement | null>
+  jsonStringify: (
+    data: JsonData,
+    // eslint-disable-next-line
+    replacer?: (this: any, key: string, value: unknown) => string
+  ) => string
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
@@ -290,8 +297,11 @@ export interface CollectionNodeProps extends BaseNodeProps {
   showStringQuotes: boolean
   defaultValue: unknown
   newKeyOptions?: string[] | NewKeyOptionsFunction
-  jsonParse: (input: string) => JsonData
-  jsonStringify: (data: JsonData) => string
+  jsonParse: (
+    input: string,
+    // eslint-disable-next-line
+    reviver?: (this: any, key: string, value: string) => unknown
+  ) => JsonData
   insertAtTop: { object: boolean; array: boolean }
   TextEditor?: React.FC<TextEditorProps>
   onCollapse?: OnCollapseFunction
@@ -343,6 +353,10 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   showCollectionWrapper?: boolean // default true
   wrapperElement?: React.FC<CustomNodeProps<U>>
   wrapperProps?: Record<string, unknown>
+
+  // For JSON stringify/parse
+  stringifyReplacer?: (value: unknown) => unknown
+  parseReviver?: (stringified: string) => unknown
 }
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>

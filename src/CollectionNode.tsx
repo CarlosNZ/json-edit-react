@@ -71,7 +71,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const startCollapsed = collapseFilter(incomingNodeData)
 
   const { contentRef, isAnimating, maxHeight, collapsed, animateCollapse, cssTransitionValue } =
-    useCollapseTransition(data, collapseAnimationTime, startCollapsed, mainContainerRef)
+    useCollapseTransition(
+      data,
+      collapseAnimationTime,
+      startCollapsed,
+      mainContainerRef,
+      jsonStringify
+    )
 
   const {
     pathString,
@@ -217,7 +223,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       setCurrentlyEditingElement(null)
       setPreviousValue(null)
       setError(null)
-      if (JSON.stringify(value) === JSON.stringify(data)) return
+      if (jsonStringify(value) === jsonStringify(data)) return
       onEdit(value, path).then((error) => {
         if (error) {
           onError({ code: 'UPDATE_ERROR', message: error }, value as CollectionData)
@@ -421,6 +427,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       handleKeyboard={handleKeyboard}
       getNewKeyOptions={getNewKeyOptions}
       editConfirmRef={editConfirmRef}
+      jsonStringify={jsonStringify}
     />
   )
 

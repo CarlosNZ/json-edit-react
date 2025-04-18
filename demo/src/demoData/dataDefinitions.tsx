@@ -1,12 +1,14 @@
 import React from 'react'
 import { data } from './data'
 import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'
-import { dateNodeDefinition } from '../customComponents/DateTimePicker'
+import {
+  DatePickerDefinition,
+  LinkCustomNodeDefinition,
+} from '../../../custom-component-library/components'
 import {
   CustomNodeDefinition,
   FilterFunction,
   CustomTextDefinitions,
-  LinkCustomNodeDefinition,
   assign,
   matchNode,
   DefaultValueFunction,
@@ -21,7 +23,7 @@ import {
   ErrorString,
   TypeOptions,
   UpdateFunctionProps,
-} from '../imports'
+} from '@json-edit-react'
 import { type Input } from 'object-property-assigner'
 import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'
@@ -54,7 +56,8 @@ export interface DemoData {
   showErrorMessages?: boolean
   defaultValue?: DefaultValueFunction
   newKeyOptions?: string[] | NewKeyOptionsFunction
-  customNodeDefinitions?: CustomNodeDefinition[]
+  // eslint-disable-next-line -- any is correct here
+  customNodeDefinitions?: CustomNodeDefinition<Record<string, any>>[]
   customTextDefinitions?: CustomTextDefinitions
   styles?: Partial<ThemeStyles>
   customTextEditorAvailable?: boolean
@@ -93,7 +96,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'data',
     collapse: 2,
     data: data.intro,
-    customNodeDefinitions: [dateNodeDefinition],
+    customNodeDefinitions: [DatePickerDefinition],
     // restrictEdit: ({ key }) => key === 'number',
     customTextEditorAvailable: true,
     restrictTypeSelection: ({ key }) => {
@@ -220,7 +223,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return true
     },
     collapse: 1,
-    customNodeDefinitions: [dateNodeDefinition, LinkCustomNodeDefinition],
+    customNodeDefinitions: [DatePickerDefinition, LinkCustomNodeDefinition],
     data: data.starWars,
   },
   jsonPlaceholder: {
@@ -538,7 +541,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     searchPlaceholder: 'Search guestbook',
     customNodeDefinitions: [
       {
-        condition: dateNodeDefinition.condition,
+        condition: DatePickerDefinition.condition,
         element: ({ data, getStyles, nodeData }) => {
           return (
             <p style={getStyles('string', nodeData)}>{new Date(data as string).toLocaleString()}</p>
@@ -708,7 +711,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         hideKey: true,
       },
       {
-        ...dateNodeDefinition,
+        ...DatePickerDefinition,
         showOnView: true,
         showInTypesSelector: true,
         customNodeProps: { showTimeSelect: false, dateFormat: 'MMM d, yyyy' },

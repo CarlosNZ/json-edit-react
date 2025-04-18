@@ -15,7 +15,10 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "baseUrl": ".",
-    "paths": { "@components/*": ["./components/*"], "@components": ["./components"] },
+    "paths": {
+      "@json-edit-react/*": ["../src/*"],
+      "@json-edit-react": ["../src/"]
+    },
 
     /* Linting */
     "strict": true,
