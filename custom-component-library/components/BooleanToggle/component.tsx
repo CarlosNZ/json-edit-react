@@ -1,5 +1,9 @@
 /**
  * Boolean Toggle
+ *
+ * - Provides an alternative to the default boolean input -- a checkbox that can
+ *   be toggled on and off without having to explicity enable "editing" of the
+ *   element.
  */
 
 import React from 'react'
