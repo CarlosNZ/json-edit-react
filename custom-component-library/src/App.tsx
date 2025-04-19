@@ -1,3 +1,6 @@
+const STORE_DATE_AS_DATE_OBJECT = true
+
+import { useState } from 'react'
 import {
   LinkCustomNodeDefinition,
   DateObjectDefinition,
@@ -7,40 +10,46 @@ import {
   NanDefinition,
   SymbolDefinition,
   BigIntDefinition,
+  MarkdownNodeDefinition,
 } from '../components'
 import { testData } from '../components/data'
 import { JsonData, JsonEditor } from '@json-edit-react'
-import { useState } from 'react'
+
+// @ts-expect-error redefine after initialisation
+testData['Date & Time'].Date = STORE_DATE_AS_DATE_OBJECT ? new Date() : new Date().toISOString()
+
+type TestData = typeof testData
 
 function App() {
   const [data, setData] = useState<JsonData>(testData)
 
   console.log('Current data', data)
 
-  type TestData = typeof testData
-
   return (
     <div id="container">
-      <h1>json-edit-react</h1>
-      <h2>Custom component library</h2>
       <JsonEditor
         data={data}
         setData={setData}
         customNodeDefinitions={[
           LinkCustomNodeDefinition,
           {
-            ...DateObjectDefinition,
-            customNodeProps: { showTime: (data as TestData)['Show Time in Dates?'] },
+            ...(STORE_DATE_AS_DATE_OBJECT ? DateObjectDefinition : DatePickerDefinition),
+            customNodeProps: { showTime: (data as TestData)['Date & Time']['Show Time in Date?'] },
           },
           UndefinedDefinition,
-          {
-            ...DatePickerDefinition,
-            customNodeProps: { showTime: (data as TestData)['Show Time in Dates?'] },
-          },
           BooleanToggleDefinition,
           NanDefinition,
           SymbolDefinition,
           BigIntDefinition,
+          {
+            ...MarkdownNodeDefinition,
+            condition: ({ key }) => key === 'Markdown',
+          },
+          {
+            ...MarkdownNodeDefinition,
+            condition: ({ key }) => key === 'intro',
+            hideKey: true,
+          },
         ]}
         rootName=""
       />

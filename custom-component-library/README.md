@@ -1,5 +1,7 @@
 A collection of [Custom Components](https://github.com/CarlosNZ/json-edit-react#custom-nodes) for **json-edit-react**. 
 
+You can use these as-is or modify them for your own particular use case.
+
 Eventually, I'd like to publish these in a separate package so you can easily import them. But for now just copy the code out of this repo.
 
 Contains a [Vite](https://vite.dev/) web-app for previewing and developing components.
@@ -20,6 +22,7 @@ These are the ones currently available:
 - [x] Boolean Toggle
 - [x] `NaN`
 - [x] BigInt
+- [x] Markdown
 
 ## Development
 
@@ -43,6 +46,6 @@ Custom components should consider the following:
 
 - Must respect editing restrictions
 - If including CSS classes, please prefix with `jer-`
-- Handle keyboard input if possible
+- Handle keyboard input if possible (and double-click to edit)
 - Provide customisation options, particularly styles
 
