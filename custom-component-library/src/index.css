@@ -24,6 +24,7 @@
   justify-content: center;
   align-items: center;
   margin-bottom: 7em;
+  margin-top: 1em;
 }
 
 .jer-editor-container {
@@ -32,8 +33,8 @@
 
 a {
   font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  /* color: #646cff; */
+  text-decoration: underline;
 }
 a:hover {
   /* color: #535bf2; */
@@ -49,10 +50,40 @@ body {
   place-items: center;
 }
 
+h1,
+h2,
+h3 {
+  font-family: system-ui, Helvetica, Arial, sans-serif;
+}
+
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: 2em;
+  line-height: 1.2;
   margin: 0;
+  color: #3f5e7a;
+}
+
+h2 {
+  font-size: 1.4em;
+  line-height: 1.8;
+  margin: 0;
+}
+
+h3 {
+  font-size: 1.1em;
+  line-height: 1.3;
+  margin: 0;
+  /* margin-bottom: 0.5em; */
+}
+
+p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+ul {
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
 }
 
 button {

@@ -14,7 +14,7 @@ export const BigIntDefinition: CustomNodeDefinition<BigIntProps> = {
   stringifyReplacer: (value) =>
     typeof value === 'bigint' ? { __type: 'bigint', value: String(value) } : value,
   parseReviver: (value) =>
-    isCollection(value) && '__type' in value && 'value' in value
+    isCollection(value) && '__type' in value && 'value' in value && value.__type === 'bigint'
       ? BigInt(value.value as string)
       : value,
 }
