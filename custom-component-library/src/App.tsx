@@ -1,4 +1,5 @@
-const STORE_DATE_AS_DATE_OBJECT = true
+// Set to true to store date as Date object, false to store as ISO string
+const STORE_DATE_AS_DATE_OBJECT = false
 
 import { useState } from 'react'
 import {
@@ -52,6 +53,7 @@ function App() {
           },
         ]}
         rootName=""
+        showCollectionCount="when-closed"
       />
     </div>
   )

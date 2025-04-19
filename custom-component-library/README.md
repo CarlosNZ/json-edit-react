@@ -1,6 +1,10 @@
+## Custom Component Library
+
 A collection of [Custom Components](https://github.com/CarlosNZ/json-edit-react#custom-nodes) for **json-edit-react**. 
 
 You can use these as-is or modify them for your own particular use case.
+
+<img width="400" alt="screenshot" src="image/library_screenshot.png" />
 
 Eventually, I'd like to publish these in a separate package so you can easily import them. But for now just copy the code out of this repo.
 
