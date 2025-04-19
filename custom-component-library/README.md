@@ -21,11 +21,11 @@ These are the ones currently available:
 
 - [x] Hyperlink/URL
 - [x] Undefined
-- [x] Date Object
+- [x] `Date` Object
 - [x] Date/Time Picker (with ISO string)
 - [x] Boolean Toggle
 - [x] `NaN`
-- [x] BigInt
+- [x] `BigInt`
 - [x] Markdown
 
 ## Development
