@@ -130,7 +130,7 @@ export const StringEdit: React.FC<StringEditProps> = ({
             // required when control key is not "standard" text-area
             // behaviour ("Shift-Enter" or "Enter")
             const newValue = insertCharInTextArea(
-              textAreaRef as React.MutableRefObject<HTMLTextAreaElement>,
+              textAreaRef as React.RefObject<HTMLTextAreaElement>,
               '\n'
             )
             setValue(newValue)
