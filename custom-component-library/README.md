@@ -27,6 +27,7 @@ These are the ones currently available:
 - [x] `NaN`
 - [x] `BigInt`
 - [x] Markdown
+- [ ] Image (to-do)
 
 ## Development
 
@@ -50,6 +51,12 @@ Custom components should consider the following:
 
 - Must respect editing restrictions
 - If including CSS classes, please prefix with `jer-`
-- Handle keyboard input if possible (and double-click to edit)
+- Handle keyboard input as much as possible:
+  - Double-click to edit (if allowed)
+  - `Tab`/`Shift-Tab` to navigate
+  - `Enter` to submit
+  - `Escape` to cancel
 - Provide customisation options, particularly styles
+
+If your custom component is "string-like", there are two helper components exported with the package: `StringDisplay` and `StringEdit` -- these are the same components used for the actual "string" elements in the main package. See the [Hyperlink](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/components/Hyperlink/component.tsx) and [BigInt](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/components/BigInt/component.tsx) components for examples of how to use them.
 

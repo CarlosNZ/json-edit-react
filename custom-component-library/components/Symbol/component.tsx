@@ -10,6 +10,7 @@ export const SymbolComponent: React.FC<CustomNodeProps<SymbolProps>> = (props) =
   const {
     setValue,
     isEditing,
+    setIsEditing,
     getStyles,
     nodeData,
     customNodeProps = {},
@@ -35,7 +36,7 @@ export const SymbolComponent: React.FC<CustomNodeProps<SymbolProps>> = (props) =
       }}
     />
   ) : (
-    <span style={style}>
+    <span style={style} onDoubleClick={() => setIsEditing(true)}>
       Symbol(<span style={descriptionStyle}>"{(nodeData.value as symbol).description}"</span>)
     </span>
   )

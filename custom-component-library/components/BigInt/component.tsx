@@ -10,6 +10,7 @@ export const BigIntComponent: React.FC<CustomNodeProps<BigIntProps>> = (props) =
   const {
     setValue,
     isEditing,
+    setIsEditing,
     getStyles,
     nodeData,
     customNodeProps = {},
@@ -34,6 +35,8 @@ export const BigIntComponent: React.FC<CustomNodeProps<BigIntProps>> = (props) =
       }}
     />
   ) : (
-    <span style={style}>{value as bigint}</span>
+    <span onDoubleClick={() => setIsEditing(true)} style={style}>
+      {value as bigint}
+    </span>
   )
 }

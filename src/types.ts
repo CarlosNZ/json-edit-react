@@ -287,7 +287,7 @@ interface BaseNodeProps {
 }
 
 export interface CollectionNodeProps extends BaseNodeProps {
-  mainContainerRef: React.MutableRefObject<Element>
+  mainContainerRef: React.RefObject<Element>
   data: CollectionData
   collapseFilter: FilterFunction
   collapseAnimationTime: number

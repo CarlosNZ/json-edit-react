@@ -1,5 +1,5 @@
 // Set to true to store date as Date object, false to store as ISO string
-const STORE_DATE_AS_DATE_OBJECT = false
+const STORE_DATE_AS_DATE_OBJECT = true
 
 import { useState } from 'react'
 import {
@@ -29,6 +29,7 @@ function App() {
   return (
     <div id="container">
       <JsonEditor
+        // restrictEdit={true}
         data={data}
         setData={setData}
         customNodeDefinitions={[

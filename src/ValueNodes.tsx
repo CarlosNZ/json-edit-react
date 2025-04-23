@@ -286,6 +286,29 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   )
 }
 
+// A custom hook to add a keyboard listener to a component that does't have
+// standard DOM keyboard behaviour (like inputs). Only used for the `null`
+// component here, but is exported for re-use with Custom Components if required
+export const useKeyboardListener = (isEditing: boolean, listener: (e: unknown) => void) => {
+  const timer = useRef<number | undefined>(undefined)
+
+  useEffect(() => {
+    if (!isEditing) {
+      // The listener messes with other elements when switching rapidly (e.g.
+      // when "getNext" is called repeatedly on inaccessible elements), so we
+      // cancel the listener load before it even happens if this node gets
+      // switched from isEditing to not in less than 100ms
+      window.clearTimeout(timer.current)
+      return
+    }
+    // Small delay to prevent registering keyboard input from previous element
+    // if switched using "Tab"
+    timer.current = window.setTimeout(() => window.addEventListener('keydown', listener), 100)
+
+    return () => window.removeEventListener('keydown', listener)
+  }, [isEditing, listener])
+}
+
 export const NullValue: React.FC<InputProps> = ({
   value,
   isEditing,
@@ -296,30 +319,14 @@ export const NullValue: React.FC<InputProps> = ({
   keyboardCommon,
 }) => {
   const { getStyles } = useTheme()
-  const timer = useRef<number | undefined>(undefined)
-
-  useEffect(() => {
-    if (!isEditing) {
-      // The listener messes with other elements when switching rapidly (e.g. when "getNext" called repeatedly on inaccessible elements), so we cancel the listener load before it even happens if this node gets switched from isEditing to not in less than 100ms
-      window.clearTimeout(timer.current)
-      return
-    }
-    // Small delay to prevent registering keyboard input from previous element
-    // if switched using "Tab"
-    timer.current = window.setTimeout(
-      () => window.addEventListener('keydown', listenForSubmit),
-      100
-    )
-
-    return () => window.removeEventListener('keydown', listenForSubmit)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing])
 
   const listenForSubmit = (e: unknown) =>
     handleKeyboard(e as React.KeyboardEvent, {
       confirm: handleEdit,
       ...keyboardCommon,
     })
+
+  useKeyboardListener(isEditing, listenForSubmit)
 
   return (
     <div

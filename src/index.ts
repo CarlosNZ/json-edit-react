@@ -1,7 +1,7 @@
 export { JsonEditor } from './JsonEditor'
 export { defaultTheme } from './contexts/ThemeProvider'
 export { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
-export { StringDisplay, StringEdit } from './ValueNodes'
+export { StringDisplay, StringEdit, useKeyboardListener } from './ValueNodes'
 export { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
 export { matchNode, matchNodeKey, isCollection, toPathString } from './helpers'
 export { default as assign } from 'object-property-assigner'

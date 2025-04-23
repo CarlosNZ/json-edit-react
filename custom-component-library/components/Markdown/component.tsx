@@ -23,9 +23,10 @@ export const MarkdownComponent: React.FC<CustomNodeProps<LinkProps>> = (props) =
       onClick={(e) => {
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
       }}
+      onDoubleClick={() => setIsEditing(true)}
       style={styles}
     >
-      {/* TO-DO: Style over-rides, keyboard and double-click behaviour */}
+      {/* TO-DO: Style over-rides */}
       <Markdown>{nodeData.value as string}</Markdown>
     </div>
   )
