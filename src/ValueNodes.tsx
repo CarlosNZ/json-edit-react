@@ -298,21 +298,31 @@ export const useKeyboardListener = (isEditing: boolean, listener: (e: unknown) =
     currentListener.current = listener
   }, [listener])
 
+  // Define our stable event handler function
+  const eventHandler = (e: unknown) => {
+    currentListener.current(e)
+  }
+
   useEffect(() => {
-    if (!isEditing) {
-      window.clearTimeout(timer.current)
-      return
-    }
+    // The listener messes with other elements when switching rapidly (e.g. when
+    // "getNext" is called repeatedly on inaccessible elements), so we cancel
+    // the listener load before it even happens if this node gets switched from
+    // isEditing to not in less than 100ms
+    window.clearTimeout(timer.current)
 
-    // Create a stable reference to the event handler that always calls
-    // the latest listener
-    const eventHandler = (e: unknown) => currentListener.current(e)
+    if (!isEditing) return
 
+    // Small delay to prevent registering keyboard input from previous element
+    // if switched using "Tab"
     timer.current = window.setTimeout(() => {
       window.addEventListener('keydown', eventHandler)
     }, 100)
 
-    return () => window.removeEventListener('keydown', eventHandler)
+    // Cleanup function
+    return () => {
+      window.clearTimeout(timer.current)
+      window.removeEventListener('keydown', eventHandler)
+    }
   }, [isEditing])
 }
 
