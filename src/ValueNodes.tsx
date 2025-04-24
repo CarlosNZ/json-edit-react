@@ -256,6 +256,8 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
 }) => {
   const { getStyles } = useTheme()
 
+  if (typeof value !== 'boolean') return null
+
   return isEditing ? (
     <input
       className="jer-input-boolean"
