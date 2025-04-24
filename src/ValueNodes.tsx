@@ -256,6 +256,8 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
 }) => {
   const { getStyles } = useTheme()
 
+  if (typeof value !== 'boolean') return null
+
   return isEditing ? (
     <input
       className="jer-input-boolean"
@@ -286,27 +288,44 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   )
 }
 
-// A custom hook to add a keyboard listener to a component that does't have
+// A custom hook to add a keyboard listener to a component that doesn't have
 // standard DOM keyboard behaviour (like inputs). Only used for the `null`
 // component here, but is exported for re-use with Custom Components if required
 export const useKeyboardListener = (isEditing: boolean, listener: (e: unknown) => void) => {
   const timer = useRef<number | undefined>(undefined)
+  const currentListener = useRef(listener)
+
+  // Always update the ref to point to the latest listener
+  useEffect(() => {
+    currentListener.current = listener
+  }, [listener])
+
+  // Define our stable event handler function
+  const eventHandler = (e: unknown) => {
+    currentListener.current(e)
+  }
 
   useEffect(() => {
-    if (!isEditing) {
-      // The listener messes with other elements when switching rapidly (e.g.
-      // when "getNext" is called repeatedly on inaccessible elements), so we
-      // cancel the listener load before it even happens if this node gets
-      // switched from isEditing to not in less than 100ms
-      window.clearTimeout(timer.current)
-      return
-    }
+    // The listener messes with other elements when switching rapidly (e.g. when
+    // "getNext" is called repeatedly on inaccessible elements), so we cancel
+    // the listener load before it even happens if this node gets switched from
+    // isEditing to not in less than 100ms
+    window.clearTimeout(timer.current)
+
+    if (!isEditing) return
+
     // Small delay to prevent registering keyboard input from previous element
     // if switched using "Tab"
-    timer.current = window.setTimeout(() => window.addEventListener('keydown', listener), 100)
+    timer.current = window.setTimeout(() => {
+      window.addEventListener('keydown', eventHandler)
+    }, 100)
 
-    return () => window.removeEventListener('keydown', listener)
-  }, [isEditing, listener])
+    // Cleanup function
+    return () => {
+      window.clearTimeout(timer.current)
+      window.removeEventListener('keydown', eventHandler)
+    }
+  }, [isEditing])
 }
 
 export const NullValue: React.FC<InputProps> = ({

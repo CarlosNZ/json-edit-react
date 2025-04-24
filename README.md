@@ -1216,6 +1216,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.26.1**: Fix bug when submitting with keyboard after switching to `null` type ([#194](https://github.com/CarlosNZ/json-edit-react/pull/194))
 - **1.26.0**:
   - Handle non-standard data types (e.g. `undefined`, `BigInt`) when stringifying/parsing JSON
   - More custom components (See [library ReadMe](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md))
