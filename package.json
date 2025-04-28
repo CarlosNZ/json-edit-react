@@ -79,23 +79,28 @@
   "keywords": [
     "react",
     "component",
+    "components",
     "interactive",
     "interactive-json",
     "json",
     "json-component",
     "json-display",
     "json-tree",
-    "json-view",
     "json-viewer",
     "json-inspector",
     "json-schema",
+    "json-editor",
+    "editor",
+    "data-viewer",
+    "form-builder",
+    "drag-and-drop",
+    "customizable",
+    "typescript",
     "react-component",
     "react-json",
-    "react18-json-view",
-    "react-json-view",
     "theme",
-    "tree",
     "tree-view",
-    "treeview"
+    "treeview",
+    "react-json-view"
   ]
 }

@@ -7,7 +7,7 @@ for Github. This is so we can re-use the introductory content in both READMEs
 without duplicating it.
 
 It also converts Github-style admonition blocks to HTML that mimics Github
-styling.
+styling and converts internal anchor links to full GitHub repository URLs.
 """
 
 import re
@@ -74,16 +74,41 @@ def convert_github_admonition(text):
     
     return re.sub(pattern, replace_admonition, text, flags=re.MULTILINE)
 
-def replace_blocks(content_file, source_file, output_file=None):
+def convert_internal_links(text, base_url="https://github.com/CarlosNZ/json-edit-react"):
     """
-    Replace blocks in the content file with corresponding blocks from the source file.
-    Ignores block markers inside Markdown comments.
+    Convert internal Markdown anchor links to full GitHub documentation links.
+    
+    Args:
+    text (str): The input text containing internal links
+    base_url (str): The base URL for the GitHub repository
+    
+    Returns:
+    str: Text with converted links
+    """
+    # Regex to match internal Markdown links: [text](#anchor)
+    # But avoid matching links that already have a full URL or are not anchors
+    pattern = r'\[([^\]]+)\]\(#([^)]+)\)'
+    
+    def replace_link(match):
+        link_text = match.group(1)
+        anchor = match.group(2)
+        
+        # Create the full GitHub URL with the anchor
+        return f'[{link_text}]({base_url}#{anchor})'
+    
+    return re.sub(pattern, replace_link, text)
+
+def replace_blocks(content_file, source_file, output_file=None, base_url="https://github.com/CarlosNZ/json-edit-react"):
+    """
+    Replace blocks in the content file with corresponding blocks from the source file,
+    and convert internal links to full GitHub links.
     
     Args:
     content_file (str): Path to the content markdown file
     source_file (str): Path to the source markdown file
     output_file (str, optional): Path to save the modified content. 
-                                 If None, returns the modified content.
+                                If None, returns the modified content.
+    base_url (str): The base URL for the GitHub repository
     
     Returns:
     str: Modified content if no output file is specified
@@ -119,6 +144,9 @@ def replace_blocks(content_file, source_file, output_file=None):
     # Convert Github admonition blocks
     modified_content = convert_github_admonition(modified_content)
     
+    # Convert internal links to full GitHub links
+    modified_content = convert_internal_links(modified_content, base_url)
+    
     # If output file is specified, write to file
     if output_file:
         with open(output_file, 'w', encoding='utf-8') as f:
@@ -133,7 +161,8 @@ def main():
     replace_blocks(
         content_file='README_npm.md', 
         source_file='README.md', 
-        output_file='README_npm_output.md'
+        output_file='README_npm_output.md',
+        base_url="https://github.com/CarlosNZ/json-edit-react"
     )
 
 if __name__ == '__main__':
