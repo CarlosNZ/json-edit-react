@@ -41,7 +41,8 @@ import {
   useToast,
   Tooltip,
 } from '@chakra-ui/react'
-import logo from './image/logo_400.png'
+// import logo from './image/logo_400.png'
+import logoSVG from './image/logo.svg'
 import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
@@ -324,7 +325,8 @@ function App() {
           <VStack align="flex-start" gap={3}>
             <HStack align="flex-end" mt={2} gap={4} flexWrap="wrap">
               <Flex gap={4} align="center">
-                <img src={logo} alt="logo" style={{ maxHeight: '3.5em' }} />
+                {/* <img src={logo} alt="logo" style={{ maxHeight: '3.5em' }} /> */}
+                <img src={logoSVG} alt="logo" style={{ maxHeight: '3.5em' }} />
                 <Heading as="h1" size="3xl" variant="other">
                   json-edit-<span style={{ color: '#EA3788' }}>react</span>
                 </Heading>
