@@ -1207,7 +1207,7 @@ Please open an issue: https://github.com/CarlosNZ/json-edit-react/issues
 Things in the pipeline:
 
 1. I'm working on a script that can take a JSON Schema and return the suite of [Filter Functions](#advanced-editing-control) required to fully constrain the component's editing UI to comply with this schema (we can already do [validation](#json-schema-validation), but this prevent most invalid data from ever being entered). I don't think it'll part of the main package, as I don't want to increase the bundle size for a companion script -- I may release it in its own package, or just publish the code here in the repo.
-2. Alternative line wrapping for array data [#2](https://github.com/CarlosNZ/json-edit-react/issues/2)
+2. Alternative line wrapping and pagination for array data [#2](https://github.com/CarlosNZ/json-edit-react/issues/2) [#195](https://github.com/CarlosNZ/json-edit-react/issues/195)
 3. Start thinking about V2
 
 ## Inspiration
