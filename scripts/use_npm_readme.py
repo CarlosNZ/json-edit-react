@@ -22,11 +22,11 @@ def prepare_for_publish():
         print("Original README backed up as .original-readme.md")
     
     # Use the npm version as the main README
-    if os.path.exists('README_npm_output.md'):
-        shutil.copy2('README_npm_output.md', 'README.md')
+    if os.path.exists('.README_npm_output.md'):
+        shutil.copy2('.README_npm_output.md', 'README.md')
         print("NPM README is now in place for publishing")
     else:
-        print("Error: README_npm_output.md not found. Run the conversion script first.")
+        print("Error: .README_npm_output.md not found. Run the conversion script first.")
         sys.exit(1)
 
 
@@ -43,8 +43,8 @@ def restore_after_publish():
         print("Warning: No backed-up README found to restore")
     
     # Remove the temporary npm README
-    if os.path.exists('README_npm_output.md'):
-        os.remove('README_npm_output.md')
+    if os.path.exists('.README_npm_output.md'):
+        os.remove('.README_npm_output.md')
         print("Temporary npm README removed")
 
 

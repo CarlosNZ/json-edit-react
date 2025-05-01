@@ -159,9 +159,9 @@ def replace_blocks(content_file, source_file, output_file=None, base_url="https:
 # Example usage
 def main():
     replace_blocks(
-        content_file='README_npm.md', 
+        content_file='.README_npm.md', 
         source_file='README.md', 
-        output_file='README_npm_output.md',
+        output_file='.README_npm_output.md',
         base_url="https://github.com/CarlosNZ/json-edit-react"
     )
 
