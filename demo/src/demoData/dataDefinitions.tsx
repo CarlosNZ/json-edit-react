@@ -349,7 +349,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           won't be allowed to make any changes that don't comply with the schema. The schema being
           enforced here is{' '}
           <Link
-            href="https://json-schema.org/learn/miscellaneous-examples#complex-object-with-nested-properties"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/demoData/jsonSchema.json"
             isExternal
           >
             this one.
