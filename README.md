@@ -12,7 +12,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 ![NPM Version](https://img.shields.io/npm/v/json-edit-react)
 ![GitHub License](https://img.shields.io/github/license/carlosnz/json-edit-react)
 ![NPM Downloads](https://img.shields.io/npm/dm/json-edit-react)
-[![Discuss on GitHub](https://img.shields.io/badge/Discussions-Join%20the%20conversation-blue?logo=github)](https://github.com/your-org/json-edit-react/discussions)
+[![Discuss on GitHub](https://img.shields.io/badge/Discussions-Join%20the%20conversation-blue?logo=github)](https://github.com/CarlosNZ/json-edit-react/discussions)
 [![Sponsor](https://img.shields.io/badge/Sponsor-♥-pink.svg)](https://github.com/sponsors/CarlosNZ)
 
 ### Features include:
