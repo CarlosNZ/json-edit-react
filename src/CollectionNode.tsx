@@ -315,7 +315,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           key={key}
           style={getStyles('collectionElement', childNodeData)}
         >
-          {isCollection(value) && childCustomNodeData?.isCollection !== false ? (
+          {isCollection(value) && !childCustomNodeData?.renderCollectionAsValue ? (
             <CollectionNode
               key={key}
               {...props}

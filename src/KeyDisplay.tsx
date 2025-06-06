@@ -40,6 +40,9 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
 }) => {
   const { setCurrentlyEditingElement } = useTreeState()
 
+  const displayEmptyStringText = name === '' && path.length > 0
+  const displayColon = name !== '' || path.length > 0
+
   if (!isEditingKey)
     return (
       <span
@@ -52,14 +55,14 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
         onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
         onClick={handleClick}
       >
-        {name === '' ? (
+        {displayEmptyStringText ? (
           <span className={path.length > 0 ? 'jer-empty-string' : undefined}>
             {/* display "<empty string>" using pseudo class CSS */}
           </span>
         ) : (
           `${name}`
         )}
-        <span className="jer-key-colon">:</span>
+        {displayColon ? <span className="jer-key-colon">:</span> : null}
       </span>
     )
 

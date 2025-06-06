@@ -19,7 +19,7 @@ import {
   type EnumDefinition,
 } from './types'
 import { useTheme, useTreeState } from './contexts'
-import { getCustomNode, type CustomNodeData } from './CustomNode'
+import { type CustomNodeData } from './CustomNode'
 import { filterNode, getNextOrPrevious, isJsEvent, matchEnumType } from './helpers'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'

@@ -15,5 +15,5 @@ export const EnhancedLinkCustomNodeDefinition: CustomNodeDefinition<EnhancedLink
   },
   customNodeProps: { fieldNames: { text: TEXT_FIELD, url: URL_FIELD } },
   showOnEdit: true,
-  isCollection: false,
+  renderCollectionAsValue: true,
 }

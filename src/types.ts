@@ -355,7 +355,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   showCollectionWrapper?: boolean // default true
   wrapperElement?: React.FC<CustomNodeProps<U>>
   wrapperProps?: Record<string, unknown>
-  isCollection?: false
+  renderCollectionAsValue?: boolean
 
   // For JSON stringify/parse
   stringifyReplacer?: (value: unknown) => unknown

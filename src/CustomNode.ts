@@ -14,7 +14,7 @@ export interface CustomNodeData {
   showEditTools?: boolean
   showCollectionWrapper?: boolean
   passOriginalNode?: boolean
-  isCollection?: false
+  renderCollectionAsValue?: boolean
 }
 
 // Fetches matching custom nodes (based on condition filter) from custom node
