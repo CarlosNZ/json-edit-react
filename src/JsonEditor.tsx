@@ -33,6 +33,7 @@ import { getTranslateFunction } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
 import './style.css'
+import { getCustomNode } from './CustomNode'
 
 const Editor: React.FC<JsonEditorProps> = ({
   data: srcData,
@@ -369,6 +370,8 @@ const Editor: React.FC<JsonEditorProps> = ({
     stringTruncate,
     translate,
     customNodeDefinitions,
+    customNodeData: {},
+    //  getCustomNode(customNodeDefinitions, nodeData),
     customButtons,
     parentData: null,
     jsonParse: jsonParseReplacement,

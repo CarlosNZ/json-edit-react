@@ -12,12 +12,17 @@ import {
   SymbolDefinition,
   BigIntDefinition,
   MarkdownNodeDefinition,
+  EnhancedLinkCustomNodeDefinition,
 } from '../components'
 import { testData } from '../components/data'
 import { JsonData, JsonEditor } from '@json-edit-react'
 
 // @ts-expect-error redefine after initialisation
 testData['Date & Time'].Date = STORE_DATE_AS_DATE_OBJECT ? new Date() : new Date().toISOString()
+
+testData['Date & Time'].info = STORE_DATE_AS_DATE_OBJECT
+  ? 'Date is stored a JS Date object. To use ISO string, set STORE_DATE_AS_DATE_OBJECT to false in App.tsx.'
+  : 'Date is stored as ISO string. To use JS Date objects, set STORE_DATE_AS_DATE_OBJECT to true in App.tsx.'
 
 type TestData = typeof testData
 
@@ -38,6 +43,7 @@ function App() {
             ...(STORE_DATE_AS_DATE_OBJECT ? DateObjectDefinition : DatePickerDefinition),
             customNodeProps: { showTime: (data as TestData)['Date & Time']['Show Time in Date?'] },
           },
+          EnhancedLinkCustomNodeDefinition,
           UndefinedDefinition,
           BooleanToggleDefinition,
           NanDefinition,

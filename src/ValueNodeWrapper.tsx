@@ -43,6 +43,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     indent,
     translate,
     customNodeDefinitions,
+    customNodeData,
     handleKeyboard,
     keyboardControls,
     sort,
@@ -83,7 +84,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     { canDrag, canDragOnto, path, nodeData, onMove, onError, translate }
   )
 
-  const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
+  // const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
   const updateValue = useCallback(
