@@ -913,6 +913,7 @@ Localise your implementation (or just customise the default messages) by passing
   DEFAULT_STRING: 'New data!',
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
+  EMPTY_STRING: '<empty string>' // Displayed when property key is ""
 }
 ```
 
@@ -1231,6 +1232,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 - **1.27.0**: 
   - Option to handle custom collections as "Value" nodes ([#203](https://github.com/CarlosNZ/json-edit-react/issues/203))
+  - Put `EMPTY_STRING: "<empty string>"` into translations
 - **1.26.1**: Fix bug when submitting with keyboard after switching to `null` type ([#194](https://github.com/CarlosNZ/json-edit-react/pull/194))
 - **1.26.0**:
   - Handle non-standard data types (e.g. `undefined`, `BigInt`) when stringifying/parsing JSON
