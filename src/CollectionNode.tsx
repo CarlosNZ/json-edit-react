@@ -165,10 +165,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     showOnView,
     showCollectionWrapper = true,
   } = customNodeData
-  // useMemo(
-  //   () => getCustomNode(customNodeDefinitions, nodeData),
-  //   [nodeData, customNodeDefinitions]
-  // )
 
   const childrenEditing = areChildrenBeingEdited(pathString)
 
