@@ -75,6 +75,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [Active hyperlinks](#active-hyperlinks)
   - [Handling JSON](#handling-json)
   - [Custom Collection nodes](#custom-collection-nodes)
+  - [Displaying Collections as Values](#displaying-collections-as-values)
 - [Custom Text](#custom-text)
 - [Custom Buttons](#custom-buttons)
 - [Keyboard customisation](#keyboard-customisation)
@@ -946,6 +947,7 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   showCollectionWrapper // boolean (optional), default true
   wrapperElement        // React component (optional) to wrap *outside* the normal collection wrapper
   wrapperProps          // object (optional) -- props for the above wrapper component
+  renderCollectionAsValue // For special "object" data that should be treated like a "Value" node
 
   // For JSON conversion -- only needed if editing as JSON text
   stringifyReplacer    // function for stringifying to JSON (if non-JSON data type)
@@ -963,7 +965,7 @@ By default, your component will be presented to the right of the property key it
 
 Also, by default, your component will be treated as a "display" element, i.e. it will appear in the JSON viewer, but when editing, it will revert to the standard editing interface. This can be changed, however, with the `showOnEdit`, `showOnView` and `showEditTools` props. For example, a Date picker might only be required when *editing* and left as-is for display. The `showEditTools` prop refers to the editing icons (copy, add, edit, delete) that appear to the right of each value on hover. If you choose to disable these but you still want to your component to have an "edit" mode, you'll have to provide your own UI mechanism to toggle editing.
 
-You can allow users to create new instances of your special nodes by selecting them as a "Type" in the types selector when editing/adding values. Set `showInTypesSelector: true` to enable this. However, if this is enabled you need to also provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
+You can allow users to create new instances of your special nodes by selecting them as a "Type" in the types selector when editing/adding values. Set `showInTypesSelector: true` to enable this. However, if this is enabled you need to *also* provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
 
 ### Active hyperlinks
 
@@ -1001,6 +1003,15 @@ In most cases it will be preferable (and simpler) to create custom nodes to matc
   - an optional `wrapperElement`, which is displayed *outside* the collection (props can be supplied as described above with `wrapperProps`). Again, the inner contents (including your custom `element`) can be displayed using React `children`. In this example, the **blue** border shows the `wrapperElement` and the **red** border shows the inner `element`:  
   <img width="450" alt="custom node levels" src="image/custom_component_levels.png"> 
 - There is one additional prop, `showCollectionWrapper` (default `true`), which, when set to `false`, hides the surrounding collection elements (namely the hide/show chevron and the brackets). In this case, you would have to provide your own hide/show mechanism in your component should you want it.
+
+### Displaying Collections as Values
+
+If you have a specialised `object` that you would like to display as though it were a regular "value" -- for example, a JavaScript [`Date` object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) -- you can set the `renderCollectionAsValue` to `true`. This passes the entire object as a value rather than being rendered as a "collection" of key-value pairs, but you'll have to make sure your custom component handles it appropriately.
+
+There are two examples in the [Custom Component Library](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md):
+
+- [Date Object](#add-link)
+- ["Enhanced" link](#add-link) (object with "url" and "text" fields, displayed as clickable string)
 
 
 ## Custom Text
