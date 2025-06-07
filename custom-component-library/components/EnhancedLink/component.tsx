@@ -1,8 +1,6 @@
 /**
- * An URL display Custom Component
- *
- * A simple custom node which detects urls in data and makes them active
- * hyperlinks.
+ * A custom "URL" renderer -- an object that has "text" and "url" properties,
+ * but is displayed as a clickable string
  */
 
 import React, { useState } from 'react'
@@ -19,7 +17,6 @@ export interface EnhancedLinkProps {
 
 type EnhancedLink = {
   [key: string]: string
-  // url: string
 }
 
 export const EnhancedLinkCustomComponent: React.FC<CustomNodeProps<EnhancedLinkProps>> = (
