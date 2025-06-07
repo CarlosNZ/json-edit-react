@@ -1,4 +1,5 @@
 export * from './Hyperlink'
+export * from './EnhancedLink'
 export * from './DateObject'
 export * from './Undefined'
 export * from './DatePicker'

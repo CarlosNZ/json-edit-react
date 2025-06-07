@@ -2,6 +2,7 @@ import { type JSX } from 'react'
 import { type Options as AssignOptions } from 'object-property-assigner'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { type ExternalTriggers } from './hooks'
+import { CustomNodeData } from './CustomNode'
 
 export type JsonData = Record<string, unknown> | Array<unknown> | unknown
 
@@ -271,6 +272,7 @@ interface BaseNodeProps {
   sort: SortFunction
   translate: TranslateFunction
   customNodeDefinitions: CustomNodeDefinition[]
+  customNodeData: CustomNodeData
   customButtons: CustomButtonDefinition[]
   errorMessageTimeout: number
   keyboardControls: KeyboardControlsFull
@@ -353,6 +355,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   showCollectionWrapper?: boolean // default true
   wrapperElement?: React.FC<CustomNodeProps<U>>
   wrapperProps?: Record<string, unknown>
+  renderCollectionAsValue?: boolean
 
   // For JSON stringify/parse
   stringifyReplacer?: (value: unknown) => unknown

@@ -33,6 +33,7 @@ import { getTranslateFunction } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
 import './style.css'
+import { getCustomNode } from './CustomNode'
 
 const Editor: React.FC<JsonEditorProps> = ({
   data: srcData,
@@ -336,6 +337,8 @@ const Editor: React.FC<JsonEditorProps> = ({
     [keySort]
   )
 
+  const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
+
   const otherProps = {
     mainContainerRef: mainContainerRef as React.MutableRefObject<Element>,
     name: rootName,
@@ -369,6 +372,7 @@ const Editor: React.FC<JsonEditorProps> = ({
     stringTruncate,
     translate,
     customNodeDefinitions,
+    customNodeData,
     customButtons,
     parentData: null,
     jsonParse: jsonParseReplacement,
@@ -401,7 +405,7 @@ const Editor: React.FC<JsonEditorProps> = ({
       className={`jer-editor-container ${className ?? ''}`}
       style={mainContainerStyles}
     >
-      {isCollection(data) ? (
+      {isCollection(data) && !customNodeData.renderCollectionAsValue ? (
         <CollectionNode data={data} {...otherProps} />
       ) : (
         <ValueNodeWrapper data={data as ValueData} showLabel {...otherProps} />

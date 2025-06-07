@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
@@ -56,6 +56,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     newKeyOptions,
     translate,
     customNodeDefinitions,
+    customNodeData,
     jsonParse,
     jsonStringify,
     TextEditor,
@@ -163,10 +164,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     showOnEdit,
     showOnView,
     showCollectionWrapper = true,
-  } = useMemo(
-    () => getCustomNode(customNodeDefinitions, nodeData),
-    [nodeData, customNodeDefinitions]
-  )
+  } = customNodeData
 
   const childrenEditing = areChildrenBeingEdited(pathString)
 
@@ -304,13 +302,16 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         parentData: data,
         fullData: nodeData.fullData,
       }
+
+      const childCustomNodeData = getCustomNode(customNodeDefinitions, childNodeData)
+
       return (
         <div
           className="jer-collection-element"
           key={key}
           style={getStyles('collectionElement', childNodeData)}
         >
-          {isCollection(value) ? (
+          {isCollection(value) && !childCustomNodeData?.renderCollectionAsValue ? (
             <CollectionNode
               key={key}
               {...props}
@@ -319,6 +320,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
               nodeData={childNodeData}
               showCollectionCount={showCollectionCount}
               canDragOnto={canEdit}
+              customNodeData={childCustomNodeData}
             />
           ) : (
             <ValueNodeWrapper
@@ -329,6 +331,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
               nodeData={childNodeData}
               canDragOnto={canEdit}
               showLabel={collectionType === 'object' ? true : showArrayIndices}
+              customNodeData={childCustomNodeData}
             />
           )}
         </div>
