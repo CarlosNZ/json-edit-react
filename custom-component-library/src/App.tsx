@@ -59,7 +59,7 @@ function App() {
           },
           {
             ...MarkdownNodeDefinition,
-            condition: ({ key }) => key === 'intro',
+            condition: ({ key }) => key === 'Intro',
             hideKey: true,
           },
         ]}
