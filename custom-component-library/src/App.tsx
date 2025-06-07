@@ -44,6 +44,8 @@ function App() {
           {
             ...(STORE_DATE_AS_DATE_OBJECT ? DateObjectDefinition : DatePickerDefinition),
             customNodeProps: {
+              // Display the time depending on whether or not the "Show time"
+              // toggle is checked
               showTime: (data as TestData)?.['Date & Time']?.['Show Time in Date?'] ?? false,
             },
           },
@@ -53,6 +55,8 @@ function App() {
           NanDefinition,
           SymbolDefinition,
           BigIntDefinition,
+          // Can override specific definition properties when using the
+          // components
           {
             ...MarkdownNodeDefinition,
             condition: ({ key }) => key === 'Markdown',

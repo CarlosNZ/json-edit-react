@@ -27,6 +27,7 @@ These are the ones currently available:
 - [x] `NaN`
 - [x] `BigInt`
 - [x] Markdown
+- [x] "Enhanced" link
 - [ ] Image (to-do)
 
 ## Development
