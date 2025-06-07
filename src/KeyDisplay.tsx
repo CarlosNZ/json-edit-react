@@ -22,6 +22,7 @@ interface KeyDisplayProps {
   keyValueArray?: Array<[string | number, ValueData]>
   styles: React.CSSProperties
   getNextOrPrevious: (type: 'next' | 'prev') => CollectionKey[] | null
+  emptyStringKey: string | null
 }
 
 export const KeyDisplay: React.FC<KeyDisplayProps> = ({
@@ -37,11 +38,9 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   keyValueArray,
   styles,
   getNextOrPrevious,
+  emptyStringKey,
 }) => {
   const { setCurrentlyEditingElement } = useTreeState()
-
-  const displayEmptyStringText = name === '' && path.length > 0
-  const displayColon = name !== '' || path.length > 0
 
   if (!isEditingKey)
     return (
@@ -55,14 +54,8 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
         onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
         onClick={handleClick}
       >
-        {displayEmptyStringText ? (
-          <span className={path.length > 0 ? 'jer-empty-string' : undefined}>
-            {/* display "<empty string>" using pseudo class CSS */}
-          </span>
-        ) : (
-          `${name}`
-        )}
-        {displayColon ? <span className="jer-key-colon">:</span> : null}
+        {emptyStringKey ? <span className="jer-empty-string">{emptyStringKey}</span> : name}
+        {name || emptyStringKey ? <span className="jer-key-colon">:</span> : null}
       </span>
     )
 

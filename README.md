@@ -1229,6 +1229,8 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.27.0**: 
+  - Option to handle custom collections as "Value" nodes ([#203](https://github.com/CarlosNZ/json-edit-react/issues/203))
 - **1.26.1**: Fix bug when submitting with keyboard after switching to `null` type ([#194](https://github.com/CarlosNZ/json-edit-react/pull/194))
 - **1.26.0**:
   - Handle non-standard data types (e.g. `undefined`, `BigInt`) when stringifying/parsing JSON

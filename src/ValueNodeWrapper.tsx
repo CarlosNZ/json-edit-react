@@ -77,6 +77,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     error,
     onError,
     handleEditKey,
+    emptyStringKey,
     derivedValues,
   } = useCommon({ props })
 
@@ -309,6 +310,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     styles: getStyles('property', nodeData),
     getNextOrPrevious: (type: 'next' | 'prev') =>
       getNextOrPrevious(nodeData.fullData, path, type, sort),
+    emptyStringKey,
   }
 
   const ValueComponent = showCustomNode ? (

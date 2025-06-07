@@ -580,6 +580,9 @@ function App() {
               //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
               // }}
               // externalTriggers={triggers}
+              // translations={{
+              //   EMPTY_STRING: 'Nah',
+              // }}
             />
           </Box>
           {/* <Button onClick={() => setTriggers({ edit: { action: 'accept' } })}>

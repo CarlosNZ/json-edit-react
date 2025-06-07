@@ -104,6 +104,8 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
 
   const derivedValues = { isEditing, isEditingKey, isArray, canEditKey }
 
+  const emptyStringKey = name === '' && path.length > 1 ? translate('EMPTY_STRING', nodeData) : null
+
   return {
     pathString,
     nodeData,
@@ -120,5 +122,6 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     setError,
     handleEditKey,
     derivedValues,
+    emptyStringKey,
   }
 }

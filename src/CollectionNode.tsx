@@ -94,6 +94,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     setError,
     onError,
     handleEditKey,
+    emptyStringKey,
     derivedValues,
   } = useCommon({ props, collapsed })
 
@@ -453,6 +454,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         // prevents clicks being passed through when "property" is not enabled
         // but "header" is
         (e: React.MouseEvent) => e.stopPropagation(),
+    emptyStringKey,
   }
 
   const CollectionNodeComponent = (

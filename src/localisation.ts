@@ -14,6 +14,7 @@ const localisedStrings = {
   DEFAULT_STRING: 'New data!',
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
+  EMPTY_STRING: '<empty string>',
 }
 
 export type LocalisedStrings = typeof localisedStrings
