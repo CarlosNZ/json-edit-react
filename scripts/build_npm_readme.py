@@ -64,14 +64,15 @@ def convert_github_admonition(text):
                                       {'emoji': '❗', 'color': '#0075ff'})
         
         # Create an HTML block that looks similar to Github's admonition
+        content = '\n'.join(content_lines)
         return f'''<div style="background-color: #f6f8fa; border-left: 4px solid {style['color']}; padding: 15px; margin: 15px 0; border-radius: 3px;">
-<p style="margin: 0 0 10px 0; color: {style['color']};">
-<strong>{style['emoji']} {admonition_type}:</strong>
-</p>
+        <p style="margin: 0 0 10px 0; color: {style['color']};">
+        <strong>{style['emoji']} {admonition_type}:</strong>
+        </p>
 
-{'\n'.join(content_lines)}
+{content}
 </div>\n'''
-    
+
     return re.sub(pattern, replace_admonition, text, flags=re.MULTILINE)
 
 def convert_internal_links(text, base_url="https://github.com/CarlosNZ/json-edit-react"):
