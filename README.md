@@ -1014,7 +1014,6 @@ There are two examples in the [Custom Component Library](https://github.com/Carl
 - [Date Object](https://github.com/CarlosNZ/json-edit-react/tree/main/custom-component-library/components/DateObject)
 - ["Enhanced" link](https://github.com/CarlosNZ/json-edit-react/tree/main/custom-component-library/components/EnhancedLink) (object with "url" and "text" fields, displayed as clickable string)
 
-
 ## Custom Text
 
 It's possible to change the various text strings displayed by the component. You can [localise it](#localisation), but you can also specify functions to override the displayed text based on certain conditions. For example, say we want the property count text (e.g. `6 items` by default) to give a summary of a certain type of node, which can look nice when collapsed. For example (taken from the [Demo](https://carlosnz.github.io/json-edit-react/?data=customNodes)):
