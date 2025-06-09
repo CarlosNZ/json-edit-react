@@ -4,7 +4,16 @@ import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react
 import {
   DatePickerDefinition,
   LinkCustomNodeDefinition,
+  DateObjectDefinition,
+  UndefinedDefinition,
+  BooleanToggleDefinition,
+  NanDefinition,
+  SymbolDefinition,
+  BigIntDefinition,
+  MarkdownNodeDefinition,
+  EnhancedLinkCustomNodeDefinition,
 } from '../../../custom-component-library/components'
+import { testData } from '../../../custom-component-library/src/data'
 import {
   CustomNodeDefinition,
   FilterFunction,
@@ -32,6 +41,9 @@ import Ajv from 'ajv'
 const ajv = new Ajv()
 const validateJsonSchema = ajv.compile(jsonSchema)
 const validateCustomNodes = ajv.compile(customNodesSchema)
+
+// @ts-expect-error only used in Custom component demo app
+delete testData['Date & Time']['Date']
 
 export interface DemoData {
   name: string
@@ -65,7 +77,7 @@ export interface DemoData {
 
 export const demoDataDefinitions: Record<string, DemoData> = {
   intro: {
-    name: '📘 Intro',
+    name: '📣 Intro',
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>Play around with the JSON structure, and test out various options.</Text>
@@ -776,6 +788,68 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     styles: {
       string: ({ key }) => (key === 'name' ? { fontWeight: 'bold', fontSize: '120%' } : null),
     },
+    customTextEditorAvailable: true,
+  },
+  customComponentLibrary: {
+    name: '📚 Custom Component Library',
+    description: (
+      <Flex flexDir="column" gap={2}>
+        <Text>Play around with the JSON structure, and test out various options.</Text>
+        <Text>
+          There are a range of different demo data sets to play with, showcasing specific features
+          in each one (over and above the modifiable options above). The definitions for all demo
+          data displays can be found in the repo{' '}
+          <Link
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/demoData/dataDefinitions.tsx"
+            isExternal
+          >
+            here
+          </Link>
+          .
+        </Text>
+        <Text>Incorporate into your own React project:</Text>
+        <Box fontSize="sm">
+          <Text pl={3}>
+            <span className="code">npm i json-edit-react</span>
+            <br />
+            <span style={{ paddingLeft: 10 }}>or:</span>
+            <br />
+            <span className="code">yarn add json-edit-react</span>
+          </Text>
+        </Box>
+      </Flex>
+    ),
+    rootName: 'components',
+    collapse: 2,
+    data: testData,
+    customNodeDefinitions: [
+      // Must keep this one first as we override it by index in App.tsx
+      {
+        ...DateObjectDefinition,
+        customNodeProps: { showTime: false },
+      },
+      LinkCustomNodeDefinition,
+      EnhancedLinkCustomNodeDefinition,
+      UndefinedDefinition,
+      BooleanToggleDefinition,
+      NanDefinition,
+      SymbolDefinition,
+      BigIntDefinition,
+      {
+        ...MarkdownNodeDefinition,
+        condition: ({ key }) => key === 'Markdown',
+      },
+      {
+        ...MarkdownNodeDefinition,
+        condition: ({ key }) => key === 'Intro',
+        hideKey: true,
+        customNodeProps: {
+          components: {
+            a: ({ _, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+          },
+        },
+      },
+    ],
     customTextEditorAvailable: true,
   },
 }

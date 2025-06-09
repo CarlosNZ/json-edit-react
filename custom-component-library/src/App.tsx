@@ -14,16 +14,20 @@ import {
   MarkdownNodeDefinition,
   EnhancedLinkCustomNodeDefinition,
 } from '../components'
-import { testData } from '../components/data'
+import { testData } from './data'
 import { JsonData, JsonEditor } from '@json-edit-react'
 
 if (testData?.['Date & Time']) {
   // @ts-expect-error redefine after initialisation
   testData['Date & Time'].Date = STORE_DATE_AS_DATE_OBJECT ? new Date() : new Date().toISOString()
 
+  // @ts-expect-error adding property
   testData['Date & Time'].info = STORE_DATE_AS_DATE_OBJECT
     ? 'Date is stored a JS Date object. To use ISO string, set STORE_DATE_AS_DATE_OBJECT to false in App.tsx.'
     : 'Date is stored as ISO string. To use JS Date objects, set STORE_DATE_AS_DATE_OBJECT to true in App.tsx.'
+
+  // @ts-expect-error only used in Demo app
+  delete testData['Date & Time']['Date Object']
 }
 
 type TestData = typeof testData

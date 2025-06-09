@@ -1,4 +1,4 @@
-import { useEffect, useRef, lazy, Suspense } from 'react'
+import { useEffect, useRef, lazy, Suspense, useMemo } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import {
@@ -152,6 +152,17 @@ function App() {
   //     }, 500)
   //   }
   // }, [])
+
+  const customNodeDefinitions =
+    selectedDataSet === 'customComponentLibrary' &&
+    typeof data === 'object' &&
+    (data as any)?.['Date & Time']?.['Show Time in Date?'] &&
+    Array.isArray(dataDefinition.customNodeDefinitions)
+      ? [
+          { ...dataDefinition.customNodeDefinitions[0], customNodeProps: { showTime: true } },
+          ...dataDefinition.customNodeDefinitions.slice(1),
+        ]
+      : dataDefinition.customNodeDefinitions
 
   const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
 
@@ -496,7 +507,7 @@ function App() {
               maxWidth="min(670px, 90vw)"
               className="block-shadow"
               stringTruncate={90}
-              customNodeDefinitions={dataDefinition?.customNodeDefinitions}
+              customNodeDefinitions={customNodeDefinitions}
               // customNodeDefinitions={[
               //   {
               //     condition: ({ key }) => key === 'string',

@@ -6,15 +6,11 @@
 
 import React from 'react'
 import { type CustomNodeProps } from '@json-edit-react'
-import Markdown from 'react-markdown'
+import Markdown, { Options } from 'react-markdown'
 
-export interface LinkProps {
-  linkStyles?: React.CSSProperties
-  stringTruncate?: number
-  [key: string]: unknown
-}
+export type ReactMarkdownProps = Options
 
-export const MarkdownComponent: React.FC<CustomNodeProps<LinkProps>> = (props) => {
+export const MarkdownComponent: React.FC<CustomNodeProps<ReactMarkdownProps>> = (props) => {
   const { setIsEditing, getStyles, nodeData } = props
   const styles = getStyles('string', nodeData)
 
@@ -24,10 +20,10 @@ export const MarkdownComponent: React.FC<CustomNodeProps<LinkProps>> = (props) =
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
       }}
       onDoubleClick={() => setIsEditing(true)}
-      style={styles}
+      style={{ ...styles }}
+      className="jer-markdown-block"
     >
-      {/* TO-DO: Style over-rides */}
-      <Markdown>{nodeData.value as string}</Markdown>
+      <Markdown {...props.customNodeProps}>{nodeData.value as string}</Markdown>
     </div>
   )
 }
