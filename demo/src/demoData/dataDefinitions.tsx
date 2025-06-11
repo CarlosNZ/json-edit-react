@@ -845,6 +845,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         hideKey: true,
         customNodeProps: {
           components: {
+            // @ts-expect-error Ignore _ var
             a: ({ _, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
           },
         },

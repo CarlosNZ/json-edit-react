@@ -4,14 +4,19 @@
  * Uses react-markdown to render the markdown content
  */
 
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { type CustomNodeProps } from '@json-edit-react'
-import Markdown, { Options } from 'react-markdown'
+import { Options } from 'react-markdown'
+import { Loading } from '../_common/Loading'
 
-export type ReactMarkdownProps = Options
+const Markdown = lazy(() => import('react-markdown'))
 
-export const MarkdownComponent: React.FC<CustomNodeProps<ReactMarkdownProps>> = (props) => {
-  const { setIsEditing, getStyles, nodeData } = props
+export interface MarkdownCustomProps extends Options {
+  loadingText?: string
+}
+
+export const MarkdownComponent: React.FC<CustomNodeProps<MarkdownCustomProps>> = (props) => {
+  const { setIsEditing, getStyles, nodeData, customNodeProps } = props
   const styles = getStyles('string', nodeData)
 
   return (
@@ -23,7 +28,9 @@ export const MarkdownComponent: React.FC<CustomNodeProps<ReactMarkdownProps>> = 
       style={{ ...styles }}
       className="jer-markdown-block"
     >
-      <Markdown {...props.customNodeProps}>{nodeData.value as string}</Markdown>
+      <Suspense fallback={<Loading text={customNodeProps?.loadingText ?? 'Loading Markdown'} />}>
+        <Markdown {...props.customNodeProps}>{nodeData.value as string}</Markdown>
+      </Suspense>
     </div>
   )
 }

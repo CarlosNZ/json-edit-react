@@ -8,19 +8,22 @@
  * rather than requiring the user to edit the ISO string directly.
  */
 
-import React from 'react'
-import DatePicker from 'react-datepicker'
+import React, { lazy, Suspense } from 'react'
 import { Button } from './Button'
 import { CustomNodeProps } from '@json-edit-react'
 
 // Styles
 import 'react-datepicker/dist/react-datepicker.css'
 import './style.css'
+import { Loading } from '../_common/Loading'
+
+const DatePicker = lazy(() => import('react-datepicker'))
 
 export interface DatePickerCustomProps {
   dateFormat?: string
   dateTimeFormat?: string
   showTime?: boolean
+  loadingText?: string
 }
 
 export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = ({
@@ -39,6 +42,7 @@ export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = 
     dateFormat = 'MMM d, yyyy',
     dateTimeFormat = 'MMM d, yyyy h:mm aa',
     showTime = true,
+    loadingText = 'Loading Date Picker',
   } = customNodeProps ?? {}
 
   const date = new Date(value as string)
@@ -54,26 +58,38 @@ export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = 
     // at all when viewing (and so will show raw ISO strings). However, we've
     // defined an alternative here too, when showOnView == true, in which case
     // the date/time string is shown as a localised date/time.
-    <DatePicker
-      // Check to prevent invalid date (from previous data value) crashing the
-      // component
-
-      // @ts-expect-error -- isNan can take any input
-      selected={isNaN(date) ? null : date}
-      showTimeSelect={showTime}
-      dateFormat={showTime ? dateTimeFormat : dateFormat}
-      onChange={(date: Date | null) => date && setValue(date.toISOString())}
-      open={true}
-      onKeyDown={handleKeyPress}
+    <Suspense
+      fallback={
+        <div style={stringStyle}>
+          <Loading text={loadingText} />
+        </div>
+      }
     >
-      <div style={{ display: 'inline-flex', gap: 10 }}>
-        {/* These buttons are not really necessary -- you can either use the
+      <DatePicker
+        // Check to prevent invalid date (from previous data value) crashing the
+        // component
+        // @ts-expect-error -- isNan can take any input
+        selected={isNaN(date) ? null : date}
+        showTimeSelect={showTime}
+        dateFormat={showTime ? dateTimeFormat : dateFormat}
+        onChange={(date: Date | null) => date && setValue(date.toISOString())}
+        open={true}
+        onKeyDown={handleKeyPress}
+      >
+        <div style={{ display: 'inline-flex', gap: 10 }}>
+          {/* These buttons are not really necessary -- you can either use the
         standard Ok/Cancel icons, or keyboard Enter/Esc, but shown for demo
         purposes */}
-        <Button textColor={textColour} color={okColour} onClick={handleEdit} text="OK" />
-        <Button textColor={textColour} color={cancelColour} onClick={handleCancel} text="Cancel" />
-      </div>
-    </DatePicker>
+          <Button textColor={textColour} color={okColour} onClick={handleEdit} text="OK" />
+          <Button
+            textColor={textColour}
+            color={cancelColour}
+            onClick={handleCancel}
+            text="Cancel"
+          />
+        </div>
+      </DatePicker>
+    </Suspense>
   ) : (
     <div
       // Double-click behaviour same as standard elements

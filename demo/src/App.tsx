@@ -48,6 +48,7 @@ import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { getLineHeight, truncate } from './helpers'
+import { Loading } from '../../custom-component-library/components/_common/Loading'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 const SourceIndicator = lazy(() => import('./SourceIndicator'))
@@ -570,7 +571,7 @@ function App() {
                       <Suspense
                         fallback={
                           <div className="loading" style={{ height: `${getLineHeight(data)}lh` }}>
-                            Loading code editor...
+                            <Loading text="Loading code editor" />
                           </div>
                         }
                       >
