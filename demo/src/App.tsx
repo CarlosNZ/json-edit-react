@@ -1,4 +1,4 @@
-import { useEffect, useRef, lazy, Suspense, useMemo } from 'react'
+import { useEffect, useRef, lazy, Suspense } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import {
@@ -156,7 +156,7 @@ function App() {
   const customNodeDefinitions =
     selectedDataSet === 'customComponentLibrary' &&
     typeof data === 'object' &&
-    (data as any)?.['Date & Time']?.['Show Time in Date?'] &&
+    (data as Record<string, Record<string, unknown>>)?.['Date & Time']?.['Show Time in Date?'] &&
     Array.isArray(dataDefinition.customNodeDefinitions)
       ? [
           { ...dataDefinition.customNodeDefinitions[0], customNodeProps: { showTime: true } },
