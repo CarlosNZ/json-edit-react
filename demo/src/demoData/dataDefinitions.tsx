@@ -726,7 +726,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         ...DatePickerDefinition,
         showOnView: true,
         showInTypesSelector: true,
-        customNodeProps: { showTimeSelect: false, dateFormat: 'MMM d, yyyy' },
+        customNodeProps: { showTime: false, dateFormat: 'MMM d, yyyy' },
       },
       // Uncomment to test a custom Collection node
       // {
