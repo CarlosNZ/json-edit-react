@@ -49,11 +49,11 @@ export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = 
   const stringStyle = getStyles('string', nodeData)
 
   return isEditing ? (
-    // Picker only shows up when "editing". Due to the `showOnView: false` in
-    // the definition below, this component will not show at all when viewing
-    // (and so will show raw ISO strings). However, we've defined an alternative
-    // here too, when showOnView == true, in which case the date/time string is
-    // shown as a localised date/time.
+    // By default, DatePicker only shows up when "editing". Due to the
+    // `showOnView: false` in the definition below, this component will not show
+    // at all when viewing (and so will show raw ISO strings). However, we've
+    // defined an alternative here too, when showOnView == true, in which case
+    // the date/time string is shown as a localised date/time.
     <DatePicker
       // Check to prevent invalid date (from previous data value) crashing the
       // component
