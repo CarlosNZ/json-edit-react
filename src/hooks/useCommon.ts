@@ -39,7 +39,8 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const [error, setError] = useState<string | null>(null)
 
   const nodeData = { ...incomingNodeData, collapsed }
-  const { path, key: name, size } = nodeData
+  const { path, key, size } = nodeData
+  const name = key + ''
 
   const pathString = toPathString(path)
 
