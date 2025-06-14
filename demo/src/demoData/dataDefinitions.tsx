@@ -4,7 +4,16 @@ import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react
 import {
   DatePickerDefinition,
   LinkCustomNodeDefinition,
+  DateObjectDefinition,
+  UndefinedDefinition,
+  BooleanToggleDefinition,
+  NanDefinition,
+  SymbolDefinition,
+  BigIntDefinition,
+  MarkdownNodeDefinition,
+  EnhancedLinkCustomNodeDefinition,
 } from '../../../custom-component-library/components'
+import { testData } from '../../../custom-component-library/src/data'
 import {
   CustomNodeDefinition,
   FilterFunction,
@@ -32,6 +41,9 @@ import Ajv from 'ajv'
 const ajv = new Ajv()
 const validateJsonSchema = ajv.compile(jsonSchema)
 const validateCustomNodes = ajv.compile(customNodesSchema)
+
+// @ts-expect-error only used in Custom component demo app
+delete testData['Date & Time']['Date']
 
 export interface DemoData {
   name: string
@@ -65,7 +77,7 @@ export interface DemoData {
 
 export const demoDataDefinitions: Record<string, DemoData> = {
   intro: {
-    name: '📘 Intro',
+    name: '📣 Intro',
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>Play around with the JSON structure, and test out various options.</Text>
@@ -776,6 +788,80 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     styles: {
       string: ({ key }) => (key === 'name' ? { fontWeight: 'bold', fontSize: '120%' } : null),
     },
+    customTextEditorAvailable: true,
+  },
+  customComponentLibrary: {
+    name: '📚 Custom Component Library',
+    description: (
+      <Flex flexDir="column" gap={2}>
+        <Text>
+          Here are examples of all the custom components available in the{' '}
+          <Link
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md"
+            isExternal
+          >
+            Custom Component Library
+          </Link>
+          , which aims to provide ready-to-go{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
+            Custom Nodes
+          </Link>{' '}
+          for common (yet non-JSON) data types or useful data structures.
+        </Text>
+        <Text>
+          See their implementation in the{' '}
+          <Link
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/src/App.tsx"
+            isExternal
+          >
+            example App
+          </Link>{' '}
+          for how to use.
+        </Text>
+        <Text>
+          If you've made a custom component that could be useful to others, please consider{' '}
+          <Link
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md#development"
+            isExternal
+          >
+            submitting a PR
+          </Link>{' '}
+          to add it to this library.
+        </Text>
+      </Flex>
+    ),
+    rootName: 'components',
+    collapse: 2,
+    data: testData,
+    customNodeDefinitions: [
+      // Must keep this one first as we override it by index in App.tsx
+      {
+        ...DateObjectDefinition,
+        customNodeProps: { showTime: false },
+      },
+      LinkCustomNodeDefinition,
+      EnhancedLinkCustomNodeDefinition,
+      UndefinedDefinition,
+      BooleanToggleDefinition,
+      NanDefinition,
+      SymbolDefinition,
+      BigIntDefinition,
+      {
+        ...MarkdownNodeDefinition,
+        condition: ({ key }) => key === 'Markdown',
+      },
+      {
+        ...MarkdownNodeDefinition,
+        condition: ({ key }) => key === 'Intro',
+        hideKey: true,
+        customNodeProps: {
+          components: {
+            // @ts-expect-error Ignore _ var
+            a: ({ _, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+          },
+        },
+      },
+    ],
     customTextEditorAvailable: true,
   },
 }

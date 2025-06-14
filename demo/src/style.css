@@ -63,3 +63,37 @@ footer {
   align-items: center;
   justify-content: center;
 }
+
+/* For the "Markdown" block in the "Custom Component Library" data set */
+.jer-markdown-block h1,
+h2,
+h3 {
+  font-family: Work Sans, sans-serif;
+  font-weight: bold;
+  line-height: 1.4em;
+  /* color: #ea3788; */
+}
+
+.jer-markdown-block h1 {
+  font-size: 2em;
+}
+
+.jer-markdown-block h2 {
+  font-size: 1.5em;
+}
+
+.jer-markdown-block h3 {
+  font-size: 1.2em;
+}
+
+.jer-markdown-block {
+  line-height: 1.3em;
+}
+
+.jer-markdown-block ul {
+  margin: 0.4em 2em;
+  /* color: black; */
+}
+.jer-markdown-block p {
+  margin: 0.5em 0;
+}

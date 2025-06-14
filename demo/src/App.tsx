@@ -2,7 +2,6 @@ import { useEffect, useRef, lazy, Suspense } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import {
-  JsonEditor,
   Theme,
   FilterFunction,
   JsonData,
@@ -40,17 +39,19 @@ import {
   NumberDecrementStepper,
   useToast,
   Tooltip,
+  Spinner,
 } from '@chakra-ui/react'
-// import logo from './image/logo_400.png'
 import logoSVG from './image/logo.svg'
 import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { getLineHeight, truncate } from './helpers'
+import { Loading } from '../../custom-component-library/components/_common/Loading'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 const SourceIndicator = lazy(() => import('./SourceIndicator'))
+const JsonEditor = lazy(() => import('@json-edit-react').then((m) => ({ default: m.JsonEditor })))
 
 interface AppState {
   rootName: string
@@ -152,6 +153,17 @@ function App() {
   //     }, 500)
   //   }
   // }, [])
+
+  const customNodeDefinitions =
+    selectedDataSet === 'customComponentLibrary' &&
+    typeof data === 'object' &&
+    (data as Record<string, Record<string, unknown>>)?.['Date & Time']?.['Show Time in Date?'] &&
+    Array.isArray(dataDefinition.customNodeDefinitions)
+      ? [
+          { ...dataDefinition.customNodeDefinitions[0], customNodeProps: { showTime: true } },
+          ...dataDefinition.customNodeDefinitions.slice(1),
+        ]
+      : dataDefinition.customNodeDefinitions
 
   const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
 
@@ -368,222 +380,230 @@ function App() {
             Demo
           </Heading>
           <Box position="relative">
-            <Input
-              id="searchTextInput"
-              placeholder={
-                isSearchFocused ? dataDefinition.searchPlaceholder ?? 'Search values' : '🔍'
+            <Suspense
+              fallback={
+                <Flex h={200} justify="center" align="center">
+                  <Spinner label="Loading..." />
+                </Flex>
               }
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-              bgColor={'#f6f6f6'}
-              borderColor="gainsboro"
-              borderRadius={50}
-              size="sm"
-              w={20}
-              value={searchText}
-              onChange={(e) => updateState({ searchText: e.target.value })}
-              position="absolute"
-              right={2}
-              top={2}
-              zIndex={100}
-              _focus={{ w: '45%' }}
-              transition={'width 0.3s'}
-            />
-            <JsonEditor
-              data={data}
-              setData={setData as (data: JsonData) => void}
-              rootName={rootName}
-              theme={[theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }]}
-              indent={indent}
-              onUpdate={async (nodeData) => {
-                const demoOnUpdate = dataDefinition?.onUpdate ?? (() => undefined)
-                const result = await demoOnUpdate(nodeData, toast as (options: unknown) => void)
-                if (result) return result
-                else {
-                  const { newData } = nodeData
-                  if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
+            >
+              <Input
+                id="searchTextInput"
+                placeholder={
+                  isSearchFocused ? dataDefinition.searchPlaceholder ?? 'Search values' : '🔍'
                 }
-              }}
-              onEdit={dataDefinition?.onEdit ?? undefined}
-              onAdd={dataDefinition?.onAdd ?? undefined}
-              onError={
-                dataDefinition.onError
-                  ? (errorData) => {
-                      const error = (dataDefinition.onError as OnErrorFunction)(errorData)
-                      toast({
-                        title: 'ERROR 😢',
-                        description: error as string,
-                        status: 'error',
-                        duration: 5000,
-                        isClosable: true,
-                      })
-                    }
-                  : undefined
-              }
-              showErrorMessages={dataDefinition.showErrorMessages}
-              collapse={collapseLevel}
-              collapseAnimationTime={collapseTime}
-              showCollectionCount={
-                showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
-              }
-              enableClipboard={
-                allowCopy
-                  ? ({ stringValue, type, success, errorMessage }) =>
-                      success
-                        ? toast({
-                            title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
-                            description: truncate(String(stringValue)),
-                            status: 'success',
-                            duration: 5000,
-                            isClosable: true,
-                          })
-                        : toast({
-                            title: 'Problem copying to clipboard',
-                            description: errorMessage,
-                            status: 'error',
-                            duration: 5000,
-                            isClosable: true,
-                          })
-                  : false
-              }
-              // viewOnly
-              restrictEdit={restrictEdit}
-              // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
-              restrictDelete={restrictDelete}
-              restrictAdd={restrictAdd}
-              restrictTypeSelection={dataDefinition?.restrictTypeSelection}
-              // restrictTypeSelection={[
-              //   'string',
-              //   'number',
-              //   'boolean',
-              //   'null',
-              //   { enum: 'Option', values: ['One', 'Two', 'Three'] },
-              //   {
-              //     enum: 'Hobby',
-              //     values: ['partying', 'building stuff', 'avenging', 'time travel'],
-              //     matchPriority: 1,
-              //   },
-              //   {
-              //     enum: 'Other activities that could be quite long',
-              //     values: ['changing', 'building stuff', 'avenging', 'money money money money'],
-              //     matchPriority: 2,
-              //   },
-              // ]}
-              restrictDrag={false}
-              searchFilter={dataDefinition?.searchFilter}
-              searchText={searchText}
-              keySort={sortKeys}
-              // keySort={
-              //   sortKeys
-              //     ? (a, b) => {
-              //         const nameRev1 = String(a[0]).length
-              //         const nameRev2 = String(b[0]).length
-              //         if (nameRev1 < nameRev2) {
-              //           return -1
-              //         }
-              //         if (nameRev1 > nameRev2) {
-              //           return 1
-              //         }
-              //         return 0
-              //       }
-              //     : false
-              // }
-              defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
-              newKeyOptions={dataDefinition?.newKeyOptions}
-              showArrayIndices={showIndices}
-              showStringQuotes={showStringQuotes}
-              minWidth={'min(500px, 95vw)'}
-              maxWidth="min(670px, 90vw)"
-              className="block-shadow"
-              stringTruncate={90}
-              customNodeDefinitions={dataDefinition?.customNodeDefinitions}
-              // customNodeDefinitions={[
-              //   {
-              //     condition: ({ key }) => key === 'string',
-              //     element: ({ nodeData, value, originalNode, originalNodeKey }) => (
-              //       <div
-              //         style={{
-              //           display: 'flex',
-              //           // border: '1px solid red',
-              //           margin: '-0.5em',
-              //           alignItems: 'center',
-              //         }}
-              //       >
-              //         {originalNodeKey}
-              //         {/* {nodeData.key} */}
-              //         <span>ICON</span>:{' '}
-              //         <span style={{ lineHeight: 'unset !important' }}>{originalNode}</span>
-              //       </div>
-              //     ),
-              //     hideKey: true,
-              //     passOriginalNode: true,
-              //     showOnEdit: true,
-              //   },
-              // ]}
-              customText={dataDefinition?.customTextDefinitions}
-              // icons={{ chevron: <IconCancel size="1.2em" /> }}
-              // customButtons={[
-              //   {
-              //     Element: () => (
-              //       <svg fill="none" viewBox="0 0 24 24" height="1em" width="1em">
-              //         <path
-              //           fill="currentColor"
-              //           fillRule="evenodd"
-              //           d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 2c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11z"
-              //           clipRule="evenodd"
-              //         />
-              //         <path fill="currentColor" d="M16 12l-6 4.33V7.67L16 12z" />
-              //       </svg>
-              //     ),
-              //     onClick: (nodeData, e) => console.log(nodeData),
-              //   },
-              // ]}
-              onChange={dataDefinition?.onChange ?? undefined}
-              jsonParse={JSON5.parse}
-              // keyboardControls={{
-              //   cancel: 'Tab',
-              //   confirm: { key: 'Enter', modifier: 'Meta' },
-              //   objectConfirm: { key: 'Enter', modifier: 'Shift' },
-              //   stringLineBreak: { key: 'Enter' },
-              //   stringConfirm: { key: 'Enter', modifier: 'Meta' },
-              //   clipboardModifier: ['Alt', 'Shift'],
-              //   collapseModifier: 'Control',
-              //   booleanConfirm: 'Enter',
-              //   booleanToggle: 'r',
-              // }}
-              // insertAtBeginning="object"
-              // rootFontSize={20}
-              TextEditor={
-                customTextEditor
-                  ? (props) => (
-                      <Suspense
-                        fallback={
-                          <div className="loading" style={{ height: `${getLineHeight(data)}lh` }}>
-                            Loading code editor...
-                          </div>
-                        }
-                      >
-                        <CodeEditor {...props} theme={theme?.displayName ?? ''} />
-                      </Suspense>
-                    )
-                  : undefined
-              }
-              // collapseClickZones={['property', 'header']}
-              // onEditEvent={(path) => {
-              //   console.log(path)
-              //   setIsEditing(path ? true : false)
-              // }}
-              // onCollapse={(input) => {
-              //   const path = JSON.stringify(input.path)
-              //   const newCollapseState = { ...collapseState.current, [path]: input }
-              //   collapseState.current = newCollapseState
-              //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
-              // }}
-              // externalTriggers={triggers}
-              // translations={{
-              //   EMPTY_STRING: 'Nah',
-              // }}
-            />
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setIsSearchFocused(false)}
+                bgColor={'#f6f6f6'}
+                borderColor="gainsboro"
+                borderRadius={50}
+                size="sm"
+                w={20}
+                value={searchText}
+                onChange={(e) => updateState({ searchText: e.target.value })}
+                position="absolute"
+                right={2}
+                top={2}
+                zIndex={100}
+                _focus={{ w: '45%' }}
+                transition={'width 0.3s'}
+              />
+              <JsonEditor
+                data={data}
+                setData={setData as (data: JsonData) => void}
+                rootName={rootName}
+                theme={[theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }]}
+                indent={indent}
+                onUpdate={async (nodeData) => {
+                  const demoOnUpdate = dataDefinition?.onUpdate ?? (() => undefined)
+                  const result = await demoOnUpdate(nodeData, toast as (options: unknown) => void)
+                  if (result) return result
+                  else {
+                    const { newData } = nodeData
+                    if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
+                  }
+                }}
+                onEdit={dataDefinition?.onEdit ?? undefined}
+                onAdd={dataDefinition?.onAdd ?? undefined}
+                onError={
+                  dataDefinition.onError
+                    ? (errorData) => {
+                        const error = (dataDefinition.onError as OnErrorFunction)(errorData)
+                        toast({
+                          title: 'ERROR 😢',
+                          description: error as string,
+                          status: 'error',
+                          duration: 5000,
+                          isClosable: true,
+                        })
+                      }
+                    : undefined
+                }
+                showErrorMessages={dataDefinition.showErrorMessages}
+                collapse={collapseLevel}
+                collapseAnimationTime={collapseTime}
+                showCollectionCount={
+                  showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
+                }
+                enableClipboard={
+                  allowCopy
+                    ? ({ stringValue, type, success, errorMessage }) =>
+                        success
+                          ? toast({
+                              title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
+                              description: truncate(String(stringValue)),
+                              status: 'success',
+                              duration: 5000,
+                              isClosable: true,
+                            })
+                          : toast({
+                              title: 'Problem copying to clipboard',
+                              description: errorMessage,
+                              status: 'error',
+                              duration: 5000,
+                              isClosable: true,
+                            })
+                    : false
+                }
+                // viewOnly
+                restrictEdit={restrictEdit}
+                // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
+                restrictDelete={restrictDelete}
+                restrictAdd={restrictAdd}
+                restrictTypeSelection={dataDefinition?.restrictTypeSelection}
+                // restrictTypeSelection={[
+                //   'string',
+                //   'number',
+                //   'boolean',
+                //   'null',
+                //   { enum: 'Option', values: ['One', 'Two', 'Three'] },
+                //   {
+                //     enum: 'Hobby',
+                //     values: ['partying', 'building stuff', 'avenging', 'time travel'],
+                //     matchPriority: 1,
+                //   },
+                //   {
+                //     enum: 'Other activities that could be quite long',
+                //     values: ['changing', 'building stuff', 'avenging', 'money money money money'],
+                //     matchPriority: 2,
+                //   },
+                // ]}
+                restrictDrag={false}
+                searchFilter={dataDefinition?.searchFilter}
+                searchText={searchText}
+                keySort={sortKeys}
+                // keySort={
+                //   sortKeys
+                //     ? (a, b) => {
+                //         const nameRev1 = String(a[0]).length
+                //         const nameRev2 = String(b[0]).length
+                //         if (nameRev1 < nameRev2) {
+                //           return -1
+                //         }
+                //         if (nameRev1 > nameRev2) {
+                //           return 1
+                //         }
+                //         return 0
+                //       }
+                //     : false
+                // }
+                defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
+                newKeyOptions={dataDefinition?.newKeyOptions}
+                showArrayIndices={showIndices}
+                showStringQuotes={showStringQuotes}
+                minWidth={'min(500px, 95vw)'}
+                maxWidth="min(670px, 90vw)"
+                className="block-shadow"
+                stringTruncate={90}
+                customNodeDefinitions={customNodeDefinitions}
+                // customNodeDefinitions={[
+                //   {
+                //     condition: ({ key }) => key === 'string',
+                //     element: ({ nodeData, value, originalNode, originalNodeKey }) => (
+                //       <div
+                //         style={{
+                //           display: 'flex',
+                //           // border: '1px solid red',
+                //           margin: '-0.5em',
+                //           alignItems: 'center',
+                //         }}
+                //       >
+                //         {originalNodeKey}
+                //         {/* {nodeData.key} */}
+                //         <span>ICON</span>:{' '}
+                //         <span style={{ lineHeight: 'unset !important' }}>{originalNode}</span>
+                //       </div>
+                //     ),
+                //     hideKey: true,
+                //     passOriginalNode: true,
+                //     showOnEdit: true,
+                //   },
+                // ]}
+                customText={dataDefinition?.customTextDefinitions}
+                // icons={{ chevron: <IconCancel size="1.2em" /> }}
+                // customButtons={[
+                //   {
+                //     Element: () => (
+                //       <svg fill="none" viewBox="0 0 24 24" height="1em" width="1em">
+                //         <path
+                //           fill="currentColor"
+                //           fillRule="evenodd"
+                //           d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 2c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11z"
+                //           clipRule="evenodd"
+                //         />
+                //         <path fill="currentColor" d="M16 12l-6 4.33V7.67L16 12z" />
+                //       </svg>
+                //     ),
+                //     onClick: (nodeData, e) => console.log(nodeData),
+                //   },
+                // ]}
+                onChange={dataDefinition?.onChange ?? undefined}
+                jsonParse={JSON5.parse}
+                // keyboardControls={{
+                //   cancel: 'Tab',
+                //   confirm: { key: 'Enter', modifier: 'Meta' },
+                //   objectConfirm: { key: 'Enter', modifier: 'Shift' },
+                //   stringLineBreak: { key: 'Enter' },
+                //   stringConfirm: { key: 'Enter', modifier: 'Meta' },
+                //   clipboardModifier: ['Alt', 'Shift'],
+                //   collapseModifier: 'Control',
+                //   booleanConfirm: 'Enter',
+                //   booleanToggle: 'r',
+                // }}
+                // insertAtBeginning="object"
+                // rootFontSize={20}
+                TextEditor={
+                  customTextEditor
+                    ? (props) => (
+                        <Suspense
+                          fallback={
+                            <div className="loading" style={{ height: `${getLineHeight(data)}lh` }}>
+                              <Loading text="Loading code editor" />
+                            </div>
+                          }
+                        >
+                          <CodeEditor {...props} theme={theme?.displayName ?? ''} />
+                        </Suspense>
+                      )
+                    : undefined
+                }
+                // collapseClickZones={['property', 'header']}
+                // onEditEvent={(path) => {
+                //   console.log(path)
+                //   setIsEditing(path ? true : false)
+                // }}
+                // onCollapse={(input) => {
+                //   const path = JSON.stringify(input.path)
+                //   const newCollapseState = { ...collapseState.current, [path]: input }
+                //   collapseState.current = newCollapseState
+                //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
+                // }}
+                // externalTriggers={triggers}
+                // translations={{
+                //   EMPTY_STRING: 'Nah',
+                // }}
+              />
+            </Suspense>
           </Box>
           {/* <Button onClick={() => setTriggers({ edit: { action: 'accept' } })}>
             Click to stop edit

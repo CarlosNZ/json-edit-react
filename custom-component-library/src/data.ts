@@ -1,6 +1,6 @@
 /**
  * The data to be shown in the json-edit-react component, which showcases the
- * custom components defined in here.
+ * custom components defined here.
  */
 
 export const testData = {
@@ -14,6 +14,7 @@ export const testData = {
   - DateObject
   - Undefined
   - Markdown
+  - "Enhanced" link
   - BigInt
   - BooleanToggle
   - NaN
@@ -26,14 +27,16 @@ export const testData = {
     'Long URL':
       'https://www.google.com/maps/place/Sky+Tower/@-36.8465603,174.7609398,818m/data=!3m1!1e3!4m6!3m5!1s0x6d0d47f06d4bdc25:0x2d1b5c380ad9387!8m2!3d-36.848448!4d174.762191!16zL20vMDFuNXM2?entry=ttu&g_ep=EgoyMDI1MDQwOS4wIKXMDSoASAFQAw%3D%3D',
     'Enhanced Link': {
-      text: 'This link displays custom text',
+      text: 'This link displays custom text — try editing me!',
       url: 'https://github.com/CarlosNZ/json-edit-react/tree/main/custom-component-library#custom-component-library',
     },
   },
+  'Simple boolean toggle': false,
   'Date & Time': {
     Date: new Date().toISOString(),
+    'Date Object': new Date(),
     'Show Time in Date?': true,
-    info: 'Replaced in App.tsx',
+    // info: 'Inserted in App.tsx',
   },
 
   'Non-JSON types': {
@@ -43,5 +46,6 @@ export const testData = {
     Symbol2: Symbol('Second one'),
     BigInt: 1234567890123456789012345678901234567890n,
   },
-  Markdown: 'This text is **bold** and this is *italic*',
+  Markdown:
+    'Uses [react-markdown](https://www.npmjs.com/package/react-markdown) to render **Markdown** *text content*. ',
 }

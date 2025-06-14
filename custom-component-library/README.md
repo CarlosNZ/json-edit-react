@@ -10,7 +10,9 @@ Eventually, I'd like to publish these in a separate package so you can easily im
 
 Contains a [Vite](https://vite.dev/) web-app for previewing and developing components.
 
-The individual components are in the `/components` folder, along with demo data (in `data.ts`).
+The individual components are in the `/components` folder.
+
+There is a React app provided for demo-ing and testing these components -- [Development](#development) below.
 
 > [!NOTE]
 > If you create a custom component that you think would be useful to others, please [create a PR](https://github.com/CarlosNZ/json-edit-react/pulls) for it.

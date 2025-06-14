@@ -1,0 +1,12 @@
+.jer-simple-loader {
+  width: fit-content;
+  font-style: italic;
+  clip-path: inset(0 3ch 0 0);
+  animation: l4 1s steps(4) infinite;
+  line-height: 1.2em;
+}
+@keyframes l4 {
+  to {
+    clip-path: inset(0 -1ch 0 0);
+  }
+}

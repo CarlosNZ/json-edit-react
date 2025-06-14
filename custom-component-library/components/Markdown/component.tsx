@@ -4,18 +4,19 @@
  * Uses react-markdown to render the markdown content
  */
 
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { type CustomNodeProps } from '@json-edit-react'
-import Markdown from 'react-markdown'
+import { Options } from 'react-markdown'
+import { Loading } from '../_common/Loading'
 
-export interface LinkProps {
-  linkStyles?: React.CSSProperties
-  stringTruncate?: number
-  [key: string]: unknown
+const Markdown = lazy(() => import('react-markdown'))
+
+export interface MarkdownCustomProps extends Options {
+  loadingText?: string
 }
 
-export const MarkdownComponent: React.FC<CustomNodeProps<LinkProps>> = (props) => {
-  const { setIsEditing, getStyles, nodeData } = props
+export const MarkdownComponent: React.FC<CustomNodeProps<MarkdownCustomProps>> = (props) => {
+  const { setIsEditing, getStyles, nodeData, customNodeProps } = props
   const styles = getStyles('string', nodeData)
 
   return (
@@ -24,10 +25,12 @@ export const MarkdownComponent: React.FC<CustomNodeProps<LinkProps>> = (props) =
         if (e.getModifierState('Control') || e.getModifierState('Meta')) setIsEditing(true)
       }}
       onDoubleClick={() => setIsEditing(true)}
-      style={styles}
+      style={{ ...styles }}
+      className="jer-markdown-block"
     >
-      {/* TO-DO: Style over-rides */}
-      <Markdown>{nodeData.value as string}</Markdown>
+      <Suspense fallback={<Loading text={customNodeProps?.loadingText ?? 'Loading Markdown'} />}>
+        <Markdown {...props.customNodeProps}>{nodeData.value as string}</Markdown>
+      </Suspense>
     </div>
   )
 }

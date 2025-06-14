@@ -1,7 +1,7 @@
 import { type CustomNodeDefinition } from '@json-edit-react'
-import { MarkdownComponent, LinkProps } from './component'
+import { MarkdownComponent, MarkdownCustomProps } from './component'
 
-export const MarkdownNodeDefinition: CustomNodeDefinition<LinkProps> = {
+export const MarkdownNodeDefinition: CustomNodeDefinition<MarkdownCustomProps> = {
   condition: () => false, // Over-ride this for specific cases
   element: MarkdownComponent,
   // customNodeProps: {},

@@ -67,6 +67,7 @@ export default defineConfig({
           vendor: ['react', 'react-dom', 'wouter', 'use-undo'],
           // JSON utilities
           json: ['json5', 'ajv'],
+          jsonEditReact: ['json-edit-react'],
         },
       },
     },

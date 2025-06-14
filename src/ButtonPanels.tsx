@@ -115,7 +115,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
         copyType = 'path'
       } else {
         value = data
-        stringValue = type ? jsonStringify(data) : String(value)
+        stringValue = typeof value === 'object' ? jsonStringify(data) : String(value)
       }
       if (!navigator.clipboard) {
         if (typeof enableClipboard === 'function')
