@@ -1229,7 +1229,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.27.1**: Bug fix for ":" not rendering when key is `0`
+- **1.27.2**:
+  - Bug fix for ":" not rendering when key is `0`
+  - Slightly better detection of data type when copying value to clipboard text
 - **1.27.0**: 
   - Option to handle custom collections as "Value" nodes ([#203](https://github.com/CarlosNZ/json-edit-react/issues/203))
   - Put `EMPTY_STRING: "<empty string>"` into translations
