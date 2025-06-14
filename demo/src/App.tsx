@@ -51,7 +51,7 @@ import { Loading } from '../../custom-component-library/components/_common/Loadi
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 const SourceIndicator = lazy(() => import('./SourceIndicator'))
-const JsonEditor = lazy(() => import('json-edit-react').then((m) => ({ default: m.JsonEditor })))
+const JsonEditor = lazy(() => import('@json-edit-react').then((m) => ({ default: m.JsonEditor })))
 
 interface AppState {
   rootName: string
