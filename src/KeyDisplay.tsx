@@ -55,7 +55,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
         onClick={handleClick}
       >
         {emptyStringKey ? <span className="jer-empty-string">{emptyStringKey}</span> : name}
-        {name || emptyStringKey ? <span className="jer-key-colon">:</span> : null}
+        {name !== '' || emptyStringKey ? <span className="jer-key-colon">:</span> : null}
       </span>
     )
 
