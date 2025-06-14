@@ -40,7 +40,7 @@ export const testData = {
   },
 
   'Non-JSON types': {
-    undefined: undefined,
+    Undefined: undefined,
     'Not a Number': NaN,
     Symbol1: Symbol('First one'),
     Symbol2: Symbol('Second one'),
