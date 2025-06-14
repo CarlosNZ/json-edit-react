@@ -12,7 +12,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "json-edit-react": "1.27.0",
+    "json-edit-react": "1.27.1",
     "react": "^19.0.0",
     "react-datepicker": "^7.5.0",
     "react-dom": "^19.0.0",
