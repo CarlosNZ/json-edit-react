@@ -794,29 +794,40 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     name: '📚 Custom Component Library',
     description: (
       <Flex flexDir="column" gap={2}>
-        <Text>Play around with the JSON structure, and test out various options.</Text>
         <Text>
-          There are a range of different demo data sets to play with, showcasing specific features
-          in each one (over and above the modifiable options above). The definitions for all demo
-          data displays can be found in the repo{' '}
+          Here are examples of all the custom components available in the{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/demoData/dataDefinitions.tsx"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md"
             isExternal
           >
-            here
+            Custom Component Library
           </Link>
-          .
+          , which aims to provide ready-to-go{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
+            Custom Nodes
+          </Link>{' '}
+          for common (yet non-JSON) data types or useful data structures.
         </Text>
-        <Text>Incorporate into your own React project:</Text>
-        <Box fontSize="sm">
-          <Text pl={3}>
-            <span className="code">npm i json-edit-react</span>
-            <br />
-            <span style={{ paddingLeft: 10 }}>or:</span>
-            <br />
-            <span className="code">yarn add json-edit-react</span>
-          </Text>
-        </Box>
+        <Text>
+          See their implementation in the{' '}
+          <Link
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/src/App.tsx"
+            isExternal
+          >
+            example App
+          </Link>{' '}
+          for how to use.
+        </Text>
+        <Text>
+          If you've made a custom component that could be useful to others, please consider{' '}
+          <Link
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md#development"
+            isExternal
+          >
+            submitting a PR
+          </Link>{' '}
+          to add it to this library.
+        </Text>
       </Flex>
     ),
     rootName: 'components',

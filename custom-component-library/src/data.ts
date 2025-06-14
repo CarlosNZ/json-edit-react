@@ -1,6 +1,6 @@
 /**
  * The data to be shown in the json-edit-react component, which showcases the
- * custom components defined in here.
+ * custom components defined here.
  */
 
 export const testData = {
@@ -22,7 +22,6 @@ export const testData = {
 
   Click [here](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md) for more info
   `,
-  'Simpler boolean toggle': true,
   'Active Links': {
     Url: 'https://carlosnz.github.io/json-edit-react/',
     'Long URL':
@@ -32,6 +31,7 @@ export const testData = {
       url: 'https://github.com/CarlosNZ/json-edit-react/tree/main/custom-component-library#custom-component-library',
     },
   },
+  'Simple boolean toggle': false,
   'Date & Time': {
     Date: new Date().toISOString(),
     'Date Object': new Date(),
@@ -46,5 +46,6 @@ export const testData = {
     Symbol2: Symbol('Second one'),
     BigInt: 1234567890123456789012345678901234567890n,
   },
-  Markdown: 'This text is **bold** and this is *italic*',
+  Markdown:
+    'Uses [react-markdown](https://www.npmjs.com/package/react-markdown) to render **Markdown** *text content*. ',
 }
