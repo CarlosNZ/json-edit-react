@@ -19,6 +19,7 @@ export const testData = {
   - BooleanToggle
   - NaN
   - Symbol
+  - Image
 
   Click [here](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md) for more info
   `,
@@ -48,4 +49,13 @@ export const testData = {
   },
   Markdown:
     'Uses [react-markdown](https://www.npmjs.com/package/react-markdown) to render **Markdown** *text content*. ',
+  Images: {
+    JPG: 'https://film-grab.com/wp-content/uploads/2014/07/51.jpg',
+    PNG: 'https://github.com/CarlosNZ/json-edit-react/blob/main/image/logo192.png?raw=true',
+    GIF: 'https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnV0aHB0c2xiMHFmdGY3Z2NkenBkb3Rmd3hvdTlkaTlkNGYxOXFtOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9E7kUhnT9eDok/giphy.gif',
+    'Image properties': {
+      maxWidth: 200,
+      maxHeight: 100,
+    },
+  },
 }
