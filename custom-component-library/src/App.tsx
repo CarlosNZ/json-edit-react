@@ -14,9 +14,10 @@ import {
   MarkdownNodeDefinition,
   EnhancedLinkCustomNodeDefinition,
   ImageNodeDefinition,
+  ColorPickerNodeDefinition,
 } from '../components'
 import { testData } from './data'
-import { JsonData, JsonEditor } from '@json-edit-react'
+import { JsonEditor } from '@json-edit-react'
 
 if (testData?.['Date & Time']) {
   // @ts-expect-error redefine after initialisation
@@ -56,6 +57,7 @@ function App() {
         setData={setData as (data: unknown) => void}
         customNodeDefinitions={[
           { ...ImageNodeDefinition, customNodeProps: { imageStyles: { maxWidth, maxHeight } } },
+          ColorPickerNodeDefinition,
           LinkCustomNodeDefinition,
           {
             ...(STORE_DATE_AS_DATE_OBJECT ? DateObjectDefinition : DatePickerDefinition),

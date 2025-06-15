@@ -58,4 +58,8 @@ export const testData = {
       maxHeight: 100,
     },
   },
+  'Color Picker': {
+    color: '#ffffff',
+    type: 'Hex',
+  },
 }
