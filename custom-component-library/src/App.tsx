@@ -57,15 +57,11 @@ function App() {
         setData={setData as (data: unknown) => void}
         customNodeDefinitions={[
           { ...ImageNodeDefinition, customNodeProps: { imageStyles: { maxWidth, maxHeight } } },
-          ColorPickerNodeDefinition,
           LinkCustomNodeDefinition,
+          ColorPickerNodeDefinition,
           {
             ...(STORE_DATE_AS_DATE_OBJECT ? DateObjectDefinition : DatePickerDefinition),
-            customNodeProps: {
-              // Display the time depending on whether or not the "Show time"
-              // toggle is checked
-              showTime,
-            },
+            customNodeProps: { showTime },
           },
           EnhancedLinkCustomNodeDefinition,
           UndefinedDefinition,
