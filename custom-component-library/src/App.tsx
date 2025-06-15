@@ -16,7 +16,7 @@ import {
   ImageNodeDefinition,
 } from '../components'
 import { testData } from './data'
-import { JsonData, JsonEditor } from '@json-edit-react'
+import { JsonEditor } from '@json-edit-react'
 
 if (testData?.['Date & Time']) {
   // @ts-expect-error redefine after initialisation
@@ -59,11 +59,7 @@ function App() {
           LinkCustomNodeDefinition,
           {
             ...(STORE_DATE_AS_DATE_OBJECT ? DateObjectDefinition : DatePickerDefinition),
-            customNodeProps: {
-              // Display the time depending on whether or not the "Show time"
-              // toggle is checked
-              showTime,
-            },
+            customNodeProps: { showTime },
           },
           EnhancedLinkCustomNodeDefinition,
           UndefinedDefinition,

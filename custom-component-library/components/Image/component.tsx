@@ -13,11 +13,12 @@ export interface ImageProps {
 export const ImageComponent: React.FC<CustomNodeProps<ImageProps>> = (props) => {
   const { value, customNodeProps = {} } = props
 
-  const { imageStyles = { maxWidth: 200, maxHeight: 200 }, altText = 'image' } = customNodeProps
+  const { imageStyles = { maxWidth: 200, maxHeight: 200 }, altText = value as string } =
+    customNodeProps
 
   return (
     <a href={value as string} target="_blank" rel="noreferrer">
-      <img src={value as string} title={value as string} style={imageStyles} alt={altText} />
+      <img src={value as string} title={altText} style={imageStyles} alt={altText} />
     </a>
   )
 }
