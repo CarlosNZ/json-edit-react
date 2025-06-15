@@ -12,6 +12,7 @@ import {
   BigIntDefinition,
   MarkdownNodeDefinition,
   EnhancedLinkCustomNodeDefinition,
+  ImageNodeDefinition,
 } from '../../../custom-component-library/components'
 import { testData } from '../../../custom-component-library/src/data'
 import {
@@ -831,7 +832,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'components',
-    collapse: 2,
+    collapse: 3,
     data: testData,
     customNodeDefinitions: [
       // Must keep this one first as we override it by index in App.tsx
@@ -839,6 +840,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         ...DateObjectDefinition,
         customNodeProps: { showTime: false },
       },
+      ImageNodeDefinition,
       LinkCustomNodeDefinition,
       EnhancedLinkCustomNodeDefinition,
       UndefinedDefinition,

@@ -30,7 +30,8 @@ These are the ones currently available:
 - [x] `BigInt`
 - [x] Markdown
 - [x] "Enhanced" link
-- [ ] Image (to-do)
+- [x] Image
+- [ ] Colour picker (to-do)
 
 ## Development
 
@@ -59,7 +60,7 @@ Custom components should consider the following:
   - `Tab`/`Shift-Tab` to navigate
   - `Enter` to submit
   - `Escape` to cancel
-- Provide customisation options, particularly styles
+- Provide customisation options, particularly styles (but make sure to specify defaults)
 - If the data contains non-JSON types, add a "stringify" and "reviver" function definition (see `BigInt`, `NaN` and `Symbol` components)
 
 If your custom component is "string-like", there are two helper components exported with the package: `StringDisplay` and `StringEdit` -- these are the same components used for the actual "string" elements in the main package. See the [Hyperlink](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/components/Hyperlink/component.tsx) and [BigInt](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/components/BigInt/component.tsx) components for examples of how to use them.

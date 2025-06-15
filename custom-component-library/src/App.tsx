@@ -13,6 +13,7 @@ import {
   BigIntDefinition,
   MarkdownNodeDefinition,
   EnhancedLinkCustomNodeDefinition,
+  ImageNodeDefinition,
 } from '../components'
 import { testData } from './data'
 import { JsonData, JsonEditor } from '@json-edit-react'
@@ -33,24 +34,35 @@ if (testData?.['Date & Time']) {
 type TestData = typeof testData
 
 function App() {
-  const [data, setData] = useState<JsonData>(testData)
+  const [data, setData] = useState<TestData>(testData)
 
   console.log('Current data', data)
+
+  // Properties that are conditional on some data property:
+
+  // Display the time depending on whether or not the "Show time" toggle is
+  // checked
+  const showTime = data?.['Date & Time']?.['Show Time in Date?'] ?? false
+
+  // Image sizing
+  const maxWidth = data?.Images?.['Image properties']?.maxWidth
+  const maxHeight = data?.Images?.['Image properties']?.maxHeight
 
   return (
     <div id="container">
       <JsonEditor
         // restrictEdit={true}
         data={data}
-        setData={setData}
+        setData={setData as (data: unknown) => void}
         customNodeDefinitions={[
+          { ...ImageNodeDefinition, customNodeProps: { imageStyles: { maxWidth, maxHeight } } },
           LinkCustomNodeDefinition,
           {
             ...(STORE_DATE_AS_DATE_OBJECT ? DateObjectDefinition : DatePickerDefinition),
             customNodeProps: {
               // Display the time depending on whether or not the "Show time"
               // toggle is checked
-              showTime: (data as TestData)?.['Date & Time']?.['Show Time in Date?'] ?? false,
+              showTime,
             },
           },
           EnhancedLinkCustomNodeDefinition,

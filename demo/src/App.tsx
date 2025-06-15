@@ -46,8 +46,9 @@ import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
-import { getLineHeight, truncate } from './helpers'
+import { getConditionalDefinitions, getLineHeight, truncate } from './helpers'
 import { Loading } from '../../custom-component-library/components/_common/Loading'
+import { testData } from '../../custom-component-library/src/data'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 const SourceIndicator = lazy(() => import('./SourceIndicator'))
@@ -155,14 +156,11 @@ function App() {
   // }, [])
 
   const customNodeDefinitions =
-    selectedDataSet === 'customComponentLibrary' &&
-    typeof data === 'object' &&
-    (data as Record<string, Record<string, unknown>>)?.['Date & Time']?.['Show Time in Date?'] &&
-    Array.isArray(dataDefinition.customNodeDefinitions)
-      ? [
-          { ...dataDefinition.customNodeDefinitions[0], customNodeProps: { showTime: true } },
-          ...dataDefinition.customNodeDefinitions.slice(1),
-        ]
+    selectedDataSet === 'customComponentLibrary'
+      ? getConditionalDefinitions(
+          data as typeof testData,
+          dataDefinition?.customNodeDefinitions ?? []
+        )
       : dataDefinition.customNodeDefinitions
 
   const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
