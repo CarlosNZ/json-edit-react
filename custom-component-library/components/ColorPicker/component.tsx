@@ -9,6 +9,9 @@ import { Loading } from '../_common/Loading'
 const HexColorPicker = lazy(() =>
   import('react-colorful').then((m) => ({ default: m.HexColorPicker }))
 )
+const HexColorInput = lazy(() =>
+  import('react-colorful').then((m) => ({ default: m.HexColorInput }))
+)
 
 export interface ColorPickerProps {
   loadingText?: string
@@ -23,6 +26,7 @@ export const ColorPickerComponent: React.FC<CustomNodeProps<ColorPickerProps>> =
 }) => {
   const { loadingText } = customNodeProps
 
+  const inputStyle = getStyles('input', nodeData)
   const stringStyle = getStyles('string', nodeData)
 
   return (
@@ -33,17 +37,20 @@ export const ColorPickerComponent: React.FC<CustomNodeProps<ColorPickerProps>> =
         </div>
       }
     >
-      <HexColorPicker
-        color={value as string}
-        onChange={setValue}
-        style={{
-          position: 'absolute',
-          top: ' calc(100% + 2px)',
-          left: 0,
-          borderRadius: 9,
-          boxShadow: '0 6px 12px rgba(0, 0, 0, 0.15)',
-        }}
-      />
+      <div style={{ position: 'relative' }}>
+        <HexColorInput style={inputStyle} color={value as string} onChange={setValue} prefixed />
+        <HexColorPicker
+          style={{
+            position: 'absolute',
+            bottom: '1.5em',
+            zIndex: 1000,
+            boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px',
+            borderRadius: '8px',
+          }}
+          color={value as string}
+          onChange={setValue}
+        />
+      </div>
     </Suspense>
   )
 }
