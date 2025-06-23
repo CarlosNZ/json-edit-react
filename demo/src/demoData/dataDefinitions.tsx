@@ -116,7 +116,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       if (key === 'enum')
         return [
           ...standardDataTypes,
-          'Date',
+          'Date (ISO)',
           {
             enum: 'Custom Type',
             values: ['Option A 🍏', 'Option B 🍌', 'Option C 🍒'],
