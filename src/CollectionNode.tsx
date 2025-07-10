@@ -47,6 +47,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     collapseAnimationTime,
     onMove,
     enableClipboard,
+    showIconTooltips,
     searchFilter,
     searchText,
     indent,
@@ -432,6 +433,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       getNewKeyOptions={getNewKeyOptions}
       editConfirmRef={editConfirmRef}
       jsonStringify={jsonStringify}
+      showIconTooltips={showIconTooltips}
     />
   )
 
