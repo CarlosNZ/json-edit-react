@@ -178,10 +178,7 @@ export type CompareFunction = (
 
 export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
 
-export type OnEditEventFunction = (
-  path: (CollectionKey | null)[] | string | null,
-  isKey: boolean
-) => void
+export type OnEditEventFunction = (path: (CollectionKey | null)[] | null, isKey: boolean) => void
 
 // Definition to externally set Collapse state -- also passed to OnCollapse
 // function

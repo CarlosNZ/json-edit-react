@@ -90,7 +90,7 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
       cancelOp.current()
     }
     setCurrentlyEditingElement(pathString)
-    if (onEditEvent) onEditEvent(path, newCancelOrKey === 'key')
+    if (onEditEvent) onEditEvent(path as CollectionKey[], newCancelOrKey === 'key')
     cancelOp.current = typeof newCancelOrKey === 'function' ? newCancelOrKey : null
   }
 
