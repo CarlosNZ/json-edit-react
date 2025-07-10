@@ -196,6 +196,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | ----------------------- | ----------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `theme`                 | `ThemeInput`                              | `defaultTheme`       | Either one of the built-in themes (imported separately), or an object specifying some or all theme properties — see [Themes](#themes--styles).                                                                                                                                                                                                                                                            |
 | `icons`                 | `{[iconName]: JSX.Element, ... }`         | `{ }`                | Replace the built-in icons by specifying them here — see [Themes](#themes--styles).                                                                                                                                                                                                                                                                                                                       |  |
+| `showIconTooltips`      | `boolean`                                 | false                | Display icon tooltips when hovering.                                                                                                                                                                                                                                                                                                                                                                      |  |
 | `indent`                | `number`                                  | `3`                  | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                                                                                                                                        |
 | `collapse`              | `boolean\|number\|FilterFunction`         | `false`              | Defines which nodes of the JSON tree will be displayed "opened" in the UI on load — see [Collapse](#collapse).                                                                                                                                                                                                                                                                                            |
 | `collapseAnimationTime` | `number`                                  | `300`                | Time (in milliseconds) for the transition animation when collapsing collection nodes.                                                                                                                                                                                                                                                                                                                     |
@@ -914,6 +915,11 @@ Localise your implementation (or just customise the default messages) by passing
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
   EMPTY_STRING: '<empty string>' // Displayed when property key is ""
+  // Tooltips only appear if `showIconTooltips` prop is enabled
+  TOOLTIP_COPY: 'Copy to clipboard',
+  TOOLTIP_EDIT: 'Edit',
+  TOOLTIP_DELETE: 'Delete',
+  TOOLTIP_ADD: 'Add',
 }
 ```
 
