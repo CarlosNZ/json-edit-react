@@ -76,6 +76,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const updateAddingState = (active: boolean) => {
     // Add 'null' to the path to indicate that the actual path of where the new
     // key will go is not yet known.
+    // Also, "active" matches the second "isKey" parameter here, even though it
+    // describes a different thing.
     if (onEditEvent) onEditEvent([...path, null], active)
 
     if (!active) {
