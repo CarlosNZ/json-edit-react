@@ -1238,6 +1238,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.28.0**:
+  - (Optional) tooltips for icons ([#211](https://github.com/CarlosNZ/json-edit-react/pull/211))
+  - Call `onEditEvent` when starting/stopping editing of a *new* key ([#208](https://github.com/CarlosNZ/json-edit-react/issues/208))
 - **1.27.2**:
   - Bug fix for ":" not rendering when key is `0`
   - Slightly better detection of data type when copying value to clipboard text
