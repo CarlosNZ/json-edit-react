@@ -1115,10 +1115,13 @@ The `onEditEvent` callback is executed whenever the user starts or stops editing
 
 ```ts
 type OnEditEventFunction = 
-  (path: CollectionKey[] | null, isKey: boolean) => void
+  (path: (CollectionKey | null)[] | null, isKey: boolean) => void
 ```
 
 The `path` will be an array representing the path components when starting to edit, and `null` when ending the edit. The `isKey` indicates whether the edit is for the property `key` rather than `value`.
+
+> [!NOTE] 
+> After clicking the "Add key" button, the `path` in the `onEditEvent` callback will end with a `null` value, indicating that the final path where this key will end up is not yet known.
 
 The `onCollapse` callback is executed when user opens or collapses a node, and has the following signature:
 
