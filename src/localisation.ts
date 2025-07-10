@@ -15,6 +15,10 @@ const localisedStrings = {
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
   EMPTY_STRING: '<empty string>',
+  TOOLTIP_COPY: 'Copy to clipboard',
+  TOOLTIP_EDIT: 'Edit',
+  TOOLTIP_DELETE: 'Delete',
+  TOOLTIP_ADD: 'Add',
 }
 
 export type LocalisedStrings = typeof localisedStrings

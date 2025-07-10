@@ -601,6 +601,7 @@ function App() {
                 // translations={{
                 //   EMPTY_STRING: 'Nah',
                 // }}
+                showIconTooltips
               />
             </Suspense>
           </Box>

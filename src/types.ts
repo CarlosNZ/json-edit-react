@@ -38,6 +38,7 @@ export interface JsonEditorProps {
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
   showStringQuotes?: boolean
+  showIconTooltips?: boolean
   defaultValue?: string | number | boolean | null | object | DefaultValueFunction
   newKeyOptions?: string[] | NewKeyOptionsFunction
   minWidth?: string | number
@@ -260,6 +261,7 @@ interface BaseNodeProps {
   onDelete: InternalUpdateFunction
   onError?: OnErrorFunction
   showErrorMessages: boolean
+  showIconTooltips: boolean
   onMove: InternalMoveFunction
   enableClipboard: boolean | CopyFunction
   onEditEvent?: OnEditEventFunction
