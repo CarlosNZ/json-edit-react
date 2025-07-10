@@ -78,7 +78,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     // key will go is not yet known.
     // Also, "active" matches the second "isKey" parameter here, even though it
     // describes a different thing.
-    if (onEditEvent) onEditEvent([...path, null], active)
+    if (onEditEvent) onEditEvent(active ? [...path, null] : null, active)
 
     if (!active) {
       setAddingKeyState(false)
