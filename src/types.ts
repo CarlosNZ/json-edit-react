@@ -60,6 +60,7 @@ export interface JsonEditorProps {
   collapseClickZones?: Array<'left' | 'header' | 'property'>
   // Additional events
   onEditEvent?: OnEditEventFunction
+  onEvent?: EditEventFunction
   onCollapse?: OnCollapseFunction
   externalTriggers?: ExternalTriggers
 }
@@ -178,6 +179,13 @@ export type CompareFunction = (
 export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
 
 export type OnEditEventFunction = (path: CollectionKey[] | string | null, isKey: boolean) => void
+
+interface EditEvent {
+  type: 'editStart' | 'editStop' | 'editKeyStart' | 'editKeyStop' | 'delete' | 'add'
+  path: CollectionKey[]
+}
+
+export type EditEventFunction = (event: EditEvent) => void
 
 // Definition to externally set Collapse state -- also passed to OnCollapse
 // function

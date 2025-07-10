@@ -430,7 +430,11 @@ export const JsonEditor: React.FC<JsonEditorProps> = (props) => {
 
   return (
     <ThemeProvider theme={props.theme ?? defaultTheme} icons={props.icons} docRoot={docRoot}>
-      <TreeStateProvider onEditEvent={props.onEditEvent} onCollapse={props.onCollapse}>
+      <TreeStateProvider
+        onEditEvent={props.onEditEvent}
+        onEvent={props.onEvent}
+        onCollapse={props.onCollapse}
+      >
         <Editor {...props} />
       </TreeStateProvider>
     </ThemeProvider>

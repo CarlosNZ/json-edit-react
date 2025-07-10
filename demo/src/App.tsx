@@ -413,6 +413,7 @@ function App() {
                 theme={[theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }]}
                 indent={indent}
                 onUpdate={async (nodeData) => {
+                  console.log('nodeData', nodeData)
                   const demoOnUpdate = dataDefinition?.onUpdate ?? (() => undefined)
                   const result = await demoOnUpdate(nodeData, toast as (options: unknown) => void)
                   if (result) return result
@@ -586,15 +587,18 @@ function App() {
                     : undefined
                 }
                 // collapseClickZones={['property', 'header']}
-                // onEditEvent={(path) => {
-                //   console.log(path)
-                //   setIsEditing(path ? true : false)
-                // }}
+                onEditEvent={(...args) => {
+                  console.log('EDIT EVENT', args)
+                  // setIsEditing(path ? true : false)
+                }}
+                onEvent={(event) => {
+                  console.log('EVENT', event)
+                }}
                 // onCollapse={(input) => {
-                //   const path = JSON.stringify(input.path)
-                //   const newCollapseState = { ...collapseState.current, [path]: input }
-                //   collapseState.current = newCollapseState
-                //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
+                // const path = JSON.stringify(input.path)
+                // const newCollapseState = { ...collapseState.current, [path]: input }
+                // collapseState.current = newCollapseState
+                // localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
                 // }}
                 // externalTriggers={triggers}
                 // translations={{

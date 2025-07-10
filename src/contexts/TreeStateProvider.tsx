@@ -15,6 +15,7 @@ import {
   type OnEditEventFunction,
   type OnCollapseFunction,
   type CollapseState,
+  EditEventFunction,
 } from '../types'
 import { toPathString } from '../helpers'
 
@@ -48,10 +49,16 @@ const TreeStateProviderContext = createContext<TreeStateContext | null>(null)
 interface TreeStateProps {
   children: React.ReactNode
   onEditEvent?: OnEditEventFunction
+  onEvent?: EditEventFunction
   onCollapse?: OnCollapseFunction
 }
 
-export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeStateProps) => {
+export const TreeStateProvider = ({
+  children,
+  onEditEvent,
+  onEvent,
+  onCollapse,
+}: TreeStateProps) => {
   const [collapseState, setCollapseState] = useState<CollapseState | CollapseState[] | null>(null)
   const [currentlyEditingElement, setCurrentlyEditingElement] = useState<string | null>(null)
 
@@ -91,6 +98,7 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
     }
     setCurrentlyEditingElement(pathString)
     if (onEditEvent) onEditEvent(path, newCancelOrKey === 'key')
+    // if (onEvent) onEvent({ type: 'editKeyStart', path })
     cancelOp.current = typeof newCancelOrKey === 'function' ? newCancelOrKey : null
   }
 
