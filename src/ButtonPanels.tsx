@@ -165,7 +165,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
         <div
           onClick={handleCopy}
           className="jer-copy-pulse"
-          title={showIconTooltips ? translate('TOOLTIP_COPY', nodeData) : undefined}
+          title={showIconTooltips ? translate('TOOLTIP_COPY', nodeData) : ''}
         >
           <Icon name="copy" nodeData={nodeData} />
         </div>
@@ -173,7 +173,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       {startEdit && (
         <div
           onClick={startEdit}
-          title={showIconTooltips ? translate('TOOLTIP_EDIT', nodeData) : undefined}
+          title={showIconTooltips ? translate('TOOLTIP_EDIT', nodeData) : ''}
         >
           <Icon name="edit" nodeData={nodeData} />
         </div>
@@ -181,7 +181,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       {handleDelete && (
         <div
           onClick={handleDelete}
-          title={showIconTooltips ? translate('TOOLTIP_DELETE', nodeData) : undefined}
+          title={showIconTooltips ? translate('TOOLTIP_DELETE', nodeData) : ''}
         >
           <Icon name="delete" nodeData={nodeData} />
         </div>
@@ -193,7 +193,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             // For arrays, we don't need to add a key
             else handleAdd('')
           }}
-          title="Add"
+          title={showIconTooltips ? translate('TOOLTIP_ADD', nodeData) : ''}
         >
           <Icon name="add" nodeData={nodeData} />
         </div>
