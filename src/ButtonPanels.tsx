@@ -12,8 +12,10 @@ import {
   type CustomButtonDefinition,
   type KeyboardControlsFull,
   JsonData,
+  OnEditEventFunction,
 } from './types'
 import { getModifier } from './helpers'
+import { on } from 'events'
 
 interface EditButtonProps {
   startEdit?: () => void
@@ -36,6 +38,7 @@ interface EditButtonProps {
     // eslint-disable-next-line
     replacer?: (this: any, key: string, value: unknown) => string
   ) => string
+  onEditEvent?: OnEditEventFunction
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
@@ -52,6 +55,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   editConfirmRef,
   getNewKeyOptions,
   jsonStringify,
+  onEditEvent,
 }) => {
   const { getStyles } = useTheme()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
@@ -69,6 +73,10 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const hasKeyOptionsList = Array.isArray(addingKeyState)
 
   const updateAddingState = (active: boolean) => {
+    // Add 'null' to the path to indicate that the actual path of where the new
+    // key will go is not yet known.
+    if (onEditEvent) onEditEvent([...path, null], active)
+
     if (!active) {
       setAddingKeyState(false)
       return
