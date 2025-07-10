@@ -15,7 +15,6 @@ import {
   OnEditEventFunction,
 } from './types'
 import { getModifier } from './helpers'
-import { on } from 'events'
 
 interface EditButtonProps {
   startEdit?: () => void
