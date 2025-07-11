@@ -344,6 +344,8 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     <div
       className="jer-component jer-value-component"
       style={{
+        // If parentData is null, then we have a Value node at the root level,
+        // so don't indent it.
         marginLeft: parentData !== null ? `${indent / 2}em` : 0,
         position: 'relative',
       }}
