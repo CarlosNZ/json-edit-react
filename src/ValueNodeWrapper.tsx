@@ -344,7 +344,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     <div
       className="jer-component jer-value-component"
       style={{
-        marginLeft: `${indent / 2}em`,
+        marginLeft: parentData !== null ? `${indent / 2}em` : 0,
         position: 'relative',
       }}
       draggable={canDrag}
