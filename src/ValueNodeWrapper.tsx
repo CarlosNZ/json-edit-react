@@ -200,6 +200,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       // that won't match the custom node condition any more
       customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
     )
+    if (!['string', 'number', 'boolean'].includes(type)) setCurrentlyEditingElement(null)
     onEdit(newValue, path).then((error) => {
       if (error) {
         onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
