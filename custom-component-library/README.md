@@ -31,7 +31,7 @@ These are the ones currently available:
 - [x] Markdown
 - [x] "Enhanced" link
 - [x] Image
-- [ ] Colour picker (to-do)
+- [x] Colour picker
 
 ## Development
 

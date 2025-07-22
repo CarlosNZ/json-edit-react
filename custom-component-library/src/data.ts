@@ -20,6 +20,7 @@ export const testData = {
   - NaN
   - Symbol
   - Image
+  - ColorPicker
 
   Click [here](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md) for more info
   `,
