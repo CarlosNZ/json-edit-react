@@ -38,6 +38,7 @@ export interface JsonEditorProps {
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
   showStringQuotes?: boolean
+  showIconTooltips?: boolean
   defaultValue?: string | number | boolean | null | object | DefaultValueFunction
   newKeyOptions?: string[] | NewKeyOptionsFunction
   minWidth?: string | number
@@ -177,7 +178,7 @@ export type CompareFunction = (
 
 export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
 
-export type OnEditEventFunction = (path: CollectionKey[] | string | null, isKey: boolean) => void
+export type OnEditEventFunction = (path: (CollectionKey | null)[] | null, isKey: boolean) => void
 
 // Definition to externally set Collapse state -- also passed to OnCollapse
 // function
@@ -257,8 +258,10 @@ interface BaseNodeProps {
   onDelete: InternalUpdateFunction
   onError?: OnErrorFunction
   showErrorMessages: boolean
+  showIconTooltips: boolean
   onMove: InternalMoveFunction
   enableClipboard: boolean | CopyFunction
+  onEditEvent?: OnEditEventFunction
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction
   restrictAddFilter: FilterFunction

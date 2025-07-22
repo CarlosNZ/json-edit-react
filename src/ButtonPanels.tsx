@@ -12,6 +12,7 @@ import {
   type CustomButtonDefinition,
   type KeyboardControlsFull,
   JsonData,
+  OnEditEventFunction,
 } from './types'
 import { getModifier } from './helpers'
 
@@ -36,6 +37,8 @@ interface EditButtonProps {
     // eslint-disable-next-line
     replacer?: (this: any, key: string, value: unknown) => string
   ) => string
+  onEditEvent?: OnEditEventFunction
+  showIconTooltips: boolean
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
@@ -52,6 +55,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   editConfirmRef,
   getNewKeyOptions,
   jsonStringify,
+  onEditEvent,
+  showIconTooltips,
 }) => {
   const { getStyles } = useTheme()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
@@ -69,6 +74,12 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const hasKeyOptionsList = Array.isArray(addingKeyState)
 
   const updateAddingState = (active: boolean) => {
+    // Add 'null' to the path to indicate that the actual path of where the new
+    // key will go is not yet known.
+    // Also, "active" matches the second "isKey" parameter here, even though it
+    // describes a different thing.
+    if (onEditEvent) onEditEvent(active ? [...path, null] : null, active)
+
     if (!active) {
       setAddingKeyState(false)
       return
@@ -160,17 +171,27 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       onClick={(e) => e.stopPropagation()}
     >
       {enableClipboard && (
-        <div onClick={handleCopy} className="jer-copy-pulse">
+        <div
+          onClick={handleCopy}
+          className="jer-copy-pulse"
+          title={showIconTooltips ? translate('TOOLTIP_COPY', nodeData) : ''}
+        >
           <Icon name="copy" nodeData={nodeData} />
         </div>
       )}
       {startEdit && (
-        <div onClick={startEdit}>
+        <div
+          onClick={startEdit}
+          title={showIconTooltips ? translate('TOOLTIP_EDIT', nodeData) : ''}
+        >
           <Icon name="edit" nodeData={nodeData} />
         </div>
       )}
       {handleDelete && (
-        <div onClick={handleDelete}>
+        <div
+          onClick={handleDelete}
+          title={showIconTooltips ? translate('TOOLTIP_DELETE', nodeData) : ''}
+        >
           <Icon name="delete" nodeData={nodeData} />
         </div>
       )}
@@ -181,6 +202,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             // For arrays, we don't need to add a key
             else handleAdd('')
           }}
+          title={showIconTooltips ? translate('TOOLTIP_ADD', nodeData) : ''}
         >
           <Icon name="add" nodeData={nodeData} />
         </div>

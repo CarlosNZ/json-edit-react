@@ -49,6 +49,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     sort,
     editConfirmRef,
     jsonStringify,
+    showIconTooltips,
   } = props
   const { getStyles } = useTheme()
   const {
@@ -199,6 +200,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       // that won't match the custom node condition any more
       customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
     )
+    if (!['string', 'number', 'boolean'].includes(type)) setCurrentlyEditingElement(null)
     onEdit(newValue, path).then((error) => {
       if (error) {
         onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
@@ -343,7 +345,9 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     <div
       className="jer-component jer-value-component"
       style={{
-        marginLeft: `${indent / 2}em`,
+        // If parentData is null, then we have a Value node at the root level,
+        // so don't indent it.
+        marginLeft: parentData !== null ? `${indent / 2}em` : 0,
         position: 'relative',
       }}
       draggable={canDrag}
@@ -388,6 +392,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 keyboardControls={keyboardControls}
                 editConfirmRef={editConfirmRef}
                 jsonStringify={jsonStringify}
+                showIconTooltips={showIconTooltips}
               />
             )
           )}

@@ -12,8 +12,11 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 ![NPM Version](https://img.shields.io/npm/v/json-edit-react)
 ![GitHub License](https://img.shields.io/github/license/carlosnz/json-edit-react)
 ![NPM Downloads](https://img.shields.io/npm/dm/json-edit-react)
+
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/CarlosNZ/json-edit-react)
 [![Discuss on GitHub](https://img.shields.io/badge/Discussions-Join%20the%20conversation-blue?logo=github)](https://github.com/CarlosNZ/json-edit-react/discussions)
 [![Sponsor](https://img.shields.io/badge/Sponsor-♥-pink.svg)](https://github.com/sponsors/CarlosNZ)
+
 
 ### Features include:
 
@@ -196,6 +199,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | ----------------------- | ----------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `theme`                 | `ThemeInput`                              | `defaultTheme`       | Either one of the built-in themes (imported separately), or an object specifying some or all theme properties — see [Themes](#themes--styles).                                                                                                                                                                                                                                                            |
 | `icons`                 | `{[iconName]: JSX.Element, ... }`         | `{ }`                | Replace the built-in icons by specifying them here — see [Themes](#themes--styles).                                                                                                                                                                                                                                                                                                                       |  |
+| `showIconTooltips`      | `boolean`                                 | false                | Display icon tooltips when hovering.                                                                                                                                                                                                                                                                                                                                                                      |  |
 | `indent`                | `number`                                  | `3`                  | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                                                                                                                                        |
 | `collapse`              | `boolean\|number\|FilterFunction`         | `false`              | Defines which nodes of the JSON tree will be displayed "opened" in the UI on load — see [Collapse](#collapse).                                                                                                                                                                                                                                                                                            |
 | `collapseAnimationTime` | `number`                                  | `300`                | Time (in milliseconds) for the transition animation when collapsing collection nodes.                                                                                                                                                                                                                                                                                                                     |
@@ -914,6 +918,11 @@ Localise your implementation (or just customise the default messages) by passing
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
   EMPTY_STRING: '<empty string>' // Displayed when property key is ""
+  // Tooltips only appear if `showIconTooltips` prop is enabled
+  TOOLTIP_COPY: 'Copy to clipboard',
+  TOOLTIP_EDIT: 'Edit',
+  TOOLTIP_DELETE: 'Delete',
+  TOOLTIP_ADD: 'Add',
 }
 ```
 
@@ -1115,10 +1124,13 @@ The `onEditEvent` callback is executed whenever the user starts or stops editing
 
 ```ts
 type OnEditEventFunction = 
-  (path: CollectionKey[] | null, isKey: boolean) => void
+  (path: (CollectionKey | null)[] | null, isKey: boolean) => void
 ```
 
 The `path` will be an array representing the path components when starting to edit, and `null` when ending the edit. The `isKey` indicates whether the edit is for the property `key` rather than `value`.
+
+> [!NOTE] 
+> After clicking the "Add key" button, the `path` in the `onEditEvent` callback will end with a `null` value, indicating that the final path where this key will end up is not yet known.
 
 The `onCollapse` callback is executed when user opens or collapses a node, and has the following signature:
 
@@ -1229,6 +1241,11 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.28.2**: When switching data type, only keep editing if new type is primitive ([#216](https://github.com/CarlosNZ/json-edit-react/issues/216))
+- **1.28.1**: Fix left padding of root node when value is primitive ([#214](https://github.com/CarlosNZ/json-edit-react/issues/214))
+- **1.28.0**:
+  - (Optional) tooltips for icons ([#211](https://github.com/CarlosNZ/json-edit-react/pull/211))
+  - Call `onEditEvent` when starting/stopping editing of a *new* key ([#208](https://github.com/CarlosNZ/json-edit-react/issues/208))
 - **1.27.2**:
   - Bug fix for ":" not rendering when key is `0`
   - Slightly better detection of data type when copying value to clipboard text

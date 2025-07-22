@@ -586,6 +586,7 @@ function App() {
                     : undefined
                 }
                 // collapseClickZones={['property', 'header']}
+                // onEditEvent={(...args) => console.log('onEditEvent', ...args)}
                 // onEditEvent={(path) => {
                 //   console.log(path)
                 //   setIsEditing(path ? true : false)
@@ -600,6 +601,7 @@ function App() {
                 // translations={{
                 //   EMPTY_STRING: 'Nah',
                 // }}
+                showIconTooltips
               />
             </Suspense>
           </Box>
