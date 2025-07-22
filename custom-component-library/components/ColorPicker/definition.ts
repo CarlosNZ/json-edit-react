@@ -1,15 +1,15 @@
 import { type CustomNodeDefinition } from '@json-edit-react'
 import { ColorPickerComponent, ColorPickerProps } from './component'
-
-const hexCodeRegex = /^#[0-9A-Fa-f]{6}$/
+import { colord } from 'colord'
 
 export const ColorPickerNodeDefinition: CustomNodeDefinition<ColorPickerProps> = {
-  condition: ({ value }) => typeof value === 'string' && hexCodeRegex.test(value),
+  condition: ({ value }) => typeof value === 'string' && colord(value).isValid(),
   element: ColorPickerComponent,
   name: 'Color Picker',
   // customNodeProps: {},
-  showOnView: false,
+  showOnView: true,
   showOnEdit: true,
   showInTypesSelector: true,
   defaultValue: '#ffffff',
+  passOriginalNode: true,
 }

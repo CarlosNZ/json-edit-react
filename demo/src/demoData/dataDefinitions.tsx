@@ -1,6 +1,6 @@
 import React from 'react'
 import { data } from './data'
-import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'
+import { Flex, Box, Link, Text, UnorderedList, ListItem, border } from '@chakra-ui/react'
 import {
   DatePickerDefinition,
   LinkCustomNodeDefinition,
@@ -849,7 +849,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       NanDefinition,
       SymbolDefinition,
       BigIntDefinition,
-      ColorPickerNodeDefinition,
+      { ...ColorPickerNodeDefinition, customNodeProps: { type: 'HexAlpha' } },
       {
         ...MarkdownNodeDefinition,
         condition: ({ key }) => key === 'Markdown',
