@@ -1,13 +1,16 @@
 /**
  * A Colour picker Custom Component
+ *
+ * Can handle named colours, Hex, RGB and HSL formats, with an optional alpha
+ * channel
  */
 
 import React, { lazy, Suspense, useRef } from 'react'
-import { StringEdit, toPathString, type CustomNodeProps } from '@json-edit-react'
-import { Loading } from '../_common/Loading'
+import { HsvColor } from 'react-colorful'
 import { colord, extend, getFormat, HsvaColor } from 'colord'
 import namesPlugin from 'colord/plugins/names'
-import { HsvColor } from 'react-colorful'
+import { StringEdit, toPathString, type CustomNodeProps } from '@json-edit-react'
+import { Loading } from '../_common/Loading'
 
 extend([namesPlugin])
 

@@ -58,5 +58,5 @@ export const testData = {
       maxHeight: 100,
     },
   },
-  'Color Picker': '#d84887',
+  'Color Picker': '#ff69B4', // Hot Pink
 }

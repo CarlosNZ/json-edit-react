@@ -10,6 +10,6 @@ export const ColorPickerNodeDefinition: CustomNodeDefinition<ColorPickerProps> =
   showOnView: true,
   showOnEdit: true,
   showInTypesSelector: true,
-  defaultValue: '#ffffff',
+  defaultValue: '#ff69B4', // Hot Pink!
   passOriginalNode: true,
 }
