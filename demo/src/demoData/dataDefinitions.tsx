@@ -1,6 +1,6 @@
 import React from 'react'
 import { data } from './data'
-import { Flex, Box, Link, Text, UnorderedList, ListItem, border } from '@chakra-ui/react'
+import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'
 import {
   DatePickerDefinition,
   LinkCustomNodeDefinition,
