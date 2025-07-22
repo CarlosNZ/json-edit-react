@@ -9,6 +9,7 @@ import React, { lazy, Suspense, useRef } from 'react'
 import { HsvColor } from 'react-colorful'
 import { colord, extend, getFormat, HsvaColor } from 'colord'
 import namesPlugin from 'colord/plugins/names'
+import { useDebouncedCallback } from 'use-debounce'
 import { StringEdit, toPathString, type CustomNodeProps } from '@json-edit-react'
 import { Loading } from '../_common/Loading'
 
@@ -68,6 +69,11 @@ export const ColorPickerComponent: React.FC<CustomNodeProps<ColorPickerProps>> =
 
   const lastValidColor = useRef(text)
 
+  // Debounced setValue to avoid excessive updates while dragging the picker
+  const debouncedSetValue = useDebouncedCallback((value: string) => {
+    setValue(value)
+  }, 150)
+
   const stringStyle = getStyles('string', nodeData)
 
   const PickerComponent = alpha ? HsvaColorPicker : HsvColorPicker
@@ -122,7 +128,7 @@ export const ColorPickerComponent: React.FC<CustomNodeProps<ColorPickerProps>> =
             color={hsvValue}
             onChange={(newColor) => {
               setHsvValue(colord(newColor).toHsv())
-              setValue(getFormattedColorText(newColor, text))
+              debouncedSetValue(getFormattedColorText(newColor, text))
             }}
             onKeyDown={handleKeyPress}
           />
