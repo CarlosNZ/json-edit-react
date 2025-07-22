@@ -849,7 +849,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       NanDefinition,
       SymbolDefinition,
       BigIntDefinition,
-      { ...ColorPickerNodeDefinition, customNodeProps: { type: 'HexAlpha' } },
+      ColorPickerNodeDefinition,
       {
         ...MarkdownNodeDefinition,
         condition: ({ key }) => key === 'Markdown',
