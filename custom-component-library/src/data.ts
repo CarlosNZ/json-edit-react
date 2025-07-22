@@ -20,6 +20,7 @@ export const testData = {
   - NaN
   - Symbol
   - Image
+  - ColorPicker
 
   Click [here](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md) for more info
   `,
@@ -58,4 +59,5 @@ export const testData = {
       maxHeight: 100,
     },
   },
+  'Color Picker': '#ff69B4', // Hot Pink
 }

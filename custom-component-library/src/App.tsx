@@ -14,6 +14,7 @@ import {
   MarkdownNodeDefinition,
   EnhancedLinkCustomNodeDefinition,
   ImageNodeDefinition,
+  ColorPickerNodeDefinition,
 } from '../components'
 import { testData } from './data'
 import { JsonEditor } from '@json-edit-react'
@@ -57,6 +58,7 @@ function App() {
         customNodeDefinitions={[
           { ...ImageNodeDefinition, customNodeProps: { imageStyles: { maxWidth, maxHeight } } },
           LinkCustomNodeDefinition,
+          ColorPickerNodeDefinition,
           {
             ...(STORE_DATE_AS_DATE_OBJECT ? DateObjectDefinition : DatePickerDefinition),
             customNodeProps: { showTime },

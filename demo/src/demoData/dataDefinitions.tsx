@@ -13,6 +13,7 @@ import {
   MarkdownNodeDefinition,
   EnhancedLinkCustomNodeDefinition,
   ImageNodeDefinition,
+  ColorPickerNodeDefinition,
 } from '../../../custom-component-library/components'
 import { testData } from '../../../custom-component-library/src/data'
 import {
@@ -848,6 +849,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       NanDefinition,
       SymbolDefinition,
       BigIntDefinition,
+      ColorPickerNodeDefinition,
       {
         ...MarkdownNodeDefinition,
         condition: ({ key }) => key === 'Markdown',
