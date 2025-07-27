@@ -68,9 +68,11 @@ export const ColorPickerComponent: React.FC<CustomNodeProps<ColorPickerProps>> =
   const [hsvValue, setHsvValue] = React.useState(colord(text).toHsv())
 
   const lastValidColor = useRef(text)
+  const isUpdatingFromPicker = useRef(false)
 
   // Debounced setValue to avoid excessive updates while dragging the picker
   const debouncedSetValue = useDebouncedCallback((value: string) => {
+    isUpdatingFromPicker.current = true
     setValue(value)
   }, 150)
 
@@ -97,6 +99,12 @@ export const ColorPickerComponent: React.FC<CustomNodeProps<ColorPickerProps>> =
             value={text}
             setValue={
               ((value: string) => {
+                // Prevent infinite loop when update is coming from color picker
+                if (isUpdatingFromPicker.current) {
+                  isUpdatingFromPicker.current = false // Reset immediately
+                  return
+                }
+
                 // Only update the color picker display if the input text is a
                 // valid color
                 const parsed = colord(value)
