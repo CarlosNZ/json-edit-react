@@ -11,7 +11,8 @@ interface KeyDisplayProps {
   isEditingKey: boolean
   pathString: string
   path: CollectionKey[]
-  name: string
+  name: string | number
+  arrayCountFromOne: boolean
   handleKeyboard: (
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
@@ -31,6 +32,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   pathString,
   path,
   name,
+  arrayCountFromOne,
   handleKeyboard,
   handleEditKey,
   handleCancel,
@@ -42,20 +44,22 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
 }) => {
   const { setCurrentlyEditingElement } = useTreeState()
 
+  const displayKey = typeof name === 'number' ? String(name + (arrayCountFromOne ? 1 : 0)) : name
+
   if (!isEditingKey)
     return (
       <span
         className="jer-key-text"
         style={{
           ...styles,
-          minWidth: `${Math.min(String(name).length + 1, 5)}ch`,
-          flexShrink: name.length > 10 ? 1 : 0,
+          minWidth: `${Math.min(displayKey.length + 1, 5)}ch`,
+          flexShrink: displayKey.length > 10 ? 1 : 0,
         }}
         onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
         onClick={handleClick}
       >
-        {emptyStringKey ? <span className="jer-empty-string">{emptyStringKey}</span> : name}
-        {name !== '' || emptyStringKey ? <span className="jer-key-colon">:</span> : null}
+        {emptyStringKey ? <span className="jer-empty-string">{emptyStringKey}</span> : displayKey}
+        {displayKey !== '' || emptyStringKey ? <span className="jer-key-colon">:</span> : null}
       </span>
     )
 
@@ -64,7 +68,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
       className="jer-input-text jer-key-edit"
       type="text"
       name={pathString}
-      defaultValue={name}
+      defaultValue={displayKey}
       autoFocus
       onFocus={(e) => e.target.select()}
       onKeyDown={(e: React.KeyboardEvent) =>
@@ -86,7 +90,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
           },
         })
       }
-      style={{ width: `${String(name).length / 1.5 + 0.5}em` }}
+      style={{ width: `${displayKey.length / 1.5 + 0.5}em` }}
     />
   )
 }
