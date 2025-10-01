@@ -67,6 +67,7 @@ interface AppState {
   allowCopy: boolean
   sortKeys: boolean
   showIndices: boolean
+  arraysFromOne: boolean
   showStringQuotes: boolean
   defaultNewValue: string
   searchText: string
@@ -111,6 +112,7 @@ function App() {
     allowCopy: true,
     sortKeys: false,
     showIndices: true,
+    arraysFromOne: false,
     showStringQuotes: true,
     defaultNewValue: 'New data!',
     searchText: '',
@@ -176,6 +178,7 @@ function App() {
     collapseTime,
     showCount,
     showIndices,
+    arraysFromOne,
     sortKeys,
     showStringQuotes,
     allowCopy,
@@ -508,6 +511,7 @@ function App() {
                 defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
                 newKeyOptions={dataDefinition?.newKeyOptions}
                 showArrayIndices={showIndices}
+                arrayIndexFromOne={arraysFromOne}
                 showStringQuotes={showStringQuotes}
                 minWidth={'min(500px, 95vw)'}
                 maxWidth="min(670px, 90vw)"
@@ -826,16 +830,6 @@ function App() {
                       Show String quotes
                     </Checkbox>
                     <Checkbox
-                      id="showIndicesCheckbox"
-                      isChecked={showIndices}
-                      onChange={() => toggleState('showIndices')}
-                      w="50%"
-                    >
-                      Show Array indices
-                    </Checkbox>
-                  </Flex>
-                  <Flex w="100%" justify="flex-start">
-                    <Checkbox
                       id="sortKeysCheckbox"
                       isChecked={sortKeys}
                       onChange={() => toggleState('sortKeys')}
@@ -843,6 +837,26 @@ function App() {
                     >
                       Sort Object keys
                     </Checkbox>
+                  </Flex>
+                  <Flex w="100%" justify="flex-start">
+                    <Checkbox
+                      id="showIndicesCheckbox"
+                      isChecked={showIndices}
+                      onChange={() => toggleState('showIndices')}
+                      w="50%"
+                    >
+                      Show Array indices
+                    </Checkbox>
+                    <Checkbox
+                      id="arraysFromOneCheckbox"
+                      isChecked={arraysFromOne}
+                      onChange={() => toggleState('arraysFromOne')}
+                      w="50%"
+                    >
+                      Arrays index from 1
+                    </Checkbox>
+                  </Flex>
+                  <Flex w="100%" justify="flex-start">
                     <HStack>
                       <Checkbox
                         id="customEditorCheckbox"
