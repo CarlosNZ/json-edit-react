@@ -12,7 +12,7 @@ interface KeyDisplayProps {
   pathString: string
   path: CollectionKey[]
   name: string | number
-  arrayCountFromOne: boolean
+  arrayIndexFromOne: boolean
   handleKeyboard: (
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
@@ -32,7 +32,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   pathString,
   path,
   name,
-  arrayCountFromOne,
+  arrayIndexFromOne,
   handleKeyboard,
   handleEditKey,
   handleCancel,
@@ -44,7 +44,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
 }) => {
   const { setCurrentlyEditingElement } = useTreeState()
 
-  const displayKey = typeof name === 'number' ? String(name + (arrayCountFromOne ? 1 : 0)) : name
+  const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
 
   if (!isEditingKey)
     return (

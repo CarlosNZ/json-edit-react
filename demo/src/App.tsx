@@ -511,7 +511,7 @@ function App() {
                 defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
                 newKeyOptions={dataDefinition?.newKeyOptions}
                 showArrayIndices={showIndices}
-                arrayCountFromOne={arraysFromOne}
+                arrayIndexFromOne={arraysFromOne}
                 showStringQuotes={showStringQuotes}
                 minWidth={'min(500px, 95vw)'}
                 maxWidth="min(670px, 90vw)"
@@ -853,7 +853,7 @@ function App() {
                       onChange={() => toggleState('arraysFromOne')}
                       w="50%"
                     >
-                      Arrays start from 1
+                      Arrays index from 1
                     </Checkbox>
                   </Flex>
                   <Flex w="100%" justify="flex-start">

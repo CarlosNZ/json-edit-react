@@ -37,7 +37,7 @@ export interface JsonEditorProps {
   searchDebounceTime?: number
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
-  arrayCountFromOne?: boolean
+  arrayIndexFromOne?: boolean
   showStringQuotes?: boolean
   showIconTooltips?: boolean
   defaultValue?: string | number | boolean | null | object | DefaultValueFunction
@@ -273,7 +273,7 @@ interface BaseNodeProps {
   restrictTypeSelection: boolean | TypeOptions | TypeFilterFunction
   stringTruncate: number
   indent: number
-  arrayCountFromOne: boolean
+  arrayIndexFromOne: boolean
   sort: SortFunction
   translate: TranslateFunction
   customNodeDefinitions: CustomNodeDefinition[]
