@@ -1242,7 +1242,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.28.3**: Option to display array indexes starting at "1" ([#62](https://github.com/CarlosNZ/json-edit-react/issues/62))
+- **1.29.0**: Option to display array indexes starting at "1" ([#62](https://github.com/CarlosNZ/json-edit-react/issues/62))
 - **1.28.2**: When switching data type, only keep editing if new type is primitive ([#216](https://github.com/CarlosNZ/json-edit-react/issues/216))
 - **1.28.1**: Fix left padding of root node when value is primitive ([#214](https://github.com/CarlosNZ/json-edit-react/issues/214))
 - **1.28.0**:
