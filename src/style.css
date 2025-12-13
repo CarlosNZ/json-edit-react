@@ -146,8 +146,9 @@ select:focus + .focus {
 /* .jer-brackets {
 } */
 
-/* .jer-bracket-outside {
-} */
+.jer-bracket-outside {
+  padding-left: 0.5em;
+}
 
 /* .jer-collection-item-count {
 } */
