@@ -2,6 +2,7 @@ import typescript from '@rollup/plugin-typescript'
 import dts from 'rollup-plugin-dts'
 import peerDepsExternal from 'rollup-plugin-peer-deps-external'
 import styles from 'rollup-plugin-styles'
+import copy from 'rollup-plugin-copy'
 import terser from '@rollup/plugin-terser'
 import del from 'rollup-plugin-delete'
 import bundleSize from 'rollup-plugin-bundle-size'
@@ -32,6 +33,9 @@ export default [
         declarationDir: 'build/dts',
       }),
       terser(),
+      copy({
+        targets: [{ src: 'src/style.css', dest: 'build' }],
+      }),
       bundleSize(),
       sizes(),
     ],

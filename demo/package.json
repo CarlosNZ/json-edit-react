@@ -33,7 +33,7 @@
     "ajv": "^8.16.0",
     "firebase": "^10.13.0",
     "framer-motion": "^11.0.3",
-    "json-edit-react": "1.29.0",
+    "json-edit-react": "1.29.1-beta1",
     "json5": "^2.2.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

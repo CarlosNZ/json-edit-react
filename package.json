@@ -1,6 +1,6 @@
 {
   "name": "json-edit-react",
-  "version": "1.29.0",
+  "version": "1.29.1-beta1",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
@@ -64,6 +64,7 @@
     "react-dom": "^19.1.0",
     "rollup": "^4.10.0",
     "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-delete": "^3.0.1",
     "rollup-plugin-dts": "^6.1.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
