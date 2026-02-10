@@ -3705,10 +3705,10 @@ object-property-assigner@^1.3.5:
   resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.3.5.tgz#f5037ff73b7b015a42e4059c3ff5c84017413ca2"
   integrity sha512-DIzHzNSTnpoG8QPQCDNrHa6O3vLMhktK3Igirqpk523UYIVe8JNCKcn5C9WyLQxJc58EGsAIiiEu10gqPrud8w==
 
-object-property-extractor@^1.0.13:
-  version "1.0.13"
-  resolved "https://registry.yarnpkg.com/object-property-extractor/-/object-property-extractor-1.0.13.tgz#fff188d6308ac5574eb2610221af906eb87b4f38"
-  integrity sha512-9kgEjTWDhTPuPn7nyof+5mLmCKBPKdU0c7IVpTbOvYKYSdXQ5skH4Pa/8MPbZXeyXBGrqS82JyWecsh6tMxiLw==
+object-property-extractor@^1.0.14:
+  version "1.0.14"
+  resolved "https://registry.yarnpkg.com/object-property-extractor/-/object-property-extractor-1.0.14.tgz#bff9292974a47633129e8108b547b6a116ad67b6"
+  integrity sha512-euG3MQwj41DMbfk1keguY+jKQvaf9r26NeECtb28G8jABnhZVqxVEvIFywWC2107cSgx8dimA+JXuCAZFfbsSg==
 
 object.assign@^4.1.4, object.assign@^4.1.7:
   version "4.1.7"
