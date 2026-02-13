@@ -34,13 +34,17 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   if (typeof value !== 'string') return null
   const dummyValue = value.slice(-1) === '\n' ? value + '.' : value
 
+  // The height of the text-area is determined by the height of the editor container, minus some padding to prevent it from being too tall.
+  const height = document?.getElementsByClassName('jer-editor-container')?.[0].clientHeight
+  const heightString = height ? `${height - 100}px` : 'auto'
+
   return (
-    <div style={{ display: 'grid' }}>
+    <div style={{ display: 'grid', width: '100%' }}>
       <textarea
         id={`${name}_textarea`}
         ref={textAreaRef}
         style={{
-          height: 'auto',
+          height: heightString,
           gridArea: '1 / 1 / 2 / 2',
           overflowY: 'auto',
           whiteSpace: 'pre-wrap',
@@ -64,7 +68,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
         style={{
           visibility: 'hidden',
           // visibility: 'visible',
-          height: 'auto',
+          height: heightString,
           gridArea: '1 / 1 / 2 / 2',
           color: 'red',
           opacity: 0.9,
