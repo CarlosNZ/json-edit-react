@@ -120,7 +120,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   useEffect(() => {
     setStringifiedValue(jsonStringify(data))
     // if (isEditing) setCurrentlyEditingElement(null)
-  }, [data, jsonStringify])
+    // jsonStringify is a serializer, not a trigger — including it here would
+    // reset in-progress edit text on every parent re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data])
 
   useEffect(() => {
     const shouldBeCollapsed = collapseFilter(nodeData) && !isEditing

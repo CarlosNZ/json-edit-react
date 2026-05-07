@@ -36,6 +36,13 @@ import './style.css'
 import { getCustomNode } from './CustomNode'
 import { getCustomKey } from './CustomKey'
 
+// Module-scoped so the default is a stable reference across renders;
+// an inline default would clobber in-progress edits in CollectionNode.
+const defaultJsonStringify = (
+  data: JsonData,
+  replacer?: (key: string, value: unknown) => unknown
+) => JSON.stringify(data, replacer, 2)
+
 const Editor: React.FC<JsonEditorProps> = ({
   data: srcData,
   setData: srcSetData,
@@ -81,7 +88,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   customKeyDefinitions = [],
   customButtons = [],
   jsonParse = JSON.parse,
-  jsonStringify = (data, replacer) => JSON.stringify(data, replacer, 2),
+  jsonStringify = defaultJsonStringify,
   TextEditor,
   errorMessageTimeout = 2500,
   keyboardControls = {},
