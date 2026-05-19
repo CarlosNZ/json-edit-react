@@ -996,11 +996,11 @@ If you want a single component to render the **entire row** (both key and value 
 A `customKey` component is rendered in place of the default property label, in **view mode**. It receives the following props ([`CustomKeyProps`](https://github.com/CarlosNZ/json-edit-react/blob/main/src/types.ts)):
 
 - `nodeData` — the full [NodeData](#filter-functions) for this node
-- `name` — the key as displayed (`string | number`)
+- `name` — the key as **displayed** (always `string`, and for array indices already offset for `arrayIndexFromOne`). For the raw key, use `nodeData.key`.
 - `path` — the full path to this node
 - `canEditKey` — whether key editing is permitted for this node
-- `setIsEditingKey()` — call to enter key-edit mode (replaces your custom render with the standard input)
-- `handleEditKey(newKey)` — commit a new key value programmatically
+- `setIsEditingKey()` — call to enter key-edit mode (replaces your custom render with the standard input). No-ops if `canEditKey` is false.
+- `handleEditKey(newKey)` — commit a new key value programmatically. No-ops if `canEditKey` is false.
 - `handleClick(e)` — the parent's click handler; forward this if you want default click behaviour (e.g. collapse on header click for collection nodes)
 - `styles` — theme-resolved styles for the property text
 - `getStyles(element, nodeData)` — fetch theme styles for any other theme key (e.g. `'bracket'`)

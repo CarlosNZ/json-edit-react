@@ -335,7 +335,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       setIsEditing={() => setCurrentlyEditingElement(path)}
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, inputProps) : undefined}
-      originalNodeKey={passOriginalNode ? <KeyDisplay {...keyDisplayProps} /> : undefined}
+      originalNodeKey={
+        passOriginalNode ? (
+          // `originalNodeKey` is contracted to be what would have been rendered
+          // if it wasn't intercepted, so suppress any matching `customKey` here
+          // and let the default renderer run.
+          <KeyDisplay {...keyDisplayProps} customNodeData={undefined} />
+        ) : undefined
+      }
       canEdit={canEdit}
       keyboardCommon={inputProps.keyboardCommon}
       onError={onError}

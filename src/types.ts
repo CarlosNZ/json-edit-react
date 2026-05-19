@@ -325,7 +325,9 @@ export interface ValueNodeProps extends BaseNodeProps {
 
 export interface CustomKeyProps<T = Record<string, unknown>> {
   nodeData: NodeData
-  name: string | number
+  // The displayed key — already a string, and for array indices already
+  // offset for `arrayIndexFromOne`. Use `nodeData.key` for the raw key.
+  name: string
   path: CollectionKey[]
   canEditKey: boolean
   handleEditKey: (newKey: string) => void

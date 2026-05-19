@@ -65,11 +65,15 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
       return (
         <CustomKey
           nodeData={nodeData}
-          name={name}
+          name={displayKey}
           path={path}
           canEditKey={canEditKey}
-          handleEditKey={handleEditKey}
-          setIsEditingKey={() => setCurrentlyEditingElement(path, 'key')}
+          handleEditKey={(newKey) => {
+            if (canEditKey) handleEditKey(newKey)
+          }}
+          setIsEditingKey={() => {
+            if (canEditKey) setCurrentlyEditingElement(path, 'key')
+          }}
           handleClick={handleClick}
           styles={styles}
           customNodeProps={customNodeProps}
