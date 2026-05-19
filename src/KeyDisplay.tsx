@@ -60,6 +60,15 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
 
   if (!isEditingKey) {
+    // Theme styles plus the same layout derivation the default key span
+    // uses, so custom-key renderers that spread `...styles` get
+    // default-consistent column alignment and wrap behaviour. Authors
+    // can override individual values.
+    const derivedKeyStyles: React.CSSProperties = {
+      ...styles,
+      minWidth: `${Math.min(displayKey.length + 1, 5)}ch`,
+      flexShrink: displayKey.length > 10 ? 1 : 0,
+    }
     if (customNodeData?.CustomKey && nodeData && getStyles) {
       const { CustomKey, customNodeProps } = customNodeData
       return (
@@ -75,7 +84,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
             if (canEditKey) setCurrentlyEditingElement(path, 'key')
           }}
           handleClick={handleClick}
-          styles={styles}
+          styles={derivedKeyStyles}
           customNodeProps={customNodeProps}
           getStyles={getStyles}
         />
@@ -84,11 +93,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
     return (
       <span
         className="jer-key-text"
-        style={{
-          ...styles,
-          minWidth: `${Math.min(displayKey.length + 1, 5)}ch`,
-          flexShrink: displayKey.length > 10 ? 1 : 0,
-        }}
+        style={derivedKeyStyles}
         onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
         onClick={handleClick}
       >

@@ -1002,7 +1002,7 @@ A `customKey` component is rendered in place of the default property label, in *
 - `setIsEditingKey()` — call to enter key-edit mode (replaces your custom render with the standard input). No-ops if `canEditKey` is false.
 - `handleEditKey(newKey)` — commit a new key value programmatically. No-ops if `canEditKey` is false.
 - `handleClick(e)` — the parent's click handler; forward this if you want default click behaviour (e.g. collapse on header click for collection nodes)
-- `styles` — theme-resolved styles for the property text
+- `styles` — theme-resolved styles for the property text, plus the same `minWidth`/`flexShrink` layout values the default key renderer uses (so spreading `...styles` keeps column alignment consistent). Override individual values to opt out.
 - `getStyles(element, nodeData)` — fetch theme styles for any other theme key (e.g. `'bracket'`)
 - `customNodeProps` — the same `customNodeProps` object as on the definition (shared with `element`)
 
