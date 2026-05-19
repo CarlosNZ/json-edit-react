@@ -323,6 +323,21 @@ export interface ValueNodeProps extends BaseNodeProps {
   onChange?: OnChangeFunction
 }
 
+export interface CustomKeyProps<T = Record<string, unknown>> {
+  nodeData: NodeData
+  // The displayed key — already a string, and for array indices already
+  // offset for `arrayIndexFromOne`. Use `nodeData.key` for the raw key.
+  name: string
+  path: CollectionKey[]
+  canEditKey: boolean
+  handleEditKey: (newKey: string) => void
+  setIsEditingKey: () => void
+  handleClick?: (e: React.MouseEvent) => void
+  styles: React.CSSProperties
+  customNodeProps?: T
+  getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
+}
+
 export interface CustomNodeProps<T = Record<string, unknown>>
   extends Omit<BaseNodeProps, 'onError'> {
   value: JsonData
@@ -346,6 +361,7 @@ export interface CustomNodeProps<T = Record<string, unknown>>
 export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<string, unknown>> {
   condition: FilterFunction
   element?: React.FC<CustomNodeProps<T>>
+  customKey?: React.FC<CustomKeyProps<T>>
   name?: string // appears in "Type" selector
   customNodeProps?: T
   hideKey?: boolean

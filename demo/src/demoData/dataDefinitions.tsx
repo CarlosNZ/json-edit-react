@@ -44,6 +44,16 @@ const ajv = new Ajv()
 const validateJsonSchema = ajv.compile(jsonSchema)
 const validateCustomNodes = ajv.compile(customNodesSchema)
 
+// Used by the "Custom Keys" data set — a small glossary of agent codenames
+// and field abbreviations, passed via `customNodeProps` to the matching
+// custom-key component.
+const codenameGlossary: Record<string, string> = {
+  M: 'handler',
+  Q: 'quartermaster',
+  dob: 'date of birth',
+  bp: 'blood pressure',
+}
+
 // @ts-expect-error only used in Custom component demo app
 delete testData['Date & Time']['Date']
 
@@ -791,6 +801,248 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       string: ({ key }) => (key === 'name' ? { fontWeight: 'bold', fontSize: '120%' } : null),
     },
     customTextEditorAvailable: true,
+  },
+  customKeys: {
+    name: '🕵️ Custom Keys',
+    description: (
+      <Flex flexDir="column" gap={2}>
+        <Text>
+          This dossier demonstrates the{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#customising-keys" isExternal>
+            <span className="code">customKey</span>
+          </Link>{' '}
+          property of{' '}
+          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
+            Custom Nodes
+          </Link>{' '}
+          — a definition can render its own component in place of the property label, for both
+          value <em>and</em> collection nodes.
+        </Text>
+        <Text>Five inline definitions are at work here:</Text>
+        <UnorderedList>
+          <ListItem>
+            <Text>
+              Keys starting with <span className="code">_</span> are <em>classified</em> (italic +
+              🔒). Try expanding <span className="code">_emergencyContact</span> — this works on
+              collection keys, not just leaf values.
+            </Text>
+          </ListItem>
+          <ListItem>
+            <Text>
+              Keys starting with <span className="code">REDACTED_</span> are blacked out — the
+              original key is preserved in the data and shown on hover.
+            </Text>
+          </ListItem>
+          <ListItem>
+            <Text>
+              Codename keys (<span className="code">M</span>, <span className="code">Q</span>,{' '}
+              <span className="code">dob</span>, <span className="code">bp</span>) get an inline
+              expansion via a shared <span className="code">customNodeProps</span> map.
+            </Text>
+          </ListItem>
+          <ListItem>
+            <Text>
+              Keys ending in <span className="code">!</span> get a ⚠️ priority badge.
+            </Text>
+          </ListItem>
+          <ListItem>
+            <Text>
+              URLs under <span className="code">Field Reports</span> use{' '}
+              <span className="code">customKey</span> <em>and</em>{' '}
+              <span className="code">element</span> in one definition — 🔗 in the key, clickable
+              anchor in the value.
+            </Text>
+          </ListItem>
+        </UnorderedList>
+        <Text>
+          Double-click any customised key to enter the standard key-edit input. Try renaming{' '}
+          <span className="code">REDACTED_passportId</span> to drop the prefix and watch the
+          redaction lift.
+        </Text>
+      </Flex>
+    ),
+    rootName: 'dossier',
+    collapse: 2,
+    data: data.customKeys,
+    restrictAdd: ({ level }) => level === 0,
+    restrictDelete: ({ level }) => level === 0,
+    customNodeDefinitions: [
+      // 1. "REDACTED_" prefix — blacked-out key, original visible on hover.
+      // Must come before the `_` matcher (which would still match these
+      // would-be matches only if they started with `_`; they don't, but
+      // ordering this first is cleaner).
+      {
+        condition: ({ key }) => typeof key === 'string' && key.startsWith('REDACTED_'),
+        customKey: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => {
+          const display = String(name)
+          return (
+            <span
+              className="jer-key-text"
+              style={{ ...styles, cursor: 'help' }}
+              onClick={handleClick}
+              onDoubleClick={() => canEditKey && setIsEditingKey()}
+              title={`Encrypted key — double-click to reveal: ${display}`}
+            >
+              <span
+                style={{
+                  backgroundColor: 'black',
+                  color: 'black',
+                  padding: '0 0.3em',
+                  borderRadius: '2px',
+                  letterSpacing: '-0.05em',
+                }}
+              >
+                {display.replace(/\S/g, '█')}
+              </span>
+              <span className="jer-key-colon" style={{ marginLeft: '0.25em' }}>
+                :
+              </span>
+            </span>
+          )
+        },
+      },
+      // 2. "_" prefix — classified (italic + lock). Works for value AND
+      // collection keys: expand `_emergencyContact` to see the
+      // collection-key case.
+      {
+        condition: ({ key }) => typeof key === 'string' && key.startsWith('_'),
+        customKey: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => (
+          <span
+            className="jer-key-text"
+            style={{ ...styles, fontStyle: 'italic', opacity: 0.85 }}
+            onClick={handleClick}
+            onDoubleClick={() => canEditKey && setIsEditingKey()}
+          >
+            <span style={{ marginRight: '0.25em' }} aria-hidden="true">
+              🔒
+            </span>
+            {String(name)}
+            <span className="jer-key-colon">:</span>
+          </span>
+        ),
+      },
+      // 3. Codename glossary — keys in the map get a subscript expansion.
+      // `customNodeProps` carries the map so a single component can serve
+      // many keys, and the same generic could be shared with an `element`
+      // for this definition if you wanted both.
+      {
+        condition: ({ key }) =>
+          typeof key === 'string' && key in (codenameGlossary as Record<string, string>),
+        customNodeProps: { glossary: codenameGlossary },
+        customKey: ({
+          name,
+          canEditKey,
+          styles,
+          handleClick,
+          setIsEditingKey,
+          customNodeProps,
+        }) => {
+          const glossary = (customNodeProps as { glossary: Record<string, string> } | undefined)
+            ?.glossary
+          return (
+            <span
+              className="jer-key-text"
+              style={{
+                ...styles,
+                display: 'inline-flex',
+                alignItems: 'baseline',
+                gap: '0.35em',
+              }}
+              onClick={handleClick}
+              onDoubleClick={() => canEditKey && setIsEditingKey()}
+            >
+              <span>{String(name)}</span>
+              {glossary?.[String(name)] && (
+                <span
+                  style={{
+                    fontSize: '0.7em',
+                    fontStyle: 'italic',
+                    opacity: 0.6,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  ({glossary[String(name)]})
+                </span>
+              )}
+              <span className="jer-key-colon">:</span>
+            </span>
+          )
+        },
+      },
+      // 4. "!" suffix — priority badge. Shows that the rendered key text
+      // can differ from the stored key (we strip the trailing "!").
+      {
+        condition: ({ key }) => typeof key === 'string' && key.endsWith('!'),
+        customKey: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => {
+          const display = String(name).slice(0, -1)
+          return (
+            <span
+              className="jer-key-text"
+              style={{ ...styles, color: '#c0392b', fontWeight: 'bold' }}
+              onClick={handleClick}
+              onDoubleClick={() => canEditKey && setIsEditingKey()}
+            >
+              <span style={{ marginRight: '0.25em' }} aria-hidden="true">
+                ⚠️
+              </span>
+              {display}
+              <span className="jer-key-colon">:</span>
+            </span>
+          )
+        },
+      },
+      // 5. Field-report URLs — `customKey` AND `element` on the same node:
+      // a link icon in the key slot, clickable anchor in the value slot.
+      // Scoped via `path.includes('Field Reports')` so it doesn't fight
+      // with normal string values elsewhere.
+      {
+        condition: ({ value, path }) =>
+          typeof value === 'string' &&
+          /^https?:\/\/.+\..+$/.test(value) &&
+          path.includes('Field Reports'),
+        customKey: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => (
+          <span
+            className="jer-key-text"
+            style={{ ...styles }}
+            onClick={handleClick}
+            onDoubleClick={() => canEditKey && setIsEditingKey()}
+          >
+            <span style={{ marginRight: '0.25em' }} aria-hidden="true">
+              🔗
+            </span>
+            {String(name)}
+            <span className="jer-key-colon">:</span>
+          </span>
+        ),
+        element: ({ nodeData, getStyles, setIsEditing }) => {
+          const url = nodeData.value as string
+          const styles = getStyles('string', nodeData)
+          return (
+            <a
+              href={url}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                ...styles,
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                fontSize: '85%',
+              }}
+              onClick={(e) => {
+                if (e.getModifierState('Control') || e.getModifierState('Meta')) {
+                  e.preventDefault()
+                  setIsEditing(true)
+                }
+              }}
+            >
+              {url}
+            </a>
+          )
+        },
+        showOnView: true,
+        showOnEdit: false,
+      },
+    ],
   },
   customComponentLibrary: {
     name: '📚 Custom Component Library',

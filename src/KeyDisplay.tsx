@@ -4,7 +4,14 @@
 
 import React from 'react'
 import { useTreeState } from './contexts'
-import { type KeyboardControlsFull, type CollectionKey, type ValueData } from './types'
+import {
+  type KeyboardControlsFull,
+  type CollectionKey,
+  type NodeData,
+  type ThemeableElement,
+  type ValueData,
+} from './types'
+import { type CustomNodeData } from './CustomNode'
 
 interface KeyDisplayProps {
   canEditKey: boolean
@@ -24,6 +31,9 @@ interface KeyDisplayProps {
   styles: React.CSSProperties
   getNextOrPrevious: (type: 'next' | 'prev') => CollectionKey[] | null
   emptyStringKey: string | null
+  nodeData?: NodeData
+  customNodeData?: CustomNodeData
+  getStyles?: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
 }
 
 export const KeyDisplay: React.FC<KeyDisplayProps> = ({
@@ -41,20 +51,49 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   styles,
   getNextOrPrevious,
   emptyStringKey,
+  nodeData,
+  customNodeData,
+  getStyles,
 }) => {
   const { setCurrentlyEditingElement } = useTreeState()
 
   const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
 
-  if (!isEditingKey)
+  if (!isEditingKey) {
+    // Theme styles plus the same layout derivation the default key span
+    // uses, so custom-key renderers that spread `...styles` get
+    // default-consistent column alignment and wrap behaviour. Authors
+    // can override individual values.
+    const derivedKeyStyles: React.CSSProperties = {
+      ...styles,
+      minWidth: `${Math.min(displayKey.length + 1, 5)}ch`,
+      flexShrink: displayKey.length > 10 ? 1 : 0,
+    }
+    if (customNodeData?.CustomKey && nodeData && getStyles) {
+      const { CustomKey, customNodeProps } = customNodeData
+      return (
+        <CustomKey
+          nodeData={nodeData}
+          name={emptyStringKey ?? displayKey}
+          path={path}
+          canEditKey={canEditKey}
+          handleEditKey={(newKey) => {
+            if (canEditKey) handleEditKey(newKey)
+          }}
+          setIsEditingKey={() => {
+            if (canEditKey) setCurrentlyEditingElement(path, 'key')
+          }}
+          handleClick={handleClick}
+          styles={derivedKeyStyles}
+          customNodeProps={customNodeProps}
+          getStyles={getStyles}
+        />
+      )
+    }
     return (
       <span
         className="jer-key-text"
-        style={{
-          ...styles,
-          minWidth: `${Math.min(displayKey.length + 1, 5)}ch`,
-          flexShrink: displayKey.length > 10 ? 1 : 0,
-        }}
+        style={derivedKeyStyles}
         onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
         onClick={handleClick}
       >
@@ -62,6 +101,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
         {displayKey !== '' || emptyStringKey ? <span className="jer-key-colon">:</span> : null}
       </span>
     )
+  }
 
   return (
     <input

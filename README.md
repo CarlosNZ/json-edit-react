@@ -26,7 +26,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
  - 🎨 **Customisable UI** — built-in or custom [themes](#themes--styles), CSS overrides or targeted classes
  - 📦 **Self-contained** — plain HTML/CSS, so no dependence on external UI libraries
  - 🔍 **Search & filter** — find data by key, value or custom function
- - 🚧 **[Custom components](#custom-nodes)** — replace specific nodes with specialised components (e.g. date picker, links, images, `undefined`, `BigInt`, `Symbol`)
+ - 🚧 **[Custom components](#custom-nodes)** — replace keys and/or values with specialised components (e.g. date picker, links, images, `undefined`, `BigInt`, `Symbol`)
  - 🌏 **[Localisation](#localisation)** — easily translate UI labels and messages
  - 🔄 **[Drag-n-drop](#drag-n-drop)** re-ordering within objects/arrays
  - 🎹 **[Keyboard customisation](#keyboard-customisation)** — define your own key bindings
@@ -75,6 +75,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [Icons](#icons)
 - [Localisation](#localisation)
 - [Custom Nodes](#custom-nodes)
+  - [Customising keys](#customising-keys)
   - [Active hyperlinks](#active-hyperlinks)
   - [Handling JSON](#handling-json)
   - [Custom Collection nodes](#custom-collection-nodes)
@@ -942,8 +943,12 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
 ```js
 {
   condition,            // a FilterFunction, as above
-  element,              // React Component
-  customNodeProps,      // object (optional)
+
+  // The two render slots — provide either, both, or neither:
+  customKey,            // React Component — renders in the KEY slot (the property label)
+  element,              // React Component — renders in the VALUE / contents slot
+
+  customNodeProps,      // object (optional) — props shared by `customKey` and `element`
   hideKey,              // boolean (optional)
   defaultValue,         // JSON value for a new instance of your component
   showOnEdit            // boolean, default false
@@ -966,13 +971,49 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
 }
 ```
 
+A definition can target two slots independently — the **key** slot (via `customKey`) and the **value/contents** slot (via `element`). Either or both. The same model applies uniformly to value nodes and collection nodes:
+
+| Slot                  | Value node                                      | Collection node                                                            |
+| --------------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
+| Key                   | `customKey`                                     | `customKey`                                                                |
+| Value / contents      | `element`                                       | `element` (renders **between** the brackets)                               |
+| Whole-node override   | `element` with `hideKey: true` (escape hatch)   | `wrapperElement`, or `showCollectionWrapper: false` (escape hatch)         |
+
+Most cases are best served by targeting the specific slot you want to change — e.g. for a clickable or highlighted key, use `customKey`; for an alternative value renderer (image, date picker, etc.), use `element`.
+
 The `condition` is just a [Filter function](#filter-functions), with the same input parameters (`key`, `path`, `value`, etc.), and `element` is a React component. Every node in the data structure will be run through each condition function, and any that match will be replaced by your custom component. Note that if a node matches more than one custom definition conditions (from multiple components), the *first* one will be used, so place them in the array in priority order.
 
 The component will receive *all* the same props as a standard node component plus some additional ones — see [BaseNodeProps](https://github.com/CarlosNZ/json-edit-react/blob/b085f6391dabf574809f1040b11401c13344923d/src/types.ts#L219-L265) (common to all nodes) and [CustomNodeProps](https://github.com/CarlosNZ/json-edit-react/blob/b085f6391dabf574809f1040b11401c13344923d/src/types.ts#L275-L287) type definitions. Specifically, if you want to update the data structure from your custom node, you'll need to call the `setValue` method on your node's data value. And if you enable `passOriginalNode` above, you'll also have access to `originalNode` and `originalNodeKey` in order to render the standard content (i.e. what would have been rendered if it wasn't intercepted by this Custom Node) -- this can be helpful if you want your Custom Node to just be the default content with a little extra decoration. (*Note:* you may need a little custom CSS to render these original node components identically to the default display.)
 
 You can pass additional props specific to your component, if required, through the `customNodeProps` object. A thorough example of a custom **Date Picker** is used in the demo (along with a couple of other more basic presentational ones), which you can inspect to see how to utilise the standard props and a couple of custom props. View the source code [here](https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/customComponents/DateTimePicker.tsx).
 
-By default, your component will be presented to the right of the property key it belongs to, like any other value. However, you can hide the key itself by setting `hideKey: true`, and the custom component will take the whole row. (See the "Presented by" box in the "Custom Nodes" data set for an example.)
+By default, your `element` is presented to the right of the property key it belongs to, like any other value, and the key is rendered by the library. If you want to customize the **key** as well, use the `customKey` slot — see [Customising keys](#customising-keys) below.
+
+If you want a single component to render the **entire row** (both key and value together — for example a tightly-coupled composite where the layout can't be decomposed into two slots), you can set `hideKey: true` and let your `element` take the whole row. This is supported as an escape hatch; for most cases the `customKey` + `element` split is cleaner and preserves the standard key-editing UX.
+
+### Customising keys
+
+A `customKey` component is rendered in place of the default property label, in **view mode**. It receives the following props ([`CustomKeyProps`](https://github.com/CarlosNZ/json-edit-react/blob/main/src/types.ts)):
+
+- `nodeData` — the full [NodeData](#filter-functions) for this node
+- `name` — the key as **displayed** (always `string`; for array indices already offset for `arrayIndexFromOne`, and for empty-string keys already substituted with the `emptyStringKey` placeholder when one is configured). For the raw key, use `nodeData.key`.
+- `path` — the full path to this node
+- `canEditKey` — whether key editing is permitted for this node
+- `setIsEditingKey()` — call to enter key-edit mode (replaces your custom render with the standard input). No-ops if `canEditKey` is false.
+- `handleEditKey(newKey)` — commit a new key value programmatically. No-ops if `canEditKey` is false.
+- `handleClick(e)` — the parent's click handler; forward this if you want default click behaviour (e.g. collapse on header click for collection nodes)
+- `styles` — theme-resolved styles for the property text, plus the same `minWidth`/`flexShrink` layout values the default key renderer uses (so spreading `...styles` keeps column alignment consistent). Override individual values to opt out.
+- `getStyles(element, nodeData)` — fetch theme styles for any other theme key (e.g. `'bracket'`)
+- `customNodeProps` — the same `customNodeProps` object as on the definition (shared with `element`)
+
+See the [Custom Keys data set](https://carlosnz.github.io/json-edit-react/?data=customKeys) in the demo for a handful of short reference implementations — classified-field markers, redacted keys, key glossaries, priority badges, and a definition that uses `customKey` and `element` together.
+
+> [!NOTE]
+> The colon after the key (`:`) is **not** rendered for you — your component owns everything inside the key slot.
+>
+> `customKey` only fires in view mode; in edit mode the standard text input is used. And `hideKey: true` suppresses the key entirely (including any `customKey`).
+
+The same definition can use **both** `customKey` and `element` to customize a row end-to-end. `customKey` works **identically on value and collection nodes** — the same definition can match either, so e.g. an underscore-prefixed key gets a lock icon whether the value is a primitive or a nested object/array.
 
 Also, by default, your component will be treated as a "display" element, i.e. it will appear in the JSON viewer, but when editing, it will revert to the standard editing interface. This can be changed, however, with the `showOnEdit`, `showOnView` and `showEditTools` props. For example, a Date picker might only be required when *editing* and left as-is for display. The `showEditTools` prop refers to the editing icons (copy, add, edit, delete) that appear to the right of each value on hover. If you choose to disable these but you still want to your component to have an "edit" mode, you'll have to provide your own UI mechanism to toggle editing.
 
@@ -1007,13 +1048,13 @@ If you implement a Custom Node that uses a non-JSON data type (e.g. `BigInt`, `D
 
 ### Custom Collection nodes
 
-In most cases it will be preferable (and simpler) to create custom nodes to match *value* nodes (i.e. not `array` or `object` *collection* nodes), which is what all the [Demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) examples show. However, if you *do* wish to target a whole collection node, there are a couple of other things to know:
-- The normal descendants of this node can still be displayed using the [React `children`](https://react.dev/learn/passing-props-to-a-component#passing-jsx-as-children) property, it just becomes your component's responsibility to handle it.
-- You can specify two different components in the definition:
-  - the regular `element` prop, which will be displayed *inside* the collection brackets (i.e. it appears as the *contents* of the collection)
-  - an optional `wrapperElement`, which is displayed *outside* the collection (props can be supplied as described above with `wrapperProps`). Again, the inner contents (including your custom `element`) can be displayed using React `children`. In this example, the **blue** border shows the `wrapperElement` and the **red** border shows the inner `element`:  
+Most custom-node usage targets *value* nodes (i.e. not `array` or `object` *collection* nodes), which is what most [Demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) examples show. Customising collection nodes is fully supported, with the same two-slot model as value nodes:
+
+- For just the **key** of a collection, use `customKey` (see [Customising keys](#customising-keys)). The brackets, chevron, count, and collapse behaviour are all preserved.
+- For the **contents inside the brackets**, use `element`. The normal descendants can still be displayed using the [React `children`](https://react.dev/learn/passing-props-to-a-component#passing-jsx-as-children) property — it becomes your component's responsibility to render them.
+- For a **wrapper around the whole collection**, use `wrapperElement` (with optional `wrapperProps`). The inner contents (including your custom `element`) can be displayed using React `children`. In this example, the **blue** border shows the `wrapperElement` and the **red** border shows the inner `element`:  
   <img width="450" alt="custom node levels" src="image/custom_component_levels.png"> 
-- There is one additional prop, `showCollectionWrapper` (default `true`), which, when set to `false`, hides the surrounding collection elements (namely the hide/show chevron and the brackets). In this case, you would have to provide your own hide/show mechanism in your component should you want it.
+- For a **full replacement** of the entire collection node (no chevron, no brackets, no built-in collapse), set `showCollectionWrapper: false`. In that case you provide your own hide/show mechanism. This is the escape hatch — for most styling/key needs, `customKey` and/or `element` are simpler.
 
 ### Displaying Collections as Values
 
@@ -1219,6 +1260,7 @@ A few helper functions, components and types that might be useful in your own im
 - `CollectionNodeProps`: all props passed internally to "collection" nodes (i.e. objects/arrays)
 - `ValueNodeProps`: all props passed internally to "value" nodes (i.e. *not* objects/arrays)
 - `CustomNodeProps`: all props passed internally to [Custom nodes](#custom-nodes); basically the same as `CollectionNodeProps` with an extra `customNodeProps` field for passing props unique to your component`
+- `CustomKeyProps`: props passed to a [`customKey`](#customising-keys) component — see the type definition for the full shape
 - `DataType`: `"string"` | `"number"` | `"boolean"` | `"null"` | `"object"` | `"array"`
 - `EnumDefinition`: type of [Enum definition](#enums) objects
 - `KeyboardControls`: structure for [keyboard customisation](#keyboard-customisation) prop
@@ -1242,6 +1284,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
+- **1.30.0**: New [`customKey`](#customising-keys) slot on `CustomNodeDefinition` — a definition can now render its own component in the key position, for both value and collection nodes ([#235](https://github.com/CarlosNZ/json-edit-react/pull/235), originally suggested by [@drahoslove](https://github.com/drahoslove) in [#233](https://github.com/CarlosNZ/json-edit-react/pull/233))
 - **1.29.1**: Squashed a bug where a parent re-render would revert data mid-edit when editing a whole collection as text ([#234](https://github.com/CarlosNZ/json-edit-react/pull/234))
 - **1.29.0**: Option to display array indexes starting at "1" ([#62](https://github.com/CarlosNZ/json-edit-react/issues/62))
 - **1.28.2**: When switching data type, only keep editing if new type is primitive ([#216](https://github.com/CarlosNZ/json-edit-react/issues/216))
