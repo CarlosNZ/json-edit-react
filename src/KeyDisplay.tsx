@@ -65,7 +65,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
       return (
         <CustomKey
           nodeData={nodeData}
-          name={displayKey}
+          name={emptyStringKey ?? displayKey}
           path={path}
           canEditKey={canEditKey}
           handleEditKey={(newKey) => {
