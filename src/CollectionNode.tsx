@@ -464,6 +464,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
         // but "header" is
         (e: React.MouseEvent) => e.stopPropagation(),
     emptyStringKey,
+    nodeData,
+    customNodeData,
+    getStyles,
   }
 
   const CollectionNodeComponent = (

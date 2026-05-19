@@ -21,6 +21,9 @@ export const testData = {
   - Symbol
   - Image
   - ColorPicker
+  - **PrivateKey** — \`customKey\` on underscore-prefixed keys (works on both values & collections)
+  - **AnnotatedKey** — \`customKey\` with a configured map of key annotations
+  - **KeyedLink** — one definition customising both \`customKey\` and \`element\` (key icon + clickable URL)
 
   Click [here](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md) for more info
   `,
@@ -60,4 +63,22 @@ export const testData = {
     },
   },
   'Color Picker': '#ff69B4', // Hot Pink
+  'Custom Keys': {
+    _secret: 'shh — value node with a "_"-prefixed key',
+    _internal: {
+      note: 'collection node with a "_"-prefixed key — try expanding/collapsing me',
+      audit: { createdBy: 'admin', revision: 3 },
+    },
+    Product: {
+      id: 'P-42',
+      sku: 'JER-001',
+      qty: 7,
+      ts: new Date().toISOString(),
+      name: 'JSON editor',
+    },
+    'Linked Resources': {
+      Documentation: 'https://carlosnz.github.io/json-edit-react/',
+      Repository: 'https://github.com/CarlosNZ/json-edit-react',
+    },
+  },
 }

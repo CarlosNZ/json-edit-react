@@ -1,8 +1,14 @@
-import { type CustomNodeDefinition, type CustomNodeProps, type NodeData } from './types'
+import {
+  type CustomKeyProps,
+  type CustomNodeDefinition,
+  type CustomNodeProps,
+  type NodeData,
+} from './types'
 
 export interface CustomNodeData {
   CustomNode?: React.FC<CustomNodeProps>
   CustomWrapper?: React.FC<CustomNodeProps>
+  CustomKey?: React.FC<CustomKeyProps>
   name?: string
   customNodeProps?: Record<string, unknown>
   wrapperProps?: Record<string, unknown>
@@ -30,6 +36,7 @@ export const getCustomNode = (
   const {
     element,
     wrapperElement,
+    customKey,
     customNodeProps,
     wrapperProps,
     hideKey = false,
@@ -43,6 +50,7 @@ export const getCustomNode = (
   return {
     CustomNode: element,
     CustomWrapper: wrapperElement,
+    CustomKey: customKey,
     customNodeProps,
     wrapperProps,
     hideKey,

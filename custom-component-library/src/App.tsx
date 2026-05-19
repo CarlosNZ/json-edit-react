@@ -15,6 +15,9 @@ import {
   EnhancedLinkCustomNodeDefinition,
   ImageNodeDefinition,
   ColorPickerNodeDefinition,
+  PrivateKeyDefinition,
+  AnnotatedKeyDefinition,
+  KeyedLinkDefinition,
 } from '../components'
 import { testData } from './data'
 import { JsonEditor } from '@json-edit-react'
@@ -56,6 +59,10 @@ function App() {
         data={data}
         setData={setData as (data: unknown) => void}
         customNodeDefinitions={[
+          // Custom-key examples — these use the new `customKey` field
+          PrivateKeyDefinition,
+          AnnotatedKeyDefinition,
+          KeyedLinkDefinition,
           { ...ImageNodeDefinition, customNodeProps: { imageStyles: { maxWidth, maxHeight } } },
           LinkCustomNodeDefinition,
           ColorPickerNodeDefinition,
