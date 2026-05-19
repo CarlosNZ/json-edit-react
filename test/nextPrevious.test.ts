@@ -1,4 +1,4 @@
-import { getNextOrPrevious } from '../demo/src/json-edit-react/src/helpers'
+import { getNextOrPrevious } from '../src/helpers'
 
 const getNext = (data: object, path: (string | number)[]) =>
   getNextOrPrevious(data, path, 'next', () => {})
