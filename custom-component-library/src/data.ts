@@ -60,4 +60,16 @@ export const testData = {
     },
   },
   'Color Picker': '#ff69B4', // Hot Pink
+  'Custom Keys': {
+    description: 'Keys containing "error" are red & bold. Keys starting with "_" are italic & dimmed.',
+    errorCount: 3,
+    lastErrorMessage: 'Connection refused',
+    errorContext: {
+      upstreamErrorCode: 'ECONNREFUSED',
+      retryable: true,
+    },
+    _internalId: 'abc-123',
+    _deprecatedField: 'use errorContext instead',
+    status: 'degraded',
+  },
 }
