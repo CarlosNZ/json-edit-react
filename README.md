@@ -1006,14 +1006,14 @@ A `customKey` component is rendered in place of the default property label, in *
 - `getStyles(element, nodeData)` — fetch theme styles for any other theme key (e.g. `'bracket'`)
 - `customNodeProps` — the same `customNodeProps` object as on the definition (shared with `element`)
 
+See the [Custom Keys data set](https://carlosnz.github.io/json-edit-react/?data=customKeys) in the demo for a handful of short reference implementations — classified-field markers, redacted keys, key glossaries, priority badges, and a definition that uses `customKey` and `element` together.
+
 > [!NOTE]
-> The colon after the key (`:`) is **not** rendered for you — your component owns everything inside the key slot. The PrivateKey example in the [Custom Component Library](https://github.com/CarlosNZ/json-edit-react/tree/main/custom-component-library/components/PrivateKey) is a short reference.
+> The colon after the key (`:`) is **not** rendered for you — your component owns everything inside the key slot.
 >
 > `customKey` only fires in view mode; in edit mode the standard text input is used. And `hideKey: true` suppresses the key entirely (including any `customKey`).
 
-The same definition can use **both** `customKey` and `element` to customize a row end-to-end — see the [KeyedLink](https://github.com/CarlosNZ/json-edit-react/tree/main/custom-component-library/components/KeyedLink) example, where one definition renders a link icon in the key slot and a clickable anchor in the value slot.
-
-`customKey` works **identically on value and collection nodes** — the same definition can match either. The PrivateKey example demonstrates this: keys prefixed with `_` get a lock icon whether the value is a primitive or a nested object/array.
+The same definition can use **both** `customKey` and `element` to customize a row end-to-end. `customKey` works **identically on value and collection nodes** — the same definition can match either, so e.g. an underscore-prefixed key gets a lock icon whether the value is a primitive or a nested object/array.
 
 Also, by default, your component will be treated as a "display" element, i.e. it will appear in the JSON viewer, but when editing, it will revert to the standard editing interface. This can be changed, however, with the `showOnEdit`, `showOnView` and `showEditTools` props. For example, a Date picker might only be required when *editing* and left as-is for display. The `showEditTools` prop refers to the editing icons (copy, add, edit, delete) that appear to the right of each value on hover. If you choose to disable these but you still want to your component to have an "edit" mode, you'll have to provide your own UI mechanism to toggle editing.
 

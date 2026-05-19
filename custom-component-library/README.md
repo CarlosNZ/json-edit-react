@@ -32,9 +32,6 @@ These are the ones currently available:
 - [x] "Enhanced" link
 - [x] Image
 - [x] Colour picker
-- [x] Private Key
-- [x] Annotated Key
-- [x] Keyed Link
 
 ## Development
 
