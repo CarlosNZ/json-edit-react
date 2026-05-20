@@ -34,7 +34,7 @@ import {
   ErrorString,
   TypeOptions,
   UpdateFunctionProps,
-  type Input,
+  type AssignInput,
 } from '@json-edit-react'
 import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'
@@ -523,7 +523,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       const messageObject = (newData as { messages: { [key: number]: { timeStamp: string } } })
         ?.messages?.[path[1] as number]
       messageObject.timeStamp = new Date().toISOString()
-      const data = assign(newData as Input, parentPath, messageObject)
+      const data = assign(newData as AssignInput, parentPath, messageObject)
       return ['value', data]
     },
     onAdd: ({ path, newData }) => {
@@ -531,7 +531,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         // @ts-expect-error TO-DO
         const messages = [...(newData?.messages ?? [])]
         messages.sort((a, b) => new Date(b.timeStamp).getTime() - new Date(a.timeStamp).getTime())
-        const data = assign(newData as Input, 'messages', messages)
+        const data = assign(newData as AssignInput, 'messages', messages)
         return ['value', data]
       }
       return

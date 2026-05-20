@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { assign, extract, type AssignOptions, type Input } from './utils'
+import { assign, extract, type AssignOptions, type AssignInput } from './utils'
 import { CollectionNode } from './CollectionNode'
 import {
   getFullKeyboardControlMap,
@@ -478,7 +478,7 @@ const updateDataObject = (
   }
 
   const currentValue = action !== 'add' ? extract(data, path) : undefined
-  const newData = assign(data as Input, path, newValue, assignOptions)
+  const newData = assign(data as AssignInput, path, newValue, assignOptions)
 
   return {
     currentData: data,

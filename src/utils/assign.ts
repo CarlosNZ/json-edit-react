@@ -10,10 +10,10 @@
 import { splitPropertyString, type Path } from './helpers'
 
 type BasicType = string | number | boolean | undefined | null | ((...args: unknown[]) => unknown)
-type Value = Input | BasicType
+type Value = AssignInput | BasicType
 type InputObject = { [key: string]: Value }
 type InputArray = Value[]
-export type Input = InputObject | InputArray
+export type AssignInput = InputObject | InputArray
 
 export interface AssignOptions {
   remove?: boolean
@@ -26,7 +26,7 @@ export interface AssignOptions {
 
 interface FullOptions extends AssignOptions {
   noError: boolean
-  fullData: Input
+  fullData: AssignInput
   fullPath: string
 }
 
@@ -70,7 +70,7 @@ const removeFromArray = <T>(input: T[], index: number): T[] => input.filter((_, 
 
 // Wrapper function
 export const assign = (
-  data: Input,
+  data: AssignInput,
   propertyPath: string | Path,
   newValue: any,
   options: AssignOptions = {}
@@ -96,11 +96,11 @@ export const assign = (
 
 // Recursive function called by wrapper
 const assignProperty = (
-  data: Input,
+  data: AssignInput,
   propertyPathArray: Path,
   newValue: any,
   options: FullOptions
-): Input => {
+): AssignInput => {
   const objectData = isObject(data) ? { ...data } : null
   const arrayData = isArray(data) ? [...data] : null
 
@@ -115,7 +115,7 @@ const assignProperty = (
 
   if (arrayData && typeof property === 'string') {
     return arrayData.map((item) =>
-      assignProperty(item as Input, propertyPathArray, newValue, options)
+      assignProperty(item as AssignInput, propertyPathArray, newValue, options)
     )
   }
 
@@ -168,7 +168,7 @@ const assignProperty = (
         return newData
       }
     }
-    newData[property] = assignProperty(newData[property] as Input, newPathArray, newValue, options)
+    newData[property] = assignProperty(newData[property] as AssignInput, newPathArray, newValue, options)
 
     return newData
   }
@@ -180,7 +180,7 @@ const assignProperty = (
     if (objectData) {
       newData[property] = newElement
       newData[property] = assignProperty(
-        newData[property] as Input,
+        newData[property] as AssignInput,
         newPathArray,
         newValue,
         options
@@ -192,7 +192,7 @@ const assignProperty = (
       newData.push(newElement)
       const newIndex = newData.length - 1
       newData[newIndex] = assignProperty(
-        newData[newIndex] as Input,
+        newData[newIndex] as AssignInput,
         newPathArray,
         newValue,
         options
