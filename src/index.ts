@@ -4,8 +4,7 @@ export { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevro
 export { StringDisplay, StringEdit, useKeyboardListener } from './ValueNodes'
 export { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
 export { matchNode, matchNodeKey, isCollection, toPathString } from './helpers'
-export { default as assign } from 'object-property-assigner'
-export { default as extract } from 'object-property-extractor'
+export { assign, extract, type AssignInput, type AssignOptions } from './utils'
 export {
   standardDataTypes,
   type JsonEditorProps,

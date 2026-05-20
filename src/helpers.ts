@@ -1,4 +1,4 @@
-import extractProperty from 'object-property-extractor'
+import { extract } from './utils'
 import {
   type SearchFilterFunction,
   type NodeData,
@@ -268,7 +268,7 @@ export const getNextOrPrevious = (
   const thisKey = path.slice(-1)[0]
   if (thisKey === undefined) return null
 
-  const parentData = extractProperty(fullData, parentPath)
+  const parentData = extract(fullData, parentPath)
   const collection = transformCollection(parentData as CollectionData)
 
   if (!Array.isArray(parentData))
@@ -301,7 +301,7 @@ const getChildRecursive = (
   nextOrPrev: TabDirection = 'next',
   sort: SortFunction
 ) => {
-  const node = extractProperty(fullData, path)
+  const node = extract(fullData, path)
   if (!isCollection(node)) return path
   const keys = Array.isArray(node) ? node.map((_, index) => index) : Object.keys(node)
 

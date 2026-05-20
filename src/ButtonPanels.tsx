@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import extract from 'object-property-extractor'
+import { extract } from './utils'
 import { Icon } from './Icons'
 import { useTheme } from './contexts'
 import { type TranslateFunction } from './localisation'

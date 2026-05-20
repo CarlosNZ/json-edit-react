@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 ## What this is
 
-`json-edit-react` is a published React component library (`JsonEditor`) for inline editing/viewing of JSON / object data. The published package is intentionally **self-contained**: plain HTML/CSS, no UI framework dependencies, with only two small runtime deps (`object-property-assigner`, `object-property-extractor`) and React as a peer dependency (`>=16.0.0`).
+`json-edit-react` is a published React component library (`JsonEditor`) for inline editing/viewing of JSON / object data. The published package is intentionally **self-contained**: plain HTML/CSS, no UI framework dependencies, no runtime dependencies, and React as a peer dependency (`>=16.0.0`).
 
 A high-level architectural overview is maintained at https://deepwiki.com/CarlosNZ/json-edit-react and the full user-facing API is documented in [README.md](README.md).
 
@@ -71,7 +71,7 @@ The demo can resolve `json-edit-react` from three places via `VITE_JRE_SOURCE` (
 - Peer dep is `react >=16.0.0`. The ESLint config enforces `react/react-in-jsx-scope: error` — keep `import React from 'react'` (or the JSX namespace) available where needed. Don't rely on React 17+ JSX transform behaviour in library code.
 
 ### Dependencies
-- The core library has **only two** runtime deps. Don't add more without a strong reason — the "no external UI library" promise is part of the product. UI-rich features (CodeMirror, Chakra, AJV, Firebase) belong in the demo, not in `src/`.
+- The core library has **zero** runtime deps. Don't add any without a strong reason — the "no external UI library" promise is part of the product. UI-rich features (CodeMirror, Chakra, AJV, Firebase) belong in the demo, not in `src/`.
 - Anything imported only by the demo must not be reachable from `src/`.
 
 ### Build

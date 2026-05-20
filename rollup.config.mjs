@@ -35,7 +35,6 @@ export default [
       bundleSize(),
       sizes(),
     ],
-    external: ['object-property-assigner', 'object-property-extractor'],
   },
   // Types
   {

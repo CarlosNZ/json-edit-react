@@ -24,7 +24,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
  - 🔒 **Granular control** – restrict edits, deletions, or additions per element
  - 📏 **[JSON Schema](https://json-schema.org/) validation** (using 3rd-party validation library)
  - 🎨 **Customisable UI** — built-in or custom [themes](#themes--styles), CSS overrides or targeted classes
- - 📦 **Self-contained** — plain HTML/CSS, so no dependence on external UI libraries
+ - 📦 **Self-contained** — plain HTML/CSS, no external UI library dependencies, and *zero runtime dependencies*
  - 🔍 **Search & filter** — find data by key, value or custom function
  - 🚧 **[Custom components](#custom-nodes)** — replace keys and/or values with specialised components (e.g. date picker, links, images, `undefined`, `BigInt`, `Symbol`)
  - 🌏 **[Localisation](#localisation)** — easily translate UI labels and messages
@@ -973,11 +973,11 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
 
 A definition can target two slots independently — the **key** slot (via `customKey`) and the **value/contents** slot (via `element`). Either or both. The same model applies uniformly to value nodes and collection nodes:
 
-| Slot                  | Value node                                      | Collection node                                                            |
-| --------------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
-| Key                   | `customKey`                                     | `customKey`                                                                |
-| Value / contents      | `element`                                       | `element` (renders **between** the brackets)                               |
-| Whole-node override   | `element` with `hideKey: true` (escape hatch)   | `wrapperElement`, or `showCollectionWrapper: false` (escape hatch)         |
+| Slot                | Value node                                    | Collection node                                                    |
+| ------------------- | --------------------------------------------- | ------------------------------------------------------------------ |
+| Key                 | `customKey`                                   | `customKey`                                                        |
+| Value / contents    | `element`                                     | `element` (renders **between** the brackets)                       |
+| Whole-node override | `element` with `hideKey: true` (escape hatch) | `wrapperElement`, or `showCollectionWrapper: false` (escape hatch) |
 
 Most cases are best served by targeting the specific slot you want to change — e.g. for a clickable or highlighted key, use `customKey`; for an alternative value renderer (image, date picker, etc.), use `element`.
 
@@ -1239,8 +1239,8 @@ A few helper functions, components and types that might be useful in your own im
 - `StringEdit`: component used when editing a string value, can be useful for custom components
 - `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron`: all the built-in [icon](#icons) components
 - `matchNode`, `matchNodeKey`: helpers for defining custom [Search](#searchfiltering) functions
-- `extract`: function to extract a deeply nested object value from a string path. See [here](https://github.com/CarlosNZ/object-property-extractor)
-- `assign`: function to set a deep object value from a string path. See [here](https://github.com/CarlosNZ/object-property-assigner)
+- `extract`: function to extract a deeply nested object value from a string path. Originally published at [object-property-extractor](https://github.com/CarlosNZ/object-property-extractor)
+- `assign`: function to set a deep object value from a string path. Originally published at [object-property-assigner](https://github.com/CarlosNZ/object-property-assigner)
 - `isCollection`: simple utility that returns `true` if input is a "Collection" (i.e. an Object or Array)
 - `toPathString`: transforms a path array to a string representation, e.g.  `["data", 0, "property1", "name"] => "data.0.property1.name"`
 - `defaultTheme`, `githubDarkTheme`, `monoDarkTheme`, `monoLightTheme`, `candyWrapperTheme`, `psychedelicTheme`: all built-in themes
@@ -1284,7 +1284,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.30.0**: New [`customKey`](#customising-keys) slot on `CustomNodeDefinition` — a definition can now render its own component in the key position, for both value and collection nodes ([#235](https://github.com/CarlosNZ/json-edit-react/pull/235), originally suggested by [@drahoslove](https://github.com/drahoslove) in [#233](https://github.com/CarlosNZ/json-edit-react/pull/233))
+- **1.30.0**:
+  - New [`customKey`](#customising-keys) slot on `CustomNodeDefinition` — a definition can now render its own component in the key position, for both value and collection nodes ([#235](https://github.com/CarlosNZ/json-edit-react/pull/235), originally suggested by [@drahoslove](https://github.com/drahoslove) in [#233](https://github.com/CarlosNZ/json-edit-react/pull/233))
+  - Internalise `extract` and `assign` utilities — package now has zero runtime dependencies ([#237](https://github.com/CarlosNZ/json-edit-react/pull/237))
 - **1.29.1**: Squashed a bug where a parent re-render would revert data mid-edit when editing a whole collection as text ([#234](https://github.com/CarlosNZ/json-edit-react/pull/234))
 - **1.29.0**: Option to display array indexes starting at "1" ([#62](https://github.com/CarlosNZ/json-edit-react/issues/62))
 - **1.28.2**: When switching data type, only keep editing if new type is primitive ([#216](https://github.com/CarlosNZ/json-edit-react/issues/216))
