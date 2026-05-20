@@ -1444,13 +1444,10 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@1.29.1:
-  version "1.29.1"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.29.1.tgz#06d2df014149ab7dce4fd167aec8d63e433f199c"
-  integrity sha512-/Q3Zrljf5YUZvQnm+2ExXJPjEitONRONmiLXPLvvmhtJ7OFd0bB4C3HBkU6ijBR9TChWDxw6ciJfs6d6UtxZdg==
-  dependencies:
-    object-property-assigner "^1.3.5"
-    object-property-extractor "^1.0.14"
+json-edit-react@1.30.0:
+  version "1.30.0"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.30.0.tgz#a8e6939429ef41b690f3912d6ab5e18922a11869"
+  integrity sha512-wnZNTgOvHfW8wZaxE7A86PSreki4QfmIejueIryFRV5CiD/VtGeTNnTwgqUKY/T2w3kwS55BQtMXKhmL36uLzg==
 
 json-schema-traverse@^0.4.1:
   version "0.4.1"
@@ -1851,16 +1848,6 @@ node-releases@^2.0.19:
   version "2.0.19"
   resolved "https://registry.yarnpkg.com/node-releases/-/node-releases-2.0.19.tgz#9e445a52950951ec4d177d843af370b411caf314"
   integrity sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==
-
-object-property-assigner@^1.3.5:
-  version "1.3.5"
-  resolved "https://registry.yarnpkg.com/object-property-assigner/-/object-property-assigner-1.3.5.tgz#f5037ff73b7b015a42e4059c3ff5c84017413ca2"
-  integrity sha512-DIzHzNSTnpoG8QPQCDNrHa6O3vLMhktK3Igirqpk523UYIVe8JNCKcn5C9WyLQxJc58EGsAIiiEu10gqPrud8w==
-
-object-property-extractor@^1.0.14:
-  version "1.0.14"
-  resolved "https://registry.yarnpkg.com/object-property-extractor/-/object-property-extractor-1.0.14.tgz#bff9292974a47633129e8108b547b6a116ad67b6"
-  integrity sha512-euG3MQwj41DMbfk1keguY+jKQvaf9r26NeECtb28G8jABnhZVqxVEvIFywWC2107cSgx8dimA+JXuCAZFfbsSg==
 
 optionator@^0.9.3:
   version "0.9.4"
