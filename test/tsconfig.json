@@ -3,7 +3,9 @@
   "compilerOptions": {
     "rootDir": "..",
     "noEmit": true,
-    "moduleResolution": "bundler"
+    "moduleResolution": "bundler",
+    "typeRoots": ["../node_modules/@types"],
+    "types": ["jest", "node"]
   },
   "include": ["**/*.ts", "../src/**/*.ts"]
 }
