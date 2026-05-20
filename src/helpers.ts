@@ -1,4 +1,4 @@
-import { extract } from './utils/extract'
+import { extract } from './utils'
 import {
   type SearchFilterFunction,
   type NodeData,
