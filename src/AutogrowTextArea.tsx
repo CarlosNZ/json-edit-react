@@ -34,12 +34,21 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   if (typeof value !== 'string') return null
   const dummyValue = value.slice(-1) === '\n' ? value + '.' : value
 
+  const containerHeight = document?.getElementsByClassName('jer-component')?.[0].clientHeight
+
+  console.log('containerHeight', containerHeight)
+
   return (
     <div style={{ display: 'grid' }}>
       <textarea
         id={`${name}_textarea`}
         ref={textAreaRef}
         style={{
+          // Prevents the textarea from growing beyond the container height,
+          // which leads to a weird "double scroll" effect where both the
+          // textarea and the container scroll. The 8em accounts for the difference between the container height and the text area
+          maxHeight: `calc(${containerHeight}px - 8em)`,
+          // maxHeight: containerHeight - 100,
           height: 'auto',
           gridArea: '1 / 1 / 2 / 2',
           overflowY: 'auto',
@@ -64,7 +73,10 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
         style={{
           visibility: 'hidden',
           // visibility: 'visible',
+          maxHeight: `calc(${containerHeight}px - 8em)`,
+          // maxHeight: containerHeight - 100,
           height: 'auto',
+          // height: heightString,
           gridArea: '1 / 1 / 2 / 2',
           color: 'red',
           opacity: 0.9,
