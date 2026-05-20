@@ -24,7 +24,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
  - 🔒 **Granular control** – restrict edits, deletions, or additions per element
  - 📏 **[JSON Schema](https://json-schema.org/) validation** (using 3rd-party validation library)
  - 🎨 **Customisable UI** — built-in or custom [themes](#themes--styles), CSS overrides or targeted classes
- - 📦 **Self-contained** — plain HTML/CSS, so no dependence on external UI libraries
+ - 📦 **Self-contained** — plain HTML/CSS, no external UI library dependencies, and *zero runtime dependencies*
  - 🔍 **Search & filter** — find data by key, value or custom function
  - 🚧 **[Custom components](#custom-nodes)** — replace keys and/or values with specialised components (e.g. date picker, links, images, `undefined`, `BigInt`, `Symbol`)
  - 🌏 **[Localisation](#localisation)** — easily translate UI labels and messages
@@ -973,11 +973,11 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
 
 A definition can target two slots independently — the **key** slot (via `customKey`) and the **value/contents** slot (via `element`). Either or both. The same model applies uniformly to value nodes and collection nodes:
 
-| Slot                  | Value node                                      | Collection node                                                            |
-| --------------------- | ----------------------------------------------- | -------------------------------------------------------------------------- |
-| Key                   | `customKey`                                     | `customKey`                                                                |
-| Value / contents      | `element`                                       | `element` (renders **between** the brackets)                               |
-| Whole-node override   | `element` with `hideKey: true` (escape hatch)   | `wrapperElement`, or `showCollectionWrapper: false` (escape hatch)         |
+| Slot                | Value node                                    | Collection node                                                    |
+| ------------------- | --------------------------------------------- | ------------------------------------------------------------------ |
+| Key                 | `customKey`                                   | `customKey`                                                        |
+| Value / contents    | `element`                                     | `element` (renders **between** the brackets)                       |
+| Whole-node override | `element` with `hideKey: true` (escape hatch) | `wrapperElement`, or `showCollectionWrapper: false` (escape hatch) |
 
 Most cases are best served by targeting the specific slot you want to change — e.g. for a clickable or highlighted key, use `customKey`; for an alternative value renderer (image, date picker, etc.), use `element`.
 
