@@ -82,7 +82,7 @@ export const assign = (
 
   const propertyPathArray = Array.isArray(propertyPath)
     ? propertyPath
-    : splitPropertyString(propertyPath).filter((e) => e !== '')
+    : splitPropertyString(propertyPath)
 
   if (isArray(data) && remove && propertyPathArray.length === 1) {
     // Special case for removing an array index that is at the root level. We'd
