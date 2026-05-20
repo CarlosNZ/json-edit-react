@@ -4,6 +4,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type, @typescript-eslint/no-unused-vars */
 
+import { splitPropertyString, type Path } from './helpers'
+
 type BasicType = string | number | boolean | undefined | null | Function
 type Value = Input | BasicType
 type InputObject = { [key: string]: Value }
@@ -19,8 +21,6 @@ export interface AssignOptions {
   insertAfter?: string | number
 }
 
-type Path = (string | number)[]
-
 interface FullOptions extends AssignOptions {
   noError: boolean
   fullData: Input
@@ -28,22 +28,6 @@ interface FullOptions extends AssignOptions {
 }
 
 // --- Helpers ---
-
-// Splits a string representing a (nested) property/index on an Object or Array
-// into array of strings/indexes
-// e.g. "data.organisations.nodes[0]" => ["data","organisations", "nodes", 0]
-const splitPropertyString = (propertyPath: string | Path) => {
-  if (Array.isArray(propertyPath)) return propertyPath
-  const arr = propertyPath
-    .split(/(\.|\[\d+\])/)
-    .filter((part) => part !== '.' && part !== '')
-    .map((part) => {
-      const match = /\[(\d+)\]/.exec(part)
-      if (!match) return part
-      return Number(match[1])
-    })
-  return arr.flat()
-}
 
 const stringifyPath = (path: (string | number)[] | string | number): string => {
   if (typeof path === 'string') return path

@@ -4,6 +4,8 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 
+import { splitPropertyString } from './helpers'
+
 type BasicObject = {
   [key: string]: BasicObject | unknown | (BasicObject | unknown)[]
 }
@@ -42,21 +44,6 @@ export const extract = (
   } else {
     return extract(newObj, propertyPathArray.slice(1), fallback)
   }
-}
-
-// Splits a string representing a (nested) property/index on an Object or Array
-// into array of strings/indexes
-// e.g. "data.organisations.nodes[0]" => ["data","organisations", "nodes", 0]
-const splitPropertyString = (propertyPath: string) => {
-  const arr = propertyPath
-    .split(/(\.|\[\d+\])/)
-    .filter((part) => part !== '.' && part !== '')
-    .map((part) => {
-      const match = /\[(\d+)\]/.exec(part)
-      if (!match) return part
-      return Number(match[1])
-    })
-  return arr.flat()
 }
 
 const fallbackOrError = (obj: InputObject, property: string | number, fallback: any) => {
