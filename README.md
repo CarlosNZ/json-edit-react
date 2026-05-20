@@ -1284,7 +1284,9 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.30.0**: New [`customKey`](#customising-keys) slot on `CustomNodeDefinition` — a definition can now render its own component in the key position, for both value and collection nodes ([#235](https://github.com/CarlosNZ/json-edit-react/pull/235), originally suggested by [@drahoslove](https://github.com/drahoslove) in [#233](https://github.com/CarlosNZ/json-edit-react/pull/233))
+- **1.30.0**:
+  - New [`customKey`](#customising-keys) slot on `CustomNodeDefinition` — a definition can now render its own component in the key position, for both value and collection nodes ([#235](https://github.com/CarlosNZ/json-edit-react/pull/235), originally suggested by [@drahoslove](https://github.com/drahoslove) in [#233](https://github.com/CarlosNZ/json-edit-react/pull/233))
+  - Internalise `extract` and `assign` utilities — package now has zero runtime dependencies ([#237](https://github.com/CarlosNZ/json-edit-react/pull/237))
 - **1.29.1**: Squashed a bug where a parent re-render would revert data mid-edit when editing a whole collection as text ([#234](https://github.com/CarlosNZ/json-edit-react/pull/234))
 - **1.29.0**: Option to display array indexes starting at "1" ([#62](https://github.com/CarlosNZ/json-edit-react/issues/62))
 - **1.28.2**: When switching data type, only keep editing if new type is primitive ([#216](https://github.com/CarlosNZ/json-edit-react/issues/216))
