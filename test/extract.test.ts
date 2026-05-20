@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-function-type */
-import extract from '../src/utils/extract'
+import { extract } from '../src/utils/extract'
 
 const testObj1 = {
   a: 1,

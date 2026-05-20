@@ -4,16 +4,16 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 
-export type BasicObject = {
+type BasicObject = {
   [key: string]: BasicObject | unknown | (BasicObject | unknown)[]
 }
 
-export type BasicArray = (BasicObject | unknown)[]
+type BasicArray = (BasicObject | unknown)[]
 
-export type InputObject = BasicObject | BasicArray | unknown
+type InputObject = BasicObject | BasicArray | unknown
 
 // Returns a specific property or index (e.g. application.name) from a nested Object
-const extractProperty = (
+export const extract = (
   inputObj: InputObject,
   properties: string | number | (string | number)[],
   fallback?: any
@@ -30,7 +30,7 @@ const extractProperty = (
   // from *each* item in the array and return an array of results. If the array
   // is empty, we can't extract anything so should return fallback or error.
   if (Array.isArray(inputObj) && typeof currentProperty !== 'number' && inputObj.length > 0)
-    return inputObj.map((item) => extractProperty(item, propertyPathArray, fallback))
+    return inputObj.map((item) => extract(item, propertyPathArray, fallback))
 
   if (typeof inputObj !== 'object' || inputObj === null || !(currentProperty in inputObj))
     return fallbackOrError(inputObj, currentProperty, fallback)
@@ -40,7 +40,7 @@ const extractProperty = (
   if (propertyPathArray.length === 1) {
     return newObj
   } else {
-    return extractProperty(newObj, propertyPathArray.slice(1), fallback)
+    return extract(newObj, propertyPathArray.slice(1), fallback)
   }
 }
 
@@ -66,5 +66,3 @@ Looking for property: ${property}
 In object: ${JSON.stringify(obj)}`)
   else return fallback
 }
-
-export default extractProperty

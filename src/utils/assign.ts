@@ -4,10 +4,10 @@
 
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type, @typescript-eslint/no-unused-vars */
 
-export type BasicType = string | number | boolean | undefined | null | Function
-export type Value = Input | BasicType
-export type InputObject = { [key: string]: Value }
-export type InputArray = Value[]
+type BasicType = string | number | boolean | undefined | null | Function
+type Value = Input | BasicType
+type InputObject = { [key: string]: Value }
+type InputArray = Value[]
 export type Input = InputObject | InputArray
 
 export interface Options {
@@ -19,7 +19,7 @@ export interface Options {
   insertAfter?: string | number
 }
 
-export type Path = (string | number)[]
+type Path = (string | number)[]
 
 interface FullOptions extends Options {
   noError: boolean
@@ -82,7 +82,12 @@ const removeFromArray = <T>(input: T[], index: number): T[] => input.filter((_, 
 // --- Main assign function ---
 
 // Wrapper function
-const assign = (data: Input, propertyPath: string | Path, newValue: any, options: Options = {}) => {
+export const assign = (
+  data: Input,
+  propertyPath: string | Path,
+  newValue: any,
+  options: Options = {}
+) => {
   const { remove = false, createNew = true, noError = false } = options
   const fullData = data
   const fullPath = stringifyPath(propertyPath)
@@ -261,5 +266,3 @@ const updateArray = (data: InputArray, property: number, newValue: any, options:
 
   data[property] = newValue
 }
-
-export default assign

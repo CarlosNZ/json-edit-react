@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import assign from '../src/utils/assign'
+import { assign } from '../src/utils/assign'
 const cloneDeep = <T>(value: T): T => {
   if (Array.isArray(value)) return value.map((v) => cloneDeep(v)) as unknown as T
   if (value && typeof value === 'object') {
