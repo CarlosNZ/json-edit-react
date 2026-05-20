@@ -2534,10 +2534,10 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@1.30.0:
-  version "1.30.0"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.30.0.tgz#a8e6939429ef41b690f3912d6ab5e18922a11869"
-  integrity sha512-wnZNTgOvHfW8wZaxE7A86PSreki4QfmIejueIryFRV5CiD/VtGeTNnTwgqUKY/T2w3kwS55BQtMXKhmL36uLzg==
+json-edit-react@1.30.1:
+  version "1.30.1"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.30.1.tgz#103834f9ad3b6d4ab8ed693ee859c39c310e742d"
+  integrity sha512-YVF6YamBQBh5eO8XXP2DG2QH/ihG3EebairbH8oGWNY6JXk+2TQgkbPpPiJ6rC6joa4ig+3WgaF2lWEk23HuWA==
 
 json-parse-even-better-errors@^2.3.0:
   version "2.3.1"
