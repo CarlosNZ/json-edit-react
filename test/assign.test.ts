@@ -713,6 +713,15 @@ test('Insert at start index in object', () => {
   )
 })
 
+test('Insert after index 0 in object', () => {
+  const newObj = assign(testObj1, 'b.inner3.innerArray[1].new', 'Hi there', {
+    insertAfter: 0,
+  })
+  expect(JSON.stringify((newObj as any).b.inner3.innerArray[1])).toEqual(
+    '{"one":"one","new":"Hi there","two":2,"three":3,"four":{"one":1}}'
+  )
+})
+
 test("Insert after object index that doesn't exist", () => {
   expect(assign(testObj1, 'b.inner3.oneMore', 'YUP', { insertBefore: 999 })).toStrictEqual({
     ...testObj1_original,

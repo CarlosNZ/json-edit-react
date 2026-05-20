@@ -113,6 +113,9 @@ const assignProperty = (
 
   const property = propertyPathArray[0]
 
+  // When a string key is used against an array, broadcast the assignment to
+  // every element — e.g. assign(data, 'users.email', value) updates `email`
+  // on each entry of `users`.
   if (arrayData && typeof property === 'string') {
     return arrayData.map((item) =>
       assignProperty(item as AssignInput, propertyPathArray, newValue, options)
@@ -216,7 +219,7 @@ const updateObject = (data: InputObject, property: string, newValue: any, option
     else if (typeof insertAfter === 'number') index = insertAfter
     else index = entries.findIndex(([key]) => key === (insertBefore ?? insertAfter))
 
-    if (insertAfter) index++
+    if (insertAfter !== undefined) index++
 
     entries.splice(index, 0, [property, newValue])
     return Object.fromEntries(entries)
