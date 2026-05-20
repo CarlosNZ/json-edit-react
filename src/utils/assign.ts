@@ -10,7 +10,7 @@ type InputObject = { [key: string]: Value }
 type InputArray = Value[]
 export type Input = InputObject | InputArray
 
-export interface Options {
+export interface AssignOptions {
   remove?: boolean
   noError?: boolean
   createNew?: boolean
@@ -21,7 +21,7 @@ export interface Options {
 
 type Path = (string | number)[]
 
-interface FullOptions extends Options {
+interface FullOptions extends AssignOptions {
   noError: boolean
   fullData: Input
   fullPath: string
@@ -86,7 +86,7 @@ export const assign = (
   data: Input,
   propertyPath: string | Path,
   newValue: any,
-  options: Options = {}
+  options: AssignOptions = {}
 ) => {
   const { remove = false, createNew = true, noError = false } = options
   const fullData = data

@@ -1,2 +1,2 @@
 export { extract } from './extract'
-export { assign, type Input, type Options as AssignOptions } from './assign'
+export { assign, type Input, type AssignOptions } from './assign'
