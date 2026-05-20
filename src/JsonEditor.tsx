@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import assign, { type Options as AssignOptions, type Input } from 'object-property-assigner'
-import extract from 'object-property-extractor'
+import assign, { type Options as AssignOptions, type Input } from './utils/assign'
+import extract from './utils/extract'
 import { CollectionNode } from './CollectionNode'
 import {
   getFullKeyboardControlMap,

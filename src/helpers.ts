@@ -1,4 +1,4 @@
-import extractProperty from 'object-property-extractor'
+import extractProperty from './utils/extract'
 import {
   type SearchFilterFunction,
   type NodeData,

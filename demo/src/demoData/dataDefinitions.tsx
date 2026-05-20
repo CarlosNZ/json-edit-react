@@ -34,8 +34,8 @@ import {
   ErrorString,
   TypeOptions,
   UpdateFunctionProps,
+  type Input,
 } from '@json-edit-react'
-import { type Input } from 'object-property-assigner'
 import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'
 import Ajv from 'ajv'
