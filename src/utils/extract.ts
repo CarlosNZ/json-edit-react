@@ -2,7 +2,9 @@
 // (formerly published as the `object-property-extractor` npm package).
 // Kept in-source so this library has zero non-React runtime dependencies.
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// `any` here covers `fallback` and the return type — extract walks
+// arbitrary nested data and returns whatever it finds at the path.
 
 import { splitPropertyString } from './helpers'
 
@@ -37,7 +39,7 @@ export const extract = (
   if (typeof inputObj !== 'object' || inputObj === null || !(currentProperty in inputObj))
     return fallbackOrError(inputObj, currentProperty, fallback)
 
-  //  @ts-ignore -- we've already checked for values that could cause problems
+  // @ts-expect-error -- narrowing of `currentProperty in inputObj` isn't picked up here
   const newObj = inputObj[currentProperty]
   if (propertyPathArray.length === 1) {
     return newObj

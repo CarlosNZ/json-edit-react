@@ -2,11 +2,14 @@
 // (formerly published as the `object-property-assigner` npm package).
 // Kept in-source so this library has zero non-React runtime dependencies.
 
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-function-type, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// `any` here covers the `newValue` parameter — assign accepts arbitrary
+// values (JSON, functions, etc.), and `unknown` would force callers to
+// narrow before passing.
 
 import { splitPropertyString, type Path } from './helpers'
 
-type BasicType = string | number | boolean | undefined | null | Function
+type BasicType = string | number | boolean | undefined | null | ((...args: unknown[]) => unknown)
 type Value = Input | BasicType
 type InputObject = { [key: string]: Value }
 type InputArray = Value[]
@@ -39,7 +42,7 @@ const stringifyPath = (path: (string | number)[] | string | number): string => {
 }
 
 const maybeThrow = (
-  obj: any,
+  obj: unknown,
   fullPath: string,
   part: string | number,
   noError: boolean,
@@ -211,7 +214,7 @@ const updateObject = (data: InputObject, property: string, newValue: any, option
     let index = Infinity
     if (typeof insertBefore === 'number') index = insertBefore
     else if (typeof insertAfter === 'number') index = insertAfter
-    else index = entries.findIndex(([key, _]) => key === (insertBefore ?? insertAfter))
+    else index = entries.findIndex(([key]) => key === (insertBefore ?? insertAfter))
 
     if (insertAfter) index++
 
