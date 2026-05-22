@@ -38,6 +38,13 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 
 <!-- NPM INTRO -->
 
+----
+
+> [!NOTE]
+> Development of V2 of **json-edit-react** is underway, with significant refactors and improvements. If you've got any particular things you'd like to see, please join the discussion [here](https://github.com/CarlosNZ/json-edit-react/discussions/198).
+
+----
+
 > [!IMPORTANT]
 > Breaking changes:
 > - **Version 1.19.0** has a change to the `theme` input. Built-in themes must now be imported separately and passed in, rather than just naming the theme as a string. This is better for tree-shaking, so unused themes won't be bundled with your build. See [Themes & Styles](#themes--styles).
