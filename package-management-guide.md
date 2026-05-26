@@ -252,6 +252,30 @@ ls .changeset/
 
 Lists all pending markdown files.
 
+### How version numbers are chosen
+
+You don't pick a target version directly — you pick a **bump type** in the changeset (`major` / `minor` / `patch`) and `pnpm changeset version` does the semver arithmetic.
+
+For packages at `>= 1.0.0` (e.g. `json-edit-react`), standard semver:
+
+| Highest bump type in pending changesets | Effect |
+|---|---|
+| `major` | `1.5.3` → `2.0.0` |
+| `minor` | `1.5.3` → `1.6.0` |
+| `patch` | `1.5.3` → `1.5.4` |
+
+For packages at `< 1.0.0` (e.g. fresh `@json-edit-react/themes` at `0.1.0`), Changesets respects the pre-1.0 semver convention — the minor slot is the "breaking" indicator:
+
+| Highest bump type in pending changesets | Effect |
+|---|---|
+| `major` | `0.1.0` → `0.2.0` (treated as a minor bump) |
+| `minor` | `0.1.0` → `0.2.0` |
+| `patch` | `0.1.0` → `0.1.1` |
+
+You don't automatically jump from `0.x` to `1.0.0` via a `major` changeset. When you're ready to promote a sub-package to `1.0.0`, edit its `package.json` version field by hand before the next `pnpm changeset publish`. The CHANGELOG entry for that promotion can be a regular changeset declaring the move.
+
+**Cross-package cascade:** when one package gets a `major` bump and another peer-depends on it via `workspace:^`, Changesets propagates the bump downstream automatically (the peer-dep range has to change, which is itself a breaking change for the dependent). That's why `pnpm changeset status` may show packages bumped beyond what their own changeset declared — the changeset for `json-edit-react: major` cascades into `@json-edit-react/themes` and `@json-edit-react/components` even though their own changesets said `minor`.
+
 ### Releasing
 
 When ready to publish:
@@ -285,6 +309,74 @@ git push --follow-tags
 
 **Note:** `changeset publish` does not have a `--dry-run` flag. To preview a release without publishing, inspect `pnpm changeset status` (shows pending bumps), then optionally run `pnpm changeset version` in a throwaway branch to see the diff (or use `git stash`/`git restore` to revert). For per-package preflight, `pnpm publish --dry-run` from inside a `packages/*/` dir works.
 
+### Beta / prerelease releases
+
+Changesets has a built-in **pre mode** for shipping releases under a custom dist-tag (e.g. `beta`, `next`, `alpha`, `rc`) so users don't get them by default — they have to opt in with `npm install <pkg>@beta`.
+
+The flow:
+
+```sh
+# 1. Enter pre mode with a tag — this becomes the npm dist-tag
+pnpm changeset pre enter beta
+
+# 2. Add changesets as normal for whatever's going into the prerelease
+pnpm changeset
+
+# 3. Bump versions — Changesets appends the pre tag
+pnpm changeset version
+#    → @json-edit-react/themes:    0.1.0     → 0.2.0-beta.0
+#    → json-edit-react:            1.30.1    → 2.0.0-beta.0
+
+# 4. Publish — pre-tagged releases automatically use the dist-tag from the pre mode
+pnpm changeset publish
+#    → @json-edit-react/themes@0.2.0-beta.0 published with dist-tag "beta"
+#    → `npm install @json-edit-react/themes` still returns 0.1.0 (latest)
+#    → `npm install @json-edit-react/themes@beta` returns 0.2.0-beta.0
+
+# 5. Iterate — each new `changeset version` while in pre mode bumps to the next pre-release:
+#    0.2.0-beta.0 → 0.2.0-beta.1 → 0.2.0-beta.2 → ...
+
+# 6. When ready for the stable release, exit pre mode
+pnpm changeset pre exit
+
+# 7. Cut the stable release
+pnpm changeset version          # collapses 0.2.0-beta.N → 0.2.0
+pnpm changeset publish          # publishes 0.2.0 with dist-tag "latest"
+```
+
+Pre mode is tracked via a `.changeset/pre.json` file that gets committed alongside your other changesets. **Don't forget step 6** — staying in pre mode means every future `changeset version` keeps generating prerelease bumps.
+
+#### One-off snapshot releases (no pre mode)
+
+For quick preview / "publish whatever's in HEAD right now under a custom tag" without entering pre mode:
+
+```sh
+pnpm changeset version --snapshot beta
+# → bumps to 0.0.0-beta-<timestamp> (e.g., 0.0.0-beta-20260527142133)
+pnpm changeset publish --tag beta --no-git-tag
+```
+
+`--snapshot` uses timestamps in the version string so each snapshot is unique without consuming pending changesets. Good for CI-driven per-PR previews. `--no-git-tag` keeps these out of your release history.
+
+#### Inspecting and managing dist-tags
+
+npm dist-tags are how published versions are advertised. By default:
+
+- `latest` → returned by `npm install <pkg>`
+- `beta` / `next` / `alpha` / `rc` / anything else → opt-in via `npm install <pkg>@<tag>`
+
+```sh
+npm dist-tag ls @json-edit-react/themes
+# latest: 0.1.0
+# beta:   0.2.0-beta.3
+
+# Manually promote/demote tags without re-publishing:
+npm dist-tag add @json-edit-react/themes@0.2.0-beta.3 next
+npm dist-tag rm @json-edit-react/themes beta
+```
+
+Useful for promoting a beta to `latest` once you've decided it's stable enough, or for retracting a tag.
+
 ### Changesets config
 
 [.changeset/config.json](.changeset/config.json) defines the workflow:
@@ -309,20 +401,23 @@ Key fields:
 - `"access": "public"` — scoped packages publish publicly.
 - `"baseBranch": "main"` — release branch.
 
-### Bumping a version manually (emergency)
+### Bumping a version manually
 
-For hotfixes where Changesets is overkill:
+You can hand-edit `version` in a package's `package.json` whenever Changesets' automatic arithmetic doesn't match what you want. Two common reasons:
+
+1. **Promoting a 0.x package to 1.0.0.** Changesets keeps 0.x packages on the pre-1.0 minor-as-breaking convention. To go from `0.x` → `1.0.0`, edit `version` directly.
+2. **Hotfix where Changesets is overkill.**
 
 ```sh
 # Edit the version directly
-vim packages/themes/package.json    # bump version
+vim packages/themes/package.json    # change "version": "0.2.0" → "1.0.0"
 
 # Publish from inside the package dir
 cd packages/themes
 pnpm publish
 ```
 
-Discouraged because it skips the changelog, but available when you need it.
+Discouraged in general because it skips the auto-generated changelog. For the 1.0.0 promotion specifically, the cleanest approach is: hand-edit the version, then add a normal changeset describing the promotion so the changelog still captures it.
 
 ## Bundle-size verification
 
