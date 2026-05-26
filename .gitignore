@@ -41,7 +41,6 @@ typings/
 demo/src/json-edit-react
 
 # Dev playground file
-.npmrc
 temp.js
 .vscode/settings.json
 demo/src/firebaseConfig.json
