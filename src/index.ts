@@ -2,7 +2,7 @@ export { JsonEditor } from './JsonEditor'
 export { defaultTheme } from './contexts/ThemeProvider'
 export { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 export { StringDisplay, StringEdit, useKeyboardListener } from './ValueNodes'
-export { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
+export { AutogrowTextArea } from './AutogrowTextArea'
 export { matchNode, matchNodeKey, isCollection, toPathString } from './helpers'
 export { assign, extract, type AssignInput, type AssignOptions } from './utils'
 export {
@@ -46,12 +46,3 @@ export {
 export { type EditState, type ExternalTriggers } from './hooks'
 export { type IconProps } from './Icons'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
-
-export {
-  githubDarkTheme,
-  githubLightTheme,
-  monoDarkTheme,
-  monoLightTheme,
-  candyWrapperTheme,
-  psychedelicTheme,
-} from './additionalThemes'

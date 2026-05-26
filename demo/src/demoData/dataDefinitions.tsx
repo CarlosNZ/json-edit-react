@@ -14,7 +14,7 @@ import {
   EnhancedLinkCustomNodeDefinition,
   ImageNodeDefinition,
   ColorPickerNodeDefinition,
-} from '../../../custom-component-library/components'
+} from '@json-edit-react/components'
 import { testData } from '../../../custom-component-library/src/data'
 import {
   CustomNodeDefinition,

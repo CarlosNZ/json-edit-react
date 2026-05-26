@@ -21,36 +21,37 @@
   "author": "Carl Smith <5456533+CarlosNZ@users.noreply.github.com>",
   "license": "MIT",
   "homepage": "https://carlosnz.github.io/json-edit-react",
+  "packageManager": "pnpm@10.8.1",
   "scripts": {
-    "setup": "yarn install && cd demo && yarn install",
+    "setup": "pnpm install && cd demo && yarn install",
     "test": "jest",
     "dev": "cd demo && yarn && yarn dev",
     "demo": "cd demo && yarn && yarn start",
-    "demo:package": "yarn build-package && cd demo && yarn && yarn start:package",
-    "prebuild": "yarn lint",
+    "demo:package": "pnpm build-package && cd demo && yarn && yarn start:package",
+    "prebuild": "pnpm lint",
     "build": "rollup -c && rm -R build/dts",
     "postbuild": "node ./scripts/cleanBuildTypes.cjs",
-    "build-package": "yarn build && yarn pack --filename package.tgz && tar -xzf package.tgz && mv package build_package && rm package.tgz",
+    "build-package": "pnpm build && pnpm pack && tar -xzf json-edit-react-*.tgz && mv package build_package && rm json-edit-react-*.tgz",
     "lint": "eslint",
     "prepareReadme": "python3 scripts/build_npm_readme.py",
-    "prepublishOnly": "yarn build && yarn prepareReadme && python3 scripts/use_npm_readme.py prepare",
+    "prepublishOnly": "pnpm build && pnpm prepareReadme && python3 scripts/use_npm_readme.py prepare",
     "postpublish": "python3 scripts/use_npm_readme.py restore && node scripts/installLatestPackage.mjs pause &",
     "compile": "tsc --noEmit && ts-prune",
-    "release": "yarn publish",
+    "release": "pnpm publish",
     "release-demo": "cd demo && yarn deploy"
   },
   "peerDependencies": {
     "react": ">=16.0.0"
   },
-  "dependencies": {},
   "devDependencies": {
+    "@changesets/cli": "^2.31.0",
     "@eslint/js": "^9.24.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.11.17",
-    "@types/react": ">=16.0.0",
+    "@types/react": "^19.1.0",
     "eslint": "^9.24.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -72,6 +73,12 @@
     "tslib": "^2.6.2",
     "typescript": "^5.3.3",
     "typescript-eslint": "^8.29.1"
+  },
+  "pnpm": {
+    "overrides": {
+      "csstype": "3.1.3",
+      "@types/react": "19.1.1"
+    }
   },
   "keywords": [
     "react",

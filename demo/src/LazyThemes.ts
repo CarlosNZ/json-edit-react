@@ -1,3 +1,4 @@
+import { Theme } from '@json-edit-react'
 import {
   githubDarkTheme,
   githubLightTheme,
@@ -5,8 +6,7 @@ import {
   monoDarkTheme,
   candyWrapperTheme,
   psychedelicTheme,
-  Theme,
-} from '@json-edit-react'
+} from '@json-edit-react/themes'
 
 // This file contains functions that return theme objects
 // Each function is dynamically imported when needed to reduce initial bundle size

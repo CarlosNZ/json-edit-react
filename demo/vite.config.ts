@@ -5,27 +5,42 @@ import fs from 'fs-extra'
 
 type PackageOption = 'npm' | 'local' | 'build'
 
-// Get the appropriate package.json so we can determine the version
 const provider: PackageOption = (process.env.VITE_JRE_SOURCE as PackageOption) ?? 'npm'
 
 console.log(`Using json-edit-react from: ${provider}`)
 
-const srcMap: Record<PackageOption, { pkgJson: string; jsonEditReactSrc: string }> = {
+const coreSrcMap: Record<PackageOption, { pkgJson: string; src: string }> = {
   npm: {
     pkgJson: path.join('node_modules', 'json-edit-react', 'package.json'),
-    jsonEditReactSrc: 'json-edit-react',
+    src: 'json-edit-react',
   },
   local: {
     pkgJson: path.join('..', 'package.json'),
-    jsonEditReactSrc: path.resolve(__dirname, '../src'),
+    src: path.resolve(__dirname, '../src'),
   },
   build: {
     pkgJson: path.join('..', 'build_package', 'package.json'),
-    jsonEditReactSrc: path.resolve(__dirname, '../build_package'),
+    src: path.resolve(__dirname, '../build_package'),
   },
 }
-const packageFile = srcMap[provider].pkgJson
-const jsonEditReactPath = srcMap[provider].jsonEditReactSrc
+
+// For `npm` mode, scoped sibling packages must be installed in demo/node_modules
+// (they fall through to normal node_modules resolution). For `local` and `build`
+// modes, vite rewrites the import to the in-repo path.
+const themesSrcMap: Record<PackageOption, string> = {
+  npm: '@json-edit-react/themes',
+  local: path.resolve(__dirname, '../packages/themes/src'),
+  build: path.resolve(__dirname, '../packages/themes/build/index.esm.js'),
+}
+
+const componentsSrcMap: Record<PackageOption, string> = {
+  npm: '@json-edit-react/components',
+  local: path.resolve(__dirname, '../packages/components/src'),
+  build: path.resolve(__dirname, '../packages/components/build/index.esm.js'),
+}
+
+const packageFile = coreSrcMap[provider].pkgJson
+const jsonEditReactPath = coreSrcMap[provider].src
 const pkg = fs.readJsonSync(packageFile)
 
 // https://vite.dev/config/
@@ -33,7 +48,14 @@ export default defineConfig({
   plugins: [react()],
   base: 'https://carlosnz.github.io/json-edit-react/',
   resolve: {
-    alias: { '@json-edit-react': jsonEditReactPath },
+    // Order matters: more specific scoped aliases must come before the bare
+    // `@json-edit-react` alias so `@json-edit-react/themes` doesn't accidentally
+    // resolve through the core alias's prefix match.
+    alias: [
+      { find: /^@json-edit-react\/themes$/, replacement: themesSrcMap[provider] },
+      { find: /^@json-edit-react\/components$/, replacement: componentsSrcMap[provider] },
+      { find: /^@json-edit-react$/, replacement: jsonEditReactPath },
+    ],
   },
   server: {
     port: 5175,
