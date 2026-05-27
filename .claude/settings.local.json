@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(pnpm test *)",
-      "Bash(VITE_JRE_SOURCE=local timeout 10 yarn start:local)"
+      "Bash(VITE_JRE_SOURCE=local timeout 10 yarn start:local)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(pnpm compile *)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm build *)"
     ]
   }
 }
