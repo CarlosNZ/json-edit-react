@@ -35,10 +35,11 @@
     "lint": "eslint",
     "prepareReadme": "python3 scripts/build_npm_readme.py",
     "prepublishOnly": "pnpm build && pnpm prepareReadme && python3 scripts/use_npm_readme.py prepare",
-    "postpublish": "python3 scripts/use_npm_readme.py restore && node scripts/installLatestPackage.mjs pause &",
+    "postpublish": "python3 scripts/use_npm_readme.py restore",
     "compile": "tsc --noEmit && ts-prune",
     "release": "pnpm publish",
-    "release-demo": "cd demo && yarn deploy"
+    "release-demo": "cd demo && yarn deploy",
+    "sync-demos": "node scripts/installLatestPackage.mjs"
   },
   "peerDependencies": {
     "react": ">=16.0.0"
