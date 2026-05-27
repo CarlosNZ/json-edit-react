@@ -41,7 +41,7 @@ const defaultJsonStringify = (
   replacer?: (key: string, value: unknown) => unknown
 ) => JSON.stringify(data, replacer, 2)
 
-const Editor: React.FC<JsonEditorProps> = ({
+const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   data: srcData,
   setData: srcSetData,
   rootName = 'root',
@@ -426,7 +426,7 @@ const Editor: React.FC<JsonEditorProps> = ({
   )
 }
 
-export const JsonEditor: React.FC<JsonEditorProps> = (props) => {
+export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.ReactElement | null {
   const [docRoot, setDocRoot] = useState<HTMLElement>()
 
   // We want access to the global document.documentElement object, but can't
@@ -440,10 +440,14 @@ export const JsonEditor: React.FC<JsonEditorProps> = (props) => {
 
   if (!docRoot) return null
 
+  // Cast at the boundary — the internal Editor and tree operate on `JsonData`,
+  // generics only flow to the public surface for consumer typing.
+  const innerProps = props as unknown as JsonEditorProps<JsonData>
+
   return (
-    <ThemeProvider theme={props.theme ?? defaultTheme} icons={props.icons} docRoot={docRoot}>
-      <TreeStateProvider onEditEvent={props.onEditEvent} onCollapse={props.onCollapse}>
-        <Editor {...props} />
+    <ThemeProvider theme={innerProps.theme ?? defaultTheme} icons={innerProps.icons} docRoot={docRoot}>
+      <TreeStateProvider onEditEvent={innerProps.onEditEvent} onCollapse={innerProps.onCollapse}>
+        <Editor {...innerProps} />
       </TreeStateProvider>
     </ThemeProvider>
   )
