@@ -6,7 +6,9 @@
       "Bash(echo \"exit: $?\")",
       "Bash(pnpm compile *)",
       "Bash(pnpm lint *)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(node scripts/measure-build.mjs)",
+      "Bash(MEASURE_CORE=true MEASURE_THEMES=true MEASURE_COMPONENTS=true node scripts/measure-build.mjs)"
     ]
   }
 }
