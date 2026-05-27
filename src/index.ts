@@ -40,8 +40,8 @@ export {
   type CollapseState,
   type EnumDefinition,
   type ErrorString,
-  type TypeOptions,
   type UpdateFunctionProps,
+  type TypeOptions,
 } from './types'
 export { type EditState, type ExternalTriggers } from './hooks'
 export { type IconProps } from './Icons'
