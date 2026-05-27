@@ -13,6 +13,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | Pre-built themes split into a separate package | `npm i @json-edit-react/themes` and update theme imports |
 | `LinkCustomComponent` / `LinkCustomNodeDefinition` moved | `npm i @json-edit-react/components` and update those imports |
 | Several internal helpers are now part of the public API | No action needed — purely additive |
+| `JsonEditor` is now generic on the data type (`JsonEditor<T>`) | No action needed — defaults to `JsonData`, source-compatible. Opt in by writing `<JsonEditor<MyShape> ... />` |
 
 Nothing else about the editor's runtime behaviour, props, or callbacks has changed.
 
@@ -119,7 +120,45 @@ The package is ESM with `"sideEffects": false`, so modern bundlers (Webpack 4+, 
 
 ---
 
-## 3. New public export in core: `AutogrowTextArea`
+## 3. `JsonEditor` is now generic on the data type
+
+`JsonEditor` and its callback types now accept an optional type parameter `T`, so TypeScript consumers can preserve their data shape through the component boundary instead of falling back to `unknown`.
+
+**Why:** prior to v2, the `data` prop was typed `JsonData` which collapses to `unknown` — so `setData`, `onUpdate`, `onChange`, `onError`, and `NodeData.fullData` all dropped the consumer's static type. Typed apps had to cast at the boundary (e.g. `setData as (data: JsonData) => void`). The generic removes that friction.
+
+### Migration
+
+The default is `T = JsonData`, so **existing code keeps working unchanged**. To opt in, pass your data type as a type argument:
+
+```diff
++ interface User { name: string; email: string }
+
+- <JsonEditor data={user} setData={setUser} />
++ <JsonEditor<User> data={user} setData={setUser} />
+```
+
+Callbacks then receive your shape:
+
+```ts
+<JsonEditor<User>
+  data={user}
+  setData={setUser}
+  onUpdate={({ newData, currentData }) => {
+    // newData and currentData are typed as User
+  }}
+/>
+```
+
+The generic flows to root-level slots only: `data`, `setData`, the `newData` / `currentData` fields on `UpdateFunctionProps`, `currentData` on `OnChangeFunction` / `OnErrorFunction`, and `fullData` on `NodeData` (used by `FilterFunction`, `SearchFilterFunction`, etc.). Per-node `value` and `parentData` slots stay `unknown` — they are arbitrary-depth slices that no static type can describe.
+
+> [!NOTE]
+> Same mental model as `useState<T>`: `T` describes the data you provided, not a runtime invariant. If structural edits are unrestricted, post-edit values may not conform to `T` — pair with `restrictAdd` / `restrictDelete` / `restrictTypeSelection`, or validate in `onUpdate`, if you depend on the shape.
+
+`CustomNodeDefinition` is intentionally **not** generic on the data type — its two existing generics (for `customNodeProps` and wrapper props) are unchanged, and custom-node `condition` / `element` continue to receive `NodeData<JsonData>`.
+
+---
+
+## 4. New public export in core: `AutogrowTextArea`
 
 `AutogrowTextArea` — the auto-resizing textarea primitive that powers `StringEdit` and the built-in string editor — is now exported from `json-edit-react`. This is purely additive; nothing about your existing code changes.
 
