@@ -51,33 +51,29 @@ jobs:
           path: base
           ref: ${{ github.event.pull_request.base.sha }}
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10.8.1
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm
+          cache: yarn
           cache-dependency-path: |
-            pr/pnpm-lock.yaml
-            base/pnpm-lock.yaml
+            pr/yarn.lock
+            base/yarn.lock
 
       - name: Install (PR)
         working-directory: pr
-        run: pnpm install --frozen-lockfile
+        run: yarn install --frozen-lockfile
 
       - name: Build PR
         working-directory: pr
         run: |
           if [[ "${{ needs.detect.outputs.core }}" == "true" ]]; then
-            pnpm exec rollup -c
+            yarn rollup -c
           fi
           if [[ "${{ needs.detect.outputs.themes }}" == "true" ]]; then
-            pnpm --filter @json-edit-react/themes build
+            yarn workspace @json-edit-react/themes build
           fi
           if [[ "${{ needs.detect.outputs.components }}" == "true" ]]; then
-            pnpm --filter @json-edit-react/components build
+            yarn workspace @json-edit-react/components build
           fi
 
       - name: Measure PR sizes
@@ -90,19 +86,19 @@ jobs:
 
       - name: Install (base)
         working-directory: base
-        run: pnpm install --frozen-lockfile
+        run: yarn install --frozen-lockfile
 
       - name: Build base
         working-directory: base
         run: |
           if [[ "${{ needs.detect.outputs.core }}" == "true" ]]; then
-            pnpm exec rollup -c
+            yarn rollup -c
           fi
           if [[ "${{ needs.detect.outputs.themes }}" == "true" ]]; then
-            pnpm --filter @json-edit-react/themes build
+            yarn workspace @json-edit-react/themes build
           fi
           if [[ "${{ needs.detect.outputs.components }}" == "true" ]]; then
-            pnpm --filter @json-edit-react/components build
+            yarn workspace @json-edit-react/components build
           fi
 
       - name: Measure base sizes
