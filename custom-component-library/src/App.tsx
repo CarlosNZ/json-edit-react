@@ -15,7 +15,7 @@ import {
   EnhancedLinkCustomNodeDefinition,
   ImageNodeDefinition,
   ColorPickerNodeDefinition,
-} from '../components'
+} from '@json-edit-react/components'
 import { testData } from './data'
 import { JsonEditor } from '@json-edit-react'
 

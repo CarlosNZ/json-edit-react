@@ -16,8 +16,10 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@json-edit-react/*": ["../src/*"],
-      "@json-edit-react": ["../src/"]
+      "@json-edit-react/components": ["../packages/components/src"],
+      "@json-edit-react/components/*": ["../packages/components/src/*"],
+      "@json-edit-react": ["../src/"],
+      "@json-edit-react/*": ["../src/*"]
     },
 
     /* Linting */
@@ -27,5 +29,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "components"]
+  "include": ["src"]
 }

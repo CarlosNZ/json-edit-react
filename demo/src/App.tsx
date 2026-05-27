@@ -47,7 +47,7 @@ import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { getConditionalDefinitions, getLineHeight, truncate } from './helpers'
-import { Loading } from '../../custom-component-library/components/_common/Loading'
+import { Loading } from '../../packages/components/src/_common/Loading'
 import { testData } from '../../custom-component-library/src/data'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))

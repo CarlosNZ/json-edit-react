@@ -16,8 +16,12 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@json-edit-react/*": ["../src/*"],
-      "@json-edit-react": ["../src/"]
+      "@json-edit-react/themes": ["../packages/themes/src"],
+      "@json-edit-react/themes/*": ["../packages/themes/src/*"],
+      "@json-edit-react/components": ["../packages/components/src"],
+      "@json-edit-react/components/*": ["../packages/components/src/*"],
+      "@json-edit-react": ["../src/"],
+      "@json-edit-react/*": ["../src/*"]
     },
     /* Linting */
     "strict": true,
@@ -26,6 +30,10 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "../custom-component-library/components/DatePicker/DateTimePicker.tsx"]
-  // "exclude": ["src/json-edit-react/**/*"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "../custom-component-library/components/DatePicker/DateTimePicker.tsx"
+  ],
+  "exclude": ["src/json-edit-react", "src/imports"]
 }

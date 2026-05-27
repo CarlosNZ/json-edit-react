@@ -90,12 +90,19 @@ Same component as `<JsonEditor viewOnly />`, but a separate named export — dis
 
 Current "delete + add" semantics force consumers to detect renames by hand and lose order info. Distinct callback. (From [discussion #228](https://github.com/CarlosNZ/json-edit-react/discussions/228#discussioncomment-15144209).)
 
-## 9. Split themes + custom components into separate packages
+## 9. Split themes + custom components into separate packages — ✅ done
 
 Move out of core entirely. Themes can grow (variants, contrast modes, images) without ever weighing on the "zero runtime deps" promise.
 
-- `@json-edit-react/themes` — current [additionalThemes/](src/additionalThemes/)
-- `@json-edit-react/components` — `LinkCustomComponent` and friends
+- [`@json-edit-react/themes`](packages/themes/) — the six pre-built themes, peer-depends on core, no runtime deps.
+- [`@json-edit-react/components`](packages/components/) — `LinkCustomComponent` + 11 more (DatePicker, ColorPicker, Markdown, etc.). Single-entry ESM with `sideEffects: false`. Third-party libs are regular deps and lazy-loaded in heavy components so unused ones don't hit the consumer's runtime bundle. Sub-path exports are documented as the escape hatch if legacy CJS consumers ever report bundle bloat (see [packages/components/CLAUDE.md](packages/components/CLAUDE.md)).
+
+Repo restructure that came with this:
+
+- pnpm workspace at root covers `.`, `packages/themes`, `packages/components`. [demo/](demo/) and [custom-component-library/](custom-component-library/) stay independent yarn-1 projects (validation harnesses with arms-length view of published artefacts). The `VITE_JRE_SOURCE` toggle was extended to cover the two new packages.
+- [Changesets](https://github.com/changesets/changesets) for independent version bumps and changelogs across the three packages.
+- New maintainer cheat sheet: [package-management-guide.md](package-management-guide.md).
+- v1 → v2 migration notes for consumers: [migration-guide.md](migration-guide.md).
 
 ## 10. Terminology — "node", not "component"
 
@@ -175,6 +182,18 @@ Break it down:
 5. **Stable callbacks.** The current JSX `value={{ ... }}` object rebuilds inline arrows every render (notably the `setCollapseState` wrapper). `useCallback`/reducer dispatch + a memoized context value object — prerequisite for the `React.memo` pass in section 11 to actually pay off.
 
 Ordering: (1) is mechanical and unlocks the rest. (2) before (5) since the reducer gives you the stable dispatch for free. (3) and (4) can land independently.
+
+### Bundle-size test scaffolding (separate repo)
+
+A `json-edit-react-bundle-tests` repo with minimal consumer projects across the major bundlers — Vite, CRA (Webpack 5), Next.js (App + Pages routers), Webpack with CJS output, Parcel 2, esbuild. Each imports a configurable subset of `@json-edit-react/components` (and themes). A root `./report.sh` runs all builds and emits a comparison table of gzipped sizes per import combination, broken down by component via `source-map-explorer` or `webpack-bundle-analyzer`.
+
+Goals:
+
+- Verify Option B+ tree-shaking actually works the way it's supposed to in real bundlers.
+- Catch regressions when adding new components or bumping deps.
+- Have concrete numbers to point at when answering "how big does my bundle get if I import X?".
+
+Lives outside this repo so it doesn't pull bundler/framework deps into the workspace; runs on its own cadence.
 
 ### Backfill tests
 

@@ -114,6 +114,17 @@ npm i json-edit-react
 yarn add json-edit-react
 ```
 
+### Optional companion packages
+
+Two optional packages ship pre-built extras. Install whichever you want:
+
+```sh
+npm i @json-edit-react/themes      # Six ready-made themes
+npm i @json-edit-react/components  # 12 custom node components (links, date picker, color picker, markdown, etc.)
+```
+
+Both peer-depend on `json-edit-react` and tree-shake what you don't import. The `@json-edit-react/components` package also brings third-party libraries (`react-datepicker`, `react-markdown`, `react-colorful`, etc.) — the heavy ones are lazy-loaded at runtime so unused components don't contribute to your initial bundle.
+
 ## Implementation
 
 ```jsx
@@ -757,11 +768,15 @@ An example custom search function can be seen in the [Demo](#https://carlosnz.gi
 
 ## Themes & Styles
 
-There is a small selection of built-in themes (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react/)). In order to use one of these, just import it from the package and pass it as the theme prop:
+A small selection of pre-built themes is available in the [`@json-edit-react/themes`](#optional-companion-packages) companion package (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react/)). Install the package, then import a theme and pass it as the `theme` prop:
+
+```sh
+npm i @json-edit-react/themes
+```
 
 ```js
-import { JsonEditor, githubDarkTheme } from 'json-edit-react'
-// ...other imports
+import { JsonEditor } from 'json-edit-react'
+import { githubDarkTheme } from '@json-edit-react/themes'
 
 const MyApp = () => {
   const [ data, setData ] = useState({ one: 1, two: 2 })
@@ -775,7 +790,7 @@ const MyApp = () => {
 }
 ```
 
-The following themes are available in the package (although realistically, these exist more to showcase the capabilities — I'm open to better built-in themes, so feel free to [create an issue](https://github.com/CarlosNZ/json-edit-react/issues) with suggestions):
+The following themes are exported (although realistically, these exist more to showcase the capabilities — I'm open to better built-in themes, so feel free to [create an issue](https://github.com/CarlosNZ/json-edit-react/issues) with suggestions):
 - `githubDarkTheme`
 - `githubLightTheme`
 - `monoDarkTheme`
@@ -942,7 +957,7 @@ Your `translations` object doesn't have to be exhaustive — only define the key
 You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) to see it in action. (There is also a custom Date picker that appears when editing ISO strings in the other data sets.)
 
 > [!TIP]
-> There are a selection of useful Custom components ready for you to use in my [Custom Component Library](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md) — see examples in the [Demo app](https://carlosnz.github.io/json-edit-react/?data=customComponentLibrary).  
+> A set of pre-built Custom components is published as [`@json-edit-react/components`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components) — drop-in date pickers, color pickers, Markdown rendering, hyperlinks, and more. See examples in the [Demo app](https://carlosnz.github.io/json-edit-react/?data=customComponentLibrary). The [`custom-component-library/`](https://github.com/CarlosNZ/json-edit-react/tree/main/custom-component-library) app in this repo is a working showcase that consumes the package — a useful reference for building your own.  
 > Please contribute your own if you think they'd be useful to others.
 
 Custom nodes are provided in the `customNodeDefinitions` prop, as an array of objects of following structure:
@@ -992,7 +1007,7 @@ The `condition` is just a [Filter function](#filter-functions), with the same in
 
 The component will receive *all* the same props as a standard node component plus some additional ones — see [BaseNodeProps](https://github.com/CarlosNZ/json-edit-react/blob/b085f6391dabf574809f1040b11401c13344923d/src/types.ts#L219-L265) (common to all nodes) and [CustomNodeProps](https://github.com/CarlosNZ/json-edit-react/blob/b085f6391dabf574809f1040b11401c13344923d/src/types.ts#L275-L287) type definitions. Specifically, if you want to update the data structure from your custom node, you'll need to call the `setValue` method on your node's data value. And if you enable `passOriginalNode` above, you'll also have access to `originalNode` and `originalNodeKey` in order to render the standard content (i.e. what would have been rendered if it wasn't intercepted by this Custom Node) -- this can be helpful if you want your Custom Node to just be the default content with a little extra decoration. (*Note:* you may need a little custom CSS to render these original node components identically to the default display.)
 
-You can pass additional props specific to your component, if required, through the `customNodeProps` object. A thorough example of a custom **Date Picker** is used in the demo (along with a couple of other more basic presentational ones), which you can inspect to see how to utilise the standard props and a couple of custom props. View the source code [here](https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/customComponents/DateTimePicker.tsx).
+You can pass additional props specific to your component, if required, through the `customNodeProps` object. A thorough example of a custom **Date Picker** is used in the demo (along with a couple of other more basic presentational ones), which you can inspect to see how to utilise the standard props and a couple of custom props. View the source code [here](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/DatePicker/component.tsx).
 
 By default, your `element` is presented to the right of the property key it belongs to, like any other value, and the key is rendered by the library. If you want to customize the **key** as well, use the `customKey` slot — see [Customising keys](#customising-keys) below.
 
@@ -1028,10 +1043,15 @@ You can allow users to create new instances of your special nodes by selecting t
 
 ### Active hyperlinks
 
-A simple custom component and definition to turn url strings into clickable links is provided with the main package for you to use out of the box. Just import and use like so:
+A drop-in custom component to turn url strings into clickable links is available from the [`@json-edit-react/components`](#optional-companion-packages) companion package:
+
+```sh
+npm i @json-edit-react/components
+```
 
 ```js
-import { JsonEditor, LinkCustomNodeDefinition } from 'json-edit-react'
+import { JsonEditor } from 'json-edit-react'
+import { LinkCustomNodeDefinition } from '@json-edit-react/components'
 
 // ...Other stuff
 return (
@@ -1042,9 +1062,11 @@ return (
   )
 ```
 
+For object-shaped link data (e.g. `{ text, url }` pairs displayed as a clickable string), use `EnhancedLinkCustomNodeDefinition` from the same package.
+
 ### Handling JSON
 
-If you implement a Custom Node that uses a non-JSON data type (e.g. `BigInt`, `Date`), then if you edit your data as full JSON text, these values will be stripped out by the default `JSON.stringify` and `JSON.parse` methods. In this case, you can provide [**replacer**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#replacer) and [**reviver**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#the_reviver_parameter) methods to serialize and de-serialize your data as you see fit. For example the [`BigInt` component](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/components/BigInt/definition.ts) in the [custom component library](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/components/DateObject/definition.ts) serializes the value into JSON text like so:
+If you implement a Custom Node that uses a non-JSON data type (e.g. `BigInt`, `Date`), then if you edit your data as full JSON text, these values will be stripped out by the default `JSON.stringify` and `JSON.parse` methods. In this case, you can provide [**replacer**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#replacer) and [**reviver**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#the_reviver_parameter) methods to serialize and de-serialize your data as you see fit. For example the [`BigInt` component](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/BigInt/definition.ts) in the [`@json-edit-react/components`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components) package serializes the value into JSON text like so:
 
 ```json
 {
@@ -1067,10 +1089,10 @@ Most custom-node usage targets *value* nodes (i.e. not `array` or `object` *coll
 
 If you have a specialised `object` that you would like to display as though it were a regular "value" -- for example, a JavaScript [`Date` object](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) -- you can set the `renderCollectionAsValue` to `true`. This passes the entire object as a value rather than being rendered as a "collection" of key-value pairs, but you'll have to make sure your custom component handles it appropriately.
 
-There are two examples in the [Custom Component Library](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md):
+There are two examples in the [`@json-edit-react/components`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components) package:
 
-- [Date Object](https://github.com/CarlosNZ/json-edit-react/tree/main/custom-component-library/components/DateObject)
-- ["Enhanced" link](https://github.com/CarlosNZ/json-edit-react/tree/main/custom-component-library/components/EnhancedLink) (object with "url" and "text" fields, displayed as clickable string)
+- [Date Object](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components/src/DateObject)
+- ["Enhanced" link](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components/src/EnhancedLink) (object with "url" and "text" fields, displayed as clickable string)
 
 ## Custom Text
 
@@ -1240,17 +1262,16 @@ A few helper functions, components and types that might be useful in your own im
 
 ### Functions & Components
 
-- `LinkCustomComponent`: the component used to render [hyperlinks](#active-hyperlinks)
-- `LinkCustomNodeDefinition`: custom node definition for [hyperlinks](#active-hyperlinks)
-- `StringDisplay`: main component used to display a string value, re-used in the above "Link" Custom Component
+- `StringDisplay`: main component used to display a string value. Useful as a building block in custom components — handles truncation, "show more / show less" expansion, and the standard double-click-to-edit behaviour.
 - `StringEdit`: component used when editing a string value, can be useful for custom components
+- `AutogrowTextArea`: the auto-resizing textarea primitive used by `StringEdit` and the built-in string editor
 - `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron`: all the built-in [icon](#icons) components
 - `matchNode`, `matchNodeKey`: helpers for defining custom [Search](#searchfiltering) functions
 - `extract`: function to extract a deeply nested object value from a string path. Originally published at [object-property-extractor](https://github.com/CarlosNZ/object-property-extractor)
 - `assign`: function to set a deep object value from a string path. Originally published at [object-property-assigner](https://github.com/CarlosNZ/object-property-assigner)
 - `isCollection`: simple utility that returns `true` if input is a "Collection" (i.e. an Object or Array)
 - `toPathString`: transforms a path array to a string representation, e.g.  `["data", 0, "property1", "name"] => "data.0.property1.name"`
-- `defaultTheme`, `githubDarkTheme`, `monoDarkTheme`, `monoLightTheme`, `candyWrapperTheme`, `psychedelicTheme`: all built-in themes
+- `defaultTheme`: the "default" theme baseline used when no `theme` prop is supplied. (Additional themes ship in [`@json-edit-react/themes`](#themes--styles).)
 - `standardDataTypes`: array containing all standard data types: `[ 'string','number', 'boolean', 'null', 'object', 'array' ]`
 
 ### Types
