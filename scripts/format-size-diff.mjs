@@ -20,9 +20,10 @@ const fmtBytes = (n) => {
 const fmtDelta = (b, p) => {
   if (b === undefined) return '— (new)'
   const d = p - b
+  if (d === 0) return '⚪ no change'
   const pct = b === 0 ? 0 : (d / b) * 100
-  const sign = d > 0 ? '🔺 +' : d < 0 ? '🟢 ' : ''
-  return `${sign}${fmtBytes(d)} (${d >= 0 ? '+' : ''}${pct.toFixed(2)}%)`
+  const sign = d > 0 ? '🔺 +' : '🟢 '
+  return `${sign}${fmtBytes(d)} (${d > 0 ? '+' : ''}${pct.toFixed(2)}%)`
 }
 
 let out = '## Bundle size impact\n\n'
