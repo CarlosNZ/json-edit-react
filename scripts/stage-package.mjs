@@ -1,20 +1,29 @@
 #!/usr/bin/env node
 /**
- * Assemble a self-contained publish-ready directory for the core `json-edit-react`
- * package at `build_package/`.
+ * Assemble a self-contained publish-ready directory for the core
+ * `json-edit-react` package at `build_package/`.
  *
- * Why a staging dir? The repo-root `README.md` is the long GitHub one — not what we
- * want on the npm page. Rather than swap it in-place (the old `prepublishOnly` flow,
- * fragile if publish fails mid-way), we publish from a different directory whose
- * `README.md` is the short, npm-appropriate version.
+ * Why a staging dir? The repo-root `README.md` is the long GitHub one — not
+ * what we want on the npm page. Rather than swap it in-place (the old
+ * `prepublishOnly` flow, fragile if publish fails mid-way), we publish from a
+ * different directory whose `README.md` is the short, npm-appropriate version.
  *
  * Invoked by `pnpm build-package` after `pnpm build` has produced `build/`.
- * `publishConfig.directory: "build_package"` in the root package.json tells pnpm /
+ * `publishConfig.directory: "build_package"` in the root package.json tells
+ * pnpm /
  * Changesets to publish from here.
  */
 
 import { execFileSync } from 'node:child_process'
-import { cpSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync, readdirSync } from 'node:fs'
+import {
+  cpSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+  readdirSync,
+} from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -65,10 +74,7 @@ function writeTrimmedPackageJson() {
   for (const field of KEEP_FIELDS) {
     if (field in sourcePkg) stagedPkg[field] = sourcePkg[field]
   }
-  writeFileSync(
-    join(stagingDir, 'package.json'),
-    JSON.stringify(stagedPkg, null, 2) + '\n'
-  )
+  writeFileSync(join(stagingDir, 'package.json'), JSON.stringify(stagedPkg, null, 2) + '\n')
 }
 
 function copyBuild() {
@@ -93,11 +99,7 @@ function copyRootFile(name, { required = true } = {}) {
 function generateReadme() {
   execFileSync(
     'python3',
-    [
-      join(repoRoot, 'scripts', 'build_npm_readme.py'),
-      '--output',
-      join(stagingDir, 'README.md'),
-    ],
+    [join(repoRoot, 'scripts', 'build_npm_readme.py'), '--output', join(stagingDir, 'README.md')],
     { stdio: 'inherit', cwd: repoRoot }
   )
 }
