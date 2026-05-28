@@ -20,9 +20,9 @@ Spike (1) first — it tells us whether the rest of the type model survives cont
 
 ---
 
-## 1. Generic `JsonEditor<T>` on data type
+## 1. Generic `JsonEditor<T>` on data type — ✅ done
 
-`JsonData` in [src/types.ts](src/types.ts) collapses to `unknown`, so consumers lose their types crossing the boundary (`data`, `setData`, every `UpdateFunction` callback, `NodeData.fullData`, `FilterFunction`, etc.).
+`JsonData` in [src/types.ts](src/types.ts) collapsed to `unknown`, so consumers lost their types crossing the boundary (`data`, `setData`, every `UpdateFunction` callback, `NodeData.fullData`, `FilterFunction`, etc.).
 
 ```ts
 interface JsonEditorProps<T = JsonData> {
@@ -33,7 +33,7 @@ interface JsonEditorProps<T = JsonData> {
 }
 ```
 
-Ripples through every callback signature — only realistic in a major. Type gymnastics around `NodeData` and the custom-node generics are the risky part; prototype early.
+Landed in [#240](https://github.com/CarlosNZ/json-edit-react/pull/240). `T` flows to `data`, `setData`, the root-data slots of `UpdateFunction` / `OnChangeFunction` / `OnErrorFunction`, and `NodeData.fullData` (which propagates into every `FilterFunction` variant). Default `T = JsonData` keeps existing untyped code source-compatible. Per-node `value` / `parentData` stay wide — they're arbitrary-depth slices no static type can describe. The recursive internal `Editor` stays pinned to `JsonEditorProps<JsonData>`; the outer wrapper casts at the boundary. `CustomNodeDefinition` intentionally didn't gain a `T` generic — would have made mixed-shape arrays unworkable. See [migration-guide.md](migration-guide.md) for consumer guidance.
 
 ## 2. Path identity — drop dot-joined strings
 
