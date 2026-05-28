@@ -207,7 +207,7 @@ Both [demo/vite.config.ts](demo/vite.config.ts) and [custom-component-library/vi
 
 The `local` mode is what you'll use 90% of the time during dev — edits in core/themes/components are picked up by vite's hot-reload without rebuilding.
 
-The `npm` mode is for **validating against the published artefact**. After publishing, install the latest versions in demo and CCL (`./scripts/installLatestPackage.mjs` does this automatically post-publish) and run `yarn start` to see exactly what a consumer would see.
+The `npm` mode is for **validating against the published artefact**. After publishing, run `pnpm sync-demos` from the repo root to bump demo and CCL to the just-published versions, then `yarn start` to see exactly what a consumer would see.
 
 ## Versioning with Changesets
 
@@ -303,6 +303,10 @@ pnpm changeset publish
 
 # 6. Push commit + tags
 git push --follow-tags
+
+# 7. Bump demo + CCL to the just-published versions
+#    (polls npm until each new version is visible, then `yarn add` in each consumer)
+pnpm sync-demos
 ```
 
 `pnpm changeset publish` walks each workspace package, compares its local version against npm, and runs `pnpm publish` for anything that's ahead. The `publishConfig.access: public` in each scoped package's `package.json` ensures the `@json-edit-react/...` packages publish as public (npm scopes default to private).
@@ -484,7 +488,7 @@ Then re-run `pnpm install`. The symlink lands at `packages/<name>/node_modules/j
 
 Right — the themes and components packages haven't been published to npm yet. The `npm` mode for those packages only works after the first publish. Use `local` mode (`VITE_JRE_SOURCE=local`) in the meantime; it routes through vite aliases to the in-repo source.
 
-After the first publish, run `./scripts/installLatestPackage.mjs` (or update demo/CCL `package.json` deps manually) to install the published versions.
+After the first publish, run `pnpm sync-demos` (or update demo/CCL `package.json` deps manually) to install the published versions.
 
 ### How do I un-publish a bad release?
 
