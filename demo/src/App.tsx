@@ -52,7 +52,9 @@ import { testData } from '../../custom-component-library/src/data'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 const SourceIndicator = lazy(() => import('./SourceIndicator'))
-const JsonEditor = lazy(() => import('@json-edit-react').then((m) => ({ default: m.JsonEditor })))
+const JsonEditor = lazy(() =>
+  import('@json-edit-react').then((m) => ({ default: m.JsonEditor }))
+) as typeof import('@json-edit-react').JsonEditor
 
 interface AppState {
   rootName: string
@@ -135,7 +137,7 @@ function App() {
   const [
     { present: data, past, future },
     { set: setData, reset, undo: undoData, redo: redoData, canUndo, canRedo },
-  ] = useUndo(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data)
+  ] = useUndo<JsonData>(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data)
   // Provides a named version of these methods (i.e undo.name = "undo")
   const undo = () => undoData()
   const redo = () => redoData()
@@ -300,7 +302,7 @@ function App() {
         break
       case 'liveData':
         setIsSaving(true)
-        await updateLiveData(data)
+        await updateLiveData(data as object)
         setIsSaving(false)
         toast({
           title: 'Whoosh!',
@@ -409,9 +411,9 @@ function App() {
                 _focus={{ w: '45%' }}
                 transition={'width 0.3s'}
               />
-              <JsonEditor
+              <JsonEditor<typeof data>
                 data={data}
-                setData={setData as (data: JsonData) => void}
+                setData={setData}
                 rootName={rootName}
                 theme={[theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }]}
                 indent={indent}
