@@ -1,13 +1,23 @@
 """
-Github README to NPM README transformation script
+Generate the short npm-page README from the GitHub README.
 
-This script takes the README_npm.md file and replaces the content blocks (marked
-by {{ }}) with the corresponding blocks from the main README.md file, which is
-for Github. This is so we can re-use the introductory content in both READMEs
-without duplicating it.
+Reads the `.README_npm.md` template, replaces `{{BLOCK NAME}}` placeholders with
+the corresponding `<!-- BLOCK NAME -->`-delimited sections from the long
+`README.md`, and writes the result to the path passed via `--output`. This lets
+us reuse intro/usage prose across both READMEs without duplicating it.
 
-It also converts Github-style admonition blocks to HTML that mimics Github
-styling and converts internal anchor links to full GitHub repository URLs.
+Also:
+- Converts GitHub-style admonition blocks (> [!NOTE], etc.) to inline HTML so
+  they render reasonably on the npm page.
+- Rewrites internal links to absolute GitHub URLs — both `[text](#anchor)` and
+  `[text](relative/path.md)` style — so they resolve correctly when viewed on
+  npmjs.com.
+
+Invoked by `scripts/stage-package.mjs` during `pnpm build-package`; the output
+file lands inside the `build_package/` staging directory, never overwriting the
+real repo-root README. Defaults match the legacy in-place flow (output to
+`.README_npm_output.md`) for backwards compatibility, but the new flow always
+passes an explicit `--output`.
 """
 
 import re
