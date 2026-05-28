@@ -37,9 +37,6 @@ typings/
 #Misc
 .DS_Store
 
-# Duplicated source code for GUI app
-demo/src/json-edit-react
-
 # Dev playground file
 temp.js
 .vscode/settings.json
@@ -51,4 +48,3 @@ demo/src/package
 custom-component-library/components/package
 .original-readme.md
 .npm-readme.md
-demo/src/imports/import.ts

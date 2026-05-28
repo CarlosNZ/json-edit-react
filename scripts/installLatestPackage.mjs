@@ -1,60 +1,92 @@
 #!/usr/bin/env node
 
-import { execSync } from 'child_process'
+import { execSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { join, resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const foldersToInstall = ['demo', 'custom-component-library']
-const packageName = 'json-edit-react'
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
-/**
- * Installs the most recent version of a package (stable or beta)
- * @param {string} packageName - The name of the package to check
- */
-async function installLatestPackage() {
-  console.log('Installing most recent version of the published package in apps...')
+const PACKAGES = [
+  { name: 'json-edit-react', pkgJsonPath: 'package.json' },
+  { name: '@json-edit-react/themes', pkgJsonPath: 'packages/themes/package.json' },
+  { name: '@json-edit-react/components', pkgJsonPath: 'packages/components/package.json' },
+]
+
+const CONSUMERS = ['demo', 'custom-component-library']
+
+const POLL_INTERVAL_MS = 5_000
+const POLL_MAX_ATTEMPTS = 24 // 24 * 5s = 2 min
+
+const readJson = (relPath) => JSON.parse(readFileSync(join(ROOT, relPath), 'utf8'))
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+const getConsumerDep = (consumerPkg, name) =>
+  consumerPkg.dependencies?.[name] ?? consumerPkg.devDependencies?.[name] ?? null
+
+const npmHasVersion = (name, version) => {
   try {
-    // Get all package info in a single call
-    const packageData = JSON.parse(execSync(`npm view ${packageName} --json`).toString())
-
-    // Get stable version from dist-tags (always exists)
-    const stableVersion = packageData['dist-tags'].latest
-    const stableDate = new Date(packageData.time[stableVersion])
-
-    console.log(`Latest stable: ${stableVersion} (${stableDate.toISOString()})`)
-
-    // Check if beta tag exists
-    if (!packageData['dist-tags'].beta) {
-      console.log('No beta version available. Installing stable version')
-      installPackage(packageName, stableVersion, foldersToInstall)
-      return
-    }
-
-    // Get beta version and timestamp
-    const betaVersion = packageData['dist-tags'].beta
-    const betaDate = new Date(packageData.time[betaVersion])
-
-    console.log(`Latest beta: ${betaVersion} (${betaDate.toISOString()})`)
-
-    // Compare dates and install the most recent version
-    if (betaDate > stableDate) {
-      installPackage(packageName, betaVersion, foldersToInstall)
-    } else {
-      installPackage(packageName, stableVersion, foldersToInstall)
-    }
-  } catch (error) {
-    console.error('Error checking or installing package:', error.message)
+    execSync(`npm view ${name}@${version} version`, {
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+    return true
+  } catch {
+    return false
   }
 }
 
-const installPackage = (packageName, version, installFolders) => {
-  for (const folder of installFolders) {
-    console.log(`Installing version ${version} in ${folder}`)
-    execSync(`cd ${folder} && yarn add ${packageName}@${version}`, { stdio: 'inherit' })
+const waitForPublish = async (name, version) => {
+  for (let attempt = 1; attempt <= POLL_MAX_ATTEMPTS; attempt++) {
+    if (npmHasVersion(name, version)) return true
+    console.log(`    waiting for ${name}@${version} on npm (${attempt}/${POLL_MAX_ATTEMPTS})`)
+    if (attempt < POLL_MAX_ATTEMPTS) await sleep(POLL_INTERVAL_MS)
+  }
+  return false
+}
+
+const syncDemos = async () => {
+  console.log('Syncing demo apps to published library versions\n')
+
+  const targets = PACKAGES.map((p) => ({
+    name: p.name,
+    version: readJson(p.pkgJsonPath).version,
+  }))
+
+  for (const consumer of CONSUMERS) {
+    console.log(`[${consumer}]`)
+    const consumerPkg = readJson(`${consumer}/package.json`)
+
+    for (const { name, version } of targets) {
+      const currentDep = getConsumerDep(consumerPkg, name)
+      if (!currentDep) {
+        console.log(`  - ${name}: not a dependency, skipping`)
+        continue
+      }
+      if (currentDep === version) {
+        console.log(`  - ${name}@${version}: already current`)
+        continue
+      }
+      console.log(`  - ${name}: ${currentDep} -> ${version}`)
+
+      const available = await waitForPublish(name, version)
+      if (!available) {
+        console.error(
+          `    ! ${name}@${version} not on npm after ${POLL_MAX_ATTEMPTS} attempts, skipping`
+        )
+        continue
+      }
+
+      execSync(`yarn add ${name}@${version}`, {
+        cwd: join(ROOT, consumer),
+        stdio: 'inherit',
+      })
+    }
+    console.log()
   }
 }
 
-const pause = process.argv[2] === 'pause'
-
-if (pause) {
-  console.log('Pausing installation to wait for newly published package...')
-  setTimeout(() => installLatestPackage(), 10_000)
-} else installLatestPackage(packageName)
+syncDemos().catch((err) => {
+  console.error('sync-demos failed:', err)
+  process.exit(1)
+})
