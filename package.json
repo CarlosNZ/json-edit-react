@@ -23,7 +23,8 @@
   "homepage": "https://carlosnz.github.io/json-edit-react",
   "packageManager": "pnpm@10.8.1",
   "publishConfig": {
-    "directory": "build_package"
+    "directory": "build_package",
+    "linkDirectory": false
   },
   "scripts": {
     "setup": "pnpm install && cd demo && yarn install",
