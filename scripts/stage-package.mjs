@@ -10,8 +10,7 @@
  *
  * Invoked by `pnpm build-package` after `pnpm build` has produced `build/`.
  * `publishConfig.directory: "build_package"` in the root package.json tells
- * pnpm /
- * Changesets to publish from here.
+ * pnpm / Changesets to publish from here.
  */
 
 import { execFileSync } from 'node:child_process'
