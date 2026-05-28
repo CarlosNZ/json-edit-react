@@ -36,7 +36,7 @@
     "build-package": "pnpm build && node scripts/stage-package.mjs",
     "lint": "eslint",
     "compile": "tsc --noEmit && ts-prune",
-    "preview-publish": "pnpm build-package && cd build_package && pnpm pack",
+    "preview-publish": "pnpm build-package && cd build_package && pnpm pack --pack-destination ..",
     "release": "pnpm -r build && pnpm build-package && pnpm changeset publish",
     "release-demo": "cd demo && yarn deploy",
     "sync-demos": "node scripts/installLatestPackage.mjs"
