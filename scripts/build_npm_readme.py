@@ -110,10 +110,14 @@ def convert_internal_links(text, base_url="https://github.com/CarlosNZ/json-edit
         text,
     )
 
-    # Second pass: rewrite relative file links [text](some/path.ext) or [text](file.md#anchor)
-    # Skip absolute URLs (http/https/mailto), already-anchored links (handled above),
-    # and image references (we leave those for an image-host pass elsewhere)
-    relative_pattern = r'\[([^\]]+)\]\(([^):#][^)]*?)\)'
+    # Second pass: rewrite relative file links [text](some/path.ext) or
+    # [text](file.md#anchor)
+    # Skip absolute URLs (http/https/mailto), already-anchored links (handled
+    # above), and markdown images. Images are excluded via a negative lookbehind
+    # for `!` — without it `![alt](image.png)` would have its `[alt](image.png)`
+    # portion matched and rewritten to a GitHub HTML page URL, which doesn't
+    # render as an image on npm.
+    relative_pattern = r'(?<!!)\[([^\]]+)\]\(([^):#][^)]*?)\)'
 
     def replace_relative(match):
         link_text = match.group(1)

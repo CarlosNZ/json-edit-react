@@ -22,7 +22,7 @@ cd custom-component-library && yarn install && yarn dev:local
 pnpm preview-publish                                            # core (stages, then packs from build_package/)
 pnpm --filter @json-edit-react/themes preview-publish           # themes
 pnpm --filter @json-edit-react/components preview-publish       # components
-# → tarballs land in build_package/ (core) or packages/<name>/ (sub-packages)
+# → core tarball lands at the repo root; sub-package tarballs land in packages/<name>/
 ```
 
 ## Overview
@@ -301,10 +301,10 @@ git add -A
 git commit -m "Release v..."
 
 # 5. Inspect what will ship (real .tgz files, no registry contact)
-pnpm preview-publish                                       # core → build_package/*.tgz
+pnpm preview-publish                                       # core → ./json-edit-react-*.tgz (at repo root)
 pnpm --filter @json-edit-react/themes preview-publish      # → packages/themes/*.tgz
 pnpm --filter @json-edit-react/components preview-publish  # → packages/components/*.tgz
-tar -tzf build_package/json-edit-react-*.tgz | sort        # inspect each, repeat for the others
+tar -tzf json-edit-react-*.tgz | sort                      # inspect each (repeat for the sub-package .tgz files)
 
 # 6. Publish to npm (the `release` script orchestrates: -r build, build-package, changeset publish)
 pnpm release

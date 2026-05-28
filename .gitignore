@@ -49,3 +49,7 @@ custom-component-library/components/package
 
 # Packed tarballs from `pnpm pack` (preview-publish output)
 *.tgz
+
+# Python bytecode cache (produced when scripts/build_npm_readme.py is imported)
+__pycache__/
+*.pyc
