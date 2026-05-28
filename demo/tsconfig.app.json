@@ -34,6 +34,5 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "../custom-component-library/components/DatePicker/DateTimePicker.tsx"
-  ],
-  "exclude": ["src/json-edit-react", "src/imports"]
+  ]
 }
