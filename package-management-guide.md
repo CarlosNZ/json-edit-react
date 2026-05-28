@@ -18,9 +18,11 @@ pnpm changeset               # add a changeset before opening a PR
 cd demo && yarn install && yarn start:local
 cd custom-component-library && yarn install && yarn dev:local
 
-# Mock-publish to test pre-release (run from inside the package directory)
-cd packages/themes && pnpm pack
-# → packages/themes/json-edit-react-themes-0.1.0.tgz
+# Preview-publish — produces a real .tgz you can inspect (no registry contact)
+pnpm preview-publish                                            # core (stages, then packs from build_package/)
+pnpm --filter @json-edit-react/themes preview-publish           # themes
+pnpm --filter @json-edit-react/components preview-publish       # components
+# → tarballs land in build_package/ (core) or packages/<name>/ (sub-packages)
 ```
 
 ## Overview
@@ -298,20 +300,28 @@ git diff
 git add -A
 git commit -m "Release v..."
 
-# 5. Publish to npm
-pnpm changeset publish
+# 5. Inspect what will ship (real .tgz files, no registry contact)
+pnpm preview-publish                                       # core → build_package/*.tgz
+pnpm --filter @json-edit-react/themes preview-publish      # → packages/themes/*.tgz
+pnpm --filter @json-edit-react/components preview-publish  # → packages/components/*.tgz
+tar -tzf build_package/json-edit-react-*.tgz | sort        # inspect each, repeat for the others
 
-# 6. Push commit + tags
+# 6. Publish to npm (the `release` script orchestrates: -r build, build-package, changeset publish)
+pnpm release
+
+# 7. Push commit + tags
 git push --follow-tags
 
-# 7. Bump demo + CCL to the just-published versions
+# 8. Bump demo + CCL to the just-published versions
 #    (polls npm until each new version is visible, then `yarn add` in each consumer)
 pnpm sync-demos
 ```
 
-`pnpm changeset publish` walks each workspace package, compares its local version against npm, and runs `pnpm publish` for anything that's ahead. The `publishConfig.access: public` in each scoped package's `package.json` ensures the `@json-edit-react/...` packages publish as public (npm scopes default to private).
+`pnpm changeset publish` walks each workspace package, compares its local version against npm, and runs `pnpm publish` for anything that's ahead. For core, the root `package.json`'s `publishConfig.directory: "build_package"` tells Changesets to publish from the staged directory rather than the repo root — so step 6 builds and stages `build_package/` (a self-contained dir with a trimmed `package.json` and the short npm README) before Changesets ever runs. For sub-packages, `publishConfig.access: public` is set in each scoped package's `package.json` to ensure they ship as public (npm scopes default to private), and their `prepack: pnpm build` hook rebuilds at publish time.
 
-**Note:** `changeset publish` does not have a `--dry-run` flag. To preview a release without publishing, inspect `pnpm changeset status` (shows pending bumps), then optionally run `pnpm changeset version` in a throwaway branch to see the diff (or use `git stash`/`git restore` to revert). For per-package preflight, `pnpm publish --dry-run` from inside a `packages/*/` dir works.
+**Pack == publish guarantee.** No package uses `prepublishOnly` / `postpublish` hooks. That means `pnpm pack` and `pnpm publish` produce byte-identical tarballs — what `pnpm preview-publish` shows you in step 5 is exactly what npm receives in step 6.
+
+**Note:** `changeset publish` does not have a `--dry-run` flag of its own. The intended preflight is `pnpm preview-publish` (per package) as in step 5. To preview the *workspace-wide* bump set without consuming changesets, inspect `pnpm changeset status` or run `pnpm changeset version` on a throwaway branch.
 
 ### Beta / prerelease releases
 

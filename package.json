@@ -22,6 +22,9 @@
   "license": "MIT",
   "homepage": "https://carlosnz.github.io/json-edit-react",
   "packageManager": "pnpm@10.8.1",
+  "publishConfig": {
+    "directory": "build_package"
+  },
   "scripts": {
     "setup": "pnpm install && cd demo && yarn install",
     "test": "jest",
@@ -30,13 +33,11 @@
     "demo:package": "pnpm build-package && cd demo && yarn && yarn start:package",
     "prebuild": "pnpm lint",
     "build": "rollup -c && rm -R build/dts",
-    "build-package": "pnpm build && pnpm pack && tar -xzf json-edit-react-*.tgz && mv package build_package && rm json-edit-react-*.tgz",
+    "build-package": "pnpm build && node scripts/stage-package.mjs",
     "lint": "eslint",
-    "prepareReadme": "python3 scripts/build_npm_readme.py",
-    "prepublishOnly": "pnpm build && pnpm prepareReadme && python3 scripts/use_npm_readme.py prepare",
-    "postpublish": "python3 scripts/use_npm_readme.py restore",
     "compile": "tsc --noEmit && ts-prune",
-    "release": "pnpm publish",
+    "preview-publish": "pnpm build-package && cd build_package && pnpm pack",
+    "release": "pnpm -r build && pnpm build-package && pnpm changeset publish",
     "release-demo": "cd demo && yarn deploy",
     "sync-demos": "node scripts/installLatestPackage.mjs"
   },

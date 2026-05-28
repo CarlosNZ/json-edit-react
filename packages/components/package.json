@@ -27,9 +27,11 @@
     "access": "public"
   },
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && rm -rf build/dts",
     "clean": "rm -rf build",
-    "compile": "tsc --noEmit"
+    "compile": "tsc --noEmit",
+    "prepack": "pnpm build",
+    "preview-publish": "pnpm pack"
   },
   "peerDependencies": {
     "json-edit-react": "workspace:^",

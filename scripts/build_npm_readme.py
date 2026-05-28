@@ -77,27 +77,43 @@ def convert_github_admonition(text):
 
 def convert_internal_links(text, base_url="https://github.com/CarlosNZ/json-edit-react"):
     """
-    Convert internal Markdown anchor links to full GitHub documentation links.
-    
+    Convert internal Markdown links to full GitHub URLs:
+    - [text](#anchor)          -> [text](base_url#anchor)
+    - [text](file.md)          -> [text](base_url/blob/main/file.md)
+    - [text](file.md#anchor)   -> [text](base_url/blob/main/file.md#anchor)
+    - [text](path/to/file.ext) -> [text](base_url/blob/main/path/to/file.ext)
+
+    Absolute URLs (http://, https://, mailto:) and image paths are left untouched.
+
     Args:
     text (str): The input text containing internal links
     base_url (str): The base URL for the GitHub repository
-    
+
     Returns:
     str: Text with converted links
     """
-    # Regex to match internal Markdown links: [text](#anchor)
-    # But avoid matching links that already have a full URL or are not anchors
-    pattern = r'\[([^\]]+)\]\(#([^)]+)\)'
-    
-    def replace_link(match):
+    # First pass: rewrite bare anchor links [text](#anchor)
+    anchor_pattern = r'\[([^\]]+)\]\(#([^)]+)\)'
+    text = re.sub(
+        anchor_pattern,
+        lambda m: f'[{m.group(1)}]({base_url}#{m.group(2)})',
+        text,
+    )
+
+    # Second pass: rewrite relative file links [text](some/path.ext) or [text](file.md#anchor)
+    # Skip absolute URLs (http/https/mailto), already-anchored links (handled above),
+    # and image references (we leave those for an image-host pass elsewhere)
+    relative_pattern = r'\[([^\]]+)\]\(([^):#][^)]*?)\)'
+
+    def replace_relative(match):
         link_text = match.group(1)
-        anchor = match.group(2)
-        
-        # Create the full GitHub URL with the anchor
-        return f'[{link_text}]({base_url}#{anchor})'
-    
-    return re.sub(pattern, replace_link, text)
+        target = match.group(2)
+        # Skip anything that looks absolute or is a protocol-relative URL
+        if target.startswith(('http://', 'https://', 'mailto:', '//', '/')):
+            return match.group(0)
+        return f'[{link_text}]({base_url}/blob/main/{target})'
+
+    return re.sub(relative_pattern, replace_relative, text)
 
 def replace_blocks(content_file, source_file, output_file=None, base_url="https://github.com/CarlosNZ/json-edit-react"):
     """
@@ -157,13 +173,26 @@ def replace_blocks(content_file, source_file, output_file=None, base_url="https:
     
     return modified_content
 
-# Example usage
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description='Generate the short npm README by expanding marker blocks from README.md into the .README_npm.md template.'
+    )
+    parser.add_argument('--template', default='.README_npm.md',
+                        help='Path to the npm README template (default: .README_npm.md)')
+    parser.add_argument('--source', default='README.md',
+                        help='Path to the source README containing the marker blocks (default: README.md)')
+    parser.add_argument('--output', default='.README_npm_output.md',
+                        help='Path to write the generated README (default: .README_npm_output.md)')
+    parser.add_argument('--base-url', default='https://github.com/CarlosNZ/json-edit-react',
+                        help='Base GitHub repo URL for rewriting internal links')
+    args = parser.parse_args()
+
     replace_blocks(
-        content_file='.README_npm.md', 
-        source_file='README.md', 
-        output_file='.README_npm_output.md',
-        base_url="https://github.com/CarlosNZ/json-edit-react"
+        content_file=args.template,
+        source_file=args.source,
+        output_file=args.output,
+        base_url=args.base_url,
     )
 
 if __name__ == '__main__':
