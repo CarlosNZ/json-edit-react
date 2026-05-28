@@ -305,6 +305,33 @@ It is recommended that you manage the `data` state yourself outside this compone
 > [!TIP]
 > Update functions should ideally be used only for implementing side effects (e.g. notifications), validation, or mutating the data before setting it with `setData`.
 
+### Typed data
+
+`JsonEditor` is generic on the type of its `data` prop, so TypeScript users can preserve their data shape across the component boundary instead of falling back to `unknown`:
+
+```tsx
+interface User {
+  name: string
+  email: string
+  roles: string[]
+}
+
+const [user, setUser] = useState<User>(initialUser)
+
+<JsonEditor<User>
+  data={user}
+  setData={setUser}
+  onUpdate={({ newData }) => {
+    // newData is typed as User
+  }}
+/>
+```
+
+The generic flows through `data`, `setData`, the `onUpdate` / `onEdit` / `onDelete` / `onAdd` / `onChange` / `onError` callbacks (root data slots only — per-node `value` stays `unknown`), and `NodeData.fullData` inside `FilterFunction`s. Defaults to `JsonData` (≈ `unknown`) so untyped consumers don't need to change anything.
+
+> [!NOTE]
+> `T` describes the data you *provide*. It is an input contract, not a runtime invariant — if the user can freely restructure the JSON, post-edit values may not conform to `T`. Pair with `restrictAdd` / `restrictDelete` / `restrictTypeSelection` to lock the shape, or validate inside `onUpdate` if you depend on it.
+
 ## Update Functions
 
 A **callback** to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update some external state, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema.
@@ -1278,8 +1305,8 @@ A few helper functions, components and types that might be useful in your own im
 
 - `Theme`: a full [Theme](#themes--styles) object
 - `ThemeInput`: input type for the `theme` prop
-- `JsonEditorProps`: all input props for the Json Editor component
-- `JsonData`: main `data` object -- any valid JSON structure
+- `JsonEditorProps<T>`: all input props for the Json Editor component. Generic on the data type — see [Typed data](#typed-data).
+- `JsonData`: main `data` object -- any valid JSON structure. Used as the default for `T`.
 - [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`CopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
 - [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`ExternalTriggers`](#event-triggers): input types of the respective props
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string

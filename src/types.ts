@@ -6,16 +6,16 @@ import { CustomNodeData } from './CustomNode'
 
 export type JsonData = Record<string, unknown> | Array<unknown> | unknown
 
-export interface JsonEditorProps {
-  data: JsonData
-  setData?: (data: JsonData) => void
+export interface JsonEditorProps<T = JsonData> {
+  data: T
+  setData?: (data: T) => void
   rootName?: string
-  onUpdate?: UpdateFunction
-  onEdit?: UpdateFunction
-  onDelete?: UpdateFunction
-  onAdd?: UpdateFunction
-  onChange?: OnChangeFunction
-  onError?: OnErrorFunction
+  onUpdate?: UpdateFunction<T>
+  onEdit?: UpdateFunction<T>
+  onDelete?: UpdateFunction<T>
+  onAdd?: UpdateFunction<T>
+  onChange?: OnChangeFunction<T>
+  onError?: OnErrorFunction<T>
   showErrorMessages?: boolean
   enableClipboard?: boolean | CopyFunction
   theme?: ThemeInput
@@ -23,25 +23,25 @@ export interface JsonEditorProps {
   className?: string
   id?: string
   indent?: number
-  collapse?: boolean | number | FilterFunction
+  collapse?: boolean | number | FilterFunction<T>
   collapseAnimationTime?: number // ms
   showCollectionCount?: boolean | 'when-closed'
-  restrictEdit?: boolean | FilterFunction
-  restrictDelete?: boolean | FilterFunction
-  restrictAdd?: boolean | FilterFunction
-  restrictTypeSelection?: boolean | TypeOptions | TypeFilterFunction
-  restrictDrag?: boolean | FilterFunction
+  restrictEdit?: boolean | FilterFunction<T>
+  restrictDelete?: boolean | FilterFunction<T>
+  restrictAdd?: boolean | FilterFunction<T>
+  restrictTypeSelection?: boolean | TypeOptions | TypeFilterFunction<T>
+  restrictDrag?: boolean | FilterFunction<T>
   viewOnly?: boolean
   searchText?: string
-  searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
+  searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction<T>
   searchDebounceTime?: number
   keySort?: boolean | CompareFunction
   showArrayIndices?: boolean
   arrayIndexFromOne?: boolean
   showStringQuotes?: boolean
   showIconTooltips?: boolean
-  defaultValue?: string | number | boolean | null | object | DefaultValueFunction
-  newKeyOptions?: string[] | NewKeyOptionsFunction
+  defaultValue?: string | number | boolean | null | object | DefaultValueFunction<T>
+  newKeyOptions?: string[] | NewKeyOptionsFunction<T>
   minWidth?: string | number
   maxWidth?: string | number
   rootFontSize?: string | number
@@ -108,28 +108,28 @@ export interface TextEditorProps {
  * FUNCTIONS
  */
 
-export interface UpdateFunctionProps {
-  newData: JsonData
-  currentData: JsonData
+export interface UpdateFunctionProps<T = JsonData> {
+  newData: T
+  currentData: T
   newValue: unknown
   currentValue: unknown
   name: CollectionKey
   path: CollectionKey[]
 }
 
-export type UpdateFunctionReturn = ['error' | 'value', JsonData]
+export type UpdateFunctionReturn<T = JsonData> = ['error' | 'value', T]
 
-export type UpdateFunction = (
-  props: UpdateFunctionProps
+export type UpdateFunction<T = JsonData> = (
+  props: UpdateFunctionProps<T>
 ) =>
   | void
   | ErrorString
   | boolean
-  | UpdateFunctionReturn
-  | Promise<boolean | ErrorString | void | UpdateFunctionReturn>
+  | UpdateFunctionReturn<T>
+  | Promise<boolean | ErrorString | void | UpdateFunctionReturn<T>>
 
-export type OnChangeFunction = (props: {
-  currentData: JsonData
+export type OnChangeFunction<T = JsonData> = (props: {
+  currentData: T
   newValue: ValueData
   currentValue: ValueData
   name: CollectionKey
@@ -141,8 +141,8 @@ export interface JerError {
   message: ErrorString
 }
 
-export type OnErrorFunction = (props: {
-  currentData: JsonData
+export type OnErrorFunction<T = JsonData> = (props: {
+  currentData: T
   errorValue: JsonData
   currentValue: JsonData
   name: CollectionKey
@@ -150,16 +150,19 @@ export type OnErrorFunction = (props: {
   error: JerError
 }) => unknown
 
-export type FilterFunction = (input: NodeData) => boolean
-export type TypeFilterFunction = (input: NodeData) => boolean | TypeOptions
-export type CustomTextFunction = (input: NodeData) => string | null
-export type DefaultValueFunction = (input: NodeData, newKey?: string) => unknown
-export type SearchFilterFunction = (inputData: NodeData, searchText: string) => boolean
-export type SearchFilterInputFunction = (
-  inputData: Partial<NodeData>,
+export type FilterFunction<T = JsonData> = (input: NodeData<T>) => boolean
+export type TypeFilterFunction<T = JsonData> = (input: NodeData<T>) => boolean | TypeOptions
+export type CustomTextFunction<T = JsonData> = (input: NodeData<T>) => string | null
+export type DefaultValueFunction<T = JsonData> = (input: NodeData<T>, newKey?: string) => unknown
+export type SearchFilterFunction<T = JsonData> = (
+  inputData: NodeData<T>,
   searchText: string
 ) => boolean
-export type NewKeyOptionsFunction = (input: NodeData) => string[] | null | void
+export type SearchFilterInputFunction<T = JsonData> = (
+  inputData: Partial<NodeData<T>>,
+  searchText: string
+) => boolean
+export type NewKeyOptionsFunction<T = JsonData> = (input: NodeData<T>) => string[] | null | void
 
 export type CopyType = 'path' | 'value'
 export type CopyFunction = (input: {
@@ -240,7 +243,7 @@ export type KeyboardControlsFull = Omit<
  * NODES
  */
 
-export interface NodeData {
+export interface NodeData<T = JsonData> {
   key: CollectionKey
   path: CollectionKey[]
   level: number
@@ -248,7 +251,7 @@ export interface NodeData {
   value: JsonData
   size: number | null
   parentData: object | null
-  fullData: JsonData
+  fullData: T
   collapsed?: boolean
 }
 interface BaseNodeProps {

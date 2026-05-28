@@ -51,10 +51,10 @@ function App() {
 
   return (
     <div id="container">
-      <JsonEditor
+      <JsonEditor<TestData>
         // restrictEdit={true}
         data={data}
-        setData={setData as (data: unknown) => void}
+        setData={setData}
         customNodeDefinitions={[
           { ...ImageNodeDefinition, customNodeProps: { imageStyles: { maxWidth, maxHeight } } },
           LinkCustomNodeDefinition,
