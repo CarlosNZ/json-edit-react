@@ -302,7 +302,7 @@ function App() {
         break
       case 'liveData':
         setIsSaving(true)
-        await updateLiveData(data as object)
+        await updateLiveData(data)
         setIsSaving(false)
         toast({
           title: 'Whoosh!',
