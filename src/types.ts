@@ -88,6 +88,11 @@ export type ErrorString = string
 
 export type TabDirection = 'next' | 'prev'
 
+export interface EditingState {
+  path: CollectionKey[]
+  mode: 'value' | 'key'
+}
+
 export interface IconReplacements {
   add?: JSX.Element
   edit?: JSX.Element

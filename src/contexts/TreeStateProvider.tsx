@@ -15,26 +15,26 @@ import {
   type OnEditEventFunction,
   type OnCollapseFunction,
   type CollapseState,
+  type EditingState,
 } from '../types'
-import { toPathString } from '../helpers'
+import { editingStatesEqual, isDescendantOf } from '../helpers'
 
 interface DragSource {
   path: CollectionKey[] | null
-  pathString: string | null
 }
 
 interface TreeStateContext {
   collapseState: CollapseState | CollapseState[] | null
   setCollapseState: (collapseState: CollapseState | CollapseState[] | null) => void
   getMatchingCollapseState: (path: CollectionKey[]) => CollapseState | null
-  currentlyEditingElement: string | null
+  currentlyEditingElement: EditingState | null
   setCurrentlyEditingElement: (
-    path: CollectionKey[] | string | null,
+    path: CollectionKey[] | null,
     cancelOpOrKey?: (() => void) | 'key'
   ) => void
-  previouslyEditedElement: string | null
-  setPreviouslyEditedElement: (path: string) => void
-  areChildrenBeingEdited: (pathString: string) => boolean
+  previouslyEditedElement: CollectionKey[] | null
+  setPreviouslyEditedElement: (path: CollectionKey[]) => void
+  areChildrenBeingEdited: (path: CollectionKey[]) => boolean
   dragSource: DragSource
   setDragSource: (newState: DragSource) => void
   tabDirection: TabDirection
@@ -53,16 +53,13 @@ interface TreeStateProps {
 
 export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeStateProps) => {
   const [collapseState, setCollapseState] = useState<CollapseState | CollapseState[] | null>(null)
-  const [currentlyEditingElement, setCurrentlyEditingElement] = useState<string | null>(null)
+  const [currentlyEditingElement, setCurrentlyEditingElement] = useState<EditingState | null>(null)
 
   // This value holds the "previous" value when user changes type. Because
   // changing data type causes a proper data update, cancelling afterwards
   // doesn't revert to the previous type. This value allows us to do that.
   const [previousValue, setPreviousValue] = useState<JsonData | null>(null)
-  const [dragSource, setDragSource] = useState<DragSource>({
-    path: null,
-    pathString: null,
-  })
+  const [dragSource, setDragSource] = useState<DragSource>({ path: null })
   const cancelOp = useRef<(() => void) | null>(null)
 
   // tabDirection and previouslyEdited are used in Tab navigation. Each node can
@@ -72,26 +69,29 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
   // shouldn't be, it immediately goes to the next (and the next, etc...). These
   // two values hold some state which is useful in this slightly messy process.
   const tabDirection = useRef<TabDirection>('next')
-  const previouslyEdited = useRef<string | null>(null)
+  const previouslyEdited = useRef<CollectionKey[] | null>(null)
 
   const updateCurrentlyEditingElement = (
-    path: CollectionKey[] | string | null,
+    path: CollectionKey[] | null,
     newCancelOrKey?: (() => void) | 'key'
   ) => {
-    const pathString =
-      typeof path === 'string' || path === null
-        ? path
-        : toPathString(path, newCancelOrKey === 'key' ? 'key_' : undefined)
+    const nextState: EditingState | null =
+      path === null ? null : { path, mode: newCancelOrKey === 'key' ? 'key' : 'value' }
 
     // The "Cancel" function allows the UI to reset the element that was
     // previously being edited if the user clicks another "Edit" button
     // elsewhere
-    if (currentlyEditingElement !== null && pathString !== null && cancelOp.current !== null) {
+    if (currentlyEditingElement !== null && nextState !== null && cancelOp.current !== null) {
       cancelOp.current()
     }
-    setCurrentlyEditingElement(pathString)
-    if (onEditEvent && (Array.isArray(path) || path === null))
-      onEditEvent(path, newCancelOrKey === 'key')
+
+    // Skip setState when the editing state is equivalent — avoids redundant
+    // re-renders when callers re-issue the same edit target. React's `===`
+    // bailout doesn't help here because nextState is a fresh object each call.
+    if (!editingStatesEqual(nextState, currentlyEditingElement))
+      setCurrentlyEditingElement(nextState)
+
+    if (onEditEvent) onEditEvent(path, newCancelOrKey === 'key')
     cancelOp.current = typeof newCancelOrKey === 'function' ? newCancelOrKey : null
   }
 
@@ -109,8 +109,8 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
     return doesCollapseStateMatchPath(path, collapseState) ? collapseState : null
   }
 
-  const areChildrenBeingEdited = (pathString: string) =>
-    currentlyEditingElement !== null && currentlyEditingElement.includes(pathString)
+  const areChildrenBeingEdited = (path: CollectionKey[]) =>
+    currentlyEditingElement !== null && isDescendantOf(currentlyEditingElement.path, path)
 
   return (
     <TreeStateProviderContext.Provider
@@ -134,7 +134,7 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
         setCurrentlyEditingElement: updateCurrentlyEditingElement,
         areChildrenBeingEdited,
         previouslyEditedElement: previouslyEdited.current,
-        setPreviouslyEditedElement: (path: string) => {
+        setPreviouslyEditedElement: (path: CollectionKey[]) => {
           previouslyEdited.current = path
         },
         tabDirection: tabDirection.current,

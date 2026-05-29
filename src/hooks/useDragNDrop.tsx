@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useTreeState, useTheme } from '../contexts'
-import { toPathString } from '../helpers'
+import { isDescendantOf, pathsEqual } from '../helpers'
 import {
   type NodeData,
   type CollectionKey,
@@ -34,23 +34,21 @@ export const useDragNDrop = ({
   const { dragSource, setDragSource } = useTreeState()
   const [isDragTarget, setIsDragTarget] = useState<Position | false>(false)
 
-  const pathString = toPathString(path)
-
   // Props added to items being dragged
   const dragSourceProps = useMemo(() => {
     if (!canDrag) return {}
     return {
       onDragStart: (e: React.DragEvent) => {
         e.stopPropagation()
-        setDragSource({ path, pathString })
+        setDragSource({ path })
       },
       onDragEnd: (e: React.DragEvent) => {
         e.stopPropagation()
-        setDragSource({ path: null, pathString: null })
+        setDragSource({ path: null })
       },
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canDrag, pathString])
+  }, [canDrag, path])
 
   // Props for the items being dropped onto
   const getDropTargetProps = useMemo(
@@ -64,12 +62,14 @@ export const useDragNDrop = ({
         onDrop: (e: React.DragEvent) => {
           e.stopPropagation()
           handleDrop(position)
-          setDragSource({ path: null, pathString: null })
+          setDragSource({ path: null })
           setIsDragTarget(false)
         },
         onDragEnter: (e: React.DragEvent) => {
           e.stopPropagation()
-          if (!pathString.startsWith(dragSource.pathString ?? '')) {
+          // Block highlighting when dragging onto self or any descendant of the
+          // drag source (reflexive descendant check)
+          if (dragSource.path === null || !isDescendantOf(path, dragSource.path)) {
             setIsDragTarget(position)
           }
         },
@@ -80,7 +80,7 @@ export const useDragNDrop = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dragSource, canDragOnto, pathString]
+    [dragSource, canDragOnto, path]
   )
 
   // A dummy component to allow us to detect when dragging onto the *bottom*
@@ -88,7 +88,7 @@ export const useDragNDrop = ({
   // locked to the bottom.
   const BottomDropTarget = useMemo(
     () =>
-      canDragOnto && dragSource.pathString !== null ? (
+      canDragOnto && dragSource.path !== null ? (
         <div
           className="jer-drop-target-bottom"
           style={{
@@ -118,9 +118,10 @@ export const useDragNDrop = ({
   }
 
   const handleDrop = (position: Position) => {
-    const sourceKey = dragSource.path?.slice(-1)[0]
-    const sourceBase = dragSource.path?.slice(0, -1).join('.')
-    const thisBase = path.slice(0, -1).join('')
+    if (dragSource.path === null) return
+    const sourceKey = dragSource.path.slice(-1)[0]
+    const sourceParent = dragSource.path.slice(0, -1)
+    const thisParent = path.slice(0, -1)
     const { parentData } = nodeData
     if (
       typeof sourceKey === 'string' &&
@@ -128,7 +129,7 @@ export const useDragNDrop = ({
       !Array.isArray(parentData) &&
       Object.keys(parentData).includes(sourceKey) &&
       sourceKey in parentData &&
-      sourceBase !== thisBase
+      !pathsEqual(sourceParent, thisParent)
     ) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
     } else {

@@ -13,7 +13,7 @@ import {
   type ValueNodeProps,
   type JsonData,
 } from '../types'
-import { toPathString } from '../helpers'
+import { pathsEqual, toPathString } from '../helpers'
 
 interface CommonProps {
   props: CollectionNodeProps | ValueNodeProps
@@ -97,8 +97,11 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   }
 
   // Common DERIVED VALUES (this makes the JSX logic less messy)
-  const isEditing = currentlyEditingElement === pathString
-  const isEditingKey = currentlyEditingElement === `key_${pathString}`
+  const isEditing =
+    currentlyEditingElement?.mode === 'value' &&
+    pathsEqual(currentlyEditingElement.path, path)
+  const isEditingKey =
+    currentlyEditingElement?.mode === 'key' && pathsEqual(currentlyEditingElement.path, path)
   const isArray = typeof path.slice(-1)[0] === 'number'
   const canEditKey = parentData !== null && canEdit && canAdd && canDelete && !isArray
 

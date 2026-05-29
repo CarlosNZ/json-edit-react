@@ -282,7 +282,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       cancel: handleCancel,
       tabForward: () => {
         setTabDirection('next')
-        setPreviouslyEditedElement(pathString)
+        setPreviouslyEditedElement(path)
         const next = getNextOrPrevious(nodeData.fullData, path, 'next', sort)
         if (next) {
           handleEdit()
@@ -291,7 +291,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       },
       tabBack: () => {
         setTabDirection('prev')
-        setPreviouslyEditedElement(pathString)
+        setPreviouslyEditedElement(path)
         const prev = getNextOrPrevious(nodeData.fullData, path, 'prev', sort)
         if (prev) {
           handleEdit()

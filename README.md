@@ -1297,7 +1297,7 @@ A few helper functions, components and types that might be useful in your own im
 - `extract`: function to extract a deeply nested object value from a string path. Originally published at [object-property-extractor](https://github.com/CarlosNZ/object-property-extractor)
 - `assign`: function to set a deep object value from a string path. Originally published at [object-property-assigner](https://github.com/CarlosNZ/object-property-assigner)
 - `isCollection`: simple utility that returns `true` if input is a "Collection" (i.e. an Object or Array)
-- `toPathString`: transforms a path array to a string representation, e.g.  `["data", 0, "property1", "name"] => "data.0.property1.name"`
+- `toPathString`: transforms a path array to a string representation suitable for HTML `name`/`id` attributes, e.g.  `["data", 0, "property1", "name"] => "data/0/property1/name"`. Keys are URL-encoded so the result is unambiguous even when keys contain `/` or other special characters.
 - `defaultTheme`: the "default" theme baseline used when no `theme` prop is supplied. (Additional themes ship in [`@json-edit-react/themes`](#themes--styles).)
 - `standardDataTypes`: array containing all standard data types: `[ 'string','number', 'boolean', 'null', 'object', 'array' ]`
 
