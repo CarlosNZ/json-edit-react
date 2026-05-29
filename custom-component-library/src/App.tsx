@@ -34,6 +34,8 @@ if (testData?.['Date & Time']) {
 
 type TestData = typeof testData
 
+const SourceIndicator = lazy(() => import('../../demo/src/SourceIndicator'))
+
 function App() {
   const [data, setData] = useState<TestData>(testData)
 
@@ -46,8 +48,6 @@ function App() {
   // Image sizing
   const maxWidth = data?.Images?.['Image properties']?.maxWidth
   const maxHeight = data?.Images?.['Image properties']?.maxHeight
-
-  const SourceIndicator = lazy(() => import('../../demo/src/SourceIndicator'))
 
   return (
     <div id="container">
