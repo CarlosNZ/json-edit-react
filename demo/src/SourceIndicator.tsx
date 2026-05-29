@@ -1,6 +1,14 @@
 // Non-default VITE_JRE_SOURCE modes get a coloured badge so it's obvious which
-// version of json-edit-react the demo is consuming. The `npm` (default / deployed)
-// mode renders nothing — what real users see has no badge.
+// version of json-edit-react the demo is consuming. The `npm` (default /
+// deployed) mode renders nothing — what real users see has no badge.
+//
+// Shared: the custom-component-library app also imports this file directly via
+// a relative path (`../../demo/src/SourceIndicator`), wrapped in React.lazy so
+// TypeScript doesn't need it inside CCL's tsconfig `include`. The two apps are
+// otherwise independent (see CLAUDE.md), but a one-file cross-import is the
+// pragmatic tradeoff vs. duplicating the badge. If you change this component's
+// export shape, expect the demo's typecheck to catch issues; if you rename or
+// move this file, also update custom-component-library/src/App.tsx.
 const badges: Record<string, { label: string; backgroundColor: string }> = {
   local: { label: 'LOCAL', backgroundColor: '#ef4444' },
   build: { label: 'BUILD', backgroundColor: '#ff51ff' },
