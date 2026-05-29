@@ -50,6 +50,9 @@ custom-component-library/components/package
 # Packed tarballs from `pnpm pack` (preview-publish output)
 *.tgz
 
+# Extracted tarballs from `pnpm pack-all` (consumed by VITE_JRE_SOURCE=pack)
+pack-output/
+
 # Python bytecode cache (produced when scripts/build_npm_readme.py is imported)
 __pycache__/
 *.pyc

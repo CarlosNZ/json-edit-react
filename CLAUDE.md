@@ -58,7 +58,8 @@ pnpm install          # install root + all workspace packages
 pnpm setup            # install root + demo (chains pnpm install && cd demo && yarn install)
 pnpm dev              # run the demo against local src (VITE_JRE_SOURCE=local)
 pnpm demo             # run the demo against the npm-installed version
-pnpm demo:package     # build core and run the demo against the packaged build
+pnpm demo:pack        # pack all three packages and run the demo against the tarballs (VITE_JRE_SOURCE=pack)
+pnpm pack-all         # produce pack-output/<name>/package/ — consumed by demo/CCL :pack scripts
 pnpm test             # jest
 pnpm lint             # eslint (also runs as prebuild)
 pnpm compile          # tsc --noEmit && ts-prune (dead-export check)
@@ -68,7 +69,7 @@ pnpm release          # pnpm publish — DON'T run unless explicitly asked
 pnpm changeset        # add a changeset before opening a PR that touches published behaviour
 ```
 
-The demo and CCL can each resolve `json-edit-react`, `@json-edit-react/themes`, and `@json-edit-react/components` from three places via `VITE_JRE_SOURCE` (`local` | `build` | `npm`). See [demo/vite.config.ts](demo/vite.config.ts) and [custom-component-library/vite.config.ts](custom-component-library/vite.config.ts). When iterating on library changes, use `VITE_JRE_SOURCE=local` (e.g. `pnpm dev`) so edits in [src/](src/) or `packages/*/src/` are picked up by Vite immediately.
+The demo and CCL can each resolve `json-edit-react`, `@json-edit-react/themes`, and `@json-edit-react/components` from four places via `VITE_JRE_SOURCE` (`local` | `build` | `pack` | `npm`). See [demo/vite.config.ts](demo/vite.config.ts) and [custom-component-library/vite.config.ts](custom-component-library/vite.config.ts), with the full table in [package-management-guide.md](package-management-guide.md). When iterating on library changes, use `VITE_JRE_SOURCE=local` (e.g. `pnpm dev`) so edits in [src/](src/) or `packages/*/src/` are picked up by Vite immediately. Use `pack` (via `pnpm pack-all`) as the pre-publish dress rehearsal.
 
 ## Conventions and gotchas
 
