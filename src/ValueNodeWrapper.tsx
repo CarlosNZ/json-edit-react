@@ -20,7 +20,7 @@ import {
 } from './types'
 import { useTheme, useTreeState } from './contexts'
 import { type CustomNodeData } from './CustomNode'
-import { filterNode, getNextOrPrevious, isJsEvent, matchEnumType } from './helpers'
+import { filterNode, getNextOrPrevious, isJsEvent, matchEnumType, NOOP } from './helpers'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'
 
@@ -268,7 +268,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setValue: updateValue,
     isEditing,
     canEdit,
-    setIsEditing: canEdit ? () => setCurrentlyEditingElement(path) : () => {},
+    setIsEditing: canEdit ? () => setCurrentlyEditingElement(path) : NOOP,
     handleEdit,
     handleCancel,
     path,

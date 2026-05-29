@@ -7,6 +7,7 @@ import {
   isCollection,
   matchNode,
   matchNodeKey,
+  NOOP,
   restoreUndefined,
   UNDEFINED,
 } from './helpers'
@@ -27,7 +28,7 @@ import {
   CustomNodeDefinition,
 } from './types'
 import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useTreeState } from './contexts'
-import { useData, useTriggers } from './hooks'
+import { useTriggers } from './hooks'
 import { getTranslateFunction } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
@@ -42,10 +43,10 @@ const defaultJsonStringify = (
 ) => JSON.stringify(data, replacer, 2)
 
 const Editor: React.FC<JsonEditorProps<JsonData>> = ({
-  data: srcData,
-  setData: srcSetData,
+  data,
+  setData,
   rootName = 'root',
-  onUpdate = () => {},
+  onUpdate = NOOP,
   onEdit: srcEdit = onUpdate,
   onDelete: srcDelete = onUpdate,
   onAdd: srcAdd = onUpdate,
@@ -63,7 +64,6 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   restrictAdd = false,
   restrictTypeSelection = false,
   restrictDrag = true,
-  viewOnly,
   searchFilter: searchFilterInput,
   searchText,
   searchDebounceTime = 350,
@@ -102,8 +102,6 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     [translations, customText]
   )
   const [debouncedSearchText, setDebouncedSearchText] = useState(searchText)
-
-  const [data, setData] = useData<JsonData>({ setData: srcSetData, data: srcData })
 
   const mainContainerRef = useRef<HTMLDivElement>(null)
 
@@ -269,22 +267,10 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     })
   }
 
-  const restrictEditFilter = useMemo(
-    () => getFilterFunction(restrictEdit, viewOnly),
-    [restrictEdit, viewOnly]
-  )
-  const restrictDeleteFilter = useMemo(
-    () => getFilterFunction(restrictDelete, viewOnly),
-    [restrictDelete, viewOnly]
-  )
-  const restrictAddFilter = useMemo(
-    () => getFilterFunction(restrictAdd, viewOnly),
-    [restrictAdd, viewOnly]
-  )
-  const restrictDragFilter = useMemo(
-    () => getFilterFunction(restrictDrag, viewOnly),
-    [restrictDrag, viewOnly]
-  )
+  const restrictEditFilter = useMemo(() => getFilterFunction(restrictEdit), [restrictEdit])
+  const restrictDeleteFilter = useMemo(() => getFilterFunction(restrictDelete), [restrictDelete])
+  const restrictAddFilter = useMemo(() => getFilterFunction(restrictAdd), [restrictAdd])
+  const restrictDragFilter = useMemo(() => getFilterFunction(restrictDrag), [restrictDrag])
   const searchFilter = useMemo(() => getSearchFilter(searchFilterInput), [searchFilterInput])
 
   const fullKeyboardControls = useMemo(
@@ -493,10 +479,8 @@ const updateDataObject = (
 }
 
 const getFilterFunction = (
-  propValue: boolean | number | FilterFunction,
-  viewOnly?: boolean
+  propValue: boolean | number | FilterFunction
 ): FilterFunction => {
-  if (viewOnly) return () => true
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
   return propValue

@@ -1,4 +1,5 @@
 export { JsonEditor } from './JsonEditor'
+export { JsonViewer } from './JsonViewer'
 export { defaultTheme } from './contexts/ThemeProvider'
 export { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 export { StringDisplay, StringEdit, useKeyboardListener } from './ValueNodes'
@@ -8,6 +9,7 @@ export { assign, extract, type AssignInput, type AssignOptions } from './utils'
 export {
   standardDataTypes,
   type JsonEditorProps,
+  type JsonViewerProps,
   type UpdateFunction,
   type OnChangeFunction,
   type OnErrorFunction,

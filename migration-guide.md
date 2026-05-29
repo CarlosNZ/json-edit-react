@@ -14,8 +14,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `LinkCustomComponent` / `LinkCustomNodeDefinition` moved | `npm i @json-edit-react/components` and update those imports |
 | Several internal helpers are now part of the public API | No action needed — purely additive |
 | `JsonEditor` is now generic on the data type (`JsonEditor<T>`) | No action needed — defaults to `JsonData`, source-compatible. Opt in by writing `<JsonEditor<MyShape> ... />` |
-
-Nothing else about the editor's runtime behaviour, props, or callbacks has changed.
+| `setData` is now required; `viewOnly` removed; new `JsonViewer` export | Switch read-only usage to `<JsonViewer>`; replace `viewOnly={cond}` with the relevant `restrict*` toggles, including `restrictDrag` if drag was enabled — see §6 |
 
 ---
 
@@ -188,6 +187,66 @@ toPathString(['has/slash', 'x'])           // 'has%2Fslash/x'
 The second `key?: 'key_'` parameter has been removed — it was an internal encoding trick that's no longer needed.
 
 If you used `toPathString`'s output as an HTML `name` or `id` attribute (e.g. inside a custom component), nothing about how you use it changes; the string just looks different. If you parsed the returned string back into a path, you'll need to switch to `decodeURIComponent` per segment after splitting on `/`.
+
+---
+
+## 6. `setData` is required; `viewOnly` removed; `JsonViewer` added
+
+`JsonEditor` is now strictly controlled — `setData` is a required prop. The old "uncontrolled" mode (omit `setData`, edits managed internally) is gone, along with the `viewOnly` shorthand. In its place is a sibling export, `JsonViewer`, which is the canonical read-only entry point.
+
+### If you already pass `setData`
+
+No change. Edits will continue to flow through `setData` exactly as before.
+
+### If you used `viewOnly={true}` for a read-only display
+
+Switch to `JsonViewer`:
+
+```tsx
+// Before (v1)
+import { JsonEditor } from 'json-edit-react'
+<JsonEditor data={data} viewOnly />
+
+// After (v2)
+import { JsonViewer } from 'json-edit-react'
+<JsonViewer data={data} />
+```
+
+`JsonViewer` accepts all the display, theming, keyboard, search, collapse, custom-node, and localisation props of `JsonEditor`, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`), and `externalTriggers` — none are meaningful in a read-only context. If you were passing any of those alongside `viewOnly={true}`, you can drop them when moving to `JsonViewer`.
+
+### If you used `viewOnly={cond}` to toggle editing dynamically
+
+Replace with the `restrict*` props on `JsonEditor`:
+
+```tsx
+// Before (v1)
+<JsonEditor data={data} setData={setData} viewOnly={!canEdit} />
+
+// After (v2)
+<JsonEditor
+  data={data}
+  setData={setData}
+  restrictEdit={!canEdit}
+  restrictAdd={!canEdit}
+  restrictDelete={!canEdit}
+  restrictDrag={!canEdit}   // only needed if you've enabled drag with restrictDrag={false}
+/>
+```
+
+This keeps the same component mounted across the toggle, so internal state (collapse, search, currently-editing element) is preserved. `restrictDrag` defaults to `true` (drag off), so you only need to thread the toggle through it if you'd previously opted in to drag-and-drop.
+
+### If you relied on the uncontrolled "fire-and-forget" mode
+
+If you previously passed only `data` (no `setData`) and let the component manage edits internally, you now need to lift that state into your own component:
+
+```tsx
+// Before (v1)
+<JsonEditor data={initialData} />
+
+// After (v2)
+const [data, setData] = useState(initialData)
+<JsonEditor data={data} setData={setData} />
+```
 
 ---
 
