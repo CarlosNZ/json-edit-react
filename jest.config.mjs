@@ -1,7 +1,13 @@
 /** @type {import('jest').Config} */
 export default {
   preset: 'ts-jest',
-  testEnvironment: 'node',
-  testMatch: ['<rootDir>/test/**/*.test.ts'],
-  modulePathIgnorePatterns: ['<rootDir>/build', '<rootDir>/build_package', '<rootDir>/demo'],
+  testEnvironment: 'jsdom',
+  testMatch: ['<rootDir>/test/**/*.test.{ts,tsx}'],
+  setupFilesAfterEnv: ['<rootDir>/test/setupTests.ts'],
+  modulePathIgnorePatterns: [
+    '<rootDir>/build',
+    '<rootDir>/build_package',
+    '<rootDir>/demo',
+    '<rootDir>/pack-output',
+  ],
 }
