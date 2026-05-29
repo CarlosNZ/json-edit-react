@@ -11,7 +11,7 @@ The aim of v2.0 is **clean house, not ship features**. Feature additions belong 
 Numbering matches the section numbers below. Items joined with `+` are interlocked and best tackled together.
 
 - §1 Generic `JsonEditor<T>` ✅ (foundational type model)
-- §2 Path identity (foundational identity model) — [#246](https://github.com/CarlosNZ/json-edit-react/issues/246)
+- §2 Path identity ✅ (foundational identity model) — [#246](https://github.com/CarlosNZ/json-edit-react/issues/246)
 - §3 Tests (regression net for everything that follows) — [#61](https://github.com/CarlosNZ/json-edit-react/issues/61)
 - §4 `TreeStateProvider` refactor (depends on §2; unlocks the perf work in §16) — [#247](https://github.com/CarlosNZ/json-edit-react/issues/247)
 - §5 Drop controlled/uncontrolled dual mode (state simplification) — [#248](https://github.com/CarlosNZ/json-edit-react/issues/248)
@@ -42,11 +42,11 @@ interface JsonEditorProps<T = JsonData> {
 
 Landed in [#240](https://github.com/CarlosNZ/json-edit-react/pull/240). `T` flows to `data`, `setData`, the root-data slots of `UpdateFunction` / `OnChangeFunction` / `OnErrorFunction`, and `NodeData.fullData` (which propagates into every `FilterFunction` variant). Default `T = JsonData` keeps existing untyped code source-compatible. Per-node `value` / `parentData` stay wide — they're arbitrary-depth slices no static type can describe. The recursive internal `Editor` stays pinned to `JsonEditorProps<JsonData>`; the outer wrapper casts at the boundary. `CustomNodeDefinition` intentionally didn't gain a `T` generic — would have made mixed-shape arrays unworkable. See [migration-guide.md](migration-guide.md) for consumer guidance.
 
-## 2. Path identity — drop dot-joined strings
+## 2. Path identity — drop dot-joined strings — ✅ done
 
-[`toPathString`](src/helpers.ts) joins keys with `.` and patches empty strings with `\0`. Keys containing dots produce ambiguous paths. Worse, `areChildrenBeingEdited` in [TreeStateProvider.tsx](src/contexts/TreeStateProvider.tsx) does `pathString.includes(...)` — a **substring** match, so `"foo"` claims `"foobar"`'s children are being edited.
+[`toPathString`](src/helpers.ts) joined keys with `.` and patched empty strings with `\0`. Keys containing dots produced ambiguous paths, and `areChildrenBeingEdited` in [TreeStateProvider.tsx](src/contexts/TreeStateProvider.tsx) used `pathString.includes(...)` — a **substring** match — so `"foo"` claimed `"foobar"`'s children were being edited.
 
-Use `CollectionKey[]` as node identity everywhere; only stringify for React keys (and use a safe encoding there).
+Landed in [#260](https://github.com/CarlosNZ/json-edit-react/pull/260). `CollectionKey[]` is the canonical node identity throughout — editing state is `{ path, mode }`, drag source carries `path` only, and `areChildrenBeingEdited` plus the drag-onto-self guard use new array predicates (`pathsEqual`, `isDescendantOf`). `toPathString` survives as a public utility but its encoding switched to `/` + `encodeURIComponent` (injective, with a `'\0'` sentinel for the single-empty-key edge case); the `'key_'` second arg is removed since mode is now a field. Also fixed a latent same-family bug in `handleDrop` where `sourceBase`/`thisBase` were joined with mismatched separators. See [migration-guide.md](migration-guide.md#5-topathstring-encoding-changed).
 
 ## 3. Tests
 
