@@ -132,9 +132,16 @@ export const matchNodeKey: SearchFilterFunction = ({ key, path }, searchText = '
  * URL-encoded (so any literal `/` becomes `%2F`) and joined with `/`. Because
  * `encodeURIComponent` never emits `/`, the separator can only appear between
  * keys, never inside one — so distinct paths always produce distinct strings.
+ *
+ * One edge case needs a sentinel: a single empty-string key `['']` would
+ * otherwise produce `''` and collide with the root path `[]`. We map it to
+ * `'\0'` instead — safe because `encodeURIComponent` never emits a literal
+ * null char (it produces `'%00'` for the null byte).
  */
-export const toPathString = (path: CollectionKey[]) =>
-  path.map((part) => encodeURIComponent(String(part))).join('/')
+export const toPathString = (path: CollectionKey[]) => {
+  if (path.length === 1 && path[0] === '') return '\0'
+  return path.map((part) => encodeURIComponent(String(part))).join('/')
+}
 
 export const pathsEqual = (a: CollectionKey[], b: CollectionKey[]): boolean =>
   a.length === b.length && a.every((k, i) => k === b[i])

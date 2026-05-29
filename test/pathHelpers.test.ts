@@ -86,11 +86,51 @@ describe('toPathString', () => {
     expect(toPathString(['%2F', 'x'])).not.toBe(toPathString(['/', 'x']))
   })
 
-  test('empty-string keys produce visible separators', () => {
-    expect(toPathString([''])).toBe('')
-    expect(toPathString(['a', '', 'b'])).toBe('a//b')
-    // Empty key adjacent to populated keys is unambiguous
-    expect(toPathString(['a', '', 'b'])).not.toBe(toPathString(['a', 'b']))
+  describe('empty-string keys', () => {
+    test('mid-path: surrounded by separators', () => {
+      expect(toPathString(['a', '', 'b'])).toBe('a//b')
+      expect(toPathString(['a', '', 'b'])).not.toBe(toPathString(['a', 'b']))
+    })
+
+    test('at the end: trailing separator distinguishes', () => {
+      expect(toPathString(['a', ''])).toBe('a/')
+      expect(toPathString(['a', ''])).not.toBe(toPathString(['a']))
+    })
+
+    test('at the start: leading separator distinguishes', () => {
+      expect(toPathString(['', 'one'])).toBe('/one')
+      expect(toPathString(['', 'one'])).not.toBe(toPathString(['one']))
+    })
+
+    test('multiple empties — separator count preserves length', () => {
+      expect(toPathString(['', ''])).toBe('/')
+      expect(toPathString(['', '', ''])).toBe('//')
+      expect(toPathString(['', ''])).not.toBe(toPathString(['']))
+      expect(toPathString(['', ''])).not.toBe(toPathString(['', '', '']))
+    })
+
+    test('single empty key uses a sentinel to distinguish from root path', () => {
+      // The one case the join-based encoding cannot disambiguate from `[]`
+      // without help. `encodeURIComponent` never emits a literal '\0' (it
+      // produces '%00' for the null char), so '\0' is safe as a sentinel.
+      expect(toPathString([''])).toBe('\0')
+      expect(toPathString([''])).not.toBe(toPathString([]))
+    })
+
+    test('every distinct path produces a distinct string (injectivity)', () => {
+      const paths: (string | number)[][] = [
+        [],
+        [''],
+        ['a'],
+        ['', 'one'],
+        ['a', ''],
+        ['', ''],
+        ['', '', ''],
+        ['a', '', 'b'],
+        ['\0'],
+      ]
+      expect(new Set(paths.map(toPathString)).size).toBe(paths.length)
+    })
   })
 
   test('numeric and unicode keys round-trip cleanly', () => {
