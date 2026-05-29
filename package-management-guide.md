@@ -433,6 +433,73 @@ pnpm publish
 
 Discouraged in general because it skips the auto-generated changelog. For the 1.0.0 promotion specifically, the cleanest approach is: hand-edit the version, then add a normal changeset describing the promotion so the changelog still captures it.
 
+## V2 release plan
+
+Working notes on how we're getting from the current in-progress state to a v2.0.0 stable release. Mechanics live in the "Beta / prerelease releases" section above — this section is the specific trajectory.
+
+### Phase 1 — Active development (current state)
+
+- Root [package.json](package.json) carries `"version": "2.0.0-dev"` as a cosmetic marker. The demo (`pnpm dev` / `VITE_JRE_SOURCE=local`) reads this directly, so it visibly differs from the live v1.x on npm.
+- This is a hand-edit, **not managed by Changesets**. Don't run `pnpm changeset version` during this phase — it would consume the queued changesets in `.changeset/` prematurely.
+- Keep queueing changesets as usual via `pnpm changeset add` as v2 work continues; they accumulate until the RC transition.
+- Sub-packages (`@json-edit-react/themes`, `@json-edit-react/components`) stay at their current `0.x.y` versions.
+
+### Phase 2 — Feature-complete, RC milestone
+
+When the v2 surface is stable enough to invite real testing, switch to release candidates.
+
+**The gotcha**: Changesets reads the *current* `version` in `package.json` as its baseline. If that's still `2.0.0-dev` when you enter pre-mode, the computed bump may not land where you want — Changesets doesn't promote cleanly from one pre-release tag to another. Clean transition:
+
+```sh
+# 1. Revert the manual dev marker back to the last real release.
+#    In package.json: "version": "2.0.0-dev"  →  "version": "1.30.1"
+#    Don't commit this revert as its own commit — just stage it, ready for step 4.
+
+# 2. Enter pre-mode with the "rc" dist-tag.
+pnpm changeset pre enter rc
+
+# 3. Consume queued changesets into a proper RC version.
+pnpm changeset version
+# → core 1.30.1 → 2.0.0-rc.0
+# → @json-edit-react/themes 0.1.0 → 1.0.0-rc.0    (cascade — see "Cross-package cascade" above)
+# → @json-edit-react/components 0.1.0 → 1.0.0-rc.0 (cascade)
+
+# 4. Commit the whole transition as one commit.
+git add -A && git commit -m "Enter v2 RC"
+```
+
+After this, each subsequent `pnpm changeset version` (while pre-mode is active) bumps to `-rc.1`, `-rc.2`, etc. You can publish each RC to npm via `pnpm release` — it lands under the `rc` dist-tag, so `npm install json-edit-react` keeps resolving to v1.x.
+
+### Sub-package version trajectory
+
+The cascade in step 3 takes `@json-edit-react/themes` and `@json-edit-react/components` from `0.1.0` straight to `1.0.0-rc.0`, because the queued changesets include `'json-edit-react': major` and a major peer-dep bump is itself a breaking change for downstream packages.
+
+Whether to actually let the sub-packages cross the 0.x → 1.0 boundary at v2 release is worth deciding deliberately. 1.0.0 conventionally signals "API stability committed to" — possibly premature for two brand-new sub-packages on day one.
+
+If we'd rather keep them pre-1.0, hand-edit their `version` fields back down (e.g. `0.2.0-rc.0`) after `pnpm changeset version` runs but before `pnpm release`. Document the decision in a regular changeset so the changelog still captures the intent.
+
+### Phase 3 — Stable v2 release
+
+When RC iterations are converging and we're ready to ship:
+
+```sh
+# 1. Exit pre-mode (deletes .changeset/pre.json)
+pnpm changeset pre exit
+
+# 2. Add a final changeset if any extra work is pending; then consume everything queued.
+pnpm changeset version
+# → core 2.0.0-rc.N → 2.0.0
+# → sub-packages: whatever was chosen in Phase 2 → corresponding stable
+
+# 3. Commit, push, then run the full release.
+git add -A && git commit -m "Release v2.0.0"
+pnpm release
+git push --follow-tags
+pnpm sync-demos
+```
+
+After this the `latest` dist-tag on npm moves from v1.x to v2.0.0, and consumers running plain `npm install json-edit-react` start getting v2.
+
 ## Bundle-size verification
 
 For now: pack a package and install into a minimal Vite project, build, and inspect the output.
