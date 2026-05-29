@@ -7,6 +7,7 @@ import {
   isCollection,
   matchNode,
   matchNodeKey,
+  NOOP,
   restoreUndefined,
   UNDEFINED,
 } from './helpers'
@@ -45,7 +46,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   data,
   setData,
   rootName = 'root',
-  onUpdate = () => {},
+  onUpdate = NOOP,
   onEdit: srcEdit = onUpdate,
   onDelete: srcDelete = onUpdate,
   onAdd: srcAdd = onUpdate,

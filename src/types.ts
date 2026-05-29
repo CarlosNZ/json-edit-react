@@ -78,6 +78,7 @@ export type JsonViewerProps<T = JsonData> = Omit<
   | 'restrictDelete'
   | 'restrictDrag'
   | 'restrictTypeSelection'
+  | 'externalTriggers'
 >
 
 const valueDataTypes = ['string', 'number', 'boolean', 'null'] as const

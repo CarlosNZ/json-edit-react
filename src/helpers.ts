@@ -17,6 +17,8 @@ import {
   type EditingState,
 } from './types'
 
+export const NOOP = () => {}
+
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
   value !== null && typeof value === 'object'
 

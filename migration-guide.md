@@ -212,11 +212,11 @@ import { JsonViewer } from 'json-edit-react'
 <JsonViewer data={data} />
 ```
 
-`JsonViewer` accepts all the display, theming, keyboard, search, collapse, custom-node, and localisation props of `JsonEditor`, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), and the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`) — none are meaningful in a read-only context. If you were passing any of those alongside `viewOnly={true}`, you can drop them when moving to `JsonViewer`.
+`JsonViewer` accepts all the display, theming, keyboard, search, collapse, custom-node, and localisation props of `JsonEditor`, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`), and `externalTriggers` — none are meaningful in a read-only context. If you were passing any of those alongside `viewOnly={true}`, you can drop them when moving to `JsonViewer`.
 
 ### If you used `viewOnly={cond}` to toggle editing dynamically
 
-Replace with the three `restrict*` props on `JsonEditor`:
+Replace with the `restrict*` props on `JsonEditor`:
 
 ```tsx
 // Before (v1)
@@ -229,10 +229,11 @@ Replace with the three `restrict*` props on `JsonEditor`:
   restrictEdit={!canEdit}
   restrictAdd={!canEdit}
   restrictDelete={!canEdit}
+  restrictDrag={!canEdit}   // only needed if you've enabled drag with restrictDrag={false}
 />
 ```
 
-This keeps the same component mounted across the toggle, so internal state (collapse, search, currently-editing element) is preserved.
+This keeps the same component mounted across the toggle, so internal state (collapse, search, currently-editing element) is preserved. `restrictDrag` defaults to `true` (drag off), so you only need to thread the toggle through it if you'd previously opted in to drag-and-drop.
 
 ### If you relied on the uncontrolled "fire-and-forget" mode
 
