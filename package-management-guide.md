@@ -29,11 +29,11 @@ pnpm --filter @json-edit-react/components preview-publish       # components
 
 ### The three packages
 
-| Package | Path | What it ships |
-|---|---|---|
-| `json-edit-react` | [./](./) (repo root) | The core editor component and all primary types |
-| `@json-edit-react/themes` | [packages/themes/](packages/themes/) | Six pre-built theme objects |
-| `@json-edit-react/components` | [packages/components/](packages/components/) | 12 ready-to-use custom node components |
+| Package                       | Path                                         | What it ships                                   |
+| ----------------------------- | -------------------------------------------- | ----------------------------------------------- |
+| `json-edit-react`             | [./](./) (repo root)                         | The core editor component and all primary types |
+| `@json-edit-react/themes`     | [packages/themes/](packages/themes/)         | Six pre-built theme objects                     |
+| `@json-edit-react/components` | [packages/components/](packages/components/) | 12 ready-to-use custom node components          |
 
 All three publish to npm independently with their own versions and changelogs.
 
@@ -201,11 +201,11 @@ Once you `pnpm publish`, the tarball is on npm forever (you can `unpublish` with
 
 Both [demo/vite.config.ts](demo/vite.config.ts) and [custom-component-library/vite.config.ts](custom-component-library/vite.config.ts) have an alias system controlled by the `VITE_JRE_SOURCE` environment variable. The aliases run at vite build time and don't depend on what's installed in node_modules.
 
-| Mode | What it resolves to |
-|---|---|
+| Mode                                                     | What it resolves to                                                                                                                                                      |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `VITE_JRE_SOURCE=local` (default for `yarn start:local`) | `@json-edit-react` → `../src/` (core source) <br>`@json-edit-react/themes` → `../packages/themes/src/` <br>`@json-edit-react/components` → `../packages/components/src/` |
-| `VITE_JRE_SOURCE=build` (default for `yarn start:build`) | Same but pointing at each package's `build/` output (built artefact) |
-| `VITE_JRE_SOURCE=npm` (default for `yarn start`) | Falls through to demo's installed `node_modules` (whatever's been pulled from npm) |
+| `VITE_JRE_SOURCE=build` (default for `yarn start:build`) | Same but pointing at each package's `build/` output (built artefact)                                                                                                     |
+| `VITE_JRE_SOURCE=npm` (default for `yarn start`)         | Falls through to demo's installed `node_modules` (whatever's been pulled from npm)                                                                                       |
 
 The `local` mode is what you'll use 90% of the time during dev — edits in core/themes/components are picked up by vite's hot-reload without rebuilding.
 
@@ -260,19 +260,19 @@ You don't pick a target version directly — you pick a **bump type** in the cha
 
 For packages at `>= 1.0.0` (e.g. `json-edit-react`), standard semver:
 
-| Highest bump type in pending changesets | Effect |
-|---|---|
-| `major` | `1.5.3` → `2.0.0` |
-| `minor` | `1.5.3` → `1.6.0` |
-| `patch` | `1.5.3` → `1.5.4` |
+| Highest bump type in pending changesets | Effect            |
+| --------------------------------------- | ----------------- |
+| `major`                                 | `1.5.3` → `2.0.0` |
+| `minor`                                 | `1.5.3` → `1.6.0` |
+| `patch`                                 | `1.5.3` → `1.5.4` |
 
 For packages at `< 1.0.0` (e.g. fresh `@json-edit-react/themes` at `0.1.0`), Changesets respects the pre-1.0 semver convention — the minor slot is the "breaking" indicator:
 
-| Highest bump type in pending changesets | Effect |
-|---|---|
-| `major` | `0.1.0` → `0.2.0` (treated as a minor bump) |
-| `minor` | `0.1.0` → `0.2.0` |
-| `patch` | `0.1.0` → `0.1.1` |
+| Highest bump type in pending changesets | Effect                                      |
+| --------------------------------------- | ------------------------------------------- |
+| `major`                                 | `0.1.0` → `0.2.0` (treated as a minor bump) |
+| `minor`                                 | `0.1.0` → `0.2.0`                           |
+| `patch`                                 | `0.1.0` → `0.1.1`                           |
 
 You don't automatically jump from `0.x` to `1.0.0` via a `major` changeset. When you're ready to promote a sub-package to `1.0.0`, edit its `package.json` version field by hand before the next `pnpm changeset publish`. The CHANGELOG entry for that promotion can be a regular changeset declaring the move.
 
@@ -479,6 +479,9 @@ Whether to actually let the sub-packages cross the 0.x → 1.0 boundary at v2 re
 If we'd rather keep them pre-1.0, hand-edit their `version` fields back down (e.g. `0.2.0-rc.0`) after `pnpm changeset version` runs but before `pnpm release`. Document the decision in a regular changeset so the changelog still captures the intent.
 
 ### Phase 3 — Stable v2 release
+
+> [!IMPORTANT]
+> Remember to create a `v1.x.x` branch off `main` before merging `v2.0-dev`
 
 When RC iterations are converging and we're ready to ship:
 
