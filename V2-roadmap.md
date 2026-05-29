@@ -76,7 +76,7 @@ Ordering: (1) is mechanical and unlocks the rest. (2) before (5) since the reduc
 
 ## 5. Drop controlled/uncontrolled dual mode — ✅ done
 
-Implemented in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §11. `JsonEditor` is now strictly controlled — `setData` is a required prop, TypeScript-enforced. The internal [`useData`](src/hooks/useData.ts) hook (which previously branched between external `setData` and internal `useState`) is deleted; `JsonEditor` reads `data`/`setData` from props directly. The `viewOnly` prop is removed at the same time (read-only displays now use the new `<JsonViewer />` — see §11; dynamic permissions-style toggling stays on `<JsonEditor>` with `restrictEdit/restrictAdd/restrictDelete`). See [migration-guide.md §6](migration-guide.md#6-setdata-is-required-viewonly-removed-jsonviewer-added).
+Landed in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §11. `JsonEditor` is now strictly controlled — `setData` is a required prop, TypeScript-enforced. The internal [`useData`](src/hooks/useData.ts) hook (which previously branched between external `setData` and internal `useState`) is deleted; `JsonEditor` reads `data`/`setData` from props directly. The `viewOnly` prop is removed at the same time (read-only displays now use the new `<JsonViewer />` — see §11; dynamic permissions-style toggling stays on `<JsonEditor>` with `restrictEdit/restrictAdd/restrictDelete`). See [migration-guide.md §6](migration-guide.md#6-setdata-is-required-viewonly-removed-jsonviewer-added).
 
 ## 6. `UpdateFunction` return shape
 
@@ -132,7 +132,7 @@ Idiomatic React, TS autocompletes the actions, removes a piece of awkward state.
 
 ## 11. Export `JsonViewer` — ✅ done
 
-Implemented in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §5. `<JsonViewer />` is the canonical read-only entry point — a thin wrapper over `JsonEditor` that hard-codes `setData={noop}` and locks all four `restrict*` filters on. `JsonViewerProps<T>` is `Omit<JsonEditorProps<T>, 'setData' | 'onUpdate' | 'onEdit' | 'onAdd' | 'onDelete' | 'onChange' | 'restrictEdit' | 'restrictAdd' | 'restrictDelete' | 'restrictDrag' | 'restrictTypeSelection' | 'externalTriggers'>` — drops the props that aren't meaningful in a viewer. `externalTriggers` is also scrubbed at runtime in the wrapper since it would otherwise bypass the restrict filters (see [#251](https://github.com/CarlosNZ/json-edit-react/issues/251) — to revisit alongside §10). The v1 `viewOnly` prop is removed in the same PR.
+Landed in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §5. `<JsonViewer />` is the canonical read-only entry point — a thin wrapper over `JsonEditor` that hard-codes `setData={noop}` and locks all four `restrict*` filters on. `JsonViewerProps<T>` is `Omit<JsonEditorProps<T>, 'setData' | 'onUpdate' | 'onEdit' | 'onAdd' | 'onDelete' | 'onChange' | 'restrictEdit' | 'restrictAdd' | 'restrictDelete' | 'restrictDrag' | 'restrictTypeSelection' | 'externalTriggers'>` — drops the props that aren't meaningful in a viewer. `externalTriggers` is also scrubbed at runtime in the wrapper since it would otherwise bypass the restrict filters (see [#251](https://github.com/CarlosNZ/json-edit-react/issues/251) — to revisit alongside §10). The v1 `viewOnly` prop is removed in the same PR.
 
 ## 12. `onRenameProperty` callback
 
