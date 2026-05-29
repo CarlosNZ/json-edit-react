@@ -46,5 +46,10 @@ demo/src/firebaseConfig.json
 build_package
 demo/src/package
 custom-component-library/components/package
-.original-readme.md
-.npm-readme.md
+
+# Packed tarballs from `pnpm pack` (preview-publish output)
+*.tgz
+
+# Python bytecode cache (produced when scripts/build_npm_readme.py is imported)
+__pycache__/
+*.pyc

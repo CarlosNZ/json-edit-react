@@ -99,6 +99,7 @@ importers:
       typescript-eslint:
         specifier: ^8.29.1
         version: 8.60.0(eslint@9.39.4)(typescript@5.9.3)
+    publishDirectory: build_package
 
   packages/components:
     dependencies:

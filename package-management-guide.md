@@ -18,9 +18,11 @@ pnpm changeset               # add a changeset before opening a PR
 cd demo && yarn install && yarn start:local
 cd custom-component-library && yarn install && yarn dev:local
 
-# Mock-publish to test pre-release (run from inside the package directory)
-cd packages/themes && pnpm pack
-# → packages/themes/json-edit-react-themes-0.1.0.tgz
+# Preview-publish — produces a real .tgz you can inspect (no registry contact)
+pnpm preview-publish                                            # core (stages, then packs from build_package/)
+pnpm --filter @json-edit-react/themes preview-publish           # themes
+pnpm --filter @json-edit-react/components preview-publish       # components
+# → core tarball lands at the repo root; sub-package tarballs land in packages/<name>/
 ```
 
 ## Overview
@@ -298,20 +300,28 @@ git diff
 git add -A
 git commit -m "Release v..."
 
-# 5. Publish to npm
-pnpm changeset publish
+# 5. Inspect what will ship (real .tgz files, no registry contact)
+pnpm preview-publish                                       # core → ./json-edit-react-*.tgz (at repo root)
+pnpm --filter @json-edit-react/themes preview-publish      # → packages/themes/*.tgz
+pnpm --filter @json-edit-react/components preview-publish  # → packages/components/*.tgz
+tar -tzf json-edit-react-*.tgz | sort                      # inspect each (repeat for the sub-package .tgz files)
 
-# 6. Push commit + tags
+# 6. Publish to npm (the `release` script orchestrates: -r build, build-package, changeset publish)
+pnpm release
+
+# 7. Push commit + tags
 git push --follow-tags
 
-# 7. Bump demo + CCL to the just-published versions
+# 8. Bump demo + CCL to the just-published versions
 #    (polls npm until each new version is visible, then `yarn add` in each consumer)
 pnpm sync-demos
 ```
 
-`pnpm changeset publish` walks each workspace package, compares its local version against npm, and runs `pnpm publish` for anything that's ahead. The `publishConfig.access: public` in each scoped package's `package.json` ensures the `@json-edit-react/...` packages publish as public (npm scopes default to private).
+`pnpm changeset publish` walks each workspace package, compares its local version against npm, and runs `pnpm publish` for anything that's ahead. For core, the root `package.json`'s `publishConfig.directory: "build_package"` tells Changesets to publish from the staged directory rather than the repo root — so step 6 builds and stages `build_package/` (a self-contained dir with a trimmed `package.json` and the short npm README) before Changesets ever runs. For sub-packages, `publishConfig.access: public` is set in each scoped package's `package.json` to ensure they ship as public (npm scopes default to private), and their `prepack: pnpm build` hook rebuilds at publish time.
 
-**Note:** `changeset publish` does not have a `--dry-run` flag. To preview a release without publishing, inspect `pnpm changeset status` (shows pending bumps), then optionally run `pnpm changeset version` in a throwaway branch to see the diff (or use `git stash`/`git restore` to revert). For per-package preflight, `pnpm publish --dry-run` from inside a `packages/*/` dir works.
+**Pack == publish guarantee.** No package uses `prepublishOnly` / `postpublish` hooks. That means `pnpm pack` and `pnpm publish` produce byte-identical tarballs — what `pnpm preview-publish` shows you in step 5 is exactly what npm receives in step 6.
+
+**Note:** `changeset publish` does not have a `--dry-run` flag of its own. The intended preflight is `pnpm preview-publish` (per package) as in step 5. To preview the *workspace-wide* bump set without consuming changesets, inspect `pnpm changeset status` or run `pnpm changeset version` on a throwaway branch.
 
 ### Beta / prerelease releases
 
@@ -422,6 +432,73 @@ pnpm publish
 ```
 
 Discouraged in general because it skips the auto-generated changelog. For the 1.0.0 promotion specifically, the cleanest approach is: hand-edit the version, then add a normal changeset describing the promotion so the changelog still captures it.
+
+## V2 release plan
+
+Working notes on how we're getting from the current in-progress state to a v2.0.0 stable release. Mechanics live in the "Beta / prerelease releases" section above — this section is the specific trajectory.
+
+### Phase 1 — Active development (current state)
+
+- Root [package.json](package.json) carries `"version": "2.0.0-dev"` as a cosmetic marker. The demo (`pnpm dev` / `VITE_JRE_SOURCE=local`) reads this directly, so it visibly differs from the live v1.x on npm.
+- This is a hand-edit, **not managed by Changesets**. Don't run `pnpm changeset version` during this phase — it would consume the queued changesets in `.changeset/` prematurely.
+- Keep queueing changesets as usual via `pnpm changeset add` as v2 work continues; they accumulate until the RC transition.
+- Sub-packages (`@json-edit-react/themes`, `@json-edit-react/components`) stay at their current `0.x.y` versions.
+
+### Phase 2 — Feature-complete, RC milestone
+
+When the v2 surface is stable enough to invite real testing, switch to release candidates.
+
+**The gotcha**: Changesets reads the *current* `version` in `package.json` as its baseline. If that's still `2.0.0-dev` when you enter pre-mode, the computed bump may not land where you want — Changesets doesn't promote cleanly from one pre-release tag to another. Clean transition:
+
+```sh
+# 1. Revert the manual dev marker back to the last real release.
+#    In package.json: "version": "2.0.0-dev"  →  "version": "1.30.1"
+#    Don't commit this revert as its own commit — just stage it, ready for step 4.
+
+# 2. Enter pre-mode with the "rc" dist-tag.
+pnpm changeset pre enter rc
+
+# 3. Consume queued changesets into a proper RC version.
+pnpm changeset version
+# → core 1.30.1 → 2.0.0-rc.0
+# → @json-edit-react/themes 0.1.0 → 1.0.0-rc.0    (cascade — see "Cross-package cascade" above)
+# → @json-edit-react/components 0.1.0 → 1.0.0-rc.0 (cascade)
+
+# 4. Commit the whole transition as one commit.
+git add -A && git commit -m "Enter v2 RC"
+```
+
+After this, each subsequent `pnpm changeset version` (while pre-mode is active) bumps to `-rc.1`, `-rc.2`, etc. You can publish each RC to npm via `pnpm release` — it lands under the `rc` dist-tag, so `npm install json-edit-react` keeps resolving to v1.x.
+
+### Sub-package version trajectory
+
+The cascade in step 3 takes `@json-edit-react/themes` and `@json-edit-react/components` from `0.1.0` straight to `1.0.0-rc.0`, because the queued changesets include `'json-edit-react': major` and a major peer-dep bump is itself a breaking change for downstream packages.
+
+Whether to actually let the sub-packages cross the 0.x → 1.0 boundary at v2 release is worth deciding deliberately. 1.0.0 conventionally signals "API stability committed to" — possibly premature for two brand-new sub-packages on day one.
+
+If we'd rather keep them pre-1.0, hand-edit their `version` fields back down (e.g. `0.2.0-rc.0`) after `pnpm changeset version` runs but before `pnpm release`. Document the decision in a regular changeset so the changelog still captures the intent.
+
+### Phase 3 — Stable v2 release
+
+When RC iterations are converging and we're ready to ship:
+
+```sh
+# 1. Exit pre-mode (deletes .changeset/pre.json)
+pnpm changeset pre exit
+
+# 2. Add a final changeset if any extra work is pending; then consume everything queued.
+pnpm changeset version
+# → core 2.0.0-rc.N → 2.0.0
+# → sub-packages: whatever was chosen in Phase 2 → corresponding stable
+
+# 3. Commit, push, then run the full release.
+git add -A && git commit -m "Release v2.0.0"
+pnpm release
+git push --follow-tags
+pnpm sync-demos
+```
+
+After this the `latest` dist-tag on npm moves from v1.x to v2.0.0, and consumers running plain `npm install json-edit-react` start getting v2.
 
 ## Bundle-size verification
 
