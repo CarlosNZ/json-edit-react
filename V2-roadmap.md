@@ -76,7 +76,7 @@ Ordering: (1) is mechanical and unlocks the rest. (2) before (5) since the reduc
 
 ## 5. Drop controlled/uncontrolled dual mode
 
-[`useData`](src/hooks/useData.ts) supports both. The README already steers users hard toward controlled. Drop the uncontrolled branch — simpler state ownership, removes a class of "external state drifted from internal" bugs.
+[`useData`](src/hooks/useData.ts) supports both. The README already steers users hard toward controlled. Drop the uncontrolled branch — and bundle with §11: make `setData` required on `JsonEditor`, retire the `viewOnly` prop, and ship sibling `<JsonViewer />` as the canonical read-only entry. Net: simpler state ownership, no more silently-dropped edits when `setData` is forgotten, fewer modes to reason about, `useData` deleted entirely.
 
 ## 6. `UpdateFunction` return shape
 
@@ -132,7 +132,7 @@ Idiomatic React, TS autocompletes the actions, removes a piece of awkward state.
 
 ## 11. Export `JsonViewer`
 
-Same component as `<JsonEditor viewOnly />`, but a separate named export — discoverable, reads better in consumer code, no tree-shaking cost.
+Standalone named export — `<JsonViewer />` becomes the canonical viewer, replacing the v1 `<JsonEditor viewOnly />` form (`viewOnly` retires as part of §5). Thin wrapper over `JsonEditor` that locks all four `restrict*` filters on and supplies a no-op `setData`; `setData` becomes mandatory on `JsonEditor` once viewer use moves here. Discoverable name aids adoption ("json viewer react"), reads better in consumer code, no tree-shaking cost.
 
 ## 12. `onRenameProperty` callback
 

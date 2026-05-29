@@ -43,13 +43,6 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 > [!NOTE]
 > Development of V2 of **json-edit-react** is underway, with significant refactors and improvements. If you've got any particular things you'd like to see, please join the discussion [here](https://github.com/CarlosNZ/json-edit-react/discussions/198).
 
-----
-
-> [!IMPORTANT]
-> Breaking changes:
-> - **Version 1.19.0** has a change to the `theme` input. Built-in themes must now be imported separately and passed in, rather than just naming the theme as a string. This is better for tree-shaking, so unused themes won't be bundled with your build. See [Themes & Styles](#themes--styles).
-> - **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state).
-
 ## Contents  <!-- omit in toc -->
 - [Installation](#installation)
 - [Implementation](#implementation)
@@ -134,9 +127,17 @@ import { JsonEditor } from 'json-edit-react'
 return (
   <JsonEditor
     data={ jsonData }
-    setData={ setJsonData } // optional
+    setData={ setJsonData }
     { ...otherProps } />
 );
+```
+
+For a read-only viewer, use the `JsonViewer` export instead — it takes the same display, theming, and search props but omits `setData` and the edit-related callbacks/restrictions:
+
+```jsx
+import { JsonViewer } from 'json-edit-react'
+
+return <JsonViewer data={ jsonData } { ...otherProps } />
 ```
 
 ## Usage
@@ -164,7 +165,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 
 ## Props Reference
 
-The only *required* property is `data` (although you will need to provide a `setData` method to update your data).
+`data` and `setData` are the only *required* props. For a read-only component, use [`JsonViewer`](#viewer-mode) instead — its only required prop is `data`.
 
 This is a reference list of *all* possible props, divided into related sections. Most of them provide a link to a section below in which the concepts are explored in more detail.
 
@@ -178,7 +179,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | Prop              | Type                    | Default | Description                                                                                                                         |
 | ----------------- | ----------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `data`            | `object\|array`         | none    | The data to be displayed / edited                                                                                                   |
-| `setData`         | `object\|array => void` | none    | Method to update your `data` object. See [Managing state](#managing-state) below for additional notes.                              |
+| `setData`         | `object\|array => void` | none    | Method to update your `data` object. **Required.** See [Managing state](#managing-state) below for additional notes.                |
 | `onUpdate`        | `UpdateFunction`        | none    | A function to run whenever a value is **updated** (edit, delete *or* add) in the editor. See [Update functions](#update-functions). |
 | `onEdit`          | `UpdateFunction`        | none    | A function to run whenever a value is **edited**.                                                                                   |
 | `onDelete`        | `UpdateFunction`        | none    | A function to run whenever a value is **deleted**.                                                                                  |
@@ -204,7 +205,6 @@ This is a reference list of *all* possible props, divided into related sections.
 | `newKeyOptions`         | `string[] \| NewKeyOptionsFunction`       | none    | New keys can be restricted to certain values — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                       |
 | `defaultValue`          | `any\|DefaultValueFilterFunction`         | `null`  | Value that new properties are initialised with — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                     |
 | `restrictDrag`          | `boolean\|FilterFunction`                 | `true`  | Set to `false` to enable drag and drop functionality — see [Drag-n-drop](#drag-n-drop)                                                                                  |
-| `viewOnly`              | `boolean`                                 |         | A shorthand if you just want the component to be a viewer, with no editing at all. Overrides any of the above edit restrictions.                                        |
 
 </details>
 
@@ -300,10 +300,26 @@ More detail [below](#external-control-1)
 
 ## Managing State
 
-It is recommended that you manage the `data` state yourself outside this component — just pass in a `setData` method, which is called internally to update your `data`. However, this is not compulsory — if you don't provide a `setData` method, the data will be managed internally, which is fine if you're not really doing anything with the data. The alternative is to use the [Update functions](#update-functions) to update your `data` externally, but this is not recommended except in special circumstances as you can run into issues keeping your data in sync with the internal state (which is what is displayed), as well as unnecessary re-renders.
+You manage the `data` state yourself outside this component and pass in a `setData` method, which is called internally to update your `data`. Both `data` and `setData` are required. If you only want a read-only display, use [`JsonViewer`](#viewer-mode) — it takes the same display props but doesn't require `setData` and exposes no edit affordances.
+
+The [Update functions](#update-functions) (`onUpdate` / `onEdit` / `onDelete` / `onAdd`) are not an alternative to `setData` — they are for side effects, validation, or mutating the value before it reaches `setData`. Trying to drive your own state from them leads to drift between the internal display state and your external copy.
 
 > [!TIP]
 > Update functions should ideally be used only for implementing side effects (e.g. notifications), validation, or mutating the data before setting it with `setData`.
+
+### Viewer mode
+
+If your use case is read-only — displaying JSON without any editing affordances — import `JsonViewer` instead of `JsonEditor`:
+
+```tsx
+import { JsonViewer } from 'json-edit-react'
+
+<JsonViewer data={data} theme={someTheme} />
+```
+
+`JsonViewer` is a thin wrapper over `JsonEditor` that locks all edit, add, delete and drag operations off. It accepts the same display, theming, keyboard, search, collapse, localisation and custom-node props, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), and the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`) — none of which are meaningful in a read-only context.
+
+If you instead need an editor that *sometimes* locks editing (e.g. based on user permissions), keep using `<JsonEditor>` and toggle the relevant `restrict*` props dynamically — `restrictEdit={!canEdit}` etc.
 
 ### Typed data
 
@@ -500,7 +516,7 @@ The callback for each type of restriction is slightly different, so let's look a
 ### `restrictEdit`, `restrictDelete` & `restrictAdd`
 
 > [!TIP]
-> As a shorthand, if you want to restrict *all* editing completely, you can just pass the `viewOnly` prop, which will supersede any other defined editing restrictions
+> If you want to display data with no editing at all, use the [`JsonViewer`](#viewer-mode) component instead of `JsonEditor` — it disables every edit affordance without needing to combine these props.
 
 These each take a `boolean` value, or a `FilterFunction` callback, with the following input parameter object:
 

@@ -8,7 +8,7 @@ export type JsonData = Record<string, unknown> | Array<unknown> | unknown
 
 export interface JsonEditorProps<T = JsonData> {
   data: T
-  setData?: (data: T) => void
+  setData: (data: T) => void
   rootName?: string
   onUpdate?: UpdateFunction<T>
   onEdit?: UpdateFunction<T>
@@ -31,7 +31,6 @@ export interface JsonEditorProps<T = JsonData> {
   restrictAdd?: boolean | FilterFunction<T>
   restrictTypeSelection?: boolean | TypeOptions | TypeFilterFunction<T>
   restrictDrag?: boolean | FilterFunction<T>
-  viewOnly?: boolean
   searchText?: string
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction<T>
   searchDebounceTime?: number
@@ -65,6 +64,21 @@ export interface JsonEditorProps<T = JsonData> {
   onCollapse?: OnCollapseFunction
   externalTriggers?: ExternalTriggers
 }
+
+export type JsonViewerProps<T = JsonData> = Omit<
+  JsonEditorProps<T>,
+  | 'setData'
+  | 'onUpdate'
+  | 'onEdit'
+  | 'onAdd'
+  | 'onDelete'
+  | 'onChange'
+  | 'restrictEdit'
+  | 'restrictAdd'
+  | 'restrictDelete'
+  | 'restrictDrag'
+  | 'restrictTypeSelection'
+>
 
 const valueDataTypes = ['string', 'number', 'boolean', 'null'] as const
 const collectionDataTypes = ['object', 'array'] as const
