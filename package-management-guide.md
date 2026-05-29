@@ -16,7 +16,7 @@ pnpm changeset               # add a changeset before opening a PR
 
 # Demo / CCL (still on yarn 1, independent installs)
 cd demo && yarn install && yarn start:local
-cd custom-component-library && yarn install && yarn dev:local
+cd custom-component-library && yarn install && yarn start:local
 
 # Preview-publish — produces a real .tgz you can inspect (no registry contact)
 pnpm preview-publish                                            # core (stages, then packs from build_package/)
@@ -135,11 +135,11 @@ yarn start:local       # uses local source (../src and ../packages/*/src)
 yarn start:build       # uses built artifacts (../build_package and ../packages/*/build)
 yarn start             # uses npm-installed versions
 
-# CCL (port 5176) — same three modes
+# CCL (port 5176) — same modes
 cd custom-component-library
-yarn dev:local
-yarn dev:build
-yarn dev
+yarn start:local
+yarn start:build
+yarn start
 ```
 
 See "Demo and CCL local-source toggle" below for what each mode actually resolves.
@@ -204,10 +204,13 @@ Both [demo/vite.config.ts](demo/vite.config.ts) and [custom-component-library/vi
 | Mode                                                     | What it resolves to                                                                                                                                                      |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `VITE_JRE_SOURCE=local` (default for `yarn start:local`) | `@json-edit-react` → `../src/` (core source) <br>`@json-edit-react/themes` → `../packages/themes/src/` <br>`@json-edit-react/components` → `../packages/components/src/` |
-| `VITE_JRE_SOURCE=build` (default for `yarn start:build`) | Same but pointing at each package's `build/` output (built artefact)                                                                                                     |
+| `VITE_JRE_SOURCE=build` (default for `yarn start:build`) | Each package's `build/` output (rollup artefact, before packaging)                                                                                                       |
+| `VITE_JRE_SOURCE=pack` (default for `yarn start:pack`)   | Each package's locally-packed tarball under `pack-output/<name>/package/` — what `pnpm publish` would actually upload. Run `pnpm pack-all` first.                        |
 | `VITE_JRE_SOURCE=npm` (default for `yarn start`)         | Falls through to demo's installed `node_modules` (whatever's been pulled from npm)                                                                                       |
 
 The `local` mode is what you'll use 90% of the time during dev — edits in core/themes/components are picked up by vite's hot-reload without rebuilding.
+
+The `pack` mode is the closest pre-publish dress rehearsal: `pnpm pack-all` builds and packs all three packages exactly as `pnpm publish` would, extracts them into `pack-output/<name>/package/`, and `npm install`s their runtime deps so vite can resolve everything (e.g. `react-datepicker` for components). Then `yarn start:pack` / `yarn build:pack` consumes those extracted dirs. Most packaging issues — missing files from the `files` array, broken `exports` map, wrong `main`/`module`/`types` paths, bad `prepack` output — show up here before they can hit a real consumer. `peerDependencies` are **not** validated in this mode: [scripts/pack-all.mjs](scripts/pack-all.mjs) strips them from the extracted `package.json` before installing, because workspace-internal peers (e.g. `json-edit-react@2.0.0-dev` before publish) would otherwise fail to resolve. Peer-dep correctness has to be reviewed by reading the staged `package.json` directly.
 
 The `npm` mode is for **validating against the published artefact**. After publishing, run `pnpm sync-demos` from the repo root to bump demo and CCL to the just-published versions, then `yarn start` to see exactly what a consumer would see.
 
@@ -322,6 +325,21 @@ pnpm sync-demos
 **Pack == publish guarantee.** No package uses `prepublishOnly` / `postpublish` hooks. That means `pnpm pack` and `pnpm publish` produce byte-identical tarballs — what `pnpm preview-publish` shows you in step 5 is exactly what npm receives in step 6.
 
 **Note:** `changeset publish` does not have a `--dry-run` flag of its own. The intended preflight is `pnpm preview-publish` (per package) as in step 5. To preview the *workspace-wide* bump set without consuming changesets, inspect `pnpm changeset status` or run `pnpm changeset version` on a throwaway branch.
+
+**Note (first v2 publish — one-time action):** Before `@json-edit-react/themes` and `@json-edit-react/components` exist on npm, `demo/package.json` and `custom-component-library/package.json` deliberately don't list them as dependencies — `yarn install` would fail. As a consequence, `yarn build` / `yarn deploy` are broken in default `npm` mode. Use `:local`, `:build`, or `:pack` for iteration; `pnpm dev` is the everyday command and works fine.
+After the **first** publish of those two packages, add them to both consumers once:
+
+```sh
+THEMES_VER=$(node -p "require('./packages/themes/package.json').version")
+COMPONENTS_VER=$(node -p "require('./packages/components/package.json').version")
+
+cd demo
+yarn add @json-edit-react/themes@$THEMES_VER @json-edit-react/components@$COMPONENTS_VER
+cd ../custom-component-library
+yarn add @json-edit-react/components@$COMPONENTS_VER
+```
+
+From then on, `pnpm sync-demos` keeps all three bumped after subsequent releases — it only updates packages already in `dependencies`, so it'll start picking them up automatically once they're listed.
 
 ### Beta / prerelease releases
 
