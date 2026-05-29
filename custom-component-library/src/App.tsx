@@ -1,7 +1,7 @@
 // Set to true to store date as Date object, false to store as ISO string
 const STORE_DATE_AS_DATE_OBJECT = true
 
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import {
   LinkCustomNodeDefinition,
   DateObjectDefinition,
@@ -37,8 +37,6 @@ type TestData = typeof testData
 function App() {
   const [data, setData] = useState<TestData>(testData)
 
-  console.log('Current data', data)
-
   // Properties that are conditional on some data property:
 
   // Display the time depending on whether or not the "Show time" toggle is
@@ -49,8 +47,13 @@ function App() {
   const maxWidth = data?.Images?.['Image properties']?.maxWidth
   const maxHeight = data?.Images?.['Image properties']?.maxHeight
 
+  const SourceIndicator = lazy(() => import('../../demo/src/SourceIndicator'))
+
   return (
     <div id="container">
+      <Suspense fallback={null}>
+        <SourceIndicator />
+      </Suspense>
       <JsonEditor<TestData>
         // restrictEdit={true}
         data={data}
