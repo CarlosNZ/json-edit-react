@@ -36,6 +36,11 @@ export default defineConfig({
       { find: /^@json-edit-react$/, replacement: coreSrcMap[packageSource] },
       { find: /^json-edit-react$/, replacement: coreSrcMap[packageSource] },
     ],
+    // In `pack` and `build` modes the packed/built components package lives
+    // outside CCL/node_modules. Without dedupe, vite's walk-up resolution can
+    // pick up a second copy of React (from workspace root or elsewhere) —
+    // different on-disk path = different React instance = broken hooks.
+    dedupe: ['react', 'react-dom'],
   },
   server: {
     port: 5176,

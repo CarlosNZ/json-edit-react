@@ -106,10 +106,16 @@ for (const target of targets) {
   if (mutated) writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + '\n')
   if (pkg.dependencies && Object.keys(pkg.dependencies).length > 0) {
     console.log(`  installing runtime deps for ${target.label}...`)
-    execSync('npm install --no-package-lock --no-audit --no-fund --silent', {
-      cwd: pkgDir,
-      stdio: 'inherit',
-    })
+    // --omit=peer: npm 7+ auto-installs peer deps of runtime deps (e.g.
+    //   `react-datepicker` declares `react` as a peer), which would put a
+    //   second copy of React inside `pack-output/<name>/package/node_modules/`.
+    //   Vite's walk-up resolution would find that copy first, giving the demo
+    //   two React instances and breaking hooks. The consumer (demo/CCL)
+    //   already provides React, so skip peer installation here.
+    execSync(
+      'npm install --omit=peer --no-package-lock --no-audit --no-fund --silent',
+      { cwd: pkgDir, stdio: 'inherit' }
+    )
   }
   console.log(`✓ ${target.label} → pack-output/${target.destName}/package/`)
 }

@@ -69,6 +69,14 @@ export default defineConfig({
       { find: /^@json-edit-react$/, replacement: jsonEditReactPath },
       { find: /^json-edit-react$/, replacement: jsonEditReactPath },
     ],
+    // In `pack` and `build` modes the packed/built sub-packages live outside
+    // demo/node_modules. Without dedupe, vite's walk-up resolution from those
+    // files can pick up a second copy of React (from the workspace root's
+    // node_modules, or wherever else it finds one first) — different on-disk
+    // path = different React instance = hooks/context broken at runtime.
+    // Forcing react/react-dom to always resolve from the demo's own deps
+    // guarantees a single instance.
+    dedupe: ['react', 'react-dom'],
   },
   server: {
     port: 5175,
