@@ -14,11 +14,11 @@ Numbering matches the section numbers below. Items joined with `+` are interlock
 - §2 Path identity ✅ (foundational identity model) — [#246](https://github.com/CarlosNZ/json-edit-react/issues/246)
 - §3 Tests (regression net for everything that follows) — [#61](https://github.com/CarlosNZ/json-edit-react/issues/61)
 - §4 `TreeStateProvider` refactor (depends on §2; unlocks the perf work in §16) — [#247](https://github.com/CarlosNZ/json-edit-react/issues/247)
-- §5 Drop controlled/uncontrolled dual mode (state simplification) — [#248](https://github.com/CarlosNZ/json-edit-react/issues/248)
+- §5 Drop controlled/uncontrolled dual mode + §11 `JsonViewer` ✅ (state simplification, bundled) — [#248](https://github.com/CarlosNZ/json-edit-react/issues/248) / [#261](https://github.com/CarlosNZ/json-edit-react/pull/261)
 - §6 + §7 New `UpdateFunction` return shape + per-node `isValid` (interlocked) — [#249](https://github.com/CarlosNZ/json-edit-react/issues/249)
 - §8 + §9 `restrict*` → `allow*` rename + group the prop surface (API surface) — [#250](https://github.com/CarlosNZ/json-edit-react/issues/250)
 - §10 `useImperativeHandle` triggers — [#251](https://github.com/CarlosNZ/json-edit-react/issues/251)
-- §11 + §12 `JsonViewer` export + `onRenameProperty` (additive, can land any time) — [#252](https://github.com/CarlosNZ/json-edit-react/issues/252)
+- §12 `onRenameProperty` callback (additive, can land any time) — [#252](https://github.com/CarlosNZ/json-edit-react/issues/252)
 - §13 Themes / custom-component package split ✅ (mechanical)
 - §14 Terminology — "node", not "component" — [#253](https://github.com/CarlosNZ/json-edit-react/issues/253)
 - §15 CustomNode flags audit — [#254](https://github.com/CarlosNZ/json-edit-react/issues/254)
@@ -74,9 +74,9 @@ Break it down:
 
 Ordering: (1) is mechanical and unlocks the rest. (2) before (5) since the reducer gives you the stable dispatch for free. (3) and (4) can land independently.
 
-## 5. Drop controlled/uncontrolled dual mode
+## 5. Drop controlled/uncontrolled dual mode — ✅ done
 
-[`useData`](src/hooks/useData.ts) supports both. The README already steers users hard toward controlled. Drop the uncontrolled branch — and bundle with §11: make `setData` required on `JsonEditor`, retire the `viewOnly` prop, and ship sibling `<JsonViewer />` as the canonical read-only entry. Net: simpler state ownership, no more silently-dropped edits when `setData` is forgotten, fewer modes to reason about, `useData` deleted entirely.
+Implemented in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §11. `JsonEditor` is now strictly controlled — `setData` is a required prop, TypeScript-enforced. The internal [`useData`](src/hooks/useData.ts) hook (which previously branched between external `setData` and internal `useState`) is deleted; `JsonEditor` reads `data`/`setData` from props directly. The `viewOnly` prop is removed at the same time (read-only displays now use the new `<JsonViewer />` — see §11; dynamic permissions-style toggling stays on `<JsonEditor>` with `restrictEdit/restrictAdd/restrictDelete`). See [migration-guide.md §6](migration-guide.md#6-setdata-is-required-viewonly-removed-jsonviewer-added).
 
 ## 6. `UpdateFunction` return shape
 
@@ -130,9 +130,9 @@ ref.current.cancelEdit()
 
 Idiomatic React, TS autocompletes the actions, removes a piece of awkward state.
 
-## 11. Export `JsonViewer`
+## 11. Export `JsonViewer` — ✅ done
 
-Standalone named export — `<JsonViewer />` becomes the canonical viewer, replacing the v1 `<JsonEditor viewOnly />` form (`viewOnly` retires as part of §5). Thin wrapper over `JsonEditor` that locks all four `restrict*` filters on and supplies a no-op `setData`; `setData` becomes mandatory on `JsonEditor` once viewer use moves here. Discoverable name aids adoption ("json viewer react"), reads better in consumer code, no tree-shaking cost.
+Implemented in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §5. `<JsonViewer />` is the canonical read-only entry point — a thin wrapper over `JsonEditor` that hard-codes `setData={noop}` and locks all four `restrict*` filters on. `JsonViewerProps<T>` is `Omit<JsonEditorProps<T>, 'setData' | 'onUpdate' | 'onEdit' | 'onAdd' | 'onDelete' | 'onChange' | 'restrictEdit' | 'restrictAdd' | 'restrictDelete' | 'restrictDrag' | 'restrictTypeSelection'>` — drops the props that aren't meaningful in a viewer. The v1 `viewOnly` prop is removed in the same PR.
 
 ## 12. `onRenameProperty` callback
 
