@@ -14,6 +14,7 @@ import {
   type EnumDefinition,
   type CollectionData,
   type ValueData,
+  type EditingState,
 } from './types'
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
@@ -126,15 +127,32 @@ export const matchNodeKey: SearchFilterFunction = ({ key, path }, searchText = '
 }
 
 /**
- * Converts a part expressed as an array of properties to a single string
+ * Converts a path expressed as an array of CollectionKeys to a string suitable
+ * for HTML `name`/`id` attributes. The encoding is injective: keys are
+ * URL-encoded (so any literal `/` becomes `%2F`) and joined with `/`. Because
+ * `encodeURIComponent` never emits `/`, the separator can only appear between
+ * keys, never inside one — so distinct paths always produce distinct strings.
  */
-export const toPathString = (path: Array<string | number>, key?: 'key_') =>
-  (key ?? '') +
-  path
-    // An empty string in a part will "disappear", so replace it with a
-    // non-printable char
-    .map((part) => (part === '' ? String.fromCharCode(0) : part))
-    .join('.')
+export const toPathString = (path: CollectionKey[]) =>
+  path.map((part) => encodeURIComponent(String(part))).join('/')
+
+export const pathsEqual = (a: CollectionKey[], b: CollectionKey[]): boolean =>
+  a.length === b.length && a.every((k, i) => k === b[i])
+
+// Reflexive: a node is considered a (trivial) descendant of itself. Both
+// callers (areChildrenBeingEdited, drag-onto-self guard) want this behaviour.
+export const isDescendantOf = (
+  node: CollectionKey[],
+  ancestor: CollectionKey[]
+): boolean => node.length >= ancestor.length && ancestor.every((k, i) => k === node[i])
+
+export const editingStatesEqual = (
+  a: EditingState | null,
+  b: EditingState | null
+): boolean => {
+  if (a === null || b === null) return a === b
+  return a.mode === b.mode && pathsEqual(a.path, b.path)
+}
 
 /**
  * KEYBOARD INTERACTION

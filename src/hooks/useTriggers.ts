@@ -6,7 +6,7 @@
 import { useEffect } from 'react'
 import { useTreeState } from '../contexts'
 import { type CollectionKey, type CollapseState } from '../types'
-import { toPathString } from '../helpers'
+import { pathsEqual } from '../helpers'
 
 export interface EditState {
   path?: CollectionKey[]
@@ -37,7 +37,9 @@ export const useTriggers = (
 
     // EDIT
 
-    const doesPathMatch = edit?.path ? toPathString(edit.path) === currentlyEditingElement : true
+    const doesPathMatch = edit?.path
+      ? currentlyEditingElement !== null && pathsEqual(edit.path, currentlyEditingElement.path)
+      : true
 
     switch (edit?.action) {
       case 'accept': {

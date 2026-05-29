@@ -27,7 +27,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     collapseState,
     setCollapseState,
     getMatchingCollapseState,
-    currentlyEditingElement,
     setCurrentlyEditingElement,
     areChildrenBeingEdited,
     previousValue,
@@ -173,7 +172,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     showCollectionWrapper = true,
   } = customNodeData
 
-  const childrenEditing = areChildrenBeingEdited(pathString)
+  const childrenEditing = areChildrenBeingEdited(path)
 
   // For when children are accessed via Tab
   if (childrenEditing && collapsed) animateCollapse(false)
@@ -214,7 +213,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       setCollapseState({ collapsed: !collapsed, path, includeChildren: true })
       return
     }
-    if (!(currentlyEditingElement && currentlyEditingElement.includes(pathString))) {
+    if (!areChildrenBeingEdited(path)) {
       hasBeenOpened.current = true
       setCollapseState(null)
       if (onCollapse) onCollapse({ path, collapsed: !collapsed, includeChildren: false })

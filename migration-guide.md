@@ -170,6 +170,27 @@ It joins the existing rendering primitives — `StringDisplay`, `StringEdit`, `t
 
 ---
 
+## 5. `toPathString` encoding changed
+
+`toPathString` now joins keys with `/` (URL-encoded) instead of `.`, so the encoding is unambiguous even when keys themselves contain `.` or `/`.
+
+```js
+// Before (v1)
+toPathString(['data', 0, 'name'])          // 'data.0.name'
+toPathString(['foo.bar', 'baz'])           // 'foo.bar.baz' — collides with ['foo','bar','baz']
+
+// After (v2)
+toPathString(['data', 0, 'name'])          // 'data/0/name'
+toPathString(['foo.bar', 'baz'])           // 'foo.bar/baz' — now distinguishable
+toPathString(['has/slash', 'x'])           // 'has%2Fslash/x'
+```
+
+The second `key?: 'key_'` parameter has been removed — it was an internal encoding trick that's no longer needed.
+
+If you used `toPathString`'s output as an HTML `name` or `id` attribute (e.g. inside a custom component), nothing about how you use it changes; the string just looks different. If you parsed the returned string back into a path, you'll need to switch to `decodeURIComponent` per segment after splitting on `/`.
+
+---
+
 ## Need help?
 
 If you hit something this guide doesn't cover, please [open an issue](https://github.com/CarlosNZ/json-edit-react/issues) — happy to help triage and add to this doc.
