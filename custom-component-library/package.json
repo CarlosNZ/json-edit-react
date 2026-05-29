@@ -5,12 +5,17 @@
   "type": "module",
   "packageManager": "yarn@1.22.22",
   "scripts": {
-    "dev": "vite",
-    "dev:local": "VITE_JRE_SOURCE=local vite",
-    "dev:build": "VITE_JRE_SOURCE=build vite",
+    "start": "vite",
+    "start:local": "VITE_JRE_SOURCE=local vite",
+    "start:build": "VITE_JRE_SOURCE=build vite",
+    "start:pack": "VITE_JRE_SOURCE=pack vite",
+    "dev": "yarn start:local",
     "build": "tsc -b && vite build",
+    "build:local": "VITE_JRE_SOURCE=local yarn build",
+    "build:build": "VITE_JRE_SOURCE=build yarn build",
+    "build:pack": "VITE_JRE_SOURCE=pack yarn build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "serve": "vite preview"
   },
   "dependencies": {
     "json-edit-react": "1.30.1",
