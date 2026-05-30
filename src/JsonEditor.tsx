@@ -1,16 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { assign, extract, type AssignOptions, type AssignInput } from './utils'
+import { assign, type AssignOptions, type AssignInput } from './utils/assign'
+import { extract } from './utils/extract'
 import { CollectionNode } from './CollectionNode'
-import {
-  getFullKeyboardControlMap,
-  handleKeyPress,
-  isCollection,
-  matchNode,
-  matchNodeKey,
-  NOOP,
-  restoreUndefined,
-  UNDEFINED,
-} from './helpers'
+import { getFullKeyboardControlMap, handleKeyPress } from './utils/keyboard'
+import { matchNode, matchNodeKey } from './utils/filter'
+import { isCollection, NOOP, restoreUndefined, UNDEFINED } from './utils/misc'
 import {
   type CollectionData,
   type JsonEditorProps,

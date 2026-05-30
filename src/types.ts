@@ -1,5 +1,5 @@
 import { type JSX } from 'react'
-import { type AssignOptions } from './utils'
+import { type AssignOptions } from './utils/assign'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { type ExternalTriggers } from './hooks'
 import { CustomNodeData } from './CustomNode'

@@ -15,6 +15,7 @@ export default tseslint.config(
       '.rollup.cache',
       'custom-component-library',
       'build_package',
+      'pack-output',
       // packages/* are sibling workspace packages with their own lint scope.
       // Root eslint only covers core (src/).
       'packages',

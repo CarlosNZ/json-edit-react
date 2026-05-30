@@ -4,8 +4,11 @@ export { defaultTheme } from './contexts/ThemeProvider'
 export { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 export { StringDisplay, StringEdit, useKeyboardListener } from './ValueNodes'
 export { AutogrowTextArea } from './AutogrowTextArea'
-export { matchNode, matchNodeKey, isCollection, toPathString } from './helpers'
-export { assign, extract, type AssignInput, type AssignOptions } from './utils'
+export { matchNode, matchNodeKey } from './utils/filter'
+export { isCollection } from './utils/misc'
+export { toPathString } from './utils/pathTools'
+export { assign, type AssignInput, type AssignOptions } from './utils/assign'
+export { extract } from './utils/extract'
 export {
   standardDataTypes,
   type JsonEditorProps,

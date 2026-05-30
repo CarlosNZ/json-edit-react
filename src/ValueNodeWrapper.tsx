@@ -20,7 +20,9 @@ import {
 } from './types'
 import { useTheme, useTreeState } from './contexts'
 import { type CustomNodeData } from './CustomNode'
-import { filterNode, getNextOrPrevious, isJsEvent, matchEnumType, NOOP } from './helpers'
+import { filterNode } from './utils/filter'
+import { getNextOrPrevious } from './utils/keyboard'
+import { isJsEvent, matchEnumType, NOOP } from './utils/misc'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'
 

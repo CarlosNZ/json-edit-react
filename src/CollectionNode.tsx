@@ -9,13 +9,9 @@ import {
   type ValueData,
 } from './types'
 import { Icon } from './Icons'
-import {
-  filterNode,
-  getModifier,
-  getNextOrPrevious,
-  insertCharInTextArea,
-  isCollection,
-} from './helpers'
+import { filterNode } from './utils/filter'
+import { getModifier, getNextOrPrevious, insertCharInTextArea } from './utils/keyboard'
+import { isCollection } from './utils/misc'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { KeyDisplay } from './KeyDisplay'
 import { useTheme, useTreeState } from './contexts'

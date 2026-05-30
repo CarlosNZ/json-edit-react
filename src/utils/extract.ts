@@ -6,7 +6,7 @@
 // `any` here covers `fallback` and the return type — extract walks
 // arbitrary nested data and returns whatever it finds at the path.
 
-import { splitPropertyString } from './helpers'
+import { splitPropertyString } from './pathTools'
 
 type BasicObject = {
   [key: string]: BasicObject | unknown | (BasicObject | unknown)[]
