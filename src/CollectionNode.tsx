@@ -138,7 +138,14 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   useEffect(() => {
     return subscribe((cmd) => {
       if (doesCollapseStateMatchPath(path, cmd)) {
-        hasBeenOpened.current = true
+        // Only force-open the mount gate when expanding. A collapse
+        // broadcast must not flip `hasBeenOpened` true on a node that
+        // hasn't been opened — that would mount its descendants on the
+        // next render, undoing the "don't mount descendants of
+        // never-opened nodes" perf optimization. (For previously-opened
+        // nodes that are now being collapsed, `hasBeenOpened` stays true
+        // either way, preserving children for re-expansion.)
+        if (!cmd.collapsed) hasBeenOpened.current = true
         animateCollapse(cmd.collapsed)
       }
     })
@@ -280,6 +287,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     cancelEdit()
     if (previousValue !== null) {
       onEdit(previousValue, path)
+      // Clear the snapshot after applying it — otherwise it lingers in
+      // editing state and a later cancel (here or on another node) would
+      // see a non-null `previousValue` and trigger an unintended revert.
+      setPreviousValue(null)
       return
     }
     setError(null)

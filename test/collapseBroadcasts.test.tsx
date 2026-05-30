@@ -9,7 +9,7 @@
  * each `CollectionNode`.
  */
 
-import { render } from '@testing-library/react'
+import { act, render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { type CollapseState } from '../src/types'
@@ -230,8 +230,13 @@ describe('Collapse broadcasts via externalTriggers', () => {
       )
       expect(isCollapsed(container.querySelectorAll('.jer-collapse-icon')[1])).toBe(true)
 
-      // Advance well past the old 2-second window.
-      jest.advanceTimersByTime(5_000)
+      // Advance well past the old 2-second window. Wrapped in act() so any
+      // timer-driven state updates (e.g. useCollapseTransition's animation
+      // completion timer that flips maxHeight back to undefined) commit
+      // synchronously rather than triggering "not wrapped in act" warnings.
+      act(() => {
+        jest.advanceTimersByTime(5_000)
+      })
 
       // Same command (new object reference) still fires.
       rerender(

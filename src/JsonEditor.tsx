@@ -103,7 +103,15 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     cancelEdit()
     const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
     return () => clearTimeout(debounce)
-  }, [searchText, searchDebounceTime, cancelEdit])
+    // `cancelEdit` is intentionally excluded. It's useCallback-stable over
+    // `onEditEvent`, but a consumer passing `onEditEvent={() => ...}` inline
+    // would re-bind it on every render — including it here would re-fire this
+    // effect on unrelated renders and cancel in-progress edits mid-keystroke.
+    // React's effect semantics still pick up the latest `cancelEdit` closure
+    // at fire time when one of the listed deps changes, so behaviour is
+    // correct: cancel runs once per genuine search-input change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchText, searchDebounceTime])
 
   const nodeData: NodeData = {
     key: rootName,

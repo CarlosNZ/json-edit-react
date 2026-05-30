@@ -15,9 +15,9 @@ import { type CollectionKey, type CollapseState } from '../src/types'
 
 type DragSourceValue = { path: CollectionKey[] | null }
 
-// Mutable refs the tests poke at to drive each slice. The editing action
-// functions are stable (useCallback) so re-assignment per-render is just
-// defensive; collapse setters aren't yet stable (Part 5 lands that).
+// Mutable refs the tests poke at to drive each slice. All three setters are
+// useCallback-stable in their respective providers — re-assigning per-render
+// is purely defensive against that ever changing.
 const setters: {
   setDrag: ((s: DragSourceValue) => void) | null
   startEdit:

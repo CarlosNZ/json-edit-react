@@ -263,7 +263,7 @@ For most consumers, **nothing changes** — toolbar-driven Collapse/Expand on a 
 
 Two specific scenarios have changed:
 
-**Broadcasts can't punch through a collapse boundary.** This applies any time the target of a broadcast (or any of its descendants) isn't currently mounted — on initial load or later — because a collapsed `CollectionNode` doesn't render its children at all (this is an important perf optimization for large data sets). Pub-sub broadcasts only reach mounted subscribers, so:
+**Broadcasts can't punch through a collapse boundary.** Pub-sub broadcasts only reach currently-mounted subscribers. A `CollectionNode`'s children are mounted only while that node has been opened (an important perf optimization for large data sets), so any time the target of a broadcast — or any of its descendants — sits behind a not-yet-opened parent (initial-load-collapsed, or filter-change re-collapsed), the broadcast can't reach it:
 
 - A path-scoped command targeting an unmounted node silently misses (same as v1 — the timer didn't help here either).
 - A subtree-scoped command (`includeChildren: true`) reaches the targeted root if it's mounted, and that root expands — but its newly-mounted children evaluate `collapseFilter` at mount time and use *that* result. The broadcast doesn't cascade to them automatically the way v1's 2-second-lingering state did.
