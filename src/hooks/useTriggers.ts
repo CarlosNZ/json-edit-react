@@ -4,7 +4,7 @@
  */
 
 import { useEffect } from 'react'
-import { useTreeState } from '../contexts'
+import { useEditing, useCollapse } from '../contexts'
 import { type CollectionKey, type CollapseState } from '../types'
 import { pathsEqual } from '../utils/pathTools'
 
@@ -22,7 +22,8 @@ export const useTriggers = (
   triggers: ExternalTriggers | null | undefined,
   editConfirmRef: React.RefObject<HTMLDivElement | null>
 ) => {
-  const { setCurrentlyEditingElement, currentlyEditingElement, setCollapseState } = useTreeState()
+  const { setCurrentlyEditingElement, currentlyEditingElement } = useEditing()
+  const { setCollapseState } = useCollapse()
 
   useEffect(() => {
     if (!triggers) return

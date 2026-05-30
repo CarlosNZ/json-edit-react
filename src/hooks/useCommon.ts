@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useState } from 'react'
-import { useTreeState } from '../contexts'
+import { useEditing } from '../contexts'
 import {
   type CollectionNodeProps,
   type ErrorString,
@@ -35,7 +35,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     translate,
     errorMessageTimeout,
   } = props
-  const { currentlyEditingElement, setCurrentlyEditingElement } = useTreeState()
+  const { currentlyEditingElement, setCurrentlyEditingElement } = useEditing()
   const [error, setError] = useState<string | null>(null)
 
   const nodeData = { ...incomingNodeData, collapsed }

@@ -9,7 +9,7 @@
 import React, { createContext, useContext, useState } from 'react'
 import { type CollectionKey } from '../types'
 
-export interface DragSource {
+interface DragSource {
   path: CollectionKey[] | null
 }
 

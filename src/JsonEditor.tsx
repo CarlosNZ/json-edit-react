@@ -21,7 +21,7 @@ import {
   ValueData,
   CustomNodeDefinition,
 } from './types'
-import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useTreeState } from './contexts'
+import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useEditing } from './contexts'
 import { useTriggers } from './hooks'
 import { getTranslateFunction } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
@@ -89,7 +89,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   collapseClickZones = ['header', 'left'],
 }) => {
   const { getStyles } = useTheme()
-  const { setCurrentlyEditingElement } = useTreeState()
+  const { setCurrentlyEditingElement } = useEditing()
   const collapseFilter = useMemo(() => getFilterFunction(collapse), [collapse])
   const translate = useMemo(
     () => getTranslateFunction(translations, customText),

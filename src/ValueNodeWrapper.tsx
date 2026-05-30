@@ -18,7 +18,7 @@ import {
   type JsonData,
   type EnumDefinition,
 } from './types'
-import { useTheme, useTreeState } from './contexts'
+import { useTheme, useEditing, useCollapse } from './contexts'
 import { type CustomNodeData } from './CustomNode'
 import { filterNode } from './utils/filter'
 import { getNextOrPrevious } from './utils/keyboard'
@@ -57,14 +57,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   const { getStyles } = useTheme()
   const {
     setCurrentlyEditingElement,
-    setCollapseState,
     previouslyEditedElement,
     setPreviouslyEditedElement,
     tabDirection,
     setTabDirection,
     previousValue,
     setPreviousValue,
-  } = useTreeState()
+  } = useEditing()
+  const { setCollapseState } = useCollapse()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data

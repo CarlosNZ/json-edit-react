@@ -3,7 +3,7 @@
  */
 
 import React from 'react'
-import { useTreeState } from './contexts'
+import { useEditing } from './contexts'
 import {
   type KeyboardControlsFull,
   type CollectionKey,
@@ -55,7 +55,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   customNodeData,
   getStyles,
 }) => {
-  const { setCurrentlyEditingElement } = useTreeState()
+  const { setCurrentlyEditingElement } = useEditing()
 
   const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
 

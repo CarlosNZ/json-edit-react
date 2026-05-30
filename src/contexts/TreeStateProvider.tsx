@@ -5,17 +5,16 @@
  * - CollapseProvider — collapse state and broadcast
  * - DragSourceProvider — drag-and-drop source path
  *
- * These three slices were previously co-mingled in one omnibus context here.
- * They are now split, but this composing wrapper and the composing
- * `useTreeState` hook preserve the existing call-site API so consumers compile
- * unchanged. Part 2 of the §4 refactor narrows each consumer to import only
- * the slice it actually uses.
+ * Consumers subscribe to whichever slice they need via `useEditing`,
+ * `useCollapse`, or `useDragSource` — there is no merged-shape hook. This is
+ * what makes slice isolation actually pay off: a change in one slice no longer
+ * forces re-renders of components that only care about another.
  */
 
 import React from 'react'
-import { EditingProvider, useEditing } from './EditingProvider'
-import { CollapseProvider, useCollapse } from './CollapseProvider'
-import { DragSourceProvider, useDragSource } from '../hooks/DragSourceProvider'
+import { EditingProvider } from './EditingProvider'
+import { CollapseProvider } from './CollapseProvider'
+import { DragSourceProvider } from '../hooks/DragSourceProvider'
 import { type OnEditEventFunction, type OnCollapseFunction } from '../types'
 
 interface TreeStateProps {
@@ -31,9 +30,3 @@ export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeSta
     </CollapseProvider>
   </EditingProvider>
 )
-
-export const useTreeState = () => ({
-  ...useEditing(),
-  ...useCollapse(),
-  ...useDragSource(),
-})

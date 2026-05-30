@@ -14,20 +14,18 @@ import { getModifier, getNextOrPrevious, insertCharInTextArea } from './utils/ke
 import { isCollection } from './utils/misc'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { KeyDisplay } from './KeyDisplay'
-import { useTheme, useTreeState } from './contexts'
+import { useTheme, useEditing, useCollapse } from './contexts'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   const {
-    collapseState,
-    setCollapseState,
-    getMatchingCollapseState,
     setCurrentlyEditingElement,
     areChildrenBeingEdited,
     previousValue,
     setPreviousValue,
-  } = useTreeState()
+  } = useEditing()
+  const { collapseState, setCollapseState, getMatchingCollapseState } = useCollapse()
   const {
     mainContainerRef,
     data,
