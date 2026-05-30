@@ -519,6 +519,11 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
   })
 
+  // A rejected onUpdate promise currently loses the edit silently and leaks an
+  // unhandled rejection. Tracked as #271 — promote to a real test once the
+  // editor wraps `await updateMethod(...)` in a try/catch and reverts cleanly.
+  test.todo('async onUpdate that rejects should revert and show an error (#271)')
+
   test('restrictEdit as a function selectively allows/blocks per node', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
