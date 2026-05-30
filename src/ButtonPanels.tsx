@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { extract } from './utils'
+import { extract } from './utils/extract'
 import { Icon } from './Icons'
 import { useTheme } from './contexts'
 import { type TranslateFunction } from './localisation'
@@ -14,7 +14,7 @@ import {
   JsonData,
   OnEditEventFunction,
 } from './types'
-import { getModifier } from './helpers'
+import { getModifier } from './utils/keyboard'
 
 interface EditButtonProps {
   startEdit?: () => void

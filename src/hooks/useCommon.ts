@@ -13,7 +13,7 @@ import {
   type ValueNodeProps,
   type JsonData,
 } from '../types'
-import { pathsEqual, toPathString } from '../helpers'
+import { pathsEqual, toPathString } from '../utils/pathTools'
 
 interface CommonProps {
   props: CollectionNodeProps | ValueNodeProps

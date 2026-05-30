@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { useTreeState, useTheme } from '../contexts'
-import { isDescendantOf, pathsEqual } from '../helpers'
+import { isDescendantOf, pathsEqual } from '../utils/pathTools'
 import {
   type NodeData,
   type CollectionKey,

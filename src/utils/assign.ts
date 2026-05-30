@@ -7,7 +7,7 @@
 // values (JSON, functions, etc.), and `unknown` would force callers to
 // narrow before passing.
 
-import { splitPropertyString, type Path } from './helpers'
+import { splitPropertyString, type Path } from './pathTools'
 
 type BasicType = string | number | boolean | undefined | null | ((...args: unknown[]) => unknown)
 type Value = AssignInput | BasicType

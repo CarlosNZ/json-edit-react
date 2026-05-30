@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { insertCharInTextArea, toPathString } from './helpers'
+import { insertCharInTextArea } from './utils/keyboard'
+import { toPathString } from './utils/pathTools'
 import { useTheme } from './contexts'
 import {
   type NodeData,

@@ -6,7 +6,7 @@
 import { useEffect } from 'react'
 import { useTreeState } from '../contexts'
 import { type CollectionKey, type CollapseState } from '../types'
-import { pathsEqual } from '../helpers'
+import { pathsEqual } from '../utils/pathTools'
 
 export interface EditState {
   path?: CollectionKey[]

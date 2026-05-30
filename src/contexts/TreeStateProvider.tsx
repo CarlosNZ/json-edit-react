@@ -17,7 +17,7 @@ import {
   type CollapseState,
   type EditingState,
 } from '../types'
-import { editingStatesEqual, isDescendantOf } from '../helpers'
+import { editingStatesEqual, isDescendantOf } from '../utils/pathTools'
 
 interface DragSource {
   path: CollectionKey[] | null

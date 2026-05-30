@@ -1,6 +1,6 @@
 import React from 'react'
 import { JsonEditor } from './JsonEditor'
-import { NOOP } from './helpers'
+import { NOOP } from './utils/misc'
 import { type JsonData, type JsonViewerProps } from './types'
 
 export function JsonViewer<T = JsonData>(props: JsonViewerProps<T>): React.ReactElement | null {
