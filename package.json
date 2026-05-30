@@ -32,7 +32,7 @@
     "dev": "cd demo && yarn && yarn dev",
     "demo": "cd demo && yarn && yarn start",
     "demo:pack": "pnpm pack-all && cd demo && yarn && yarn start:pack",
-    "prebuild": "pnpm lint",
+    "prebuild": "pnpm lint && node scripts/run-prebuild-tests.mjs",
     "build": "rollup -c && rm -R build/dts",
     "build-package": "pnpm build && node scripts/stage-package.mjs",
     "lint": "eslint",

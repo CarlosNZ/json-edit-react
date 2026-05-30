@@ -115,6 +115,14 @@ pnpm --filter @json-edit-react/components build # build components only
 
 `-r` is "recursive" — runs the script in every workspace. The root is included because of `include-workspace-root=true` in [.npmrc](.npmrc).
 
+`pnpm build` (core) runs `pnpm lint` and `pnpm test` first via the `prebuild` hook — a failing test or lint stops the build. To force a build past a failing test (e.g. when iterating on a build artefact and an unrelated test is red), set `SKIP_TESTS=1`:
+
+```sh
+SKIP_TESTS=1 pnpm build      # builds even if tests fail; lint still runs
+```
+
+There's no equivalent skip for lint — fix the lint or use `pnpm rollup -c && rm -R build/dts` directly if you really need to bypass everything.
+
 ### Testing, linting, typechecking
 
 ```sh
