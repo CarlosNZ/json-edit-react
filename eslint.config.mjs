@@ -16,6 +16,7 @@ export default tseslint.config(
       'custom-component-library',
       'build_package',
       'pack-output',
+      'test/style-mock.js',
       // packages/* are sibling workspace packages with their own lint scope.
       // Root eslint only covers core (src/).
       'packages',
