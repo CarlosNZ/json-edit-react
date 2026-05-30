@@ -39,8 +39,8 @@ The workspace boundary is configured in [pnpm-workspace.yaml](pnpm-workspace.yam
 | [CollectionNode.tsx](src/CollectionNode.tsx) | Renders objects/arrays (recursive) |
 | [ValueNodeWrapper.tsx](src/ValueNodeWrapper.tsx) + [ValueNodes.tsx](src/ValueNodes.tsx) | Leaf value rendering + per-type editors. `StringDisplay` and `StringEdit` here are part of the **public API** — `@json-edit-react/components` composes on top of them. |
 | [CustomNode.ts](src/CustomNode.ts) | Custom-node type infrastructure. The built-in `LinkCustomComponent` was moved to `@json-edit-react/components` in v2. |
-| [contexts/](src/contexts/) | `ThemeProvider`, `TreeStateProvider` |
-| [hooks/](src/hooks/) | `useData`, `useCommon`, `useTriggers`, `useDragNDrop`, `useCollapseTransition` |
+| [contexts/](src/contexts/) | `ThemeProvider`, `EditingProvider`, `CollapseProvider`, and a thin composing `TreeStateProvider`. Each slice exposes its own hook (`useEditing`, `useCollapse`); consumers import only what they use. |
+| [hooks/](src/hooks/) | `useCommon`, `useTriggers`, `useDragNDrop`, `useCollapseTransition`, plus `DragSourceProvider` (the third tree-state slice — lives here next to its sole consumer `useDragNDrop`). |
 | [helpers.ts](src/helpers.ts) | `matchNode`, `matchNodeKey`, `isCollection`, `toPathString`, `getNextOrPrevious`, etc. |
 | [types.ts](src/types.ts) | `JsonEditorProps` and all exported types |
 | [localisation.ts](src/localisation.ts) | UI strings and `TranslateFunction` |

@@ -14,20 +14,19 @@ import { getModifier, getNextOrPrevious, insertCharInTextArea } from './utils/ke
 import { isCollection } from './utils/misc'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { KeyDisplay } from './KeyDisplay'
-import { useTheme, useTreeState } from './contexts'
+import { useTheme, useEditing, useCollapse, doesCollapseStateMatchPath } from './contexts'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   const {
-    collapseState,
-    setCollapseState,
-    getMatchingCollapseState,
-    setCurrentlyEditingElement,
+    startEdit,
+    cancelEdit,
     areChildrenBeingEdited,
     previousValue,
     setPreviousValue,
-  } = useTreeState()
+  } = useEditing()
+  const { subscribe, setCollapseState } = useCollapse()
   const {
     mainContainerRef,
     data,
@@ -121,19 +120,37 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     const shouldBeCollapsed = collapseFilter(nodeData) && !isEditing
     hasBeenOpened.current = !shouldBeCollapsed
     animateCollapse(shouldBeCollapsed)
-    // eslint-disable-next-line
+    // Only re-fire when `collapseFilter` itself changes — `animateCollapse`
+    // depends on this node's own collapsed state, so listing it would make
+    // the effect fight every user-driven expand/collapse.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collapseFilter])
 
+  // Subscribe to collapse-broadcast commands and react if the command targets
+  // this node. New mounts only see *future* broadcasts — a Collapse-All from
+  // before this node existed has no lingering state to leak.
+  //
+  // `animateCollapse` and `path` are honest deps: animateCollapse depends on
+  // the node's own `collapsed` state, so its identity flips every collapse —
+  // re-subscribing each time is what keeps the handler from closing over a
+  // stale `animateCollapse` (and missing the next command). pathString is the
+  // value-equal stand-in for path's array reference.
   useEffect(() => {
-    if (collapseState !== null) {
-      const matchingCollapse = getMatchingCollapseState(path)
-      if (matchingCollapse) {
-        hasBeenOpened.current = true
-        animateCollapse(matchingCollapse.collapsed)
+    return subscribe((cmd) => {
+      if (doesCollapseStateMatchPath(path, cmd)) {
+        // Only force-open the mount gate when expanding. A collapse
+        // broadcast must not flip `hasBeenOpened` true on a node that
+        // hasn't been opened — that would mount its descendants on the
+        // next render, undoing the "don't mount descendants of
+        // never-opened nodes" perf optimization. (For previously-opened
+        // nodes that are now being collapsed, `hasBeenOpened` stays true
+        // either way, preserving children for re-expansion.)
+        if (!cmd.collapsed) hasBeenOpened.current = true
+        animateCollapse(cmd.collapsed)
       }
-    }
-    // eslint-disable-next-line
-  }, [collapseState])
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `path` covered by pathString
+  }, [subscribe, pathString, animateCollapse])
 
   // For JSON-editing TextArea
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -211,7 +228,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     }
     if (!areChildrenBeingEdited(path)) {
       hasBeenOpened.current = true
-      setCollapseState(null)
       if (onCollapse) onCollapse({ path, collapsed: !collapsed, includeChildren: false })
       animateCollapse(!collapsed)
     }
@@ -220,7 +236,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const handleEdit = () => {
     try {
       const value = jsonParse(stringifiedValue)
-      setCurrentlyEditingElement(null)
+      cancelEdit()
       setPreviousValue(null)
       setError(null)
       if (jsonStringify(value) === jsonStringify(data)) return
@@ -268,9 +284,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       : undefined
 
   const handleCancel = () => {
-    setCurrentlyEditingElement(null)
+    cancelEdit()
     if (previousValue !== null) {
       onEdit(previousValue, path)
+      // Clear the snapshot after applying it — otherwise it lingers in
+      // editing state and a later cancel (here or on another node) would
+      // see a non-null `previousValue` and trigger an unintended revert.
+      setPreviousValue(null)
       return
     }
     setError(null)
@@ -394,7 +414,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
-    setIsEditing: () => setCurrentlyEditingElement(path),
+    setIsEditing: () => startEdit(path),
     getStyles,
     canDragOnto: canEdit,
     canEdit,
@@ -417,7 +437,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           ? () => {
               hasBeenOpened.current = true
               setPreviousValue(null)
-              setCurrentlyEditingElement(path)
+              startEdit(path)
             }
           : undefined
       }

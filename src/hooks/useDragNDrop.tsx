@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
-import { useTreeState, useTheme } from '../contexts'
+import { useTheme } from '../contexts'
+import { useDragSource } from './DragSourceProvider'
 import { isDescendantOf, pathsEqual } from '../utils/pathTools'
 import {
   type NodeData,
@@ -31,7 +32,7 @@ export const useDragNDrop = ({
   translate,
 }: DnDProps) => {
   const { getStyles } = useTheme()
-  const { dragSource, setDragSource } = useTreeState()
+  const { dragSource, setDragSource } = useDragSource()
   const [isDragTarget, setIsDragTarget] = useState<Position | false>(false)
 
   // Props added to items being dragged

@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { JsonViewer } from '../src/JsonViewer'
+import { type FilterFunction } from '../src/types'
 
 const noop = () => {}
 
@@ -177,6 +179,194 @@ describe('JsonEditor — rootName and initial collapse state', () => {
     expect(chevrons).toHaveLength(2)
     expect(chevrons[0]).not.toHaveClass('jer-rotate-90') // root open
     expect(chevrons[1]).toHaveClass('jer-rotate-90') // nested collapsed
+  })
+
+  test('collapse={true} does not mount descendants of collapsed nodes (initial-load perf)', () => {
+    // Children of a collapsed CollectionNode are gated by `hasBeenOpened.current`
+    // and not rendered at all (not just CSS-hidden). This is what makes initial
+    // load snappy on large data sets — a deeply-nested tree with `collapse=true`
+    // only mounts the root.
+    const data = { a: { b: { c: { d: { e: 'deep' } } } } }
+    const { container } = render(<JsonEditor data={data} setData={noop} collapse />)
+    expect(container.querySelectorAll('.jer-collapse-icon')).toHaveLength(1)
+  })
+
+  test('functional collapse: multi-criteria filter applies per node', () => {
+    // Filter combines three criteria: key match, array size, and depth. Each
+    // criterion is meant to be common in real use (collapse "metadata" blocks,
+    // collapse large arrays by default, collapse below level N).
+    const data = {
+      name: 'Alice',
+      metadata: { created: '2024' },
+      bigList: [1, 2, 3, 4, 5],
+      small: [1, 2],
+      deep: { l1: { l2: { l3: 'value' } } },
+    }
+    const collapseFilter: FilterFunction = ({ key, value, level }) => {
+      if (key === 'metadata') return true
+      if (Array.isArray(value) && value.length > 3) return true
+      if (level > 2) return true
+      return false
+    }
+    const { container } = render(
+      <JsonEditor data={data} setData={noop} collapse={collapseFilter} />
+    )
+    const chevrons = container.querySelectorAll('.jer-collapse-icon')
+    // DOM order: root, metadata, bigList, small, deep, l1, l2.
+    expect(chevrons).toHaveLength(7)
+    expect(chevrons[0]).not.toHaveClass('jer-rotate-90') // root — level 0, expand
+    expect(chevrons[1]).toHaveClass('jer-rotate-90') // metadata — key match
+    expect(chevrons[2]).toHaveClass('jer-rotate-90') // bigList — array size > 3
+    expect(chevrons[3]).not.toHaveClass('jer-rotate-90') // small — size 2
+    expect(chevrons[4]).not.toHaveClass('jer-rotate-90') // deep — level 1
+    expect(chevrons[5]).not.toHaveClass('jer-rotate-90') // l1 — level 2
+    expect(chevrons[6]).toHaveClass('jer-rotate-90') // l2 — level 3 > 2
+  })
+
+  test('functional collapse: state-dependent filter flips collapse states across the tree', async () => {
+    // The filter reads an external mode ("odd" or "even") and opens any node
+    // whose `index` parity matches. Toggle the mode and every node flips —
+    // newly-open paths mount fresh children that pick up the current filter,
+    // and newly-closed paths unmount theirs (CollectionNode's effect on
+    // `[collapseFilter]` reassigns `hasBeenOpened.current = !shouldBeCollapsed`,
+    // which gates child rendering).
+    //
+    // Data: four levels deep, three children per level on the open branches,
+    // so each level exercises indexes 0/1/2 (even, odd, even).
+    const data = {
+      a: {
+        aa: { aaa: { leaf: 1 }, aab: { leaf: 1 }, aac: { leaf: 1 } },
+        ab: { aba: { leaf: 1 }, abb: { leaf: 1 }, abc: { leaf: 1 } },
+        ac: { aca: { leaf: 1 }, acb: { leaf: 1 }, acc: { leaf: 1 } },
+      },
+      b: {
+        ba: { baa: { leaf: 1 }, bab: { leaf: 1 }, bac: { leaf: 1 } },
+        bb: { bba: { leaf: 1 }, bbb: { leaf: 1 }, bbc: { leaf: 1 } },
+        bc: { bca: { leaf: 1 }, bcb: { leaf: 1 }, bcc: { leaf: 1 } },
+      },
+      c: {
+        ca: { caa: { leaf: 1 }, cab: { leaf: 1 }, cac: { leaf: 1 } },
+        cb: { cba: { leaf: 1 }, cbb: { leaf: 1 }, cbc: { leaf: 1 } },
+        cc: { cca: { leaf: 1 }, ccb: { leaf: 1 }, ccc: { leaf: 1 } },
+      },
+    }
+
+    const Harness = () => {
+      const [mode, setMode] = useState<'odd' | 'even'>('even')
+      const filter: FilterFunction = ({ index, level }) => {
+        if (level === 0) return false // root always open
+        // "open if index parity matches mode" → collapse if it doesn't
+        return mode === 'odd' ? index % 2 === 0 : index % 2 !== 0
+      }
+      return (
+        <>
+          <button onClick={() => setMode((m) => (m === 'odd' ? 'even' : 'odd'))}>toggle</button>
+          <JsonEditor data={data} setData={noop} collapse={filter} />
+        </>
+      )
+    }
+
+    const user = userEvent.setup()
+    const { container } = render(<Harness />)
+
+    // Find the chevron for a given key by walking from the key text to its
+    // enclosing `.jer-collection-name` row. `.jer-key-text` concatenates the
+    // key with a trailing `:` (from the inner `.jer-key-colon` span), so the
+    // exact match includes that suffix. Unique keys throughout the data mean
+    // each key resolves to exactly one chevron (or null if not mounted).
+    const chevron = (key: string) => {
+      const keyEl = Array.from(container.querySelectorAll('.jer-key-text')).find(
+        (el) => el.textContent === `${key}:`
+      )
+      return keyEl?.parentElement?.querySelector('.jer-collapse-icon') ?? null
+    }
+    const isOpen = (el: Element | null) => el !== null && !el.classList.contains('jer-rotate-90')
+    const isClosed = (el: Element | null) => el !== null && el.classList.contains('jer-rotate-90')
+
+    // --- mode: 'even' --- open if index 0 or 2; collapse if index 1 ---
+
+    // Level 1: a (0), b (1), c (2) → a and c open, b collapsed.
+    expect(isOpen(chevron('a'))).toBe(true)
+    expect(isClosed(chevron('b'))).toBe(true)
+    expect(isOpen(chevron('c'))).toBe(true)
+
+    // b is closed → its descendants aren't mounted at all (perf optimization).
+    expect(chevron('ba')).toBeNull()
+    expect(chevron('bb')).toBeNull()
+
+    // Level 2 under a: aa (0), ab (1), ac (2) → aa and ac open, ab collapsed.
+    expect(isOpen(chevron('aa'))).toBe(true)
+    expect(isClosed(chevron('ab'))).toBe(true)
+    expect(isOpen(chevron('ac'))).toBe(true)
+    // ab's children not mounted.
+    expect(chevron('aba')).toBeNull()
+    // Level 3 under aa: aaa (0), aab (1), aac (2).
+    expect(isOpen(chevron('aaa'))).toBe(true)
+    expect(isClosed(chevron('aab'))).toBe(true)
+    expect(isOpen(chevron('aac'))).toBe(true)
+
+    // --- toggle to 'odd' --- open if index 1; collapse if index 0 or 2 ---
+
+    await user.click(screen.getByText('toggle'))
+
+    // Level 1: every flip.
+    expect(isClosed(chevron('a'))).toBe(true)
+    expect(isOpen(chevron('b'))).toBe(true)
+    expect(isClosed(chevron('c'))).toBe(true)
+
+    // a is now closed → its previously-mounted children unmount (the
+    // [collapseFilter] effect resets `hasBeenOpened` to false). So `aa`, `ab`,
+    // `ac` are gone from the DOM, and their descendants with them.
+    expect(chevron('aa')).toBeNull()
+    expect(chevron('ab')).toBeNull()
+    expect(chevron('aaa')).toBeNull()
+
+    // b is now open → its previously-unmounted children mount fresh and
+    // evaluate the current filter at mount time. ba (0) closed, bb (1) open,
+    // bc (2) closed.
+    expect(isClosed(chevron('ba'))).toBe(true)
+    expect(isOpen(chevron('bb'))).toBe(true)
+    expect(isClosed(chevron('bc'))).toBe(true)
+
+    // bb (newly open) → its children also mount. Level 3 under bb.
+    expect(isClosed(chevron('bba'))).toBe(true)
+    expect(isOpen(chevron('bbb'))).toBe(true)
+    expect(isClosed(chevron('bbc'))).toBe(true)
+
+    // --- toggle back to 'even' --- state should mirror the initial render ---
+
+    await user.click(screen.getByText('toggle'))
+
+    expect(isOpen(chevron('a'))).toBe(true)
+    expect(isClosed(chevron('b'))).toBe(true)
+    expect(isOpen(chevron('c'))).toBe(true)
+    expect(isOpen(chevron('aaa'))).toBe(true)
+    expect(isClosed(chevron('aab'))).toBe(true)
+    // b's descendants from the 'odd' phase unmount when b collapses again.
+    expect(chevron('bb')).toBeNull()
+    expect(chevron('bbb')).toBeNull()
+  })
+
+  test('functional collapse: changing the filter cascades expansion to newly-mounted nodes', () => {
+    // Start with "everything collapsed" — only root mounts. Then toggle the
+    // filter to "expand everything" — root expands, its newly-mounted children
+    // evaluate the *current* filter at mount time and stay expanded, which
+    // cascades all the way down without needing any broadcast.
+    const data = { a: { b: { c: { d: 'leaf' } } } }
+    const collapseAll: FilterFunction = () => true
+    const expandAll: FilterFunction = () => false
+
+    const { container, rerender } = render(
+      <JsonEditor data={data} setData={noop} collapse={collapseAll} />
+    )
+    // Only root mounted while collapsed.
+    expect(container.querySelectorAll('.jer-collapse-icon')).toHaveLength(1)
+
+    rerender(<JsonEditor data={data} setData={noop} collapse={expandAll} />)
+    // root + a + b + c — d is the value 'leaf', not a collection.
+    const chevrons = container.querySelectorAll('.jer-collapse-icon')
+    expect(chevrons).toHaveLength(4)
+    chevrons.forEach((c) => expect(c).not.toHaveClass('jer-rotate-90'))
   })
 })
 

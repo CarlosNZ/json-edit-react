@@ -1,2 +1,4 @@
 export * from './ThemeProvider'
-export * from './TreeStateProvider'
+export { TreeStateProvider } from './TreeStateProvider'
+export { useEditing } from './EditingProvider'
+export { useCollapse, doesCollapseStateMatchPath } from './CollapseProvider'

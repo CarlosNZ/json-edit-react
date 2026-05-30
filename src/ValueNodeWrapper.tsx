@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useLayoutEffect, useState, useMemo, useCallback } from 'react'
 import {
   StringValue,
   NumberValue,
@@ -18,7 +18,7 @@ import {
   type JsonData,
   type EnumDefinition,
 } from './types'
-import { useTheme, useTreeState } from './contexts'
+import { useTheme, useEditing, useCollapse } from './contexts'
 import { type CustomNodeData } from './CustomNode'
 import { filterNode } from './utils/filter'
 import { getNextOrPrevious } from './utils/keyboard'
@@ -56,15 +56,16 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   } = props
   const { getStyles } = useTheme()
   const {
-    setCurrentlyEditingElement,
-    setCollapseState,
+    startEdit,
+    cancelEdit,
     previouslyEditedElement,
-    setPreviouslyEditedElement,
+    recordPreviousEdit,
     tabDirection,
     setTabDirection,
     previousValue,
     setPreviousValue,
-  } = useTreeState()
+  } = useEditing()
+  const { setCollapseState } = useCollapse()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
     typeof data === 'function' ? INVALID_FUNCTION_STRING : data
@@ -157,24 +158,50 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   // Early return if this node is filtered out
   const isVisible = filterNode('value', nodeData, searchFilter, searchText)
 
-  // This prevents hidden or uneditable nodes being set to editing via Tab
-  // navigation
-  if (isEditing && (!isVisible || !canEdit)) {
+  // Skip hidden or uneditable nodes that Tab navigation has landed on by
+  // advancing the editing target to the next viable node.
+  //
+  // `useLayoutEffect` (not `useEffect`) is load-bearing: it fires synchronously
+  // before the browser paints, so the redirect state update batches into the
+  // same paint as the commit that flagged this node as `isEditing`. With plain
+  // `useEffect` the user would see a flicker — the current node briefly
+  // closes its editor (commit 1 with the filtered-out target "editing"),
+  // then reopens (commit 2 after the redirect). See V2-roadmap §16 for the
+  // followup: hoisting filter-awareness into `getNextOrPrevious` so the Tab
+  // handler can pick a viable target up front, eliminating the redirect
+  // entirely and dropping the setState-after-render pattern.
+  useLayoutEffect(() => {
+    if (!isEditing) return
+    if (isVisible && canEdit) return
     const next = getNextOrPrevious(nodeData.fullData, path, tabDirection, sort)
-    if (next) setCurrentlyEditingElement(next)
-    else setCurrentlyEditingElement(previouslyEditedElement)
-  }
+    if (next) startEdit(next)
+    else if (previouslyEditedElement) startEdit(previouslyEditedElement)
+    else cancelEdit()
+    // The three booleans gate the redirect; `startEdit`/`cancelEdit` are
+    // included for hygiene (they are useCallback-stable over `onEditEvent`
+    // in EditingProvider, so they almost never flip). The remaining reads
+    // (`nodeData.fullData`, `tabDirection`, `previouslyEditedElement`,
+    // `path`, `sort`) are intentionally excluded — they change on every
+    // render or every edit transition and would cause spurious re-fires
+    // when no redirect is needed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing, isVisible, canEdit, startEdit, cancelEdit])
 
   if (!isVisible) return null
 
   const handleChangeDataType = (type: DataType) => {
+    // Snapshot the original value before any type-change `onEdit` fires, so
+    // a subsequent cancel can revert. Gated on `previousValue === null` so a
+    // chain of type changes within one edit session still reverts to the
+    // *original* — subsequent changes don't overwrite the first snapshot.
+    if (previousValue === null) setPreviousValue(value as JsonData)
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
       onEdit(customNode.defaultValue, path)
       setDataType(type)
       setEnumType(null)
       // Custom nodes will be instantiated expanded and NOT editing
-      setCurrentlyEditingElement(null)
+      cancelEdit()
       setCollapseState({ path, collapsed: false, includeChildren: false })
       return
     }
@@ -184,13 +211,19 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       return false
     }) as EnumDefinition | undefined
     if (enumType) {
-      if (typeof value !== 'string' || !enumType.values.includes(value))
-        onEdit(enumType.values[0], path).then((error) => {
+      if (typeof value !== 'string' || !enumType.values.includes(value)) {
+        const attempted = enumType.values[0]
+        onEdit(attempted, path).then((error) => {
           if (error) {
-            onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
-            setCurrentlyEditingElement(null)
+            // `attempted` rather than `newValue` — `newValue` is declared
+            // further down in this function and is never reached on this
+            // branch (we return at `setEnumType` below), so referencing it
+            // from this callback would throw a TDZ ReferenceError.
+            onError({ code: 'UPDATE_ERROR', message: error }, attempted as JsonData)
+            cancelEdit()
           }
         })
+      }
       setEnumType(enumType)
       return
     }
@@ -203,17 +236,17 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       // that won't match the custom node condition any more
       customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
     )
-    if (!['string', 'number', 'boolean'].includes(type)) setCurrentlyEditingElement(null)
+    if (!['string', 'number', 'boolean'].includes(type)) cancelEdit()
     onEdit(newValue, path).then((error) => {
       if (error) {
         onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
-        setCurrentlyEditingElement(null)
+        cancelEdit()
       } else setEnumType(null)
     })
   }
 
   const handleEdit = (inputValue?: unknown) => {
-    setCurrentlyEditingElement(null)
+    cancelEdit()
     setPreviousValue(null)
     let newValue: JsonData
     if (inputValue !== undefined && !isJsEvent(inputValue)) newValue = inputValue as JsonData
@@ -241,9 +274,13 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   }
 
   const handleCancel = () => {
-    setCurrentlyEditingElement(null)
+    cancelEdit()
     if (previousValue !== null) {
       onEdit(previousValue, path)
+      // Clear the snapshot after applying it — otherwise it lingers in
+      // editing state and a later cancel (here or on another node) would
+      // see a non-null `previousValue` and trigger an unintended revert.
+      setPreviousValue(null)
       return
     }
     setValue(data)
@@ -270,7 +307,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     setValue: updateValue,
     isEditing,
     canEdit,
-    setIsEditing: canEdit ? () => setCurrentlyEditingElement(path) : NOOP,
+    setIsEditing: canEdit ? () => startEdit(path) : NOOP,
     handleEdit,
     handleCancel,
     path,
@@ -284,20 +321,20 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       cancel: handleCancel,
       tabForward: () => {
         setTabDirection('next')
-        setPreviouslyEditedElement(path)
+        recordPreviousEdit(path)
         const next = getNextOrPrevious(nodeData.fullData, path, 'next', sort)
         if (next) {
           handleEdit()
-          setCurrentlyEditingElement(next)
+          startEdit(next)
         }
       },
       tabBack: () => {
         setTabDirection('prev')
-        setPreviouslyEditedElement(path)
+        recordPreviousEdit(path)
         const prev = getNextOrPrevious(nodeData.fullData, path, 'prev', sort)
         if (prev) {
           handleEdit()
-          setCurrentlyEditingElement(prev)
+          startEdit(prev)
         }
       },
     },
@@ -334,7 +371,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
-      setIsEditing={() => setCurrentlyEditingElement(path)}
+      setIsEditing={() => startEdit(path)}
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, inputProps) : undefined}
       originalNodeKey={
@@ -392,8 +429,11 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
                 startEdit={
                   canEdit
                     ? () => {
-                        setPreviousValue(previousValue)
-                        setCurrentlyEditingElement(path, handleCancel)
+                        // Clear any leftover type-change snapshot from a
+                        // previously-abandoned edit session so a cancel
+                        // doesn't unexpectedly revert to a stale value.
+                        setPreviousValue(null)
+                        startEdit(path, { cancelOp: handleCancel })
                       }
                     : undefined
                 }

@@ -13,7 +13,7 @@ Numbering matches the section numbers below. Items joined with `+` are interlock
 - §1 Generic `JsonEditor<T>` ✅ (foundational type model)
 - §2 Path identity ✅ (foundational identity model) — [#246](https://github.com/CarlosNZ/json-edit-react/issues/246)
 - §3 Tests ✅ (regression net for everything that follows) — [#61](https://github.com/CarlosNZ/json-edit-react/issues/61)
-- §4 `TreeStateProvider` refactor (depends on §2; unlocks the perf work in §16) — [#247](https://github.com/CarlosNZ/json-edit-react/issues/247)
+- §4 `TreeStateProvider` refactor ✅ (depends on §2; unlocks the perf work in §16) — [#247](https://github.com/CarlosNZ/json-edit-react/issues/247) / [#272](https://github.com/CarlosNZ/json-edit-react/pull/272)
 - §5 Drop controlled/uncontrolled dual mode + §11 `JsonViewer` ✅ (state simplification, bundled) — [#248](https://github.com/CarlosNZ/json-edit-react/issues/248) / [#261](https://github.com/CarlosNZ/json-edit-react/pull/261)
 - §6 + §7 New `UpdateFunction` return shape + per-node `isValid` (interlocked) — [#249](https://github.com/CarlosNZ/json-edit-react/issues/249)
 - §8 + §9 `restrict*` → `allow*` rename + group the prop surface (API surface) — [#250](https://github.com/CarlosNZ/json-edit-react/issues/250)
@@ -52,25 +52,19 @@ Landed in [#260](https://github.com/CarlosNZ/json-edit-react/pull/260). `Collect
 
 Landed across three stacked PRs: harness + helper unit tests ([#265](https://github.com/CarlosNZ/json-edit-react/pull/265)), render-basics ([#267](https://github.com/CarlosNZ/json-edit-react/pull/267)), and behavioural coverage ([#269](https://github.com/CarlosNZ/json-edit-react/pull/269)) — edit flow, structural mutations, restrictions/callbacks, search/filter, and the Tab-+-filter interaction. RTL + jsdom harness, `pnpm build` now runs tests via prebuild with a `SKIP_TESTS=1` escape hatch. Followups: a11y on icon buttons → [#268](https://github.com/CarlosNZ/json-edit-react/issues/268), and a post-§4/§16 forensic render-issue pass → [#266](https://github.com/CarlosNZ/json-edit-react/issues/266). Drag-and-drop and undo-on-cancel remain uncovered — tracked in [#270](https://github.com/CarlosNZ/json-edit-react/issues/270) for later.
 
-## 4. `TreeStateProvider` refactor
+## 4. `TreeStateProvider` refactor — ✅ done
 
-[TreeStateProvider.tsx](src/contexts/TreeStateProvider.tsx) currently conflates three unrelated concerns behind one omnibus context: editing state, collapse broadcasts, and drag source. State is split awkwardly across `useState` and `useRef` (`cancelOp`, `tabDirection`, `previouslyEdited`) and the collapse broadcast self-resets via a magic `setTimeout(..., 2000)`. Every consumer of any one slice re-renders on changes to any other — directly at odds with the perf work in section 16.
+Landed in [#272](https://github.com/CarlosNZ/json-edit-react/pull/272) across five reviewable commits:
 
-Break it down:
+1. **Provider split.** One omnibus `TreeStateProvider` became three slice-specific providers: `EditingProvider` and `CollapseProvider` in [src/contexts/](src/contexts/), and `DragSourceProvider` in [src/hooks/](src/hooks/) (sibling to `useDragNDrop`, its only consumer). A thin composing `<TreeStateProvider>` wrapper still wraps the three for `JsonEditor`'s render — no public API change.
+2. **Consumer narrowing.** `useTreeState` deleted; each of the 7 call sites now imports only the slice hook(s) it needs (`useEditing` / `useCollapse` / `useDragSource`). Slice-isolation activated and pinned by [test/sliceIsolation.test.tsx](test/sliceIsolation.test.tsx).
+3. **Editing state machine.** The overloaded `setCurrentlyEditingElement(path, cancelOpOrKey?)` replaced by five named, `useCallback`-stable actions: `startEdit(path, options?)`, `cancelEdit()`, `setTabDirection`, `recordPreviousEdit`, `setPreviousValue`. All editing fields bundled into one `useState` object for atomic multi-field transitions. Tab-nav retry loop moved out of the render body and into a `useEffect` (later upgraded to `useLayoutEffect` to avoid a paint-flicker — see §16 for the architecturally cleaner followup).
+4. **Collapse pub-sub.** The `setTimeout(2000)` reset gone; `CollapseProvider` now broadcasts directly to subscribers via a `Set` in a ref. Zero React re-renders on broadcast. Each `CollectionNode` subscribes on mount with a path-matching handler. Documented behavioural change in [migration-guide.md §7](migration-guide.md#7-collapse-broadcasts-are-now-fire-and-forget): broadcasts can't punch through a collapse boundary, so full-tree expand on an initially-collapsed tree wants the `collapse` prop, not `externalTriggers.collapse`. 10-scenario end-to-end test suite in [test/collapseBroadcasts.test.tsx](test/collapseBroadcasts.test.tsx).
+5. **Memoize + audit.** Each provider's context value wrapped in `useMemo`. Eslint-disabled deps across consumer files audited — one redeemed (`cancelEdit` added back to JsonEditor's dep array), three sharpened with explanatory comments, the rest left as legitimate "fire only on X" semantic decisions. Identity-stability test pins the memoization promise for §16 to build on.
 
-1. **Split into three independent providers.** `EditingProvider`, `CollapseProvider`, `DragSourceProvider`. Drag source already lives next to [useDragNDrop](src/hooks/useDragNDrop.ts) conceptually — move it. Each provider exports its own hook (`useEditing`, `useCollapse`, `useDragSource`); the existing `useTreeState` either composes them or is dropped.
+The "drop substring matching in `areChildrenBeingEdited`" item from the original plan was already done as part of §2's path-identity work — `isDescendantOf` from [src/utils/pathTools.ts](src/utils/pathTools.ts) does the prefix check correctly on arrays.
 
-2. **Editing as a reducer / state machine.** Today's editing flow has implicit transitions (`idle → editing(path, cancelOp, mode)`, `editing → editing(other path, calls old cancelOp)`, `editing → idle`, Tab-navigation retry loop). Model these explicitly with a reducer; `dispatch` is stable by definition, which composes with the memo work in section 16. `cancelOp`, `tabDirection`, `previouslyEdited` move into reducer state rather than being side-channel refs.
-
-3. **Replace the collapse `setTimeout` reset.** The 2-second auto-reset is fragile (assumes every `CollectionNode` reacts within the window) and surprising to read. Two options:
-   - Treat `CollapseState` as a **versioned command** — each `setCollapseState` bumps a counter; nodes compare last-seen version to detect new commands. No timer.
-   - Treat collapse as an **imperative broadcast** — fire via a subscription model rather than holding it in state at all. Pairs naturally with the `useImperativeHandle` work in section 10.
-
-4. **Drop substring matching in `areChildrenBeingEdited`.** Currently `currentlyEditingElement.includes(pathString)` — a literal substring check on the dot-joined path string. Once paths are arrays (section 2), this becomes a proper prefix check (`editingPath.every((k, i) => k === nodePath[i]) && editingPath.length >= nodePath.length`). Bundle this change with the path-identity work.
-
-5. **Stable callbacks.** The current JSX `value={{ ... }}` object rebuilds inline arrows every render (notably the `setCollapseState` wrapper). `useCallback`/reducer dispatch + a memoized context value object — prerequisite for the `React.memo` pass in section 16 to actually pay off.
-
-Ordering: (1) is mechanical and unlocks the rest. (2) before (5) since the reducer gives you the stable dispatch for free. (3) and (4) can land independently.
+Followups carried into other roadmap items: §10 gained a "To consider" note for an `expandPath`-style imperative helper; §16 gained the "Followup carried from §4 Part 3" entry (make `getNextOrPrevious` filter-aware to drop the `useLayoutEffect` redirect).
 
 ## 5. Drop controlled/uncontrolled dual mode — ✅ done
 
@@ -128,6 +122,10 @@ ref.current.cancelEdit()
 
 Idiomatic React, TS autocompletes the actions, removes a piece of awkward state.
 
+After §4 Part 4, `setCollapseState` is already pub-sub — the imperative handle for `collapse(...)` is a thin wrapper that calls it directly. Editing actions on the handle (`startEdit`/`cancelEdit`) bind to the named actions in `EditingProvider` (§4 Part 3). No new infrastructure needed here; this becomes a small public-API exposure on top of the existing internals.
+
+**To consider** (not in initial scope): the imperative API opens design space the prop-based one didn't — a higher-level `expandPath(['deep', 'inner'])` could walk from root to target, expand each level, await React commit, and then apply commands to descendants that aren't currently mounted (a limitation of the bare `collapse(...)` pub-sub broadcast — see migration-guide §7). This would tug against the initial-load perf optimization where children of collapsed nodes don't mount at all, so any "force" pathway has to be opt-in. Worth a real piece of design work *if* real-world feedback shows the §7 pattern (manage `collapse` as state) doesn't cover users' needs.
+
 ## 11. Export `JsonViewer` — ✅ done
 
 Landed in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §5. `<JsonViewer />` is the canonical read-only entry point — a thin wrapper over `JsonEditor` that hard-codes `setData={noop}` and locks all four `restrict*` filters on. `JsonViewerProps<T>` is `Omit<JsonEditorProps<T>, 'setData' | 'onUpdate' | 'onEdit' | 'onAdd' | 'onDelete' | 'onChange' | 'restrictEdit' | 'restrictAdd' | 'restrictDelete' | 'restrictDrag' | 'restrictTypeSelection' | 'externalTriggers'>` — drops the props that aren't meaningful in a viewer. `externalTriggers` is also scrubbed at runtime in the wrapper since it would otherwise bypass the restrict filters (see [#251](https://github.com/CarlosNZ/json-edit-react/issues/251) — to revisit alongside §10). The v1 `viewOnly` prop is removed in the same PR.
@@ -169,6 +167,8 @@ Approach in stages, measure with a 10k-node payload between each:
 3. **External store** (Zustand/Jotai-style atoms keyed by path) — biggest refactor, unlocks future undo/redo + time travel cheaply.
 
 Only escalate if measurements demand it.
+
+**Followup carried from §4 Part 3:** the Tab-navigation retry in [ValueNodeWrapper.tsx](src/ValueNodeWrapper.tsx) currently lands editing on a filtered/uneditable target and then redirects via `useLayoutEffect`. The redirect is invisible (one paint) but the pattern is still "fire setState into the next render cycle." A cleaner architecture is to make `getNextOrPrevious` filter-aware so the Tab handler picks a viable target up front and never lands on a non-viable one. Touches `getNextOrPrevious` plus its three callers in `ValueNodeWrapper.tsx` and `KeyDisplay.tsx`. Eliminates the setState-after-render pattern entirely.
 
 ---
 
