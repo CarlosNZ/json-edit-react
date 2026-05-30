@@ -12,7 +12,7 @@ Numbering matches the section numbers below. Items joined with `+` are interlock
 
 - §1 Generic `JsonEditor<T>` ✅ (foundational type model)
 - §2 Path identity ✅ (foundational identity model) — [#246](https://github.com/CarlosNZ/json-edit-react/issues/246)
-- §3 Tests (regression net for everything that follows) — [#61](https://github.com/CarlosNZ/json-edit-react/issues/61)
+- §3 Tests ✅ (regression net for everything that follows) — [#61](https://github.com/CarlosNZ/json-edit-react/issues/61)
 - §4 `TreeStateProvider` refactor (depends on §2; unlocks the perf work in §16) — [#247](https://github.com/CarlosNZ/json-edit-react/issues/247)
 - §5 Drop controlled/uncontrolled dual mode + §11 `JsonViewer` ✅ (state simplification, bundled) — [#248](https://github.com/CarlosNZ/json-edit-react/issues/248) / [#261](https://github.com/CarlosNZ/json-edit-react/pull/261)
 - §6 + §7 New `UpdateFunction` return shape + per-node `isValid` (interlocked) — [#249](https://github.com/CarlosNZ/json-edit-react/issues/249)
@@ -48,11 +48,9 @@ Landed in [#240](https://github.com/CarlosNZ/json-edit-react/pull/240). `T` flow
 
 Landed in [#260](https://github.com/CarlosNZ/json-edit-react/pull/260). `CollectionKey[]` is the canonical node identity throughout — editing state is `{ path, mode }`, drag source carries `path` only, and `areChildrenBeingEdited` plus the drag-onto-self guard use new array predicates (`pathsEqual`, `isDescendantOf`). `toPathString` survives as a public utility but its encoding switched to `/` + `encodeURIComponent` (injective, with a `'\0'` sentinel for the single-empty-key edge case); the `'key_'` second arg is removed since mode is now a field. Also fixed a latent same-family bug in `handleDrop` where `sourceBase`/`thisBase` were joined with mismatched separators. See [migration-guide.md](migration-guide.md#5-topathstring-encoding-changed).
 
-## 3. Tests
+## 3. Tests — ✅ done
 
-[test/](test/) currently has only [nextPrevious.test.ts](test/nextPrevious.test.ts). Edit flow, type conversion, key rename, search filter, DnD, undo-on-cancel, controlled vs derived data — all uncovered.
-
-v2.0 is the excuse to backfill RTL coverage so the refactor work doesn't regress users. Ideally land — at least in skeleton form — before the bigger restructures (§4 TreeStateProvider, §16 perf) so they have a regression net.
+Landed across three stacked PRs: harness + helper unit tests ([#265](https://github.com/CarlosNZ/json-edit-react/pull/265)), render-basics ([#267](https://github.com/CarlosNZ/json-edit-react/pull/267)), and behavioural coverage ([#269](https://github.com/CarlosNZ/json-edit-react/pull/269)) — edit flow, structural mutations, restrictions/callbacks, search/filter, and the Tab-+-filter interaction. RTL + jsdom harness, `pnpm build` now runs tests via prebuild with a `SKIP_TESTS=1` escape hatch. Followups: a11y on icon buttons → [#268](https://github.com/CarlosNZ/json-edit-react/issues/268), and a post-§4/§16 forensic render-issue pass → [#266](https://github.com/CarlosNZ/json-edit-react/issues/266). Drag-and-drop and undo-on-cancel remain uncovered for now and can be filled in later.
 
 ## 4. `TreeStateProvider` refactor
 
