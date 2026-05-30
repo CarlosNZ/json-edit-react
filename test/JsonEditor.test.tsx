@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { JsonViewer } from '../src/JsonViewer'
@@ -393,5 +393,292 @@ describe('JsonEditor — structural mutations', () => {
     expect(setData).toHaveBeenCalledTimes(1)
     // 'hello' → number conversion is NaN, which the editor falls back to 0
     expect(setData).toHaveBeenCalledWith({ x: 0 })
+  })
+})
+
+describe('JsonEditor — restrictions and callbacks', () => {
+  test('restrictEdit hides the edit button and blocks dblClick', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={setData}
+        restrictEdit
+        showIconTooltips
+      />
+    )
+
+    expect(screen.queryByTitle('Edit')).toBeNull()
+    await user.dblClick(screen.getByText('"hello"'))
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('restrictDelete hides the delete button', () => {
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        restrictDelete
+        showIconTooltips
+      />
+    )
+    expect(screen.queryByTitle('Delete')).toBeNull()
+  })
+
+  test('restrictAdd hides the add button', () => {
+    render(
+      <JsonEditor
+        data={{ existing: 'value' }}
+        setData={noop}
+        restrictAdd
+        showIconTooltips
+      />
+    )
+    expect(screen.queryByTitle('Add')).toBeNull()
+  })
+
+  test('onUpdate returning false reverts the edit and shows an error', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(() => false as const)
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'rejected{Enter}')
+
+    // onUpdate ran with the attempted new value
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+    // Revert path: setData fired with the ORIGINAL data, not the typed one
+    expect(setData).toHaveBeenCalledTimes(1)
+    expect(setData).toHaveBeenCalledWith({ x: 'hello' })
+    // The default error message is shown in the editor's error slug
+    expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
+  })
+
+  test('onUpdate returning a custom error string surfaces that string', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => 'No can do')
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'nope{Enter}')
+
+    expect(screen.getByText('No can do')).toBeInTheDocument()
+  })
+
+  test("onUpdate returning ['value', override] passes the override straight to setData", async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(() => ['value', { x: 'OVERRIDDEN' }] as ['value', { x: string }])
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'whatever{Enter}')
+
+    expect(setData).toHaveBeenCalledTimes(1)
+    // The user's typed value is discarded; the override wins
+    expect(setData).toHaveBeenCalledWith({ x: 'OVERRIDDEN' })
+  })
+
+  test('async onUpdate resolving with true commits the edit', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(async () => true as const)
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'hi{Enter}')
+
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+    expect(setData).toHaveBeenCalledTimes(1)
+    expect(setData).toHaveBeenCalledWith({ x: 'hi' })
+  })
+
+  test('async onUpdate resolving with false reverts and shows an error', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(async () => false as const)
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'hi{Enter}')
+
+    expect(setData).toHaveBeenCalledWith({ x: 'hello' })
+    expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
+  })
+
+  test('restrictEdit as a function selectively allows/blocks per node', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    render(
+      <JsonEditor
+        data={{ readonly: 'cant', editable: 'can' }}
+        setData={setData}
+        restrictEdit={({ key }) => key === 'readonly'}
+        showIconTooltips
+      />
+    )
+
+    const readonlyRow = screen.getByText('"cant"').closest('.jer-component') as HTMLElement
+    const editableRow = screen.getByText('"can"').closest('.jer-component') as HTMLElement
+
+    expect(readonlyRow.querySelector('[title="Edit"]')).toBeNull()
+    expect(editableRow.querySelector('[title="Edit"]')).not.toBeNull()
+
+    // dblClick on the restricted value does NOT open an input
+    await user.dblClick(screen.getByText('"cant"'))
+    expect(screen.queryByRole('textbox')).toBeNull()
+
+    // dblClick on the allowed value DOES open an input
+    await user.dblClick(screen.getByText('"can"'))
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+
+  test('restrictDelete as a function selectively allows/blocks per node', () => {
+    render(
+      <JsonEditor
+        data={{ keep: 'must', drop: 'can' }}
+        setData={noop}
+        restrictDelete={({ key }) => key === 'keep'}
+        showIconTooltips
+      />
+    )
+
+    const keepRow = screen.getByText('"must"').closest('.jer-component') as HTMLElement
+    const dropRow = screen.getByText('"can"').closest('.jer-component') as HTMLElement
+
+    expect(keepRow.querySelector('[title="Delete"]')).toBeNull()
+    expect(dropRow.querySelector('[title="Delete"]')).not.toBeNull()
+  })
+
+  test('restrictAdd as a function selectively allows/blocks per collection', () => {
+    render(
+      <JsonEditor
+        data={{ closed: { a: 1 }, open: { b: 1 } }}
+        setData={noop}
+        restrictAdd={({ key }) => key === 'closed'}
+        showIconTooltips
+      />
+    )
+
+    // The closed sub-collection has no Add; the open one does
+    const closedCollection = screen.getByText('closed').closest('.jer-component') as HTMLElement
+    const openCollection = screen.getByText('open').closest('.jer-component') as HTMLElement
+
+    expect(closedCollection.querySelector('[title="Add"]')).toBeNull()
+    expect(openCollection.querySelector('[title="Add"]')).not.toBeNull()
+  })
+})
+
+describe('JsonEditor — search and filter', () => {
+  test('searchText filters values via the default value matcher', () => {
+    render(
+      <JsonEditor
+        data={{ fruit: 'apple', vehicle: 'car', tool: 'hammer' }}
+        setData={noop}
+        searchText="apple"
+      />
+    )
+
+    // Only the 'apple' row's value remains; the others are not rendered at all
+    expect(screen.getByText('"apple"')).toBeInTheDocument()
+    expect(screen.queryByText('"car"')).toBeNull()
+    expect(screen.queryByText('"hammer"')).toBeNull()
+  })
+
+  test('a custom searchFilter function decides which nodes stay visible', () => {
+    render(
+      <JsonEditor
+        data={{ small: 1, medium: 5, large: 10 }}
+        setData={noop}
+        // Pass any non-empty searchText to activate filtering — the function ignores it
+        searchText="x"
+        searchFilter={(nodeData) =>
+          typeof nodeData.value === 'number' && nodeData.value >= 5
+        }
+      />
+    )
+
+    expect(screen.queryByText('1')).toBeNull()
+    expect(screen.getByText('5')).toBeInTheDocument()
+    expect(screen.getByText('10')).toBeInTheDocument()
+  })
+
+  test('Tab and Shift+Tab skip filtered-out nodes', async () => {
+    const user = userEvent.setup()
+    // 'banana' does NOT contain 'apple'; the other two values do.
+    // With searchText='apple', the 'b' row is hidden from the rendered tree.
+    render(
+      <JsonEditor
+        data={{ a: 'apple', b: 'banana', c: 'apple-pie' }}
+        setData={noop}
+        searchText="apple"
+      />
+    )
+
+    // Sanity: 'banana' is filtered out before we start
+    expect(screen.queryByText('"banana"')).toBeNull()
+
+    await user.dblClick(screen.getByText('"apple"'))
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('apple')
+
+    // Tab from 'a' must skip the hidden 'b' and land on 'c'
+    await user.keyboard('{Tab}')
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('apple-pie')
+
+    // Shift+Tab from 'c' must skip 'b' going the other way and land back on 'a'
+    await user.keyboard('{Shift>}{Tab}{/Shift}')
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('apple')
+  })
+
+  test('searchDebounceTime delays the filter — change is invisible until the debounce fires', () => {
+    // Default matcher filters by VALUE, so the strings to query for are the values.
+    const data = { fruit: 'apple', veg: 'broccoli' }
+
+    // Mount under real timers — JsonEditor's outer wrapper sets docRoot in
+    // a mount-time useEffect; fake timers can starve it and the component
+    // renders null. Switch to fake timers only after the initial render.
+    const { rerender } = render(
+      <JsonEditor data={data} setData={noop} searchText="" searchDebounceTime={500} />
+    )
+    expect(screen.getByText('"apple"')).toBeInTheDocument()
+    expect(screen.getByText('"broccoli"')).toBeInTheDocument()
+
+    jest.useFakeTimers()
+    try {
+      rerender(
+        <JsonEditor data={data} setData={noop} searchText="apple" searchDebounceTime={500} />
+      )
+
+      // Right after rerender — debounce hasn't fired, 'broccoli' is still rendered
+      expect(screen.getByText('"broccoli"')).toBeInTheDocument()
+
+      // Advance partway — still nothing
+      act(() => {
+        jest.advanceTimersByTime(400)
+      })
+      expect(screen.getByText('"broccoli"')).toBeInTheDocument()
+
+      // Cross the debounce threshold — filter applies, 'broccoli' disappears
+      act(() => {
+        jest.advanceTimersByTime(150)
+      })
+      expect(screen.queryByText('"broccoli"')).toBeNull()
+      expect(screen.getByText('"apple"')).toBeInTheDocument()
+    } finally {
+      jest.useRealTimers()
+    }
   })
 })
