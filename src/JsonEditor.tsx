@@ -89,7 +89,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   collapseClickZones = ['header', 'left'],
 }) => {
   const { getStyles } = useTheme()
-  const { setCurrentlyEditingElement } = useEditing()
+  const { cancelEdit } = useEditing()
   const collapseFilter = useMemo(() => getFilterFunction(collapse), [collapse])
   const translate = useMemo(
     () => getTranslateFunction(translations, customText),
@@ -100,10 +100,10 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   const mainContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setCurrentlyEditingElement(null)
+    cancelEdit()
     const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
     return () => clearTimeout(debounce)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- setCurrentlyEditingElement is a React state setter, and can't change
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- cancelEdit is a stable useCallback ref
   }, [searchText, searchDebounceTime])
 
   const nodeData: NodeData = {

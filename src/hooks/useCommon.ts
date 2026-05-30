@@ -35,7 +35,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     translate,
     errorMessageTimeout,
   } = props
-  const { currentlyEditingElement, setCurrentlyEditingElement } = useEditing()
+  const { currentlyEditingElement, cancelEdit } = useEditing()
   const [error, setError] = useState<string | null>(null)
 
   const nodeData = { ...incomingNodeData, collapsed }
@@ -75,7 +75,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   )
 
   const handleEditKey = (newKey: string) => {
-    setCurrentlyEditingElement(null)
+    cancelEdit()
     if (name === newKey) return
     if (!parentData) return
     const parentPath = path.slice(0, -1)

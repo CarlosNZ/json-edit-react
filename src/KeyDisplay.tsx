@@ -55,7 +55,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   customNodeData,
   getStyles,
 }) => {
-  const { setCurrentlyEditingElement } = useEditing()
+  const { startEdit, cancelEdit } = useEditing()
 
   const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
 
@@ -81,7 +81,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
             if (canEditKey) handleEditKey(newKey)
           }}
           setIsEditingKey={() => {
-            if (canEditKey) setCurrentlyEditingElement(path, 'key')
+            if (canEditKey) startEdit(path, { mode: 'key' })
           }}
           handleClick={handleClick}
           styles={derivedKeyStyles}
@@ -94,7 +94,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
       <span
         className="jer-key-text"
         style={derivedKeyStyles}
-        onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
+        onDoubleClick={() => canEditKey && startEdit(path, { mode: 'key' })}
         onClick={handleClick}
       >
         {emptyStringKey ? <span className="jer-empty-string">{emptyStringKey}</span> : displayKey}
@@ -119,14 +119,16 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
             handleEditKey((e.target as HTMLInputElement).value)
             if (keyValueArray) {
               const firstChildKey = keyValueArray?.[0][0]
-              setCurrentlyEditingElement(
-                firstChildKey ? [...path, firstChildKey] : getNextOrPrevious('next')
-              )
-            } else setCurrentlyEditingElement(path)
+              const next = firstChildKey ? [...path, firstChildKey] : getNextOrPrevious('next')
+              if (next) startEdit(next)
+              else cancelEdit()
+            } else startEdit(path)
           },
           tabBack: () => {
             handleEditKey((e.target as HTMLInputElement).value)
-            setCurrentlyEditingElement(getNextOrPrevious('prev'))
+            const prev = getNextOrPrevious('prev')
+            if (prev) startEdit(prev)
+            else cancelEdit()
           },
         })
       }

@@ -14,20 +14,23 @@ import { type CollectionKey, type CollapseState } from '../src/types'
 
 type DragSourceValue = { path: CollectionKey[] | null }
 
-// Mutable refs the tests poke at to drive each slice. Re-assigned every Harness
-// render — the setters from EditingProvider/CollapseProvider aren't yet stable
-// across renders (Part 5 fixes that), so always re-read before calling.
+// Mutable refs the tests poke at to drive each slice. The editing action
+// functions are stable (useCallback) so re-assignment per-render is just
+// defensive; collapse setters aren't yet stable (Part 5 lands that).
 const setters: {
   setDrag: ((s: DragSourceValue) => void) | null
-  setEdit:
-    | ((path: CollectionKey[] | null, cancelOpOrKey?: (() => void) | 'key') => void)
+  startEdit:
+    | ((
+        path: CollectionKey[],
+        options?: { mode?: 'key' | 'value'; cancelOp?: () => void }
+      ) => void)
     | null
   setCollapse: ((s: CollapseState | CollapseState[] | null) => void) | null
-} = { setDrag: null, setEdit: null, setCollapse: null }
+} = { setDrag: null, startEdit: null, setCollapse: null }
 
 const Harness = () => {
   setters.setDrag = useDragSource().setDragSource
-  setters.setEdit = useEditing().setCurrentlyEditingElement
+  setters.startEdit = useEditing().startEdit
   setters.setCollapse = useCollapse().setCollapseState
   return null
 }
@@ -67,7 +70,7 @@ beforeEach(() => {
   renderCounts.collapse = 0
   renderCounts.drag = 0
   setters.setDrag = null
-  setters.setEdit = null
+  setters.startEdit = null
   setters.setCollapse = null
   // Fake timers needed because CollapseProvider currently schedules a 2-second
   // state-reset setTimeout. Part 4 removes the timer; this `useFakeTimers`
@@ -112,12 +115,12 @@ describe('Tree-state providers — slice isolation', () => {
     })
   })
 
-  test('setCurrentlyEditingElement only re-renders editing consumers', () => {
+  test('startEdit only re-renders editing consumers', () => {
     renderTree()
     const before = { ...renderCounts }
 
     act(() => {
-      setters.setEdit!(['some', 'path'])
+      setters.startEdit!(['some', 'path'])
     })
 
     expect(renderCounts.editing).toBeGreaterThan(before.editing)

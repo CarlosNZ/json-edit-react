@@ -7,9 +7,15 @@
  * - the "previous value" snapshot used when the user changes a node's data
  *   type and then cancels (the type change is a real data update, so cancel
  *   needs an explicit revert path)
+ *
+ * Exposes named action functions instead of an omnibus setter. Actions are
+ * wrapped in `useCallback` so they keep stable identities across renders
+ * (lets consumers list them honestly in `useEffect` dep arrays). State is
+ * held in a single `useState` object so multi-field transitions commit
+ * atomically via the updater form.
  */
 
-import React, { createContext, useContext, useRef, useState } from 'react'
+import React, { createContext, useCallback, useContext, useRef, useState } from 'react'
 import {
   type TabDirection,
   type CollectionKey,
@@ -19,18 +25,22 @@ import {
 } from '../types'
 import { editingStatesEqual, isDescendantOf } from '../utils/pathTools'
 
-interface EditingContext {
+interface EditingStateBundle {
   currentlyEditingElement: EditingState | null
-  setCurrentlyEditingElement: (
-    path: CollectionKey[] | null,
-    cancelOpOrKey?: (() => void) | 'key'
-  ) => void
   previouslyEditedElement: CollectionKey[] | null
-  setPreviouslyEditedElement: (path: CollectionKey[]) => void
-  areChildrenBeingEdited: (path: CollectionKey[]) => boolean
   tabDirection: TabDirection
-  setTabDirection: (dir: TabDirection) => void
   previousValue: JsonData | null
+}
+
+interface EditingContext extends EditingStateBundle {
+  areChildrenBeingEdited: (path: CollectionKey[]) => boolean
+  startEdit: (
+    path: CollectionKey[],
+    options?: { mode?: 'key' | 'value'; cancelOp?: () => void }
+  ) => void
+  cancelEdit: () => void
+  setTabDirection: (dir: TabDirection) => void
+  recordPreviousEdit: (path: CollectionKey[]) => void
   setPreviousValue: (value: JsonData | null) => void
 }
 
@@ -41,66 +51,90 @@ interface EditingProps {
   onEditEvent?: OnEditEventFunction
 }
 
+const initialState: EditingStateBundle = {
+  currentlyEditingElement: null,
+  previouslyEditedElement: null,
+  tabDirection: 'next',
+  previousValue: null,
+}
+
 export const EditingProvider = ({ children, onEditEvent }: EditingProps) => {
-  const [currentlyEditingElement, setCurrentlyEditingElement] = useState<EditingState | null>(null)
+  const [state, setState] = useState<EditingStateBundle>(initialState)
 
-  // Holds the "previous" value when the user changes a node's data type.
-  // Changing data type causes a proper data update, so cancelling afterwards
-  // can't naturally revert to the previous type — this snapshot allows it.
-  const [previousValue, setPreviousValue] = useState<JsonData | null>(null)
-  const cancelOp = useRef<(() => void) | null>(null)
+  // cancelOp is a function-valued field that fires imperatively before
+  // transitioning to a new edit. Kept in a ref so installing/clearing it
+  // doesn't trigger re-renders, and so closure semantics over the latest
+  // registered cancel are predictable.
+  const cancelOpRef = useRef<(() => void) | null>(null)
 
-  // tabDirection and previouslyEdited support Tab navigation. Each node can
-  // find the "previous" or "next" node on Tab detection, but has no way to know
-  // whether that node is actually visible or editable. So each node runs this
-  // check on itself on render, and if it has been set to "isEditing" when it
-  // shouldn't be, it immediately goes to the next (and the next, etc...). These
-  // two values hold some state which is useful in this slightly messy process.
-  const tabDirection = useRef<TabDirection>('next')
-  const previouslyEdited = useRef<CollectionKey[] | null>(null)
+  const startEdit = useCallback(
+    (
+      path: CollectionKey[],
+      options?: { mode?: 'key' | 'value'; cancelOp?: () => void }
+    ) => {
+      const mode = options?.mode ?? 'value'
+      const next: EditingState = { path, mode }
 
-  const updateCurrentlyEditingElement = (
-    path: CollectionKey[] | null,
-    newCancelOrKey?: (() => void) | 'key'
-  ) => {
-    const nextState: EditingState | null =
-      path === null ? null : { path, mode: newCancelOrKey === 'key' ? 'key' : 'value' }
+      // Fire the cancel registered for the *previous* edit (if any) before
+      // we transition — lets that node's UI reset cleanly.
+      if (cancelOpRef.current) cancelOpRef.current()
+      cancelOpRef.current = options?.cancelOp ?? null
 
-    // The "Cancel" function allows the UI to reset the element that was
-    // previously being edited if the user clicks another "Edit" button
-    // elsewhere
-    if (currentlyEditingElement !== null && nextState !== null && cancelOp.current !== null) {
-      cancelOp.current()
-    }
+      // Bail on equivalent transitions so re-issuing the same edit target
+      // doesn't trigger a redundant re-render. `===` won't help here because
+      // `next` is a fresh object literal each call.
+      setState((prev) =>
+        editingStatesEqual(prev.currentlyEditingElement, next)
+          ? prev
+          : { ...prev, currentlyEditingElement: next }
+      )
 
-    // Skip setState when the editing state is equivalent — avoids redundant
-    // re-renders when callers re-issue the same edit target. React's `===`
-    // bailout doesn't help here because nextState is a fresh object each call.
-    if (!editingStatesEqual(nextState, currentlyEditingElement))
-      setCurrentlyEditingElement(nextState)
+      onEditEvent?.(path, mode === 'key')
+    },
+    [onEditEvent]
+  )
 
-    if (onEditEvent) onEditEvent(path, newCancelOrKey === 'key')
-    cancelOp.current = typeof newCancelOrKey === 'function' ? newCancelOrKey : null
-  }
+  const cancelEdit = useCallback(() => {
+    cancelOpRef.current = null
+    setState((prev) =>
+      prev.currentlyEditingElement === null
+        ? prev
+        : { ...prev, currentlyEditingElement: null }
+    )
+    onEditEvent?.(null, false)
+  }, [onEditEvent])
 
-  const areChildrenBeingEdited = (path: CollectionKey[]) =>
-    currentlyEditingElement !== null && isDescendantOf(currentlyEditingElement.path, path)
+  const setTabDirection = useCallback((dir: TabDirection) => {
+    setState((prev) => (prev.tabDirection === dir ? prev : { ...prev, tabDirection: dir }))
+  }, [])
+
+  const recordPreviousEdit = useCallback((path: CollectionKey[]) => {
+    setState((prev) => ({ ...prev, previouslyEditedElement: path }))
+  }, [])
+
+  const setPreviousValue = useCallback((value: JsonData | null) => {
+    setState((prev) => (prev.previousValue === value ? prev : { ...prev, previousValue: value }))
+  }, [])
+
+  const areChildrenBeingEdited = useCallback(
+    (path: CollectionKey[]) =>
+      state.currentlyEditingElement !== null &&
+      isDescendantOf(state.currentlyEditingElement.path, path),
+    [state.currentlyEditingElement]
+  )
 
   return (
     <EditingProviderContext.Provider
       value={{
-        currentlyEditingElement,
-        setCurrentlyEditingElement: updateCurrentlyEditingElement,
+        currentlyEditingElement: state.currentlyEditingElement,
+        previouslyEditedElement: state.previouslyEditedElement,
+        tabDirection: state.tabDirection,
+        previousValue: state.previousValue,
         areChildrenBeingEdited,
-        previouslyEditedElement: previouslyEdited.current,
-        setPreviouslyEditedElement: (path: CollectionKey[]) => {
-          previouslyEdited.current = path
-        },
-        tabDirection: tabDirection.current,
-        setTabDirection: (dir: TabDirection) => {
-          tabDirection.current = dir
-        },
-        previousValue,
+        startEdit,
+        cancelEdit,
+        setTabDirection,
+        recordPreviousEdit,
         setPreviousValue,
       }}
     >

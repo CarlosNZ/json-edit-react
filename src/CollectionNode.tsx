@@ -20,7 +20,8 @@ import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   const {
-    setCurrentlyEditingElement,
+    startEdit,
+    cancelEdit,
     areChildrenBeingEdited,
     previousValue,
     setPreviousValue,
@@ -218,7 +219,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const handleEdit = () => {
     try {
       const value = jsonParse(stringifiedValue)
-      setCurrentlyEditingElement(null)
+      cancelEdit()
       setPreviousValue(null)
       setError(null)
       if (jsonStringify(value) === jsonStringify(data)) return
@@ -266,7 +267,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       : undefined
 
   const handleCancel = () => {
-    setCurrentlyEditingElement(null)
+    cancelEdit()
     if (previousValue !== null) {
       onEdit(previousValue, path)
       return
@@ -392,7 +393,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
-    setIsEditing: () => setCurrentlyEditingElement(path),
+    setIsEditing: () => startEdit(path),
     getStyles,
     canDragOnto: canEdit,
     canEdit,
@@ -415,7 +416,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           ? () => {
               hasBeenOpened.current = true
               setPreviousValue(null)
-              setCurrentlyEditingElement(path)
+              startEdit(path)
             }
           : undefined
       }

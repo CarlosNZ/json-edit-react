@@ -22,7 +22,7 @@ export const useTriggers = (
   triggers: ExternalTriggers | null | undefined,
   editConfirmRef: React.RefObject<HTMLDivElement | null>
 ) => {
-  const { setCurrentlyEditingElement, currentlyEditingElement } = useEditing()
+  const { startEdit, cancelEdit, currentlyEditingElement } = useEditing()
   const { setCollapseState } = useCollapse()
 
   useEffect(() => {
@@ -46,17 +46,17 @@ export const useTriggers = (
       case 'accept': {
         if (doesPathMatch) {
           if (editConfirmRef.current) editConfirmRef.current.click()
-          setCurrentlyEditingElement(null)
+          cancelEdit()
         }
 
         break
       }
       case 'cancel': {
-        if (doesPathMatch) setCurrentlyEditingElement(null)
+        if (doesPathMatch) cancelEdit()
         break
       }
       default: {
-        if (edit?.path) setCurrentlyEditingElement(edit.path)
+        if (edit?.path) startEdit(edit.path)
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
