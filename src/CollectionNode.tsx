@@ -120,7 +120,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     const shouldBeCollapsed = collapseFilter(nodeData) && !isEditing
     hasBeenOpened.current = !shouldBeCollapsed
     animateCollapse(shouldBeCollapsed)
-    // eslint-disable-next-line
+    // Only re-fire when `collapseFilter` itself changes — `animateCollapse`
+    // depends on this node's own collapsed state, so listing it would make
+    // the effect fight every user-driven expand/collapse.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collapseFilter])
 
   // Subscribe to collapse-broadcast commands and react if the command targets

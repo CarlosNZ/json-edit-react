@@ -59,6 +59,9 @@ export const useTriggers = (
         if (edit?.path) startEdit(edit.path)
       }
     }
+    // `triggers` is the only intended trigger. Including the editing setters
+    // or `currentlyEditingElement` would re-run the effect on every edit
+    // transition and re-broadcast the *last* triggers payload — wrong.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [triggers])
 }

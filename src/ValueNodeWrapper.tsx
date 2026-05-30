@@ -170,6 +170,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     if (next) startEdit(next)
     else if (previouslyEditedElement) startEdit(previouslyEditedElement)
     else cancelEdit()
+    // The three booleans are what gate this redirect. The other reads
+    // (`nodeData.fullData`, `tabDirection`, `previouslyEditedElement`, etc.)
+    // are picked up via the closure at fire time; listing them would re-fire
+    // on every data update even when no redirect is needed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditing, isVisible, canEdit])
 

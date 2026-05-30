@@ -7,7 +7,7 @@
  * scoped per-provider and the three contexts are genuinely independent.
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { act, render } from '@testing-library/react'
 import { TreeStateProvider, useEditing, useCollapse } from '../src/contexts'
 import { useDragSource } from '../src/hooks/DragSourceProvider'
@@ -134,5 +134,43 @@ describe('Tree-state providers — slice isolation', () => {
     expect(renderCounts.editing).toBeGreaterThan(before.editing)
     expect(renderCounts.collapse).toBe(before.collapse)
     expect(renderCounts.drag).toBe(before.drag)
+  })
+
+  test('context value identity is stable across unrelated re-renders (memoized providers)', () => {
+    // The three provider value objects are wrapped in `useMemo` over their
+    // real inputs. When a parent above the provider re-renders for an
+    // unrelated reason, each provider re-runs but its `useMemo` returns the
+    // same instance — consumers see byte-for-byte the same context value,
+    // which is what lets a downstream `React.memo` wrapper bail out cleanly.
+    const seen = { editing: [] as object[], collapse: [] as object[], drag: [] as object[] }
+
+    const Observer = () => {
+      seen.editing.push(useEditing())
+      seen.collapse.push(useCollapse())
+      seen.drag.push(useDragSource())
+      return null
+    }
+
+    let bumpOuterCounter: () => void = () => {}
+    const Outer = () => {
+      const [, setCounter] = useState(0)
+      bumpOuterCounter = () => setCounter((n) => n + 1)
+      return (
+        <TreeStateProvider>
+          <Observer />
+        </TreeStateProvider>
+      )
+    }
+
+    render(<Outer />)
+    expect(seen.editing).toHaveLength(1)
+
+    act(() => bumpOuterCounter())
+    expect(seen.editing).toHaveLength(2)
+
+    // Identity-stable across the unrelated re-render.
+    expect(seen.editing[0]).toBe(seen.editing[1])
+    expect(seen.collapse[0]).toBe(seen.collapse[1])
+    expect(seen.drag[0]).toBe(seen.drag[1])
   })
 })

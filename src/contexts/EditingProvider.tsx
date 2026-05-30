@@ -15,7 +15,7 @@
  * atomically via the updater form.
  */
 
-import React, { createContext, useCallback, useContext, useRef, useState } from 'react'
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react'
 import {
   type TabDirection,
   type CollectionKey,
@@ -123,24 +123,34 @@ export const EditingProvider = ({ children, onEditEvent }: EditingProps) => {
     [state.currentlyEditingElement]
   )
 
-  return (
-    <EditingProviderContext.Provider
-      value={{
-        currentlyEditingElement: state.currentlyEditingElement,
-        previouslyEditedElement: state.previouslyEditedElement,
-        tabDirection: state.tabDirection,
-        previousValue: state.previousValue,
-        areChildrenBeingEdited,
-        startEdit,
-        cancelEdit,
-        setTabDirection,
-        recordPreviousEdit,
-        setPreviousValue,
-      }}
-    >
-      {children}
-    </EditingProviderContext.Provider>
+  // Memoize so the context value reference is only fresh when its inputs
+  // actually change — the action functions are useCallback-stable and `state`
+  // is the single source of truth for everything in this slice.
+  const value = useMemo(
+    () => ({
+      currentlyEditingElement: state.currentlyEditingElement,
+      previouslyEditedElement: state.previouslyEditedElement,
+      tabDirection: state.tabDirection,
+      previousValue: state.previousValue,
+      areChildrenBeingEdited,
+      startEdit,
+      cancelEdit,
+      setTabDirection,
+      recordPreviousEdit,
+      setPreviousValue,
+    }),
+    [
+      state,
+      areChildrenBeingEdited,
+      startEdit,
+      cancelEdit,
+      setTabDirection,
+      recordPreviousEdit,
+      setPreviousValue,
+    ]
   )
+
+  return <EditingProviderContext.Provider value={value}>{children}</EditingProviderContext.Provider>
 }
 
 export const useEditing = () => {

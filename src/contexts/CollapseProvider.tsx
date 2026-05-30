@@ -14,7 +14,7 @@
  * all when collapse commands fire.
  */
 
-import React, { createContext, useCallback, useContext, useRef } from 'react'
+import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react'
 import { type CollectionKey, type OnCollapseFunction, type CollapseState } from '../types'
 
 type CollapseCommandHandler = (cmd: CollapseState) => void
@@ -53,11 +53,13 @@ export const CollapseProvider = ({ children, onCollapse }: CollapseProps) => {
     [onCollapse]
   )
 
-  return (
-    <CollapseProviderContext.Provider value={{ subscribe, setCollapseState }}>
-      {children}
-    </CollapseProviderContext.Provider>
-  )
+  // Memoize so the context value reference is only fresh when its inputs
+  // actually change. `subscribe` is stable for the provider's lifetime;
+  // `setCollapseState` changes only when the consumer-supplied `onCollapse`
+  // changes — which in practice is almost never.
+  const value = useMemo(() => ({ subscribe, setCollapseState }), [subscribe, setCollapseState])
+
+  return <CollapseProviderContext.Provider value={value}>{children}</CollapseProviderContext.Provider>
 }
 
 export const useCollapse = () => {

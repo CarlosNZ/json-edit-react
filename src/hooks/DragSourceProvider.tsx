@@ -6,7 +6,7 @@
  * drag is the only consumer.
  */
 
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useContext, useMemo, useState } from 'react'
 import { type CollectionKey } from '../types'
 
 interface DragSource {
@@ -26,8 +26,12 @@ interface DragSourceProps {
 
 export const DragSourceProvider = ({ children }: DragSourceProps) => {
   const [dragSource, setDragSource] = useState<DragSource>({ path: null })
+  // `setDragSource` is React's setState ref (stable for the provider's
+  // lifetime). The value object's identity flips only when `dragSource`
+  // itself changes — i.e. drag start/end.
+  const value = useMemo(() => ({ dragSource, setDragSource }), [dragSource])
   return (
-    <DragSourceProviderContext.Provider value={{ dragSource, setDragSource }}>
+    <DragSourceProviderContext.Provider value={value}>
       {children}
     </DragSourceProviderContext.Provider>
   )

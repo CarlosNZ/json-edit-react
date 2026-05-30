@@ -103,8 +103,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     cancelEdit()
     const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
     return () => clearTimeout(debounce)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- cancelEdit is a stable useCallback ref
-  }, [searchText, searchDebounceTime])
+  }, [searchText, searchDebounceTime, cancelEdit])
 
   const nodeData: NodeData = {
     key: rootName,
