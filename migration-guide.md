@@ -15,6 +15,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | Several internal helpers are now part of the public API | No action needed — purely additive |
 | `JsonEditor` is now generic on the data type (`JsonEditor<T>`) | No action needed — defaults to `JsonData`, source-compatible. Opt in by writing `<JsonEditor<MyShape> ... />` |
 | `setData` is now required; `viewOnly` removed; new `JsonViewer` export | Switch read-only usage to `<JsonViewer>`; replace `viewOnly={cond}` with the relevant `restrict*` toggles, including `restrictDrag` if drag was enabled — see §6 |
+| `externalTriggers.collapse` is now a fire-and-forget broadcast | Broadcasts only reach mounted `CollectionNode`s; toggle the `collapse` prop for full-tree expand/collapse on initially-collapsed trees — see §7 |
 
 ---
 
@@ -247,6 +248,44 @@ If you previously passed only `data` (no `setData`) and let the component manage
 const [data, setData] = useState(initialData)
 <JsonEditor data={data} setData={setData} />
 ```
+
+---
+
+## 7. Collapse broadcasts are now fire-and-forget
+
+Collapse commands sent via `externalTriggers.collapse` (and the internal `setCollapseState` used by the toolbar buttons) used to be held briefly in component state, with a 2-second timer clearing them so subsequent identical commands would re-fire. The new model is pub-sub: each command is broadcast directly to currently-subscribed `CollectionNode`s and not retained anywhere.
+
+**Why:** state-coerced-into-command-via-timer was the source of two long-standing oddities. Within the 2-second window, nodes that mounted *after* a collapse command (e.g. children added to an expanded parent) would automatically apply that command — typically not what you wanted. After the window, a re-issued identical command would no-op. The pub-sub model is honest about what's actually happening: collapse is an event, not a state.
+
+### What you'll see in practice
+
+For most consumers, **nothing changes** — toolbar-driven Collapse/Expand on a fully-mounted tree, path-scoped commands, arrays of commands, the `onCollapse` callback, and back-to-back identical commands all behave the same way (in fact, back-to-back commands now fire reliably without needing a 2-second gap).
+
+Two specific scenarios have changed:
+
+**Broadcasts can't punch through a collapse boundary.** This applies any time the target of a broadcast (or any of its descendants) isn't currently mounted — on initial load or later — because a collapsed `CollectionNode` doesn't render its children at all (this is an important perf optimization for large data sets). Pub-sub broadcasts only reach mounted subscribers, so:
+
+- A path-scoped command targeting an unmounted node silently misses (same as v1 — the timer didn't help here either).
+- A subtree-scoped command (`includeChildren: true`) reaches the targeted root if it's mounted, and that root expands — but its newly-mounted children evaluate `collapseFilter` at mount time and use *that* result. The broadcast doesn't cascade to them automatically the way v1's 2-second-lingering state did.
+
+**For tree-wide or "expand deep" use cases, manage the `collapse` prop as state instead** — each newly-mounted node evaluates the current filter at mount time, so cascading expansion happens naturally:
+
+```tsx
+// Before (v1)
+const [triggers, setTriggers] = useState<ExternalTriggers | undefined>()
+const expandAll = () =>
+  setTriggers({ collapse: { collapsed: false, path: [], includeChildren: true } })
+<JsonEditor data={data} setData={setData} collapse externalTriggers={triggers} />
+
+// After (v2)
+const [collapse, setCollapse] = useState(true)
+const expandAll = () => setCollapse(false)
+<JsonEditor data={data} setData={setData} collapse={collapse} />
+```
+
+Path-scoped commands continue to work fine when the targeted node is already mounted (e.g. collapsing a subtree whose ancestor is expanded; toggling a single chevron's state from a button). These are the most common uses of `externalTriggers.collapse` and they behave identically to v1.
+
+**External data changes within ~2 seconds of a command no longer replay it.** Previously, mutating `data` shortly after firing a collapse command could cause newly-mounted nodes (from the data change) to also apply the lingering command. That was a side effect of the timer, not a designed feature. With pub-sub, newly-mounted nodes use their `collapse` prop (or default) regardless of what was broadcast moments earlier.
 
 ---
 

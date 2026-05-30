@@ -128,6 +128,10 @@ ref.current.cancelEdit()
 
 Idiomatic React, TS autocompletes the actions, removes a piece of awkward state.
 
+After §4 Part 4, `setCollapseState` is already pub-sub — the imperative handle for `collapse(...)` is a thin wrapper that calls it directly. Editing actions on the handle (`startEdit`/`cancelEdit`) bind to the named actions in `EditingProvider` (§4 Part 3). No new infrastructure needed here; this becomes a small public-API exposure on top of the existing internals.
+
+**To consider** (not in initial scope): the imperative API opens design space the prop-based one didn't — a higher-level `expandPath(['deep', 'inner'])` could walk from root to target, expand each level, await React commit, and then apply commands to descendants that aren't currently mounted (a limitation of the bare `collapse(...)` pub-sub broadcast — see migration-guide §7). This would tug against the initial-load perf optimization where children of collapsed nodes don't mount at all, so any "force" pathway has to be opt-in. Worth a real piece of design work *if* real-world feedback shows the §7 pattern (manage `collapse` as state) doesn't cover users' needs.
+
 ## 11. Export `JsonViewer` — ✅ done
 
 Landed in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §5. `<JsonViewer />` is the canonical read-only entry point — a thin wrapper over `JsonEditor` that hard-codes `setData={noop}` and locks all four `restrict*` filters on. `JsonViewerProps<T>` is `Omit<JsonEditorProps<T>, 'setData' | 'onUpdate' | 'onEdit' | 'onAdd' | 'onDelete' | 'onChange' | 'restrictEdit' | 'restrictAdd' | 'restrictDelete' | 'restrictDrag' | 'restrictTypeSelection' | 'externalTriggers'>` — drops the props that aren't meaningful in a viewer. `externalTriggers` is also scrubbed at runtime in the wrapper since it would otherwise bypass the restrict filters (see [#251](https://github.com/CarlosNZ/json-edit-react/issues/251) — to revisit alongside §10). The v1 `viewOnly` prop is removed in the same PR.

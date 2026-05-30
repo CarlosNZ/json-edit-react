@@ -14,7 +14,7 @@ import { getModifier, getNextOrPrevious, insertCharInTextArea } from './utils/ke
 import { isCollection } from './utils/misc'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { KeyDisplay } from './KeyDisplay'
-import { useTheme, useEditing, useCollapse } from './contexts'
+import { useTheme, useEditing, useCollapse, doesCollapseStateMatchPath } from './contexts'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
@@ -26,7 +26,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     previousValue,
     setPreviousValue,
   } = useEditing()
-  const { collapseState, setCollapseState, getMatchingCollapseState } = useCollapse()
+  const { subscribe, setCollapseState } = useCollapse()
   const {
     mainContainerRef,
     data,
@@ -123,16 +123,24 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     // eslint-disable-next-line
   }, [collapseFilter])
 
+  // Subscribe to collapse-broadcast commands and react if the command targets
+  // this node. New mounts only see *future* broadcasts — a Collapse-All from
+  // before this node existed has no lingering state to leak.
+  //
+  // `animateCollapse` and `path` are honest deps: animateCollapse depends on
+  // the node's own `collapsed` state, so its identity flips every collapse —
+  // re-subscribing each time is what keeps the handler from closing over a
+  // stale `animateCollapse` (and missing the next command). pathString is the
+  // value-equal stand-in for path's array reference.
   useEffect(() => {
-    if (collapseState !== null) {
-      const matchingCollapse = getMatchingCollapseState(path)
-      if (matchingCollapse) {
+    return subscribe((cmd) => {
+      if (doesCollapseStateMatchPath(path, cmd)) {
         hasBeenOpened.current = true
-        animateCollapse(matchingCollapse.collapsed)
+        animateCollapse(cmd.collapsed)
       }
-    }
-    // eslint-disable-next-line
-  }, [collapseState])
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `path` covered by pathString
+  }, [subscribe, pathString, animateCollapse])
 
   // For JSON-editing TextArea
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -210,7 +218,6 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     }
     if (!areChildrenBeingEdited(path)) {
       hasBeenOpened.current = true
-      setCollapseState(null)
       if (onCollapse) onCollapse({ path, collapsed: !collapsed, includeChildren: false })
       animateCollapse(!collapsed)
     }

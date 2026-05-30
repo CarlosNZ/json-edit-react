@@ -1,20 +1,27 @@
 /**
- * Collapse-broadcast state for the tree. Used to trigger whole-tree (or
+ * Collapse broadcasts for the tree. Used to trigger whole-tree (or
  * subtree-targeted) expand/collapse operations from outside any specific node.
  *
- * Note: this is a Part-1 relocation of the existing logic — including the
- * `setTimeout(..., 2000)` reset that papers over the stale-mount problem.
- * Part 4 of the §4 refactor replaces the state-with-timer model with a pub-sub
- * broadcast that doesn't need the reset.
+ * Pub-sub model: commands are broadcast imperatively to registered
+ * subscribers, not held in React state. Each `CollectionNode` subscribes on
+ * mount with a handler that matches the incoming command against its own
+ * path. New mounts register and only receive *future* broadcasts — there's
+ * no "current command" lingering anywhere to leak into nodes that mounted
+ * after a Collapse-All click.
+ *
+ * `setCollapseState` performs zero React state updates: the provider never
+ * re-renders on a broadcast. Consumers that don't subscribe see no churn at
+ * all when collapse commands fire.
  */
 
-import React, { createContext, useContext, useState } from 'react'
+import React, { createContext, useCallback, useContext, useRef } from 'react'
 import { type CollectionKey, type OnCollapseFunction, type CollapseState } from '../types'
 
+type CollapseCommandHandler = (cmd: CollapseState) => void
+
 interface CollapseContext {
-  collapseState: CollapseState | CollapseState[] | null
+  subscribe: (handler: CollapseCommandHandler) => () => void
   setCollapseState: (collapseState: CollapseState | CollapseState[] | null) => void
-  getMatchingCollapseState: (path: CollectionKey[]) => CollapseState | null
 }
 
 const CollapseProviderContext = createContext<CollapseContext | null>(null)
@@ -25,40 +32,29 @@ interface CollapseProps {
 }
 
 export const CollapseProvider = ({ children, onCollapse }: CollapseProps) => {
-  const [collapseState, setCollapseState] = useState<CollapseState | CollapseState[] | null>(null)
+  const subscribersRef = useRef<Set<CollapseCommandHandler>>(new Set())
 
-  // Returns the current "CollapseState" value to Collection Node if it matches
-  // that node. If the current "CollapseState" is an array, will return the
-  // matching one
-  const getMatchingCollapseState = (path: CollectionKey[]) => {
-    if (Array.isArray(collapseState)) {
-      for (const cs of collapseState) {
-        if (doesCollapseStateMatchPath(path, cs)) return cs
-      }
-      return null
+  const subscribe = useCallback((handler: CollapseCommandHandler) => {
+    subscribersRef.current.add(handler)
+    return () => {
+      subscribersRef.current.delete(handler)
     }
+  }, [])
 
-    return doesCollapseStateMatchPath(path, collapseState) ? collapseState : null
-  }
+  const setCollapseState = useCallback(
+    (state: CollapseState | CollapseState[] | null) => {
+      if (state === null) return
+      const commands = Array.isArray(state) ? state : [state]
+      commands.forEach((cmd) => {
+        subscribersRef.current.forEach((handler) => handler(cmd))
+        onCollapse?.(cmd)
+      })
+    },
+    [onCollapse]
+  )
 
   return (
-    <CollapseProviderContext.Provider
-      value={{
-        collapseState,
-        setCollapseState: (state) => {
-          setCollapseState(state)
-          if (onCollapse && state !== null)
-            if (Array.isArray(state)) {
-              state.forEach((cs) => onCollapse(cs))
-            } else onCollapse(state)
-          // Reset after 2 seconds, which is enough time for all child nodes to
-          // have opened/closed, but still allows collapse reset if data changes
-          // externally
-          if (state !== null) setTimeout(() => setCollapseState(null), 2000)
-        },
-        getMatchingCollapseState,
-      }}
-    >
+    <CollapseProviderContext.Provider value={{ subscribe, setCollapseState }}>
       {children}
     </CollapseProviderContext.Provider>
   )
@@ -70,18 +66,18 @@ export const useCollapse = () => {
   return context
 }
 
-const doesCollapseStateMatchPath = (path: CollectionKey[], collapseState: CollapseState | null) => {
-  if (collapseState === null) return false
+export const doesCollapseStateMatchPath = (
+  path: CollectionKey[],
+  command: CollapseState
+): boolean => {
+  if (!command.includeChildren)
+    return command.path.length === path.length && command.path.every((part, i) => path[i] === part)
 
-  if (!collapseState.includeChildren)
-    return (
-      collapseState.path.every((part, index) => path[index] === part) &&
-      collapseState.path.length === path.length
-    )
-
-  for (const [index, value] of collapseState.path.entries()) {
+  // Subtree match: command targets all descendants of `command.path`. The
+  // node matches if its own path begins with the command path (reflexive —
+  // the targeted root itself collapses too).
+  for (const [index, value] of command.path.entries()) {
     if (value !== path[index]) return false
   }
-
   return true
 }
