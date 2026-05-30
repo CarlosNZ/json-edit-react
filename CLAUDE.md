@@ -25,7 +25,7 @@ This is a **pnpm workspace** (root, plus `packages/*`). [demo/](demo/) and [cust
 - [demo/](demo/) — Vite app deployed to https://carlosnz.github.io/json-edit-react. Independent yarn project. Doubles as the dev environment for all three packages via the `VITE_JRE_SOURCE` toggle.
 - [custom-component-library/](custom-component-library/) — separate Vite app showcasing how third parties consume `@json-edit-react/components`. Independent yarn project.
 - [test/](test/) — Jest tests for core.
-- [scripts/](scripts/) — Python + Node helpers for the publish flow (core only — README rewriting, build cleanup, post-publish version check).
+- [scripts/](scripts/) — Python + Node helpers for the publish + build flow (core only — README rewriting, staging, packing, the test step for `prebuild`).
 - [json-schema-tools/](json-schema-tools/) — auxiliary tooling, not part of the package.
 - [build/](build/) — Rollup output for core. The only core artefact shipped to npm. Each sub-package has its own `packages/<name>/build/`.
 
@@ -61,9 +61,10 @@ pnpm demo             # run the demo against the npm-installed version
 pnpm demo:pack        # pack all three packages and run the demo against the tarballs (VITE_JRE_SOURCE=pack)
 pnpm pack-all         # produce pack-output/<name>/package/ — consumed by demo/CCL :pack scripts
 pnpm test             # jest
-pnpm lint             # eslint (also runs as prebuild)
+pnpm lint             # eslint
 pnpm compile          # tsc --noEmit && ts-prune (dead-export check)
-pnpm build            # rollup → build/ (core only)
+pnpm build            # rollup → build/ (core only); prebuild runs lint + tests
+SKIP_TESTS=1 pnpm build  # build, skipping tests (lint still runs)
 pnpm -r build         # build all three packages
 pnpm release          # pnpm publish — DON'T run unless explicitly asked
 pnpm changeset        # add a changeset before opening a PR that touches published behaviour
@@ -103,14 +104,19 @@ The demo and CCL can each resolve `json-edit-react`, `@json-edit-react/themes`, 
 ### Build
 - Core's rollup config is at [rollup.config.mjs](rollup.config.mjs). Each sub-package has its own under `packages/<name>/rollup.config.mjs`. All three produce CJS, ESM, and a flattened `.d.ts`.
 - Only `build/` ships per package. Core's `tsconfig.json` deliberately sets `"files": ["src/index.ts"]` so rollup's TS plugin walks the dependency graph from the entry rather than typechecking the whole tree at build time. Use `pnpm compile` for a full project-wide typecheck.
+- Core's `prebuild` runs `pnpm lint && node scripts/run-prebuild-tests.mjs` — a failing lint OR test halts the build. `SKIP_TESTS=1 pnpm build` skips the test step only (lint stays mandatory). No equivalent skip for lint; if you genuinely need to bypass everything, run `rollup -c && rm -R build/dts` directly.
 
 ### Linting / formatting
 - ESLint flat config at [eslint.config.mjs](eslint.config.mjs) covers core only. The `packages/`, `demo/` and `custom-component-library/` directories are ignored from the root lint and have (or will have) their own configs.
 - Prettier: no semicolons, single quotes, 100 col, `trailingComma: es5`, 2-space indent ([.prettierrc](.prettierrc)).
 
 ### Tests
-- Jest with the `ts-jest` preset; config at [jest.config.mjs](jest.config.mjs). Tests live in [test/](test/) and import from [src/](src/) directly.
-- `modulePathIgnorePatterns` excludes [build/](build/), `build_package/`, and [demo/](demo/) so the demo's bundled snapshot of the package doesn't trigger a haste-map name collision.
+- Jest + ts-jest, `testEnvironment: 'jsdom'`. Config at [jest.config.mjs](jest.config.mjs); ts-jest is pointed at [test/tsconfig.json](test/tsconfig.json) (the root `tsconfig.json` has `files: ["src/index.ts"]` and excludes tests). Tests live in [test/](test/) and import from [src/](src/) directly. Both `.ts` and `.tsx` test files are picked up by `testMatch`.
+- RTL stack: `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`. jest-dom's global matcher augmentation (`toBeInTheDocument`, `toHaveClass`, `toHaveFocus`, etc.) is wired via the ambient declaration in [test/jest-dom.d.ts](test/jest-dom.d.ts) — required because jest-dom v6 only exposes types via package `exports`, which the `types` compiler option doesn't follow. Runtime side-effect import lives in [test/setupTests.ts](test/setupTests.ts).
+- `.css` imports are stubbed via `moduleNameMapper` ([test/style-mock.js](test/style-mock.js)) so Jest doesn't try to parse the Rollup-handled CSS.
+- `modulePathIgnorePatterns` excludes [build/](build/), `build_package/`, [demo/](demo/), and `pack-output/` to avoid haste-map name collisions from bundled snapshots.
+- Tests fire automatically as part of `pnpm build` via the prebuild hook (see Build section above for the `SKIP_TESTS=1` escape hatch).
+- **Keep tests current with the work.** When changing user-facing behaviour — adding/altering props, changing edit/mutation/search/restriction flows, fixing a reported bug — add or update tests in the same change. Bug fixes ideally include a regression test that fails *before* the fix; the fix flips it to green, which both proves the fix and prevents the bug returning. The tests pin the *contract* (what's on screen, what `setData` receives), not the implementation, so clean internal refactors should leave them green. If you find yourself wanting to delete or weaken a test to land a change, pause and check whether the change is actually a contract break that needs a separate decision.
 
 ### Publishing
 - Versioning is handled by [Changesets](https://github.com/changesets/changesets). PRs that touch published behaviour add a markdown file via `pnpm changeset`; at release time `pnpm changeset version` consumes them into version bumps + changelogs, and `pnpm changeset publish` ships everything whose local version is ahead of npm.
