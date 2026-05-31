@@ -72,9 +72,14 @@ export const CollapseProvider = ({ children, onCollapse }: CollapseProps) => {
         )
         return
       }
-      const commands = Array.isArray(state) ? state : [state]
+      const incoming = Array.isArray(state) ? state : [state]
+      // Snapshot the commands. They're retained in provider state and
+      // replayed to late mounts — a caller mutating the originals after
+      // dispatch must not silently change the pending broadcast. `onCollapse`
+      // still receives the originals (the caller's identity).
+      const commands = incoming.map((cmd) => ({ ...cmd, path: [...cmd.path] }))
       setInner((prev) => ({ commands, version: prev.version + 1 }))
-      commands.forEach((cmd) => onCollapse?.(cmd))
+      incoming.forEach((cmd) => onCollapse?.(cmd))
     },
     [onCollapse]
   )

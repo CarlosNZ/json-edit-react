@@ -234,6 +234,36 @@ describe('Collapse broadcasts via externalTriggers', () => {
     }
   })
 
+  test('14. caller mutation after broadcast does not change the retained command', () => {
+    // Commands are stored by the provider for replay to late mounts. If they
+    // were held by reference, a caller mutating the command object after
+    // dispatch could silently change the pending broadcast — without a
+    // version bump or onCollapse call. The provider should snapshot the
+    // command list when it accepts it.
+    const dataBefore = { outer: { existing: 1 } }
+    const dataAfter = { outer: { existing: 1, newChild: { nested: 'value' } } }
+    const command: CollapseState = { collapsed: true, path: [], includeChildren: true }
+    const triggers = { collapse: command }
+
+    const { container, rerender } = render(
+      <JsonEditor data={dataBefore} setData={noop} externalTriggers={triggers} />
+    )
+    container
+      .querySelectorAll('.jer-collapse-icon')
+      .forEach((c) => expect(isCollapsed(c)).toBe(true))
+
+    // Mutate the command after the provider stored it. Same triggers
+    // reference so useTriggers does NOT re-broadcast.
+    command.collapsed = false
+
+    rerender(<JsonEditor data={dataAfter} setData={noop} externalTriggers={triggers} />)
+    const chevrons = container.querySelectorAll('.jer-collapse-icon')
+    expect(chevrons).toHaveLength(3)
+    // newChild inherits the SNAPSHOT taken when the broadcast fired
+    // (collapsed:true), not the post-broadcast mutation.
+    expect(isCollapsed(chevrons[2])).toBe(true)
+  })
+
   test('13. overlapping commands resolve last-write-wins per node', () => {
     // An array of commands may target the same node multiple times — e.g. a
     // sweeping Collapse-All followed by a targeted expand of one subtree.
