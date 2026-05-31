@@ -234,6 +234,28 @@ describe('Collapse broadcasts via externalTriggers', () => {
     }
   })
 
+  test('13. overlapping commands resolve last-write-wins per node', () => {
+    // An array of commands may target the same node multiple times — e.g. a
+    // sweeping Collapse-All followed by a targeted expand of one subtree.
+    // Each node applies only the LAST matching command. Calling
+    // animateCollapse twice in a single effect would mis-fire because the
+    // callback closes over render-time `collapsed` and React batches the
+    // setState between calls.
+    const data = { outer: { inner: { x: 1 } } }
+    const commands: CollapseState[] = [
+      { collapsed: true, path: [], includeChildren: true }, // collapse everything
+      { collapsed: false, path: ['outer'], includeChildren: true }, // ...except the `outer` subtree
+    ]
+    const { container, rerender } = render(<JsonEditor data={data} setData={noop} />)
+    rerender(<JsonEditor data={data} setData={noop} externalTriggers={{ collapse: commands }} />)
+
+    const chevrons = container.querySelectorAll('.jer-collapse-icon')
+    expect(chevrons).toHaveLength(3)
+    expect(isCollapsed(chevrons[0])).toBe(true) // root — only matched by cmd 1
+    expect(isCollapsed(chevrons[1])).toBe(false) // outer — last match is cmd 2 (expand)
+    expect(isCollapsed(chevrons[2])).toBe(false) // inner — last match is cmd 2 (subtree of outer)
+  })
+
   test('12. changing collapse prop retires a pending broadcast for late mounts', () => {
     // With `collapse={true}`, only the root mounts (descendants are gated by
     // hasBeenOpened=false). A Collapse-All broadcast fires but only reaches

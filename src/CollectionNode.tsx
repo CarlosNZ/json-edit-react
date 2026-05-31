@@ -4,6 +4,7 @@ import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
 import {
   type CollectionNodeProps,
+  type CollapseState,
   type NodeData,
   type CollectionData,
   type ValueData,
@@ -157,17 +158,23 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     if (version === lastSeenVersionRef.current) return
     lastSeenVersionRef.current = version
     if (!commands) return
+    // Multiple matching commands collapse to a single `animateCollapse`
+    // call — last-write-wins per node. Calling `animateCollapse` more than
+    // once in the same effect fire would not produce the expected sequence:
+    // it closes over `collapsed` from render time and React batches the
+    // `setCollapsed` inside it, so the second call sees stale `collapsed`
+    // and either bails on the equality check or sets the wrong value.
+    let lastMatching: CollapseState | undefined
     for (const cmd of commands) {
-      if (doesCollapseStateMatchPath(path, cmd)) {
-        // Only force-open the mount gate when expanding. A collapse
-        // broadcast must not flip `hasBeenOpened` true on a node that
-        // hasn't been opened — that would mount its descendants on the
-        // next render, undoing the "don't mount descendants of
-        // never-opened nodes" perf optimization.
-        if (!cmd.collapsed) hasBeenOpened.current = true
-        animateCollapse(cmd.collapsed)
-      }
+      if (doesCollapseStateMatchPath(path, cmd)) lastMatching = cmd
     }
+    if (!lastMatching) return
+    // Only force-open the mount gate when expanding. A collapse broadcast
+    // must not flip `hasBeenOpened` true on a node that hasn't been opened
+    // — that would mount its descendants on the next render, undoing the
+    // "don't mount descendants of never-opened nodes" perf optimization.
+    if (!lastMatching.collapsed) hasBeenOpened.current = true
+    animateCollapse(lastMatching.collapsed)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [version, commands])
 

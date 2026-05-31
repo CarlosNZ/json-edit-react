@@ -168,6 +168,8 @@ Only escalate if measurements demand it.
 
 **Followup carried from §4 Part 3:** the Tab-navigation retry in [ValueNodeWrapper.tsx](src/ValueNodeWrapper.tsx) currently lands editing on a filtered/uneditable target and then redirects via `useLayoutEffect`. The redirect is invisible (one paint) but the pattern is still "fire setState into the next render cycle." A cleaner architecture is to make `getNextOrPrevious` filter-aware so the Tab handler picks a viable target up front and never lands on a non-viable one. Touches `getNextOrPrevious` plus its three callers in `ValueNodeWrapper.tsx` and `KeyDisplay.tsx`. Eliminates the setState-after-render pattern entirely.
 
+**Add-on (try after §16 lands, in isolation):** browser-side scroll/render cost on very large fully-expanded trees (~50k+ nodes) is a separate problem from React re-renders — once the DOM is that big, layout/paint cost dominates regardless of React work. Worth a low-effort experiment: add `content-visibility: auto` (with a `contain-intrinsic-size` estimate) to `.jer-collection-element` in [style.css](src/style.css). Modern Chromium and Firefox support it (Safari rolling out); off-screen subtrees skip layout + paint, which is most of virtualization's win for ~zero code. Risk is scroll-position jumpiness if the intrinsic-size estimate is off. Try it standalone after §16 to measure the delta cleanly, not bundled with the React-side optimizations.
+
 ---
 
 ## Additional cleanup (do while breaking changes are allowed)
