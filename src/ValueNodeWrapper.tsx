@@ -190,9 +190,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   if (!isVisible) return null
 
   const handleChangeDataType = (type: DataType) => {
-    // Clear any pending broadcast so a primitive-to-collection conversion
-    // mounts a fresh CollectionNode in its default state instead of
-    // inheriting (e.g. a recent Collapse-All).
+    // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
     setCollapseState(null)
     // Snapshot the original value before any type-change `onEdit` fires, so
     // a subsequent cancel can revert. Gated on `previousValue === null` so a

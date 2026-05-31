@@ -1,45 +1,77 @@
 /**
- * Collapse broadcasts for the tree. Used to trigger whole-tree (or
- * subtree-targeted) expand/collapse operations from outside any specific node.
+ * Collapse broadcasts for the tree. Drives whole-tree (or subtree-targeted)
+ * expand/collapse operations from outside any specific node — e.g. the
+ * Opt-click "Collapse All" / "Open All" gesture, and the
+ * `externalTriggers.collapse` prop.
  *
- * State-based broadcast with a version counter. Each call to
- * `setCollapseState` writes the command(s) into provider state and bumps
- * `version`. Subscribers (`CollectionNode`s) read both from context and
- * compare `version` to a `useRef`-tracked last-seen value to decide whether
- * to apply.
+ * ## Contract surface
  *
- * Why a version counter: re-broadcasting a command with identical content
- * (e.g. Collapse-All, then Collapse-All again) needs to re-fire consumer
- * effects. Identity comparison on the `commands` array alone isn't enough
- * because nothing guarantees a fresh array reference. The version counter
- * makes "this is a new broadcast" explicit.
+ * Provider state is `{ commands, version }`. Every `setCollapseState(cmds)`
+ * snapshots the commands and bumps `version`. Subscribers (every
+ * `CollectionNode`) consume the state via three named contracts:
  *
- * Why state (not pub-sub): pub-sub broadcasts only reach subscribers mounted
- * at broadcast time. A subtree-expand command targeting a not-yet-mounted
- * descendant (collapsed-at-load with `collapse={N}`) misses every level past
- * the mount frontier — see #273. With state, newly-mounted descendants read
+ * 1. **Broadcast application** — `useAppliedBroadcast(path,
+ *    hasBeenOpenedRef, animateCollapse)` walks `commands` once per new
+ *    `version`, applies the last command whose path matches this node, and
+ *    bails on subsequent renders via a version-mismatch check. Late mounts
+ *    (descendants that mount as their parent expands during a cascade)
+ *    read the still-present commands on their first render — that's what
+ *    makes Opt-click "Open All" reach past the initial mount frontier
+ *    (#273).
+ *
+ * 2. **Prop-change retires broadcast** — CollectionNode uses
+ *    `useReferenceChanged(collapseFilter)` to detect when the consumer's
+ *    derived `collapse` prop has changed. A change is fresher consumer
+ *    intent than any pending broadcast, so the node calls
+ *    `setCollapseState(null)` to retire the stale commands. Skipped on
+ *    first mount — the cascade-through-frontier behavior above relies on
+ *    freshly-mounted descendants seeing the still-set commands.
+ *
+ * 3. **User-action clears broadcast** — `setCollapseState(null)` is also
+ *    called by user-driven actions that mount a new `CollectionNode` and
+ *    don't want it to inherit a recent broadcast (otherwise "I just added
+ *    a new object, why is it collapsed?"). Two call sites, both grep-able
+ *    as `setCollapseState(null)`:
+ *      - `handleAdd` in CollectionNode.tsx
+ *      - `handleChangeDataType` in ValueNodeWrapper.tsx
+ *    External programmatic `setData` doesn't go through these paths, so
+ *    it still inherits — matches "user expressed an intent; external data
+ *    changes should respect it until the user expresses otherwise."
+ *
+ * ## Why state, not pub-sub
+ *
+ * Pub-sub broadcasts only reach subscribers mounted at broadcast time. A
+ * subtree-expand command targeting a not-yet-mounted descendant
+ * (collapsed at load with `collapse={N}`) misses every level past the
+ * mount frontier — see #273. With state, newly-mounted descendants read
  * the still-present command on their first render and cascade naturally.
  *
- * No stale-clear timer. The cascade through a deep tree can take many React
- * commits, each of which may itself render thousands of nodes — there is no
- * fixed timer that's both short enough to feel like "the broadcast was
- * transient" and long enough to cover the cascade on arbitrarily large
- * trees. So we don't try: `commands` persists in state until the next
- * broadcast overwrites it or it's explicitly cleared via
- * `setCollapseState(null)`.
+ * ## Why the version counter
  *
- * `setCollapseState(null)` clears the pending broadcast (sets `commands` to
- * null without bumping `version`). This is used by user-driven actions that
- * mount new CollectionNodes — notably `handleAdd` and
- * `handleChangeDataType`. Without the clear, the new node would inherit the
- * still-set broadcast, which is surprising ("I just added a new object,
- * why is it collapsed?"). External programmatic `setData` doesn't go
- * through those paths, so it still inherits — which matches "user
- * expressed an intent; external data changes should respect it until the
- * user expresses otherwise."
+ * Re-broadcasting a command with identical content (Collapse-All, then
+ * Collapse-All again) needs to re-fire consumer effects. Identity
+ * comparison on the `commands` array alone isn't enough because nothing
+ * guarantees a fresh array reference. The version counter makes "this is
+ * a new broadcast" explicit; consumer effects compare against a
+ * `useRef`-tracked last-seen value.
+ *
+ * No stale-clear timer. The cascade through a deep tree can take many
+ * React commits, each of which may itself render thousands of nodes —
+ * there's no fixed timer that's both short enough to feel transient and
+ * long enough to cover the cascade on arbitrarily large trees. So
+ * `commands` persists in state until the next broadcast overwrites it or
+ * it's explicitly cleared via `setCollapseState(null)`.
  */
 
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { type CollectionKey, type OnCollapseFunction, type CollapseState } from '../types'
 
 interface CollapseContext {
@@ -100,10 +132,7 @@ export const useCollapse = () => {
   return context
 }
 
-export const doesCollapseStateMatchPath = (
-  path: CollectionKey[],
-  command: CollapseState
-): boolean => {
+const doesCollapseStateMatchPath = (path: CollectionKey[], command: CollapseState): boolean => {
   if (!command.includeChildren)
     return command.path.length === path.length && command.path.every((part, i) => path[i] === part)
 
@@ -114,4 +143,74 @@ export const doesCollapseStateMatchPath = (
     if (value !== path[index]) return false
   }
   return true
+}
+
+/**
+ * Returns true on renders where `value` differs from the previous render
+ * by `Object.is` (reference identity, matching React's `useEffect`
+ * dep-array semantics). Returns false on first render. Not a deep
+ * comparison — calling with a large data object would compare references
+ * only, never contents. The ref-update happens in a `useEffect`, so a
+ * render that re-runs without committing (concurrent mode, strict mode)
+ * reads the same answer twice.
+ *
+ * Used to disambiguate "first mount" from "subsequent change" without
+ * wedging a flag ref into the surrounding effect.
+ */
+export const useReferenceChanged = <T,>(value: T): boolean => {
+  const ref = useRef(value)
+  const changed = !Object.is(ref.current, value)
+  useEffect(() => {
+    ref.current = value
+  })
+  return changed
+}
+
+/**
+ * Applies broadcast commands to a CollectionNode. Reads `version` and
+ * `commands` from the collapse context; uses a `useRef`-tracked last-seen
+ * version to fire exactly once per broadcast. Newly-mounted descendants
+ * start with `lastSeenVersionRef.current === 0`, so their first render
+ * sees a mismatch against the current `version` and applies the
+ * still-present command — that's how Opt-click "Open All" cascades past
+ * the initial mount frontier (#273).
+ *
+ * Last-matching-wins: when an array of commands targets the same node
+ * multiple times, only the last matching command is applied. Calling
+ * `animateCollapse` more than once in the same effect fire would close
+ * over render-time `collapsed` and mis-fire — React batches the
+ * `setCollapsed` between calls, so the second sees stale state.
+ *
+ * `hasBeenOpenedRef.current` is set true only when expanding. A collapse
+ * broadcast must not flip the mount gate on a never-opened node, or its
+ * descendants would mount on the next render and undo the "don't mount
+ * descendants of never-opened nodes" perf optimization.
+ *
+ * Effect deps are `[version, commands]` only. `path` and `animateCollapse`
+ * are closed over and captured fresh on every fire — effects re-create
+ * their closure on each run. Listing them would fire the effect on every
+ * local collapse toggle and every parent re-render that hands down a new
+ * data ref; on large trees that's significant React scheduling overhead
+ * even though the version check would early-return.
+ */
+export const useAppliedBroadcast = (
+  path: CollectionKey[],
+  hasBeenOpenedRef: React.RefObject<boolean>,
+  animateCollapse: (collapse: boolean) => void
+) => {
+  const { commands, version } = useCollapse()
+  const lastSeenVersionRef = useRef(0)
+  useEffect(() => {
+    if (version === lastSeenVersionRef.current) return
+    lastSeenVersionRef.current = version
+    if (!commands) return
+    let lastMatching: CollapseState | undefined
+    for (const cmd of commands) {
+      if (doesCollapseStateMatchPath(path, cmd)) lastMatching = cmd
+    }
+    if (!lastMatching) return
+    if (!lastMatching.collapsed) hasBeenOpenedRef.current = true
+    animateCollapse(lastMatching.collapsed)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [version, commands])
 }
