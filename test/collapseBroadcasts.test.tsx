@@ -234,6 +234,36 @@ describe('Collapse broadcasts via externalTriggers', () => {
     }
   })
 
+  test('12. changing collapse prop retires a pending broadcast for late mounts', () => {
+    // With `collapse={true}`, only the root mounts (descendants are gated by
+    // hasBeenOpened=false). A Collapse-All broadcast fires but only reaches
+    // the root (no-op since already collapsed). The consumer then changes
+    // `collapse` to false to expand the tree — descendants mount fresh.
+    // They should follow the NEW prop (expanded), NOT inherit the stale
+    // Collapse-All broadcast that's still in provider state.
+    const data = { outer: { inner: { x: 1 } } }
+    const triggers = { collapse: collapseAll }
+
+    const { container, rerender } = render(
+      <JsonEditor data={data} setData={noop} collapse={true} externalTriggers={triggers} />
+    )
+    // Only the root is mounted; it's collapsed.
+    let chevrons = container.querySelectorAll('.jer-collapse-icon')
+    expect(chevrons).toHaveLength(1)
+    expect(isCollapsed(chevrons[0])).toBe(true)
+
+    // Same triggers reference so useTriggers doesn't re-broadcast — we're
+    // testing what the collapse-prop change does to the pending broadcast.
+    rerender(
+      <JsonEditor data={data} setData={noop} collapse={false} externalTriggers={triggers} />
+    )
+    // root, outer, inner — all expanded because the prop-change retired
+    // the pending broadcast before descendants mounted.
+    chevrons = container.querySelectorAll('.jer-collapse-icon')
+    expect(chevrons).toHaveLength(3)
+    chevrons.forEach((c) => expect(isCollapsed(c)).toBe(false))
+  })
+
   test('11. broadcast cascades through the mount frontier (#273 regression)', () => {
     // The bug the version counter exists to fix: with `collapse={2}`, levels
     // 2+ start unmounted (the perf optimization that keeps deep trees cheap).

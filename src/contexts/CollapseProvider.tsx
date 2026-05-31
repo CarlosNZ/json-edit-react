@@ -25,7 +25,8 @@
  * fixed timer that's both short enough to feel like "the broadcast was
  * transient" and long enough to cover the cascade on arbitrarily large
  * trees. So we don't try: `commands` persists in state until the next
- * broadcast overwrites it or `clearCollapseState` is called.
+ * broadcast overwrites it or it's explicitly cleared via
+ * `setCollapseState(null)`.
  *
  * `setCollapseState(null)` clears the pending broadcast (sets `commands` to
  * null without bumping `version`). This is used by user-driven actions that

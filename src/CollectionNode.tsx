@@ -116,10 +116,21 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
+  const collapseFilterHasChangedRef = useRef(false)
   useEffect(() => {
     const shouldBeCollapsed = collapseFilter(nodeData) && !isEditing
     hasBeenOpened.current = !shouldBeCollapsed
     animateCollapse(shouldBeCollapsed)
+    if (collapseFilterHasChangedRef.current) {
+      // The `collapse` prop changed — that's a fresher user intent than any
+      // pending broadcast. Retire the broadcast so descendants that mount
+      // from this expansion follow the new prop, not the stale Collapse-All.
+      // Skipped on first-mount (the cascade-through-frontier case relies on
+      // freshly-mounted nodes seeing the still-set broadcast).
+      setCollapseState(null)
+    } else {
+      collapseFilterHasChangedRef.current = true
+    }
     // Only re-fire when `collapseFilter` itself changes — `animateCollapse`
     // depends on this node's own collapsed state, so listing it would make
     // the effect fight every user-driven expand/collapse.
