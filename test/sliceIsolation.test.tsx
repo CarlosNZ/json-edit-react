@@ -7,7 +7,7 @@
  * scoped per-provider and the three contexts are genuinely independent.
  */
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { act, render } from '@testing-library/react'
 import { TreeStateProvider, useEditing, useCollapse } from '../src/contexts'
 import { useDragSource } from '../src/hooks/DragSourceProvider'
@@ -89,27 +89,8 @@ describe('Tree-state providers — slice isolation', () => {
     expect(renderCounts.collapse).toBe(before.collapse)
   })
 
-  test('setCollapseState broadcasts to subscribers without any React re-renders', () => {
-    // Collapse is pub-sub: a broadcast hits subscriber handlers directly via
-    // the subscriber Set, no React state involved. Zero re-renders in the
-    // provider, zero in any of the three single-slice consumers.
-    let receivedCommand: CollapseState | null = null
-
-    const Subscriber = () => {
-      const { subscribe } = useCollapse()
-      useEffect(() => subscribe((cmd) => (receivedCommand = cmd)), [subscribe])
-      return null
-    }
-
-    render(
-      <TreeStateProvider>
-        <Harness />
-        <EditingOnlyConsumer />
-        <CollapseOnlyConsumer />
-        <DragOnlyConsumer />
-        <Subscriber />
-      </TreeStateProvider>
-    )
+  test('setCollapseState only re-renders collapse consumers', () => {
+    renderTree()
     const before = { ...renderCounts }
 
     const command: CollapseState = { collapsed: true, path: [], includeChildren: true }
@@ -117,9 +98,8 @@ describe('Tree-state providers — slice isolation', () => {
       setters.setCollapse!(command)
     })
 
-    expect(receivedCommand).toEqual(command)
+    expect(renderCounts.collapse).toBeGreaterThan(before.collapse)
     expect(renderCounts.editing).toBe(before.editing)
-    expect(renderCounts.collapse).toBe(before.collapse)
     expect(renderCounts.drag).toBe(before.drag)
   })
 

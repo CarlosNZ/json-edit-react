@@ -2,25 +2,48 @@
  * Collapse broadcasts for the tree. Used to trigger whole-tree (or
  * subtree-targeted) expand/collapse operations from outside any specific node.
  *
- * Pub-sub model: commands are broadcast imperatively to registered
- * subscribers, not held in React state. Each `CollectionNode` subscribes on
- * mount with a handler that matches the incoming command against its own
- * path. New mounts register and only receive *future* broadcasts — there's
- * no "current command" lingering anywhere to leak into nodes that mounted
- * after a Collapse-All click.
+ * State-based broadcast with a version counter. Each call to
+ * `setCollapseState` writes the command(s) into provider state and bumps
+ * `version`. Subscribers (`CollectionNode`s) read both from context and
+ * compare `version` to a `useRef`-tracked last-seen value to decide whether
+ * to apply.
  *
- * `setCollapseState` performs zero React state updates: the provider never
- * re-renders on a broadcast. Consumers that don't subscribe see no churn at
- * all when collapse commands fire.
+ * Why a version counter: re-broadcasting a command with identical content
+ * (e.g. Collapse-All, then Collapse-All again) needs to re-fire consumer
+ * effects. Identity comparison on the `commands` array alone isn't enough
+ * because nothing guarantees a fresh array reference. The version counter
+ * makes "this is a new broadcast" explicit.
+ *
+ * Why state (not pub-sub): pub-sub broadcasts only reach subscribers mounted
+ * at broadcast time. A subtree-expand command targeting a not-yet-mounted
+ * descendant (collapsed-at-load with `collapse={N}`) misses every level past
+ * the mount frontier — see #273. With state, newly-mounted descendants read
+ * the still-present command on their first render and cascade naturally.
+ *
+ * No stale-clear timer. The cascade through a deep tree can take many React
+ * commits, each of which may itself render thousands of nodes — there is no
+ * fixed timer that's both short enough to feel like "the broadcast was
+ * transient" and long enough to cover the cascade on arbitrarily large
+ * trees. So we don't try: `commands` persists in state until the next
+ * broadcast overwrites it or `clearCollapseState` is called.
+ *
+ * `setCollapseState(null)` clears the pending broadcast (sets `commands` to
+ * null without bumping `version`). This is used by user-driven actions that
+ * mount new CollectionNodes — notably `handleAdd` and
+ * `handleChangeDataType`. Without the clear, the new node would inherit the
+ * still-set broadcast, which is surprising ("I just added a new object,
+ * why is it collapsed?"). External programmatic `setData` doesn't go
+ * through those paths, so it still inherits — which matches "user
+ * expressed an intent; external data changes should respect it until the
+ * user expresses otherwise."
  */
 
-import React, { createContext, useCallback, useContext, useMemo, useRef } from 'react'
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react'
 import { type CollectionKey, type OnCollapseFunction, type CollapseState } from '../types'
 
-type CollapseCommandHandler = (cmd: CollapseState) => void
-
 interface CollapseContext {
-  subscribe: (handler: CollapseCommandHandler) => () => void
+  commands: CollapseState[] | null
+  version: number
   setCollapseState: (collapseState: CollapseState | CollapseState[] | null) => void
 }
 
@@ -32,34 +55,37 @@ interface CollapseProps {
 }
 
 export const CollapseProvider = ({ children, onCollapse }: CollapseProps) => {
-  const subscribersRef = useRef<Set<CollapseCommandHandler>>(new Set())
-
-  const subscribe = useCallback((handler: CollapseCommandHandler) => {
-    subscribersRef.current.add(handler)
-    return () => {
-      subscribersRef.current.delete(handler)
-    }
-  }, [])
+  const [inner, setInner] = useState<{ commands: CollapseState[] | null; version: number }>({
+    commands: null,
+    version: 0,
+  })
 
   const setCollapseState = useCallback(
     (state: CollapseState | CollapseState[] | null) => {
-      if (state === null) return
+      if (state === null) {
+        // Clear the pending broadcast without bumping `version`. Nodes that
+        // already applied the previous broadcast bail on the version check;
+        // late mounts read `commands === null` and use their default state.
+        setInner((prev) =>
+          prev.commands === null ? prev : { commands: null, version: prev.version }
+        )
+        return
+      }
       const commands = Array.isArray(state) ? state : [state]
-      commands.forEach((cmd) => {
-        subscribersRef.current.forEach((handler) => handler(cmd))
-        onCollapse?.(cmd)
-      })
+      setInner((prev) => ({ commands, version: prev.version + 1 }))
+      commands.forEach((cmd) => onCollapse?.(cmd))
     },
     [onCollapse]
   )
 
-  // Memoize so the context value reference is only fresh when its inputs
-  // actually change. `subscribe` is stable for the provider's lifetime;
-  // `setCollapseState` changes only when the consumer-supplied `onCollapse`
-  // changes — which in practice is almost never.
-  const value = useMemo(() => ({ subscribe, setCollapseState }), [subscribe, setCollapseState])
+  const value = useMemo(
+    () => ({ commands: inner.commands, version: inner.version, setCollapseState }),
+    [inner.commands, inner.version, setCollapseState]
+  )
 
-  return <CollapseProviderContext.Provider value={value}>{children}</CollapseProviderContext.Provider>
+  return (
+    <CollapseProviderContext.Provider value={value}>{children}</CollapseProviderContext.Provider>
+  )
 }
 
 export const useCollapse = () => {
