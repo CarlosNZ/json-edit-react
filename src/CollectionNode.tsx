@@ -4,7 +4,6 @@ import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
 import {
   type CollectionNodeProps,
-  type CollapseState,
   type NodeData,
   type CollectionData,
   type ValueData,
@@ -15,7 +14,13 @@ import { getModifier, getNextOrPrevious, insertCharInTextArea } from './utils/ke
 import { isCollection } from './utils/misc'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { KeyDisplay } from './KeyDisplay'
-import { useTheme, useEditing, useCollapse, doesCollapseStateMatchPath } from './contexts'
+import {
+  useTheme,
+  useEditing,
+  useCollapse,
+  useAppliedBroadcast,
+  useReferenceChanged,
+} from './contexts'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
@@ -27,7 +32,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     previousValue,
     setPreviousValue,
   } = useEditing()
-  const { commands, version, setCollapseState } = useCollapse()
+  const { setCollapseState } = useCollapse()
   const {
     mainContainerRef,
     data,
@@ -117,66 +122,22 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
-  const collapseFilterHasChangedRef = useRef(false)
+  // Contract #2: prop-change retires broadcast. See CollapseProvider top-of-file doc.
+  const collapseFilterChanged = useReferenceChanged(collapseFilter)
   useEffect(() => {
     const shouldBeCollapsed = collapseFilter(nodeData) && !isEditing
     hasBeenOpened.current = !shouldBeCollapsed
     animateCollapse(shouldBeCollapsed)
-    if (collapseFilterHasChangedRef.current) {
-      // The `collapse` prop changed — that's a fresher user intent than any
-      // pending broadcast. Retire the broadcast so descendants that mount
-      // from this expansion follow the new prop, not the stale Collapse-All.
-      // Skipped on first-mount (the cascade-through-frontier case relies on
-      // freshly-mounted nodes seeing the still-set broadcast).
-      setCollapseState(null)
-    } else {
-      collapseFilterHasChangedRef.current = true
-    }
+    if (collapseFilterChanged) setCollapseState(null)
     // Only re-fire when `collapseFilter` itself changes — `animateCollapse`
     // depends on this node's own collapsed state, so listing it would make
     // the effect fight every user-driven expand/collapse.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collapseFilter])
 
-  // React to collapse-broadcast commands targeting this node. The version
-  // counter guards against re-applying the same broadcast: each broadcast
-  // bumps `version`, so a newly-mounted descendant (with `lastSeenVersionRef`
-  // still 0) sees a version mismatch on its first render and applies the
-  // still-present command — that's what makes the cascade reach past the
-  // initial mount frontier. `commands` persists in provider state until the
-  // next broadcast overwrites it, so the cascade always completes regardless
-  // of tree size; late mounts inherit the most recent broadcast.
-  //
-  // Only `[version, commands]` in deps — `path` and `animateCollapse` are
-  // closed over and captured fresh on every fire (effects re-create their
-  // closure on each run). Including them would fire the effect on every
-  // local collapse toggle and every parent re-render that hands down a new
-  // data ref, which for large trees adds significant React scheduling
-  // overhead even though the version check would early-return.
-  const lastSeenVersionRef = useRef(0)
-  useEffect(() => {
-    if (version === lastSeenVersionRef.current) return
-    lastSeenVersionRef.current = version
-    if (!commands) return
-    // Multiple matching commands collapse to a single `animateCollapse`
-    // call — last-write-wins per node. Calling `animateCollapse` more than
-    // once in the same effect fire would not produce the expected sequence:
-    // it closes over `collapsed` from render time and React batches the
-    // `setCollapsed` inside it, so the second call sees stale `collapsed`
-    // and either bails on the equality check or sets the wrong value.
-    let lastMatching: CollapseState | undefined
-    for (const cmd of commands) {
-      if (doesCollapseStateMatchPath(path, cmd)) lastMatching = cmd
-    }
-    if (!lastMatching) return
-    // Only force-open the mount gate when expanding. A collapse broadcast
-    // must not flip `hasBeenOpened` true on a node that hasn't been opened
-    // — that would mount its descendants on the next render, undoing the
-    // "don't mount descendants of never-opened nodes" perf optimization.
-    if (!lastMatching.collapsed) hasBeenOpened.current = true
-    animateCollapse(lastMatching.collapsed)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [version, commands])
+  // Contract #1: apply broadcast commands targeting this node. See
+  // CollapseProvider top-of-file doc.
+  useAppliedBroadcast(path, hasBeenOpened, animateCollapse)
 
   // For JSON-editing TextArea
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -280,8 +241,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const handleAdd = (key: string) => {
-    // Clear any pending broadcast so the freshly mounted child uses its
-    // default state instead of inheriting (e.g. a recent Collapse-All).
+    // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
     setCollapseState(null)
     animateCollapse(false)
     const newValue = getDefaultNewValue(nodeData, key)
