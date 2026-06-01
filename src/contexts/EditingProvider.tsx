@@ -42,7 +42,7 @@ import {
   type OnEditEventFunction,
   type EditingState,
 } from '../types'
-import { editingStatesEqual, isDescendantOf } from '../utils/pathTools'
+import { editingStatesEqual, isDescendantOf, pathsEqual } from '../utils/pathTools'
 
 export interface EditingStateBundle {
   currentlyEditingElement: EditingState | null
@@ -124,7 +124,13 @@ const createEditingStore = (
   }
 
   const recordPreviousEdit = (path: CollectionKey[]) => {
-    commit({ ...state, previouslyEditedElement: path })
+    // Callers pass a freshly-allocated `path`, so guard on value equality —
+    // otherwise every Tab re-commits an equal path and wakes all `useEditing`
+    // subscribers for nothing.
+    const prev = state.previouslyEditedElement
+    if (prev === null || !pathsEqual(prev, path)) {
+      commit({ ...state, previouslyEditedElement: path })
+    }
   }
 
   const setPreviousValue = (value: JsonData | null) => {

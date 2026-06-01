@@ -46,12 +46,14 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   // Per-node editing flags as primitive selectors: this node re-renders only
   // when its OWN boolean flips, so moving an edit between nodes re-renders just
   // the two involved, not the whole tree.
-  const isEditing = useEditingSelector(
-    (s) => s.currentlyEditingElement?.mode === 'value' && pathsEqual(s.currentlyEditingElement.path, path)
-  )
-  const isEditingKey = useEditingSelector(
-    (s) => s.currentlyEditingElement?.mode === 'key' && pathsEqual(s.currentlyEditingElement.path, path)
-  )
+  const isEditing = useEditingSelector((s) => {
+    const editing = s.currentlyEditingElement
+    return editing !== null && editing.mode === 'value' && pathsEqual(editing.path, path)
+  })
+  const isEditingKey = useEditingSelector((s) => {
+    const editing = s.currentlyEditingElement
+    return editing !== null && editing.mode === 'key' && pathsEqual(editing.path, path)
+  })
 
   const canEdit = !restrictEditFilter(nodeData)
   const canDelete = !restrictDeleteFilter(nodeData)
