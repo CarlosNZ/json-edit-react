@@ -70,10 +70,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     editConfirmRef,
     collapseClickZones,
   } = props
-  // Holds the raw-JSON edit buffer. Computed lazily — only when this node
-  // actually enters JSON-edit mode (see `enterJsonEdit` / the editing branch
-  // below) — rather than eagerly serializing every collection's whole subtree
-  // on mount. `null` means "not yet needed".
+  // Holds the raw-JSON edit buffer once the user types into it. Stays `null`
+  // until then — while editing, the displayed value is derived lazily by
+  // `editBufferValue` (below), rather than eagerly serializing every
+  // collection's whole subtree on mount. `null` means "not yet typed into".
   const [stringifiedValue, setStringifiedValue] = useState<string | null>(null)
 
   const startCollapsed = collapseFilter(incomingNodeData)
@@ -145,8 +145,9 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   // Lets the `string | null` edit buffer back a textarea whose `setValue` is
   // typed `Dispatch<SetStateAction<string>>`. Resolves the functional-updater
-  // form against the displayed value and always writes a string, so the buffer
-  // is never null while the user is actively editing.
+  // form against the displayed value and always writes a string, so a user
+  // edit never sets the buffer back to null. (It starts null until the first
+  // change — until then the textarea shows the derived `editBufferValue`.)
   const setEditBuffer = useCallback<React.Dispatch<React.SetStateAction<string>>>(
     (update) =>
       setStringifiedValue((prev) =>
@@ -253,7 +254,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       cancelEdit()
       setPreviousValue(null)
       setError(null)
-      if (jsonStringify(value) === jsonStringify(data)) return
+      // No-op confirm: bail without committing. When the buffer was never
+      // typed into, `textToParse` already IS `jsonStringify(data)`, so reuse it
+      // rather than serializing `data` a second time.
+      const currentDataString = stringifiedValue === null ? textToParse : jsonStringify(data)
+      if (jsonStringify(value) === currentDataString) return
       onEdit(value, path).then((error) => {
         if (error) {
           onError({ code: 'UPDATE_ERROR', message: error }, value as CollectionData)
