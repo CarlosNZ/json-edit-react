@@ -21,7 +21,7 @@ import {
   ValueData,
   CustomNodeDefinition,
 } from './types'
-import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useEditing } from './contexts'
+import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useEditingStore } from './contexts'
 import { useTriggers } from './hooks'
 import { getTranslateFunction } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
@@ -89,7 +89,9 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   collapseClickZones = ['header', 'left'],
 }) => {
   const { getStyles } = useTheme()
-  const { cancelEdit } = useEditing()
+  // Root must not subscribe to editing state — that would re-render the whole
+  // tree on every edit transition. Read the cancel action from the stable store.
+  const { cancelEdit } = useEditingStore()
   const collapseFilter = useMemo(() => getFilterFunction(collapse), [collapse])
   const translate = useMemo(
     () => getTranslateFunction(translations, customText),

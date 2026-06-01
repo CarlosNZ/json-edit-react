@@ -3,7 +3,7 @@
  */
 
 import React from 'react'
-import { useEditing } from './contexts'
+import { useEditingStore } from './contexts'
 import {
   type KeyboardControlsFull,
   type CollectionKey,
@@ -55,7 +55,8 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   customNodeData,
   getStyles,
 }) => {
-  const { startEdit, cancelEdit } = useEditing()
+  // Actions only (no subscription) — `isEditingKey` arrives via props.
+  const { startEdit, cancelEdit } = useEditingStore()
 
   const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
 

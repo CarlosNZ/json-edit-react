@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { useTheme } from '../contexts'
+import { useTheme, useEditingStore } from '../contexts'
 import { useDragSource } from './DragSourceProvider'
 import { isDescendantOf, pathsEqual } from '../utils/pathTools'
 import {
@@ -33,6 +33,7 @@ export const useDragNDrop = ({
 }: DnDProps) => {
   const { getStyles } = useTheme()
   const { dragSource, setDragSource } = useDragSource()
+  const editingStore = useEditingStore()
   const [isDragTarget, setIsDragTarget] = useState<Position | false>(false)
 
   // Props added to items being dragged
@@ -40,6 +41,14 @@ export const useDragNDrop = ({
     if (!canDrag) return {}
     return {
       onDragStart: (e: React.DragEvent) => {
+        // Don't allow dragging while any node is being edited. Checked here
+        // (reading the store imperatively) rather than via a render-time
+        // `canDrag` flag, so starting/ending an edit doesn't re-render every
+        // draggable node in the tree.
+        if (editingStore.getSnapshot().currentlyEditingElement !== null) {
+          e.preventDefault()
+          return
+        }
         e.stopPropagation()
         setDragSource({ path })
       },

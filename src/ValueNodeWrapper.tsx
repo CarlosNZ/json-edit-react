@@ -18,7 +18,7 @@ import {
   type JsonData,
   type EnumDefinition,
 } from './types'
-import { useTheme, useEditing, useCollapse } from './contexts'
+import { useTheme, useEditingStore, useCollapse } from './contexts'
 import { type CustomNodeData } from './CustomNode'
 import { filterNode } from './utils/filter'
 import { getNextOrPrevious } from './utils/keyboard'
@@ -55,16 +55,14 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     showIconTooltips,
   } = props
   const { getStyles } = useTheme()
-  const {
-    startEdit,
-    cancelEdit,
-    previouslyEditedElement,
-    recordPreviousEdit,
-    tabDirection,
-    setTabDirection,
-    previousValue,
-    setPreviousValue,
-  } = useEditing()
+  // Actions + a getSnapshot for imperative reads. The editing *state* this node
+  // needs (tabDirection, previouslyEditedElement, previousValue) is only read
+  // inside event handlers / the Tab-redirect effect — never during render — so
+  // it's read from the snapshot at use-time rather than subscribed to. The only
+  // editing state that drives this node's render (`isEditing`) comes from
+  // `useCommon`'s per-node selector.
+  const { startEdit, cancelEdit, recordPreviousEdit, setTabDirection, setPreviousValue, getSnapshot } =
+    useEditingStore()
   const { setCollapseState } = useCollapse()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
@@ -173,6 +171,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
   useLayoutEffect(() => {
     if (!isEditing) return
     if (isVisible && canEdit) return
+    const { tabDirection, previouslyEditedElement } = getSnapshot()
     const next = getNextOrPrevious(nodeData.fullData, path, tabDirection, sort)
     if (next) startEdit(next)
     else if (previouslyEditedElement) startEdit(previouslyEditedElement)
@@ -196,7 +195,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     // a subsequent cancel can revert. Gated on `previousValue === null` so a
     // chain of type changes within one edit session still reverts to the
     // *original* — subsequent changes don't overwrite the first snapshot.
-    if (previousValue === null) setPreviousValue(value as JsonData)
+    if (getSnapshot().previousValue === null) setPreviousValue(value as JsonData)
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
       onEdit(customNode.defaultValue, path)
@@ -277,6 +276,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const handleCancel = () => {
     cancelEdit()
+    const previousValue = getSnapshot().previousValue
     if (previousValue !== null) {
       onEdit(previousValue, path)
       // Clear the snapshot after applying it — otherwise it lingers in

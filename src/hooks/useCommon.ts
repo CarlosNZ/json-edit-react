@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useState } from 'react'
-import { useEditing } from '../contexts'
+import { useEditingSelector, useEditingStore } from '../contexts'
 import {
   type CollectionNodeProps,
   type ErrorString,
@@ -35,7 +35,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     translate,
     errorMessageTimeout,
   } = props
-  const { currentlyEditingElement, cancelEdit } = useEditing()
+  const { cancelEdit } = useEditingStore()
   const [error, setError] = useState<string | null>(null)
 
   const nodeData = { ...incomingNodeData, collapsed }
@@ -43,10 +43,24 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
 
   const pathString = toPathString(path)
 
+  // Per-node editing flags as primitive selectors: this node re-renders only
+  // when its OWN boolean flips, so moving an edit between nodes re-renders just
+  // the two involved, not the whole tree.
+  const isEditing = useEditingSelector(
+    (s) => s.currentlyEditingElement?.mode === 'value' && pathsEqual(s.currentlyEditingElement.path, path)
+  )
+  const isEditingKey = useEditingSelector(
+    (s) => s.currentlyEditingElement?.mode === 'key' && pathsEqual(s.currentlyEditingElement.path, path)
+  )
+
   const canEdit = !restrictEditFilter(nodeData)
   const canDelete = !restrictDeleteFilter(nodeData)
   const canAdd = !restrictAddFilter(nodeData)
-  const canDrag = !restrictDragFilter(nodeData) && canDelete && currentlyEditingElement === null
+  // Drag permission no longer depends on global editing state (which would
+  // re-render every node when editing starts/ends). "Don't drag while editing"
+  // is enforced at drag-start instead (see useDragNDrop), reading the store
+  // imperatively.
+  const canDrag = !restrictDragFilter(nodeData) && canDelete
 
   const showError = (errorString: ErrorString) => {
     if (showErrorMessages) {
@@ -96,12 +110,8 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     })
   }
 
-  // Common DERIVED VALUES (this makes the JSX logic less messy)
-  const isEditing =
-    currentlyEditingElement?.mode === 'value' &&
-    pathsEqual(currentlyEditingElement.path, path)
-  const isEditingKey =
-    currentlyEditingElement?.mode === 'key' && pathsEqual(currentlyEditingElement.path, path)
+  // Common DERIVED VALUES (this makes the JSX logic less messy). `isEditing` /
+  // `isEditingKey` are the per-node selector subscriptions computed above.
   const isArray = typeof path.slice(-1)[0] === 'number'
   const canEditKey = parentData !== null && canEdit && canAdd && canDelete && !isArray
 

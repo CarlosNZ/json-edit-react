@@ -16,22 +16,21 @@ import { AutogrowTextArea } from './AutogrowTextArea'
 import { KeyDisplay } from './KeyDisplay'
 import {
   useTheme,
-  useEditing,
+  useEditingStore,
+  useEditingSelector,
   useCollapse,
   useAppliedBroadcast,
   useReferenceChanged,
 } from './contexts'
+import { isDescendantOf } from './utils/pathTools'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
 export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
-  const {
-    startEdit,
-    cancelEdit,
-    areChildrenBeingEdited,
-    previousValue,
-    setPreviousValue,
-  } = useEditing()
+  // Actions + imperative reads from the (stable) store — no subscription, so
+  // editing transitions elsewhere don't re-render this node.
+  const { startEdit, cancelEdit, setPreviousValue, areChildrenBeingEdited, getSnapshot } =
+    useEditingStore()
   const { setCollapseState } = useCollapse()
   const {
     mainContainerRef,
@@ -173,7 +172,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     showCollectionWrapper = true,
   } = customNodeData
 
-  const childrenEditing = areChildrenBeingEdited(path)
+  // Subscribe to "is an edit happening anywhere in my subtree" as a boolean —
+  // re-renders this node only when an edit enters or leaves its subtree (keeps
+  // it expanded while a descendant is edited via Tab).
+  const childrenEditing = useEditingSelector(
+    (s) =>
+      s.currentlyEditingElement !== null && isDescendantOf(s.currentlyEditingElement.path, path)
+  )
 
   // For when children are accessed via Tab
   if (childrenEditing && collapsed) animateCollapse(false)
@@ -275,6 +280,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   const handleCancel = () => {
     cancelEdit()
+    const previousValue = getSnapshot().previousValue
     if (previousValue !== null) {
       onEdit(previousValue, path)
       // Clear the snapshot after applying it — otherwise it lingers in

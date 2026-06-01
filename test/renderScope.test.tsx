@@ -116,7 +116,33 @@ describe('Stage B — lazy jsonStringify', () => {
   })
 })
 
-describe('render-scope baseline — editing fan-out (Stage C will tighten this)', () => {
+describe('Stage C — selectable editing store', () => {
+  // The headline Stage C win: moving an active edit between sibling nodes
+  // re-renders only the two nodes involved, not the whole tree. (Entering an
+  // edit from idle still fans out via the ancestors' `childrenEditing` flip
+  // cascading through unmemoized children — that's Stage D's job.)
+  test('moving the edit between sibling leaves re-renders only those two', async () => {
+    const user = userEvent.setup()
+    const spy = makeRenderSpy({ a: ['a'], b: ['b'], c: ['c'] })
+    render(
+      <Controlled initial={{ a: 'aval', b: 'bval', c: 'cval' }} definitions={spy.definitions} />
+    )
+
+    // Enter edit on `a` first (this fans out from idle — not what we're testing).
+    await user.dblClick(screen.getByText('"aval"'))
+    spy.reset()
+
+    // Move the edit a -> b. The common parent's "is a child editing?" stays
+    // true, so it doesn't re-render and `c` is never touched.
+    await user.dblClick(screen.getByText('"bval"'))
+
+    expect(spy.counts.a).toBeGreaterThan(0) // left edit mode
+    expect(spy.counts.b).toBeGreaterThan(0) // entered edit mode
+    expect(spy.counts.c).toBe(0) // untouched sibling — the fan-out is gone
+  })
+})
+
+describe('render-scope baseline — editing fan-out (Stage D will tighten this)', () => {
   test('starting an edit on one node currently re-renders sibling nodes too', async () => {
     const user = userEvent.setup()
     const spy = makeRenderSpy({ a: ['a'], b: ['b'], nested: ['c', 'd'] })

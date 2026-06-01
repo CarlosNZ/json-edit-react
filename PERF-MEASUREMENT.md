@@ -106,11 +106,20 @@ that's Stage C.
 
 ### After Stage C
 ```
-1. Enter edit:  commits=__  last=__ ms  settle=__s  flash=__________
-2. Keystroke:   commits=__  last=__ ms  settle=__s  flash=__________
-3. Commit:      commits=__  last=__ ms  settle=__s  flash=__________
-4. Tab-move:    commits=__  last=__ ms  settle=__s  flash=__________
+Stage: C (selectable editing store)   Dataset: medium (~19k), fully expanded
+
+4. Tab-move:    significantly improved, but variable:
+                - sibling leaves (same collection): near-instant
+                - crossing collection boundary (end of one -> start of next):
+                  still ~1-2s
+   Enter-edit / Commit: ~unchanged here.
+   Drag: confirmed still working.
 ```
+Why variable: moving between siblings keeps the common parent's
+`childrenEditing` true (no re-render, no cascade) → fast. Crossing a collection
+boundary flips `childrenEditing` on the old + new parent, and without memo each
+cascades through its whole subtree → the 1-2s. Enter-edit/Commit flip the root's
+`childrenEditing` → full cascade. Stage D's `React.memo` stops all three.
 
 ### After Stage D
 ```
