@@ -70,7 +70,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     editConfirmRef,
     collapseClickZones,
   } = props
-  const [stringifiedValue, setStringifiedValue] = useState(jsonStringify(data))
+  // Holds the raw-JSON edit buffer. Computed lazily — only when this node
+  // actually enters JSON-edit mode (see `enterJsonEdit` / the editing branch
+  // below) — rather than eagerly serializing every collection's whole subtree
+  // on mount. `null` means "not yet needed".
+  const [stringifiedValue, setStringifiedValue] = useState<string | null>(null)
 
   const startCollapsed = collapseFilter(incomingNodeData)
 
@@ -114,13 +118,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   // further down)
   const { isEditing, isEditingKey, isArray, canEditKey } = derivedValues
 
-  useEffect(() => {
-    setStringifiedValue(jsonStringify(data))
-    // if (isEditing) setCurrentlyEditingElement(null)
-    // jsonStringify is a serializer, not a trigger — including it here would
-    // reset in-progress edit text on every parent re-render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data])
+  // No eager `jsonStringify(data)` sync here: the edit buffer is computed on
+  // demand when the node enters JSON-edit mode. A non-editing node never needs
+  // it, and serializing every collection's subtree on every parent re-render
+  // was a major cost on large trees (and risked clobbering in-progress edits).
 
   // Contract #2: prop-change retires broadcast. See CollapseProvider top-of-file doc.
   const collapseFilterChanged = useReferenceChanged(collapseFilter)
@@ -222,7 +223,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   const handleEdit = () => {
     try {
-      const value = jsonParse(stringifiedValue)
+      const value = jsonParse(stringifiedValue ?? jsonStringify(data))
       cancelEdit()
       setPreviousValue(null)
       setError(null)
@@ -283,7 +284,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       return
     }
     setError(null)
-    setStringifiedValue(jsonStringify(data))
+    // Drop the edit buffer; it's recomputed lazily next time this node edits.
+    setStringifiedValue(null)
     setPreviousValue(null)
   }
 
@@ -352,7 +354,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     <div className="jer-collection-text-edit">
       {TextEditor ? (
         <TextEditor
-          value={stringifiedValue}
+          value={stringifiedValue ?? jsonStringify(data)}
           onChange={setStringifiedValue}
           onKeyDown={(e) =>
             handleKeyboard(e, {
@@ -366,8 +368,10 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           textAreaRef={textAreaRef}
           className="jer-collection-text-area"
           name={pathString}
-          value={stringifiedValue}
-          setValue={setStringifiedValue}
+          value={stringifiedValue ?? jsonStringify(data)}
+          // Safe narrowing: AutogrowTextArea only ever calls setValue with a
+          // plain string (never the functional updater form).
+          setValue={setStringifiedValue as React.Dispatch<React.SetStateAction<string>>}
           handleKeyPress={handleKeyPressEdit}
           styles={getStyles('input', nodeData)}
         />
@@ -426,6 +430,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           ? () => {
               hasBeenOpened.current = true
               setPreviousValue(null)
+              // Seed the edit buffer synchronously so the textarea opens
+              // pre-filled (no empty first frame). Other entry paths
+              // (Tab/custom/external) fall back to the lazy `?? jsonStringify`
+              // in the editing branch.
+              setStringifiedValue(jsonStringify(data))
               startEdit(path)
             }
           : undefined

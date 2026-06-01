@@ -69,6 +69,53 @@ describe('render-scope harness — sanity', () => {
   })
 })
 
+describe('Stage B — lazy jsonStringify', () => {
+  // Mirror the library's default serializer so behaviour is unchanged; the spy
+  // is the `jsonStringify` prop, which the editor wraps but calls once per use.
+  const makeStringifySpy = () =>
+    jest.fn((data: unknown, replacer?: (key: string, value: unknown) => unknown) =>
+      JSON.stringify(data, replacer as never, 2)
+    )
+
+  test('does not serialize any collection on initial mount', () => {
+    const spy = makeStringifySpy()
+    render(
+      <JsonEditor
+        data={{ outer: { inner: 1 }, sibling: 'x', list: [1, 2, 3] }}
+        setData={() => {}}
+        jsonStringify={spy}
+      />
+    )
+
+    // Pre-Stage-B this fired once per collection node (root + outer + list).
+    expect(spy).toHaveBeenCalledTimes(0)
+  })
+
+  test('serializes lazily when a collection enters JSON-edit mode', async () => {
+    const user = userEvent.setup()
+    const spy = makeStringifySpy()
+    render(
+      <JsonEditor
+        data={{ outer: { inner: 1 } }}
+        setData={() => {}}
+        jsonStringify={spy}
+        showIconTooltips
+      />
+    )
+
+    expect(spy).toHaveBeenCalledTimes(0)
+
+    // Click the root collection's Edit (JSON) button — first Edit button in DOM.
+    await user.click(screen.getAllByTitle('Edit')[0])
+
+    // The buffer is computed exactly once, on entry, and the textarea opens
+    // pre-filled with the serialized JSON.
+    expect(spy).toHaveBeenCalledTimes(1)
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toContain('"inner": 1')
+  })
+})
+
 describe('render-scope baseline — editing fan-out (Stage C will tighten this)', () => {
   test('starting an edit on one node currently re-renders sibling nodes too', async () => {
     const user = userEvent.setup()

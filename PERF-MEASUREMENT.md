@@ -88,11 +88,21 @@ is already free (local state).
 
 ### After Stage B
 ```
-1. Enter edit:  commits=__  last=__ ms  settle=__s  flash=__________
-2. Keystroke:   commits=__  last=__ ms  settle=__s  flash=__________
-3. Commit:      commits=__  last=__ ms  settle=__s  flash=__________
-4. Tab-move:    commits=__  last=__ ms  settle=__s  flash=__________
+Stage: B (lazy jsonStringify)   Dataset: medium (~19k), fully expanded
+
+1. Enter edit:  commits=1  last=1839 ms              settle=~4s    flash=whole tree
+2. Keystroke:   commits=1  last=2 ms                 settle=instant flash=(glitch)
+3. Commit:      commits=2  last=1881 ms total=3715ms settle=~7.5s  flash=whole tree
+4. Tab-move:    commits=1  last=1865 ms              settle=~4s    flash=whole tree
 ```
+vs baseline: Enter-edit 3126→1839 (-41%), Tab-move 2197→1865 (-15%), Commit React
+4624→3715 (-20%). The broad React-render drop comes from removing a `useEffect`
+from every CollectionNode (less per-render effect overhead on the fan-out), not
+from the serialization itself (stringify of even the whole tree is ~tens of ms).
+Commit wall-clock barely moved (~8-10s → ~7.5s) because it's dominated by the
+2× whole-tree re-render (Stage C/D) + browser paint of 19k DOM nodes (paint
+add-on) — neither of which Stage B touches. Fan-out (whole-tree flash) intact;
+that's Stage C.
 
 ### After Stage C
 ```
