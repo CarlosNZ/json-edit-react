@@ -36,6 +36,20 @@ const defaultJsonStringify = (
   replacer?: (key: string, value: unknown) => unknown
 ) => JSON.stringify(data, replacer, 2)
 
+// Wrap an optional consumer callback so its identity stays STABLE across
+// renders (lets the React.memo'd nodes bail) while always invoking the LATEST
+// implementation — even when passed inline. Same refs-to-latest idea as the
+// update callbacks. Returns `undefined` when the consumer supplied nothing, so
+// downstream `if (cb)` guards still hold.
+const useStableCallback = <T extends (...args: never[]) => unknown>(
+  cb: T | undefined
+): T | undefined => {
+  const ref = useRef(cb)
+  ref.current = cb
+  const stable = useRef(((...args: never[]) => ref.current?.(...args)) as T)
+  return cb ? stable.current : undefined
+}
+
 // Module-scoped stable defaults: a destructure default like `= []` allocates a
 // fresh array on every render when the prop is omitted, which would defeat the
 // React.memo node boundary (the prop would look "changed" every render). These
@@ -159,6 +173,14 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   srcDeleteRef.current = srcDelete
   const srcAddRef = useRef(srcAdd)
   srcAddRef.current = srcAdd
+
+  // Stabilise the consumer's side-effect callbacks the same way, so a node that
+  // bails out of re-rendering still invokes the latest implementation (not a
+  // stale closure) when the consumer passes them inline.
+  const onChangeStable = useStableCallback(onChange)
+  const onErrorStable = useStableCallback(onError)
+  const onCollapseStable = useStableCallback(onCollapse)
+  const onEditEventStable = useStableCallback(onEditEvent)
 
   // Common method for handling data update. It runs the updated data through
   // provided "onUpdate" function, then updates data state or returns error
@@ -409,9 +431,9 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     onEdit,
     onDelete,
     onAdd,
-    onChange,
-    onError,
-    onEditEvent,
+    onChange: onChangeStable,
+    onError: onErrorStable,
+    onEditEvent: onEditEventStable,
     showErrorMessages,
     onMove,
     showCollectionCount,
@@ -448,7 +470,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     handleKeyboard: handleKeyboardCallback,
     keyboardControls: fullKeyboardControls,
     insertAtTop: insertAtTopOption,
-    onCollapse,
+    onCollapse: onCollapseStable,
     editConfirmRef,
     collapseClickZones,
   }

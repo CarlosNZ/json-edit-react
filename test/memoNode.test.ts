@@ -6,10 +6,12 @@
  *   ref, forcing the node to re-render with fresh parent data).
  * - `nodeData.fullData` / `nodeData.parentData` identity is IGNORED (they churn
  *   on every commit but don't affect this node's own output).
- * - The side-effect callbacks are ignored; any other prop change forces a render.
+ * - Consumer callbacks are compared by `===` (JsonEditor keeps them stable), so
+ *   a changed callback propagates; any other non-ignored prop change re-renders.
  */
 
 import { areNodePropsEqual } from '../src/utils/memoNode'
+import { NOOP } from '../src/utils/misc'
 import { type NodeData } from '../src/types'
 
 const makeNodeData = (overrides: Partial<NodeData> = {}): NodeData => ({
@@ -24,13 +26,16 @@ const makeNodeData = (overrides: Partial<NodeData> = {}): NodeData => ({
   ...overrides,
 })
 
+// Callbacks are compared now, so default them to one stable `NOOP` identity —
+// tests that don't vary a callback shouldn't trip the comparator on it; the
+// callback-identity test passes fresh ones explicitly.
 const makeProps = (overrides: Record<string, unknown> = {}) => ({
   data: { x: 1 },
   parentData: { k: { x: 1 } },
   nodeData: makeNodeData(),
   customNodeData: {},
-  onError: () => {},
-  onChange: () => {},
+  onError: NOOP,
+  onChange: NOOP,
   searchText: undefined,
   indent: 2,
   ...overrides,
@@ -76,7 +81,9 @@ describe('areNodePropsEqual', () => {
     expect(areNodePropsEqual(a, b)).toBe(false)
   })
 
-  test('ignores side-effect callback identity (onError/onChange)', () => {
+  test('re-renders when a consumer callback identity changes', () => {
+    // JsonEditor keeps these stable (refs-to-latest); the comparator compares
+    // them so a genuinely-changed callback propagates instead of going stale.
     const a = makeProps()
     const b = makeProps({
       data: a.data,
@@ -85,7 +92,7 @@ describe('areNodePropsEqual', () => {
       onError: () => {}, // fresh inline callback
       onChange: () => {},
     })
-    expect(areNodePropsEqual(a, b)).toBe(true)
+    expect(areNodePropsEqual(a, b)).toBe(false)
   })
 
   test('re-renders when any other (non-ignored) prop changes', () => {

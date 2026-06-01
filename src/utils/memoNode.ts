@@ -18,31 +18,29 @@
  *   `parentData` prop, also compared.)
  * - `customNodeData` — derived purely from `customNodeDefinitions` + `nodeData`
  *   (both compared here), so its per-render identity churn is safe to ignore.
- * - `onError` / `onChange` / `onCollapse` / `onEditEvent` — side-effect
- *   callbacks invoked only from handlers; they never affect rendered output, so
- *   a stale closure is harmless and shouldn't force a re-render. This lets
- *   consumers pass them inline without defeating the memo.
- *
- * Everything else (including `data`, `parentData`, the `restrict*` filters,
- * display options, `searchText`, `translate`, `customNodeDefinitions`, and the
- * stabilised `onEdit`/`onAdd`/`onDelete`/`onMove`) is compared by `===`. For a
- * clean bail-out the consumer's render-affecting props must be referentially
- * stable — standard React guidance; inline render-affecting callbacks (e.g. an
- * inline `enableClipboard`) reduce the memo's effectiveness without breaking
- * correctness.
+ * Everything else is compared by `===`, including ALL consumer callbacks
+ * (`onChange`/`onError`/`onCollapse`/`onEditEvent` as well as the
+ * `onEdit`/`onAdd`/`onDelete`/`onMove` family). `JsonEditor` wraps every one of
+ * these in a stable, refs-to-latest identity, so they don't churn the memo when
+ * a consumer passes them inline AND a genuinely-changed implementation still
+ * propagates — comparing them is what stops a node from invoking a stale
+ * callback after the consumer swaps it. The other render-affecting props
+ * (`data`, `parentData`, the `restrict*` filters, display options,
+ * `searchText`, `translate`, `customNodeDefinitions`) must likewise be
+ * referentially stable for a clean bail-out — standard React guidance; an
+ * inline `enableClipboard` etc. reduces the memo's effectiveness without
+ * breaking correctness.
  */
 
 import { type NodeData } from '../types'
 import { pathsEqual } from './pathTools'
 
-const IGNORED_KEYS = new Set<string>([
-  'nodeData',
-  'customNodeData',
-  'onError',
-  'onChange',
-  'onCollapse',
-  'onEditEvent',
-])
+// Only the genuinely-derived props are special-cased: `nodeData` is compared
+// field-by-field (below), and `customNodeData` is derived from
+// `customNodeDefinitions` + `nodeData` (both compared). Everything else,
+// callbacks included, is compared by `===` — JsonEditor keeps the callbacks
+// referentially stable so this stays cheap.
+const IGNORED_KEYS = new Set<string>(['nodeData', 'customNodeData'])
 
 const nodeDataEqual = (a: NodeData, b: NodeData): boolean =>
   a.key === b.key &&

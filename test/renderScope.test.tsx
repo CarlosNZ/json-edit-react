@@ -18,6 +18,7 @@ import { useState } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
+import { type OnChangeFunction } from '../src/types'
 import { makeRenderSpy } from './helpers/renderSpy'
 
 // A controlled host so `setData` commits actually re-render the editor, the
@@ -232,5 +233,66 @@ describe('Stage D — React.memo boundary: entering an edit no longer fans out',
 
     expect(spy.counts.target).toBeGreaterThan(0) // edited node re-rendered
     expect(spy.counts.sibling).toBe(0) // untouched sibling subtree did not
+  })
+})
+
+describe('Stage D — consumer callbacks stay fresh through the memo boundary', () => {
+  // Regression: the React.memo comparator must not pin a stale consumer
+  // callback. `onChange`'s return value transforms the edited input, so calling
+  // a stale one silently applies the wrong transform after a consumer swaps it.
+  test('a swapped onChange is invoked (latest), not the pinned-stale one', async () => {
+    const user = userEvent.setup()
+    const onChangeV1 = jest.fn((p: Parameters<OnChangeFunction>[0]) => p.newValue)
+    const onChangeV2 = jest.fn((p: Parameters<OnChangeFunction>[0]) => p.newValue)
+
+    const Host = ({ onChange }: { onChange: OnChangeFunction }) => {
+      const [data, setData] = useState<object>({ x: 'a' })
+      return <JsonEditor data={data} setData={setData} onChange={onChange} />
+    }
+
+    const { rerender } = render(<Host onChange={onChangeV1} />)
+
+    // Enter edit on `x` and type — fires the current onChange (v1).
+    await user.dblClick(screen.getByText('"a"'))
+    const input = screen.getByRole('textbox')
+    await user.type(input, 'b')
+    expect(onChangeV1).toHaveBeenCalled()
+
+    // Consumer swaps the callback while the edit is still open. The node is
+    // memoised; the comparator must still let the new implementation through.
+    onChangeV1.mockClear()
+    onChangeV2.mockClear()
+    rerender(<Host onChange={onChangeV2} />)
+
+    // Typing again must reach the LATEST callback, not the stale one.
+    await user.type(input, 'c')
+    expect(onChangeV2).toHaveBeenCalled()
+    expect(onChangeV1).not.toHaveBeenCalled()
+  })
+
+  // Guards the perf side of the same change: the comparator now compares
+  // callbacks, so stabilising them upstream is what keeps a swap from churning
+  // the tree. Without stabilisation a fresh identity each render would re-render
+  // every node — this pins that it doesn't.
+  test('swapping a consumer callback does not re-render sibling subtrees', () => {
+    const spy = makeRenderSpy({ sibling: ['other', 'y'] })
+    const Host = ({ onChange }: { onChange: OnChangeFunction }) => {
+      const [data, setData] = useState<object>({ outer: { x: 'a' }, other: { y: 'b' } })
+      return (
+        <JsonEditor
+          data={data}
+          setData={setData}
+          onChange={onChange}
+          customNodeDefinitions={spy.definitions}
+        />
+      )
+    }
+
+    const { rerender } = render(<Host onChange={(p) => p.newValue} />)
+    spy.reset()
+
+    // Fresh onChange identity — JsonEditor stabilises it, so no node re-renders.
+    rerender(<Host onChange={(p) => p.newValue} />)
+    expect(spy.counts.sibling).toBe(0)
   })
 })
