@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react'
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
@@ -70,10 +70,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     editConfirmRef,
     collapseClickZones,
   } = props
-  // Holds the raw-JSON edit buffer. Computed lazily — only when this node
-  // actually enters JSON-edit mode (see `enterJsonEdit` / the editing branch
-  // below) — rather than eagerly serializing every collection's whole subtree
-  // on mount. `null` means "not yet needed".
+  // Holds the raw-JSON edit buffer once the user types into it. Stays `null`
+  // until then — while editing, the displayed value is derived lazily by
+  // `editBufferValue` (below), rather than eagerly serializing every
+  // collection's whole subtree on mount. `null` means "not yet typed into".
   const [stringifiedValue, setStringifiedValue] = useState<string | null>(null)
 
   const startCollapsed = collapseFilter(incomingNodeData)
@@ -145,8 +145,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   // Lets the `string | null` edit buffer back a textarea whose `setValue` is
   // typed `Dispatch<SetStateAction<string>>`. Resolves the functional-updater
-  // form against the displayed value and always writes a string, so the buffer
-  // is never null while the user is actively editing.
+  // form against the displayed value and always writes a string, so a user
+  // edit never sets the buffer back to null. (It starts null until the first
+  // change — until then the textarea shows the derived `editBufferValue`.)
   const setEditBuffer = useCallback<React.Dispatch<React.SetStateAction<string>>>(
     (update) =>
       setStringifiedValue((prev) =>
@@ -154,6 +155,17 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       ),
     [data, jsonStringify]
   )
+
+  // The raw-JSON buffer shown in the editor. Gated on `isEditing` so a
+  // non-editing node never serializes its subtree, and memoized so entering
+  // edit through ANY path — toolbar button, Tab, `externalTriggers.edit`, a
+  // custom node's `setIsEditing` — serializes once on entry rather than on
+  // every re-render until the first keystroke. Once the user types,
+  // `stringifiedValue` is non-null and the `??` short-circuits (no serialize).
+  const editBufferValue = useMemo(() => {
+    if (!isEditing) return null
+    return stringifiedValue ?? jsonStringify(data)
+  }, [isEditing, stringifiedValue, data, jsonStringify])
 
   const getDefaultNewValue = useCallback(
     (nodeData: NodeData, newKey: string) => {
@@ -248,7 +260,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       cancelEdit()
       setPreviousValue(null)
       setError(null)
-      if (jsonStringify(value) === jsonStringify(data)) return
+      // No-op confirm: bail without committing. When the buffer was never
+      // typed into, `textToParse` already IS `jsonStringify(data)`, so reuse it
+      // rather than serializing `data` a second time.
+      const currentDataString = stringifiedValue === null ? textToParse : jsonStringify(data)
+      if (jsonStringify(value) === currentDataString) return
       onEdit(value, path).then((error) => {
         if (error) {
           onError({ code: 'UPDATE_ERROR', message: error }, value as CollectionData)
@@ -374,7 +390,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     <div className="jer-collection-text-edit">
       {TextEditor ? (
         <TextEditor
-          value={stringifiedValue ?? jsonStringify(data)}
+          value={editBufferValue ?? ''}
           onChange={setStringifiedValue}
           onKeyDown={(e) =>
             handleKeyboard(e, {
@@ -388,7 +404,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           textAreaRef={textAreaRef}
           className="jer-collection-text-area"
           name={pathString}
-          value={stringifiedValue ?? jsonStringify(data)}
+          value={editBufferValue ?? ''}
           setValue={setEditBuffer}
           handleKeyPress={handleKeyPressEdit}
           styles={getStyles('input', nodeData)}
@@ -448,11 +464,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           ? () => {
               hasBeenOpened.current = true
               setPreviousValue(null)
-              // Seed the edit buffer synchronously so the textarea opens
-              // pre-filled (no empty first frame). Other entry paths
-              // (Tab/custom/external) fall back to the lazy `?? jsonStringify`
-              // in the editing branch.
-              setStringifiedValue(jsonStringify(data))
               startEdit(path)
             }
           : undefined
