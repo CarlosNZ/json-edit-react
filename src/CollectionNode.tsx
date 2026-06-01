@@ -290,17 +290,15 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
 
   const handleCancel = () => {
     cancelEdit()
-    if (previousValue !== null) {
-      onEdit(previousValue, path)
-      // Clear the snapshot after applying it — otherwise it lingers in
-      // editing state and a later cancel (here or on another node) would
-      // see a non-null `previousValue` and trigger an unintended revert.
-      setPreviousValue(null)
-      return
-    }
     setError(null)
     // Drop the edit buffer; it's recomputed lazily next time this node edits.
+    // Cleared on *both* paths so a revert can't leave a stale buffer behind for
+    // a later non-seeding (Tab/custom/external) edit-entry to pick up.
     setStringifiedValue(null)
+    if (previousValue !== null) onEdit(previousValue, path)
+    // Clear the snapshot after any revert — otherwise it lingers in editing
+    // state and a later cancel (here or on another node) would see a non-null
+    // `previousValue` and trigger an unintended revert.
     setPreviousValue(null)
   }
 
