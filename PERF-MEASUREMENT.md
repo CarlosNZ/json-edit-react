@@ -24,12 +24,12 @@ Pick one **deep leaf string value** (e.g. a `name` deep inside a province) and
 use the **same** one every time. For each interaction: **click Reset first**, do
 the action, wait for it to settle, then read the overlay.
 
-| # | Interaction | Exact steps |
-|---|---|---|
-| **1. Enter edit** | open the editor on a leaf | Reset → double-click the value → wait |
-| **2. Keystroke** | type one char while editing | (from step 1, still editing) Reset → type one character → wait |
-| **3. Commit** | save the edit | (still editing) Reset → press **Enter** → wait to settle |
-| **4. Tab-move** | move edit to next field | double-click a leaf → Reset → press **Tab** → wait |
+| #                 | Interaction                 | Exact steps                                                    |
+| ----------------- | --------------------------- | -------------------------------------------------------------- |
+| **1. Enter edit** | open the editor on a leaf   | Reset → double-click the value → wait                          |
+| **2. Keystroke**  | type one char while editing | (from step 1, still editing) Reset → type one character → wait |
+| **3. Commit**     | save the edit               | (still editing) Reset → press **Enter** → wait to settle       |
+| **4. Tab-move**   | move edit to next field     | double-click a leaf → Reset → press **Tab** → wait             |
 
 ## What to record
 
