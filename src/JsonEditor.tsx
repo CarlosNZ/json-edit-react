@@ -188,6 +188,11 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   const srcAddRef = useRef(srcAdd)
   srcAddRef.current = srcAdd
 
+  // Stable accessor for the latest whole document, so a memoized node can read
+  // the live tree at event time (onChange `currentData`, Tab navigation) rather
+  // than the `nodeData.fullData` prop, which a bailed sibling keeps stale.
+  const getLatestData = useCallback(() => dataRef.current, [])
+
   // Stabilise the consumer's side-effect callbacks the same way, so a node that
   // bails out of re-rendering still invokes the latest implementation (not a
   // stale closure) when the consumer passes them inline.
@@ -442,6 +447,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     mainContainerRef: mainContainerRef as React.MutableRefObject<Element>,
     name: rootName,
     nodeData,
+    getLatestData,
     onEdit,
     onDelete,
     onAdd,

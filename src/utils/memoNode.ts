@@ -26,6 +26,8 @@
  *   `fullData` is not an option: it churns on every commit, so it would
  *   re-render every node and defeat the memo. Change this node's
  *   `data`/`parentData` too if you genuinely need a cross-subtree dependency.
+ *   (Event-time reads needing the live document — `onChange`'s `currentData`,
+ *   Tab's `getNextOrPrevious` — use `getLatestData()`, not this prop.)
  * - `customNodeData` — derived purely from `customNodeDefinitions` + `nodeData`
  *   (both compared here), so its per-render identity churn is safe to ignore.
  * Everything else is compared by `===`, including ALL consumer callbacks

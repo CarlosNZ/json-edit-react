@@ -295,4 +295,37 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     rerender(<Host onChange={(p) => p.newValue} />)
     expect(spy.counts.sibling).toBe(0)
   })
+
+  // PROBE: does onChange's `currentData` reflect the latest committed document?
+  // `updateValue` is `useCallback([onChange])` over a now-stable onChange, so it
+  // never rebuilds and freezes its `nodeData.fullData` closure. After committing
+  // one subtree, editing a *different* subtree should still report the live doc.
+  test('onChange currentData reflects the latest committed document', async () => {
+    const user = userEvent.setup()
+    const seen: Array<Record<string, unknown>> = []
+    const onChange: OnChangeFunction = (p) => {
+      seen.push(p.currentData as Record<string, unknown>)
+      return p.newValue
+    }
+    const Host = () => {
+      const [data, setData] = useState<object>({ a: 'aval', b: 'bval' })
+      return <JsonEditor data={data} setData={setData} onChange={onChange} />
+    }
+    render(<Host />)
+
+    // Commit a change to `a`: aval -> aval2.
+    await user.dblClick(screen.getByText('"aval"'))
+    const inputA = screen.getByRole('textbox')
+    await user.clear(inputA)
+    await user.type(inputA, 'aval2{Enter}')
+    await screen.findByText('"aval2"')
+
+    // Now edit `b` and type one char — onChange fires for `b`.
+    await user.dblClick(screen.getByText('"bval"'))
+    const inputB = screen.getByRole('textbox')
+    await user.type(inputB, 'X')
+
+    // `b`'s onChange must see the committed { a: 'aval2' }, not stale { a: 'aval' }.
+    expect(seen.at(-1)).toEqual({ a: 'aval2', b: 'bval' })
+  })
 })

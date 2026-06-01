@@ -278,6 +278,11 @@ interface BaseNodeProps {
   data: unknown
   parentData: CollectionData | null
   nodeData: NodeData
+  // Reads the latest whole document at call time — for event-time reads
+  // (onChange `currentData`, Tab `getNextOrPrevious`) that need the live tree,
+  // not the `nodeData.fullData` prop a memoized sibling keeps stale after a
+  // commit elsewhere. Stable identity, so it doesn't weaken the node memo.
+  getLatestData: () => JsonData
   onEdit: InternalUpdateFunction
   onDelete: InternalUpdateFunction
   onError?: OnErrorFunction
@@ -362,7 +367,7 @@ export interface CustomKeyProps<T = Record<string, unknown>> {
 }
 
 export interface CustomNodeProps<T = Record<string, unknown>>
-  extends Omit<BaseNodeProps, 'onError'> {
+  extends Omit<BaseNodeProps, 'onError' | 'getLatestData'> {
   value: JsonData
   customNodeProps?: T
   parentData: CollectionData | null

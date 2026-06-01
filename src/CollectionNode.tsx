@@ -69,6 +69,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     onCollapse,
     editConfirmRef,
     collapseClickZones,
+    getLatestData,
   } = props
   // Holds the raw-JSON edit buffer once the user types into it. Stays `null`
   // until then — while editing, the displayed value is derived lazily by
@@ -498,7 +499,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     keyValueArray,
     styles: getStyles('property', nodeData),
     getNextOrPrevious: (type: 'next' | 'prev') =>
-      getNextOrPrevious(nodeData.fullData, path, type, sort),
+      getNextOrPrevious(getLatestData(), path, type, sort),
     handleClick: collapseClickZones.includes('property')
       ? handleCollapse
       : // The "property" area is technically part of the "header" div, so this

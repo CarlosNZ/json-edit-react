@@ -54,6 +54,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     editConfirmRef,
     jsonStringify,
     showIconTooltips,
+    getLatestData,
   } = props
   const { getStyles } = useTheme()
   // Actions + a getSnapshot for imperative reads. The editing *state* this node
@@ -99,7 +100,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       }
 
       const modifiedValue = onChange({
-        currentData: nodeData.fullData,
+        currentData: getLatestData(),
         newValue,
         currentValue: value as ValueData,
         name,
@@ -173,7 +174,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (!isEditing) return
     if (isVisible && canEdit) return
     const { tabDirection, previouslyEditedElement } = getSnapshot()
-    const next = getNextOrPrevious(nodeData.fullData, path, tabDirection, sort)
+    const next = getNextOrPrevious(getLatestData(), path, tabDirection, sort)
     if (next) startEdit(next)
     else if (previouslyEditedElement) startEdit(previouslyEditedElement)
     else cancelEdit()
@@ -325,7 +326,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       tabForward: () => {
         setTabDirection('next')
         recordPreviousEdit(path)
-        const next = getNextOrPrevious(nodeData.fullData, path, 'next', sort)
+        const next = getNextOrPrevious(getLatestData(), path, 'next', sort)
         if (next) {
           handleEdit()
           startEdit(next)
@@ -334,7 +335,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       tabBack: () => {
         setTabDirection('prev')
         recordPreviousEdit(path)
-        const prev = getNextOrPrevious(nodeData.fullData, path, 'prev', sort)
+        const prev = getNextOrPrevious(getLatestData(), path, 'prev', sort)
         if (prev) {
           handleEdit()
           startEdit(prev)
@@ -355,7 +356,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     handleCancel,
     styles: getStyles('property', nodeData),
     getNextOrPrevious: (type: 'next' | 'prev') =>
-      getNextOrPrevious(nodeData.fullData, path, type, sort),
+      getNextOrPrevious(getLatestData(), path, type, sort),
     emptyStringKey,
     nodeData,
     customNodeData,
