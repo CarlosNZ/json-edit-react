@@ -94,6 +94,17 @@ const themes = [defaultTheme]
 console.log(`json-edit-react v${__VERSION__}`)
 console.log(`Site built: ${__BUILD_TIME__}`)
 
+// Parse a dot-separated path string (e.g. "user.name" or "items.0.label") into
+// the `CollectionKey[]` the `editorRef` handle expects. Numeric segments become
+// numbers (array indices); an empty string yields `[]` (the root). Used by the
+// imperative-handle test panel below.
+const parseHandlePath = (input: string): (string | number)[] =>
+  input
+    .split('.')
+    .map((segment) => segment.trim())
+    .filter((segment) => segment !== '')
+    .map((segment) => (/^\d+$/.test(segment) ? Number(segment) : segment))
+
 function App() {
   const navigate = useLocation()[1]
   const searchString = useSearch()
@@ -123,6 +134,11 @@ function App() {
 
   // Imperative handle for driving collapse/edit actions from outside the tree.
   const editorRef = useRef<JsonEditorHandle>(null)
+  // Imperative-handle test panel: visibility toggle + target path/options.
+  // Kept in local state (not AppState) so it survives demo-data changes.
+  const [showImperativeHandle, setShowImperativeHandle] = useState(false)
+  const [handlePath, setHandlePath] = useState('')
+  const [handleIncludeChildren, setHandleIncludeChildren] = useState(true)
 
   const [isSaving, setIsSaving] = useState(false)
   const previousTheme = useRef<Theme>(null) // Used when resetting after theme editing
@@ -143,6 +159,11 @@ function App() {
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
   }, [loading, liveData, reset, selectedDataSet])
+
+  // Always reset the External Control panel to off when switching data sets.
+  useEffect(() => {
+    setShowImperativeHandle(false)
+  }, [selectedDataSet])
 
   // useEffect(() => {
   //   const localStorageState = localStorage.getItem('collapseState')
@@ -212,6 +233,12 @@ function App() {
     if (customRestrictor !== undefined) return customRestrictor
     return !allowAdd
   })()
+
+  // The "Show External Control" toggle is disabled on data sets where it
+  // doesn't make sense to demo (async live data, custom-node rendering). When
+  // unavailable it stays off and the panel is hidden.
+  const externalControlEnabled = !['liveData', 'customNodes'].includes(selectedDataSet)
+  const showExternalControl = showImperativeHandle && externalControlEnabled
 
   // Stable references so the JsonEditor's memoized nodes can bail out: an inline
   // `theme` array would churn the theme context (re-rendering every node), and
@@ -632,25 +659,6 @@ function App() {
               </RenderProfiler>
             </Suspense>
           </Box>
-          {/* Demonstrates the `editorRef` imperative handle */}
-          <HStack w="100%" justify="flex-start" gap={2}>
-            <Button
-              size="sm"
-              onClick={() =>
-                editorRef.current?.collapse({ path: [], collapsed: true, includeChildren: true })
-              }
-            >
-              Collapse all
-            </Button>
-            <Button
-              size="sm"
-              onClick={() =>
-                editorRef.current?.collapse({ path: [], collapsed: false, includeChildren: true })
-              }
-            >
-              Expand all
-            </Button>
-          </HStack>
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
               <Button
@@ -896,7 +904,7 @@ function App() {
                     </Checkbox>
                   </Flex>
                   <Flex w="100%" justify="flex-start">
-                    <HStack>
+                    <HStack w="50%">
                       <Checkbox
                         id="customEditorCheckbox"
                         isChecked={customTextEditor}
@@ -909,6 +917,15 @@ function App() {
                         <InfoIcon color="primaryScheme.500" />
                       </Tooltip>
                     </HStack>
+                    <Checkbox
+                      id="showImperativeHandleCheckbox"
+                      isChecked={showExternalControl}
+                      disabled={!externalControlEnabled}
+                      onChange={() => setShowImperativeHandle((v) => !v)}
+                      w="50%"
+                    >
+                      Show External Control
+                    </Checkbox>
                   </Flex>
                   <HStack className="inputRow" pt={2}>
                     <FormLabel className="labelWidth" textAlign="right">
@@ -923,6 +940,69 @@ function App() {
                     />
                   </HStack>
                 </CheckboxGroup>
+                {showExternalControl && (
+                  // Test panel for the `editorRef` imperative handle. Enter a
+                  // dot-separated path (e.g. "user.name" or "items.0"); empty =
+                  // root. Actions operate on that path.
+                  <VStack w="100%" align="stretch" gap={2} pt={2} borderTopWidth={1} mt={2}>
+                    <Text fontSize="sm" fontWeight="bold">
+                      External Control
+                    </Text>
+                    <Input
+                      size="sm"
+                      placeholder="path, e.g. user.name or items.0 (empty = root)"
+                      value={handlePath}
+                      onChange={(e) => setHandlePath(e.target.value)}
+                    />
+                    <HStack gap={2} flexWrap="wrap">
+                      <Button
+                        size="sm"
+                        onClick={() => editorRef.current?.startEdit(parseHandlePath(handlePath))}
+                      >
+                        Start edit
+                      </Button>
+                      <Button size="sm" onClick={() => editorRef.current?.confirmEdit()}>
+                        Confirm edit
+                      </Button>
+                      <Button size="sm" onClick={() => editorRef.current?.cancelEdit()}>
+                        Cancel edit
+                      </Button>
+                    </HStack>
+                    <HStack gap={2} flexWrap="wrap">
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          editorRef.current?.collapse({
+                            path: parseHandlePath(handlePath),
+                            collapsed: true,
+                            includeChildren: handleIncludeChildren,
+                          })
+                        }
+                      >
+                        Collapse
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          editorRef.current?.collapse({
+                            path: parseHandlePath(handlePath),
+                            collapsed: false,
+                            includeChildren: handleIncludeChildren,
+                          })
+                        }
+                      >
+                        Expand
+                      </Button>
+                      <Checkbox
+                        isChecked={handleIncludeChildren}
+                        onChange={(e) => setHandleIncludeChildren(e.target.checked)}
+                        whiteSpace="nowrap"
+                      >
+                        Include children
+                      </Checkbox>
+                    </HStack>
+                  </VStack>
+                )}
               </VStack>
             </FormControl>
           </VStack>
