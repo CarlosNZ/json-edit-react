@@ -15,7 +15,7 @@
  */
 
 import { useState } from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { makeRenderSpy } from './helpers/renderSpy'
@@ -113,6 +113,50 @@ describe('Stage B — lazy jsonStringify', () => {
     expect(spy).toHaveBeenCalledTimes(1)
     const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
     expect(textarea.value).toContain('"inner": 1')
+  })
+
+  // The lazy buffer is `string | null`, fed through the `setEditBuffer` adapter
+  // (which replaced a `setStringifiedValue` type-cast). These two pin the
+  // raw-JSON edit contract end-to-end: a change event drives the adapter, then
+  // Meta-Enter (`objectConfirm`) commits via `handleEdit`.
+  test('commits a valid raw-JSON edit made through the lazy buffer', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    render(<JsonEditor data={{ outer: { inner: 1 } }} setData={setData} showIconTooltips />)
+
+    await user.click(screen.getAllByTitle('Edit')[0])
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    fireEvent.change(textarea, { target: { value: '{ "outer": { "inner": 2 } }' } })
+    fireEvent.keyDown(textarea, { key: 'Enter', metaKey: true })
+
+    await waitFor(() => expect(setData).toHaveBeenCalled())
+    expect(setData.mock.calls.at(-1)?.[0]).toEqual({ outer: { inner: 2 } })
+  })
+
+  test('reports INVALID_JSON with the entered text when the buffer cannot parse', async () => {
+    const user = userEvent.setup()
+    const onError = jest.fn()
+    render(
+      <JsonEditor
+        data={{ outer: { inner: 1 } }}
+        setData={() => {}}
+        onError={onError}
+        showIconTooltips
+      />
+    )
+
+    await user.click(screen.getAllByTitle('Edit')[0])
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    const badJson = '{ not valid json'
+    fireEvent.change(textarea, { target: { value: badJson } })
+    fireEvent.keyDown(textarea, { key: 'Enter', metaKey: true })
+
+    expect(onError).toHaveBeenCalledTimes(1)
+    const [{ error, errorValue }] = onError.mock.calls[0]
+    expect(error.code).toBe('INVALID_JSON')
+    // The payload is the exact text that failed to parse — resolved once and
+    // shared with the parse attempt, never the raw (possibly null) buffer.
+    expect(errorValue).toBe(badJson)
   })
 })
 
