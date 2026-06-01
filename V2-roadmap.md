@@ -22,7 +22,7 @@ Numbering matches the section numbers below. Items joined with `+` are interlock
 - §13 Themes / custom-component package split ✅ (mechanical)
 - §14 Terminology — "node", not "component" — [#253](https://github.com/CarlosNZ/json-edit-react/issues/253)
 - §15 CustomNode flags audit — [#254](https://github.com/CarlosNZ/json-edit-react/issues/254)
-- §16 Fine-grained re-rendering (last — benefits from settled types) — [#255](https://github.com/CarlosNZ/json-edit-react/issues/255)
+- §16 Fine-grained re-rendering ✅ (dependency-free editing store + `React.memo`) — [#255](https://github.com/CarlosNZ/json-edit-react/issues/255)
 - Additional cleanup (umbrella) — [#256](https://github.com/CarlosNZ/json-edit-react/issues/256)
 
 ---
@@ -154,21 +154,24 @@ Internal types already standardise on `CustomNode`, `NodeData`, `CollectionNode`
 
 [`CustomNodeDefinition`](src/CustomNode.ts) has ~17 optional fields. Pass over which still earn their keep. Candidates to revisit: `passOriginalNode` (probably default-on), `showCollectionWrapper`, `showOnView`/`showOnEdit` defaults.
 
-## 16. Fine-grained re-rendering
+## 16. Fine-grained re-rendering — ✅ done
 
-[`CollectionNode`](src/CollectionNode.tsx) renders the whole tree recursively. On 10k-node payloads every keystroke during an edit re-renders all visible siblings (and re-runs `jsonStringify` on collections up the spine via `useEffect([data])`).
+[`CollectionNode`](src/CollectionNode.tsx) rendered the whole tree recursively: every edit start/move re-rendered all nodes (the editing-context fan-out — every node read `useEditing()`), and every commit re-rendered the tree top-down and re-ran `jsonStringify` on collections up the spine via `useEffect([data])`. On a fully-expanded ~19k-node payload, starting an edit took ~3.1s, a commit ~8s (felt), Tab-nav ~2.2s.
 
-Approach in stages, measure with a 10k-node payload between each:
+Done **dependency-free** (no Zustand/Jotai/`use-context-selector`) across four stacked PRs, measuring a ~19k-node fixture between each stage:
 
-1. **`React.memo` + stable callbacks + node identity by path** — lowest effort, probably 80% of the win.
-2. **Context selector** (`use-context-selector` or own impl) — each node subscribes to its slice; smallest API change for surgical updates.
-3. **External store** (Zustand/Jotai-style atoms keyed by path) — biggest refactor, unlocks future undo/redo + time travel cheaply.
+- **Measurement harness** ([#278](https://github.com/CarlosNZ/json-edit-react/pull/278)) — dev-only `React.Profiler` overlay in the demo + a sentinel-custom-node render-scope test harness (zero changes to shipped code), plus reproducible size-ladder fixtures (`data/medium|very-large|massive-test-data.json5`).
+- **Stage B — lazy `jsonStringify`** ([#279](https://github.com/CarlosNZ/json-edit-react/pull/279)) — the collection JSON-edit buffer is computed on demand (on entering edit) rather than eagerly on mount + re-derived on every data change. Removing that per-node `useEffect([data])` also cut per-render overhead on the fan-out.
+- **Stage C — selectable editing store** ([#280](https://github.com/CarlosNZ/json-edit-react/pull/280)) — editing state moved from a context *value* to a tiny external store exposed via React's built-in `useSyncExternalStore` (hence the **React peer bump to `>=18`**). The context value is the stable store object, so `useContext` never re-renders; each node subscribes only to its own `isEditing` / `isEditingKey` / `childrenEditing` boolean. `canDrag` no longer depends on global editing state (the "don't drag while editing" check moved to drag-start). Moving an edit now re-renders only the nodes involved.
+- **Stage D — `React.memo` boundary** ([#282](https://github.com/CarlosNZ/json-edit-react/pull/282)) — `CollectionNode` / `ValueNodeWrapper` wrapped in `React.memo` with a custom comparator ([src/utils/memoNode.ts](src/utils/memoNode.ts)) that keys off `data` by reference (structural sharing in [assign.ts](src/utils/assign.ts) → untouched sibling subtrees bail), compares `parentData` (key-rename safety), and ignores `fullData` identity + side-effect callbacks so inline consumer callbacks don't defeat it. Required stabilising the `onEdit`/`onAdd`/`onDelete`/`onMove` family (refs-to-latest), the churning prop defaults, and — a latent bug hitting all consumers — memoizing `ThemeProvider`'s context value.
 
-Only escalate if measurements demand it.
+Measured (medium ~19k, fully expanded): **Enter-edit 3126 → 2 ms, Commit 4624 → 14 ms, Tab-move 2197 → 1 ms.** React re-render cost is now **O(edited node + its ancestor spine), independent of tree size.** The original three-step plan (memo → context-selector → external store) collapsed into "external store via `useSyncExternalStore` + memo" — the dependency-free in-house equivalent of stages 2 + 3.
 
-**Followup carried from §4 Part 3:** the Tab-navigation retry in [ValueNodeWrapper.tsx](src/ValueNodeWrapper.tsx) currently lands editing on a filtered/uneditable target and then redirects via `useLayoutEffect`. The redirect is invisible (one paint) but the pattern is still "fire setState into the next render cycle." A cleaner architecture is to make `getNextOrPrevious` filter-aware so the Tab handler picks a viable target up front and never lands on a non-viable one. Touches `getNextOrPrevious` plus its three callers in `ValueNodeWrapper.tsx` and `KeyDisplay.tsx`. Eliminates the setState-after-render pattern entirely.
+**Stage E (full path-keyed store) — deliberately skipped.** It would shave the last whole-tree re-renders (e.g. the global `canDrag` flips on first/last edit of a session), but the measurements show React is no longer the bottleneck, so it isn't worth the refactor. Revisit only if a future feature (undo/redo time-travel) wants a path-keyed store for other reasons.
 
-**Add-on (try after §16 lands, in isolation):** browser-side scroll/render cost on very large fully-expanded trees (~50k+ nodes) is a separate problem from React re-renders — once the DOM is that big, layout/paint cost dominates regardless of React work. Worth a low-effort experiment: add `content-visibility: auto` (with a `contain-intrinsic-size` estimate) to `.jer-collection-element` in [style.css](src/style.css). Modern Chromium and Firefox support it (Safari rolling out); off-screen subtrees skip layout + paint, which is most of virtualization's win for ~zero code. Risk is scroll-position jumpiness if the intrinsic-size estimate is off. Try it standalone after §16 to measure the delta cleanly, not bundled with the React-side optimizations.
+**`content-visibility` add-on — tried, not merged.** Experiment on branch `255-content-visibility-paint` (committed, un-PR'd): `content-visibility: auto` + `contain-intrinsic-size` on `.jer-collection-element`. Verdict: only a marginal scroll-repaint gain; it does **not** fix the real remaining pain (drag-and-drop on a fully-expanded ~19k tree — a native-browser limit; Firefox won't even initiate the drag); and `contain: paint` introduced regressions (Chrome leaves stale dropzone-overlay "trails" during a drag; the expand chevron, which overflows its row slightly, gets clipped). The real lever for trees that large is virtualization/windowing — a large, separate effort, awkward with arbitrary-depth trees + the collapse animation — and in practice collapse levels keep such trees smooth.
+
+**Followup still carried from §4 Part 3:** the Tab-navigation retry in [ValueNodeWrapper.tsx](src/ValueNodeWrapper.tsx) still lands editing on a filtered/uneditable target and then redirects via `useLayoutEffect`. Stage C moved its state reads (`tabDirection`, `previouslyEditedElement`) onto the store snapshot but kept the redirect. Making `getNextOrPrevious` filter-aware — so the Tab handler picks a viable target up front and never lands on a non-viable one — would eliminate the setState-after-render pattern. Touches `getNextOrPrevious` plus its callers in `ValueNodeWrapper.tsx` and `KeyDisplay.tsx`.
 
 ---
 
