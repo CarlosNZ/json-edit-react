@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useLayoutEffect, useState, useMemo, useCallback, useRef } from 'react'
 import {
   StringValue,
   NumberValue,
@@ -25,8 +25,9 @@ import { getNextOrPrevious } from './utils/keyboard'
 import { isJsEvent, matchEnumType, NOOP } from './utils/misc'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'
+import { areNodePropsEqual } from './utils/memoNode'
 
-export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
+const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const {
     data,
     parentData,
@@ -53,6 +54,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     editConfirmRef,
     jsonStringify,
     showIconTooltips,
+    getLatestData,
   } = props
   const { getStyles } = useTheme()
   // Actions + a getSnapshot for imperative reads. The editing *state* this node
@@ -90,24 +92,30 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
 
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
+  // `updateValue` keeps a stable identity (it's handed to a custom node as
+  // `setValue`, and `path`'s identity churns every render), so it can't close
+  // over `value`/`name`/`path` — once `onChange` is stabilized upstream the
+  // closure would freeze. Read those from a ref-to-latest, and the live
+  // document from `getLatestData()`.
+  const onChangeArgsRef = useRef({ value, name, path })
+  onChangeArgsRef.current = { value, name, path }
   const updateValue = useCallback(
     (newValue: ValueData) => {
       if (!onChange) {
         setValue(newValue)
         return
       }
-
+      const { value: liveValue, name: liveName, path: livePath } = onChangeArgsRef.current
       const modifiedValue = onChange({
-        currentData: nodeData.fullData,
+        currentData: getLatestData(),
         newValue,
-        currentValue: value as ValueData,
-        name,
-        path,
+        currentValue: liveValue as ValueData,
+        name: liveName,
+        path: livePath,
       })
       setValue(modifiedValue)
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onChange]
+    [onChange, getLatestData]
   )
 
   useEffect(() => {
@@ -172,7 +180,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     if (!isEditing) return
     if (isVisible && canEdit) return
     const { tabDirection, previouslyEditedElement } = getSnapshot()
-    const next = getNextOrPrevious(nodeData.fullData, path, tabDirection, sort)
+    const next = getNextOrPrevious(getLatestData(), path, tabDirection, sort)
     if (next) startEdit(next)
     else if (previouslyEditedElement) startEdit(previouslyEditedElement)
     else cancelEdit()
@@ -324,7 +332,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       tabForward: () => {
         setTabDirection('next')
         recordPreviousEdit(path)
-        const next = getNextOrPrevious(nodeData.fullData, path, 'next', sort)
+        const next = getNextOrPrevious(getLatestData(), path, 'next', sort)
         if (next) {
           handleEdit()
           startEdit(next)
@@ -333,7 +341,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
       tabBack: () => {
         setTabDirection('prev')
         recordPreviousEdit(path)
-        const prev = getNextOrPrevious(nodeData.fullData, path, 'prev', sort)
+        const prev = getNextOrPrevious(getLatestData(), path, 'prev', sort)
         if (prev) {
           handleEdit()
           startEdit(prev)
@@ -354,7 +362,7 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     handleCancel,
     styles: getStyles('property', nodeData),
     getNextOrPrevious: (type: 'next' | 'prev') =>
-      getNextOrPrevious(nodeData.fullData, path, type, sort),
+      getNextOrPrevious(getLatestData(), path, type, sort),
     emptyStringKey,
     nodeData,
     customNodeData,
@@ -489,6 +497,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     </div>
   )
 }
+
+// Memoized boundary: a value node whose own `data` and render-affecting props
+// are unchanged bails out when its parent re-renders. See areNodePropsEqual.
+export const ValueNodeWrapper = React.memo(ValueNodeWrapperBase, areNodePropsEqual)
 
 const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
   if (customNodeData?.CustomNode && customNodeData?.name && customNodeData.showInTypesSelector) {

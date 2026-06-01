@@ -36,6 +36,41 @@ const defaultJsonStringify = (
   replacer?: (key: string, value: unknown) => unknown
 ) => JSON.stringify(data, replacer, 2)
 
+// Wrap an optional consumer callback so its identity stays STABLE across
+// renders (lets the React.memo'd nodes bail) while always invoking the LATEST
+// implementation — even when passed inline. Same refs-to-latest idea as the
+// update callbacks (and the same render-time-write safety: the wrapper runs
+// only from event handlers, never during render, so there is no mid-render read
+// to tear). Returns `undefined` when the consumer supplied nothing, so
+// downstream `if (cb)` guards still hold.
+const useStableCallback = <Args extends unknown[], R>(
+  cb: ((...args: Args) => R) | undefined
+): ((...args: Args) => R) | undefined => {
+  const ref = useRef(cb)
+  // Keep the last DEFINED callback — never overwrite with `undefined`. The
+  // wrapper is only handed out while `cb` is defined, and holding a real
+  // function means even a prior render's wrapper invoked after `cb` is removed
+  // (a concurrent-mode window) can't deref `undefined` via the `!` below.
+  // Parameterising by Args/R keeps the wrapper's signature == cb's (no cast).
+  if (cb) ref.current = cb
+  const stable = useRef((...args: Args): R => ref.current!(...args))
+  return cb ? stable.current : undefined
+}
+
+// Module-scoped stable defaults: a destructure default like `= []` allocates a
+// fresh array on every render when the prop is omitted, which would defeat the
+// React.memo node boundary (the prop would look "changed" every render). These
+// shared references keep the default stable.
+const EMPTY_CUSTOM_NODE_DEFINITIONS: CustomNodeDefinition[] = []
+const DEFAULT_COLLAPSE_CLICK_ZONES: Array<'left' | 'header' | 'property'> = ['header', 'left']
+// Same rationale: omitted object/array props would otherwise allocate a fresh
+// `{}`/`[]` every render, churning the `useMemo`s that derive `translate`,
+// `fullKeyboardControls`, etc., and defeating the node memo on every commit.
+const EMPTY_TRANSLATIONS: NonNullable<JsonEditorProps<JsonData>['translations']> = {}
+const EMPTY_CUSTOM_TEXT: NonNullable<JsonEditorProps<JsonData>['customText']> = {}
+const EMPTY_KEYBOARD_CONTROLS: NonNullable<JsonEditorProps<JsonData>['keyboardControls']> = {}
+const EMPTY_CUSTOM_BUTTONS: NonNullable<JsonEditorProps<JsonData>['customButtons']> = []
+
 const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   data,
   setData,
@@ -72,21 +107,21 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   maxWidth = 'min(600px, 90vw)',
   rootFontSize,
   stringTruncate = 250,
-  translations = {},
+  translations = EMPTY_TRANSLATIONS,
   className,
   id,
-  customText = {},
-  customNodeDefinitions = [],
-  customButtons = [],
+  customText = EMPTY_CUSTOM_TEXT,
+  customNodeDefinitions = EMPTY_CUSTOM_NODE_DEFINITIONS,
+  customButtons = EMPTY_CUSTOM_BUTTONS,
   jsonParse = JSON.parse,
   jsonStringify = defaultJsonStringify,
   TextEditor,
   errorMessageTimeout = 2500,
-  keyboardControls = {},
+  keyboardControls = EMPTY_KEYBOARD_CONTROLS,
   externalTriggers,
   insertAtTop = false,
   onCollapse,
-  collapseClickZones = ['header', 'left'],
+  collapseClickZones = DEFAULT_COLLAPSE_CLICK_ZONES,
 }) => {
   const { getStyles } = useTheme()
   // Root must not subscribe to editing state — that would re-render the whole
@@ -126,149 +161,212 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     fullData: data,
   }
 
+  // Refs-to-latest so the update callbacks below can be referentially STABLE
+  // (useCallback with empty deps) yet always act on the current data and the
+  // latest consumer callbacks — even when those are passed inline (as the demo
+  // does). Stable identities are what let the React.memo'd nodes bail out
+  // instead of re-rendering the whole tree on every commit.
+  //
+  // Writing `.current` during render is safe here because every read happens in
+  // an event handler or async committer (the `useCallback`s below, and the
+  // stabilised side-effect callbacks) — never during render to produce output.
+  // With no mid-render read there is nothing to tear. Moving these writes into a
+  // layout effect (the textbook "concurrent-safe" form) would instead open a
+  // child-first staleness window, since a child's effects run before this
+  // parent's — strictly worse for refs that only ever feed event handlers.
+  const dataRef = useRef(data)
+  dataRef.current = data
+  const setDataRef = useRef(setData)
+  setDataRef.current = setData
+  const translateRef = useRef(translate)
+  translateRef.current = translate
+  const rootNodeDataRef = useRef(nodeData)
+  rootNodeDataRef.current = nodeData
+  const srcEditRef = useRef(srcEdit)
+  srcEditRef.current = srcEdit
+  const srcDeleteRef = useRef(srcDelete)
+  srcDeleteRef.current = srcDelete
+  const srcAddRef = useRef(srcAdd)
+  srcAddRef.current = srcAdd
+
+  // Stable accessor for the latest whole document, so a memoized node can read
+  // the live tree at event time (onChange `currentData`, Tab navigation) rather
+  // than the `nodeData.fullData` prop, which a bailed sibling keeps stale.
+  const getLatestData = useCallback(() => dataRef.current, [])
+
+  // Stabilise the consumer's side-effect callbacks the same way, so a node that
+  // bails out of re-rendering still invokes the latest implementation (not a
+  // stale closure) when the consumer passes them inline.
+  const onChangeStable = useStableCallback(onChange)
+  const onErrorStable = useStableCallback(onError)
+  const onCollapseStable = useStableCallback(onCollapse)
+  const onEditEventStable = useStableCallback(onEditEvent)
+
   // Common method for handling data update. It runs the updated data through
   // provided "onUpdate" function, then updates data state or returns error
   // information accordingly
-  const handleEdit = async (updateMethod: UpdateFunction, input: UpdateFunctionProps) => {
-    const result = await updateMethod(input)
+  const handleEdit = useCallback(
+    async (updateMethod: UpdateFunction, input: UpdateFunctionProps) => {
+      const result = await updateMethod(input)
 
-    if (result === true || result === undefined) {
-      setData(input.newData)
-      return
-    }
+      if (result === true || result === undefined) {
+        setDataRef.current(input.newData)
+        return
+      }
 
-    const returnTuple = isUpdateReturnTuple(result) ? result : ['error', result]
-    const [type, resultValue] = returnTuple
+      const returnTuple = isUpdateReturnTuple(result) ? result : ['error', result]
+      const [type, resultValue] = returnTuple
 
-    if (type === 'error') {
-      setData(input.currentData)
-      return resultValue === false ? translate('ERROR_UPDATE', nodeData) : String(resultValue)
-    }
+      if (type === 'error') {
+        setDataRef.current(input.currentData)
+        return resultValue === false
+          ? translateRef.current('ERROR_UPDATE', rootNodeDataRef.current)
+          : String(resultValue)
+      }
 
-    setData(resultValue)
-  }
+      setDataRef.current(resultValue)
+    },
+    []
+  )
 
-  const onEdit: InternalUpdateFunction = async (value, path) => {
-    const { currentData, newData, currentValue, newValue } = updateDataObject(
-      data,
-      path,
-      value,
-      'update'
-    )
-    if (currentValue === newValue) return
+  const onEdit: InternalUpdateFunction = useCallback(
+    async (value, path) => {
+      const { currentData, newData, currentValue, newValue } = updateDataObject(
+        dataRef.current,
+        path,
+        value,
+        'update'
+      )
+      if (currentValue === newValue) return
 
-    return await handleEdit(srcEdit, {
-      currentData,
-      newData,
-      currentValue,
-      newValue,
-      name: path.slice(-1)[0],
-      path,
-    })
-  }
+      return await handleEdit(srcEditRef.current, {
+        currentData,
+        newData,
+        currentValue,
+        newValue,
+        name: path.slice(-1)[0],
+        path,
+      })
+    },
+    [handleEdit]
+  )
 
-  const onDelete: InternalUpdateFunction = async (value, path) => {
-    const { currentData, newData, currentValue, newValue } = updateDataObject(
-      data,
-      path,
-      value,
-      'delete'
-    )
+  const onDelete: InternalUpdateFunction = useCallback(
+    async (value, path) => {
+      const { currentData, newData, currentValue, newValue } = updateDataObject(
+        dataRef.current,
+        path,
+        value,
+        'delete'
+      )
 
-    return await handleEdit(srcDelete, {
-      currentData,
-      newData,
-      currentValue,
-      newValue,
-      name: path.slice(-1)[0],
-      path,
-    })
-  }
+      return await handleEdit(srcDeleteRef.current, {
+        currentData,
+        newData,
+        currentValue,
+        newValue,
+        name: path.slice(-1)[0],
+        path,
+      })
+    },
+    [handleEdit]
+  )
 
-  const onAdd: InternalUpdateFunction = async (value, path, options) => {
-    const { currentData, newData, currentValue, newValue } = updateDataObject(
-      data,
-      path,
-      value,
-      'add',
-      options
-    )
+  const onAdd: InternalUpdateFunction = useCallback(
+    async (value, path, options) => {
+      const { currentData, newData, currentValue, newValue } = updateDataObject(
+        dataRef.current,
+        path,
+        value,
+        'add',
+        options
+      )
 
-    return await handleEdit(srcAdd, {
-      currentData,
-      newData,
-      currentValue,
-      newValue,
-      name: path.slice(-1)[0],
-      path,
-    })
-  }
+      return await handleEdit(srcAddRef.current, {
+        currentData,
+        newData,
+        currentValue,
+        newValue,
+        name: path.slice(-1)[0],
+        path,
+      })
+    },
+    [handleEdit]
+  )
 
   // "onMove" is just a "Delete" followed by an "Add", but we combine into a
   // single "action" and only run one "onUpdate", which also means it'll be
   // registered as a single event in the "Undo" queue.
   // If either action returns an error, we reset the data the same way we do
   // when a single action returns error.
-  const onMove = async (
-    sourcePath: CollectionKey[] | null,
-    destPath: CollectionKey[],
-    position: 'above' | 'below'
-  ) => {
-    if (sourcePath === null) return
-    const { currentData, newData, currentValue } = updateDataObject(data, sourcePath, '', 'delete')
+  const onMove = useCallback(
+    async (
+      sourcePath: CollectionKey[] | null,
+      destPath: CollectionKey[],
+      position: 'above' | 'below'
+    ) => {
+      if (sourcePath === null) return
+      const { currentData, newData, currentValue } = updateDataObject(
+        dataRef.current,
+        sourcePath,
+        '',
+        'delete'
+      )
 
-    // Immediate key of the item being moved
-    const originalKey = sourcePath.slice(-1)[0]
-    // Where it's going
-    const targetPath = destPath.slice(0, -1)
-    // The key in the target path to insert before or after
-    const insertPos = destPath.slice(-1)[0]
+      // Immediate key of the item being moved
+      const originalKey = sourcePath.slice(-1)[0]
+      // Where it's going
+      const targetPath = destPath.slice(0, -1)
+      // The key in the target path to insert before or after
+      const insertPos = destPath.slice(-1)[0]
 
-    let targetKey =
-      typeof insertPos === 'number' // Moving TO an array
-        ? position === 'above'
-          ? insertPos
-          : insertPos + 1
-        : typeof originalKey === 'number'
-        ? `arr_${originalKey}` // Moving FROM an array, so needs a key
-        : originalKey // Moving from object to object
+      let targetKey =
+        typeof insertPos === 'number' // Moving TO an array
+          ? position === 'above'
+            ? insertPos
+            : insertPos + 1
+          : typeof originalKey === 'number'
+          ? `arr_${originalKey}` // Moving FROM an array, so needs a key
+          : originalKey // Moving from object to object
 
-    const sourceBase = sourcePath.slice(0, -1).join('.')
-    const destBase = destPath.slice(0, -1).join('.')
+      const sourceBase = sourcePath.slice(0, -1).join('.')
+      const destBase = destPath.slice(0, -1).join('.')
 
-    if (
-      sourceBase === destBase &&
-      typeof originalKey === 'number' &&
-      typeof targetKey === 'number' &&
-      originalKey < targetKey
-    ) {
-      targetKey -= 1
-    }
+      if (
+        sourceBase === destBase &&
+        typeof originalKey === 'number' &&
+        typeof targetKey === 'number' &&
+        originalKey < targetKey
+      ) {
+        targetKey -= 1
+      }
 
-    const insertOptions =
-      typeof targetKey === 'number'
-        ? { insert: true }
-        : position === 'above'
-        ? { insertBefore: insertPos }
-        : { insertAfter: insertPos }
+      const insertOptions =
+        typeof targetKey === 'number'
+          ? { insert: true }
+          : position === 'above'
+          ? { insertBefore: insertPos }
+          : { insertAfter: insertPos }
 
-    const { newData: addedData, newValue: addedValue } = updateDataObject(
-      newData,
-      [...targetPath, targetKey],
-      currentValue,
-      'add',
-      insertOptions as UpdateOptions
-    )
+      const { newData: addedData, newValue: addedValue } = updateDataObject(
+        newData,
+        [...targetPath, targetKey],
+        currentValue,
+        'add',
+        insertOptions as UpdateOptions
+      )
 
-    return await handleEdit(srcEdit, {
-      currentData,
-      newData: addedData,
-      currentValue,
-      newValue: addedValue,
-      name: destPath.slice(-1)[0],
-      path: destPath,
-    })
-  }
+      return await handleEdit(srcEditRef.current, {
+        currentData,
+        newData: addedData,
+        currentValue,
+        newValue: addedValue,
+        name: destPath.slice(-1)[0],
+        path: destPath,
+      })
+    },
+    [handleEdit]
+  )
 
   const restrictEditFilter = useMemo(() => getFilterFunction(restrictEdit), [restrictEdit])
   const restrictDeleteFilter = useMemo(() => getFilterFunction(restrictDelete), [restrictDelete])
@@ -337,16 +435,26 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
 
+  // Stable object so it doesn't churn the node prop comparison every render.
+  const insertAtTopOption = useMemo(
+    () => ({
+      object: insertAtTop === true || insertAtTop === 'object',
+      array: insertAtTop === true || insertAtTop === 'array',
+    }),
+    [insertAtTop]
+  )
+
   const otherProps = {
     mainContainerRef: mainContainerRef as React.MutableRefObject<Element>,
     name: rootName,
     nodeData,
+    getLatestData,
     onEdit,
     onDelete,
     onAdd,
-    onChange,
-    onError,
-    onEditEvent,
+    onChange: onChangeStable,
+    onError: onErrorStable,
+    onEditEvent: onEditEventStable,
     showErrorMessages,
     onMove,
     showCollectionCount,
@@ -382,11 +490,8 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     errorMessageTimeout,
     handleKeyboard: handleKeyboardCallback,
     keyboardControls: fullKeyboardControls,
-    insertAtTop: {
-      object: insertAtTop === true || insertAtTop === 'object',
-      array: insertAtTop === true || insertAtTop === 'array',
-    },
-    onCollapse,
+    insertAtTop: insertAtTopOption,
+    onCollapse: onCollapseStable,
     editConfirmRef,
     collapseClickZones,
   }

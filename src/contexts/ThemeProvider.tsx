@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react'
+import React, { createContext, useCallback, useContext, useMemo } from 'react'
 import {
   type Theme,
   type ThemeableElement,
@@ -54,9 +54,12 @@ const initialContext: ThemeContext = {
 
 const ThemeProviderContext = createContext(initialContext)
 
+// Stable default so an omitted `icons` prop doesn't churn the context value.
+const EMPTY_ICONS: IconReplacements = {}
+
 export const ThemeProvider = ({
   theme = defaultTheme,
-  icons = {},
+  icons = EMPTY_ICONS,
   docRoot,
   children,
 }: {
@@ -65,21 +68,28 @@ export const ThemeProvider = ({
   docRoot: HTMLElement
   children: React.ReactNode
 }) => {
-  const styles = compileStyles(theme, docRoot)
+  // Memoize so the context value is referentially stable across unrelated
+  // parent re-renders. Without this, every render handed `useTheme` consumers a
+  // fresh `{ getStyles, icons }`, re-rendering every node in the tree (a context
+  // update pierces React.memo) — defeating the §16 node memo boundary on every
+  // commit. `compileStyles` also writes CSS vars on `docRoot`, so confining it
+  // to genuine theme changes is a bonus. Pass a stable `theme` reference (e.g.
+  // memoize an inline theme array) to get the full benefit.
+  const styles = useMemo(() => compileStyles(theme, docRoot), [theme, docRoot])
 
-  const getStyles = (element: ThemeableElement, nodeData: NodeData) => {
-    if (typeof styles[element] === 'function') {
-      return styles[element](nodeData) as React.CSSProperties
-    }
-
-    return styles[element]
-  }
-
-  return (
-    <ThemeProviderContext.Provider value={{ getStyles, icons }}>
-      {children}
-    </ThemeProviderContext.Provider>
+  const getStyles = useCallback(
+    (element: ThemeableElement, nodeData: NodeData) => {
+      if (typeof styles[element] === 'function') {
+        return styles[element](nodeData) as React.CSSProperties
+      }
+      return styles[element]
+    },
+    [styles]
   )
+
+  const value = useMemo(() => ({ getStyles, icons }), [getStyles, icons])
+
+  return <ThemeProviderContext.Provider value={value}>{children}</ThemeProviderContext.Provider>
 }
 
 export const useTheme = () => useContext(ThemeProviderContext)

@@ -1,4 +1,4 @@
-import { useEffect, useRef, lazy, Suspense } from 'react'
+import { useEffect, useRef, lazy, Suspense, useMemo, useCallback } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import {
@@ -216,6 +216,44 @@ function App() {
     return !allowAdd
   })()
 
+  // Stable references so the JsonEditor's memoized nodes can bail out: an inline
+  // `theme` array would churn the theme context (re-rendering every node), and
+  // an inline `enableClipboard` would churn the per-node prop comparison.
+  const editorTheme = useMemo(
+    () => [theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }],
+    [theme, dataDefinition]
+  )
+
+  const enableClipboard = useCallback(
+    ({
+      stringValue,
+      type,
+      success,
+      errorMessage,
+    }: {
+      stringValue: unknown
+      type: 'value' | 'path'
+      success: boolean
+      errorMessage: string | null
+    }) =>
+      success
+        ? toast({
+            title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
+            description: truncate(String(stringValue)),
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+          })
+        : toast({
+            title: 'Problem copying to clipboard',
+            description: errorMessage,
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          }),
+    [toast]
+  )
+
   const handleChangeData = (selected: string) => {
     const newDataDefinition = demoDataDefinitions[selected]
 
@@ -417,11 +455,7 @@ function App() {
                   data={data}
                   setData={setData}
                   rootName={rootName}
-                  theme={[
-                    theme,
-                    dataDefinition?.styles ?? {},
-                    { container: { paddingTop: '1em' } },
-                  ]}
+                  theme={editorTheme}
                   indent={indent}
                   onUpdate={async (nodeData) => {
                     const demoOnUpdate = dataDefinition?.onUpdate ?? (() => undefined)
@@ -454,26 +488,7 @@ function App() {
                   showCollectionCount={
                     showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
                   }
-                  enableClipboard={
-                    allowCopy
-                      ? ({ stringValue, type, success, errorMessage }) =>
-                          success
-                            ? toast({
-                                title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
-                                description: truncate(String(stringValue)),
-                                status: 'success',
-                                duration: 5000,
-                                isClosable: true,
-                              })
-                            : toast({
-                                title: 'Problem copying to clipboard',
-                                description: errorMessage,
-                                status: 'error',
-                                duration: 5000,
-                                isClosable: true,
-                              })
-                      : false
-                  }
+                  enableClipboard={allowCopy ? enableClipboard : false}
                   restrictEdit={restrictEdit}
                   // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
                   restrictDelete={restrictDelete}

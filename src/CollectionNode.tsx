@@ -23,9 +23,10 @@ import {
   useReferenceChanged,
 } from './contexts'
 import { isDescendantOf } from './utils/pathTools'
+import { areNodePropsEqual } from './utils/memoNode'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
-export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
+const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   // Actions + imperative reads from the (stable) store — no subscription, so
   // editing transitions elsewhere don't re-render this node.
@@ -68,6 +69,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     onCollapse,
     editConfirmRef,
     collapseClickZones,
+    getLatestData,
   } = props
   // Holds the raw-JSON edit buffer once the user types into it. Stays `null`
   // until then — while editing, the displayed value is derived lazily by
@@ -505,7 +507,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     keyValueArray,
     styles: getStyles('property', nodeData),
     getNextOrPrevious: (type: 'next' | 'prev') =>
-      getNextOrPrevious(nodeData.fullData, path, type, sort),
+      getNextOrPrevious(getLatestData(), path, type, sort),
     handleClick: collapseClickZones.includes('property')
       ? handleCollapse
       : // The "property" area is technically part of the "header" div, so this
@@ -633,3 +635,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     CollectionNodeComponent
   )
 }
+
+// Memoized boundary: an untouched subtree (same `data` ref via structural
+// sharing) bails out instead of re-rendering when a parent re-renders. The
+// recursive `<CollectionNode>` usages above resolve to this memoized export.
+export const CollectionNode = React.memo(CollectionNodeBase, areNodePropsEqual)

@@ -18,6 +18,7 @@ import { useState } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
+import { type OnChangeFunction } from '../src/types'
 import { makeRenderSpy } from './helpers/renderSpy'
 
 // A controlled host so `setData` commits actually re-render the editor, the
@@ -236,8 +237,8 @@ describe('Stage C — selectable editing store', () => {
   })
 })
 
-describe('render-scope baseline — editing fan-out (Stage D will tighten this)', () => {
-  test('starting an edit on one node currently re-renders sibling nodes too', async () => {
+describe('Stage D — React.memo boundary: entering an edit no longer fans out', () => {
+  test('starting an edit on one node does not re-render sibling subtrees', async () => {
     const user = userEvent.setup()
     const spy = makeRenderSpy({ a: ['a'], b: ['b'], nested: ['c', 'd'] })
     render(
@@ -253,10 +254,166 @@ describe('render-scope baseline — editing fan-out (Stage D will tighten this)'
     // Enter edit mode on `a` (changes editing state, no data commit yet).
     await user.dblClick(screen.getByText('"aval"'))
 
-    // BASELINE: the editing-context fan-out re-renders every node, not just `a`.
-    // Stage C will change the two sibling expectations below to `toBe(0)`.
+    // `a` re-renders (its own isEditing flipped). Its siblings — the leaf `b`
+    // and the unrelated subtree under `c` — bail out via the memo boundary even
+    // though the root re-renders (its childrenEditing flips). This is the
+    // Stage C + D fan-out fix, end to end.
     expect(spy.counts.a).toBeGreaterThan(0)
-    expect(spy.counts.b).toBeGreaterThan(0)
-    expect(spy.counts.nested).toBeGreaterThan(0)
+    expect(spy.counts.b).toBe(0)
+    expect(spy.counts.nested).toBe(0)
+  })
+
+  test('committing a value does not re-render untouched sibling subtrees', async () => {
+    const user = userEvent.setup()
+    const spy = makeRenderSpy({ target: ['outer', 'x'], sibling: ['other', 'y'] })
+    render(
+      <Controlled
+        initial={{ outer: { x: 'xval' }, other: { y: 'yval' } }}
+        definitions={spy.definitions}
+      />
+    )
+    spy.reset()
+
+    // Edit and commit `outer.x`. assign() rebuilds only the spine (root, outer),
+    // so the `other` subtree keeps its `data` reference and bails out.
+    await user.dblClick(screen.getByText('"xval"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'changed{Enter}')
+
+    expect(spy.counts.target).toBeGreaterThan(0) // edited node re-rendered
+    expect(spy.counts.sibling).toBe(0) // untouched sibling subtree did not
+  })
+})
+
+describe('Stage D — consumer callbacks stay fresh through the memo boundary', () => {
+  // Regression: the React.memo comparator must not pin a stale consumer
+  // callback. `onChange`'s return value transforms the edited input, so calling
+  // a stale one silently applies the wrong transform after a consumer swaps it.
+  test('a swapped onChange is invoked (latest), not the pinned-stale one', async () => {
+    const user = userEvent.setup()
+    const onChangeV1 = jest.fn((p: Parameters<OnChangeFunction>[0]) => p.newValue)
+    const onChangeV2 = jest.fn((p: Parameters<OnChangeFunction>[0]) => p.newValue)
+
+    const Host = ({ onChange }: { onChange: OnChangeFunction }) => {
+      const [data, setData] = useState<object>({ x: 'a' })
+      return <JsonEditor data={data} setData={setData} onChange={onChange} />
+    }
+
+    const { rerender } = render(<Host onChange={onChangeV1} />)
+
+    // Enter edit on `x` and type — fires the current onChange (v1).
+    await user.dblClick(screen.getByText('"a"'))
+    const input = screen.getByRole('textbox')
+    await user.type(input, 'b')
+    expect(onChangeV1).toHaveBeenCalled()
+
+    // Consumer swaps the callback while the edit is still open. The node is
+    // memoised; the comparator must still let the new implementation through.
+    onChangeV1.mockClear()
+    onChangeV2.mockClear()
+    rerender(<Host onChange={onChangeV2} />)
+
+    // Typing again must reach the LATEST callback, not the stale one.
+    await user.type(input, 'c')
+    expect(onChangeV2).toHaveBeenCalled()
+    expect(onChangeV1).not.toHaveBeenCalled()
+  })
+
+  // Guards the perf side of the same change: the comparator now compares
+  // callbacks, so stabilising them upstream is what keeps a swap from churning
+  // the tree. Without stabilisation a fresh identity each render would re-render
+  // every node — this pins that it doesn't.
+  test('swapping a consumer callback does not re-render sibling subtrees', () => {
+    const spy = makeRenderSpy({ sibling: ['other', 'y'] })
+    const Host = ({ onChange }: { onChange: OnChangeFunction }) => {
+      const [data, setData] = useState<object>({ outer: { x: 'a' }, other: { y: 'b' } })
+      return (
+        <JsonEditor
+          data={data}
+          setData={setData}
+          onChange={onChange}
+          customNodeDefinitions={spy.definitions}
+        />
+      )
+    }
+
+    const { rerender } = render(<Host onChange={(p) => p.newValue} />)
+    spy.reset()
+
+    // Fresh onChange identity — JsonEditor stabilises it, so no node re-renders.
+    rerender(<Host onChange={(p) => p.newValue} />)
+    expect(spy.counts.sibling).toBe(0)
+  })
+
+  // onChange must receive LIVE args, not stale snapshots. The callback keeps a
+  // stable identity (so it doesn't churn the custom-node memo), so its closure
+  // can't be the source of truth: the document comes from `getLatestData()` and
+  // value/path from a ref-to-latest. Otherwise the `[onChange]`-stable callback
+  // freezes its closure once onChange is stabilized upstream — reporting a
+  // document missing a sibling commit AND a stale `currentValue` after re-edit.
+  test('onChange reports the live document and value, not stale snapshots', async () => {
+    const user = userEvent.setup()
+    const seen: Array<{ currentData: unknown; currentValue: unknown }> = []
+    const onChange: OnChangeFunction = (p) => {
+      seen.push({ currentData: p.currentData, currentValue: p.currentValue })
+      return p.newValue
+    }
+    const Host = () => {
+      const [data, setData] = useState<object>({ a: 'aval', b: 'bval' })
+      return <JsonEditor data={data} setData={setData} onChange={onChange} />
+    }
+    render(<Host />)
+
+    // Commit a -> aval2 (changes the document) and b -> bval2 (b's own value).
+    await user.dblClick(screen.getByText('"aval"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'aval2{Enter}')
+    await screen.findByText('"aval2"')
+    await user.dblClick(screen.getByText('"bval"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'bval2{Enter}')
+    await screen.findByText('"bval2"')
+
+    // Re-edit b and type — onChange must see the live document AND b's latest
+    // value, not the mount-time snapshots a stale closure would pin.
+    await user.dblClick(screen.getByText('"bval2"'))
+    await user.type(screen.getByRole('textbox'), 'Z')
+
+    expect(seen.at(-1)).toEqual({
+      currentData: { a: 'aval2', b: 'bval2' },
+      currentValue: 'bval2',
+    })
+  })
+
+  // Same staleness class for `onError`: `useCommon` builds its `currentData` from
+  // `nodeData.fullData`, which a bailed sibling keeps stale. Triggering an error
+  // in a subtree that bailed on an earlier commit must still report the live doc.
+  test('onError reports the live document, not a stale snapshot', async () => {
+    const user = userEvent.setup()
+    let seenCurrentData: unknown = null
+    const onError = jest.fn((p: { currentData: unknown }) => {
+      seenCurrentData = p.currentData
+    })
+    const Host = () => {
+      const [data, setData] = useState<object>({ a: 'aval', obj: { x: 1 } })
+      return <JsonEditor data={data} setData={setData} onError={onError} showIconTooltips />
+    }
+    render(<Host />)
+
+    // Commit a -> aval2; `obj`'s subtree bails on the commit (its data ref is unchanged).
+    await user.dblClick(screen.getByText('"aval"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'aval2{Enter}')
+    await screen.findByText('"aval2"')
+
+    // Open obj's JSON editor (Edit buttons: [root, a, obj]), enter invalid JSON, confirm.
+    await user.click(screen.getAllByTitle('Edit')[2])
+    const ta = screen.getByRole('textbox') as HTMLTextAreaElement
+    fireEvent.change(ta, { target: { value: '{ not json' } })
+    fireEvent.keyDown(ta, { key: 'Enter', metaKey: true })
+
+    expect(onError).toHaveBeenCalled()
+    expect(seenCurrentData).toEqual({ a: 'aval2', obj: { x: 1 } })
   })
 })

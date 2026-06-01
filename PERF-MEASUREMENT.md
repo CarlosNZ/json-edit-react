@@ -24,12 +24,12 @@ Pick one **deep leaf string value** (e.g. a `name` deep inside a province) and
 use the **same** one every time. For each interaction: **click Reset first**, do
 the action, wait for it to settle, then read the overlay.
 
-| # | Interaction | Exact steps |
-|---|---|---|
-| **1. Enter edit** | open the editor on a leaf | Reset → double-click the value → wait |
-| **2. Keystroke** | type one char while editing | (from step 1, still editing) Reset → type one character → wait |
-| **3. Commit** | save the edit | (still editing) Reset → press **Enter** → wait to settle |
-| **4. Tab-move** | move edit to next field | double-click a leaf → Reset → press **Tab** → wait |
+| #                 | Interaction                 | Exact steps                                                    |
+| ----------------- | --------------------------- | -------------------------------------------------------------- |
+| **1. Enter edit** | open the editor on a leaf   | Reset → double-click the value → wait                          |
+| **2. Keystroke**  | type one char while editing | (from step 1, still editing) Reset → type one character → wait |
+| **3. Commit**     | save the edit               | (still editing) Reset → press **Enter** → wait to settle       |
+| **4. Tab-move**   | move edit to next field     | double-click a leaf → Reset → press **Tab** → wait             |
 
 ## What to record
 
@@ -123,8 +123,19 @@ cascades through its whole subtree → the 1-2s. Enter-edit/Commit flip the root
 
 ### After Stage D
 ```
-1. Enter edit:  commits=__  last=__ ms  settle=__s  flash=__________
-2. Keystroke:   commits=__  last=__ ms  settle=__s  flash=__________
-3. Commit:      commits=__  last=__ ms  settle=__s  flash=__________
-4. Tab-move:    commits=__  last=__ ms  settle=__s  flash=__________
+Stage: D (React.memo boundary + ThemeProvider/defaults stabilisation)
+Dataset: medium (~19k), fully expanded
+
+1. Enter edit:  commits=1  last=2 ms                 flash=as expected
+2. Keystroke:   commits=1  last=5 ms                 flash=as expected
+3. Commit:      commits=2  last=7 ms   total=14 ms   flash=as expected
+4. Tab-move:    commits=1  last=1 ms                 flash=as expected
 ```
+vs baseline: Enter-edit 3126ms → 2ms, Commit 4624ms → 14ms, Tab-move 2197ms → 1ms.
+The editing fan-out and the commit cascade are both gone — React re-render cost
+is now O(edited node + its ancestor spine), independent of tree size.
+
+Remaining sluggishness on the FULLY-EXPANDED big tree (bursty keystrokes, drag
+UI not initiating) is browser layout/paint of ~19k live DOM nodes — NOT React
+work (the single-digit-ms commits prove React is minimal now). That's the
+separate problem the `content-visibility` add-on targets.

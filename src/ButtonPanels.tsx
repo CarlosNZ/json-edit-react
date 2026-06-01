@@ -85,7 +85,10 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       return
     }
 
-    // Don't show keys that already exist in the object
+    // Don't show keys that already exist in the object. This reads the node's
+    // OWN subtree (by `path`), which structural sharing keeps consistent even if
+    // `fullData` is a stale bailed reference — so no `getLatestData()` needed
+    // here (unlike the event-time whole-document reads in onChange/onError/Tab).
     const existingKeys = Object.keys(extract(nodeData.fullData, path) as object)
 
     const options = getNewKeyOptions

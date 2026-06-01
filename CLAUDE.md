@@ -82,6 +82,9 @@ The demo and CCL can each resolve `json-edit-react`, `@json-edit-react/themes`, 
 ### State model
 - The recommended pattern is for consumers to own `data` state and pass `setData`. The `onUpdate` family is for side effects / validation / mutation, **not** for state ownership. Don't suggest using `onUpdate` to update external state — the README explicitly steers users away from that.
 
+### Performance / re-rendering (§16)
+- Before changing the render path — `CollectionNode`, `ValueNodeWrapper`, `useCommon`, the editing store, the `React.memo` comparator ([memoNode.ts](src/utils/memoNode.ts)), or any node prop — read [PERF-ARCHITECTURE.md](PERF-ARCHITECTURE.md). It states the invariants that keep fine-grained re-rendering correct: referential stability of every node prop, per-node primitive editing selectors, and the rule "subscribe for what a node renders; read live for what an event handler does — never from a frozen closure or a memoizable prop." Most regressions here are staleness bugs that break one of those.
+
 ### Themes
 - Pre-built themes ship in [`@json-edit-react/themes`](packages/themes/). Core exports only `defaultTheme` (the implicit baseline) and the `Theme` / `ThemeInput` types.
 - The themes package has no runtime deps — it imports only the `Theme` type from core (erased at build).

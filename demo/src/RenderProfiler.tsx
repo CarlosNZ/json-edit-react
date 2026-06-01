@@ -35,8 +35,25 @@ interface Stats {
 
 const makeZero = (): Stats => ({ commits: 0, totalMs: 0, lastMs: 0 })
 
+// Opt-in, dev only. Enable either by adding `?profiler` to the URL, or by
+// setting `localStorage['jer-profiler'] = '1'` in the console. Reading these
+// never touches the demo's own `?data=…` param; the localStorage flag also
+// survives dataset switches (the dropdown rewrites the query string, which
+// would drop `?profiler`). Re-evaluated on every render, so toggling is live.
+const profilerEnabled = (): boolean => {
+  if (!import.meta.env.DEV) return false
+  try {
+    return (
+      new URLSearchParams(window.location.search).has('profiler') ||
+      window.localStorage.getItem('jer-profiler') === '1'
+    )
+  } catch {
+    return false
+  }
+}
+
 export const RenderProfiler: React.FC<{ children: React.ReactNode }> = ({ children }) =>
-  import.meta.env.DEV ? <DevProfiler>{children}</DevProfiler> : <>{children}</>
+  profilerEnabled() ? <DevProfiler>{children}</DevProfiler> : <>{children}</>
 
 const DevProfiler: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Single source of truth for the accumulated stats. Mutated in `onRender`,
