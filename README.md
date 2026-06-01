@@ -30,7 +30,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
  - 🌏 **[Localisation](#localisation)** — easily translate UI labels and messages
  - 🔄 **[Drag-n-drop](#drag-n-drop)** re-ordering within objects/arrays
  - 🎹 **[Keyboard customisation](#keyboard-customisation)** — define your own key bindings
- - 🎮 **[External control](#external-control-1)** via callbacks and triggers
+ - 🎮 **[External control](#external-control-1)** via callbacks and an imperative handle
 
 💡 Try the **[Live Demo](https://carlosnz.github.io/json-edit-react/)** to see these features in action!
 
@@ -280,7 +280,7 @@ More detail [below](#external-control-1)
 | ------------------ | --------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
 | `onEditEvent`      | `OnEditEventFunction` | none    | Callback to execute whenever the user starts or stops editing a node                                   |
 | `onCollapse`       | `OnCollapseFunction`  | none    | Callback to execute whenever the user collapses or opens a node                                        |
-| `externalTriggers` | `ExternalTriggers`    | none    | Specify a node to collapse/open, or to start/stop editing. See [External control](#external-control-1) |  |
+| `editorRef`        | `Ref<JsonEditorHandle>` | none  | Imperative handle to collapse/open nodes or start/stop editing. See [Imperative handle](#imperative-handle-editorref) |
 
 </details>
 
@@ -317,7 +317,7 @@ import { JsonViewer } from 'json-edit-react'
 <JsonViewer data={data} theme={someTheme} />
 ```
 
-`JsonViewer` is a thin wrapper over `JsonEditor` that locks all edit, add, delete and drag operations off. It accepts the same display, theming, keyboard, search, collapse, localisation and custom-node props, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`), and `externalTriggers` — none of which are meaningful in a read-only context.
+`JsonViewer` is a thin wrapper over `JsonEditor` that locks all edit, add, delete and drag operations off. It accepts the same display, theming, keyboard, search, collapse, localisation and custom-node props, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), and the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`) — none of which are meaningful in a read-only context. Its `editorRef` handle (`JsonViewerHandle`) is collapse-only.
 
 If you instead need an editor that *sometimes* locks editing (e.g. based on user permissions), keep using `<JsonEditor>` and toggle the relevant `restrict*` props dynamically — `restrictEdit={!canEdit}` etc.
 
@@ -1259,38 +1259,65 @@ type OnCollapseFunction = (
 ) => void
 ```
 
-### Event triggers
+### Imperative handle (`editorRef`)
 
-You can *trigger* collapse and editing actions by changing the the `externalTriggers` prop.
-
-The shape of the `externalTriggers` object is:
+You can *drive* collapse and editing actions imperatively via a handle. Create a
+ref with `useRef` and pass it to the `editorRef` prop (an ordinary prop, not the
+`ref` attribute — this keeps `JsonEditor` a generic component with full type
+inference):
 
 ```ts
-interface ExternalTriggers  {
-  collapse?: CollapseState | CollapseState[]
-  edit?: EditState
+import { useRef } from 'react'
+import { JsonEditor, type JsonEditorHandle } from 'json-edit-react'
+
+const editorRef = useRef<JsonEditorHandle>(null)
+
+// ...
+<JsonEditor data={data} setData={setData} editorRef={editorRef} />
+
+// Then, from an event handler:
+editorRef.current?.collapse({ path: ['user'], collapsed: true, includeChildren: true })
+editorRef.current?.startEdit(['user', 'name'])
+editorRef.current?.confirmEdit()  // commit the current edit
+editorRef.current?.cancelEdit()   // discard the current edit
+```
+
+The handle shape is:
+
+```ts
+interface JsonEditorHandle {
+  // Collapse/expand a node (or a whole subtree, with `includeChildren`).
+  // Same `CollapseState` shape as the `onCollapse` callback input.
+  collapse: (state: CollapseState | CollapseState[]) => void
+  // Put the node at `path` into edit mode.
+  startEdit: (path: CollectionKey[]) => void
+  // Leave edit mode without committing.
+  cancelEdit: () => void
+  // Commit the in-progress edit (equivalent to clicking the tick), then exit.
+  confirmEdit: () => void
 }
 
-// CollapseState same as `onCollapseFunction` (above) input
 interface CollapseState {
   path: CollectionKey[]
   collapsed: boolean
   includeChildren: boolean
 }
-
-interface EditState {
-  path?: CollectionKey[]
-  action?: 'accept' | 'cancel'
-}
 ```
 
-For the `edit` trigger, the `path` is only required when *starting* to edit, and
-the `action` is only required when *stopping* the edit, to determine whether the
-component should cancel or submit the current changes.
+A few behaviours worth noting:
 
-> [!CAUTION]
-> Ensure that your `externalTriggers` object is stable (i.e. doesn't create new instances on each render) so as to not cause unwanted triggering -- you may need to wrap it in `useMemo`.
-> You should also be careful that your event callbacks and triggers don't cause an infinite loop!
+- `startEdit` **supersedes the `restrictEdit` filter**. This is intentional: a
+  common pattern is to lock the whole tree with `restrictEdit={true}` and then
+  imperatively enable editing on one node through your own UI, without having to
+  maintain a `restrictEdit` function that mirrors that selection.
+- `startEdit` will **auto-reveal a target that's currently collapsed** — any
+  collapsed ancestors expand so the node becomes visible and enters edit mode.
+- `confirmEdit`/`cancelEdit` act on whichever node is currently being edited, so
+  they take no arguments.
+
+`JsonViewer` exposes the same `editorRef` prop, but its handle (`JsonViewerHandle`)
+is **collapse-only** — the editing actions aren't meaningful (and would bypass the
+read-only contract) in a viewer.
 
 
 ## Undo functionality
@@ -1324,7 +1351,7 @@ A few helper functions, components and types that might be useful in your own im
 - `JsonEditorProps<T>`: all input props for the Json Editor component. Generic on the data type — see [Typed data](#typed-data).
 - `JsonData`: main `data` object -- any valid JSON structure. Used as the default for `T`.
 - [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`CopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
-- [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`ExternalTriggers`](#event-triggers): input types of the respective props
+- [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref): input types of the respective props
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `LocalisedString`: keys for the [`translations`](#localisation) object
 - `IconReplacements`: input type for the `icons` prop

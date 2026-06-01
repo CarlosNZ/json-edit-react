@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { createRef, useState } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { JsonViewer } from '../src/JsonViewer'
-import { type FilterFunction } from '../src/types'
+import { type FilterFunction, type JsonViewerHandle } from '../src/types'
 
 const noop = () => {}
 
@@ -129,20 +129,23 @@ describe('JsonViewer — read-only contract', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
-  test('passing externalTriggers to force edit is also nullified', () => {
-    render(
-      <JsonViewer
-        data={{ greeting: 'hello' }}
-        // @ts-expect-error — externalTriggers is omitted from JsonViewerProps.
-        // It bypasses restrict filters (sets currentlyEditingElement directly),
-        // so JsonViewer must force it undefined regardless.
-        externalTriggers={{ edit: { path: ['greeting'] } }}
-      />
-    )
+  test('the editorRef handle exposes collapse but not the editing actions', () => {
+    // A consumer's imperative startEdit supersedes restrictEdit by design, so
+    // a viewer must not expose it — otherwise the read-only contract could be
+    // bypassed through the ref. JsonViewer's handle proxies only `collapse`;
+    // the editing methods live on a private inner ref and are unreachable.
+    const ref = createRef<JsonViewerHandle>()
+    const { container } = render(<JsonViewer data={{ outer: { inner: 'hi' } }} editorRef={ref} />)
 
-    // useTriggers runs in a post-mount effect. If the override didn't hold,
-    // a textbox would now be in the document.
-    expect(screen.queryByRole('textbox')).toBeNull()
+    // collapse works
+    act(() => ref.current!.collapse({ collapsed: true, path: ['outer'], includeChildren: false }))
+    const chevrons = container.querySelectorAll('.jer-collapse-icon')
+    expect(chevrons[1]).toHaveClass('jer-rotate-90')
+
+    // editing actions are genuinely absent
+    expect((ref.current as Record<string, unknown>).startEdit).toBeUndefined()
+    expect((ref.current as Record<string, unknown>).cancelEdit).toBeUndefined()
+    expect((ref.current as Record<string, unknown>).confirmEdit).toBeUndefined()
   })
 })
 

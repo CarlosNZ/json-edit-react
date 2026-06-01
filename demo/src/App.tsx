@@ -7,8 +7,7 @@ import {
   JsonData,
   OnErrorFunction,
   defaultTheme,
-  // ExternalTriggers,
-  // type CollapseState
+  type JsonEditorHandle,
 } from '@json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
@@ -122,10 +121,8 @@ function App() {
     customTextEditor: false,
   })
 
-  // const [isEditing, setIsEditing] = useState(false)
-  // const collapseState = useRef<Record<string, CollapseState>>({})
-  // const [collapseData, setCollapseData] = useState<CollapseState[]>()
-  // const [triggers, setTriggers] = useState<ExternalTriggers>()
+  // Imperative handle for driving collapse/edit actions from outside the tree.
+  const editorRef = useRef<JsonEditorHandle>(null)
 
   const [isSaving, setIsSaving] = useState(false)
   const previousTheme = useRef<Theme>(null) // Used when resetting after theme editing
@@ -626,7 +623,7 @@ function App() {
                   //   collapseState.current = newCollapseState
                   //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
                   // }}
-                  // externalTriggers={triggers}
+                  editorRef={editorRef}
                   // translations={{
                   //   EMPTY_STRING: 'Nah',
                   // }}
@@ -635,9 +632,25 @@ function App() {
               </RenderProfiler>
             </Suspense>
           </Box>
-          {/* <Button onClick={() => setTriggers({ edit: { action: 'accept' } })}>
-            Click to stop edit
-          </Button> */}
+          {/* Demonstrates the `editorRef` imperative handle */}
+          <HStack w="100%" justify="flex-start" gap={2}>
+            <Button
+              size="sm"
+              onClick={() =>
+                editorRef.current?.collapse({ path: [], collapsed: true, includeChildren: true })
+              }
+            >
+              Collapse all
+            </Button>
+            <Button
+              size="sm"
+              onClick={() =>
+                editorRef.current?.collapse({ path: [], collapsed: false, includeChildren: true })
+              }
+            >
+              Expand all
+            </Button>
+          </HStack>
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
               <Button

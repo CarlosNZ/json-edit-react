@@ -1,16 +1,23 @@
-import React from 'react'
+import React, { useImperativeHandle, useRef } from 'react'
 import { JsonEditor } from './JsonEditor'
 import { NOOP } from './utils/misc'
-import { type JsonData, type JsonViewerProps } from './types'
+import { type JsonData, type JsonEditorHandle, type JsonViewerProps } from './types'
 
 export function JsonViewer<T = JsonData>(props: JsonViewerProps<T>): React.ReactElement | null {
+  const { editorRef, ...rest } = props
+
+  // The viewer holds a PRIVATE handle to the underlying editor and exposes only
+  // `collapse` to its consumer. Editing actions supersede `restrictEdit` by
+  // design, so surfacing `startEdit`/`confirmEdit` here would let a consumer
+  // bypass the read-only contract through the ref. Keeping them on the private
+  // `innerRef` makes them genuinely unreachable, not merely type-hidden.
+  const innerRef = useRef<JsonEditorHandle>(null)
+  useImperativeHandle(editorRef, () => ({ collapse: (state) => innerRef.current?.collapse(state) }), [])
+
   return (
     <JsonEditor<T>
-      {...props}
-      // externalTriggers bypasses the restrict filters (useTriggers sets
-      // currentlyEditingElement directly), so force it off for JS consumers
-      // who might pass it past the TS Omit
-      externalTriggers={undefined}
+      {...rest}
+      editorRef={innerRef}
       setData={NOOP}
       restrictEdit
       restrictAdd

@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { assign, type AssignOptions, type AssignInput } from './utils/assign'
 import { extract } from './utils/extract'
 import { CollectionNode } from './CollectionNode'
@@ -21,8 +28,14 @@ import {
   ValueData,
   CustomNodeDefinition,
 } from './types'
-import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useEditingStore } from './contexts'
-import { useTriggers } from './hooks'
+import {
+  useTheme,
+  ThemeProvider,
+  TreeStateProvider,
+  defaultTheme,
+  useEditingStore,
+  useCollapse,
+} from './contexts'
 import { getTranslateFunction } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
@@ -118,15 +131,16 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   TextEditor,
   errorMessageTimeout = 2500,
   keyboardControls = EMPTY_KEYBOARD_CONTROLS,
-  externalTriggers,
+  editorRef,
   insertAtTop = false,
   onCollapse,
   collapseClickZones = DEFAULT_COLLAPSE_CLICK_ZONES,
 }) => {
   const { getStyles } = useTheme()
   // Root must not subscribe to editing state — that would re-render the whole
-  // tree on every edit transition. Read the cancel action from the stable store.
-  const { cancelEdit } = useEditingStore()
+  // tree on every edit transition. Read the actions from the stable store
+  // (used by the cancel-on-unmount cleanup and the `editorRef` handle below).
+  const { startEdit, cancelEdit } = useEditingStore()
   const collapseFilter = useMemo(() => getFilterFunction(collapse), [collapse])
   const translate = useMemo(
     () => getTranslateFunction(translations, customText),
@@ -403,7 +417,29 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   }, [customNodeDefinitions, jsonParse])
 
   const editConfirmRef = useRef<HTMLDivElement>(null)
-  useTriggers(externalTriggers, editConfirmRef)
+
+  // Imperative handle (`editorRef` prop). All four targets are referentially
+  // stable — `startEdit`/`cancelEdit` are bound to the editing store singleton,
+  // `setCollapseState` is `useCallback`-memoized, and `editConfirmRef` is a ref
+  // — so the handle object never churns. The methods call the LIVE setters, not
+  // a frozen closure (per PERF-ARCHITECTURE).
+  const { setCollapseState } = useCollapse()
+  useImperativeHandle(
+    editorRef,
+    () => ({
+      collapse: (state) => setCollapseState(state),
+      // `force: true` supersedes `restrictEdit` by design — see
+      // `JsonEditorHandle`. The state-based editing model auto-reveals a target
+      // collapsed below the mount frontier (the same cascade Tab nav rides).
+      startEdit: (path) => startEdit(path, { force: true }),
+      cancelEdit: () => cancelEdit(),
+      confirmEdit: () => {
+        editConfirmRef.current?.click()
+        cancelEdit()
+      },
+    }),
+    [setCollapseState, startEdit, cancelEdit]
+  )
 
   // Common "sort" method for ordering nodes, based on the `keySort` prop
   // - If it's false (the default), we do nothing

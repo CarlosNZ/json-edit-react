@@ -1,7 +1,6 @@
 import { type JSX } from 'react'
 import { type AssignOptions } from './utils/assign'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
-import { type ExternalTriggers } from './hooks'
 import { CustomNodeData } from './CustomNode'
 
 export type JsonData = Record<string, unknown> | Array<unknown> | unknown
@@ -62,8 +61,37 @@ export interface JsonEditorProps<T = JsonData> {
   // Additional events
   onEditEvent?: OnEditEventFunction
   onCollapse?: OnCollapseFunction
-  externalTriggers?: ExternalTriggers
+  // Imperative handle — see `JsonEditorHandle`. Attach with `useRef` and the
+  // `editorRef` prop (a plain ref-valued prop, not the `ref` attribute, so the
+  // component stays a generic function with full type inference).
+  editorRef?: React.Ref<JsonEditorHandle>
 }
+
+/**
+ * Imperative handle exposed via the `editorRef` prop. Lets a consumer drive
+ * collapse/expand and editing actions without a state-as-RPC prop.
+ *
+ * `startEdit` deliberately *supersedes* the `restrictEdit` filter: the intended
+ * use is to lock the whole tree with `restrictEdit` and imperatively enable
+ * editing on a single node. It also auto-reveals a target that's collapsed
+ * below the mount frontier.
+ */
+export interface JsonEditorHandle {
+  /** Collapse/expand a node (or subtree, with `includeChildren`). */
+  collapse: (state: CollapseState | CollapseState[]) => void
+  /** Put the node at `path` into edit mode (overrides `restrictEdit`). */
+  startEdit: (path: CollectionKey[]) => void
+  /** Leave edit mode without committing. */
+  cancelEdit: () => void
+  /** Commit the in-progress edit (equivalent to clicking the tick), then exit. */
+  confirmEdit: () => void
+}
+
+/**
+ * The `editorRef` handle for `JsonViewer` — collapse only; editing is not
+ * exposed in a read-only context.
+ */
+export type JsonViewerHandle = Pick<JsonEditorHandle, 'collapse'>
 
 export type JsonViewerProps<T = JsonData> = Omit<
   JsonEditorProps<T>,
@@ -78,8 +106,11 @@ export type JsonViewerProps<T = JsonData> = Omit<
   | 'restrictDelete'
   | 'restrictDrag'
   | 'restrictTypeSelection'
-  | 'externalTriggers'
->
+  | 'editorRef'
+> & {
+  /** Collapse-only imperative handle — see `JsonViewerHandle`. */
+  editorRef?: React.Ref<JsonViewerHandle>
+}
 
 const valueDataTypes = ['string', 'number', 'boolean', 'null'] as const
 const collectionDataTypes = ['object', 'array'] as const
@@ -106,6 +137,10 @@ export type TabDirection = 'next' | 'prev'
 export interface EditingState {
   path: CollectionKey[]
   mode: 'value' | 'key'
+  // Set when the edit was started imperatively via the `editorRef` handle.
+  // A forced edit overrides the `restrictEdit` filter — the node-skip redirect
+  // in ValueNodeWrapper leaves it in place instead of bouncing off it.
+  force?: boolean
 }
 
 export interface IconReplacements {

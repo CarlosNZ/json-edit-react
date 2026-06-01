@@ -1,8 +1,8 @@
 /**
  * Collapse broadcasts for the tree. Drives whole-tree (or subtree-targeted)
  * expand/collapse operations from outside any specific node — e.g. the
- * Opt-click "Collapse All" / "Open All" gesture, and the
- * `externalTriggers.collapse` prop.
+ * Opt-click "Collapse All" / "Open All" gesture, and the `editorRef`
+ * handle's `collapse(...)` method.
  *
  * ## Contract surface
  *

@@ -13,6 +13,8 @@ export {
   standardDataTypes,
   type JsonEditorProps,
   type JsonViewerProps,
+  type JsonEditorHandle,
+  type JsonViewerHandle,
   type UpdateFunction,
   type OnChangeFunction,
   type OnErrorFunction,
@@ -48,6 +50,5 @@ export {
   type TypeOptions,
   type UpdateFunctionProps,
 } from './types'
-export { type EditState, type ExternalTriggers } from './hooks'
 export { type IconProps } from './Icons'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'

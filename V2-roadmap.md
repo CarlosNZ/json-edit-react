@@ -17,7 +17,7 @@ Numbering matches the section numbers below. Items joined with `+` are interlock
 - §5 Drop controlled/uncontrolled dual mode + §11 `JsonViewer` ✅ (state simplification, bundled) — [#248](https://github.com/CarlosNZ/json-edit-react/issues/248) / [#261](https://github.com/CarlosNZ/json-edit-react/pull/261)
 - §6 + §7 New `UpdateFunction` return shape + per-node `isValid` (interlocked) — [#249](https://github.com/CarlosNZ/json-edit-react/issues/249)
 - §8 + §9 `restrict*` → `allow*` rename + group the prop surface (API surface) — [#250](https://github.com/CarlosNZ/json-edit-react/issues/250)
-- §10 `useImperativeHandle` triggers — [#251](https://github.com/CarlosNZ/json-edit-react/issues/251)
+- §10 `useImperativeHandle` triggers — ✅ done — [#251](https://github.com/CarlosNZ/json-edit-react/issues/251)
 - §12 `onRenameProperty` callback (additive, can land any time) — [#252](https://github.com/CarlosNZ/json-edit-react/issues/252)
 - §13 Themes / custom-component package split ✅ (mechanical)
 - §14 Terminology — "node", not "component" — [#253](https://github.com/CarlosNZ/json-edit-react/issues/253)
@@ -64,7 +64,7 @@ Landed in [#272](https://github.com/CarlosNZ/json-edit-react/pull/272) across fi
 
 The "drop substring matching in `areChildrenBeingEdited`" item from the original plan was already done as part of §2's path-identity work — `isDescendantOf` from [src/utils/pathTools.ts](src/utils/pathTools.ts) does the prefix check correctly on arrays.
 
-Followups carried into other roadmap items: §10 gained a "To consider" note for an `expandPath`-style imperative helper; §16 gained the "Followup carried from §4 Part 3" entry (make `getNextOrPrevious` filter-aware to drop the `useLayoutEffect` redirect).
+Followups carried into other roadmap items: the `expandPath`-style imperative helper once mooted for §10 turned out to be unnecessary — §10's `editorRef.startEdit` auto-reveals collapsed targets via the existing state-based `childrenEditing` cascade, so no separate expand step was needed. §16 gained the "Followup carried from §4 Part 3" entry (make `getNextOrPrevious` filter-aware to drop the `useLayoutEffect` redirect).
 
 ## 5. Drop controlled/uncontrolled dual mode — ✅ done
 
@@ -110,23 +110,33 @@ The "true means no" cognitive load is real. Open question: hard cutover at 2.0, 
 
 Cuts cognitive load, harder to misroute props.
 
-## 10. `useImperativeHandle` for triggers
+## 10. `useImperativeHandle` for triggers — ✅ done
 
-Replace the `externalTriggers` state-as-RPC pattern with a proper ref handle:
+Landed in [#251](https://github.com/CarlosNZ/json-edit-react/issues/251). The `externalTriggers` state-as-RPC prop (and the `ExternalTriggers` / `EditState` types) is gone, replaced by a `JsonEditorHandle` exposed via a new `editorRef` prop:
 
 ```ts
-ref.current.collapse(path)
-ref.current.startEdit(path)
-ref.current.cancelEdit()
+const editorRef = useRef<JsonEditorHandle>(null)
+editorRef.current.collapse({ path, collapsed, includeChildren })
+editorRef.current.startEdit(path)
+editorRef.current.cancelEdit()
+editorRef.current.confirmEdit()
 ```
 
-Idiomatic React, TS autocompletes the actions, removes a piece of awkward state.
+Idiomatic React, TS autocompletes the actions, removes the awkward "memoise the trigger object or loop forever" footgun.
 
-After §4 Part 4, `setCollapseState` is already state-based with a version counter — the imperative handle for `collapse(...)` is a thin wrapper that calls it directly. Editing actions on the handle (`startEdit`/`cancelEdit`) bind to the named actions in `EditingProvider` (§4 Part 3). No new infrastructure needed here; this becomes a small public-API exposure on top of the existing internals.
+Key implementation decisions:
+
+- **Plain `editorRef` prop, not the `ref` attribute.** Supporting the `ref` attribute would force `React.forwardRef`, whose return type isn't generic — `JsonEditor<T>` would collapse to `JsonData` and lose the §1 inference. A ref-valued *prop* sidesteps `forwardRef` entirely; the component stays a plain generic function (no cast). `useImperativeHandle` is wired inside the inner `Editor` (where the provider hooks are in scope).
+- **No new infrastructure.** `collapse(...)` is a thin wrapper over the state-based `setCollapseState` (§4 Part 4); `startEdit`/`cancelEdit` bind to the named `EditingProvider` actions (§4 Part 3). `confirmEdit()` clicks the live `editConfirmRef` then cancels.
+- **State-based collapse is an asset, not an obstacle.** Because both collapse broadcasts and editing state are state-based (replayed to late-mounting nodes), `startEdit` **auto-reveals** a target collapsed below the mount frontier for free — the existing `childrenEditing` cascade in `CollectionNode` expands ancestors as they mount. (Validated by a test; no explicit ancestor-expand needed.)
+- **`startEdit` supersedes `restrictEdit`** by design (a `force` flag on the editing state tells the `ValueNodeWrapper` node-skip redirect to leave it in place). Intended use: lock the tree with `restrictEdit={true}`, then imperatively enable one node.
+- **`JsonViewer` exposes a collapse-only handle** (`JsonViewerHandle`). It holds a private ref to the inner editor and proxies only `collapse`, so editing actions are genuinely unreachable — closing the read-only-bypass hole the old runtime scrub of `externalTriggers` used to cover.
+
+Tests: editing actions in [test/imperativeHandle.test.tsx](test/imperativeHandle.test.tsx); the collapse broadcast suite ([test/collapseBroadcasts.test.tsx](test/collapseBroadcasts.test.tsx)) now drives via the handle.
 
 ## 11. Export `JsonViewer` — ✅ done
 
-Landed in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §5. `<JsonViewer />` is the canonical read-only entry point — a thin wrapper over `JsonEditor` that hard-codes `setData={noop}` and locks all four `restrict*` filters on. `JsonViewerProps<T>` is `Omit<JsonEditorProps<T>, 'setData' | 'onUpdate' | 'onEdit' | 'onAdd' | 'onDelete' | 'onChange' | 'restrictEdit' | 'restrictAdd' | 'restrictDelete' | 'restrictDrag' | 'restrictTypeSelection' | 'externalTriggers'>` — drops the props that aren't meaningful in a viewer. `externalTriggers` is also scrubbed at runtime in the wrapper since it would otherwise bypass the restrict filters (see [#251](https://github.com/CarlosNZ/json-edit-react/issues/251) — to revisit alongside §10). The v1 `viewOnly` prop is removed in the same PR.
+Landed in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §5. `<JsonViewer />` is the canonical read-only entry point — a thin wrapper over `JsonEditor` that hard-codes `setData={noop}` and locks all four `restrict*` filters on. `JsonViewerProps<T>` drops the props that aren't meaningful in a viewer (`setData`, the update callbacks, and the `restrict*` filters). The v1 `viewOnly` prop is removed in the same PR. (The original runtime scrub of `externalTriggers` here was retired in §10 — `externalTriggers` is gone, and the viewer's `editorRef` handle is collapse-only, so there's no edit action to bypass the filters with.)
 
 ## 12. `onRenameProperty` callback
 

@@ -15,6 +15,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | Several internal helpers are now part of the public API | No action needed — purely additive |
 | `JsonEditor` is now generic on the data type (`JsonEditor<T>`) | No action needed — defaults to `JsonData`, source-compatible. Opt in by writing `<JsonEditor<MyShape> ... />` |
 | `setData` is now required; `viewOnly` removed; new `JsonViewer` export | Switch read-only usage to `<JsonViewer>`; replace `viewOnly={cond}` with the relevant `restrict*` toggles, including `restrictDrag` if drag was enabled — see §6 |
+| `externalTriggers` prop replaced by the `editorRef` imperative handle | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/cancelEdit/confirmEdit` — see §7 |
 
 ---
 
@@ -212,7 +213,7 @@ import { JsonViewer } from 'json-edit-react'
 <JsonViewer data={data} />
 ```
 
-`JsonViewer` accepts all the display, theming, keyboard, search, collapse, custom-node, and localisation props of `JsonEditor`, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`), and `externalTriggers` — none are meaningful in a read-only context. If you were passing any of those alongside `viewOnly={true}`, you can drop them when moving to `JsonViewer`.
+`JsonViewer` accepts all the display, theming, keyboard, search, collapse, custom-node, and localisation props of `JsonEditor`, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), and the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`) — none are meaningful in a read-only context. It does accept `editorRef`, but its handle is collapse-only (see §7). If you were passing any of the dropped props alongside `viewOnly={true}`, you can drop them when moving to `JsonViewer`.
 
 ### If you used `viewOnly={cond}` to toggle editing dynamically
 
@@ -247,6 +248,44 @@ If you previously passed only `data` (no `setData`) and let the component manage
 const [data, setData] = useState(initialData)
 <JsonEditor data={data} setData={setData} />
 ```
+
+---
+
+## 7. `externalTriggers` prop replaced by the `editorRef` imperative handle
+
+The `externalTriggers` prop — a state-as-RPC object you mutated to trigger collapse/edit actions — is removed. Imperative control now goes through a ref handle passed via the new `editorRef` prop. The `ExternalTriggers` and `EditState` types are removed; `JsonEditorHandle` (and `JsonViewerHandle`) are added.
+
+**Why:** props aren't commands. The old pattern required carefully memoising the trigger object to avoid infinite effect loops, and gave no autocomplete for the available actions. A ref handle is idiomatic React, fully typed, and removes that footgun. (`editorRef` is a *plain ref-valued prop*, not the `ref` attribute, so `JsonEditor<T>` stays a generic component with full type inference.)
+
+### Migration
+
+```diff
+- import { JsonEditor, type ExternalTriggers } from 'json-edit-react'
++ import { useRef } from 'react'
++ import { JsonEditor, type JsonEditorHandle } from 'json-edit-react'
+
+- const [triggers, setTriggers] = useState<ExternalTriggers>()
++ const editorRef = useRef<JsonEditorHandle>(null)
+
+- <JsonEditor data={data} setData={setData} externalTriggers={triggers} />
++ <JsonEditor data={data} setData={setData} editorRef={editorRef} />
+```
+
+Action mapping:
+
+| v1 `externalTriggers` | v2 `editorRef` handle |
+|---|---|
+| `{ collapse: state }` | `editorRef.current.collapse(state)` |
+| `{ edit: { path } }` | `editorRef.current.startEdit(path)` |
+| `{ edit: { action: 'accept' } }` | `editorRef.current.confirmEdit()` |
+| `{ edit: { action: 'cancel' } }` | `editorRef.current.cancelEdit()` |
+
+Two intentional behaviours of `startEdit`:
+
+- It **supersedes `restrictEdit`** — lock the tree with `restrictEdit={true}` and imperatively open one node, without writing a `restrictEdit` function to mirror that selection.
+- It **auto-reveals** a target collapsed below the current view: collapsed ancestors expand so the node becomes editable.
+
+`JsonViewer` also accepts `editorRef`, but its `JsonViewerHandle` exposes only `collapse` — editing actions would bypass the read-only contract, so they aren't surfaced.
 
 ---
 

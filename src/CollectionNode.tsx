@@ -166,7 +166,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   // The raw-JSON buffer shown in the editor. Gated on `isEditing` so a
   // non-editing node never serializes its subtree, and memoized so entering
-  // edit through ANY path — toolbar button, Tab, `externalTriggers.edit`, a
+  // edit through ANY path — toolbar button, Tab, `editorRef.startEdit`, a
   // custom node's `setIsEditing` — serializes once on entry rather than on
   // every re-render until the first keystroke. Once the user types,
   // `stringifiedValue` is non-null and the `??` short-circuits (no serialize).
