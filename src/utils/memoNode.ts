@@ -8,7 +8,7 @@
  * its `data` reference across a commit and bails out — the parent re-rendering
  * no longer cascades into it.
  *
- * Props handled specially (NOT a plain `===` compare):
+ * Props handled specially (NOT a plain `Object.is` compare):
  *
  * - `nodeData` — compared field-by-field on the render-affecting scalars
  *   (`key`, `index`, `level`, `size`, `path`). Its `parentData` / `fullData` /
