@@ -4,7 +4,7 @@
  */
 
 import { useEffect } from 'react'
-import { useEditing, useCollapse } from '../contexts'
+import { useEditingStore, useCollapse } from '../contexts'
 import { type CollectionKey, type CollapseState } from '../types'
 import { pathsEqual } from '../utils/pathTools'
 
@@ -22,13 +22,16 @@ export const useTriggers = (
   triggers: ExternalTriggers | null | undefined,
   editConfirmRef: React.RefObject<HTMLDivElement | null>
 ) => {
-  const { startEdit, cancelEdit, currentlyEditingElement } = useEditing()
+  const { startEdit, cancelEdit, getSnapshot } = useEditingStore()
   const { setCollapseState } = useCollapse()
 
   useEffect(() => {
     if (!triggers) return
 
     const { collapse, edit } = triggers
+    // Read the current editing target imperatively — this hook lives in the
+    // root Editor, so subscribing here would re-render the whole tree.
+    const { currentlyEditingElement } = getSnapshot()
 
     // COLLAPSE
 
