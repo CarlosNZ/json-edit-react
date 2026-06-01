@@ -100,4 +100,13 @@ describe('areNodePropsEqual', () => {
     const b = makeProps({ data: a.data, parentData: a.parentData, nodeData: a.nodeData, indent: 4 })
     expect(areNodePropsEqual(a, b)).toBe(false)
   })
+
+  test('treats NaN as equal (Object.is), so a NaN-valued node can still bail', () => {
+    // A value node's `data` can be NaN. With `!==` (NaN !== NaN) the comparator
+    // would mark it changed every commit and never bail; Object.is treats it as
+    // equal so the node memoizes like any other unchanged value.
+    const a = makeProps({ data: NaN })
+    const b = makeProps({ data: NaN, parentData: a.parentData, nodeData: a.nodeData })
+    expect(areNodePropsEqual(a, b)).toBe(true)
+  })
 })

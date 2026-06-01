@@ -69,7 +69,7 @@ export const areNodePropsEqual = <P extends { nodeData: NodeData }>(prev: P, nex
 
   for (const key of nextKeys) {
     if (IGNORED_KEYS.has(key as string)) continue
-    if (prev[key] !== next[key]) return false
+    if (!Object.is(prev[key], next[key])) return false
   }
   return true
 }

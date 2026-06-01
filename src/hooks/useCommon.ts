@@ -95,8 +95,11 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
         })
       }
     },
+    // `showError` itself isn't listed (it'd churn onError every render); its
+    // closure values (`showErrorMessages`, `errorMessageTimeout`) are, so onError
+    // re-captures a fresh `showError` whenever either changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onErrorCallback, showErrorMessages, getLatestData]
+    [onErrorCallback, showErrorMessages, getLatestData, errorMessageTimeout]
   )
 
   const handleEditKey = (newKey: string) => {
