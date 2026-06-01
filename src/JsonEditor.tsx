@@ -39,7 +39,9 @@ const defaultJsonStringify = (
 // Wrap an optional consumer callback so its identity stays STABLE across
 // renders (lets the React.memo'd nodes bail) while always invoking the LATEST
 // implementation — even when passed inline. Same refs-to-latest idea as the
-// update callbacks. Returns `undefined` when the consumer supplied nothing, so
+// update callbacks (and the same render-time-write safety: the wrapper runs
+// only from event handlers, never during render, so there is no mid-render read
+// to tear). Returns `undefined` when the consumer supplied nothing, so
 // downstream `if (cb)` guards still hold.
 const useStableCallback = <Args extends unknown[], R>(
   cb: ((...args: Args) => R) | undefined
@@ -163,6 +165,14 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   // latest consumer callbacks — even when those are passed inline (as the demo
   // does). Stable identities are what let the React.memo'd nodes bail out
   // instead of re-rendering the whole tree on every commit.
+  //
+  // Writing `.current` during render is safe here because every read happens in
+  // an event handler or async committer (the `useCallback`s below, and the
+  // stabilised side-effect callbacks) — never during render to produce output.
+  // With no mid-render read there is nothing to tear. Moving these writes into a
+  // layout effect (the textbook "concurrent-safe" form) would instead open a
+  // child-first staleness window, since a child's effects run before this
+  // parent's — strictly worse for refs that only ever feed event handlers.
   const dataRef = useRef(data)
   dataRef.current = data
   const setDataRef = useRef(setData)
