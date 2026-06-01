@@ -155,6 +155,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     [data, jsonStringify]
   )
 
+  // Reset the JSON-edit buffer. Used on the exits this node controls — confirm
+  // and cancel (below) — and registered as the store `cancelOp`, which fires
+  // when the edit moves to another node, on the entries we own (Edit button +
+  // custom `setIsEditing`). Keeps a stale buffer from showing on the next entry,
+  // without a per-node effect.
+  const clearEditBuffer = useCallback(() => setStringifiedValue(null), [])
+
   // The raw-JSON buffer shown in the editor. Gated on `isEditing` so a
   // non-editing node never serializes its subtree, and memoized so entering
   // edit through ANY path — toolbar button, Tab, `externalTriggers.edit`, a
@@ -251,9 +258,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const handleEdit = () => {
-    // Resolve the buffer once so the parsed input and the INVALID_JSON error
-    // payload reflect exactly the same text (the buffer is null until typed).
-    const textToParse = stringifiedValue ?? jsonStringify(data)
+    // Parse exactly the text shown: `editBufferValue` is the displayed buffer
+    // and reuses the string the memo already serialized, so the parsed input
+    // and the INVALID_JSON payload match the textarea, and confirming without
+    // typing doesn't serialize `data` again. The `?? jsonStringify(data)` is a
+    // type guard — `editBufferValue` is non-null whenever a confirm can fire.
+    const textToParse = editBufferValue ?? jsonStringify(data)
     try {
       const value = jsonParse(textToParse)
       cancelEdit()
@@ -263,6 +273,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       // typed into, `textToParse` already IS `jsonStringify(data)`, so reuse it
       // rather than serializing `data` a second time.
       const currentDataString = stringifiedValue === null ? textToParse : jsonStringify(data)
+      clearEditBuffer()
       if (jsonStringify(value) === currentDataString) return
       onEdit(value, path).then((error) => {
         if (error) {
@@ -312,10 +323,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const handleCancel = () => {
     cancelEdit()
     setError(null)
-    // Drop the edit buffer; it's recomputed lazily next time this node edits.
-    // Cleared on *both* paths so a revert can't leave a stale buffer behind for
-    // a later non-seeding (Tab/custom/external) edit-entry to pick up.
-    setStringifiedValue(null)
+    clearEditBuffer()
     const previousValue = getSnapshot().previousValue
     if (previousValue !== null) onEdit(previousValue, path)
     // Clear the snapshot after any revert — otherwise it lingers in editing
@@ -440,7 +448,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
-    setIsEditing: () => startEdit(path),
+    setIsEditing: () => startEdit(path, { cancelOp: clearEditBuffer }),
     getStyles,
     canDragOnto: canEdit,
     canEdit,
@@ -463,7 +471,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           ? () => {
               hasBeenOpened.current = true
               setPreviousValue(null)
-              startEdit(path)
+              startEdit(path, { cancelOp: clearEditBuffer })
             }
           : undefined
       }
