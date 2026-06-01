@@ -47,6 +47,7 @@ export const useDragNDrop = ({
         // draggable node in the tree.
         if (editingStore.getSnapshot().currentlyEditingElement !== null) {
           e.preventDefault()
+          e.stopPropagation()
           return
         }
         e.stopPropagation()
