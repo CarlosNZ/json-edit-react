@@ -47,11 +47,12 @@ const useStableCallback = <Args extends unknown[], R>(
   cb: ((...args: Args) => R) | undefined
 ): ((...args: Args) => R) | undefined => {
   const ref = useRef(cb)
-  ref.current = cb
-  // Identity fixed for the component's life; forwards to the latest `cb`. The
-  // wrapper is only handed out while `cb` is defined (the return flips to
-  // `undefined` otherwise, re-rendering consumers), so the assertion is safe —
-  // and parameterising by Args/R keeps the wrapper's signature == cb's, no cast.
+  // Keep the last DEFINED callback — never overwrite with `undefined`. The
+  // wrapper is only handed out while `cb` is defined, and holding a real
+  // function means even a prior render's wrapper invoked after `cb` is removed
+  // (a concurrent-mode window) can't deref `undefined` via the `!` below.
+  // Parameterising by Args/R keeps the wrapper's signature == cb's (no cast).
+  if (cb) ref.current = cb
   const stable = useRef((...args: Args): R => ref.current!(...args))
   return cb ? stable.current : undefined
 }
