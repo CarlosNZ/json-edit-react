@@ -158,6 +158,30 @@ describe('Stage B — lazy jsonStringify', () => {
     // shared with the parse attempt, never the raw (possibly null) buffer.
     expect(errorValue).toBe(badJson)
   })
+
+  test('re-entering JSON-edit after a confirm shows current data, not a stale buffer', async () => {
+    const user = userEvent.setup()
+    const Host = () => {
+      const [data, setData] = useState<object>({ x: 1 })
+      return <JsonEditor data={data} setData={setData} showIconTooltips />
+    }
+    render(<Host />)
+
+    // Open the root JSON editor, replace with a COMPACT edit, and confirm it.
+    await user.click(screen.getAllByTitle('Edit')[0])
+    const ta = screen.getByRole('textbox') as HTMLTextAreaElement
+    fireEvent.change(ta, { target: { value: '{"x":2}' } })
+    fireEvent.keyDown(ta, { key: 'Enter', metaKey: true })
+    await waitFor(() => expect(screen.getByText('2')).toBeInTheDocument())
+
+    // Re-open on the same node: it must show the CURRENT data freshly
+    // serialised (pretty-printed — note the space after the colon), not the
+    // stale compact buffer the user typed in the previous session.
+    await user.click(screen.getAllByTitle('Edit')[0])
+    const reopened = (screen.getByRole('textbox') as HTMLTextAreaElement).value
+    expect(reopened).toContain('"x": 2')
+    expect(reopened).not.toContain('{"x":2}')
+  })
 })
 
 describe('render-scope baseline — editing fan-out (Stage C will tighten this)', () => {

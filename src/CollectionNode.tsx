@@ -258,6 +258,11 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       // typed into, `textToParse` already IS `jsonStringify(data)`, so reuse it
       // rather than serializing `data` a second time.
       const currentDataString = stringifiedValue === null ? textToParse : jsonStringify(data)
+      // Exiting edit mode — drop the buffer (like handleCancel) so the next
+      // entry re-seeds from the current data rather than showing this stale
+      // text. (A successful confirm stays on this same node instance, and the
+      // removed [data] sync effect no longer refreshes it.)
+      setStringifiedValue(null)
       if (jsonStringify(value) === currentDataString) return
       onEdit(value, path).then((error) => {
         if (error) {
