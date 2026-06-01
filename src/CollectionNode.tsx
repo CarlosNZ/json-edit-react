@@ -253,9 +253,12 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const handleEdit = () => {
-    // Resolve the buffer once so the parsed input and the INVALID_JSON error
-    // payload reflect exactly the same text (the buffer is null until typed).
-    const textToParse = stringifiedValue ?? jsonStringify(data)
+    // Parse exactly the text shown: `editBufferValue` is the displayed buffer
+    // and reuses the string the memo already serialized, so the parsed input
+    // and the INVALID_JSON payload match the textarea, and confirming without
+    // typing doesn't serialize `data` again. The `?? jsonStringify(data)` is a
+    // type guard — `editBufferValue` is non-null whenever a confirm can fire.
+    const textToParse = editBufferValue ?? jsonStringify(data)
     try {
       const value = jsonParse(textToParse)
       cancelEdit()
