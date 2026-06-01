@@ -30,7 +30,7 @@
  *   Tab's `getNextOrPrevious` — use `getLatestData()`, not this prop.)
  * - `customNodeData` — derived purely from `customNodeDefinitions` + `nodeData`
  *   (both compared here), so its per-render identity churn is safe to ignore.
- * Everything else is compared by `===`, including ALL consumer callbacks
+ * Everything else is compared by `Object.is`, including ALL consumer callbacks
  * (`onChange`/`onError`/`onCollapse`/`onEditEvent` as well as the
  * `onEdit`/`onAdd`/`onDelete`/`onMove` family). `JsonEditor` wraps every one of
  * these in a stable, refs-to-latest identity, so they don't churn the memo when
