@@ -41,12 +41,16 @@ const defaultJsonStringify = (
 // implementation — even when passed inline. Same refs-to-latest idea as the
 // update callbacks. Returns `undefined` when the consumer supplied nothing, so
 // downstream `if (cb)` guards still hold.
-const useStableCallback = <T extends (...args: never[]) => unknown>(
-  cb: T | undefined
-): T | undefined => {
+const useStableCallback = <Args extends unknown[], R>(
+  cb: ((...args: Args) => R) | undefined
+): ((...args: Args) => R) | undefined => {
   const ref = useRef(cb)
   ref.current = cb
-  const stable = useRef(((...args: never[]) => ref.current?.(...args)) as T)
+  // Identity fixed for the component's life; forwards to the latest `cb`. The
+  // wrapper is only handed out while `cb` is defined (the return flips to
+  // `undefined` otherwise, re-rendering consumers), so the assertion is safe —
+  // and parameterising by Args/R keeps the wrapper's signature == cb's, no cast.
+  const stable = useRef((...args: Args): R => ref.current!(...args))
   return cb ? stable.current : undefined
 }
 

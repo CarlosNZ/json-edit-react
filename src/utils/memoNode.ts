@@ -16,6 +16,16 @@
  *   own render, so their identity is intentionally ignored. (`value` equals the
  *   top-level `data` prop, which IS compared; `parentData` equals the top-level
  *   `parentData` prop, also compared.)
+ *
+ *   Assumption worth knowing: `fullData` (the whole document) is on the public
+ *   `NodeData`, so a `customNodeDefinitions` `condition` or a filter function
+ *   may read it. Ignoring its identity means a node's render is treated as a
+ *   function of its OWN `data`/`path`/`searchText` only — if a consumer keys a
+ *   render decision on *another* subtree's data via `fullData`, this node won't
+ *   pick that up while its own inputs are unchanged (it bails). Comparing
+ *   `fullData` is not an option: it churns on every commit, so it would
+ *   re-render every node and defeat the memo. Change this node's
+ *   `data`/`parentData` too if you genuinely need a cross-subtree dependency.
  * - `customNodeData` — derived purely from `customNodeDefinitions` + `nodeData`
  *   (both compared here), so its per-render identity churn is safe to ignore.
  * Everything else is compared by `===`, including ALL consumer callbacks
