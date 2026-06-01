@@ -296,15 +296,17 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     expect(spy.counts.sibling).toBe(0)
   })
 
-  // PROBE: does onChange's `currentData` reflect the latest committed document?
-  // `updateValue` is `useCallback([onChange])` over a now-stable onChange, so it
-  // never rebuilds and freezes its `nodeData.fullData` closure. After committing
-  // one subtree, editing a *different* subtree should still report the live doc.
-  test('onChange currentData reflects the latest committed document', async () => {
+  // onChange must receive LIVE args, not stale snapshots. The callback keeps a
+  // stable identity (so it doesn't churn the custom-node memo), so its closure
+  // can't be the source of truth: the document comes from `getLatestData()` and
+  // value/path from a ref-to-latest. Otherwise the `[onChange]`-stable callback
+  // freezes its closure once onChange is stabilized upstream — reporting a
+  // document missing a sibling commit AND a stale `currentValue` after re-edit.
+  test('onChange reports the live document and value, not stale snapshots', async () => {
     const user = userEvent.setup()
-    const seen: Array<Record<string, unknown>> = []
+    const seen: Array<{ currentData: unknown; currentValue: unknown }> = []
     const onChange: OnChangeFunction = (p) => {
-      seen.push(p.currentData as Record<string, unknown>)
+      seen.push({ currentData: p.currentData, currentValue: p.currentValue })
       return p.newValue
     }
     const Host = () => {
@@ -313,19 +315,24 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     }
     render(<Host />)
 
-    // Commit a change to `a`: aval -> aval2.
+    // Commit a -> aval2 (changes the document) and b -> bval2 (b's own value).
     await user.dblClick(screen.getByText('"aval"'))
-    const inputA = screen.getByRole('textbox')
-    await user.clear(inputA)
-    await user.type(inputA, 'aval2{Enter}')
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'aval2{Enter}')
     await screen.findByText('"aval2"')
-
-    // Now edit `b` and type one char — onChange fires for `b`.
     await user.dblClick(screen.getByText('"bval"'))
-    const inputB = screen.getByRole('textbox')
-    await user.type(inputB, 'X')
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'bval2{Enter}')
+    await screen.findByText('"bval2"')
 
-    // `b`'s onChange must see the committed { a: 'aval2' }, not stale { a: 'aval' }.
-    expect(seen.at(-1)).toEqual({ a: 'aval2', b: 'bval' })
+    // Re-edit b and type — onChange must see the live document AND b's latest
+    // value, not the mount-time snapshots a stale closure would pin.
+    await user.dblClick(screen.getByText('"bval2"'))
+    await user.type(screen.getByRole('textbox'), 'Z')
+
+    expect(seen.at(-1)).toEqual({
+      currentData: { a: 'aval2', b: 'bval2' },
+      currentValue: 'bval2',
+    })
   })
 })

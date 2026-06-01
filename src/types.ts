@@ -367,7 +367,7 @@ export interface CustomKeyProps<T = Record<string, unknown>> {
 }
 
 export interface CustomNodeProps<T = Record<string, unknown>>
-  extends Omit<BaseNodeProps, 'onError' | 'getLatestData'> {
+  extends Omit<BaseNodeProps, 'onError'> {
   value: JsonData
   customNodeProps?: T
   parentData: CollectionData | null

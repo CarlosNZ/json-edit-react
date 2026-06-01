@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState, useMemo, useCallback } from 'react'
+import React, { useEffect, useLayoutEffect, useState, useMemo, useCallback, useRef } from 'react'
 import {
   StringValue,
   NumberValue,
@@ -92,24 +92,30 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
+  // `updateValue` keeps a stable identity (it's handed to a custom node as
+  // `setValue`, and `path`'s identity churns every render), so it can't close
+  // over `value`/`name`/`path` — once `onChange` is stabilized upstream the
+  // closure would freeze. Read those from a ref-to-latest, and the live
+  // document from `getLatestData()`.
+  const onChangeArgsRef = useRef({ value, name, path })
+  onChangeArgsRef.current = { value, name, path }
   const updateValue = useCallback(
     (newValue: ValueData) => {
       if (!onChange) {
         setValue(newValue)
         return
       }
-
+      const { value: liveValue, name: liveName, path: livePath } = onChangeArgsRef.current
       const modifiedValue = onChange({
         currentData: getLatestData(),
         newValue,
-        currentValue: value as ValueData,
-        name,
-        path,
+        currentValue: liveValue as ValueData,
+        name: liveName,
+        path: livePath,
       })
       setValue(modifiedValue)
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onChange]
+    [onChange, getLatestData]
   )
 
   useEffect(() => {
