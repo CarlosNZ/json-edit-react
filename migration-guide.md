@@ -276,13 +276,13 @@ Action mapping:
 | v1 `externalTriggers` | v2 `editorRef` handle |
 |---|---|
 | `{ collapse: state }` | `editorRef.current.collapse(state)` |
-| `{ edit: { path } }` | `editorRef.current.startEdit(path)` |
+| `{ edit: { path } }` | `editorRef.current.startEdit({ path })` |
 | `{ edit: { action: 'accept' } }` | `editorRef.current.confirmEdit()` |
 | `{ edit: { action: 'cancel' } }` | `editorRef.current.cancelEdit()` |
 
-Two intentional behaviours of `startEdit`:
+Two behaviours of `startEdit` worth noting:
 
-- It **supersedes `restrictEdit`** — lock the tree with `restrictEdit={true}` and imperatively open one node, without writing a `restrictEdit` function to mirror that selection.
+- It **respects `restrictEdit` by default** — the filter is evaluated for the target at call time and the call is a no-op if it's restricted (it returns `false`, so you can give your own feedback). Pass `{ path, overrideRestrictions: true }` to bypass it (e.g. lock the tree with `restrictEdit={true}` and imperatively open one node).
 - It **auto-reveals** a target collapsed below the current view: collapsed ancestors expand so the node becomes editable.
 
 `JsonViewer` also accepts `editorRef`, but its `JsonViewerHandle` exposes only `collapse` — editing actions would bypass the read-only contract, so they aren't surfaced.

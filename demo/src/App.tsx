@@ -7,6 +7,7 @@ import {
   JsonData,
   OnErrorFunction,
   defaultTheme,
+  splitPropertyString,
   type JsonEditorHandle,
 } from '@json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
@@ -94,17 +95,6 @@ const themes = [defaultTheme]
 console.log(`json-edit-react v${__VERSION__}`)
 console.log(`Site built: ${__BUILD_TIME__}`)
 
-// Parse a dot-separated path string (e.g. "user.name" or "items.0.label") into
-// the `CollectionKey[]` the `editorRef` handle expects. Numeric segments become
-// numbers (array indices); an empty string yields `[]` (the root). Used by the
-// imperative-handle test panel below.
-const parseHandlePath = (input: string): (string | number)[] =>
-  input
-    .split('.')
-    .map((segment) => segment.trim())
-    .filter((segment) => segment !== '')
-    .map((segment) => (/^\d+$/.test(segment) ? Number(segment) : segment))
-
 function App() {
   const navigate = useLocation()[1]
   const searchString = useSearch()
@@ -139,6 +129,7 @@ function App() {
   const [showImperativeHandle, setShowImperativeHandle] = useState(false)
   const [handlePath, setHandlePath] = useState('')
   const [handleIncludeChildren, setHandleIncludeChildren] = useState(true)
+  // const [handleOverrideRestrictions, setHandleOverrideRestrictions] = useState(false)
 
   const [isSaving, setIsSaving] = useState(false)
   const previousTheme = useRef<Theme>(null) // Used when resetting after theme editing
@@ -234,10 +225,10 @@ function App() {
     return !allowAdd
   })()
 
-  // The "Show External Control" toggle is disabled on data sets where it
-  // doesn't make sense to demo (async live data, custom-node rendering). When
+  // The "Show External Control" toggle is disabled on the custom-nodes data set,
+  // where path-based editing doesn't map cleanly onto the custom renderers. When
   // unavailable it stays off and the panel is hidden.
-  const externalControlEnabled = !['liveData', 'customNodes'].includes(selectedDataSet)
+  const externalControlEnabled = selectedDataSet !== 'customNodes'
   const showExternalControl = showImperativeHandle && externalControlEnabled
 
   // Stable references so the JsonEditor's memoized nodes can bail out: an inline
@@ -950,30 +941,49 @@ function App() {
                     </Text>
                     <Input
                       size="sm"
-                      placeholder="path, e.g. user.name or items.0 (empty = root)"
+                      placeholder="path, e.g. user.name or items[0] (empty = root)"
                       value={handlePath}
                       onChange={(e) => setHandlePath(e.target.value)}
                     />
                     <HStack gap={2} flexWrap="wrap">
                       <Button
                         size="sm"
-                        onClick={() => editorRef.current?.startEdit(parseHandlePath(handlePath))}
+                        onClick={() => {
+                          const started = editorRef.current?.startEdit({
+                            path: splitPropertyString(handlePath),
+                            // overrideRestrictions: handleOverrideRestrictions,
+                          })
+                          if (started === false)
+                            toast({
+                              title: "Can't edit that node",
+                              status: 'warning',
+                              duration: 2000,
+                              isClosable: true,
+                            })
+                        }}
                       >
                         Start edit
                       </Button>
                       <Button size="sm" onClick={() => editorRef.current?.confirmEdit()}>
-                        Confirm edit
+                        Confirm
                       </Button>
                       <Button size="sm" onClick={() => editorRef.current?.cancelEdit()}>
-                        Cancel edit
+                        Cancel
                       </Button>
+                      {/* <Checkbox
+                        isChecked={handleOverrideRestrictions}
+                        onChange={(e) => setHandleOverrideRestrictions(e.target.checked)}
+                        whiteSpace="nowrap"
+                      >
+                        Override restrictions
+                      </Checkbox> */}
                     </HStack>
                     <HStack gap={2} flexWrap="wrap">
                       <Button
                         size="sm"
                         onClick={() =>
                           editorRef.current?.collapse({
-                            path: parseHandlePath(handlePath),
+                            path: splitPropertyString(handlePath),
                             collapsed: true,
                             includeChildren: handleIncludeChildren,
                           })
@@ -985,7 +995,7 @@ function App() {
                         size="sm"
                         onClick={() =>
                           editorRef.current?.collapse({
-                            path: parseHandlePath(handlePath),
+                            path: splitPropertyString(handlePath),
                             collapsed: false,
                             includeChildren: handleIncludeChildren,
                           })

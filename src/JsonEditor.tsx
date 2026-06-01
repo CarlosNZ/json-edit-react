@@ -140,7 +140,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   // Root must not subscribe to editing state — that would re-render the whole
   // tree on every edit transition. Read the actions from the stable store
   // (used by the cancel-on-unmount cleanup and the `editorRef` handle below).
-  const { startEdit, cancelEdit } = useEditingStore()
+  const { startEdit: startEditAction, cancelEdit } = useEditingStore()
   const collapseFilter = useMemo(() => getFilterFunction(collapse), [collapse])
   const translate = useMemo(
     () => getTranslateFunction(translations, customText),
@@ -164,16 +164,8 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchText, searchDebounceTime])
 
-  const nodeData: NodeData = {
-    key: rootName,
-    path: [],
-    level: 0,
-    index: 0,
-    value: data,
-    size: typeof data === 'object' && data !== null ? Object.keys(data).length : 1,
-    parentData: null,
-    fullData: data,
-  }
+  // Root node (path []). Same canonical builder the `editorRef` handle uses.
+  const nodeData: NodeData = buildNodeData(data, [], rootName)
 
   // Refs-to-latest so the update callbacks below can be referentially STABLE
   // (useCallback with empty deps) yet always act on the current data and the
@@ -417,29 +409,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   }, [customNodeDefinitions, jsonParse])
 
   const editConfirmRef = useRef<HTMLDivElement>(null)
-
-  // Imperative handle (`editorRef` prop). All four targets are referentially
-  // stable — `startEdit`/`cancelEdit` are bound to the editing store singleton,
-  // `setCollapseState` is `useCallback`-memoized, and `editConfirmRef` is a ref
-  // — so the handle object never churns. The methods call the LIVE setters, not
-  // a frozen closure (per PERF-ARCHITECTURE).
   const { setCollapseState } = useCollapse()
-  useImperativeHandle(
-    editorRef,
-    () => ({
-      collapse: (state) => setCollapseState(state),
-      // `force: true` supersedes `restrictEdit` by design — see
-      // `JsonEditorHandle`. The state-based editing model auto-reveals a target
-      // collapsed below the mount frontier (the same cascade Tab nav rides).
-      startEdit: (path) => startEdit(path, { force: true }),
-      cancelEdit: () => cancelEdit(),
-      confirmEdit: () => {
-        editConfirmRef.current?.click()
-        cancelEdit()
-      },
-    }),
-    [setCollapseState, startEdit, cancelEdit]
-  )
 
   // Common "sort" method for ordering nodes, based on the `keySort` prop
   // - If it's false (the default), we do nothing
@@ -467,6 +437,39 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
       })
     },
     [keySort]
+  )
+
+  // Imperative handle (`editorRef` prop). The methods call the LIVE setters /
+  // read the LIVE tree at call time, never a frozen render closure (per
+  // PERF-ARCHITECTURE). Declared after `sort` because the `startEdit` filter
+  // pre-check reconstructs the target's NodeData via it.
+  useImperativeHandle(
+    editorRef,
+    () => ({
+      collapse: (state) => setCollapseState(state),
+      startEdit: ({ path, overrideRestrictions = false }) => {
+        // Respect the node's `restrictEdit` filter unless explicitly overridden.
+        // Evaluated here, once, against the live tree — so an explicit target is
+        // never silently redirected to a neighbour (as the node-side Tab redirect
+        // would do). `force: true` then tells the node "already vetted, don't
+        // re-check"; it also auto-reveals a target collapsed below the mount
+        // frontier (the same cascade Tab nav rides). Returns whether the edit
+        // was accepted, so a caller can give its own feedback on a blocked edit.
+        if (
+          !overrideRestrictions &&
+          restrictEditFilter(buildNodeData(getLatestData(), path, rootName, sort))
+        )
+          return false
+        startEditAction(path, { force: true })
+        return true
+      },
+      cancelEdit: () => cancelEdit(),
+      confirmEdit: () => {
+        editConfirmRef.current?.click()
+        cancelEdit()
+      },
+    }),
+    [setCollapseState, startEditAction, cancelEdit, restrictEditFilter, getLatestData, rootName, sort]
   )
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
@@ -619,6 +622,57 @@ const updateDataObject = (
     newData,
     currentValue,
     newValue: action !== 'delete' ? newValue : undefined,
+  }
+}
+
+// Canonical `NodeData` builder: construct the data for any node from the live
+// tree given its path. Used for the root node and by the `editorRef` handle to
+// run a node's `restrictEdit` filter at call time (the filter takes the full
+// NodeData, not just a path). `index`/`size` mirror the child construction in
+// CollectionNode so a filter keying off them sees the same input the rendered
+// node would; `sort` (the `keySort` comparator) is only needed to resolve the
+// `index` of an object child, so it's optional.
+const buildNodeData = (
+  fullData: JsonData,
+  path: CollectionKey[],
+  rootName: string,
+  sort?: <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
+): NodeData => {
+  if (path.length === 0) {
+    return {
+      key: rootName,
+      path: [],
+      level: 0,
+      index: 0,
+      value: fullData,
+      size: isCollection(fullData) ? Object.keys(fullData).length : 1,
+      parentData: null,
+      fullData,
+    }
+  }
+
+  const key = path[path.length - 1]
+  const value = extract(fullData, path) as JsonData
+  const parentData = (extract(fullData, path.slice(0, -1)) ?? null) as object | null
+
+  let index = 0
+  if (Array.isArray(parentData)) {
+    index = typeof key === 'number' ? key : Number(key)
+  } else if (parentData && typeof parentData === 'object') {
+    const entries = Object.entries(parentData) as Array<[string | number, unknown]>
+    sort?.(entries, (entry) => entry)
+    index = entries.findIndex(([k]) => k === key)
+  }
+
+  return {
+    key,
+    path,
+    level: path.length,
+    index,
+    value,
+    size: isCollection(value) ? Object.keys(value as object).length : null,
+    parentData,
+    fullData,
   }
 }
 

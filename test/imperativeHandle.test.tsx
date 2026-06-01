@@ -3,13 +3,14 @@
  * handle: `startEdit`, `cancelEdit`, `confirmEdit`.
  *
  * These pin the public contract of the handle:
- *  - `startEdit(path)` puts the targeted node into edit mode (a textbox).
+ *  - `startEdit({ path })` puts the targeted node into edit mode (a textbox).
  *  - `cancelEdit()` leaves edit mode without committing.
  *  - `confirmEdit()` commits the in-progress edit (calls `setData`).
  *  - `startEdit` reveals a target that's collapsed below the mount frontier,
  *    riding the same state-based reveal the Tab navigation uses.
- *  - `startEdit` supersedes `restrictEdit` — an explicit imperative action
- *    from a consumer holding the ref overrides the "everything locked" filter.
+ *  - `startEdit` respects the per-node `restrictEdit` filter by default (and
+ *    returns `false` when blocked), and bypasses it when `overrideRestrictions:
+ *    true` is passed.
  */
 
 import { createRef } from 'react'
@@ -26,7 +27,7 @@ describe('editorRef handle — editing actions', () => {
     render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} editorRef={ref} />)
     expect(screen.queryByRole('textbox')).toBeNull()
 
-    act(() => ref.current!.startEdit(['greeting']))
+    act(() => ref.current!.startEdit({ path: ['greeting'] }))
 
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
@@ -36,7 +37,7 @@ describe('editorRef handle — editing actions', () => {
     const ref = createRef<JsonEditorHandle>()
     render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} editorRef={ref} />)
 
-    act(() => ref.current!.startEdit(['greeting']))
+    act(() => ref.current!.startEdit({ path: ['greeting'] }))
     expect(screen.getByRole('textbox')).toBeInTheDocument()
 
     act(() => ref.current!.cancelEdit())
@@ -50,7 +51,7 @@ describe('editorRef handle — editing actions', () => {
     const ref = createRef<JsonEditorHandle>()
     render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} editorRef={ref} />)
 
-    act(() => ref.current!.startEdit(['greeting']))
+    act(() => ref.current!.startEdit({ path: ['greeting'] }))
     const textbox = screen.getByRole('textbox')
     await user.clear(textbox)
     await user.type(textbox, 'world')
@@ -84,20 +85,66 @@ describe('editorRef handle — editing actions', () => {
     expect(screen.queryByText('inner')).toBeNull()
     expect(screen.queryByRole('textbox')).toBeNull()
 
-    act(() => ref.current!.startEdit(['outer', 'inner', 'leaf']))
+    act(() => ref.current!.startEdit({ path: ['outer', 'inner', 'leaf'] }))
 
     // The cascade revealed the target and put it in edit mode.
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
-  test('startEdit supersedes restrictEdit={true}', () => {
-    // Intended use case: lock everything with restrictEdit, then imperatively
-    // enable editing on one node. The handle action overrides the filter.
+  test('startEdit respects restrictEdit by default (no-op when restricted)', () => {
     const ref = createRef<JsonEditorHandle>()
     render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} restrictEdit editorRef={ref} />)
 
-    act(() => ref.current!.startEdit(['greeting']))
+    let result: boolean | undefined
+    act(() => {
+      result = ref.current!.startEdit({ path: ['greeting'] })
+    })
 
+    // restrictEdit is honoured — returns false, no editor opened, and the target
+    // isn't redirected to some other node either.
+    expect(result).toBe(false)
+    expect(screen.queryByRole('textbox')).toBeNull()
+  })
+
+  test('startEdit with overrideRestrictions bypasses restrictEdit', () => {
+    // Intended use case: lock everything with restrictEdit, then imperatively
+    // enable editing on one node via an explicit override.
+    const ref = createRef<JsonEditorHandle>()
+    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} restrictEdit editorRef={ref} />)
+
+    let result: boolean | undefined
+    act(() => {
+      result = ref.current!.startEdit({ path: ['greeting'], overrideRestrictions: true })
+    })
+
+    expect(result).toBe(true)
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+
+  test('startEdit respects a per-node restrictEdit function and reports via return value', () => {
+    // Only `b` is restricted. Default startEdit should open `a` but not `b`.
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor
+        data={{ a: 'one', b: 'two' }}
+        setData={noop}
+        restrictEdit={({ key }) => key === 'b'}
+        editorRef={ref}
+      />
+    )
+
+    let blocked: boolean | undefined
+    act(() => {
+      blocked = ref.current!.startEdit({ path: ['b'] })
+    })
+    expect(blocked).toBe(false)
+    expect(screen.queryByRole('textbox')).toBeNull()
+
+    let allowed: boolean | undefined
+    act(() => {
+      allowed = ref.current!.startEdit({ path: ['a'] })
+    })
+    expect(allowed).toBe(true)
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 })

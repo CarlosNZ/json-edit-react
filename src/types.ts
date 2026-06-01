@@ -67,20 +67,36 @@ export interface JsonEditorProps<T = JsonData> {
   editorRef?: React.Ref<JsonEditorHandle>
 }
 
+export interface StartEditOptions {
+  /** The node to edit. */
+  path: CollectionKey[]
+  /**
+   * Bypass the node's `restrictEdit` filter (default `false`). When `false`,
+   * the filter is evaluated for this node at call time and the edit is a no-op
+   * if it's restricted; when `true`, editing starts regardless — the intended
+   * use is to lock the tree with `restrictEdit` and imperatively enable a
+   * single node.
+   */
+  overrideRestrictions?: boolean
+}
+
 /**
  * Imperative handle exposed via the `editorRef` prop. Lets a consumer drive
  * collapse/expand and editing actions without a state-as-RPC prop.
  *
- * `startEdit` deliberately *supersedes* the `restrictEdit` filter: the intended
- * use is to lock the whole tree with `restrictEdit` and imperatively enable
- * editing on a single node. It also auto-reveals a target that's collapsed
- * below the mount frontier.
+ * `startEdit` auto-reveals a target that's collapsed below the mount frontier.
+ * It respects the `restrictEdit` filter by default; pass `overrideRestrictions`
+ * to bypass it. (Key/add/delete modes are tracked as a follow-up.)
  */
 export interface JsonEditorHandle {
   /** Collapse/expand a node (or subtree, with `includeChildren`). */
   collapse: (state: CollapseState | CollapseState[]) => void
-  /** Put the node at `path` into edit mode (overrides `restrictEdit`). */
-  startEdit: (path: CollectionKey[]) => void
+  /**
+   * Put a node into (value) edit mode. Respects `restrictEdit` unless
+   * `overrideRestrictions` is set. Returns `false` if the edit was blocked by
+   * `restrictEdit` (request not accepted), `true` otherwise.
+   */
+  startEdit: (options: StartEditOptions) => boolean
   /** Leave edit mode without committing. */
   cancelEdit: () => void
   /** Commit the in-progress edit (equivalent to clicking the tick), then exit. */

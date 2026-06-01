@@ -117,7 +117,7 @@ Landed in [#251](https://github.com/CarlosNZ/json-edit-react/issues/251). The `e
 ```ts
 const editorRef = useRef<JsonEditorHandle>(null)
 editorRef.current.collapse({ path, collapsed, includeChildren })
-editorRef.current.startEdit(path)
+editorRef.current.startEdit({ path, overrideRestrictions? })
 editorRef.current.cancelEdit()
 editorRef.current.confirmEdit()
 ```
@@ -129,10 +129,12 @@ Key implementation decisions:
 - **Plain `editorRef` prop, not the `ref` attribute.** Supporting the `ref` attribute would force `React.forwardRef`, whose return type isn't generic — `JsonEditor<T>` would collapse to `JsonData` and lose the §1 inference. A ref-valued *prop* sidesteps `forwardRef` entirely; the component stays a plain generic function (no cast). `useImperativeHandle` is wired inside the inner `Editor` (where the provider hooks are in scope).
 - **No new infrastructure.** `collapse(...)` is a thin wrapper over the state-based `setCollapseState` (§4 Part 4); `startEdit`/`cancelEdit` bind to the named `EditingProvider` actions (§4 Part 3). `confirmEdit()` clicks the live `editConfirmRef` then cancels.
 - **State-based collapse is an asset, not an obstacle.** Because both collapse broadcasts and editing state are state-based (replayed to late-mounting nodes), `startEdit` **auto-reveals** a target collapsed below the mount frontier for free — the existing `childrenEditing` cascade in `CollectionNode` expands ancestors as they mount. (Validated by a test; no explicit ancestor-expand needed.)
-- **`startEdit` supersedes `restrictEdit`** by design (a `force` flag on the editing state tells the `ValueNodeWrapper` node-skip redirect to leave it in place). Intended use: lock the tree with `restrictEdit={true}`, then imperatively enable one node.
+- **`startEdit` takes an options object and respects `restrictEdit` per-node by default.** Shape is `startEdit({ path, overrideRestrictions? })` (object arg chosen now so `mode` etc. can be added non-breakingly later). The node's `restrictEdit` filter is evaluated **at the root, at call time** — `buildNodeData` reconstructs the target's `NodeData` from the live tree so the filter sees the same input the rendered node would, and a restricted target is a clean no-op (never redirected to a neighbour the way the node-side Tab redirect would). `overrideRestrictions: true` skips that check; the internal `force` flag then tells the `ValueNodeWrapper` node-skip redirect "already vetted, leave it". `startEdit` returns a boolean (`false` when blocked by `restrictEdit`) so a caller can give its own feedback — `onError` was rejected as the channel (its built-in message is node-local state, and a restricted target is often unmounted, so there'd be nowhere to render it).
 - **`JsonViewer` exposes a collapse-only handle** (`JsonViewerHandle`). It holds a private ref to the inner editor and proxies only `collapse`, so editing actions are genuinely unreachable — closing the read-only-bypass hole the old runtime scrub of `externalTriggers` used to cover.
 
-Tests: editing actions in [test/imperativeHandle.test.tsx](test/imperativeHandle.test.tsx); the collapse broadcast suite ([test/collapseBroadcasts.test.tsx](test/collapseBroadcasts.test.tsx)) now drives via the handle.
+Tests: editing actions (incl. restrictEdit respect/override) in [test/imperativeHandle.test.tsx](test/imperativeHandle.test.tsx); the collapse broadcast suite ([test/collapseBroadcasts.test.tsx](test/collapseBroadcasts.test.tsx)) now drives via the handle.
+
+Follow-up: extend the handle to **key / add / delete** modes with the same per-call `overrideRestrictions` semantics — [#286](https://github.com/CarlosNZ/json-edit-react/issues/286). Each mode gates on a different filter (key needs edit+add+delete; add/delete are per-node operations, not central state), so they're a 2.x feature rather than part of this cleanup.
 
 ## 11. Export `JsonViewer` — ✅ done
 

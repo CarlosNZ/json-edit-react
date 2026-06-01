@@ -1277,7 +1277,7 @@ const editorRef = useRef<JsonEditorHandle>(null)
 
 // Then, from an event handler:
 editorRef.current?.collapse({ path: ['user'], collapsed: true, includeChildren: true })
-editorRef.current?.startEdit(['user', 'name'])
+editorRef.current?.startEdit({ path: ['user', 'name'] })
 editorRef.current?.confirmEdit()  // commit the current edit
 editorRef.current?.cancelEdit()   // discard the current edit
 ```
@@ -1289,12 +1289,19 @@ interface JsonEditorHandle {
   // Collapse/expand a node (or a whole subtree, with `includeChildren`).
   // Same `CollapseState` shape as the `onCollapse` callback input.
   collapse: (state: CollapseState | CollapseState[]) => void
-  // Put the node at `path` into edit mode.
-  startEdit: (path: CollectionKey[]) => void
+  // Put a node into (value) edit mode. Returns `false` if blocked by
+  // `restrictEdit` (and not overridden), `true` otherwise.
+  startEdit: (options: StartEditOptions) => boolean
   // Leave edit mode without committing.
   cancelEdit: () => void
   // Commit the in-progress edit (equivalent to clicking the tick), then exit.
   confirmEdit: () => void
+}
+
+interface StartEditOptions {
+  path: CollectionKey[]
+  // Bypass the node's `restrictEdit` filter (default false).
+  overrideRestrictions?: boolean
 }
 
 interface CollapseState {
@@ -1306,10 +1313,16 @@ interface CollapseState {
 
 A few behaviours worth noting:
 
-- `startEdit` **supersedes the `restrictEdit` filter**. This is intentional: a
-  common pattern is to lock the whole tree with `restrictEdit={true}` and then
-  imperatively enable editing on one node through your own UI, without having to
-  maintain a `restrictEdit` function that mirrors that selection.
+- `startEdit` **respects the node's `restrictEdit` filter by default** — the filter
+  is evaluated for the target at call time, and the call is a no-op if that node
+  is restricted (it is never redirected to a different node).
+- Pass **`overrideRestrictions: true`** to bypass the filter. A common pattern is
+  to lock the whole tree with `restrictEdit={true}` and imperatively enable editing
+  on one node through your own UI, without maintaining a `restrictEdit` function
+  that mirrors that selection.
+- `startEdit` **returns `false`** when the edit was blocked by `restrictEdit` (and
+  not overridden), `true` otherwise — so you can give your own feedback (e.g. a
+  toast) on a blocked edit.
 - `startEdit` will **auto-reveal a target that's currently collapsed** — any
   collapsed ancestors expand so the node becomes visible and enters edit mode.
 - `confirmEdit`/`cancelEdit` act on whichever node is currently being edited, so
@@ -1341,6 +1354,7 @@ A few helper functions, components and types that might be useful in your own im
 - `assign`: function to set a deep object value from a string path. Originally published at [object-property-assigner](https://github.com/CarlosNZ/object-property-assigner)
 - `isCollection`: simple utility that returns `true` if input is a "Collection" (i.e. an Object or Array)
 - `toPathString`: transforms a path array to a string representation suitable for HTML `name`/`id` attributes, e.g.  `["data", 0, "property1", "name"] => "data/0/property1/name"`. Keys are URL-encoded so the result is unambiguous even when keys contain `/` or other special characters.
+- `splitPropertyString`: the rough inverse for dot/bracket notation — parses a property-path string into a path array, e.g. `"data.organisations.nodes[0]" => ["data", "organisations", "nodes", 0]`. Bracket indices become numbers (array indices); this is the same parsing `extract`/`assign` use, and is handy for building the `path` passed to the `editorRef` handle.
 - `defaultTheme`: the "default" theme baseline used when no `theme` prop is supplied. (Additional themes ship in [`@json-edit-react/themes`](#themes--styles).)
 - `standardDataTypes`: array containing all standard data types: `[ 'string','number', 'boolean', 'null', 'object', 'array' ]`
 
@@ -1351,7 +1365,7 @@ A few helper functions, components and types that might be useful in your own im
 - `JsonEditorProps<T>`: all input props for the Json Editor component. Generic on the data type — see [Typed data](#typed-data).
 - `JsonData`: main `data` object -- any valid JSON structure. Used as the default for `T`.
 - [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`CopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
-- [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref): input types of the respective props
+- [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref), [`StartEditOptions`](#imperative-handle-editorref): input types of the respective props
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `LocalisedString`: keys for the [`translations`](#localisation) object
 - `IconReplacements`: input type for the `icons` prop
