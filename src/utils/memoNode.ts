@@ -50,7 +50,7 @@ import { pathsEqual } from './pathTools'
 // Only the genuinely-derived props are special-cased: `nodeData` is compared
 // field-by-field (below), and `customNodeData` is derived from
 // `customNodeDefinitions` + `nodeData` (both compared). Everything else,
-// callbacks included, is compared by `===` — JsonEditor keeps the callbacks
+// callbacks included, is compared by `Object.is` — JsonEditor keeps the callbacks
 // referentially stable so this stays cheap.
 const IGNORED_KEYS = new Set<string>(['nodeData', 'customNodeData'])
 
