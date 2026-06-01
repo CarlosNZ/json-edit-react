@@ -25,8 +25,9 @@ import { getNextOrPrevious } from './utils/keyboard'
 import { isJsEvent, matchEnumType, NOOP } from './utils/misc'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'
+import { areNodePropsEqual } from './utils/memoNode'
 
-export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
+const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const {
     data,
     parentData,
@@ -489,6 +490,10 @@ export const ValueNodeWrapper: React.FC<ValueNodeProps> = (props) => {
     </div>
   )
 }
+
+// Memoized boundary: a value node whose own `data` and render-affecting props
+// are unchanged bails out when its parent re-renders. See areNodePropsEqual.
+export const ValueNodeWrapper = React.memo(ValueNodeWrapperBase, areNodePropsEqual)
 
 const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
   if (customNodeData?.CustomNode && customNodeData?.name && customNodeData.showInTypesSelector) {

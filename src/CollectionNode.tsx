@@ -23,9 +23,10 @@ import {
   useReferenceChanged,
 } from './contexts'
 import { isDescendantOf } from './utils/pathTools'
+import { areNodePropsEqual } from './utils/memoNode'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
-export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
+const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   // Actions + imperative reads from the (stable) store — no subscription, so
   // editing transitions elsewhere don't re-render this node.
@@ -603,3 +604,8 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     CollectionNodeComponent
   )
 }
+
+// Memoized boundary: an untouched subtree (same `data` ref via structural
+// sharing) bails out instead of re-rendering when a parent re-renders. The
+// recursive `<CollectionNode>` usages above resolve to this memoized export.
+export const CollectionNode = React.memo(CollectionNodeBase, areNodePropsEqual)

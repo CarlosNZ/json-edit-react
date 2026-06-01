@@ -142,8 +142,8 @@ describe('Stage C — selectable editing store', () => {
   })
 })
 
-describe('render-scope baseline — editing fan-out (Stage D will tighten this)', () => {
-  test('starting an edit on one node currently re-renders sibling nodes too', async () => {
+describe('Stage D — React.memo boundary: entering an edit no longer fans out', () => {
+  test('starting an edit on one node does not re-render sibling subtrees', async () => {
     const user = userEvent.setup()
     const spy = makeRenderSpy({ a: ['a'], b: ['b'], nested: ['c', 'd'] })
     render(
@@ -159,10 +159,34 @@ describe('render-scope baseline — editing fan-out (Stage D will tighten this)'
     // Enter edit mode on `a` (changes editing state, no data commit yet).
     await user.dblClick(screen.getByText('"aval"'))
 
-    // BASELINE: the editing-context fan-out re-renders every node, not just `a`.
-    // Stage C will change the two sibling expectations below to `toBe(0)`.
+    // `a` re-renders (its own isEditing flipped). Its siblings — the leaf `b`
+    // and the unrelated subtree under `c` — bail out via the memo boundary even
+    // though the root re-renders (its childrenEditing flips). This is the
+    // Stage C + D fan-out fix, end to end.
     expect(spy.counts.a).toBeGreaterThan(0)
-    expect(spy.counts.b).toBeGreaterThan(0)
-    expect(spy.counts.nested).toBeGreaterThan(0)
+    expect(spy.counts.b).toBe(0)
+    expect(spy.counts.nested).toBe(0)
+  })
+
+  test('committing a value does not re-render untouched sibling subtrees', async () => {
+    const user = userEvent.setup()
+    const spy = makeRenderSpy({ target: ['outer', 'x'], sibling: ['other', 'y'] })
+    render(
+      <Controlled
+        initial={{ outer: { x: 'xval' }, other: { y: 'yval' } }}
+        definitions={spy.definitions}
+      />
+    )
+    spy.reset()
+
+    // Edit and commit `outer.x`. assign() rebuilds only the spine (root, outer),
+    // so the `other` subtree keeps its `data` reference and bails out.
+    await user.dblClick(screen.getByText('"xval"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'changed{Enter}')
+
+    expect(spy.counts.target).toBeGreaterThan(0) // edited node re-rendered
+    expect(spy.counts.sibling).toBe(0) // untouched sibling subtree did not
   })
 })
