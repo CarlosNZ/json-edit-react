@@ -182,13 +182,23 @@ export const useEditingStore = (): EditingStore => {
   return store
 }
 
+// The slice a selector may return: a primitive only. Primitives are
+// `Object.is`-stable, so the `getSnapshot` result is referentially stable when
+// nothing changed; a selector returning a fresh object/array would compare
+// unequal on every store emit and re-render its subscriber each time.
+type EditingSelection = string | number | boolean | bigint | symbol | null | undefined
+
 /**
- * Subscribe to a derived slice of editing state. Return a PRIMITIVE (boolean,
- * string, number) — primitives are `Object.is`-stable so the component
- * re-renders only when the selected value actually changes, sidestepping the
- * `getSnapshot` caching pitfall without the external `with-selector` shim.
+ * Subscribe to a derived slice of editing state. The selector must return a
+ * PRIMITIVE — primitives are `Object.is`-stable, so the component re-renders
+ * only when the selected value actually changes, sidestepping the
+ * `getSnapshot` caching pitfall without the external `with-selector` shim. The
+ * `T extends EditingSelection` bound enforces that contract at compile time:
+ * a selector returning a fresh object/array won't type-check.
  */
-export const useEditingSelector = <T,>(selector: (state: EditingStateBundle) => T): T => {
+export const useEditingSelector = <T extends EditingSelection>(
+  selector: (state: EditingStateBundle) => T
+): T => {
   const store = useEditingStore()
   return useSyncExternalStore(
     store.subscribe,
