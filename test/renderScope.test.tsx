@@ -335,4 +335,35 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
       currentValue: 'bval2',
     })
   })
+
+  // Same staleness class for `onError`: `useCommon` builds its `currentData` from
+  // `nodeData.fullData`, which a bailed sibling keeps stale. Triggering an error
+  // in a subtree that bailed on an earlier commit must still report the live doc.
+  test('onError reports the live document, not a stale snapshot', async () => {
+    const user = userEvent.setup()
+    let seenCurrentData: unknown = null
+    const onError = jest.fn((p: { currentData: unknown }) => {
+      seenCurrentData = p.currentData
+    })
+    const Host = () => {
+      const [data, setData] = useState<object>({ a: 'aval', obj: { x: 1 } })
+      return <JsonEditor data={data} setData={setData} onError={onError} showIconTooltips />
+    }
+    render(<Host />)
+
+    // Commit a -> aval2; `obj`'s subtree bails on the commit (its data ref is unchanged).
+    await user.dblClick(screen.getByText('"aval"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'aval2{Enter}')
+    await screen.findByText('"aval2"')
+
+    // Open obj's JSON editor (Edit buttons: [root, a, obj]), enter invalid JSON, confirm.
+    await user.click(screen.getAllByTitle('Edit')[2])
+    const ta = screen.getByRole('textbox') as HTMLTextAreaElement
+    fireEvent.change(ta, { target: { value: '{ not json' } })
+    fireEvent.keyDown(ta, { key: 'Enter', metaKey: true })
+
+    expect(onError).toHaveBeenCalled()
+    expect(seenCurrentData).toEqual({ a: 'aval2', obj: { x: 1 } })
+  })
 })

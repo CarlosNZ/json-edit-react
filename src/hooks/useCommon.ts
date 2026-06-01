@@ -3,7 +3,7 @@
  * Nodes and Value Nodes
  */
 
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useEditingSelector, useEditingStore } from '../contexts'
 import {
   type CollectionNodeProps,
@@ -27,6 +27,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     parentData,
     onEdit,
     onError: onErrorCallback,
+    getLatestData,
     showErrorMessages,
     restrictEditFilter,
     restrictDeleteFilter,
@@ -72,22 +73,30 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     console.warn('Error', errorString)
   }
 
+  // `onError` keeps a stable identity (it's a node prop, threaded down and
+  // compared by the memo), so it can't close over the live document or this
+  // node's `data`/`name`/`path` — once `onErrorCallback` is stabilized upstream
+  // the closure freezes. Read the document from `getLatestData()` and the
+  // per-node args from a ref-to-latest.
+  const onErrorArgsRef = useRef({ data, name, path })
+  onErrorArgsRef.current = { data, name, path }
   const onError = useCallback(
     (error: JerError, errorValue: JsonData | string) => {
       showError(error.message)
       if (onErrorCallback) {
+        const { data: liveData, name: liveName, path: livePath } = onErrorArgsRef.current
         onErrorCallback({
-          currentData: nodeData.fullData,
+          currentData: getLatestData(),
           errorValue,
-          currentValue: data,
-          name,
-          path,
+          currentValue: liveData,
+          name: liveName,
+          path: livePath,
           error,
         })
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onErrorCallback, showErrorMessages]
+    [onErrorCallback, showErrorMessages, getLatestData]
   )
 
   const handleEditKey = (newKey: string) => {
