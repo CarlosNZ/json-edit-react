@@ -143,6 +143,18 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // For JSON-editing TextArea
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
 
+  // Lets the `string | null` edit buffer back a textarea whose `setValue` is
+  // typed `Dispatch<SetStateAction<string>>`. Resolves the functional-updater
+  // form against the displayed value and always writes a string, so the buffer
+  // is never null while the user is actively editing.
+  const setEditBuffer = useCallback<React.Dispatch<React.SetStateAction<string>>>(
+    (update) =>
+      setStringifiedValue((prev) =>
+        typeof update === 'function' ? update(prev ?? jsonStringify(data)) : update
+      ),
+    [data, jsonStringify]
+  )
+
   const getDefaultNewValue = useCallback(
     (nodeData: NodeData, newKey: string) => {
       if (typeof defaultValue !== 'function') return defaultValue
@@ -228,8 +240,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const handleEdit = () => {
+    // Resolve the buffer once so the parsed input and the INVALID_JSON error
+    // payload reflect exactly the same text (the buffer is null until typed).
+    const textToParse = stringifiedValue ?? jsonStringify(data)
     try {
-      const value = jsonParse(stringifiedValue ?? jsonStringify(data))
+      const value = jsonParse(textToParse)
       cancelEdit()
       setPreviousValue(null)
       setError(null)
@@ -242,7 +257,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     } catch {
       onError(
         { code: 'INVALID_JSON', message: translate('ERROR_INVALID_JSON', nodeData) },
-        stringifiedValue
+        textToParse
       )
     }
   }
@@ -376,9 +391,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           className="jer-collection-text-area"
           name={pathString}
           value={stringifiedValue ?? jsonStringify(data)}
-          // Safe narrowing: AutogrowTextArea only ever calls setValue with a
-          // plain string (never the functional updater form).
-          setValue={setStringifiedValue as React.Dispatch<React.SetStateAction<string>>}
+          setValue={setEditBuffer}
           handleKeyPress={handleKeyPressEdit}
           styles={getStyles('input', nodeData)}
         />

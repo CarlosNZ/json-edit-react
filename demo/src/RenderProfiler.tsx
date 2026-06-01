@@ -16,14 +16,15 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
  * Only active in dev (`pnpm dev`); in a production build it renders children
  * untouched, so it never appears on the deployed demo.
  *
- * IMPORTANT — why the structure is the way it is: `DevProfiler` itself holds
- * NO state and never re-renders after mount. `onRender` is `useCallback`-stable
- * so the `<Profiler>` element keeps identical props and the wrapped subtree is
- * never re-reconciled. The polling readout lives entirely in the sibling
- * `Overlay` component, so its 250ms `setState` re-renders only the overlay box
- * — never the Profiler boundary or the editor. (An earlier version polled in
- * this component, which re-rendered the Profiler and made its own ticks count
- * as commits — the counter measured itself.)
+ * IMPORTANT — why the structure is the way it is: `DevProfiler` holds NO state
+ * of its own, so nothing *internal* drives a re-render of the `<Profiler>`
+ * boundary. (It will still re-render if its parent does — that's normal React
+ * and harmless — but the measurement apparatus never feeds back into the thing
+ * it measures.) The polling readout lives entirely in the sibling `Overlay`
+ * component, so its 250ms `setState` re-renders only the overlay box — never
+ * the Profiler boundary or the editor. (An earlier version polled in this
+ * component, which re-rendered the Profiler and made its own ticks count as
+ * commits — the counter measured itself.)
  */
 
 interface Stats {
