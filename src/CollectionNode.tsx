@@ -156,6 +156,13 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     [data, jsonStringify]
   )
 
+  // Reset the JSON-edit buffer. Used on the exits this node controls — confirm
+  // and cancel (below) — and registered as the store `cancelOp`, which fires
+  // when the edit moves to another node, on the entries we own (Edit button +
+  // custom `setIsEditing`). Keeps a stale buffer from showing on the next entry,
+  // without a per-node effect.
+  const clearEditBuffer = useCallback(() => setStringifiedValue(null), [])
+
   // The raw-JSON buffer shown in the editor. Gated on `isEditing` so a
   // non-editing node never serializes its subtree, and memoized so entering
   // edit through ANY path — toolbar button, Tab, `externalTriggers.edit`, a
@@ -258,11 +265,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
       // typed into, `textToParse` already IS `jsonStringify(data)`, so reuse it
       // rather than serializing `data` a second time.
       const currentDataString = stringifiedValue === null ? textToParse : jsonStringify(data)
-      // Exiting edit mode — drop the buffer (like handleCancel) so the next
-      // entry re-seeds from the current data rather than showing this stale
-      // text. (A successful confirm stays on this same node instance, and the
-      // removed [data] sync effect no longer refreshes it.)
-      setStringifiedValue(null)
+      clearEditBuffer()
       if (jsonStringify(value) === currentDataString) return
       onEdit(value, path).then((error) => {
         if (error) {
@@ -312,10 +315,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
   const handleCancel = () => {
     cancelEdit()
     setError(null)
-    // Drop the edit buffer; it's recomputed lazily next time this node edits.
-    // Cleared on *both* paths so a revert can't leave a stale buffer behind for
-    // a later non-seeding (Tab/custom/external) edit-entry to pick up.
-    setStringifiedValue(null)
+    clearEditBuffer()
     if (previousValue !== null) onEdit(previousValue, path)
     // Clear the snapshot after any revert — otherwise it lingers in editing
     // state and a later cancel (here or on another node) would see a non-null
@@ -439,7 +439,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
-    setIsEditing: () => startEdit(path),
+    setIsEditing: () => startEdit(path, { cancelOp: clearEditBuffer }),
     getStyles,
     canDragOnto: canEdit,
     canEdit,
@@ -462,7 +462,7 @@ export const CollectionNode: React.FC<CollectionNodeProps> = (props) => {
           ? () => {
               hasBeenOpened.current = true
               setPreviousValue(null)
-              startEdit(path)
+              startEdit(path, { cancelOp: clearEditBuffer })
             }
           : undefined
       }

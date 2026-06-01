@@ -182,6 +182,32 @@ describe('Stage B — lazy jsonStringify', () => {
     expect(reopened).toContain('"x": 2')
     expect(reopened).not.toContain('{"x":2}')
   })
+
+  test('leaving JSON-edit by editing elsewhere does not leave a stale buffer', async () => {
+    const user = userEvent.setup()
+    const Host = () => {
+      const [data, setData] = useState<object>({ a: { inner: 1 }, b: 'leafB' })
+      return <JsonEditor data={data} setData={setData} showIconTooltips />
+    }
+    render(<Host />)
+
+    // Open `a`'s JSON editor and type a compact change — but DON'T confirm or
+    // cancel. (Edit buttons in DOM order: [root, a, b]; `a` is index 1.)
+    await user.click(screen.getAllByTitle('Edit')[1])
+    const ta = screen.getByRole('textbox') as HTMLTextAreaElement
+    fireEvent.change(ta, { target: { value: '{"inner":2}' } })
+
+    // Leave by starting an edit elsewhere — moves the store's editing element
+    // off `a` without running `a`'s handleEdit/handleCancel at all.
+    await user.dblClick(screen.getByText('"leafB"'))
+
+    // Re-open `a`'s JSON editor. `a` was never confirmed, so its data is still
+    // { inner: 1 } — it must show that freshly, not the stale `{"inner":2}`.
+    await user.click(screen.getAllByTitle('Edit')[1])
+    const reopened = (screen.getByRole('textbox') as HTMLTextAreaElement).value
+    expect(reopened).toContain('"inner": 1')
+    expect(reopened).not.toContain('{"inner":2}')
+  })
 })
 
 describe('render-scope baseline — editing fan-out (Stage C will tighten this)', () => {
