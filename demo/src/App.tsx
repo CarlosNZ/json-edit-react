@@ -818,6 +818,18 @@ function App() {
                     </Select>
                   </div>
                 </HStack>
+                <HStack className="inputRow">
+                  <FormLabel className="labelWidth" textAlign="right">
+                    Default new value
+                  </FormLabel>
+                  <Input
+                    className="inputWidth"
+                    disabled={dataDefinition.defaultValue !== undefined}
+                    type="text"
+                    value={defaultNewValue}
+                    onChange={(e) => updateState({ defaultNewValue: e.target.value })}
+                  />
+                </HStack>
                 <CheckboxGroup colorScheme="primaryScheme">
                   <Flex w="100%" justify="flex-start">
                     <Checkbox
@@ -895,6 +907,15 @@ function App() {
                     </Checkbox>
                   </Flex>
                   <Flex w="100%" justify="flex-start">
+                    <Checkbox
+                      id="showImperativeHandleCheckbox"
+                      isChecked={showExternalControl}
+                      disabled={!externalControlEnabled}
+                      onChange={() => setShowImperativeHandle((v) => !v)}
+                      w="50%"
+                    >
+                      Show External Control
+                    </Checkbox>
                     <HStack w="50%">
                       <Checkbox
                         id="customEditorCheckbox"
@@ -908,37 +929,14 @@ function App() {
                         <InfoIcon color="primaryScheme.500" />
                       </Tooltip>
                     </HStack>
-                    <Checkbox
-                      id="showImperativeHandleCheckbox"
-                      isChecked={showExternalControl}
-                      disabled={!externalControlEnabled}
-                      onChange={() => setShowImperativeHandle((v) => !v)}
-                      w="50%"
-                    >
-                      Show External Control
-                    </Checkbox>
                   </Flex>
-                  <HStack className="inputRow" pt={2}>
-                    <FormLabel className="labelWidth" textAlign="right">
-                      Default new value
-                    </FormLabel>
-                    <Input
-                      className="inputWidth"
-                      disabled={dataDefinition.defaultValue !== undefined}
-                      type="text"
-                      value={defaultNewValue}
-                      onChange={(e) => updateState({ defaultNewValue: e.target.value })}
-                    />
-                  </HStack>
                 </CheckboxGroup>
                 {showExternalControl && (
                   // Test panel for the `editorRef` imperative handle. Enter a
                   // dot-separated path (e.g. "user.name" or "items.0"); empty =
                   // root. Actions operate on that path.
-                  <VStack w="100%" align="stretch" gap={2} pt={2} borderTopWidth={1} mt={2}>
-                    <Text fontSize="sm" fontWeight="bold">
-                      External Control
-                    </Text>
+                  <VStack w="100%" align="stretch" gap={2} pt={2} mt={2}>
+                    <Text as="h3">External Control</Text>
                     <Input
                       size="sm"
                       placeholder="path, e.g. user.name or items[0] (empty = root)"
