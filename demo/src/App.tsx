@@ -8,6 +8,8 @@ import {
   OnErrorFunction,
   defaultTheme,
   splitPropertyString,
+  extract,
+  isCollection,
   type JsonEditorHandle,
 } from '@json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
@@ -130,6 +132,9 @@ function App() {
   const [handlePath, setHandlePath] = useState('')
   const [handleIncludeChildren, setHandleIncludeChildren] = useState(true)
   // const [handleOverrideRestrictions, setHandleOverrideRestrictions] = useState(false)
+  // Tracks whether a node is currently being edited (via `onEditEvent`), so the
+  // External Control panel can show Confirm/Cancel only while an edit is active.
+  const [isEditing, setIsEditing] = useState(false)
 
   const [isSaving, setIsSaving] = useState(false)
   const previousTheme = useRef<Theme>(null) // Used when resetting after theme editing
@@ -230,6 +235,25 @@ function App() {
   // unavailable it stays off and the panel is hidden.
   const externalControlEnabled = selectedDataSet !== 'customNodes'
   const showExternalControl = showImperativeHandle && externalControlEnabled
+
+  // External Control panel: collapse/expand the node at the entered path. We
+  // pre-check that the target is a collection (a leaf has nothing to collapse)
+  // and warn instead of firing a no-op — `collapse` itself returns nothing, so
+  // the host detects this with the exported `extract` + `isCollection` helpers.
+  // A successful collapse/expand is reported by the `onCollapse` callback below.
+  const handleExternalCollapse = (collapsed: boolean) => {
+    const path = splitPropertyString(handlePath)
+    if (!isCollection(extract(data, path))) {
+      toast({
+        title: `Can't ${collapsed ? 'collapse' : 'expand'} — not a collection node`,
+        status: 'warning',
+        duration: 2000,
+        isClosable: true,
+      })
+      return
+    }
+    editorRef.current?.collapse({ path, collapsed, includeChildren: handleIncludeChildren })
+  }
 
   // Stable references so the JsonEditor's memoized nodes can bail out: an inline
   // `theme` array would churn the theme context (re-rendering every node), and
@@ -630,17 +654,20 @@ function App() {
                       : undefined
                   }
                   // collapseClickZones={['property', 'header']}
-                  // onEditEvent={(...args) => console.log('onEditEvent', ...args)}
-                  // onEditEvent={(path) => {
-                  //   console.log(path)
-                  //   setIsEditing(path ? true : false)
-                  // }}
-                  // onCollapse={(input) => {
-                  //   const path = JSON.stringify(input.path)
-                  //   const newCollapseState = { ...collapseState.current, [path]: input }
-                  //   collapseState.current = newCollapseState
-                  //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
-                  // }}
+                  onEditEvent={(path) => setIsEditing(path !== null)}
+                  onCollapse={(input) => {
+                    // Showcase the onCollapse callback — only while the External
+                    // Control panel is on screen (fires for both handle-driven
+                    // and user chevron-click collapses).
+                    if (!showExternalControl) return
+                    const label = input.path.length > 0 ? input.path.join('.') : 'root'
+                    toast({
+                      title: `${input.collapsed ? 'Collapsed' : 'Expanded'} ${label}`,
+                      status: 'info',
+                      duration: 2000,
+                      isClosable: true,
+                    })
+                  }}
                   editorRef={editorRef}
                   // translations={{
                   //   EMPTY_STRING: 'Nah',
@@ -943,31 +970,51 @@ function App() {
                       value={handlePath}
                       onChange={(e) => setHandlePath(e.target.value)}
                     />
-                    <HStack gap={2} flexWrap="wrap">
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          const started = editorRef.current?.startEdit({
-                            path: splitPropertyString(handlePath),
-                            // overrideRestrictions: handleOverrideRestrictions,
-                          })
-                          if (started === false)
-                            toast({
-                              title: "Can't edit that node",
-                              status: 'warning',
-                              duration: 2000,
-                              isClosable: true,
+                    <HStack gap={2} flexWrap="wrap" w="100%" justify="space-between">
+                      <Flex justify="space-between">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const started = editorRef.current?.startEdit({
+                              path: splitPropertyString(handlePath),
+                              // overrideRestrictions: handleOverrideRestrictions,
                             })
-                        }}
-                      >
-                        Start edit
-                      </Button>
-                      <Button size="sm" onClick={() => editorRef.current?.confirmEdit()}>
-                        Confirm
-                      </Button>
-                      <Button size="sm" onClick={() => editorRef.current?.cancelEdit()}>
-                        Cancel
-                      </Button>
+                            if (started === false)
+                              toast({
+                                title: "Can't edit that node",
+                                status: 'warning',
+                                duration: 2000,
+                                isClosable: true,
+                              })
+                          }}
+                          colorScheme="primaryScheme"
+                          variant="outline"
+                        >
+                          Start edit
+                        </Button>
+                      </Flex>
+                      {/* Confirm/Cancel only make sense while an edit is active;
+                          `isEditing` is tracked via `onEditEvent`. */}
+                      {isEditing && (
+                        <Flex gap={2}>
+                          <Button
+                            size="sm"
+                            onClick={() => editorRef.current?.confirmEdit()}
+                            colorScheme="primaryScheme"
+                            variant="outline"
+                          >
+                            Confirm
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => editorRef.current?.cancelEdit()}
+                            colorScheme="primaryScheme"
+                            variant="outline"
+                          >
+                            Cancel
+                          </Button>
+                        </Flex>
+                      )}
                       {/* <Checkbox
                         isChecked={handleOverrideRestrictions}
                         onChange={(e) => setHandleOverrideRestrictions(e.target.checked)}
@@ -979,25 +1026,17 @@ function App() {
                     <HStack gap={2} flexWrap="wrap">
                       <Button
                         size="sm"
-                        onClick={() =>
-                          editorRef.current?.collapse({
-                            path: splitPropertyString(handlePath),
-                            collapsed: true,
-                            includeChildren: handleIncludeChildren,
-                          })
-                        }
+                        onClick={() => handleExternalCollapse(true)}
+                        colorScheme="primaryScheme"
+                        variant="outline"
                       >
                         Collapse
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() =>
-                          editorRef.current?.collapse({
-                            path: splitPropertyString(handlePath),
-                            collapsed: false,
-                            includeChildren: handleIncludeChildren,
-                          })
-                        }
+                        onClick={() => handleExternalCollapse(false)}
+                        colorScheme="primaryScheme"
+                        variant="outline"
                       >
                         Expand
                       </Button>

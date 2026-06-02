@@ -322,4 +322,26 @@ describe('Collapse broadcasts via editorRef handle', () => {
     expect(chevronsAfter).toHaveLength(5)
     chevronsAfter.forEach((c) => expect(isCollapsed(c)).toBe(false))
   })
+
+  test('15. a broadcast invokes the latest onCollapse after the prop is swapped', () => {
+    // `CollapseProvider` holds `onCollapse` in a ref (so an inline callback
+    // doesn't churn the context). The ref must still track the current prop, so
+    // a broadcast after a swap fires the NEW callback, not the one captured at
+    // mount.
+    const data = { a: { x: 1 } }
+    const onCollapseV1 = jest.fn()
+    const onCollapseV2 = jest.fn()
+    const command: CollapseState = { collapsed: true, path: ['a'], includeChildren: false }
+    const ref = createRef<JsonEditorHandle>()
+
+    const { rerender } = render(
+      <JsonEditor data={data} setData={noop} onCollapse={onCollapseV1} editorRef={ref} />
+    )
+    rerender(<JsonEditor data={data} setData={noop} onCollapse={onCollapseV2} editorRef={ref} />)
+
+    act(() => ref.current!.collapse(command))
+
+    expect(onCollapseV2).toHaveBeenCalledWith(command)
+    expect(onCollapseV1).not.toHaveBeenCalled()
+  })
 })

@@ -93,6 +93,15 @@ export const CollapseProvider = ({ children, onCollapse }: CollapseProps) => {
     version: 0,
   })
 
+  // Keep the latest `onCollapse` in a ref so an inline consumer callback (new
+  // identity every render) doesn't churn `setCollapseState` — and therefore the
+  // context value — which would re-render every `useCollapse` subscriber (i.e.
+  // every CollectionNode) on each parent render. The ref is reassigned on every
+  // render so it always holds the current prop; `setCollapseState` reads it
+  // lazily at call time. Mirrors `onEditEventRef` in EditingProvider.
+  const onCollapseRef = useRef(onCollapse)
+  onCollapseRef.current = onCollapse
+
   const setCollapseState = useCallback(
     (state: CollapseState | CollapseState[] | null) => {
       if (state === null) {
@@ -111,9 +120,9 @@ export const CollapseProvider = ({ children, onCollapse }: CollapseProps) => {
       // still receives the originals (the caller's identity).
       const commands = incoming.map((cmd) => ({ ...cmd, path: [...cmd.path] }))
       setInner((prev) => ({ commands, version: prev.version + 1 }))
-      incoming.forEach((cmd) => onCollapse?.(cmd))
+      incoming.forEach((cmd) => onCollapseRef.current?.(cmd))
     },
-    [onCollapse]
+    []
   )
 
   const value = useMemo(

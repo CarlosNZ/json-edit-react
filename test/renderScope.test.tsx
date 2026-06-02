@@ -18,7 +18,7 @@ import { useState } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
-import { type OnChangeFunction } from '../src/types'
+import { type OnChangeFunction, type OnCollapseFunction } from '../src/types'
 import { makeRenderSpy } from './helpers/renderSpy'
 
 // A controlled host so `setData` commits actually re-render the editor, the
@@ -343,6 +343,32 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
 
     // Fresh onChange identity — JsonEditor stabilises it, so no node re-renders.
     rerender(<Host onChange={(p) => p.newValue} />)
+    expect(spy.counts.sibling).toBe(0)
+  })
+
+  // Same hazard via the collapse context: every node subscribes to it, so an
+  // inline `onCollapse` (fresh identity each render) must not churn the context
+  // value. `CollapseProvider` ref-stabilises it; this pins that a swap doesn't
+  // re-render the tree.
+  test('swapping an inline onCollapse does not re-render the tree', () => {
+    const spy = makeRenderSpy({ sibling: ['other', 'y'] })
+    const Host = ({ onCollapse }: { onCollapse: OnCollapseFunction }) => {
+      const [data, setData] = useState<object>({ outer: { x: 'a' }, other: { y: 'b' } })
+      return (
+        <JsonEditor
+          data={data}
+          setData={setData}
+          onCollapse={onCollapse}
+          customNodeDefinitions={spy.definitions}
+        />
+      )
+    }
+
+    const { rerender } = render(<Host onCollapse={() => {}} />)
+    spy.reset()
+
+    // Fresh onCollapse identity — must not re-render any node.
+    rerender(<Host onCollapse={() => {}} />)
     expect(spy.counts.sibling).toBe(0)
   })
 
