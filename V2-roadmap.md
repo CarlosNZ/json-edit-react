@@ -240,16 +240,19 @@ The list is definitive. Type-change failures fold into `UPDATE_ERROR`; non-error
 // Hard gate: permission. true = allowed. (restrict* → allow*, §8.)
 type FilterFunction<T = JsonData> = (node: NodeData<T>) => boolean
 // allowEdit / allowDelete / allowAdd / allowDrag / allowTypeSelection?: boolean | FilterFunction<T>
+// allowClipboard?: boolean (default true) — renamed from `enableClipboard`; BOOLEAN ONLY (a per-node
+//   copy filter is security theatre — select + Cmd-C defeats it). The copy handler is `onCopy` (Cat 3).
 
 // Soft gate: intercept a user-initiated action. true (or non-void) = "I'll take it over".
 // Flat NodeData + an `event` discriminant (and event-specific extras where needed).
 type InterceptableEvent<T = JsonData> = NodeData<T> & (
   | { event: 'startEdit' }
   | { event: 'startKeyEdit' }
-  | { event: 'delete' }
-  | { event: 'add' }
-  // future: 'move' | 'typeChange' | 'copy'
+  | { event: 'startAdd' }
+  | { event: 'delete' }    // instant: the intercept IS the click, before the one-shot delete
+  | { event: 'move' }      // instant: the intercept is the drop
 )
+// (event strings tentative — finalised in the end-of-review summary table)
 type EventInterceptFunction<T = JsonData> =
   (e: InterceptableEvent<T>) => boolean | void | Promise<boolean | void>
 // onEventIntercept?: EventInterceptFunction<T>
@@ -297,26 +300,41 @@ type OnChangeFunction<T = JsonData> =
 
 ### Category 3 — Observers (run after, return ignored)
 
+All four observers run AFTER the fact and can't affect anything (return ignored). They sit at the three lifecycle moments, alongside the gate (Cat 1, *start*) and result-producer (Cat 2, *commit*):
+
+```
+start  → onEventIntercept  +  onEditEvent(start*)
+commit → onUpdate          +  onEditEvent(confirm* / delete / move)
+cancel →                      onEditEvent(cancel*)
+```
+
 ```ts
+// 1. onError — after any error condition (Group A codes from comment 6).
 type OnErrorFunction<T = JsonData> =
   (props: NodeData<T> & { error: JsonEditorError; errorValue: JsonData }) => void
 
-// onEditEvent absorbs onRenameProperty (§12). Verb-first vocabulary, shared with the
-// intercept events (Cat 1) and imperative commands (Cat 4). Key editing is a full
-// lifecycle mirroring value editing; 'confirmKeyEdit' carrying { oldKey, newKey } is
-// the rename. (Final value-edit event set is locked under the vocabulary decision.)
+// 2. onEditEvent — the COMPLETE interaction-lifecycle stream. Absorbs onRenameProperty
+// (§12); covers value-edit, key-edit AND add sessions (start/confirm/cancel), plus the
+// instant delete/move (one event each). 'confirmKeyEdit' carries { oldKey, newKey } = rename.
 type EditEvent<T = JsonData> = NodeData<T> & (
-  | { event: 'startEdit' }
-  | { event: 'confirmEdit' }
-  | { event: 'cancelEdit' }
-  | { event: 'startKeyEdit' }
-  | { event: 'confirmKeyEdit'; oldKey: CollectionKey; newKey: CollectionKey }
-  | { event: 'cancelKeyEdit' }
+  | { event: 'startEdit' }    | { event: 'confirmEdit' }    | { event: 'cancelEdit' }
+  | { event: 'startKeyEdit' } | { event: 'confirmKeyEdit'; oldKey: CollectionKey; newKey: CollectionKey } | { event: 'cancelKeyEdit' }
+  | { event: 'startAdd' }     | { event: 'confirmAdd' }     | { event: 'cancelAdd' }
+  | { event: 'delete' }       | { event: 'move' }
 )
 type OnEditEventFunction<T = JsonData> = (e: EditEvent<T>) => void
 
-// onCollapse, CopyFunction — observers; CopyFunction's error field → JsonEditorError.
+// 3. onCollapse — on collapse/expand (user click or editorRef.collapse).
+type OnCollapseFunction<T = JsonData> =
+  (props: NodeData<T> & { collapsed: boolean; includeChildren: boolean }) => void
+
+// 4. onCopy — after a copy-to-clipboard. Split out of the old enableClipboard boolean|fn
+// overload; enablement is now the `allowClipboard` boolean (Cat 1). `error` → JsonEditorError.
+type OnCopyFunction<T = JsonData> =
+  (props: NodeData<T> & { success: boolean; stringValue: string; type: CopyType; error?: JsonEditorError }) => void
 ```
+
+(All event strings above are tentative — finalised in the end-of-review summary table.)
 
 ### Category 4 (not a callback) — Imperative commands
 
