@@ -130,6 +130,9 @@ function App() {
   const [handlePath, setHandlePath] = useState('')
   const [handleIncludeChildren, setHandleIncludeChildren] = useState(true)
   // const [handleOverrideRestrictions, setHandleOverrideRestrictions] = useState(false)
+  // Tracks whether a node is currently being edited (via `onEditEvent`), so the
+  // External Control panel can show Confirm/Cancel only while an edit is active.
+  const [isEditing, setIsEditing] = useState(false)
 
   const [isSaving, setIsSaving] = useState(false)
   const previousTheme = useRef<Theme>(null) // Used when resetting after theme editing
@@ -630,11 +633,7 @@ function App() {
                       : undefined
                   }
                   // collapseClickZones={['property', 'header']}
-                  // onEditEvent={(...args) => console.log('onEditEvent', ...args)}
-                  // onEditEvent={(path) => {
-                  //   console.log(path)
-                  //   setIsEditing(path ? true : false)
-                  // }}
+                  onEditEvent={(path) => setIsEditing(path !== null)}
                   // onCollapse={(input) => {
                   //   const path = JSON.stringify(input.path)
                   //   const newCollapseState = { ...collapseState.current, [path]: input }
@@ -943,31 +942,51 @@ function App() {
                       value={handlePath}
                       onChange={(e) => setHandlePath(e.target.value)}
                     />
-                    <HStack gap={2} flexWrap="wrap">
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          const started = editorRef.current?.startEdit({
-                            path: splitPropertyString(handlePath),
-                            // overrideRestrictions: handleOverrideRestrictions,
-                          })
-                          if (started === false)
-                            toast({
-                              title: "Can't edit that node",
-                              status: 'warning',
-                              duration: 2000,
-                              isClosable: true,
+                    <HStack gap={2} flexWrap="wrap" w="100%" justify="space-between">
+                      <Flex justify="space-between">
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            const started = editorRef.current?.startEdit({
+                              path: splitPropertyString(handlePath),
+                              // overrideRestrictions: handleOverrideRestrictions,
                             })
-                        }}
-                      >
-                        Start edit
-                      </Button>
-                      <Button size="sm" onClick={() => editorRef.current?.confirmEdit()}>
-                        Confirm
-                      </Button>
-                      <Button size="sm" onClick={() => editorRef.current?.cancelEdit()}>
-                        Cancel
-                      </Button>
+                            if (started === false)
+                              toast({
+                                title: "Can't edit that node",
+                                status: 'warning',
+                                duration: 2000,
+                                isClosable: true,
+                              })
+                          }}
+                          colorScheme="primaryScheme"
+                          variant="outline"
+                        >
+                          Start edit
+                        </Button>
+                      </Flex>
+                      {/* Confirm/Cancel only make sense while an edit is active;
+                          `isEditing` is tracked via `onEditEvent`. */}
+                      {isEditing && (
+                        <Flex gap={2}>
+                          <Button
+                            size="sm"
+                            onClick={() => editorRef.current?.confirmEdit()}
+                            colorScheme="primaryScheme"
+                            variant="outline"
+                          >
+                            Confirm
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => editorRef.current?.cancelEdit()}
+                            colorScheme="primaryScheme"
+                            variant="outline"
+                          >
+                            Cancel
+                          </Button>
+                        </Flex>
+                      )}
                       {/* <Checkbox
                         isChecked={handleOverrideRestrictions}
                         onChange={(e) => setHandleOverrideRestrictions(e.target.checked)}
@@ -986,6 +1005,8 @@ function App() {
                             includeChildren: handleIncludeChildren,
                           })
                         }
+                        colorScheme="primaryScheme"
+                        variant="outline"
                       >
                         Collapse
                       </Button>
@@ -998,6 +1019,8 @@ function App() {
                             includeChildren: handleIncludeChildren,
                           })
                         }
+                        colorScheme="primaryScheme"
+                        variant="outline"
                       >
                         Expand
                       </Button>
