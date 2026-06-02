@@ -15,7 +15,7 @@ Numbering matches the section numbers below. Items joined with `+` are interlock
 - §3 Tests ✅ (regression net for everything that follows) — [#61](https://github.com/CarlosNZ/json-edit-react/issues/61)
 - §4 `TreeStateProvider` refactor ✅ (depends on §2; unlocks the perf work in §16) — [#247](https://github.com/CarlosNZ/json-edit-react/issues/247) / [#272](https://github.com/CarlosNZ/json-edit-react/pull/272)
 - §5 Drop controlled/uncontrolled dual mode + §11 `JsonViewer` ✅ (state simplification, bundled) — [#248](https://github.com/CarlosNZ/json-edit-react/issues/248) / [#261](https://github.com/CarlosNZ/json-edit-react/pull/261)
-- §6 + §7 New `UpdateFunction` return shape + per-node `isValid` (interlocked) — [#249](https://github.com/CarlosNZ/json-edit-react/issues/249)
+- §6 New `UpdateFunction` return shape — [#249](https://github.com/CarlosNZ/json-edit-react/issues/249) (§7 per-node `isValid` dropped)
 - §8 + §9 `restrict*` → `allow*` rename + group the prop surface (API surface) — [#250](https://github.com/CarlosNZ/json-edit-react/issues/250)
 - §10 `useImperativeHandle` triggers — ✅ done — [#251](https://github.com/CarlosNZ/json-edit-react/issues/251)
 - §12 `onRenameProperty` callback (additive, can land any time) — [#252](https://github.com/CarlosNZ/json-edit-react/issues/252)
@@ -78,23 +78,15 @@ Current return type has five legal shapes (`void | ErrorString | boolean | [tag,
 ```ts
 true | void | undefined           // proceed
 false                             // reject (generic error)
-{ value?: T, isValid?: boolean, error?: string }  // value overrides, error displays, isValid sets node state
-Promise<any of the above>         // async validators remain first-class
+{ value?, error?, cancel? }       // value overrides; error reverts + displays; cancel = silent abort
+Promise<any of the above>         // async stays first-class
 ```
 
-Decide explicitly: when `value` is set **and** `isValid: false` — apply the new value but flag it? Reject? Doc it.
+(`isValid` / per-node validation state was dropped — see §7. Canonical type in §17, Category 2.)
 
-## 7. Per-node `isValid` state
+## 7. Per-node `isValid` state — dropped from v2
 
-New `isValid` property on each node, settable via Update Function returns (above) and via a sibling standing validator:
-
-```ts
-validate?: (nodeData) => true | string  // runs on mount + after external data changes
-```
-
-Two sources (last-update result + standing validator) need to compose cleanly.
-
-UI must visibly distinguish **rejected** (revert, current behaviour) from **accepted-but-flagged** (new). Otherwise consumers conflate them.
+Not doing this. The motivating case ([#197](https://github.com/CarlosNZ/json-edit-react/issues/197)) is already served acceptably with conditional styles, so a built-in `isValid` / `validate` mechanism isn't worth its composition complexity (two sources, precedence rules, accepted-but-flagged vs rejected UI) in a "clean house" release. A small per-node validation *helper* that drives a style condition may be offered separately, but it sits outside this callback model. Follow-up thoughts to be posted on [#197](https://github.com/CarlosNZ/json-edit-react/issues/197).
 
 ## 8. `restrict*` → `allow*` rename
 
@@ -201,7 +193,7 @@ Every consumer-facing function falls into exactly one of three categories, and e
 | Category                                                               | Runs                | Question it answers                       | Return contract                                                  |
 | ---------------------------------------------------------------------- | ------------------- | ----------------------------------------- | ---------------------------------------------------------------- |
 | **Gates** — `allow*` (was `restrict*`), `onEventIntercept`             | *before* the action | "should this proceed / am I taking over?" | `boolean` / `void`                                               |
-| **Result producers** — `UpdateFunction`, `validate`, `onChange`        | *at commit*         | "accept / reject / transform / flag?"     | the canonical result shape (or transformed value for `onChange`) |
+| **Result producers** — `UpdateFunction`, `onChange`                    | *at commit*         | "accept / reject / transform?"            | the canonical result shape (or transformed value for `onChange`) |
 | **Observers** — `onError`, `onEditEvent`, `onCollapse`, `CopyFunction` | *after*             | (none — notification)                     | ignored                                                          |
 
 **Guiding principle:** a gate's boolean answers the yes/no question its *name* poses — `allowEdit` → `true` = allow; `onEventIntercept` → `true` = intercept. The polarity lives in the name, not a memorised convention, so opposite literals across differently-named gates are correct and predictable. The `false`-means-reject (`UpdateFunction`) vs `true`-means-intercept (`onEventIntercept`) "inconsistency" dissolves: they're different categories.
@@ -240,7 +232,7 @@ interface JsonEditorError {
 }
 ```
 
-The list is definitive. Type-change failures fold into `UPDATE_ERROR`; non-error conditions (e.g. a command that's a clean no-op) don't get a code. Validation is deliberately excluded pending the §7 `isValid` discussion. The exact routing when an *imperative* command runs the pipeline and a handler rejects it (Group A code via `CommandResult` vs `onError`) is firmed up under comments 8/11.
+The list is definitive. Type-change failures fold into `UPDATE_ERROR`; non-error conditions (e.g. a command that's a clean no-op) don't get a code. Validation isn't part of the error set (the §7 `isValid` / `validate` mechanism was dropped — see §7). The exact routing when an *imperative* command runs the pipeline and a handler rejects it (Group A code via `CommandResult` vs `onError`) is firmed up under comments 8/11.
 
 ### Category 1 — Gates (run before, decide whether to proceed)
 
@@ -276,7 +268,6 @@ type UpdateResult<T = JsonData> =
   | false                                // reject (generic error)
   | {
       value?: T                          // override the committed value
-      isValid?: boolean                  // set node validity flag (§7)
       error?: string | JsonEditorError   // reject with message
       cancel?: true                      // silent abort — no commit, no error (#117 / #249)
     }
@@ -290,9 +281,6 @@ interface UpdateFunctionProps<T = JsonData> extends NodeData<T> {
 type UpdateFunction<T = JsonData> =
   (props: UpdateFunctionProps<T>) => UpdateResult<T> | Promise<UpdateResult<T>>
 // onUpdate / onEdit / onAdd / onDelete?: UpdateFunction<T>   ← discrete props retained as conveniences
-
-// Standing validator (§7) — composes with UpdateResult.error / isValid.
-type ValidateFunction<T = JsonData> = (node: NodeData<T>) => true | string  // string = invalid message
 
 // Transform (distinct contract — returns the value, not a result).
 type OnChangeFunction<T = JsonData> =
@@ -348,9 +336,7 @@ Mutation commands **dev-warn + no-op on a path that no longer exists** — mitig
 ### Open decisions (for review)
 
 - Intercept signal: `return true` vs an exported `INTERCEPT` sentinel vs `e.preventDefault()`. (Leaning `true` — reads correctly given the callback name.)
-- `UpdateResult` when `value` set **and** `isValid: false` — apply-and-flag, or reject? (§6's open question.)
 - `error: string | JsonEditorError` — accept a bare string as shorthand, or force the object?
-- `validate` (standing, §7) vs last-`UpdateResult` precedence when they disagree.
 - Universal context type: reuse the existing `NodeData` flat (decided — comment 5; also settles `key`-not-`name` and `value`/`fullData` for "current"). Open: confirm it's the right base for *every* callback (comment 20).
 - Event vocabulary final names (`editStart` vs `startEdit`, etc.) — tie into §14 "node not component".
 - Which commands are sync vs async; how much of the handle ships in 2.0 vs stubs against [#286](https://github.com/CarlosNZ/json-edit-react/issues/286).
