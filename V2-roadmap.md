@@ -348,18 +348,43 @@ type CommandResult =
   | { success: false; error: JsonEditorError }   // standardised on the Error type
 
 interface JsonEditorHandle<T = JsonData> {
-  // mutation commands run the real pipeline (incl. onUpdate); async; bypass gates
-  startEdit(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
-  editKey (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult> // #286
-  delete  (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult> // #286 + #117 resume
-  add     (opts: { path: CollectionKey[]; value: unknown; overrideRestrictions?: boolean }): Promise<CommandResult> // #286
-  confirmEdit(): Promise<CommandResult>
-  cancelEdit(): void
+  // --- Session openers: enter an interactive session (open the input) at a node; no value
+  //     supplied. Sync (just opens). The eventual confirm runs the pipeline. Distinct starts,
+  //     SHARED confirm/cancel (only one session open at a time).
+  startEdit   (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
+  startKeyEdit(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
+  startAdd    (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
+  confirmEdit(): Promise<CommandResult>   // commit the active session (runs onUpdate)
+  cancelEdit(): void                      // abort the active session
+
+  // --- Direct ("all-in-one") mutators: do the whole mutation with values provided, no UI
+  //     session. Async (run the pipeline). `delete` is core (the #117 resume); the rest are
+  //     PLANNED BUT LATE-PHASE in the implementation plan and may be dropped.
+  delete   (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult>   // #117 resume — core
+  update   (opts: { path: CollectionKey[]; value: unknown; overrideRestrictions?: boolean }): Promise<CommandResult>      // late
+  add      (opts: { path: CollectionKey[]; value: unknown; overrideRestrictions?: boolean }): Promise<CommandResult>      // late
+  renameKey(opts: { path: CollectionKey[]; newKey: CollectionKey; overrideRestrictions?: boolean }): Promise<CommandResult> // late
+  move     (opts: { from: CollectionKey[]; to: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult>   // late
+
+  // --- Non-mutating
   collapse(opts: { path: CollectionKey[]; collapsed?: boolean; includeChildren?: boolean }): void
 }
 ```
 
-Mutation commands **dev-warn + no-op on a path that no longer exists** — mitigates the [#117](https://github.com/CarlosNZ/json-edit-react/issues/117) "intercept-but-forget-to-suppress" slip (the node deletes behind the modal, then the resume targets a gone path). Signatures can ship in 2.0 even if `editKey`/`add`/`delete` land their *behaviour* with [#286](https://github.com/CarlosNZ/json-edit-react/issues/286).
+(`editKey` value-editing has both forms, mirroring value editing: `startKeyEdit` session ↔ `renameKey` direct; same for `startEdit` ↔ `update`, `startAdd` ↔ `add`. Delete/move are direct-only — no session. Command names tentative pending the summary table. **The sync-vs-async return typing shown is provisional** — not yet decided; tied to the async open decision below.)
+
+**The command pipeline (comment 14).** Every *mutating* command — a session commit *or* a direct mutator — runs the **same** pipeline:
+
+```
+command
+  → unless overrideRestrictions: check the allow* filter   → refuse with RESTRICTED if blocked
+  → onUpdate({ event, …values })   ← ALWAYS runs; can reject (error), modify (value), or cancel
+  → commit (setData) + fire observers
+```
+
+**Invariant (comment 13): `overrideRestrictions` skips *only* the `allow*` filter — never `onUpdate`.** A command can force past a UI permission gate, but the consumer's validation/transform logic always sees the value and may veto/modify/cancel it (consistent with comment 9's "same handler, user- or command-driven"). Session openers check the filter at *open* time; the value then flows through `onUpdate` at confirm.
+
+Mutation commands **dev-warn + no-op on a path that no longer exists** — mitigates the [#117](https://github.com/CarlosNZ/json-edit-react/issues/117) "intercept-but-forget-to-suppress" slip (the node deletes behind the modal, then the resume targets a gone path). A *likely* phasing — session openers + `confirmEdit`/`cancelEdit` + `delete` + `collapse` in 2.0, the late direct mutators riding [#286](https://github.com/CarlosNZ/json-edit-react/issues/286) — but the exact 2.0-vs-later split isn't settled (see the open decision below; the implementation plan will finalise it).
 
 Known tradeoff of the binary result: to react *only* to command-driven actions (e.g. a toast showing the new path for a programmatic `add`, but not for user adds), you'd have to correlate the `CommandResult` with the observer firing — a bit awkward. Accepted for now; revisit with a typed success payload for creating commands if it proves necessary.
 
