@@ -8,6 +8,8 @@ import {
   OnErrorFunction,
   defaultTheme,
   splitPropertyString,
+  extract,
+  isCollection,
   type JsonEditorHandle,
 } from '@json-edit-react'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
@@ -233,6 +235,25 @@ function App() {
   // unavailable it stays off and the panel is hidden.
   const externalControlEnabled = selectedDataSet !== 'customNodes'
   const showExternalControl = showImperativeHandle && externalControlEnabled
+
+  // External Control panel: collapse/expand the node at the entered path. We
+  // pre-check that the target is a collection (a leaf has nothing to collapse)
+  // and warn instead of firing a no-op — `collapse` itself returns nothing, so
+  // the host detects this with the exported `extract` + `isCollection` helpers.
+  // A successful collapse/expand is reported by the `onCollapse` callback below.
+  const handleExternalCollapse = (collapsed: boolean) => {
+    const path = splitPropertyString(handlePath)
+    if (!isCollection(extract(data, path))) {
+      toast({
+        title: `Can't ${collapsed ? 'collapse' : 'expand'} — not a collection node`,
+        status: 'warning',
+        duration: 2000,
+        isClosable: true,
+      })
+      return
+    }
+    editorRef.current?.collapse({ path, collapsed, includeChildren: handleIncludeChildren })
+  }
 
   // Stable references so the JsonEditor's memoized nodes can bail out: an inline
   // `theme` array would churn the theme context (re-rendering every node), and
@@ -634,12 +655,19 @@ function App() {
                   }
                   // collapseClickZones={['property', 'header']}
                   onEditEvent={(path) => setIsEditing(path !== null)}
-                  // onCollapse={(input) => {
-                  //   const path = JSON.stringify(input.path)
-                  //   const newCollapseState = { ...collapseState.current, [path]: input }
-                  //   collapseState.current = newCollapseState
-                  //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
-                  // }}
+                  onCollapse={(input) => {
+                    // Showcase the onCollapse callback — only while the External
+                    // Control panel is on screen (fires for both handle-driven
+                    // and user chevron-click collapses).
+                    if (!showExternalControl) return
+                    const label = input.path.length > 0 ? input.path.join('.') : 'root'
+                    toast({
+                      title: `${input.collapsed ? 'Collapsed' : 'Expanded'} ${label}`,
+                      status: 'info',
+                      duration: 2000,
+                      isClosable: true,
+                    })
+                  }}
                   editorRef={editorRef}
                   // translations={{
                   //   EMPTY_STRING: 'Nah',
@@ -998,13 +1026,7 @@ function App() {
                     <HStack gap={2} flexWrap="wrap">
                       <Button
                         size="sm"
-                        onClick={() =>
-                          editorRef.current?.collapse({
-                            path: splitPropertyString(handlePath),
-                            collapsed: true,
-                            includeChildren: handleIncludeChildren,
-                          })
-                        }
+                        onClick={() => handleExternalCollapse(true)}
                         colorScheme="primaryScheme"
                         variant="outline"
                       >
@@ -1012,13 +1034,7 @@ function App() {
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() =>
-                          editorRef.current?.collapse({
-                            path: splitPropertyString(handlePath),
-                            collapsed: false,
-                            includeChildren: handleIncludeChildren,
-                          })
-                        }
+                        onClick={() => handleExternalCollapse(false)}
                         colorScheme="primaryScheme"
                         variant="outline"
                       >
