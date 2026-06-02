@@ -31,7 +31,7 @@ export const BigIntComponent: React.FC<CustomNodeProps<BigIntProps>> = (props) =
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       {...rest}
       handleEdit={() => {
-        handleEdit(BigInt(nodeData.value as string))
+        handleEdit(BigInt(editDisplayValue))
       }}
     />
   ) : (
