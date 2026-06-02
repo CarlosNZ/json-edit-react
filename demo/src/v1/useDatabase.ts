@@ -1,10 +1,13 @@
 import { getFirestore, doc, setDoc } from 'firebase/firestore'
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps, getApp } from 'firebase/app'
 import { useDocument } from 'react-firebase-hooks/firestore'
 import firebaseConfig from '../firebaseConfig.json'
 import { useMemo } from 'react'
 
-const firebaseApp = initializeApp(firebaseConfig)
+// The V2 app (eagerly imported in main.tsx) already initialises the default
+// Firebase app at module scope, so reuse it here rather than calling
+// initializeApp again — a second default-app init throws.
+const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig)
 
 const db = getFirestore(firebaseApp)
 
