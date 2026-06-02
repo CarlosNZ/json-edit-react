@@ -179,6 +179,10 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   useLayoutEffect(() => {
     if (!isEditing) return
     if (isVisible && canEdit) return
+    // A forced (imperative `editorRef.startEdit`) edit overrides `restrictEdit`,
+    // so don't bounce off this node just because it's normally uneditable. A
+    // search-filtered-out node (`!isVisible`) still redirects — it can't render.
+    if (isVisible && getSnapshot().currentlyEditingElement?.force) return
     const { tabDirection, previouslyEditedElement } = getSnapshot()
     const next = getNextOrPrevious(getLatestData(), path, tabDirection, sort)
     if (next) startEdit(next)

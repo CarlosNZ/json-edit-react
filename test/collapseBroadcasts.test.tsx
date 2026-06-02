@@ -1,19 +1,21 @@
 /**
- * End-to-end tests for collapse broadcasts via `externalTriggers.collapse`.
+ * End-to-end tests for collapse broadcasts via the `editorRef` imperative
+ * handle (`handle.collapse(...)`).
  *
- * Pins the public-facing behavior of collapse commands. The current model is
+ * Pins the public-facing behavior of collapse commands. The model is
  * state-based with a version counter: each broadcast bumps a version stored
  * in provider state, subscribers compare a `useRef`-tracked last-seen value
  * to apply on mount (cascading through the mount frontier). Commands persist
  * in provider state until the next broadcast — there's no stale-clear timer,
  * so late mounts inherit the most recent broadcast. Drives commands via the
- * public API (`externalTriggers`) rather than poking the provider directly.
+ * public API (the `editorRef` handle) rather than poking the provider directly.
  */
 
+import { createRef } from 'react'
 import { act, render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
-import { type CollapseState } from '../src/types'
+import { type CollapseState, type JsonEditorHandle } from '../src/types'
 
 const noop = () => {}
 
@@ -24,15 +26,16 @@ const isCollapsed = (chevron: Element | null) => chevron?.classList.contains('je
 const collapseAll: CollapseState = { collapsed: true, path: [], includeChildren: true }
 const expandAll: CollapseState = { collapsed: false, path: [], includeChildren: true }
 
-describe('Collapse broadcasts via externalTriggers', () => {
+describe('Collapse broadcasts via editorRef handle', () => {
   test('1. broadcast "Collapse All" collapses every visible CollectionNode', () => {
     const data = { a: { x: 1 }, b: { y: 2 } }
-    const { container, rerender } = render(<JsonEditor data={data} setData={noop} />)
+    const ref = createRef<JsonEditorHandle>()
+    const { container } = render(<JsonEditor data={data} setData={noop} editorRef={ref} />)
     // Pre-broadcast: all chevrons expanded.
     const chevronsBefore = container.querySelectorAll('.jer-collapse-icon')
     chevronsBefore.forEach((c) => expect(isCollapsed(c)).toBe(false))
 
-    rerender(<JsonEditor data={data} setData={noop} externalTriggers={{ collapse: collapseAll }} />)
+    act(() => ref.current!.collapse(collapseAll))
 
     const chevronsAfter = container.querySelectorAll('.jer-collapse-icon')
     expect(chevronsAfter.length).toBeGreaterThan(0)
@@ -41,13 +44,14 @@ describe('Collapse broadcasts via externalTriggers', () => {
 
   test('2. broadcast "Expand All" expands every previously-collapsed subscriber', () => {
     const data = { a: { x: 1 }, b: { y: 2 } }
-    const { container, rerender } = render(<JsonEditor data={data} setData={noop} />)
-    rerender(<JsonEditor data={data} setData={noop} externalTriggers={{ collapse: collapseAll }} />)
+    const ref = createRef<JsonEditorHandle>()
+    const { container } = render(<JsonEditor data={data} setData={noop} editorRef={ref} />)
+    act(() => ref.current!.collapse(collapseAll))
     container
       .querySelectorAll('.jer-collapse-icon')
       .forEach((c) => expect(isCollapsed(c)).toBe(true))
 
-    rerender(<JsonEditor data={data} setData={noop} externalTriggers={{ collapse: expandAll }} />)
+    act(() => ref.current!.collapse(expandAll))
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(chevrons.length).toBeGreaterThan(0)
     chevrons.forEach((c) => expect(isCollapsed(c)).toBe(false))
@@ -56,8 +60,9 @@ describe('Collapse broadcasts via externalTriggers', () => {
   test('3. path-scoped command (no includeChildren) collapses only the targeted node', () => {
     const data = { outer: { inner: { leaf: 1 } } }
     const command: CollapseState = { collapsed: true, path: ['outer'], includeChildren: false }
-    const { container, rerender } = render(<JsonEditor data={data} setData={noop} />)
-    rerender(<JsonEditor data={data} setData={noop} externalTriggers={{ collapse: command }} />)
+    const ref = createRef<JsonEditorHandle>()
+    const { container } = render(<JsonEditor data={data} setData={noop} editorRef={ref} />)
+    act(() => ref.current!.collapse(command))
 
     // Three chevrons: root, outer, inner. Only `outer` should be collapsed.
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
@@ -70,8 +75,9 @@ describe('Collapse broadcasts via externalTriggers', () => {
   test('4. path-scoped command with includeChildren collapses the subtree', () => {
     const data = { outer: { inner: { leaf: 1 } }, sibling: { other: 2 } }
     const command: CollapseState = { collapsed: true, path: ['outer'], includeChildren: true }
-    const { container, rerender } = render(<JsonEditor data={data} setData={noop} />)
-    rerender(<JsonEditor data={data} setData={noop} externalTriggers={{ collapse: command }} />)
+    const ref = createRef<JsonEditorHandle>()
+    const { container } = render(<JsonEditor data={data} setData={noop} editorRef={ref} />)
+    act(() => ref.current!.collapse(command))
 
     // Four chevrons: root, outer, inner, sibling. (`leaf` and `other` are
     // primitive values — no collapse icon.)
@@ -86,16 +92,12 @@ describe('Collapse broadcasts via externalTriggers', () => {
   test('5. back-to-back identical commands both fire (version always bumps)', async () => {
     const user = userEvent.setup()
     const data = { outer: { x: 1 } }
-    const { container, rerender } = render(<JsonEditor data={data} setData={noop} />)
+    const command: CollapseState = { collapsed: true, path: ['outer'], includeChildren: false }
+    const ref = createRef<JsonEditorHandle>()
+    const { container } = render(<JsonEditor data={data} setData={noop} editorRef={ref} />)
 
     // First command: collapse `outer`.
-    rerender(
-      <JsonEditor
-        data={data}
-        setData={noop}
-        externalTriggers={{ collapse: { collapsed: true, path: ['outer'], includeChildren: false } }}
-      />
-    )
+    act(() => ref.current!.collapse(command))
     let chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(isCollapsed(chevrons[1])).toBe(true)
 
@@ -104,14 +106,8 @@ describe('Collapse broadcasts via externalTriggers', () => {
     chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(isCollapsed(chevrons[1])).toBe(false)
 
-    // Same command, fresh object reference (so `useTriggers` effect re-fires).
-    rerender(
-      <JsonEditor
-        data={data}
-        setData={noop}
-        externalTriggers={{ collapse: { collapsed: true, path: ['outer'], includeChildren: false } }}
-      />
-    )
+    // Same command again — the version counter bumps, so it re-fires.
+    act(() => ref.current!.collapse(command))
     chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(isCollapsed(chevrons[1])).toBe(true)
   })
@@ -119,21 +115,22 @@ describe('Collapse broadcasts via externalTriggers', () => {
   test('6. late mount inherits the most recent broadcast', () => {
     // Fire Collapse-All on a tree without `newChild`, then add `newChild`.
     // The new node should mount collapsed — it inherits the persistent
-    // broadcast state. Same `triggers` reference across rerenders so
-    // useTriggers does NOT re-broadcast; we're testing what the new mount
-    // reads from provider state, not a re-broadcast.
+    // broadcast state. We broadcast once (via the handle) then only swap data;
+    // we're testing what the new mount reads from provider state, not a
+    // re-broadcast.
     const dataBefore = { outer: { existing: 1 } }
     const dataAfter = { outer: { existing: 1, newChild: { nested: 'value' } } }
-    const triggers = { collapse: collapseAll }
+    const ref = createRef<JsonEditorHandle>()
 
     const { container, rerender } = render(
-      <JsonEditor data={dataBefore} setData={noop} externalTriggers={triggers} />
+      <JsonEditor data={dataBefore} setData={noop} editorRef={ref} />
     )
+    act(() => ref.current!.collapse(collapseAll))
     container
       .querySelectorAll('.jer-collapse-icon')
       .forEach((c) => expect(isCollapsed(c)).toBe(true))
 
-    rerender(<JsonEditor data={dataAfter} setData={noop} externalTriggers={triggers} />)
+    rerender(<JsonEditor data={dataAfter} setData={noop} editorRef={ref} />)
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(chevrons).toHaveLength(3)
     expect(isCollapsed(chevrons[2])).toBe(true) // newChild inherits Collapse-All
@@ -146,16 +143,17 @@ describe('Collapse broadcasts via externalTriggers', () => {
     // remount, just rendered new children.)
     const data1 = { a: { x: 1 } }
     const data2 = { b: { y: 2 } }
-    const triggers = { collapse: collapseAll }
+    const ref = createRef<JsonEditorHandle>()
 
     const { container, rerender } = render(
-      <JsonEditor data={data1} setData={noop} externalTriggers={triggers} />
+      <JsonEditor data={data1} setData={noop} editorRef={ref} />
     )
+    act(() => ref.current!.collapse(collapseAll))
     container
       .querySelectorAll('.jer-collapse-icon')
       .forEach((c) => expect(isCollapsed(c)).toBe(true))
 
-    rerender(<JsonEditor data={data2} setData={noop} externalTriggers={triggers} />)
+    rerender(<JsonEditor data={data2} setData={noop} editorRef={ref} />)
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(chevrons).toHaveLength(2)
     expect(isCollapsed(chevrons[0])).toBe(true) // root — retained state
@@ -166,15 +164,9 @@ describe('Collapse broadcasts via externalTriggers', () => {
     const data = { a: { x: 1 } }
     const onCollapse = jest.fn()
     const command: CollapseState = { collapsed: true, path: ['a'], includeChildren: false }
-    const { rerender } = render(<JsonEditor data={data} setData={noop} onCollapse={onCollapse} />)
-    rerender(
-      <JsonEditor
-        data={data}
-        setData={noop}
-        onCollapse={onCollapse}
-        externalTriggers={{ collapse: command }}
-      />
-    )
+    const ref = createRef<JsonEditorHandle>()
+    render(<JsonEditor data={data} setData={noop} onCollapse={onCollapse} editorRef={ref} />)
+    act(() => ref.current!.collapse(command))
 
     expect(onCollapse).toHaveBeenCalledTimes(1)
     expect(onCollapse).toHaveBeenCalledWith(command)
@@ -186,8 +178,9 @@ describe('Collapse broadcasts via externalTriggers', () => {
       { collapsed: true, path: ['a'], includeChildren: false },
       { collapsed: true, path: ['b'], includeChildren: false },
     ]
-    const { container, rerender } = render(<JsonEditor data={data} setData={noop} />)
-    rerender(<JsonEditor data={data} setData={noop} externalTriggers={{ collapse: commands }} />)
+    const ref = createRef<JsonEditorHandle>()
+    const { container } = render(<JsonEditor data={data} setData={noop} editorRef={ref} />)
+    act(() => ref.current!.collapse(commands))
 
     // Three chevrons: root, a, b. Both `a` and `b` should be collapsed.
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
@@ -204,14 +197,10 @@ describe('Collapse broadcasts via externalTriggers', () => {
     jest.useFakeTimers()
     try {
       const data = { outer: { x: 1 } }
-      const { container, rerender } = render(<JsonEditor data={data} setData={noop} />)
-      rerender(
-        <JsonEditor
-          data={data}
-          setData={noop}
-          externalTriggers={{ collapse: { collapsed: true, path: ['outer'], includeChildren: false } }}
-        />
-      )
+      const command: CollapseState = { collapsed: true, path: ['outer'], includeChildren: false }
+      const ref = createRef<JsonEditorHandle>()
+      const { container } = render(<JsonEditor data={data} setData={noop} editorRef={ref} />)
+      act(() => ref.current!.collapse(command))
       expect(isCollapsed(container.querySelectorAll('.jer-collapse-icon')[1])).toBe(true)
 
       // Wait an arbitrary length of time. Wrapped in act() so any
@@ -220,14 +209,8 @@ describe('Collapse broadcasts via externalTriggers', () => {
         jest.advanceTimersByTime(5_000)
       })
 
-      // Same command, fresh object reference — still applies via version bump.
-      rerender(
-        <JsonEditor
-          data={data}
-          setData={noop}
-          externalTriggers={{ collapse: { collapsed: true, path: ['outer'], includeChildren: false } }}
-        />
-      )
+      // Same command again — still applies via version bump.
+      act(() => ref.current!.collapse(command))
       expect(isCollapsed(container.querySelectorAll('.jer-collapse-icon')[1])).toBe(true)
     } finally {
       jest.useRealTimers()
@@ -243,20 +226,20 @@ describe('Collapse broadcasts via externalTriggers', () => {
     const dataBefore = { outer: { existing: 1 } }
     const dataAfter = { outer: { existing: 1, newChild: { nested: 'value' } } }
     const command: CollapseState = { collapsed: true, path: [], includeChildren: true }
-    const triggers = { collapse: command }
+    const ref = createRef<JsonEditorHandle>()
 
     const { container, rerender } = render(
-      <JsonEditor data={dataBefore} setData={noop} externalTriggers={triggers} />
+      <JsonEditor data={dataBefore} setData={noop} editorRef={ref} />
     )
+    act(() => ref.current!.collapse(command))
     container
       .querySelectorAll('.jer-collapse-icon')
       .forEach((c) => expect(isCollapsed(c)).toBe(true))
 
-    // Mutate the command after the provider stored it. Same triggers
-    // reference so useTriggers does NOT re-broadcast.
+    // Mutate the command after the provider stored it. We do NOT re-broadcast.
     command.collapsed = false
 
-    rerender(<JsonEditor data={dataAfter} setData={noop} externalTriggers={triggers} />)
+    rerender(<JsonEditor data={dataAfter} setData={noop} editorRef={ref} />)
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(chevrons).toHaveLength(3)
     // newChild inherits the SNAPSHOT taken when the broadcast fired
@@ -276,8 +259,9 @@ describe('Collapse broadcasts via externalTriggers', () => {
       { collapsed: true, path: [], includeChildren: true }, // collapse everything
       { collapsed: false, path: ['outer'], includeChildren: true }, // ...except the `outer` subtree
     ]
-    const { container, rerender } = render(<JsonEditor data={data} setData={noop} />)
-    rerender(<JsonEditor data={data} setData={noop} externalTriggers={{ collapse: commands }} />)
+    const ref = createRef<JsonEditorHandle>()
+    const { container } = render(<JsonEditor data={data} setData={noop} editorRef={ref} />)
+    act(() => ref.current!.collapse(commands))
 
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(chevrons).toHaveLength(3)
@@ -294,21 +278,20 @@ describe('Collapse broadcasts via externalTriggers', () => {
     // They should follow the NEW prop (expanded), NOT inherit the stale
     // Collapse-All broadcast that's still in provider state.
     const data = { outer: { inner: { x: 1 } } }
-    const triggers = { collapse: collapseAll }
+    const ref = createRef<JsonEditorHandle>()
 
     const { container, rerender } = render(
-      <JsonEditor data={data} setData={noop} collapse={true} externalTriggers={triggers} />
+      <JsonEditor data={data} setData={noop} collapse={true} editorRef={ref} />
     )
+    act(() => ref.current!.collapse(collapseAll))
     // Only the root is mounted; it's collapsed.
     let chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(chevrons).toHaveLength(1)
     expect(isCollapsed(chevrons[0])).toBe(true)
 
-    // Same triggers reference so useTriggers doesn't re-broadcast — we're
-    // testing what the collapse-prop change does to the pending broadcast.
-    rerender(
-      <JsonEditor data={data} setData={noop} collapse={false} externalTriggers={triggers} />
-    )
+    // We do NOT re-broadcast — we're testing what the collapse-prop change
+    // does to the pending broadcast.
+    rerender(<JsonEditor data={data} setData={noop} collapse={false} editorRef={ref} />)
     // root, outer, inner — all expanded because the prop-change retired
     // the pending broadcast before descendants mounted.
     chevrons = container.querySelectorAll('.jer-collapse-icon')
@@ -322,27 +305,43 @@ describe('Collapse broadcasts via externalTriggers', () => {
     // Firing an Expand-All broadcast must reach the unmounted descendants as
     // they mount during the cascade, not stop at the original mount frontier.
     const data = { a: { b: { c: { d: { leaf: 1 } } } } }
+    const ref = createRef<JsonEditorHandle>()
 
-    const { container, rerender } = render(
-      <JsonEditor data={data} setData={noop} collapse={2} />
+    const { container } = render(
+      <JsonEditor data={data} setData={noop} collapse={2} editorRef={ref} />
     )
     // Pre-broadcast: only the levels above the collapse boundary have rendered
     // chevrons. `b`'s descendants (`c`, `d`) don't mount until `b` opens.
     const chevronsBefore = container.querySelectorAll('.jer-collapse-icon')
     expect(chevronsBefore.length).toBeLessThan(5)
 
-    rerender(
-      <JsonEditor
-        data={data}
-        setData={noop}
-        collapse={2}
-        externalTriggers={{ collapse: expandAll }}
-      />
-    )
+    act(() => ref.current!.collapse(expandAll))
 
     // After the cascade: root, a, b, c, d should all be mounted AND expanded.
     const chevronsAfter = container.querySelectorAll('.jer-collapse-icon')
     expect(chevronsAfter).toHaveLength(5)
     chevronsAfter.forEach((c) => expect(isCollapsed(c)).toBe(false))
+  })
+
+  test('15. a broadcast invokes the latest onCollapse after the prop is swapped', () => {
+    // `CollapseProvider` holds `onCollapse` in a ref (so an inline callback
+    // doesn't churn the context). The ref must still track the current prop, so
+    // a broadcast after a swap fires the NEW callback, not the one captured at
+    // mount.
+    const data = { a: { x: 1 } }
+    const onCollapseV1 = jest.fn()
+    const onCollapseV2 = jest.fn()
+    const command: CollapseState = { collapsed: true, path: ['a'], includeChildren: false }
+    const ref = createRef<JsonEditorHandle>()
+
+    const { rerender } = render(
+      <JsonEditor data={data} setData={noop} onCollapse={onCollapseV1} editorRef={ref} />
+    )
+    rerender(<JsonEditor data={data} setData={noop} onCollapse={onCollapseV2} editorRef={ref} />)
+
+    act(() => ref.current!.collapse(command))
+
+    expect(onCollapseV2).toHaveBeenCalledWith(command)
+    expect(onCollapseV1).not.toHaveBeenCalled()
   })
 })

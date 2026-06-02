@@ -54,6 +54,9 @@ export interface EditingStateBundle {
 interface StartEditOptions {
   mode?: 'key' | 'value'
   cancelOp?: () => void
+  // Imperative (handle-driven) edit — overrides `restrictEdit`. See
+  // `EditingState.force`.
+  force?: boolean
 }
 
 export interface EditingStore {
@@ -99,7 +102,7 @@ const createEditingStore = (
 
   const startEdit = (path: CollectionKey[], options?: StartEditOptions) => {
     const mode = options?.mode ?? 'value'
-    const next: EditingState = { path, mode }
+    const next: EditingState = { path, mode, force: options?.force }
 
     if (cancelOp) cancelOp()
     cancelOp = options?.cancelOp ?? null

@@ -6,13 +6,16 @@ export { StringDisplay, StringEdit, useKeyboardListener } from './ValueNodes'
 export { AutogrowTextArea } from './AutogrowTextArea'
 export { matchNode, matchNodeKey } from './utils/filter'
 export { isCollection } from './utils/misc'
-export { toPathString } from './utils/pathTools'
+export { toPathString, splitPropertyString } from './utils/pathTools'
 export { assign, type AssignInput, type AssignOptions } from './utils/assign'
 export { extract } from './utils/extract'
 export {
   standardDataTypes,
   type JsonEditorProps,
   type JsonViewerProps,
+  type JsonEditorHandle,
+  type JsonViewerHandle,
+  type StartEditOptions,
   type UpdateFunction,
   type OnChangeFunction,
   type OnErrorFunction,
@@ -48,6 +51,5 @@ export {
   type TypeOptions,
   type UpdateFunctionProps,
 } from './types'
-export { type EditState, type ExternalTriggers } from './hooks'
 export { type IconProps } from './Icons'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
