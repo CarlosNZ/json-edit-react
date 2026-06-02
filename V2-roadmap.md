@@ -218,7 +218,7 @@ Every consumer-facing function falls into exactly one of three categories, and e
 //   Group B (imperative commands) → CommandResult.error (the return value), NOT onError
 type JsonEditorErrorCode =
   // Group A — mutation / edit flow
-  | 'UPDATE_ERROR'    // an edit was rejected (onUpdate/onEdit returned false/error, or internal failure)
+  | 'UPDATE_ERROR'    // an edit was rejected (onUpdate returned false/error, or internal failure)
   | 'ADD_ERROR'       // an add was rejected
   | 'DELETE_ERROR'    // a delete was rejected
   | 'KEY_EXISTS'      // a new/renamed key collides with an existing sibling
@@ -259,7 +259,7 @@ Invariants: the gate lives in each **UI interaction handler** (e.g. node-level `
 
 For [#117](https://github.com/CarlosNZ/json-edit-react/issues/117): intercept `delete` → consumer drives its own (possibly multi-step) modal from its own state → `editorRef.delete({ path })` commits. The library holds **no** state between intercept and resume, which is what makes a *sequence* of modals trivial and sidesteps the capture-the-resolver bridge a state-driven modal would otherwise need to feed an awaited promise.
 
-### Category 2 — Result producers (run at commit, accept/reject/transform/flag)
+### Category 2 — Result producers (run at commit, accept/reject/transform)
 
 ```ts
 // The one canonical update result (replaces the five legacy shapes — §6).
@@ -273,21 +273,27 @@ type UpdateResult<T = JsonData> =
     }
   // (or Promise of any of the above)
 
-interface UpdateFunctionProps<T = JsonData> extends NodeData<T> {
-  event: 'edit' | 'add' | 'delete'       // NEW discriminator → onUpdate becomes a proper catch-all
-  newValue: unknown                      // proposed value; `value` (from NodeData) is the current one
-  newData: T                             // proposed document; `fullData` is the current one
-}
+// Single `onUpdate` — branch on `event`. NodeData carries the CURRENT identity/value;
+// the event-specific field carries the NEW bit; `newData` is always the resulting document.
+// `rename` and `move` are first-class events even though both are delete+add under the
+// hood — they arrive via distinct user interactions and carry distinct deltas.
+type UpdateFunctionProps<T = JsonData> = NodeData<T> & { newData: T } & (
+  | { event: 'edit';   newValue: unknown }          // value changes (incl. type change)
+  | { event: 'add';    newValue: unknown }           // NodeData.path/key = the new node's position
+  | { event: 'delete' }                              // newData reflects the removal
+  | { event: 'rename'; newKey: CollectionKey }       // NodeData.key/path = OLD; path is "unstable" → use newKey + newData
+  | { event: 'move';   newPath: CollectionKey[] }    // NodeData.path = source; newPath = destination
+)
 type UpdateFunction<T = JsonData> =
   (props: UpdateFunctionProps<T>) => UpdateResult<T> | Promise<UpdateResult<T>>
-// onUpdate / onEdit / onAdd / onDelete?: UpdateFunction<T>   ← discrete props retained as conveniences
+// onUpdate?: UpdateFunction<T>   (single prop — no discrete onEdit/onAdd/onDelete)
 
 // Transform (distinct contract — returns the value, not a result).
 type OnChangeFunction<T = JsonData> =
   (props: NodeData<T> & { newValue: ValueData }) => ValueData
 ```
 
-**Don't collapse `onEdit`/`onAdd`/`onDelete` into one prop.** Interception is inherently cross-cutting (one gate over all actions → a single callback is natural), but update side-effects are often operation-specific, so the discrete props earn their keep ergonomically. The symmetry with `onEventIntercept` comes instead from the new `event` discriminator on the shared input — `onUpdate` becomes a proper discriminated catch-all — while the discrete props stay as conveniences sharing the one canonical `UpdateFunction` type. (Symmetrically: don't fold `onEventIntercept` *into* `UpdateFunction` either — gate vs result-producer are different categories.)
+**One `onUpdate`, branch on `event` — no discrete `onEdit`/`onAdd`/`onDelete`.** Now that every operation shares the uniform `NodeData` payload, separate handlers gave no typing advantage over a single function + an `event` `switch` — they were pure sugar, and §9 wants a smaller prop surface. So `onUpdate` is the one result-producer prop. The same function fires for **user-driven and command-driven** (`editorRef`) operations alike, and never double-fires. (Symmetry note: don't fold `onEventIntercept` *into* `onUpdate` either — gate vs result-producer are different categories.) Convenience handlers may return **additively in 2.x** (perhaps just one or two of the most-requested) if there's demand. The `rename`/`move` "no stable path" wrinkle is handled by the union: the *old* identity is in `NodeData` (`key`/`path`), the *new* identity is the event's delta field (`newKey`/`newPath`), and `newData` is the authoritative result either way.
 
 ### Category 3 — Observers (run after, return ignored)
 
