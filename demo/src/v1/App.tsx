@@ -1,4 +1,4 @@
-import { useEffect, useRef, lazy, Suspense, useMemo, useCallback } from 'react'
+import { useEffect, useRef, lazy, Suspense } from 'react'
 import { useSearch, useLocation } from 'wouter'
 import JSON5 from 'json5'
 import {
@@ -7,9 +7,9 @@ import {
   JsonData,
   OnErrorFunction,
   defaultTheme,
-  splitPropertyString,
-  type JsonEditorHandle,
-} from '@json-edit-react'
+  // ExternalTriggers,
+  // type CollapseState
+} from 'json-edit-react-v1'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -47,15 +47,11 @@ import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { getConditionalDefinitions, getLineHeight, truncate } from './helpers'
-import { RenderProfiler } from './RenderProfiler'
-import { Loading } from '../../packages/components/src/_common/Loading'
-import { testData } from '../../custom-component-library/src/data'
+import { Loading } from './ccl-components/_common/Loading'
+import { testData } from './ccl-data'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
-const SourceIndicator = lazy(() => import('./SourceIndicator'))
-const JsonEditor = lazy(() =>
-  import('@json-edit-react').then((m) => ({ default: m.JsonEditor }))
-) as typeof import('@json-edit-react').JsonEditor
+const JsonEditor = lazy(() => import('json-edit-react-v1').then((m) => ({ default: m.JsonEditor })))
 
 interface AppState {
   rootName: string
@@ -92,7 +88,7 @@ const themeNames = [
 // Only default theme is loaded initially
 const themes = [defaultTheme]
 
-console.log(`json-edit-react v${__VERSION__}`)
+console.log(`json-edit-react v${__V1_VERSION__}`)
 console.log(`Site built: ${__BUILD_TIME__}`)
 
 function App() {
@@ -122,14 +118,10 @@ function App() {
     customTextEditor: false,
   })
 
-  // Imperative handle for driving collapse/edit actions from outside the tree.
-  const editorRef = useRef<JsonEditorHandle>(null)
-  // Imperative-handle test panel: visibility toggle + target path/options.
-  // Kept in local state (not AppState) so it survives demo-data changes.
-  const [showImperativeHandle, setShowImperativeHandle] = useState(false)
-  const [handlePath, setHandlePath] = useState('')
-  const [handleIncludeChildren, setHandleIncludeChildren] = useState(true)
-  // const [handleOverrideRestrictions, setHandleOverrideRestrictions] = useState(false)
+  // const [isEditing, setIsEditing] = useState(false)
+  // const collapseState = useRef<Record<string, CollapseState>>({})
+  // const [collapseData, setCollapseData] = useState<CollapseState[]>()
+  // const [triggers, setTriggers] = useState<ExternalTriggers>()
 
   const [isSaving, setIsSaving] = useState(false)
   const previousTheme = useRef<Theme>(null) // Used when resetting after theme editing
@@ -142,7 +134,7 @@ function App() {
   const [
     { present: data, past, future },
     { set: setData, reset, undo: undoData, redo: redoData, canUndo, canRedo },
-  ] = useUndo<JsonData>(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data)
+  ] = useUndo(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data)
   // Provides a named version of these methods (i.e undo.name = "undo")
   const undo = () => undoData()
   const redo = () => redoData()
@@ -150,11 +142,6 @@ function App() {
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
   }, [loading, liveData, reset, selectedDataSet])
-
-  // Always reset the External Control panel to off when switching data sets.
-  useEffect(() => {
-    setShowImperativeHandle(false)
-  }, [selectedDataSet])
 
   // useEffect(() => {
   //   const localStorageState = localStorage.getItem('collapseState')
@@ -225,50 +212,6 @@ function App() {
     return !allowAdd
   })()
 
-  // The "Show External Control" toggle is disabled on the custom-nodes data set,
-  // where path-based editing doesn't map cleanly onto the custom renderers. When
-  // unavailable it stays off and the panel is hidden.
-  const externalControlEnabled = selectedDataSet !== 'customNodes'
-  const showExternalControl = showImperativeHandle && externalControlEnabled
-
-  // Stable references so the JsonEditor's memoized nodes can bail out: an inline
-  // `theme` array would churn the theme context (re-rendering every node), and
-  // an inline `enableClipboard` would churn the per-node prop comparison.
-  const editorTheme = useMemo(
-    () => [theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }],
-    [theme, dataDefinition]
-  )
-
-  const enableClipboard = useCallback(
-    ({
-      stringValue,
-      type,
-      success,
-      errorMessage,
-    }: {
-      stringValue: unknown
-      type: 'value' | 'path'
-      success: boolean
-      errorMessage: string | null
-    }) =>
-      success
-        ? toast({
-            title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
-            description: truncate(String(stringValue)),
-            status: 'success',
-            duration: 5000,
-            isClosable: true,
-          })
-        : toast({
-            title: 'Problem copying to clipboard',
-            description: errorMessage,
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-          }),
-    [toast]
-  )
-
   const handleChangeData = (selected: string) => {
     const newDataDefinition = demoDataDefinitions[selected]
 
@@ -293,8 +236,8 @@ function App() {
         reset(newDataDefinition.data)
     }
 
-    if (selected === 'intro') navigate('/')
-    else navigate(`/?data=${selected}`)
+    if (selected === 'intro') navigate('/v1')
+    else navigate(`/v1?data=${selected}`)
   }
 
   const handleThemeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -387,10 +330,6 @@ function App() {
         minH="100%"
       >
         <HStack w="100%" justify="space-between" align="flex-start">
-          <Suspense fallback={null}>
-            <SourceIndicator />
-          </Suspense>
-
           <VStack align="flex-start" gap={3}>
             <HStack align="flex-end" mt={2} gap={4} flexWrap="wrap">
               <Flex gap={4} align="center">
@@ -447,7 +386,7 @@ function App() {
               <Input
                 id="searchTextInput"
                 placeholder={
-                  isSearchFocused ? (dataDefinition.searchPlaceholder ?? 'Search values') : '🔍'
+                  isSearchFocused ? dataDefinition.searchPlaceholder ?? 'Search values' : '🔍'
                 }
                 onFocus={() => setIsSearchFocused(true)}
                 onBlur={() => setIsSearchFocused(false)}
@@ -465,191 +404,209 @@ function App() {
                 _focus={{ w: '45%' }}
                 transition={'width 0.3s'}
               />
-              <RenderProfiler>
-                <JsonEditor<typeof data>
-                  data={data}
-                  setData={setData}
-                  rootName={rootName}
-                  theme={editorTheme}
-                  indent={indent}
-                  onUpdate={async (nodeData) => {
-                    const demoOnUpdate = dataDefinition?.onUpdate ?? (() => undefined)
-                    const result = await demoOnUpdate(nodeData, toast as (options: unknown) => void)
-                    if (result) return result
-                    else {
-                      const { newData } = nodeData
-                      if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
-                    }
-                  }}
-                  onEdit={dataDefinition?.onEdit ?? undefined}
-                  onAdd={dataDefinition?.onAdd ?? undefined}
-                  onError={
-                    dataDefinition.onError
-                      ? (errorData) => {
-                          const error = (dataDefinition.onError as OnErrorFunction)(errorData)
-                          toast({
-                            title: 'ERROR 😢',
-                            description: error as string,
-                            status: 'error',
-                            duration: 5000,
-                            isClosable: true,
-                          })
-                        }
-                      : undefined
+              <JsonEditor
+                data={data}
+                setData={setData as (data: JsonData) => void}
+                rootName={rootName}
+                theme={[theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }]}
+                indent={indent}
+                onUpdate={async (nodeData) => {
+                  const demoOnUpdate = dataDefinition?.onUpdate ?? (() => undefined)
+                  const result = await demoOnUpdate(nodeData, toast as (options: unknown) => void)
+                  if (result) return result
+                  else {
+                    const { newData } = nodeData
+                    if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
                   }
-                  showErrorMessages={dataDefinition.showErrorMessages}
-                  collapse={collapseLevel}
-                  collapseAnimationTime={collapseTime}
-                  showCollectionCount={
-                    showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
-                  }
-                  enableClipboard={allowCopy ? enableClipboard : false}
-                  restrictEdit={restrictEdit}
-                  // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
-                  restrictDelete={restrictDelete}
-                  restrictAdd={restrictAdd}
-                  restrictTypeSelection={dataDefinition?.restrictTypeSelection}
-                  // restrictTypeSelection={[
-                  //   'string',
-                  //   'number',
-                  //   'boolean',
-                  //   'null',
-                  //   { enum: 'Option', values: ['One', 'Two', 'Three'] },
-                  //   {
-                  //     enum: 'Hobby',
-                  //     values: ['partying', 'building stuff', 'avenging', 'time travel'],
-                  //     matchPriority: 1,
-                  //   },
-                  //   {
-                  //     enum: 'Other activities that could be quite long',
-                  //     values: ['changing', 'building stuff', 'avenging', 'money money money money'],
-                  //     matchPriority: 2,
-                  //   },
-                  // ]}
-                  restrictDrag={false}
-                  searchFilter={dataDefinition?.searchFilter}
-                  searchText={searchText}
-                  keySort={sortKeys}
-                  // keySort={
-                  //   sortKeys
-                  //     ? (a, b) => {
-                  //         const nameRev1 = String(a[0]).length
-                  //         const nameRev2 = String(b[0]).length
-                  //         if (nameRev1 < nameRev2) {
-                  //           return -1
-                  //         }
-                  //         if (nameRev1 > nameRev2) {
-                  //           return 1
-                  //         }
-                  //         return 0
-                  //       }
-                  //     : false
-                  // }
-                  defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
-                  newKeyOptions={dataDefinition?.newKeyOptions}
-                  showArrayIndices={showIndices}
-                  arrayIndexFromOne={arraysFromOne}
-                  showStringQuotes={showStringQuotes}
-                  minWidth={'min(500px, 95vw)'}
-                  maxWidth="min(670px, 90vw)"
-                  className="block-shadow"
-                  stringTruncate={90}
-                  customNodeDefinitions={customNodeDefinitions}
-                  // customNodeDefinitions={[
-                  //   {
-                  //     condition: ({ key }) => key === 'string',
-                  //     element: ({ nodeData, value, originalNode, originalNodeKey }) => (
-                  //       <div
-                  //         style={{
-                  //           display: 'flex',
-                  //           // border: '1px solid red',
-                  //           margin: '-0.5em',
-                  //           alignItems: 'center',
-                  //         }}
-                  //       >
-                  //         {originalNodeKey}
-                  //         {/* {nodeData.key} */}
-                  //         <span>ICON</span>:{' '}
-                  //         <span style={{ lineHeight: 'unset !important' }}>{originalNode}</span>
-                  //       </div>
-                  //     ),
-                  //     hideKey: true,
-                  //     passOriginalNode: true,
-                  //     showOnEdit: true,
-                  //   },
-                  // ]}
-                  customText={dataDefinition?.customTextDefinitions}
-                  // icons={{ chevron: <IconCancel size="1.2em" /> }}
-                  // customButtons={[
-                  //   {
-                  //     Element: () => (
-                  //       <svg fill="none" viewBox="0 0 24 24" height="1em" width="1em">
-                  //         <path
-                  //           fill="currentColor"
-                  //           fillRule="evenodd"
-                  //           d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 2c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11z"
-                  //           clipRule="evenodd"
-                  //         />
-                  //         <path fill="currentColor" d="M16 12l-6 4.33V7.67L16 12z" />
-                  //       </svg>
-                  //     ),
-                  //     onClick: (nodeData, e) => console.log(nodeData),
-                  //   },
-                  // ]}
-                  onChange={dataDefinition?.onChange ?? undefined}
-                  jsonParse={JSON5.parse}
-                  // keyboardControls={{
-                  //   cancel: 'Tab',
-                  //   confirm: { key: 'Enter', modifier: 'Meta' },
-                  //   objectConfirm: { key: 'Enter', modifier: 'Shift' },
-                  //   stringLineBreak: { key: 'Enter' },
-                  //   stringConfirm: { key: 'Enter', modifier: 'Meta' },
-                  //   clipboardModifier: ['Alt', 'Shift'],
-                  //   collapseModifier: 'Control',
-                  //   booleanConfirm: 'Enter',
-                  //   booleanToggle: 'r',
-                  // }}
-                  // insertAtBeginning="object"
-                  // rootFontSize={20}
-                  TextEditor={
-                    customTextEditor
-                      ? (props) => (
-                          <Suspense
-                            fallback={
-                              <div
-                                className="loading"
-                                style={{ height: `${getLineHeight(data)}lh` }}
-                              >
-                                <Loading text="Loading code editor" />
-                              </div>
-                            }
-                          >
-                            <CodeEditor {...props} theme={theme?.displayName ?? ''} />
-                          </Suspense>
-                        )
-                      : undefined
-                  }
-                  // collapseClickZones={['property', 'header']}
-                  // onEditEvent={(...args) => console.log('onEditEvent', ...args)}
-                  // onEditEvent={(path) => {
-                  //   console.log(path)
-                  //   setIsEditing(path ? true : false)
-                  // }}
-                  // onCollapse={(input) => {
-                  //   const path = JSON.stringify(input.path)
-                  //   const newCollapseState = { ...collapseState.current, [path]: input }
-                  //   collapseState.current = newCollapseState
-                  //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
-                  // }}
-                  editorRef={editorRef}
-                  // translations={{
-                  //   EMPTY_STRING: 'Nah',
-                  // }}
-                  showIconTooltips
-                />
-              </RenderProfiler>
+                }}
+                onEdit={dataDefinition?.onEdit ?? undefined}
+                onAdd={dataDefinition?.onAdd ?? undefined}
+                onError={
+                  dataDefinition.onError
+                    ? (errorData) => {
+                        const error = (dataDefinition.onError as OnErrorFunction)(errorData)
+                        toast({
+                          title: 'ERROR 😢',
+                          description: error as string,
+                          status: 'error',
+                          duration: 5000,
+                          isClosable: true,
+                        })
+                      }
+                    : undefined
+                }
+                showErrorMessages={dataDefinition.showErrorMessages}
+                collapse={collapseLevel}
+                collapseAnimationTime={collapseTime}
+                showCollectionCount={
+                  showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
+                }
+                enableClipboard={
+                  allowCopy
+                    ? ({ stringValue, type, success, errorMessage }) =>
+                        success
+                          ? toast({
+                              title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
+                              description: truncate(String(stringValue)),
+                              status: 'success',
+                              duration: 5000,
+                              isClosable: true,
+                            })
+                          : toast({
+                              title: 'Problem copying to clipboard',
+                              description: errorMessage,
+                              status: 'error',
+                              duration: 5000,
+                              isClosable: true,
+                            })
+                    : false
+                }
+                // viewOnly
+                restrictEdit={restrictEdit}
+                // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
+                restrictDelete={restrictDelete}
+                restrictAdd={restrictAdd}
+                restrictTypeSelection={dataDefinition?.restrictTypeSelection}
+                // restrictTypeSelection={[
+                //   'string',
+                //   'number',
+                //   'boolean',
+                //   'null',
+                //   { enum: 'Option', values: ['One', 'Two', 'Three'] },
+                //   {
+                //     enum: 'Hobby',
+                //     values: ['partying', 'building stuff', 'avenging', 'time travel'],
+                //     matchPriority: 1,
+                //   },
+                //   {
+                //     enum: 'Other activities that could be quite long',
+                //     values: ['changing', 'building stuff', 'avenging', 'money money money money'],
+                //     matchPriority: 2,
+                //   },
+                // ]}
+                restrictDrag={false}
+                searchFilter={dataDefinition?.searchFilter}
+                searchText={searchText}
+                keySort={sortKeys}
+                // keySort={
+                //   sortKeys
+                //     ? (a, b) => {
+                //         const nameRev1 = String(a[0]).length
+                //         const nameRev2 = String(b[0]).length
+                //         if (nameRev1 < nameRev2) {
+                //           return -1
+                //         }
+                //         if (nameRev1 > nameRev2) {
+                //           return 1
+                //         }
+                //         return 0
+                //       }
+                //     : false
+                // }
+                defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
+                newKeyOptions={dataDefinition?.newKeyOptions}
+                showArrayIndices={showIndices}
+                arrayIndexFromOne={arraysFromOne}
+                showStringQuotes={showStringQuotes}
+                minWidth={'min(500px, 95vw)'}
+                maxWidth="min(670px, 90vw)"
+                className="block-shadow"
+                stringTruncate={90}
+                customNodeDefinitions={customNodeDefinitions}
+                // customNodeDefinitions={[
+                //   {
+                //     condition: ({ key }) => key === 'string',
+                //     element: ({ nodeData, value, originalNode, originalNodeKey }) => (
+                //       <div
+                //         style={{
+                //           display: 'flex',
+                //           // border: '1px solid red',
+                //           margin: '-0.5em',
+                //           alignItems: 'center',
+                //         }}
+                //       >
+                //         {originalNodeKey}
+                //         {/* {nodeData.key} */}
+                //         <span>ICON</span>:{' '}
+                //         <span style={{ lineHeight: 'unset !important' }}>{originalNode}</span>
+                //       </div>
+                //     ),
+                //     hideKey: true,
+                //     passOriginalNode: true,
+                //     showOnEdit: true,
+                //   },
+                // ]}
+                customText={dataDefinition?.customTextDefinitions}
+                // icons={{ chevron: <IconCancel size="1.2em" /> }}
+                // customButtons={[
+                //   {
+                //     Element: () => (
+                //       <svg fill="none" viewBox="0 0 24 24" height="1em" width="1em">
+                //         <path
+                //           fill="currentColor"
+                //           fillRule="evenodd"
+                //           d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 2c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11z"
+                //           clipRule="evenodd"
+                //         />
+                //         <path fill="currentColor" d="M16 12l-6 4.33V7.67L16 12z" />
+                //       </svg>
+                //     ),
+                //     onClick: (nodeData, e) => console.log(nodeData),
+                //   },
+                // ]}
+                onChange={dataDefinition?.onChange ?? undefined}
+                jsonParse={JSON5.parse}
+                // keyboardControls={{
+                //   cancel: 'Tab',
+                //   confirm: { key: 'Enter', modifier: 'Meta' },
+                //   objectConfirm: { key: 'Enter', modifier: 'Shift' },
+                //   stringLineBreak: { key: 'Enter' },
+                //   stringConfirm: { key: 'Enter', modifier: 'Meta' },
+                //   clipboardModifier: ['Alt', 'Shift'],
+                //   collapseModifier: 'Control',
+                //   booleanConfirm: 'Enter',
+                //   booleanToggle: 'r',
+                // }}
+                // insertAtBeginning="object"
+                // rootFontSize={20}
+                TextEditor={
+                  customTextEditor
+                    ? (props) => (
+                        <Suspense
+                          fallback={
+                            <div className="loading" style={{ height: `${getLineHeight(data)}lh` }}>
+                              <Loading text="Loading code editor" />
+                            </div>
+                          }
+                        >
+                          <CodeEditor {...props} theme={theme?.displayName ?? ''} />
+                        </Suspense>
+                      )
+                    : undefined
+                }
+                // collapseClickZones={['property', 'header']}
+                // onEditEvent={(...args) => console.log('onEditEvent', ...args)}
+                // onEditEvent={(path) => {
+                //   console.log(path)
+                //   setIsEditing(path ? true : false)
+                // }}
+                // onCollapse={(input) => {
+                //   const path = JSON.stringify(input.path)
+                //   const newCollapseState = { ...collapseState.current, [path]: input }
+                //   collapseState.current = newCollapseState
+                //   localStorage.setItem('collapseState', JSON.stringify(newCollapseState))
+                // }}
+                // externalTriggers={triggers}
+                // translations={{
+                //   EMPTY_STRING: 'Nah',
+                // }}
+                showIconTooltips
+              />
             </Suspense>
           </Box>
+          {/* <Button onClick={() => setTriggers({ edit: { action: 'accept' } })}>
+            Click to stop edit
+          </Button> */}
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
               <Button
@@ -818,18 +775,6 @@ function App() {
                     </Select>
                   </div>
                 </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Default new value
-                  </FormLabel>
-                  <Input
-                    className="inputWidth"
-                    disabled={dataDefinition.defaultValue !== undefined}
-                    type="text"
-                    value={defaultNewValue}
-                    onChange={(e) => updateState({ defaultNewValue: e.target.value })}
-                  />
-                </HStack>
                 <CheckboxGroup colorScheme="primaryScheme">
                   <Flex w="100%" justify="flex-start">
                     <Checkbox
@@ -907,16 +852,7 @@ function App() {
                     </Checkbox>
                   </Flex>
                   <Flex w="100%" justify="flex-start">
-                    <Checkbox
-                      id="showImperativeHandleCheckbox"
-                      isChecked={showExternalControl}
-                      disabled={!externalControlEnabled}
-                      onChange={() => setShowImperativeHandle((v) => !v)}
-                      w="50%"
-                    >
-                      Show External Control
-                    </Checkbox>
-                    <HStack w="50%">
+                    <HStack>
                       <Checkbox
                         id="customEditorCheckbox"
                         isChecked={customTextEditor}
@@ -930,87 +866,19 @@ function App() {
                       </Tooltip>
                     </HStack>
                   </Flex>
-                </CheckboxGroup>
-                {showExternalControl && (
-                  // Test panel for the `editorRef` imperative handle. Enter a
-                  // dot-separated path (e.g. "user.name" or "items.0"); empty =
-                  // root. Actions operate on that path.
-                  <VStack w="100%" align="stretch" gap={2} pt={2} mt={2}>
-                    <Text as="h3">External Control</Text>
+                  <HStack className="inputRow" pt={2}>
+                    <FormLabel className="labelWidth" textAlign="right">
+                      Default new value
+                    </FormLabel>
                     <Input
-                      size="sm"
-                      placeholder="path, e.g. user.name or items[0] (empty = root)"
-                      value={handlePath}
-                      onChange={(e) => setHandlePath(e.target.value)}
+                      className="inputWidth"
+                      disabled={dataDefinition.defaultValue !== undefined}
+                      type="text"
+                      value={defaultNewValue}
+                      onChange={(e) => updateState({ defaultNewValue: e.target.value })}
                     />
-                    <HStack gap={2} flexWrap="wrap">
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          const started = editorRef.current?.startEdit({
-                            path: splitPropertyString(handlePath),
-                            // overrideRestrictions: handleOverrideRestrictions,
-                          })
-                          if (started === false)
-                            toast({
-                              title: "Can't edit that node",
-                              status: 'warning',
-                              duration: 2000,
-                              isClosable: true,
-                            })
-                        }}
-                      >
-                        Start edit
-                      </Button>
-                      <Button size="sm" onClick={() => editorRef.current?.confirmEdit()}>
-                        Confirm
-                      </Button>
-                      <Button size="sm" onClick={() => editorRef.current?.cancelEdit()}>
-                        Cancel
-                      </Button>
-                      {/* <Checkbox
-                        isChecked={handleOverrideRestrictions}
-                        onChange={(e) => setHandleOverrideRestrictions(e.target.checked)}
-                        whiteSpace="nowrap"
-                      >
-                        Override restrictions
-                      </Checkbox> */}
-                    </HStack>
-                    <HStack gap={2} flexWrap="wrap">
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          editorRef.current?.collapse({
-                            path: splitPropertyString(handlePath),
-                            collapsed: true,
-                            includeChildren: handleIncludeChildren,
-                          })
-                        }
-                      >
-                        Collapse
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() =>
-                          editorRef.current?.collapse({
-                            path: splitPropertyString(handlePath),
-                            collapsed: false,
-                            includeChildren: handleIncludeChildren,
-                          })
-                        }
-                      >
-                        Expand
-                      </Button>
-                      <Checkbox
-                        isChecked={handleIncludeChildren}
-                        onChange={(e) => setHandleIncludeChildren(e.target.checked)}
-                        whiteSpace="nowrap"
-                      >
-                        Include children
-                      </Checkbox>
-                    </HStack>
-                  </VStack>
-                )}
+                  </HStack>
+                </CheckboxGroup>
               </VStack>
             </FormControl>
           </VStack>
@@ -1022,9 +890,9 @@ function App() {
       <Box h={50} />
       <footer>
         <Text fontSize="sm">
-          {`json-edit-react v${__VERSION__} `}
-          <Link href="/json-edit-react/v1" color="gray.500">
-            (Use V1.x)
+          {`json-edit-react v${__V1_VERSION__} `}
+          <Link href="/json-edit-react/" color="gray.500">
+            (Check out V2!)
           </Link>
         </Text>
       </footer>
