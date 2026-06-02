@@ -66,8 +66,8 @@ footer {
 
 /* For the "Markdown" block in the "Custom Component Library" data set */
 .jer-markdown-block h1,
-h2,
-h3 {
+.jer-markdown-block h2,
+.jer-markdown-block h3 {
   font-family: Work Sans, sans-serif;
   font-weight: bold;
   line-height: 1.4em;
