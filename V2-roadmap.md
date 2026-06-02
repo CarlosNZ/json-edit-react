@@ -237,8 +237,9 @@ The list is definitive. Type-change failures fold into `UPDATE_ERROR`; non-error
 ### Category 1 — Gates (run before, decide whether to proceed)
 
 ```ts
-// Hard gate: permission. true = allowed. (restrict* → allow*, §8.)
-type FilterFunction<T = JsonData> = (node: NodeData<T>) => boolean
+// Hard gate: permission. true = allowed. (restrict* → allow*, §8.) May be async
+// (e.g. a server permission check) — the library awaits, and awaiting a sync return is free.
+type FilterFunction<T = JsonData> = (node: NodeData<T>) => boolean | Promise<boolean>
 // allowEdit / allowDelete / allowAdd / allowDrag / allowTypeSelection?: boolean | FilterFunction<T>
 // allowClipboard?: boolean (default true) — renamed from `enableClipboard`; BOOLEAN ONLY (a per-node
 //   copy filter is security theatre — select + Cmd-C defeats it). The copy handler is `onCopy` (Cat 3).
@@ -390,12 +391,12 @@ Known tradeoff of the binary result: to react *only* to command-driven actions (
 
 ### Open decisions (for review)
 
-- Intercept signal: `return true` vs an exported `INTERCEPT` sentinel vs `e.preventDefault()`. (Leaning `true` — reads correctly given the callback name.)
-- `error: string | JsonEditorError` — accept a bare string as shorthand, or force the object?
+- ✓ **Decided (comment 15)** — intercept signal is `return true` (or any non-void) to take over; `void`/`false` proceeds.
+- ✓ **Decided (comment 17)** — result-producers (`UpdateFunction`) accept a bare `string` error as shorthand (the library wraps it into a `JsonEditorError` with the matching code); *observers* (`onError`) always receive the full `JsonEditorError` object.
 - Universal context type: reuse the existing `NodeData` flat (decided — comment 5; also settles `key`-not-`name` and `value`/`fullData` for "current"). Open: confirm it's the right base for *every* callback (comment 20).
-- Event vocabulary final names (`editStart` vs `startEdit`, etc.) — tie into §14 "node not component".
-- Which commands are sync vs async; how much of the handle ships in 2.0 vs stubs against [#286](https://github.com/CarlosNZ/json-edit-react/issues/286).
-- May `onEventIntercept` / `allow*` be async? (Leaning yes for intercept.)
+- ✓ **Decided (comment 21)** — every callback the library *awaits* may be async: `onEventIntercept` and `allow*` become `=> R | Promise<R>` (`UpdateFunction` already is). `await` on a sync return is free, so there's no downside.
+- Event vocabulary final names (`editStart` vs `startEdit`, etc.) — tie into §14 "node not component". **→ finalised in the summary table.**
+- Command sync vs async return typing, and how much of the handle ships in 2.0 vs rides [#286](https://github.com/CarlosNZ/json-edit-react/issues/286). **→ to call alongside the summary table** (comment 19).
 
 ---
 
