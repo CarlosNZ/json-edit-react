@@ -359,7 +359,7 @@ interface JsonEditorHandle<T = JsonData> {
   cancel(): void                      // abort the active session; shared
 
   // --- Direct ("all-in-one") mutators: do the whole mutation with values provided, no UI
-  //     session. Run the pipeline. `delete` is core (the #117 resume); the rest are
+  //     session. Run the pipeline → async. `delete` is core (the #117 resume); the rest are
   //     PLANNED BUT LATE-PHASE in the implementation plan and may be dropped.
   delete(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult>   // #117 resume — core
   edit  (opts: { path: CollectionKey[]; value: unknown; overrideRestrictions?: boolean }): Promise<CommandResult>      // late
@@ -372,7 +372,7 @@ interface JsonEditorHandle<T = JsonData> {
 }
 ```
 
-(Each editable thing has both forms: `startRename` session ↔ `rename` direct; `startEdit` ↔ `edit`; `startAdd` ↔ `add`. Delete/move are direct-only — no session. Names are final (see the vocabulary table below). **The sync-vs-async return typing shown is the one item still provisional** — tied to the async open decision below.)
+(Each editable thing has both forms: `startRename` session ↔ `rename` direct; `startEdit` ↔ `edit`; `startAdd` ↔ `add`. Delete/move are direct-only — no session. **Sync/async typing is honest**: the genuinely-instant commands — session openers, `cancel`, `collapse` — are synchronous; the pipeline-runners (`confirm` + the direct mutators) return `Promise<CommandResult>` because they run the async `onUpdate`. TS still catches the only real misuse — reading a result off an un-awaited Promise (`r.success` on a `Promise` is a compile error). Names and return typing are final; see the vocabulary table below.)
 
 **The command pipeline (comment 14).** Every *mutating* command — a session commit *or* a direct mutator — runs the **same** pipeline:
 
@@ -413,7 +413,7 @@ Not tied to one operation: `onChange` (Cat 2 transform), `onError` / `onCollapse
 - ✓ **Decided (comments 5 & 20)** — `NodeData` is the universal flat base for *every* callback (settles `key`-not-`name`, `value`/`fullData` for "current"). Sole special case: `add`, where `NodeData` is the new node's position (`path`/`key`) with `value` unset until commit — **matching V1's existing behaviour** ([JsonEditor.tsx:281](src/JsonEditor.tsx#L281), `currentValue: undefined`).
 - ✓ **Decided (comment 21)** — every callback the library *awaits* may be async: `onEventIntercept` and `allow*` become `=> R | Promise<R>` (`UpdateFunction` already is). `await` on a sync return is free, so there's no downside.
 - Event vocabulary final names (`editStart` vs `startEdit`, etc.) — tie into §14 "node not component". **→ finalised in the summary table.**
-- Command sync vs async return typing, and how much of the handle ships in 2.0 vs rides [#286](https://github.com/CarlosNZ/json-edit-react/issues/286). **→ to call alongside the summary table** (comment 19).
+- ✓ **Decided** — command sync/async typing is *honest*: instant commands (session openers, `cancel`, `collapse`) are sync; pipeline-runners (`confirm` + direct mutators) return `Promise<CommandResult>`. (Still open: how much of the handle ships in 2.0 vs rides [#286](https://github.com/CarlosNZ/json-edit-react/issues/286) — an implementation-plan call, not an API-shape one.)
 
 ---
 
