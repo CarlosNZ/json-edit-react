@@ -49,9 +49,29 @@ const packageFile = coreSrcMap[provider].pkgJson
 const jsonEditReactPath = coreSrcMap[provider].src
 const pkg = fs.readJsonSync(packageFile)
 
+// The frozen `/v1` demo always consumes the published V1 package (aliased to
+// `json-edit-react-v1` in package.json), regardless of VITE_JRE_SOURCE. Read its
+// version for the V1 footer.
+const v1Pkg = fs.readJsonSync(
+  path.join('node_modules', 'json-edit-react-v1', 'package.json')
+)
+
+// GitHub Pages is a static host with no rewrite rules, so a client-side-only
+// `/v1` route would 404 on direct load / refresh. Vite emits `index.html` with
+// absolute asset URLs (see `base` below), so a copy of it at `build/v1/index.html`
+// boots the same SPA bundle natively when `/json-edit-react/v1/` is hit directly.
+const v1IndexHtmlPlugin = {
+  name: 'v1-index-html',
+  closeBundle() {
+    const out = path.resolve(__dirname, 'build')
+    const index = path.join(out, 'index.html')
+    if (fs.existsSync(index)) fs.copySync(index, path.join(out, 'v1', 'index.html'))
+  },
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), v1IndexHtmlPlugin],
   base: '/json-edit-react/',
   resolve: {
     // Order matters: more specific scoped aliases must come before the bare
@@ -111,6 +131,7 @@ export default defineConfig({
           // JSON utilities
           json: ['json5', 'ajv'],
           jsonEditReact: ['json-edit-react'],
+          jsonEditReactV1: ['json-edit-react-v1'],
         },
       },
     },
@@ -121,5 +142,6 @@ export default defineConfig({
       new Date().toLocaleString('en-NZ', { timeZone: 'Pacific/Auckland' })
     ),
     __VERSION__: JSON.stringify(pkg.version),
+    __V1_VERSION__: JSON.stringify(v1Pkg.version),
   },
 })

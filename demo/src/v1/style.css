@@ -1,0 +1,99 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+/* .App {
+  text-align: center;
+} */
+
+footer {
+  height: 50px;
+  display: flex;
+  padding: 10px;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.inputRow {
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.inputWidth {
+  max-width: 200px;
+}
+
+.labelWidth {
+  width: 30%;
+}
+
+.chakra-checkbox__control {
+  margin-left: 5px;
+}
+
+.block-shadow {
+  box-shadow: rgba(0, 0, 0, 0.24) 0px 3px 8px;
+}
+
+.code {
+  font-family: monospace;
+  font-size: 90%;
+  font-weight: 600;
+  color: dimgray;
+}
+
+/* For CodeMirror */
+.cm-theme-light,
+.cm-theme {
+  width: 100%;
+}
+
+.cm-content,
+.cm-gutters {
+  font-size: 80%;
+}
+
+/* Loading component for CodeMirror */
+.loading {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* For the "Markdown" block in the "Custom Component Library" data set */
+.jer-markdown-block h1,
+.jer-markdown-block h2,
+.jer-markdown-block h3 {
+  font-family: Work Sans, sans-serif;
+  font-weight: bold;
+  line-height: 1.4em;
+  /* color: #ea3788; */
+}
+
+.jer-markdown-block h1 {
+  font-size: 2em;
+}
+
+.jer-markdown-block h2 {
+  font-size: 1.5em;
+}
+
+.jer-markdown-block h3 {
+  font-size: 1.2em;
+}
+
+.jer-markdown-block {
+  line-height: 1.3em;
+}
+
+.jer-markdown-block ul {
+  margin: 0.4em 2em;
+  /* color: black; */
+}
+.jer-markdown-block p {
+  margin: 0.5em 0;
+}
