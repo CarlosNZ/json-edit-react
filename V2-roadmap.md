@@ -283,7 +283,7 @@ type UpdateResult<T = JsonData> =
 // hood — they arrive via distinct user interactions and carry distinct deltas.
 type UpdateFunctionProps<T = JsonData> = NodeData<T> & { newData: T } & (
   | { event: 'edit';   newValue: unknown }          // value changes (incl. type change)
-  | { event: 'add';    newValue: unknown }           // NodeData.path/key = the new node's position
+  | { event: 'add';    newValue: unknown }           // NodeData = new node's position (path/key); value unset until commit (matches V1)
   | { event: 'delete' }                              // newData reflects the removal
   | { event: 'rename'; newKey: CollectionKey }       // NodeData.key/path = OLD; path is "unstable" → use newKey + newData
   | { event: 'move';   newPath: CollectionKey[] }    // NodeData.path = source; newPath = destination
@@ -393,7 +393,7 @@ Known tradeoff of the binary result: to react *only* to command-driven actions (
 
 - ✓ **Decided (comment 15)** — intercept signal is `return true` (or any non-void) to take over; `void`/`false` proceeds.
 - ✓ **Decided (comment 17)** — result-producers (`UpdateFunction`) accept a bare `string` error as shorthand (the library wraps it into a `JsonEditorError` with the matching code); *observers* (`onError`) always receive the full `JsonEditorError` object.
-- Universal context type: reuse the existing `NodeData` flat (decided — comment 5; also settles `key`-not-`name` and `value`/`fullData` for "current"). Open: confirm it's the right base for *every* callback (comment 20).
+- ✓ **Decided (comments 5 & 20)** — `NodeData` is the universal flat base for *every* callback (settles `key`-not-`name`, `value`/`fullData` for "current"). Sole special case: `add`, where `NodeData` is the new node's position (`path`/`key`) with `value` unset until commit — **matching V1's existing behaviour** ([JsonEditor.tsx:281](src/JsonEditor.tsx#L281), `currentValue: undefined`).
 - ✓ **Decided (comment 21)** — every callback the library *awaits* may be async: `onEventIntercept` and `allow*` become `=> R | Promise<R>` (`UpdateFunction` already is). `await` on a sync return is free, so there's no downside.
 - Event vocabulary final names (`editStart` vs `startEdit`, etc.) — tie into §14 "node not component". **→ finalised in the summary table.**
 - Command sync vs async return typing, and how much of the handle ships in 2.0 vs rides [#286](https://github.com/CarlosNZ/json-edit-react/issues/286). **→ to call alongside the summary table** (comment 19).
