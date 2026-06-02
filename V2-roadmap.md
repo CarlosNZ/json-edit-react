@@ -23,6 +23,7 @@ Numbering matches the section numbers below. Items joined with `+` are interlock
 - §14 Terminology — "node", not "component" — [#253](https://github.com/CarlosNZ/json-edit-react/issues/253)
 - §15 CustomNode flags audit — [#254](https://github.com/CarlosNZ/json-edit-react/issues/254)
 - §16 Fine-grained re-rendering ✅ (dependency-free editing store + `React.memo`) — [#255](https://github.com/CarlosNZ/json-edit-react/issues/255)
+- §17 API standardisation — the three-category model (umbrella over §6/§7/§8/§10/§12) — [#289](https://github.com/CarlosNZ/json-edit-react/issues/289)
 - Additional cleanup (umbrella) — [#256](https://github.com/CarlosNZ/json-edit-react/issues/256)
 
 ---
@@ -83,6 +84,11 @@ Promise<any of the above>         // async validators remain first-class
 
 Decide explicitly: when `value` is set **and** `isValid: false` — apply the new value but flag it? Reject? Doc it.
 
+Two questions surfaced by [#117](https://github.com/CarlosNZ/json-edit-react/issues/117) (confirmation flows for `onDelete`) belong in this decision so the canonical shape covers them:
+
+- **Silent cancel.** A declined confirmation isn't an error — the shape needs an "abort, leave data untouched, surface nothing" outcome, distinct from `false` (reject + generic error). Candidate: `{ cancel: true }` in the object form.
+- **Imperative vs reactive resume.** #117 favours *pausing* the op (a request event) and *resuming* it imperatively (`editorRef.delete`, see §10 / [#286](https://github.com/CarlosNZ/json-edit-react/issues/286)) over awaiting a promise, because React confirmation modals are state-driven. Worth deciding whether every gate (edit/add/delete) supports both idioms symmetrically — return-value (sync/promise) for inline decisions, request-event + `editorRef` resume for state-driven flows — so the legal outcomes of an update attempt form one matrix (proceed / proceed-but-flag / reject-with-error / cancel-silently / defer-to-imperative-resume) rather than a per-callback grab-bag.
+
 ## 7. Per-node `isValid` state
 
 New `isValid` property on each node, settable via Update Function returns (above) and via a sibling standing validator:
@@ -136,6 +142,8 @@ Tests: editing actions (incl. restrictEdit respect/override) in [test/imperative
 
 Follow-up: extend the handle to **key / add / delete** modes with the same per-call `overrideRestrictions` semantics — [#286](https://github.com/CarlosNZ/json-edit-react/issues/286). Each mode gates on a different filter (key needs edit+add+delete; add/delete are per-node operations, not central state), so they're a 2.x feature rather than part of this cleanup.
 
+The **delete trigger is also the resume half of the [#117](https://github.com/CarlosNZ/json-edit-react/issues/117) confirmation flow.** An opt-in `confirmDelete` gate fires an `onDeleteRequest({ path, nodeData })` event *instead of* deleting; the consumer owns the pending state and drives their (possibly multi-step) modal, then calls `editorRef.delete(path)` to commit through the real pipeline — bypassing the gate. The library holds no state between request and commit, which is what makes a *sequence* of modals trivial (it only sees `delete(path)` at the end) and sidesteps the capture-the-resolver bridge a state-driven modal otherwise needs to feed an awaited promise. Strictly additive: `confirmDelete` defaults off, so the delete path is byte-for-byte unchanged for anyone not using it. A promise-returning `confirmDelete?: (nodeData) => Promise<boolean>` stays available off the same gate for genuinely promise-based flows. See the cancel-signal / outcome-matrix note under §6.
+
 ## 11. Export `JsonViewer` — ✅ done
 
 Landed in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled with §5. `<JsonViewer />` is the canonical read-only entry point — a thin wrapper over `JsonEditor` that hard-codes `setData={noop}` and locks all four `restrict*` filters on. `JsonViewerProps<T>` drops the props that aren't meaningful in a viewer (`setData`, the update callbacks, and the `restrict*` filters). The v1 `viewOnly` prop is removed in the same PR. (The original runtime scrub of `externalTriggers` here was retired in §10 — `externalTriggers` is gone, and the viewer's `editorRef` handle is collapse-only, so there's no edit action to bypass the filters with.)
@@ -143,6 +151,8 @@ Landed in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled 
 ## 12. `onRenameProperty` callback
 
 Current "delete + add" semantics force consumers to detect renames by hand and lose order info. Distinct callback. (From [discussion #228](https://github.com/CarlosNZ/json-edit-react/discussions/228#discussioncomment-15144209).)
+
+**Reframed under §17:** a rename is just a flavour of edit, so rather than a standalone prop it becomes a discriminated variant of the `onEditEvent` *observer* (`{ event: 'rename', oldKey, newKey, node }`) — see §17 / [#289](https://github.com/CarlosNZ/json-edit-react/issues/289).
 
 ## 13. Split themes + custom components into separate packages — ✅ done
 
@@ -186,6 +196,150 @@ Measured (medium ~19k, fully expanded): **Enter-edit 3126 → 2 ms, Commit 4624 
 **Followup — DOM virtualization (2.x feature) — [#283](https://github.com/CarlosNZ/json-edit-react/issues/283).** The real fix for drag-and-drop + responsiveness on very large *fully-expanded* trees, where the bottleneck is now DOM *size* (native HTML5 drag chokes on it). `content-visibility` can't help — it keeps every node in the DOM, only skipping paint. The approach: **window the DOM** by replacing off-screen subtrees with cheap estimated-height spacers — each `CollectionNode` self-observes via `IntersectionObserver` and renders a spacer (height from the existing `estimateHeight`, then remembered after first render) instead of recursing while off-screen. Works in place in the recursive structure for the depth dimension; a single huge *flat* collection additionally needs intra-collection slice-windowing. Edges: scroll jumpiness (mitigated by remembered heights), async-scroll gaps (`rootMargin`), search/drag interactions. A 2.x feature — not 2.0. Pragmatic stopgap meanwhile: collapse levels + a `restrictDrag` cutoff above ~10k nodes. Suggested first move: a depth-only PoC to gauge jumpiness.
 
 **Followup still carried from §4 Part 3:** the Tab-navigation retry in [ValueNodeWrapper.tsx](src/ValueNodeWrapper.tsx) still lands editing on a filtered/uneditable target and then redirects via `useLayoutEffect`. Stage C moved its state reads (`tabDirection`, `previouslyEditedElement`) onto the store snapshot but kept the redirect. Making `getNextOrPrevious` filter-aware — so the Tab handler picks a viable target up front and never lands on a non-viable one — would eliminate the setState-after-render pattern. Touches `getNextOrPrevious` plus its callers in `ValueNodeWrapper.tsx` and `KeyDisplay.tsx`.
+
+## 17. API standardisation — the three-category model (umbrella) — [#289](https://github.com/CarlosNZ/json-edit-react/issues/289)
+
+Tracked in [#289](https://github.com/CarlosNZ/json-edit-react/issues/289). Umbrella that subsumes the API-*shape* decisions scattered across §6+§7 ([#249](https://github.com/CarlosNZ/json-edit-react/issues/249)), §8 ([#250](https://github.com/CarlosNZ/json-edit-react/issues/250)), §10/[#286](https://github.com/CarlosNZ/json-edit-react/issues/286) ([#251](https://github.com/CarlosNZ/json-edit-react/issues/251)), §12 ([#252](https://github.com/CarlosNZ/json-edit-react/issues/252)), and [#117](https://github.com/CarlosNZ/json-edit-react/issues/117). v2.0 is the one chance to break the callback API cleanly; the aim is a single coherent model rather than per-callback ad-hoc shapes.
+
+### The model
+
+Every consumer-facing function falls into exactly one of three categories, and each category has **one** return contract:
+
+| Category | Runs | Question it answers | Return contract |
+| --- | --- | --- | --- |
+| **Gates** — `allow*` (was `restrict*`), `onEventIntercept` | *before* the action | "should this proceed / am I taking over?" | `boolean` / `void` |
+| **Result producers** — `UpdateFunction`, `validate`, `onChange` | *at commit* | "accept / reject / transform / flag?" | the canonical result shape (or transformed value for `onChange`) |
+| **Observers** — `onError`, `onEditEvent`, `onCollapse`, `CopyFunction` | *after* | (none — notification) | ignored |
+
+**Guiding principle:** a gate's boolean answers the yes/no question its *name* poses — `allowEdit` → `true` = allow; `onEventIntercept` → `true` = intercept. The polarity lives in the name, not a memorised convention, so opposite literals across differently-named gates are correct and predictable. The `false`-means-reject (`UpdateFunction`) vs `true`-means-intercept (`onEventIntercept`) "inconsistency" dissolves: they're different categories.
+
+### Shared building blocks
+
+```ts
+// Canonical tree-position context — passed to (or extended by) every callback.
+interface NodeContext<T = JsonData> {
+  path: CollectionKey[]   // canonical identity (§2)
+  key: CollectionKey      // immediate key (was `name`)
+  parentData: JsonData    // immediate parent collection
+  fullData: T             // whole document (typed, §1)
+}
+
+// One canonical error shape, used everywhere an error is produced or reported.
+type JsonEditorErrorCode =
+  | 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR'
+  | 'INVALID_JSON' | 'KEY_EXISTS' | 'RESTRICTED' // | …
+interface JsonEditorError {
+  code: JsonEditorErrorCode
+  message: string
+}
+```
+
+### Category 1 — Gates (run before, decide whether to proceed)
+
+```ts
+// Hard gate: permission. true = allowed. (restrict* → allow*, §8.)
+type FilterFunction<T = JsonData> = (node: NodeData<T>) => boolean
+// allowEdit / allowDelete / allowAdd / allowDrag / allowTypeSelection?: boolean | FilterFunction<T>
+
+// Soft gate: intercept a user-initiated action. true (or non-void) = "I'll take it over".
+type InterceptableEvent<T = JsonData> =
+  | { event: 'editStart';    node: NodeContext<T>; value: unknown }
+  | { event: 'editKeyStart'; node: NodeContext<T> }
+  | { event: 'delete';       node: NodeContext<T>; value: unknown }
+  | { event: 'add';          node: NodeContext<T> }
+  // future: 'move' | 'typeChange' | 'copy'
+type EventInterceptFunction<T = JsonData> =
+  (e: InterceptableEvent<T>) => boolean | void | Promise<boolean | void>
+// onEventIntercept?: EventInterceptFunction<T>
+```
+
+Invariants: the gate lives in each **UI interaction handler** (e.g. node-level `handleDelete`), never in the internal commit functions; **`editorRef.*` calls never re-fire it** (the consumer already decided — they enter below the gate, which is the uniform loop-breaker); an intercepted action is resumed via the matching imperative command. Layering: `allow*` = hard disable/hide; `onEventIntercept` = soft "leave it clickable, then decide"; `onEditEvent` = purely observational (the *after* to intercept's *before*).
+
+For [#117](https://github.com/CarlosNZ/json-edit-react/issues/117): intercept `delete` → consumer drives its own (possibly multi-step) modal from its own state → `editorRef.delete({ path })` commits. The library holds **no** state between intercept and resume, which is what makes a *sequence* of modals trivial and sidesteps the capture-the-resolver bridge a state-driven modal would otherwise need to feed an awaited promise.
+
+### Category 2 — Result producers (run at commit, accept/reject/transform/flag)
+
+```ts
+// The one canonical update result (replaces the five legacy shapes — §6).
+type UpdateResult<T = JsonData> =
+  | true | void | undefined              // proceed
+  | false                                // reject (generic error)
+  | {
+      value?: T                          // override the committed value
+      isValid?: boolean                  // set node validity flag (§7)
+      error?: string | JsonEditorError   // reject with message
+      cancel?: true                      // silent abort — no commit, no error (#117 / #249)
+    }
+  // (or Promise of any of the above)
+
+interface UpdateFunctionProps<T = JsonData> extends NodeContext<T> {
+  event: 'edit' | 'add' | 'delete'       // NEW discriminator → onUpdate becomes a proper catch-all
+  currentValue: unknown
+  newValue: unknown
+  currentData: T
+  newData: T
+}
+type UpdateFunction<T = JsonData> =
+  (props: UpdateFunctionProps<T>) => UpdateResult<T> | Promise<UpdateResult<T>>
+// onUpdate / onEdit / onAdd / onDelete?: UpdateFunction<T>   ← discrete props retained as conveniences
+
+// Standing validator (§7) — composes with UpdateResult.error / isValid.
+type ValidateFunction<T = JsonData> = (node: NodeData<T>) => true | string  // string = invalid message
+
+// Transform (distinct contract — returns the value, not a result).
+type OnChangeFunction<T = JsonData> =
+  (props: NodeContext<T> & { currentValue: ValueData; newValue: ValueData }) => ValueData
+```
+
+**Don't collapse `onEdit`/`onAdd`/`onDelete` into one prop.** Interception is inherently cross-cutting (one gate over all actions → a single callback is natural), but update side-effects are often operation-specific, so the discrete props earn their keep ergonomically. The symmetry with `onEventIntercept` comes instead from the new `event` discriminator on the shared input — `onUpdate` becomes a proper discriminated catch-all — while the discrete props stay as conveniences sharing the one canonical `UpdateFunction` type. (Symmetrically: don't fold `onEventIntercept` *into* `UpdateFunction` either — gate vs result-producer are different categories.)
+
+### Category 3 — Observers (run after, return ignored)
+
+```ts
+type OnErrorFunction<T = JsonData> =
+  (props: NodeContext<T> & { error: JsonEditorError; errorValue: JsonData }) => void
+
+// onEditEvent absorbs onRenameProperty (§12): a rename is just an edit-event flavour.
+type EditEvent<T = JsonData> =
+  | { event: 'editStart'; node: NodeContext<T> }
+  | { event: 'editEnd';   node: NodeContext<T> }
+  | { event: 'rename';    node: NodeContext<T>; oldKey: CollectionKey; newKey: CollectionKey }
+type OnEditEventFunction<T = JsonData> = (e: EditEvent<T>) => void
+
+// onCollapse, CopyFunction — observers; CopyFunction's error field → JsonEditorError.
+```
+
+### Category 4 (not a callback) — Imperative commands
+
+```ts
+type CommandResult =
+  | { success: true }
+  | { success: false; error: JsonEditorError }   // standardised on the Error type
+
+interface JsonEditorHandle<T = JsonData> {
+  // mutation commands run the real pipeline (incl. onUpdate); async; bypass gates
+  startEdit(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
+  editKey (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult> // #286
+  delete  (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult> // #286 + #117 resume
+  add     (opts: { path: CollectionKey[]; value: unknown; overrideRestrictions?: boolean }): Promise<CommandResult> // #286
+  confirmEdit(): Promise<CommandResult>
+  cancelEdit(): void
+  collapse(opts: { path: CollectionKey[]; collapsed?: boolean; includeChildren?: boolean }): void
+}
+```
+
+Mutation commands **dev-warn + no-op on a path that no longer exists** — mitigates the [#117](https://github.com/CarlosNZ/json-edit-react/issues/117) "intercept-but-forget-to-suppress" slip (the node deletes behind the modal, then the resume targets a gone path). Signatures can ship in 2.0 even if `editKey`/`add`/`delete` land their *behaviour* with [#286](https://github.com/CarlosNZ/json-edit-react/issues/286).
+
+### Open decisions (for review)
+
+- Intercept signal: `return true` vs an exported `INTERCEPT` sentinel vs `e.preventDefault()`. (Leaning `true` — reads correctly given the callback name.)
+- `UpdateResult` when `value` set **and** `isValid: false` — apply-and-flag, or reject? (§6's open question.)
+- `error: string | JsonEditorError` — accept a bare string as shorthand, or force the object?
+- `validate` (standing, §7) vs last-`UpdateResult` precedence when they disagree.
+- `key` rename (was `name`); whether `value` lives in `NodeContext` or is added per-category.
+- Event vocabulary final names (`editStart` vs `startEdit`, etc.) — tie into §14 "node not component".
+- Which commands are sync vs async; how much of the handle ships in 2.0 vs stubs against [#286](https://github.com/CarlosNZ/json-edit-react/issues/286).
+- May `onEventIntercept` / `allow*` be async? (Leaning yes for intercept.)
 
 ---
 
