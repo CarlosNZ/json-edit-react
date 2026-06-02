@@ -145,7 +145,7 @@ Landed in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled 
 
 Current "delete + add" semantics force consumers to detect renames by hand and lose order info. Distinct callback. (From [discussion #228](https://github.com/CarlosNZ/json-edit-react/discussions/228#discussioncomment-15144209).)
 
-**Reframed under §17:** a rename is just a flavour of edit, so rather than a standalone prop it becomes a discriminated variant of the `onEditEvent` *observer* (`{ event: 'rename', oldKey, newKey, node }`) — see §17 / [#289](https://github.com/CarlosNZ/json-edit-react/issues/289).
+**Reframed under §17:** a rename isn't a standalone prop — it's the *commit* of a key-edit, surfaced through the existing `onEditEvent` *observer* (the callback name is unchanged; only its `event` field gains values). Key editing is a full lifecycle mirroring value editing, so `onEditEvent` fires `startKeyEdit` / `cancelKeyEdit` / `confirmKeyEdit`, where **`confirmKeyEdit` carries `{ oldKey, newKey }`** — that *is* the rename, and you also get the start/cancel signals for free. Verb-first vocabulary, shared as far as possible across the intercept events, observer events, and imperative commands (§17 Category 1/3/4). See §17 / [#289](https://github.com/CarlosNZ/json-edit-react/issues/289).
 
 ## 13. Split themes + custom components into separate packages — ✅ done
 
@@ -292,11 +292,17 @@ type OnChangeFunction<T = JsonData> =
 type OnErrorFunction<T = JsonData> =
   (props: NodeContext<T> & { error: JsonEditorError; errorValue: JsonData }) => void
 
-// onEditEvent absorbs onRenameProperty (§12): a rename is just an edit-event flavour.
+// onEditEvent absorbs onRenameProperty (§12). Verb-first vocabulary, shared with the
+// intercept events (Cat 1) and imperative commands (Cat 4). Key editing is a full
+// lifecycle mirroring value editing; 'confirmKeyEdit' carrying { oldKey, newKey } is
+// the rename. (Final value-edit event set is locked under the vocabulary decision.)
 type EditEvent<T = JsonData> =
-  | { event: 'editStart'; node: NodeContext<T> }
-  | { event: 'editEnd';   node: NodeContext<T> }
-  | { event: 'rename';    node: NodeContext<T>; oldKey: CollectionKey; newKey: CollectionKey }
+  | { event: 'startEdit';      node: NodeContext<T> }
+  | { event: 'confirmEdit';    node: NodeContext<T> }
+  | { event: 'cancelEdit';     node: NodeContext<T> }
+  | { event: 'startKeyEdit';   node: NodeContext<T> }
+  | { event: 'confirmKeyEdit'; node: NodeContext<T>; oldKey: CollectionKey; newKey: CollectionKey }
+  | { event: 'cancelKeyEdit';  node: NodeContext<T> }
 type OnEditEventFunction<T = JsonData> = (e: EditEvent<T>) => void
 
 // onCollapse, CopyFunction — observers; CopyFunction's error field → JsonEditorError.
