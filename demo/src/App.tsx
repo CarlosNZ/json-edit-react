@@ -252,23 +252,23 @@ function App() {
 
   // Stable references so the JsonEditor's memoized nodes can bail out: an inline
   // `theme` array would churn the theme context (re-rendering every node), and
-  // an inline `enableClipboard` would churn the per-node prop comparison.
+  // an inline `onCopy` would churn the per-node prop comparison.
   const editorTheme = useMemo(
     () => [theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }],
     [theme, dataDefinition]
   )
 
-  const enableClipboard = useCallback(
+  const onCopy = useCallback(
     ({
       stringValue,
       type,
       success,
-      errorMessage,
+      error,
     }: {
-      stringValue: unknown
+      stringValue: string
       type: 'value' | 'path'
       success: boolean
-      errorMessage: string | null
+      error?: { message: string }
     }) =>
       success
         ? toast({
@@ -280,7 +280,7 @@ function App() {
           })
         : toast({
             title: 'Problem copying to clipboard',
-            description: errorMessage,
+            description: error?.message,
             status: 'error',
             duration: 5000,
             isClosable: true,
@@ -522,7 +522,8 @@ function App() {
                   showCollectionCount={
                     showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
                   }
-                  enableClipboard={allowCopy ? enableClipboard : false}
+                  allowClipboard={allowCopy}
+                  onCopy={onCopy}
                   restrictEdit={restrictEdit}
                   // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
                   restrictDelete={restrictDelete}

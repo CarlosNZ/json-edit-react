@@ -35,7 +35,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     onDelete,
     onChange,
     onMove,
-    enableClipboard,
+    allowClipboard,
+    onCopy,
     canDragOnto,
     restrictTypeSelection,
     searchFilter,
@@ -452,7 +453,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
                     : undefined
                 }
                 handleDelete={canDelete ? handleDelete : undefined}
-                enableClipboard={enableClipboard}
+                allowClipboard={allowClipboard}
+                onCopy={onCopy}
                 translate={translate}
                 customButtons={props.customButtons}
                 nodeData={nodeData}

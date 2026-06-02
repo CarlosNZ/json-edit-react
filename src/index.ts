@@ -23,7 +23,7 @@ export {
   type OnCollapseFunction,
   type JerError,
   type DataType,
-  type CopyFunction,
+  type OnCopyFunction,
   type FilterFunction,
   type SearchFilterFunction,
   type TypeFilterFunction,

@@ -22,11 +22,11 @@ import type {
   OnErrorFunction,
   OnEditEventFunction,
   OnCollapseFunction,
-  OnCopyFunction,
   CommandResult,
   JsonEditorHandle,
 } from '../src/apiTypes'
-import type { JsonData } from '../src/types'
+// `OnCopyFunction` graduated to the public surface with the clipboard split.
+import type { JsonData, OnCopyFunction } from '../src/types'
 
 // --- Cat 1: async-capable gates -------------------------------------------
 

@@ -186,7 +186,8 @@ This is a reference list of *all* possible props, divided into related sections.
 | `onAdd`           | `UpdateFunction`        | none    | A function to run whenever a new property is **added**.                                                                             |
 | `onChange`        | `OnChangeFunction`      | none    | A function to modify/constrain user input as they type — see [OnChange functions](#onchange-function).                              |
 | `onError`         | `OnErrorFunction`       | none    | A function to run whenever the component reports an error — see [OnErrorFunction](#onerror-function).                               |
-| `enableClipboard` | `boolean\|CopyFunction` | `true`  | Enable or disable the "Copy to clipboard" button in the UI. — see [Copy Function](#copy-function)                                   |
+| `allowClipboard`  | `boolean`               | `true`  | Enable or disable the "Copy to clipboard" button in the UI.                                                                         |
+| `onCopy`          | `OnCopyFunction`        | none    | A function to run whenever an item is **copied** to the clipboard — see [Copy Function](#copy-function).                            |
 
 </details>
 <details>
@@ -433,18 +434,16 @@ Normally, the component will display simple error messages whenever an error con
 
 ### Copy Function
 
-A similar callback can be run whenever an item is **copied** to the clipboard (if passed to the `enableClipboard` prop), but with a slightly different input object:
+The `onCopy` callback runs whenever an item is **copied** to the clipboard. It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with the following additional fields spread on top:
 
 ```js
 {
-    key          // name of the property being copied  
-    path         // path to the property
-    value        // the value copied to the clipboard
-    type         // Either "path" or "value" depending on whether "Cmd/Ctrl" was pressed 
-    stringValue  // A nicely stringified version of `value`  
+    // ...standard node data (key, path, value, ...)
+    type         // Either "path" or "value" depending on whether "Cmd/Ctrl" was pressed
+    stringValue  // A nicely stringified version of the copied value
                  // (i.e. what the clipboard actually receives)
-    success      // true/false -- whether clipboard copy action actually succeeded
-    errorMessage // Error detail if `success === false`
+    success      // true/false -- whether the clipboard copy action actually succeeded
+    error        // `{ message }` with the failure detail when `success === false`
 }
 ```
 
@@ -1364,7 +1363,7 @@ A few helper functions, components and types that might be useful in your own im
 - `ThemeInput`: input type for the `theme` prop
 - `JsonEditorProps<T>`: all input props for the Json Editor component. Generic on the data type — see [Typed data](#typed-data).
 - `JsonData`: main `data` object -- any valid JSON structure. Used as the default for `T`.
-- [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`CopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
+- [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`OnCopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
 - [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref), [`StartEditOptions`](#imperative-handle-editorref): input types of the respective props
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `LocalisedString`: keys for the [`translations`](#localisation) object
