@@ -29,6 +29,8 @@ jobs:
           filters: |
             core:
               - 'src/**'
+              - 'rollup.config.mjs'
+              - 'tsconfig.json'
             themes:
               - 'packages/themes/**'
             components:
