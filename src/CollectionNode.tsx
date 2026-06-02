@@ -46,7 +46,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     collapseFilter,
     collapseAnimationTime,
     onMove,
-    enableClipboard,
+    allowClipboard,
+    onCopy,
+    onEventIntercept,
     onEditEvent,
     showIconTooltips,
     searchFilter,
@@ -107,7 +109,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   } = useCommon({ props, collapsed })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
-    { canDrag, canDragOnto, path, nodeData, onMove, onError, translate }
+    { canDrag, canDragOnto, path, nodeData, onMove, onError, translate, onEventIntercept }
   )
 
   // This allows us to not render the children on load if they're hidden (which
@@ -334,6 +336,22 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     setPreviousValue(null)
   }
 
+  // Single gated entry to (collection) edit mode, shared by the edit button and
+  // the custom-node `setIsEditing` so neither bypasses the `onEventIntercept`
+  // soft gate. (`editorRef.startEdit` calls the store directly, below the gate.)
+  const handleStartEdit = async () => {
+    if (await onEventIntercept?.({ ...nodeData, event: 'startEdit' })) return
+    hasBeenOpened.current = true
+    setPreviousValue(null)
+    startEdit(path, { cancelOp: clearEditBuffer })
+  }
+
+  // Gated entry to key-rename mode, handed to KeyDisplay.
+  const handleStartRename = async () => {
+    if (await onEventIntercept?.({ ...nodeData, event: 'startRename' })) return
+    startEdit(path, { mode: 'key' })
+  }
+
   const showLabel = showArrayIndices || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
@@ -450,7 +468,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
-    setIsEditing: () => startEdit(path, { cancelOp: clearEditBuffer }),
+    setIsEditing: handleStartEdit,
     getStyles,
     canDragOnto: canEdit,
     canEdit,
@@ -468,18 +486,12 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   const EditButtonDisplay = showEditButtons && (
     <EditButtons
-      startEdit={
-        canEdit
-          ? () => {
-              hasBeenOpened.current = true
-              setPreviousValue(null)
-              startEdit(path, { cancelOp: clearEditBuffer })
-            }
-          : undefined
-      }
+      startEdit={canEdit ? handleStartEdit : undefined}
       handleAdd={canAdd ? handleAdd : undefined}
       handleDelete={canDelete ? handleDelete : undefined}
-      enableClipboard={enableClipboard}
+      allowClipboard={allowClipboard}
+      onCopy={onCopy}
+      onEventIntercept={onEventIntercept}
       type={collectionType}
       nodeData={nodeData}
       translate={translate}
@@ -503,6 +515,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     arrayIndexFromOne,
     handleKeyboard,
     handleEditKey,
+    handleStartRename,
     handleCancel,
     keyValueArray,
     styles: getStyles('property', nodeData),

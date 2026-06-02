@@ -22,7 +22,7 @@
  * §17 phase.
  */
 
-import type { JsonData, CollectionKey, ValueData, CopyType, NodeData } from './types'
+import type { JsonData, CollectionKey, ValueData, NodeData } from './types'
 
 /* ============================================================================
  * Shared building blocks
@@ -60,24 +60,8 @@ export interface JsonEditorError {
  */
 export type FilterFunction<T = JsonData> = (node: NodeData<T>) => boolean | Promise<boolean>
 
-/**
- * Soft gate: a user-initiated action about to start. Flat `NodeData` plus an
- * `event` discriminant. `delete`/`move` are instant — the intercept *is* the
- * click (before the one-shot delete) / the drop.
- */
-export type InterceptableEvent<T = JsonData> = NodeData<T> &
-  (
-    | { event: 'startEdit' }
-    | { event: 'startRename' }
-    | { event: 'startAdd' }
-    | { event: 'delete' }
-    | { event: 'move' }
-  )
-
-/** `true` (or any non-`void`) = "I'll take it over"; `void`/`false` = proceed. */
-export type EventInterceptFunction<T = JsonData> = (
-  e: InterceptableEvent<T>
-) => boolean | void | Promise<boolean | void>
+// `InterceptableEvent` / `EventInterceptFunction` (the `onEventIntercept` soft
+// gate) graduated to `./types` in Phase 1 — they're public now.
 
 /* ============================================================================
  * Category 2 — Result producers (run at commit, accept / reject / transform)
@@ -157,15 +141,8 @@ export type OnCollapseFunction<T = JsonData> = (
   props: NodeData<T> & { collapsed: boolean; includeChildren: boolean }
 ) => void
 
-/** After a copy-to-clipboard. Enablement is the `allowClipboard` boolean (Cat 1). */
-export type OnCopyFunction<T = JsonData> = (
-  props: NodeData<T> & {
-    success: boolean
-    stringValue: string
-    type: CopyType
-    error?: JsonEditorError
-  }
-) => void
+// `OnCopyFunction` (the `onCopy` observer) graduated to `./types` in Phase 1 —
+// it's public now.
 
 /* ============================================================================
  * Category 4 — Imperative commands (the `editorRef` handle)

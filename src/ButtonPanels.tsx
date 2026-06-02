@@ -6,11 +6,12 @@ import { type TranslateFunction } from './localisation'
 import {
   type CollectionKey,
   type CollectionDataType,
-  type CopyFunction,
   type CopyType,
   type NodeData,
   type CustomButtonDefinition,
   type KeyboardControlsFull,
+  type OnCopyFunction,
+  type EventInterceptFunction,
   JsonData,
   OnEditEventFunction,
 } from './types'
@@ -19,7 +20,9 @@ import { getModifier } from './utils/keyboard'
 interface EditButtonProps {
   startEdit?: () => void
   handleDelete?: () => void
-  enableClipboard: boolean | CopyFunction
+  allowClipboard: boolean
+  onCopy?: OnCopyFunction
+  onEventIntercept?: EventInterceptFunction
   handleAdd?: (newKey: string) => void
   type?: CollectionDataType
   nodeData: NodeData
@@ -45,7 +48,9 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   startEdit,
   handleDelete,
   handleAdd,
-  enableClipboard,
+  allowClipboard,
+  onCopy,
+  onEventIntercept,
   type,
   customButtons,
   nodeData,
@@ -69,7 +74,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   // state value.
   const [addingKeyState, setAddingKeyState] = useState<string[] | boolean>(false)
 
-  const { key, path, value: data } = nodeData
+  const { path, value: data } = nodeData
 
   const hasKeyOptionsList = Array.isArray(addingKeyState)
 
@@ -121,7 +126,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     let stringValue = ''
     let success: boolean
     let errorMessage: string | null = null
-    if (enableClipboard) {
+    if (allowClipboard) {
       const modifier = getModifier(e)
       if (modifier && keyboardControls.clipboardModifier.includes(modifier)) {
         value = stringifyPath(path)
@@ -132,16 +137,13 @@ export const EditButtons: React.FC<EditButtonProps> = ({
         stringValue = typeof value === 'object' ? jsonStringify(data) : String(value)
       }
       if (!navigator.clipboard) {
-        if (typeof enableClipboard === 'function')
-          enableClipboard({
-            success: false,
-            value,
-            stringValue,
-            path,
-            key,
-            type: copyType,
-            errorMessage: "Can't access clipboard API",
-          })
+        onCopy?.({
+          ...nodeData,
+          success: false,
+          stringValue,
+          type: copyType,
+          error: { message: "Can't access clipboard API" },
+        })
         return
       }
       navigator.clipboard
@@ -152,20 +154,22 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           errorMessage = err.message
         })
         .finally(() => {
-          if (typeof enableClipboard === 'function') {
-            enableClipboard({
-              success,
-              errorMessage,
-              value,
-              stringValue,
-              path,
-              key,
-              type: copyType,
-            })
-          }
+          onCopy?.({
+            ...nodeData,
+            success,
+            stringValue,
+            type: copyType,
+            error: success ? undefined : { message: errorMessage ?? 'Copy failed' },
+          })
         })
     }
   }
+
+  // Soft gate: returns true when the consumer takes the action over (suppress).
+  // `startEdit` is gated by the parent node before it reaches here; the instant
+  // `delete` and the `startAdd` interaction are gated at their click below.
+  const isIntercepted = async (event: 'delete' | 'startAdd') =>
+    !!(await onEventIntercept?.({ ...nodeData, event }))
 
   return (
     <div
@@ -173,7 +177,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       style={{ opacity: addingKeyState ? 1 : undefined }}
       onClick={(e) => e.stopPropagation()}
     >
-      {enableClipboard && (
+      {allowClipboard && (
         <div
           onClick={handleCopy}
           className="jer-copy-pulse"
@@ -192,7 +196,10 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       )}
       {handleDelete && (
         <div
-          onClick={handleDelete}
+          onClick={async () => {
+            if (await isIntercepted('delete')) return
+            handleDelete?.()
+          }}
           title={showIconTooltips ? translate('TOOLTIP_DELETE', nodeData) : ''}
         >
           <Icon name="delete" nodeData={nodeData} />
@@ -200,10 +207,11 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       )}
       {handleAdd && (
         <div
-          onClick={() => {
+          onClick={async () => {
+            if (await isIntercepted('startAdd')) return
             if (type === 'object') updateAddingState(true)
             // For arrays, we don't need to add a key
-            else handleAdd('')
+            else handleAdd?.('')
           }}
           title={showIconTooltips ? translate('TOOLTIP_ADD', nodeData) : ''}
         >

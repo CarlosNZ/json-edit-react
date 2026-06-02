@@ -35,7 +35,9 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     onDelete,
     onChange,
     onMove,
-    enableClipboard,
+    allowClipboard,
+    onCopy,
+    onEventIntercept,
     canDragOnto,
     restrictTypeSelection,
     searchFilter,
@@ -87,7 +89,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   } = useCommon({ props })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
-    { canDrag, canDragOnto, path, nodeData, onMove, onError, translate }
+    { canDrag, canDragOnto, path, nodeData, onMove, onError, translate, onEventIntercept }
   )
 
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
@@ -301,6 +303,23 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     setPreviousValue(null)
   }
 
+  // Single gated entry to value-edit mode, shared by the edit pencil and the
+  // double-click handler so neither bypasses the `onEventIntercept` soft gate.
+  // (`editorRef.startEdit` calls the store directly, below this gate.)
+  const handleStartEdit = async () => {
+    if (await onEventIntercept?.({ ...nodeData, event: 'startEdit' })) return
+    // Clear any leftover type-change snapshot from a previously-abandoned edit
+    // session so a cancel doesn't unexpectedly revert to a stale value.
+    setPreviousValue(null)
+    startEdit(path, { cancelOp: handleCancel })
+  }
+
+  // Gated entry to key-rename mode, handed to KeyDisplay.
+  const handleStartRename = async () => {
+    if (await onEventIntercept?.({ ...nodeData, event: 'startRename' })) return
+    startEdit(path, { mode: 'key' })
+  }
+
   const handleDelete = () => {
     onDelete(value, path).then((error) => {
       if (error) onError({ code: 'DELETE_ERROR', message: error }, value as ValueData)
@@ -321,7 +340,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     setValue: updateValue,
     isEditing,
     canEdit,
-    setIsEditing: canEdit ? () => startEdit(path) : NOOP,
+    setIsEditing: canEdit ? handleStartEdit : NOOP,
     handleEdit,
     handleCancel,
     path,
@@ -363,6 +382,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     arrayIndexFromOne,
     handleKeyboard,
     handleEditKey,
+    handleStartRename,
     handleCancel,
     styles: getStyles('property', nodeData),
     getNextOrPrevious: (type: 'next' | 'prev') =>
@@ -385,7 +405,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
-      setIsEditing={() => startEdit(path)}
+      setIsEditing={handleStartEdit}
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, inputProps) : undefined}
       originalNodeKey={
@@ -440,19 +460,11 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           ) : (
             showEditButtons && (
               <EditButtons
-                startEdit={
-                  canEdit
-                    ? () => {
-                        // Clear any leftover type-change snapshot from a
-                        // previously-abandoned edit session so a cancel
-                        // doesn't unexpectedly revert to a stale value.
-                        setPreviousValue(null)
-                        startEdit(path, { cancelOp: handleCancel })
-                      }
-                    : undefined
-                }
+                startEdit={canEdit ? handleStartEdit : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
-                enableClipboard={enableClipboard}
+                allowClipboard={allowClipboard}
+                onCopy={onCopy}
+                onEventIntercept={onEventIntercept}
                 translate={translate}
                 customButtons={props.customButtons}
                 nodeData={nodeData}

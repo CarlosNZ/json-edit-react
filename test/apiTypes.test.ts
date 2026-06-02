@@ -16,17 +16,17 @@ import type {
   JsonEditorError,
   JsonEditorErrorCode,
   FilterFunction,
-  EventInterceptFunction,
   UpdateFunction,
   OnChangeFunction,
   OnErrorFunction,
   OnEditEventFunction,
   OnCollapseFunction,
-  OnCopyFunction,
   CommandResult,
   JsonEditorHandle,
 } from '../src/apiTypes'
-import type { JsonData } from '../src/types'
+// `EventInterceptFunction` / `OnCopyFunction` graduated to the public surface in
+// Phase 1 — they now live in `../src/types`.
+import type { JsonData, EventInterceptFunction, OnCopyFunction } from '../src/types'
 
 // --- Cat 1: async-capable gates -------------------------------------------
 

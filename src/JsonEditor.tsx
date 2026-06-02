@@ -96,7 +96,9 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   onError,
   onEditEvent,
   showErrorMessages = true,
-  enableClipboard = true,
+  allowClipboard = true,
+  onCopy,
+  onEventIntercept,
   indent = 2,
   collapse = false,
   collapseAnimationTime = 300, // must be equivalent to CSS value
@@ -207,6 +209,8 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   const onErrorStable = useStableCallback(onError)
   const onCollapseStable = useStableCallback(onCollapse)
   const onEditEventStable = useStableCallback(onEditEvent)
+  const onCopyStable = useStableCallback(onCopy)
+  const onEventInterceptStable = useStableCallback(onEventIntercept)
 
   // Common method for handling data update. It runs the updated data through
   // provided "onUpdate" function, then updates data state or returns error
@@ -507,7 +511,9 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     canDragOnto: false, // can't drag onto outermost container
     searchFilter,
     searchText: debouncedSearchText,
-    enableClipboard,
+    allowClipboard,
+    onCopy: onCopyStable,
+    onEventIntercept: onEventInterceptStable,
     keySort,
     sort,
     showArrayIndices,

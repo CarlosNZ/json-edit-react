@@ -16,7 +16,7 @@ export interface JsonEditorProps<T = JsonData> {
   onChange?: OnChangeFunction<T>
   onError?: OnErrorFunction<T>
   showErrorMessages?: boolean
-  enableClipboard?: boolean | CopyFunction
+  allowClipboard?: boolean
   theme?: ThemeInput
   icons?: IconReplacements
   className?: string
@@ -30,6 +30,9 @@ export interface JsonEditorProps<T = JsonData> {
   restrictAdd?: boolean | FilterFunction<T>
   restrictTypeSelection?: boolean | TypeOptions | TypeFilterFunction<T>
   restrictDrag?: boolean | FilterFunction<T>
+  // Soft gate: fires at the start of a user-initiated interaction; return truthy
+  // to take it over and suppress the default action. See `EventInterceptFunction`.
+  onEventIntercept?: EventInterceptFunction<T>
   searchText?: string
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction<T>
   searchDebounceTime?: number
@@ -61,6 +64,7 @@ export interface JsonEditorProps<T = JsonData> {
   // Additional events
   onEditEvent?: OnEditEventFunction
   onCollapse?: OnCollapseFunction
+  onCopy?: OnCopyFunction<T>
   // Imperative handle — see `JsonEditorHandle`. Attach with `useRef` and the
   // `editorRef` prop (a plain ref-valued prop, not the `ref` attribute, so the
   // component stays a generic function with full type inference).
@@ -236,15 +240,36 @@ export type SearchFilterInputFunction<T = JsonData> = (
 export type NewKeyOptionsFunction<T = JsonData> = (input: NodeData<T>) => string[] | null | void
 
 export type CopyType = 'path' | 'value'
-export type CopyFunction = (input: {
-  success: boolean
-  errorMessage: string | null
-  key: CollectionKey
-  path: CollectionKey[]
-  value: unknown
-  stringValue: string
-  type: CopyType
-}) => void
+
+// Observer (Cat 3): fires after a copy-to-clipboard. Enablement is the
+// `allowClipboard` boolean (Cat 1). A failed copy carries `error.message`
+// (clipboard failures aren't part of the §17 error-code taxonomy).
+export type OnCopyFunction<T = JsonData> = (
+  props: NodeData<T> & {
+    success: boolean
+    stringValue: string
+    type: CopyType
+    error?: { message: string }
+  }
+) => void
+
+// Soft gate (Cat 1): a user-initiated action about to start. Flat `NodeData`
+// plus an `event` discriminant. `delete`/`move` are instant — the intercept
+// *is* the click (before the one-shot delete) / the drop.
+export type InterceptableEvent<T = JsonData> = NodeData<T> &
+  (
+    | { event: 'startEdit' }
+    | { event: 'startRename' }
+    | { event: 'startAdd' }
+    | { event: 'delete' }
+    | { event: 'move' }
+  )
+
+// `true` (or any non-`void`) = "I'll take it over" (suppress the default
+// action); `void`/`false` = proceed. May be async — the library awaits it.
+export type EventInterceptFunction<T = JsonData> = (
+  e: InterceptableEvent<T>
+) => boolean | void | Promise<boolean | void>
 
 export type CompareFunction = (
   a: [string | number, unknown],
@@ -340,7 +365,9 @@ interface BaseNodeProps {
   showErrorMessages: boolean
   showIconTooltips: boolean
   onMove: InternalMoveFunction
-  enableClipboard: boolean | CopyFunction
+  allowClipboard: boolean
+  onCopy?: OnCopyFunction
+  onEventIntercept?: EventInterceptFunction
   onEditEvent?: OnEditEventFunction
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction

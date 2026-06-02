@@ -25,6 +25,7 @@ interface KeyDisplayProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   handleEditKey: (newKey: string) => void
+  handleStartRename: () => void
   handleCancel: () => void
   handleClick?: (e: React.MouseEvent) => void
   keyValueArray?: Array<[string | number, ValueData]>
@@ -45,6 +46,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   arrayIndexFromOne,
   handleKeyboard,
   handleEditKey,
+  handleStartRename,
   handleCancel,
   handleClick,
   keyValueArray,
@@ -56,6 +58,10 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   getStyles,
 }) => {
   // Actions only (no subscription) — `isEditingKey` arrives via props.
+  // Entering key-rename runs through the gated `handleStartRename` prop (so the
+  // `onEventIntercept` soft gate isn't bypassed). `startEdit` is still used
+  // directly for Tab traversal *within* an open session — internal navigation
+  // that lives below the gate, like `editorRef`.
   const { startEdit, cancelEdit } = useEditingStore()
 
   const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
@@ -82,7 +88,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
             if (canEditKey) handleEditKey(newKey)
           }}
           setIsEditingKey={() => {
-            if (canEditKey) startEdit(path, { mode: 'key' })
+            if (canEditKey) handleStartRename()
           }}
           handleClick={handleClick}
           styles={derivedKeyStyles}
@@ -95,7 +101,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
       <span
         className="jer-key-text"
         style={derivedKeyStyles}
-        onDoubleClick={() => canEditKey && startEdit(path, { mode: 'key' })}
+        onDoubleClick={() => canEditKey && handleStartRename()}
         onClick={handleClick}
       >
         {emptyStringKey ? <span className="jer-empty-string">{emptyStringKey}</span> : displayKey}

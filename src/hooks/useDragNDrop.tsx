@@ -9,6 +9,7 @@ import {
   type JerError,
   type Position,
   type InternalMoveFunction,
+  type EventInterceptFunction,
 } from '../types'
 import { type TranslateFunction } from '../localisation'
 
@@ -20,6 +21,7 @@ interface DnDProps {
   onMove: InternalMoveFunction
   onError: (error: JerError, errorValue: CollectionData | string) => unknown
   translate: TranslateFunction
+  onEventIntercept?: EventInterceptFunction
 }
 
 export const useDragNDrop = ({
@@ -30,6 +32,7 @@ export const useDragNDrop = ({
   onMove,
   onError,
   translate,
+  onEventIntercept,
 }: DnDProps) => {
   const { getStyles } = useTheme()
   const { dragSource, setDragSource } = useDragSource()
@@ -128,8 +131,10 @@ export const useDragNDrop = ({
     ) : null
   }
 
-  const handleDrop = (position: Position) => {
+  const handleDrop = async (position: Position) => {
     if (dragSource.path === null) return
+    // Soft gate: the drop IS the move interaction. Truthy = consumer takes over.
+    if (await onEventIntercept?.({ ...nodeData, event: 'move' })) return
     const sourceKey = dragSource.path.slice(-1)[0]
     const sourceParent = dragSource.path.slice(0, -1)
     const thisParent = path.slice(0, -1)
