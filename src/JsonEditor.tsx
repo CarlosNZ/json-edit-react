@@ -413,6 +413,11 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   }, [customNodeDefinitions, jsonParse])
 
   const editConfirmRef = useRef<HTMLDivElement>(null)
+  // Set by `editorRef.confirmEdit()` just before it triggers `editConfirmRef`,
+  // so the gated confirm handler commits *below* the `onEventIntercept` gate
+  // (the consumer already decided) rather than re-firing it — the same
+  // "enter below the gate" loop-breaker the `start*` events get for free.
+  const confirmInterceptBypassRef = useRef(false)
   const { setCollapseState } = useCollapse()
 
   // Common "sort" method for ordering nodes, based on the `keySort` prop
@@ -469,6 +474,9 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
       },
       cancelEdit: () => cancelEdit(),
       confirmEdit: () => {
+        // Enter below the `onEventIntercept` gate — the consumer is resuming a
+        // commit they already approved, so it must not re-fire the interceptor.
+        confirmInterceptBypassRef.current = true
         editConfirmRef.current?.click()
         cancelEdit()
       },
@@ -538,6 +546,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     insertAtTop: insertAtTopOption,
     onCollapse: onCollapseStable,
     editConfirmRef,
+    confirmInterceptBypassRef,
     collapseClickZones,
   }
 

@@ -197,3 +197,123 @@ describe('onEventIntercept — editorRef enters below the gate', () => {
     expect(onEventIntercept).not.toHaveBeenCalled()
   })
 })
+
+describe('onEventIntercept — confirm gates', () => {
+  // Intercept ONLY the confirm so the editor still opens, then the commit is gated.
+  const interceptConfirm = (which: string) =>
+    jest.fn((e: { event: string }) => e.event === which)
+
+  test('confirmEdit fires with the pending value and suppresses the commit', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEventIntercept = interceptConfirm('confirmEdit')
+    render(
+      <JsonEditor data={{ greeting: 'hello' }} setData={setData} onEventIntercept={onEventIntercept} />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = await screen.findByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'world{Enter}')
+
+    // Commit suppressed, editor left open for the consumer's modal
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+    expect(onEventIntercept).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'confirmEdit', newValue: 'world', path: ['greeting'] })
+    )
+  })
+
+  test('editorRef.confirmEdit() resumes a suppressed commit without re-firing the gate', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const ref = createRef<JsonEditorHandle>()
+    const onEventIntercept = interceptConfirm('confirmEdit')
+    render(
+      <JsonEditor
+        data={{ greeting: 'hello' }}
+        setData={setData}
+        editorRef={ref}
+        onEventIntercept={onEventIntercept}
+      />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = await screen.findByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'world{Enter}')
+    expect(setData).not.toHaveBeenCalled()
+
+    onEventIntercept.mockClear()
+    await act(async () => {
+      ref.current!.confirmEdit()
+    })
+
+    // Resume commits below the gate — and the gate is NOT re-fired (no loop)
+    expect(setData).toHaveBeenCalledWith({ greeting: 'world' })
+    expect(onEventIntercept).not.toHaveBeenCalled()
+  })
+
+  test('confirmRename fires with the new key and suppresses the rename', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEventIntercept = interceptConfirm('confirmRename')
+    render(
+      <JsonEditor data={{ oldName: 1 }} setData={setData} onEventIntercept={onEventIntercept} />
+    )
+
+    await user.dblClick(screen.getByText('oldName'))
+    const input = await screen.findByDisplayValue('oldName')
+    await user.clear(input)
+    await user.type(input, 'newName{Enter}')
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(onEventIntercept).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'confirmRename', newKey: 'newName' })
+    )
+  })
+
+  test('confirmAdd fires with the new key and suppresses the add', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEventIntercept = interceptConfirm('confirmAdd')
+    const { container } = render(
+      <JsonEditor
+        data={{ existing: 'value' }}
+        setData={setData}
+        onEventIntercept={onEventIntercept}
+        showIconTooltips
+      />
+    )
+
+    await user.click(screen.getByTitle('Add'))
+    const keyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(keyInput)
+    await user.type(keyInput, 'fresh{Enter}')
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(onEventIntercept).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'confirmAdd', newKey: 'fresh' })
+    )
+  })
+
+  test('Tab-commit stays below the gate (no confirmEdit intercept)', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEventIntercept = jest.fn<boolean, [{ event: string }]>(() => false)
+    render(
+      <JsonEditor data={{ a: 'x', b: 'y' }} setData={setData} onEventIntercept={onEventIntercept} />
+    )
+
+    await user.dblClick(screen.getByText('"x"'))
+    const input = await screen.findByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'X')
+    await user.tab()
+
+    // Tab commits the edit, but as navigation — never as a `confirmEdit` gate.
+    expect(setData).toHaveBeenCalledWith({ a: 'X', b: 'y' })
+    const events = onEventIntercept.mock.calls.map(([e]) => e.event)
+    expect(events).not.toContain('confirmEdit')
+  })
+})

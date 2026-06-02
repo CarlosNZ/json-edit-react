@@ -253,14 +253,24 @@ export type OnCopyFunction<T = JsonData> = (
   }
 ) => void
 
-// Soft gate (Cat 1): a user-initiated action about to start. Flat `NodeData`
-// plus an `event` discriminant. `delete`/`move` are instant — the intercept
-// *is* the click (before the one-shot delete) / the drop.
+// Soft gate (Cat 1): a user-initiated action about to start (`start*`) or to
+// commit (`confirm*`). Flat `NodeData` plus an `event` discriminant; the
+// `confirm*` events carry the pending change. `delete`/`move` are instant — the
+// intercept *is* the click (before the one-shot delete) / the drop.
+//
+// Returning truthy on a `confirm*` event suppresses the commit and leaves the
+// edit session open; resume it via `editorRef.confirmEdit()` (which enters below
+// the gate) or abandon it via `editorRef.cancelEdit()`. `start*` are gated at the
+// explicit open affordances and `confirm*` at the explicit confirm affordances
+// (the tick / Enter) — Tab traversal between nodes stays below the gate.
 export type InterceptableEvent<T = JsonData> = NodeData<T> &
   (
     | { event: 'startEdit' }
     | { event: 'startRename' }
     | { event: 'startAdd' }
+    | { event: 'confirmEdit'; newValue: unknown }
+    | { event: 'confirmRename'; newKey: CollectionKey }
+    | { event: 'confirmAdd'; newKey: CollectionKey }
     | { event: 'delete' }
     | { event: 'move' }
   )
@@ -392,6 +402,8 @@ interface BaseNodeProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   editConfirmRef: React.RefObject<HTMLDivElement | null>
+  // Lets `editorRef.confirmEdit()` commit below the `onEventIntercept` gate.
+  confirmInterceptBypassRef: React.RefObject<boolean>
   jsonStringify: (
     data: JsonData,
     // eslint-disable-next-line

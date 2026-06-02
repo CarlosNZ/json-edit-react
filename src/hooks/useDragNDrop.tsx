@@ -134,7 +134,7 @@ export const useDragNDrop = ({
   const handleDrop = async (position: Position) => {
     if (dragSource.path === null) return
     // Soft gate: the drop IS the move interaction. Truthy = consumer takes over.
-    if (await onEventIntercept?.({ ...nodeData, event: 'move' })) return
+    if (onEventIntercept && (await onEventIntercept({ ...nodeData, event: 'move' }))) return
     const sourceKey = dragSource.path.slice(-1)[0]
     const sourceParent = dragSource.path.slice(0, -1)
     const thisParent = path.slice(0, -1)

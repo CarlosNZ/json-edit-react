@@ -187,7 +187,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | `onAdd`           | `UpdateFunction`        | none    | A function to run whenever a new property is **added**.                                                                             |
 | `onChange`        | `OnChangeFunction`      | none    | A function to modify/constrain user input as they type — see [OnChange functions](#onchange-function).                              |
 | `onError`         | `OnErrorFunction`       | none    | A function to run whenever the component reports an error — see [OnErrorFunction](#onerror-function).                               |
-| `onEventIntercept` | `EventInterceptFunction` | none   | Intercept a user interaction (`startEdit` / `startRename` / `startAdd` / `delete` / `move`) *before* it runs; return `true` (or any non-`void`) to take it over and suppress the default action. See [Event interception](#event-interception).        |
+| `onEventIntercept` | `EventInterceptFunction` | none   | Intercept a user interaction *before* it starts (`startEdit` / `startRename` / `startAdd` / `delete` / `move`) or commits (`confirmEdit` / `confirmRename` / `confirmAdd`); return `true` (or any non-`void`) to take it over and suppress the default action. See [Event interception](#event-interception).        |
 | `allowClipboard`  | `boolean`               | `true`  | Enable or disable the "Copy to clipboard" button in the UI.                                                                         |
 | `onCopy`          | `OnCopyFunction`        | none    | A function to run whenever an item is **copied** to the clipboard — see [Copy Function](#copy-function).                            |
 
@@ -454,11 +454,17 @@ The `onCopy` callback runs whenever an item is **copied** to the clipboard. It r
 
 ### Event interception
 
-`onEventIntercept` is a *soft gate*: it fires at the **start** of a user-initiated interaction, before the default action runs, so you can take the action over (e.g. drive your own confirmation modal). It receives the standard [node data](#filter-functions) plus an `event` discriminant:
+`onEventIntercept` is a *soft gate*: it fires when a user-initiated interaction is about to **start** (`start*`) or to **commit** (`confirm*`), before the default action runs, so you can take it over (e.g. drive your own confirmation modal). It receives the standard [node data](#filter-functions) plus an `event` discriminant; the `confirm*` events also carry the pending change:
 
 ```ts
 type InterceptableEvent =
-  NodeData & { event: 'startEdit' | 'startRename' | 'startAdd' | 'delete' | 'move' }
+  NodeData & (
+    | { event: 'startEdit' } | { event: 'startRename' } | { event: 'startAdd' }
+    | { event: 'confirmEdit';   newValue: unknown }
+    | { event: 'confirmRename'; newKey: CollectionKey }
+    | { event: 'confirmAdd';    newKey: CollectionKey }
+    | { event: 'delete' } | { event: 'move' }
+  )
 
 // return `true` (or any non-void) to take over and suppress the default action;
 // return `void`/`false` to let it proceed. May be async.
@@ -471,6 +477,19 @@ const onEventIntercept = (e: InterceptableEvent): boolean | void | Promise<boole
 ```
 
 This differs from the [`restrict*`](#filter-functions) filters (a *hard* gate that hides/disables the control) — `onEventIntercept` leaves the control active and lets you decide at click time. Calls made through the [`editorRef`](#imperative-handle-editorref) imperative handle enter *below* the gate and never re-fire it.
+
+**Confirmation dialogs.** Intercepting a `confirm*` event suppresses the commit and **leaves the edit session open**. Drive your dialog from your own state, then resume the commit with `editorRef.current.confirmEdit()` (which enters below the gate) or abandon it with `editorRef.current.cancelEdit()`:
+
+```tsx
+const onEventIntercept = (e: InterceptableEvent) => {
+  if (e.event === 'confirmEdit') { setPending(e.newValue); setModalOpen(true); return true }
+}
+// in your modal:
+<button onClick={() => { editorRef.current.confirmEdit(); setModalOpen(false) }}>Save</button>
+<button onClick={() => { editorRef.current.cancelEdit();  setModalOpen(false) }}>Discard</button>
+```
+
+> The instant `delete`/`move` and the `start*` events are gated at the click; `confirm*` is gated at the tick/Enter. **Tab traversal between fields stays below the gate** (it commits-and-navigates, not an explicit confirm). Note that *value transforms/validation* belong in [`onUpdate`](#update-functions), which runs at commit and can reject or rewrite the value — `onEventIntercept` is for *taking over* the interaction, not editing its result.
 
 
 ### JSON Schema Validation

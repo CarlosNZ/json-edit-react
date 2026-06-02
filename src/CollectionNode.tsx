@@ -70,6 +70,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     insertAtTop,
     onCollapse,
     editConfirmRef,
+    confirmInterceptBypassRef,
     collapseClickZones,
     getLatestData,
   } = props
@@ -241,7 +242,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       return
     }
     handleKeyboard(e, {
-      objectConfirm: handleEdit,
+      objectConfirm: handleConfirmEdit,
       cancel: handleCancel,
     })
   }
@@ -292,6 +293,25 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     }
   }
 
+  // Gated wrapper around the collection-edit commit, used by the explicit
+  // confirm affordances (the tick + Enter). `editorRef.confirmEdit()` sets the
+  // bypass ref so it commits below the gate. Returning truthy suppresses the
+  // commit and leaves the editor open (`handleEdit` opens with `cancelEdit()`).
+  const handleConfirmEdit = async () => {
+    if (confirmInterceptBypassRef.current) {
+      confirmInterceptBypassRef.current = false
+    } else if (onEventIntercept) {
+      let newValue: unknown
+      try {
+        newValue = jsonParse(editBufferValue ?? jsonStringify(data))
+      } catch {
+        newValue = editBufferValue
+      }
+      if (await onEventIntercept({ ...nodeData, event: 'confirmEdit', newValue })) return
+    }
+    handleEdit()
+  }
+
   const handleAdd = (key: string) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
     setCollapseState(null)
@@ -340,7 +360,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // the custom-node `setIsEditing` so neither bypasses the `onEventIntercept`
   // soft gate. (`editorRef.startEdit` calls the store directly, below the gate.)
   const handleStartEdit = async () => {
-    if (await onEventIntercept?.({ ...nodeData, event: 'startEdit' })) return
+    if (onEventIntercept && (await onEventIntercept({ ...nodeData, event: 'startEdit' }))) return
     hasBeenOpened.current = true
     setPreviousValue(null)
     startEdit(path, { cancelOp: clearEditBuffer })
@@ -348,8 +368,19 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   // Gated entry to key-rename mode, handed to KeyDisplay.
   const handleStartRename = async () => {
-    if (await onEventIntercept?.({ ...nodeData, event: 'startRename' })) return
+    if (onEventIntercept && (await onEventIntercept({ ...nodeData, event: 'startRename' }))) return
     startEdit(path, { mode: 'key' })
+  }
+
+  // Gated key-rename commit, handed to KeyDisplay for its explicit confirm + the
+  // imperative resume bridge. Tab traversal uses raw `handleEditKey`.
+  const handleConfirmRename = async (newKey: string) => {
+    if (confirmInterceptBypassRef.current) {
+      confirmInterceptBypassRef.current = false
+    } else if (onEventIntercept) {
+      if (await onEventIntercept({ ...nodeData, event: 'confirmRename', newKey })) return
+    }
+    handleEditKey(newKey)
   }
 
   const showLabel = showArrayIndices || !isArray
@@ -421,7 +452,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           onChange={setStringifiedValue}
           onKeyDown={(e) =>
             handleKeyboard(e, {
-              objectConfirm: handleEdit,
+              objectConfirm: handleConfirmEdit,
               cancel: handleCancel,
             })
           }
@@ -439,7 +470,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       )}
       <div className="jer-collection-input-button-row">
         <InputButtons
-          onOk={handleEdit}
+          onOk={handleConfirmEdit}
           onCancel={handleCancel}
           nodeData={nodeData}
           editConfirmRef={editConfirmRef}
@@ -464,7 +495,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     parentData,
     nodeData,
     setValue: async (val: unknown) => await onEdit(val, path),
-    handleEdit,
+    handleEdit: handleConfirmEdit,
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
@@ -492,6 +523,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       allowClipboard={allowClipboard}
       onCopy={onCopy}
       onEventIntercept={onEventIntercept}
+      confirmInterceptBypassRef={confirmInterceptBypassRef}
       type={collectionType}
       nodeData={nodeData}
       translate={translate}
@@ -515,6 +547,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     arrayIndexFromOne,
     handleKeyboard,
     handleEditKey,
+    handleConfirmRename,
     handleStartRename,
     handleCancel,
     keyValueArray,
@@ -531,6 +564,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     nodeData,
     customNodeData,
     getStyles,
+    editConfirmRef,
   }
 
   const CollectionNodeComponent = (

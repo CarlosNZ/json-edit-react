@@ -54,6 +54,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     keyboardControls,
     sort,
     editConfirmRef,
+    confirmInterceptBypassRef,
     jsonStringify,
     showIconTooltips,
     getLatestData,
@@ -307,7 +308,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // double-click handler so neither bypasses the `onEventIntercept` soft gate.
   // (`editorRef.startEdit` calls the store directly, below this gate.)
   const handleStartEdit = async () => {
-    if (await onEventIntercept?.({ ...nodeData, event: 'startEdit' })) return
+    if (onEventIntercept && (await onEventIntercept({ ...nodeData, event: 'startEdit' }))) return
     // Clear any leftover type-change snapshot from a previously-abandoned edit
     // session so a cancel doesn't unexpectedly revert to a stale value.
     setPreviousValue(null)
@@ -316,8 +317,34 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   // Gated entry to key-rename mode, handed to KeyDisplay.
   const handleStartRename = async () => {
-    if (await onEventIntercept?.({ ...nodeData, event: 'startRename' })) return
+    if (onEventIntercept && (await onEventIntercept({ ...nodeData, event: 'startRename' }))) return
     startEdit(path, { mode: 'key' })
+  }
+
+  // Gated key-rename commit, handed to KeyDisplay for its explicit confirm + the
+  // imperative resume bridge. Tab traversal uses raw `handleEditKey`.
+  const handleConfirmRename = async (newKey: string) => {
+    if (confirmInterceptBypassRef.current) {
+      confirmInterceptBypassRef.current = false
+    } else if (onEventIntercept) {
+      if (await onEventIntercept({ ...nodeData, event: 'confirmRename', newKey })) return
+    }
+    handleEditKey(newKey)
+  }
+
+  // Gated wrapper around the commit, used by the explicit confirm affordances
+  // (the tick + Enter); Tab traversal and `editorRef.confirmEdit()` use the raw
+  // `handleEdit` below the gate. Returning truthy suppresses the commit and
+  // leaves the session open. `handleEdit` opens with `cancelEdit()`, so bailing
+  // here keeps the editor up.
+  const handleConfirmEdit = async (inputValue?: unknown) => {
+    if (confirmInterceptBypassRef.current) {
+      confirmInterceptBypassRef.current = false
+    } else if (onEventIntercept) {
+      const newValue = inputValue !== undefined && !isJsEvent(inputValue) ? inputValue : value
+      if (await onEventIntercept({ ...nodeData, event: 'confirmEdit', newValue })) return
+    }
+    handleEdit(inputValue)
   }
 
   const handleDelete = () => {
@@ -341,7 +368,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     isEditing,
     canEdit,
     setIsEditing: canEdit ? handleStartEdit : NOOP,
-    handleEdit,
+    handleEdit: handleConfirmEdit,
     handleCancel,
     path,
     stringTruncate,
@@ -382,6 +409,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     arrayIndexFromOne,
     handleKeyboard,
     handleEditKey,
+    handleConfirmRename,
     handleStartRename,
     handleCancel,
     styles: getStyles('property', nodeData),
@@ -391,6 +419,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     nodeData,
     customNodeData,
     getStyles,
+    editConfirmRef,
   }
 
   const ValueComponent = showCustomNode ? (
@@ -399,10 +428,10 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       value={value}
       customNodeProps={customNodeProps}
       setValue={updateValue}
-      handleEdit={handleEdit}
+      handleEdit={handleConfirmEdit}
       handleCancel={handleCancel}
       handleKeyPress={(e: React.KeyboardEvent) =>
-        handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
+        handleKeyboard(e, { stringConfirm: handleConfirmEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
       setIsEditing={handleStartEdit}
@@ -452,7 +481,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           <div className="jer-input-component">{ValueComponent}</div>
           {isEditing ? (
             <InputButtons
-              onOk={handleEdit}
+              onOk={handleConfirmEdit}
               onCancel={handleCancel}
               nodeData={nodeData}
               editConfirmRef={editConfirmRef}
@@ -465,6 +494,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
                 allowClipboard={allowClipboard}
                 onCopy={onCopy}
                 onEventIntercept={onEventIntercept}
+                confirmInterceptBypassRef={confirmInterceptBypassRef}
                 translate={translate}
                 customButtons={props.customButtons}
                 nodeData={nodeData}

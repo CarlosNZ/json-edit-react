@@ -25,6 +25,10 @@ interface KeyDisplayProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   handleEditKey: (newKey: string) => void
+  // Gated commit (fires `confirmRename` via `onEventIntercept`); used by the
+  // explicit confirm (Enter) and the imperative `editConfirmRef` bridge. Tab
+  // traversal uses the raw `handleEditKey` below the gate.
+  handleConfirmRename: (newKey: string) => void
   handleStartRename: () => void
   handleCancel: () => void
   handleClick?: (e: React.MouseEvent) => void
@@ -35,6 +39,9 @@ interface KeyDisplayProps {
   nodeData?: NodeData
   customNodeData?: CustomNodeData
   getStyles?: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
+  // Imperative confirm bridge: a key-rename has no visible OK button, so a
+  // hidden element carries `editConfirmRef` for `editorRef.confirmEdit()`.
+  editConfirmRef?: React.RefObject<HTMLDivElement | null>
 }
 
 export const KeyDisplay: React.FC<KeyDisplayProps> = ({
@@ -46,6 +53,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   arrayIndexFromOne,
   handleKeyboard,
   handleEditKey,
+  handleConfirmRename,
   handleStartRename,
   handleCancel,
   handleClick,
@@ -56,6 +64,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   nodeData,
   customNodeData,
   getStyles,
+  editConfirmRef,
 }) => {
   // Actions only (no subscription) — `isEditingKey` arrives via props.
   // Entering key-rename runs through the gated `handleStartRename` prop (so the
@@ -63,6 +72,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   // directly for Tab traversal *within* an open session — internal navigation
   // that lives below the gate, like `editorRef`.
   const { startEdit, cancelEdit } = useEditingStore()
+  const keyInputRef = React.useRef<HTMLInputElement>(null)
 
   const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
 
@@ -111,35 +121,45 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   }
 
   return (
-    <input
-      className="jer-input-text jer-key-edit"
-      type="text"
-      name={pathString}
-      defaultValue={displayKey}
-      autoFocus
-      onFocus={(e) => e.target.select()}
-      onKeyDown={(e: React.KeyboardEvent) =>
-        handleKeyboard(e, {
-          stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
-          cancel: handleCancel,
-          tabForward: () => {
-            handleEditKey((e.target as HTMLInputElement).value)
-            if (keyValueArray) {
-              const firstChildKey = keyValueArray?.[0][0]
-              const next = firstChildKey ? [...path, firstChildKey] : getNextOrPrevious('next')
-              if (next) startEdit(next)
+    <>
+      <input
+        ref={keyInputRef}
+        className="jer-input-text jer-key-edit"
+        type="text"
+        name={pathString}
+        defaultValue={displayKey}
+        autoFocus
+        onFocus={(e) => e.target.select()}
+        onKeyDown={(e: React.KeyboardEvent) =>
+          handleKeyboard(e, {
+            stringConfirm: () => handleConfirmRename((e.target as HTMLInputElement).value),
+            cancel: handleCancel,
+            tabForward: () => {
+              handleEditKey((e.target as HTMLInputElement).value)
+              if (keyValueArray) {
+                const firstChildKey = keyValueArray?.[0][0]
+                const next = firstChildKey ? [...path, firstChildKey] : getNextOrPrevious('next')
+                if (next) startEdit(next)
+                else cancelEdit()
+              } else startEdit(path)
+            },
+            tabBack: () => {
+              handleEditKey((e.target as HTMLInputElement).value)
+              const prev = getNextOrPrevious('prev')
+              if (prev) startEdit(prev)
               else cancelEdit()
-            } else startEdit(path)
-          },
-          tabBack: () => {
-            handleEditKey((e.target as HTMLInputElement).value)
-            const prev = getNextOrPrevious('prev')
-            if (prev) startEdit(prev)
-            else cancelEdit()
-          },
-        })
-      }
-      style={{ width: `${displayKey.length / 1.5 + 0.5}em` }}
-    />
+            },
+          })
+        }
+        style={{ width: `${displayKey.length / 1.5 + 0.5}em` }}
+      />
+      {/* Hidden imperative-confirm bridge: `editorRef.confirmEdit()` clicks this
+          to commit the rename below the gate (no visible OK button for keys). */}
+      <div
+        ref={editConfirmRef}
+        style={{ display: 'none' }}
+        onClick={() => handleConfirmRename(keyInputRef.current?.value ?? displayKey)}
+      />
+    </>
   )
 }

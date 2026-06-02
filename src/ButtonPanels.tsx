@@ -23,6 +23,7 @@ interface EditButtonProps {
   allowClipboard: boolean
   onCopy?: OnCopyFunction
   onEventIntercept?: EventInterceptFunction
+  confirmInterceptBypassRef: React.RefObject<boolean>
   handleAdd?: (newKey: string) => void
   type?: CollectionDataType
   nodeData: NodeData
@@ -51,6 +52,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   allowClipboard,
   onCopy,
   onEventIntercept,
+  confirmInterceptBypassRef,
   type,
   customButtons,
   nodeData,
@@ -103,14 +105,25 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     setAddingKeyState(options ?? true)
   }
 
+  // Gated commit of a new (object) key. Used by every add-confirm affordance
+  // (Enter, the key-options select, the tick). Returning truthy suppresses the
+  // add and leaves the key input open; `editorRef.confirmEdit()` sets the bypass
+  // ref to resume below the gate.
+  const handleConfirmAdd = async (key: string) => {
+    if (confirmInterceptBypassRef.current) {
+      confirmInterceptBypassRef.current = false
+    } else if (onEventIntercept) {
+      if (await onEventIntercept({ ...nodeData, event: 'confirmAdd', newKey: key })) return
+    }
+    updateAddingState(false)
+    handleAdd?.(key)
+    setNewKey(NEW_KEY_PROMPT)
+  }
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     handleKeyboard(e, {
       stringConfirm: () => {
-        if (handleAdd) {
-          updateAddingState(false)
-          handleAdd(newKey)
-          setNewKey(NEW_KEY_PROMPT)
-        }
+        if (handleAdd) handleConfirmAdd(newKey)
       },
       cancel: () => {
         updateAddingState(false)
@@ -168,8 +181,9 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   // Soft gate: returns true when the consumer takes the action over (suppress).
   // `startEdit` is gated by the parent node before it reaches here; the instant
   // `delete` and the `startAdd` interaction are gated at their click below.
+  // Guarding on `onEventIntercept` keeps the no-interceptor path synchronous.
   const isIntercepted = async (event: 'delete' | 'startAdd') =>
-    !!(await onEventIntercept?.({ ...nodeData, event }))
+    !!(onEventIntercept && (await onEventIntercept({ ...nodeData, event })))
 
   return (
     <div
@@ -231,8 +245,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
                 name="new-key-select"
                 className="jer-select-inner"
                 onChange={(e) => {
-                  handleAdd(e.target.value)
-                  updateAddingState(false)
+                  handleConfirmAdd(e.target.value)
                 }}
                 defaultValue=""
                 autoFocus
@@ -271,9 +284,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           <InputButtons
             onOk={() => {
               if (hasKeyOptionsList && !newKey) return
-
-              updateAddingState(false)
-              handleAdd(newKey)
+              handleConfirmAdd(newKey)
             }}
             onCancel={() => {
               updateAddingState(false)

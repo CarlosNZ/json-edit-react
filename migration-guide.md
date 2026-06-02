@@ -325,7 +325,7 @@ Payload changes on the callback object: the explicit `key` / `path` / `value` fi
 
 ## 9. New: `onEventIntercept` (additive)
 
-A new optional `onEventIntercept?: EventInterceptFunction` prop lets you intercept a user interaction (`startEdit` / `startRename` / `startAdd` / `delete` / `move`) *before* it runs — return `true` (or any non-`void`) to take it over and suppress the default action. Purely additive; no migration needed. See [Event interception](README.md#event-interception).
+A new optional `onEventIntercept?: EventInterceptFunction` prop lets you intercept a user interaction *before* it starts (`startEdit` / `startRename` / `startAdd` / `delete` / `move`) or commits (`confirmEdit` / `confirmRename` / `confirmAdd`) — return `true` (or any non-`void`) to take it over and suppress the default action. Intercepting a `confirm*` event leaves the edit session open so you can drive a confirmation dialog and resume via `editorRef.confirmEdit()` / `cancelEdit()`. Purely additive; no migration needed. See [Event interception](README.md#event-interception).
 
 ---
 
