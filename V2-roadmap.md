@@ -205,11 +205,11 @@ Tracked in [#289](https://github.com/CarlosNZ/json-edit-react/issues/289). Umbre
 
 Every consumer-facing function falls into exactly one of three categories, and each category has **one** return contract:
 
-| Category | Runs | Question it answers | Return contract |
-| --- | --- | --- | --- |
-| **Gates** — `allow*` (was `restrict*`), `onEventIntercept` | *before* the action | "should this proceed / am I taking over?" | `boolean` / `void` |
-| **Result producers** — `UpdateFunction`, `validate`, `onChange` | *at commit* | "accept / reject / transform / flag?" | the canonical result shape (or transformed value for `onChange`) |
-| **Observers** — `onError`, `onEditEvent`, `onCollapse`, `CopyFunction` | *after* | (none — notification) | ignored |
+| Category                                                               | Runs                | Question it answers                       | Return contract                                                  |
+| ---------------------------------------------------------------------- | ------------------- | ----------------------------------------- | ---------------------------------------------------------------- |
+| **Gates** — `allow*` (was `restrict*`), `onEventIntercept`             | *before* the action | "should this proceed / am I taking over?" | `boolean` / `void`                                               |
+| **Result producers** — `UpdateFunction`, `validate`, `onChange`        | *at commit*         | "accept / reject / transform / flag?"     | the canonical result shape (or transformed value for `onChange`) |
+| **Observers** — `onError`, `onEditEvent`, `onCollapse`, `CopyFunction` | *after*             | (none — notification)                     | ignored                                                          |
 
 **Guiding principle:** a gate's boolean answers the yes/no question its *name* poses — `allowEdit` → `true` = allow; `onEventIntercept` → `true` = intercept. The polarity lives in the name, not a memorised convention, so opposite literals across differently-named gates are correct and predictable. The `false`-means-reject (`UpdateFunction`) vs `true`-means-intercept (`onEventIntercept`) "inconsistency" dissolves: they're different categories.
 
