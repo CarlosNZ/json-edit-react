@@ -209,13 +209,16 @@ Every consumer-facing function falls into exactly one of three categories, and e
 ### Shared building blocks
 
 ```ts
-// Canonical tree-position context — passed to (or extended by) every callback.
-interface NodeContext<T = JsonData> {
-  path: CollectionKey[]   // canonical identity (§2)
-  key: CollectionKey      // immediate key (was `name`)
-  parentData: JsonData    // immediate parent collection
-  fullData: T             // whole document (typed, §1)
-}
+// Canonical node context: reuse the existing exported `NodeData<T>` — no new parallel
+// type. Every callback receives it FLAT; category-specific fields and an `event`
+// discriminant are spread on top.
+//   interface NodeData<T = JsonData> {
+//     key: CollectionKey; path: CollectionKey[]; level: number; index: number
+//     value: JsonData; size: number | null; parentData: object | null
+//     fullData: T; collapsed?: boolean
+//   }
+// `value` (current node value) and `fullData` (current whole document) cover "current",
+// so update callbacks add only `newValue` / `newData` rather than carrying `current*` too.
 
 // One canonical error shape, used everywhere an error is produced or reported.
 type JsonEditorErrorCode =
@@ -235,12 +238,14 @@ type FilterFunction<T = JsonData> = (node: NodeData<T>) => boolean
 // allowEdit / allowDelete / allowAdd / allowDrag / allowTypeSelection?: boolean | FilterFunction<T>
 
 // Soft gate: intercept a user-initiated action. true (or non-void) = "I'll take it over".
-type InterceptableEvent<T = JsonData> =
-  | { event: 'editStart';    node: NodeContext<T>; value: unknown }
-  | { event: 'editKeyStart'; node: NodeContext<T> }
-  | { event: 'delete';       node: NodeContext<T>; value: unknown }
-  | { event: 'add';          node: NodeContext<T> }
+// Flat NodeData + an `event` discriminant (and event-specific extras where needed).
+type InterceptableEvent<T = JsonData> = NodeData<T> & (
+  | { event: 'startEdit' }
+  | { event: 'startKeyEdit' }
+  | { event: 'delete' }
+  | { event: 'add' }
   // future: 'move' | 'typeChange' | 'copy'
+)
 type EventInterceptFunction<T = JsonData> =
   (e: InterceptableEvent<T>) => boolean | void | Promise<boolean | void>
 // onEventIntercept?: EventInterceptFunction<T>
@@ -265,12 +270,10 @@ type UpdateResult<T = JsonData> =
     }
   // (or Promise of any of the above)
 
-interface UpdateFunctionProps<T = JsonData> extends NodeContext<T> {
+interface UpdateFunctionProps<T = JsonData> extends NodeData<T> {
   event: 'edit' | 'add' | 'delete'       // NEW discriminator → onUpdate becomes a proper catch-all
-  currentValue: unknown
-  newValue: unknown
-  currentData: T
-  newData: T
+  newValue: unknown                      // proposed value; `value` (from NodeData) is the current one
+  newData: T                             // proposed document; `fullData` is the current one
 }
 type UpdateFunction<T = JsonData> =
   (props: UpdateFunctionProps<T>) => UpdateResult<T> | Promise<UpdateResult<T>>
@@ -281,7 +284,7 @@ type ValidateFunction<T = JsonData> = (node: NodeData<T>) => true | string  // s
 
 // Transform (distinct contract — returns the value, not a result).
 type OnChangeFunction<T = JsonData> =
-  (props: NodeContext<T> & { currentValue: ValueData; newValue: ValueData }) => ValueData
+  (props: NodeData<T> & { newValue: ValueData }) => ValueData
 ```
 
 **Don't collapse `onEdit`/`onAdd`/`onDelete` into one prop.** Interception is inherently cross-cutting (one gate over all actions → a single callback is natural), but update side-effects are often operation-specific, so the discrete props earn their keep ergonomically. The symmetry with `onEventIntercept` comes instead from the new `event` discriminator on the shared input — `onUpdate` becomes a proper discriminated catch-all — while the discrete props stay as conveniences sharing the one canonical `UpdateFunction` type. (Symmetrically: don't fold `onEventIntercept` *into* `UpdateFunction` either — gate vs result-producer are different categories.)
@@ -290,19 +293,20 @@ type OnChangeFunction<T = JsonData> =
 
 ```ts
 type OnErrorFunction<T = JsonData> =
-  (props: NodeContext<T> & { error: JsonEditorError; errorValue: JsonData }) => void
+  (props: NodeData<T> & { error: JsonEditorError; errorValue: JsonData }) => void
 
 // onEditEvent absorbs onRenameProperty (§12). Verb-first vocabulary, shared with the
 // intercept events (Cat 1) and imperative commands (Cat 4). Key editing is a full
 // lifecycle mirroring value editing; 'confirmKeyEdit' carrying { oldKey, newKey } is
 // the rename. (Final value-edit event set is locked under the vocabulary decision.)
-type EditEvent<T = JsonData> =
-  | { event: 'startEdit';      node: NodeContext<T> }
-  | { event: 'confirmEdit';    node: NodeContext<T> }
-  | { event: 'cancelEdit';     node: NodeContext<T> }
-  | { event: 'startKeyEdit';   node: NodeContext<T> }
-  | { event: 'confirmKeyEdit'; node: NodeContext<T>; oldKey: CollectionKey; newKey: CollectionKey }
-  | { event: 'cancelKeyEdit';  node: NodeContext<T> }
+type EditEvent<T = JsonData> = NodeData<T> & (
+  | { event: 'startEdit' }
+  | { event: 'confirmEdit' }
+  | { event: 'cancelEdit' }
+  | { event: 'startKeyEdit' }
+  | { event: 'confirmKeyEdit'; oldKey: CollectionKey; newKey: CollectionKey }
+  | { event: 'cancelKeyEdit' }
+)
 type OnEditEventFunction<T = JsonData> = (e: EditEvent<T>) => void
 
 // onCollapse, CopyFunction — observers; CopyFunction's error field → JsonEditorError.
@@ -335,7 +339,7 @@ Mutation commands **dev-warn + no-op on a path that no longer exists** — mitig
 - `UpdateResult` when `value` set **and** `isValid: false` — apply-and-flag, or reject? (§6's open question.)
 - `error: string | JsonEditorError` — accept a bare string as shorthand, or force the object?
 - `validate` (standing, §7) vs last-`UpdateResult` precedence when they disagree.
-- `key` rename (was `name`); whether `value` lives in `NodeContext` or is added per-category.
+- Universal context type: reuse the existing `NodeData` flat (decided — comment 5; also settles `key`-not-`name` and `value`/`fullData` for "current"). Open: confirm it's the right base for *every* callback (comment 20).
 - Event vocabulary final names (`editStart` vs `startEdit`, etc.) — tie into §14 "node not component".
 - Which commands are sync vs async; how much of the handle ships in 2.0 vs stubs against [#286](https://github.com/CarlosNZ/json-edit-react/issues/286).
 - May `onEventIntercept` / `allow*` be async? (Leaning yes for intercept.)
