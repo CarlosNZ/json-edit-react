@@ -84,11 +84,6 @@ Promise<any of the above>         // async validators remain first-class
 
 Decide explicitly: when `value` is set **and** `isValid: false` — apply the new value but flag it? Reject? Doc it.
 
-Two questions surfaced by [#117](https://github.com/CarlosNZ/json-edit-react/issues/117) (confirmation flows for `onDelete`) belong in this decision so the canonical shape covers them:
-
-- **Silent cancel.** A declined confirmation isn't an error — the shape needs an "abort, leave data untouched, surface nothing" outcome, distinct from `false` (reject + generic error). Candidate: `{ cancel: true }` in the object form.
-- **Imperative vs reactive resume.** #117 favours *pausing* the op (a request event) and *resuming* it imperatively (`editorRef.delete`, see §10 / [#286](https://github.com/CarlosNZ/json-edit-react/issues/286)) over awaiting a promise, because React confirmation modals are state-driven. Worth deciding whether every gate (edit/add/delete) supports both idioms symmetrically — return-value (sync/promise) for inline decisions, request-event + `editorRef` resume for state-driven flows — so the legal outcomes of an update attempt form one matrix (proceed / proceed-but-flag / reject-with-error / cancel-silently / defer-to-imperative-resume) rather than a per-callback grab-bag.
-
 ## 7. Per-node `isValid` state
 
 New `isValid` property on each node, settable via Update Function returns (above) and via a sibling standing validator:
@@ -140,9 +135,7 @@ Key implementation decisions:
 
 Tests: editing actions (incl. restrictEdit respect/override) in [test/imperativeHandle.test.tsx](test/imperativeHandle.test.tsx); the collapse broadcast suite ([test/collapseBroadcasts.test.tsx](test/collapseBroadcasts.test.tsx)) now drives via the handle.
 
-Follow-up: extend the handle to **key / add / delete** modes with the same per-call `overrideRestrictions` semantics — [#286](https://github.com/CarlosNZ/json-edit-react/issues/286). Each mode gates on a different filter (key needs edit+add+delete; add/delete are per-node operations, not central state), so they're a 2.x feature rather than part of this cleanup.
-
-The **delete trigger is also the resume half of the [#117](https://github.com/CarlosNZ/json-edit-react/issues/117) confirmation flow.** An opt-in `confirmDelete` gate fires an `onDeleteRequest({ path, nodeData })` event *instead of* deleting; the consumer owns the pending state and drives their (possibly multi-step) modal, then calls `editorRef.delete(path)` to commit through the real pipeline — bypassing the gate. The library holds no state between request and commit, which is what makes a *sequence* of modals trivial (it only sees `delete(path)` at the end) and sidesteps the capture-the-resolver bridge a state-driven modal otherwise needs to feed an awaited promise. Strictly additive: `confirmDelete` defaults off, so the delete path is byte-for-byte unchanged for anyone not using it. A promise-returning `confirmDelete?: (nodeData) => Promise<boolean>` stays available off the same gate for genuinely promise-based flows. See the cancel-signal / outcome-matrix note under §6.
+Follow-up: extend the handle to **key / add / delete** modes with the same per-call `overrideRestrictions` semantics — [#286](https://github.com/CarlosNZ/json-edit-react/issues/286). Each mode gates on a different filter (key needs edit+add+delete; add/delete are per-node operations, not central state), so they're a 2.x feature rather than part of this cleanup. These commands are now specified under §17 (Category 4), and the #117 confirmation flow is handled by §17's `onEventIntercept` gate + the `editorRef.delete` resume.
 
 ## 11. Export `JsonViewer` — ✅ done
 
