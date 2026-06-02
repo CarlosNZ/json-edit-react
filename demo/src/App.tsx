@@ -156,11 +156,6 @@ function App() {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
   }, [loading, liveData, reset, selectedDataSet])
 
-  // Always reset the External Control panel to off when switching data sets.
-  useEffect(() => {
-    setShowImperativeHandle(false)
-  }, [selectedDataSet])
-
   // useEffect(() => {
   //   const localStorageState = localStorage.getItem('collapseState')
   //   if (localStorageState) {

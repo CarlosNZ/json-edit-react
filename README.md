@@ -30,7 +30,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
  - 🌏 **[Localisation](#localisation)** — easily translate UI labels and messages
  - 🔄 **[Drag-n-drop](#drag-n-drop)** re-ordering within objects/arrays
  - 🎹 **[Keyboard customisation](#keyboard-customisation)** — define your own key bindings
- - 🎮 **[External control](#external-control-1)** via callbacks and an imperative handle
+ - 🎮 **[External control](#external-control-1)** via callbacks and imperative methods
 
 💡 Try the **[Live Demo](https://carlosnz.github.io/json-edit-react/)** to see these features in action!
 
