@@ -221,14 +221,26 @@ Every consumer-facing function falls into exactly one of three categories, and e
 // so update callbacks add only `newValue` / `newData` rather than carrying `current*` too.
 
 // One canonical error shape, used everywhere an error is produced or reported.
+// Definitive code list, split by surfacing channel:
+//   Group A (mutation/edit flow) → onError observer + UpdateResult.error
+//   Group B (imperative commands) → CommandResult.error (the return value), NOT onError
 type JsonEditorErrorCode =
-  | 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR'
-  | 'INVALID_JSON' | 'KEY_EXISTS' | 'RESTRICTED' // | …
+  // Group A — mutation / edit flow
+  | 'UPDATE_ERROR'    // an edit was rejected (onUpdate/onEdit returned false/error, or internal failure)
+  | 'ADD_ERROR'       // an add was rejected
+  | 'DELETE_ERROR'    // a delete was rejected
+  | 'KEY_EXISTS'      // a new/renamed key collides with an existing sibling
+  | 'INVALID_JSON'    // raw JSON typed into the editor failed to parse
+  // Group B — imperative command flow (Category 4)
+  | 'PATH_NOT_FOUND'  // a command targeted a path that doesn't exist in the current data
+  | 'RESTRICTED'      // a command's action is blocked by an allow* filter (no overrideRestrictions set)
 interface JsonEditorError {
   code: JsonEditorErrorCode
   message: string
 }
 ```
+
+The list is definitive. Type-change failures fold into `UPDATE_ERROR`; non-error conditions (e.g. a command that's a clean no-op) don't get a code. Validation is deliberately excluded pending the §7 `isValid` discussion. The exact routing when an *imperative* command runs the pipeline and a handler rejects it (Group A code via `CommandResult` vs `onError`) is firmed up under comments 8/11.
 
 ### Category 1 — Gates (run before, decide whether to proceed)
 
