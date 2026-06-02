@@ -339,6 +339,10 @@ type OnCopyFunction<T = JsonData> =
 ### Category 4 (not a callback) — Imperative commands
 
 ```ts
+// Strictly binary: did the command run, or was it refused? All descriptive metadata
+// (which node, new collapsed state, resulting data, a new node's path) comes from the
+// OBSERVER that fires as a result — the same observer whether the trigger was user- or
+// command-driven, so there's one source of truth, not a command-only channel.
 type CommandResult =
   | { success: true }
   | { success: false; error: JsonEditorError }   // standardised on the Error type
@@ -356,6 +360,8 @@ interface JsonEditorHandle<T = JsonData> {
 ```
 
 Mutation commands **dev-warn + no-op on a path that no longer exists** — mitigates the [#117](https://github.com/CarlosNZ/json-edit-react/issues/117) "intercept-but-forget-to-suppress" slip (the node deletes behind the modal, then the resume targets a gone path). Signatures can ship in 2.0 even if `editKey`/`add`/`delete` land their *behaviour* with [#286](https://github.com/CarlosNZ/json-edit-react/issues/286).
+
+Known tradeoff of the binary result: to react *only* to command-driven actions (e.g. a toast showing the new path for a programmatic `add`, but not for user adds), you'd have to correlate the `CommandResult` with the observer firing — a bit awkward. Accepted for now; revisit with a typed success payload for creating commands if it proves necessary.
 
 ### Open decisions (for review)
 
