@@ -137,7 +137,7 @@ Landed in [#261](https://github.com/CarlosNZ/json-edit-react/pull/261), bundled 
 
 Current "delete + add" semantics force consumers to detect renames by hand and lose order info. Distinct callback. (From [discussion #228](https://github.com/CarlosNZ/json-edit-react/discussions/228#discussioncomment-15144209).)
 
-**Reframed under §17:** a rename isn't a standalone prop — it's the *commit* of a key-edit, surfaced through the existing `onEditEvent` *observer* (the callback name is unchanged; only its `event` field gains values). Key editing is a full lifecycle mirroring value editing, so `onEditEvent` fires `startKeyEdit` / `cancelKeyEdit` / `confirmKeyEdit`, where **`confirmKeyEdit` carries `{ oldKey, newKey }`** — that *is* the rename, and you also get the start/cancel signals for free. Verb-first vocabulary, shared as far as possible across the intercept events, observer events, and imperative commands (§17 Category 1/3/4). See §17 / [#289](https://github.com/CarlosNZ/json-edit-react/issues/289).
+**Reframed under §17:** a rename isn't a standalone prop — it's the *commit* of a rename session, surfaced through the existing `onEditEvent` *observer* (the callback name is unchanged; only its `event` field gains values). Renaming a key is a full lifecycle mirroring value editing, so `onEditEvent` fires `startRename` / `cancelRename` / `confirmRename`, where **`confirmRename` carries `{ oldKey, newKey }`** — that *is* the rename, and you also get the start/cancel signals for free. Verb-first vocabulary, shared as far as possible across the intercept events, observer events, and imperative commands (§17 Category 1/3/4). See §17 / [#289](https://github.com/CarlosNZ/json-edit-react/issues/289).
 
 ## 13. Split themes + custom components into separate packages — ✅ done
 
@@ -248,7 +248,7 @@ type FilterFunction<T = JsonData> = (node: NodeData<T>) => boolean | Promise<boo
 // Flat NodeData + an `event` discriminant (and event-specific extras where needed).
 type InterceptableEvent<T = JsonData> = NodeData<T> & (
   | { event: 'startEdit' }
-  | { event: 'startKeyEdit' }
+  | { event: 'startRename' }
   | { event: 'startAdd' }
   | { event: 'delete' }    // instant: the intercept IS the click, before the one-shot delete
   | { event: 'move' }      // instant: the intercept is the drop
@@ -316,12 +316,12 @@ type OnErrorFunction<T = JsonData> =
 
 // 2. onEditEvent — the COMPLETE interaction-lifecycle stream. Absorbs onRenameProperty
 // (§12); covers value-edit, key-edit AND add sessions (start/confirm/cancel), plus the
-// instant delete/move (one event each). 'confirmKeyEdit' carries { oldKey, newKey } = rename.
+// instant delete/move (one event each). 'confirmRename' carries { oldKey, newKey }.
 type EditEvent<T = JsonData> = NodeData<T> & (
-  | { event: 'startEdit' }    | { event: 'confirmEdit' }    | { event: 'cancelEdit' }
-  | { event: 'startKeyEdit' } | { event: 'confirmKeyEdit'; oldKey: CollectionKey; newKey: CollectionKey } | { event: 'cancelKeyEdit' }
-  | { event: 'startAdd' }     | { event: 'confirmAdd' }     | { event: 'cancelAdd' }
-  | { event: 'delete' }       | { event: 'move' }
+  | { event: 'startEdit' }   | { event: 'confirmEdit' }   | { event: 'cancelEdit' }
+  | { event: 'startRename' } | { event: 'confirmRename'; oldKey: CollectionKey; newKey: CollectionKey } | { event: 'cancelRename' }
+  | { event: 'startAdd' }    | { event: 'confirmAdd' }    | { event: 'cancelAdd' }
+  | { event: 'delete' }      | { event: 'move' }
 )
 type OnEditEventFunction<T = JsonData> = (e: EditEvent<T>) => void
 
@@ -352,27 +352,27 @@ interface JsonEditorHandle<T = JsonData> {
   // --- Session openers: enter an interactive session (open the input) at a node; no value
   //     supplied. Sync (just opens). The eventual confirm runs the pipeline. Distinct starts,
   //     SHARED confirm/cancel (only one session open at a time).
-  startEdit   (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
-  startKeyEdit(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
-  startAdd    (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
-  confirmEdit(): Promise<CommandResult>   // commit the active session (runs onUpdate)
-  cancelEdit(): void                      // abort the active session
+  startEdit  (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
+  startRename(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
+  startAdd   (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
+  confirm(): Promise<CommandResult>   // commit the active session (runs onUpdate); shared across all sessions
+  cancel(): void                      // abort the active session; shared
 
   // --- Direct ("all-in-one") mutators: do the whole mutation with values provided, no UI
-  //     session. Async (run the pipeline). `delete` is core (the #117 resume); the rest are
+  //     session. Run the pipeline. `delete` is core (the #117 resume); the rest are
   //     PLANNED BUT LATE-PHASE in the implementation plan and may be dropped.
-  delete   (opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult>   // #117 resume — core
-  update   (opts: { path: CollectionKey[]; value: unknown; overrideRestrictions?: boolean }): Promise<CommandResult>      // late
-  add      (opts: { path: CollectionKey[]; value: unknown; overrideRestrictions?: boolean }): Promise<CommandResult>      // late
-  renameKey(opts: { path: CollectionKey[]; newKey: CollectionKey; overrideRestrictions?: boolean }): Promise<CommandResult> // late
-  move     (opts: { from: CollectionKey[]; to: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult>   // late
+  delete(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult>   // #117 resume — core
+  edit  (opts: { path: CollectionKey[]; value: unknown; overrideRestrictions?: boolean }): Promise<CommandResult>      // late
+  add   (opts: { path: CollectionKey[]; value: unknown; overrideRestrictions?: boolean }): Promise<CommandResult>      // late
+  rename(opts: { path: CollectionKey[]; newKey: CollectionKey; overrideRestrictions?: boolean }): Promise<CommandResult> // late
+  move  (opts: { from: CollectionKey[]; to: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult>   // late
 
   // --- Non-mutating
   collapse(opts: { path: CollectionKey[]; collapsed?: boolean; includeChildren?: boolean }): void
 }
 ```
 
-(`editKey` value-editing has both forms, mirroring value editing: `startKeyEdit` session ↔ `renameKey` direct; same for `startEdit` ↔ `update`, `startAdd` ↔ `add`. Delete/move are direct-only — no session. Command names tentative pending the summary table. **The sync-vs-async return typing shown is provisional** — not yet decided; tied to the async open decision below.)
+(Each editable thing has both forms: `startRename` session ↔ `rename` direct; `startEdit` ↔ `edit`; `startAdd` ↔ `add`. Delete/move are direct-only — no session. Names are final (see the vocabulary table below). **The sync-vs-async return typing shown is the one item still provisional** — tied to the async open decision below.)
 
 **The command pipeline (comment 14).** Every *mutating* command — a session commit *or* a direct mutator — runs the **same** pipeline:
 
@@ -385,9 +385,26 @@ command
 
 **Invariant (comment 13): `overrideRestrictions` skips *only* the `allow*` filter — never `onUpdate`.** A command can force past a UI permission gate, but the consumer's validation/transform logic always sees the value and may veto/modify/cancel it (consistent with comment 9's "same handler, user- or command-driven"). Session openers check the filter at *open* time; the value then flows through `onUpdate` at confirm.
 
-Mutation commands **dev-warn + no-op on a path that no longer exists** — mitigates the [#117](https://github.com/CarlosNZ/json-edit-react/issues/117) "intercept-but-forget-to-suppress" slip (the node deletes behind the modal, then the resume targets a gone path). A *likely* phasing — session openers + `confirmEdit`/`cancelEdit` + `delete` + `collapse` in 2.0, the late direct mutators riding [#286](https://github.com/CarlosNZ/json-edit-react/issues/286) — but the exact 2.0-vs-later split isn't settled (see the open decision below; the implementation plan will finalise it).
+Mutation commands **dev-warn + no-op on a path that no longer exists** — mitigates the [#117](https://github.com/CarlosNZ/json-edit-react/issues/117) "intercept-but-forget-to-suppress" slip (the node deletes behind the modal, then the resume targets a gone path). A *likely* phasing — session openers + `confirm`/`cancel` + `delete` + `collapse` in 2.0, the late direct mutators riding [#286](https://github.com/CarlosNZ/json-edit-react/issues/286) — but the exact 2.0-vs-later split isn't settled (see the open decision below; the implementation plan will finalise it).
 
 Known tradeoff of the binary result: to react *only* to command-driven actions (e.g. a toast showing the new path for a programmatic `add`, but not for user adds), you'd have to correlate the `CommandResult` with the observer firing — a bit awkward. Accepted for now; revisit with a typed success payload for creating commands if it proves necessary.
+
+### Vocabulary (canonical)
+
+Per operation, across the four surfaces. `onUpdate` names the *operation*; `onEventIntercept`/`onEditEvent` add the *moment* prefix (they coincide for the instant `delete`/`move`):
+
+| Operation | `onEventIntercept` (gate, start) | `onUpdate` (commit) | `onEditEvent` (observe) | Command(s) |
+| --- | --- | --- | --- | --- |
+| **Edit value** | `startEdit` | `edit` | `startEdit` / `confirmEdit` / `cancelEdit` | `startEdit` → `confirm`/`cancel`; `edit` (direct) |
+| **Rename key** | `startRename` | `rename` | `startRename` / `confirmRename`* / `cancelRename` | `startRename` → `confirm`/`cancel`; `rename` (direct) |
+| **Add** | `startAdd` | `add` | `startAdd` / `confirmAdd` / `cancelAdd` | `startAdd` → `confirm`/`cancel`; `add` (direct) |
+| **Delete** | `delete` | `delete` | `delete` | `delete` |
+| **Move** | `move` | `move` | `move` | `move` |
+| **Collapse** | — | — | — (via `onCollapse`) | `collapse` |
+
+\* `confirmRename` carries `{ oldKey, newKey }`. Shared session commands `confirm()` / `cancel()` act on whichever session is open.
+
+Not tied to one operation: `onChange` (Cat 2 transform), `onError` / `onCollapse` / `onCopy` (Cat 3 observers), `allowEdit` / `allowDelete` / `allowAdd` / `allowDrag` / `allowTypeSelection` (Cat 1 gates — `boolean | fn`, async-capable), `allowClipboard` (Cat 1 gate — `boolean` only).
 
 ### Open decisions (for review)
 
