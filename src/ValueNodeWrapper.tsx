@@ -246,7 +246,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         if (result === false) {
           revertToData()
           emitEditEvent('cancelEdit')
-        } else if (result) {
+        } else if (typeof result === 'string') {
           onError(
             { code: 'UPDATE_ERROR', message: result },
             customNode.defaultValue as JsonData

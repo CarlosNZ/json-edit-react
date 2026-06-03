@@ -145,7 +145,7 @@ export const useDragNDrop = ({
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
     } else {
       onMove(dragSource.path, path, position).then((result) => {
-        if (result)
+        if (typeof result === 'string')
           onError({ code: 'UPDATE_ERROR', message: result }, nodeData.value as CollectionData)
         // `move` onEditEvent fires from the internal `onMove` handler (it owns
         // the SOURCE node's NodeData) — not here, where only the drop target is.
