@@ -400,7 +400,11 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
         ...buildNodeData(dataRef.current, sourcePath, rootNameRef.current, sortRef.current),
         newData: addedData,
         event: 'move',
-        newPath: destPath,
+        // The moved node's actual landing path, not the drop-target node's
+        // (`destPath`): `targetKey` carries the above/below offset, the kept
+        // object key, or the generated `arr_N` key, so this is where the node
+        // ends up in `addedData`.
+        newPath: [...targetPath, targetKey],
       })
     },
     [handleEdit]
