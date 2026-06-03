@@ -138,6 +138,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const revertToData = () => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
     setDataType(getDataType(data, customNodeData))
+    // Keep the enum selector in sync with the reverted value — a rejected or
+    // cancelled to-enum type change sets `enumType` synchronously before the
+    // commit resolves, so reverting only value/dataType would leave the
+    // selector stuck on the enum. (`setEnumType`/`allowedDataTypes` are
+    // declared below; `revertToData` only ever runs post-render.)
+    setEnumType(matchEnumType(data, allowedDataTypes))
   }
 
   useEffect(() => {
@@ -237,8 +243,17 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
       onEdit(customNode.defaultValue, path).then((result) => {
-        if (result) revertToData()
-        else emitEditEvent('confirmEdit')
+        if (result === false) {
+          revertToData()
+          emitEditEvent('cancelEdit')
+        } else if (result) {
+          onError(
+            { code: 'UPDATE_ERROR', message: result },
+            customNode.defaultValue as JsonData
+          )
+          revertToData()
+          emitEditEvent('cancelEdit')
+        } else emitEditEvent('confirmEdit')
       })
       setDataType(type)
       setEnumType(null)
@@ -341,8 +356,14 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
-  const handleCancel = () => {
-    cancelEdit()
+  // Per-node UI/data cleanup for any session-ending path that isn't a
+  // confirm: explicit cancel (Esc/✗), node switch (another node steals the
+  // edit), or external cancel (search reset, `editorRef.cancelEdit`).
+  // Registered as the store's `cancelOp` so the store invokes it uniformly;
+  // it does NOT call back into the store. Both steps are idempotent so the
+  // function is safe to run twice in the user-cancel path (once from
+  // `handleCancel` directly, once from the store invoking `cancelOp`).
+  const revertSession = () => {
     const previousValue = getSnapshot().previousValue
     if (previousValue !== null) {
       onEdit(previousValue, path)
@@ -354,6 +375,17 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     }
     revertToData()
     setPreviousValue(null)
+  }
+
+  const handleCancel = () => {
+    // Revert locally then drive the store cancel. Driving the store also runs
+    // `cancelOp` (= `revertSession`) for the canonical external-cancel path,
+    // so this looks redundant — but `revertSession` is idempotent, and we
+    // still want the local revert to happen on entry paths that don't
+    // register a `cancelOp` (Tab-arrival, redirect from a filtered node),
+    // where the store has no op to invoke.
+    revertSession()
+    cancelEdit()
   }
 
   const handleDelete = () => {
@@ -379,7 +411,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     setValue: updateValue,
     isEditing,
     canEdit,
-    setIsEditing: canEdit ? () => startEdit(path) : NOOP,
+    setIsEditing: canEdit ? () => startEdit(path, { cancelOp: revertSession }) : NOOP,
     handleEdit,
     handleCancel,
     path,
@@ -443,7 +475,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
-      setIsEditing={() => startEdit(path)}
+      setIsEditing={() => startEdit(path, { cancelOp: revertSession })}
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, inputProps) : undefined}
       originalNodeKey={
@@ -513,7 +545,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
                         // previously-abandoned edit session so a cancel
                         // doesn't unexpectedly revert to a stale value.
                         setPreviousValue(null)
-                        startEdit(path, { cancelOp: handleCancel })
+                        startEdit(path, { cancelOp: revertSession })
                       }
                     : undefined
                 }

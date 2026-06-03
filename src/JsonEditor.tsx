@@ -302,12 +302,16 @@ const Editor: React.FC<
 
       // The new node doesn't exist in the current tree yet, so build its
       // `NodeData` from `newData` (where it does) to get the right position
-      // (`key`/`path`/`index`). Then describe it as the spec requires: `value`
-      // is unset until commit (matches V1), and `fullData` is the CURRENT
-      // (pre-add) document, consistent with the other events.
+      // (`key`/`path`/`level`/`index`). Everything else describes the PRE-add
+      // state for a coherent payload: `value` is unset until commit (matches
+      // V1), `size` is null (no committed value yet), and `parentData` /
+      // `fullData` are the CURRENT (pre-add) parent + document — consistent with
+      // each other and with the other events.
       return await handleEdit({
         ...buildNodeData(newData, path, rootNameRef.current, sortRef.current),
         value: undefined,
+        size: null,
+        parentData: (extract(dataRef.current, path.slice(0, -1)) ?? null) as object | null,
         fullData: dataRef.current,
         newData,
         event: 'add',

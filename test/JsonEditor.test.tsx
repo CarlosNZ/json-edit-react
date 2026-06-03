@@ -1,9 +1,14 @@
 import { createRef, useState } from 'react'
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { JsonViewer } from '../src/JsonViewer'
-import { type FilterFunction, type JsonViewerHandle, type EditEvent } from '../src/types'
+import {
+  type FilterFunction,
+  type JsonEditorHandle,
+  type JsonViewerHandle,
+  type EditEvent,
+} from '../src/types'
 
 const noop = () => {}
 
@@ -144,8 +149,8 @@ describe('JsonViewer — read-only contract', () => {
 
     // editing actions are genuinely absent
     expect((ref.current as Record<string, unknown>).startEdit).toBeUndefined()
-    expect((ref.current as Record<string, unknown>).cancelEdit).toBeUndefined()
-    expect((ref.current as Record<string, unknown>).confirmEdit).toBeUndefined()
+    expect((ref.current as Record<string, unknown>).cancel).toBeUndefined()
+    expect((ref.current as Record<string, unknown>).confirm).toBeUndefined()
   })
 })
 
@@ -653,6 +658,13 @@ describe('JsonEditor — §17 onUpdate event discriminant', () => {
         path: ['fresh'],
         newValue: null,
         newData: { existing: 'value', fresh: null },
+        // The payload describes the PRE-add state + the insertion position:
+        // value/size unset, and parentData/fullData are the pre-add document
+        // (NOT including the new `fresh` key).
+        value: undefined,
+        size: null,
+        parentData: { existing: 'value' },
+        fullData: { existing: 'value' },
       })
     )
   })
@@ -802,6 +814,60 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     expect(seq.filter((e) => e === 'startEdit')).toHaveLength(2)
     expect(seq).not.toContain('cancelEdit')
   })
+
+  test('node-switch fires cancelEdit for the displaced session before startEdit for the new one', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(
+      <JsonEditor data={{ a: 'first', b: 'second' }} setData={noop} onEditEvent={onEditEvent} />
+    )
+
+    // Open edit on `a`, then click Edit on `b` while `a` is still active.
+    await user.dblClick(screen.getByText('"first"'))
+    // Typed-but-uncommitted text on `a`. The displaced session must report as
+    // a cancel (not a silent close).
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'edited-a')
+    await user.dblClick(screen.getByText('"second"'))
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'cancelEdit', 'startEdit'])
+    expect(onEditEvent.mock.calls[0][0]).toMatchObject({ key: 'a' })
+    expect(onEditEvent.mock.calls[1][0]).toMatchObject({ event: 'cancelEdit', key: 'a' })
+    expect(onEditEvent.mock.calls[2][0]).toMatchObject({ event: 'startEdit', key: 'b' })
+  })
+
+  test('editorRef.cancel fires cancelEdit and clears the local edit buffer', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        onEditEvent={onEditEvent}
+        editorRef={ref}
+      />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'typed-but-not-committed')
+
+    // External cancel via the imperative handle.
+    act(() => {
+      ref.current!.cancel()
+    })
+
+    // The lifecycle event fires.
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'cancelEdit'])
+
+    // And the local buffer was reverted — re-opening the node shows the
+    // original value, not the typed-but-uncommitted text.
+    await user.dblClick(screen.getByText('"hello"'))
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('hello')
+  })
 })
 
 describe('JsonEditor — restrictions and callbacks', () => {
@@ -895,6 +961,38 @@ describe('JsonEditor — restrictions and callbacks', () => {
 
     // Event-specific message, matching the ADD_ERROR code routed to onError
     expect(screen.getByText('Adding node unsuccessful')).toBeInTheDocument()
+  })
+
+  test('a rejected to-enum type change reverts the type selector (not stuck on the enum)', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => false as const)
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        restrictTypeSelection={['string', { enum: 'Color', values: ['red', 'green', 'blue'] }]}
+      />
+    )
+
+    // Enter edit mode on the value — the type <select> appears
+    await user.dblClick(screen.getByText('"hello"'))
+    const select = screen.getByRole('combobox') as HTMLSelectElement
+    expect(select.value).toBe('string')
+
+    // Switch the type to the enum. 'hello' isn't a valid Color, so the wrapper
+    // attempts a commit (the first enum value) which onUpdate rejects.
+    await user.selectOptions(select, 'Color')
+    expect(onUpdate).toHaveBeenCalled()
+
+    // The rejection reverts the value and closes the edit session.
+    await waitFor(() => expect(screen.queryByRole('combobox')).toBeNull())
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+
+    // Re-open editing: the type selector must reflect the reverted value
+    // (`string`), not stay stuck on the enum it was synchronously set to.
+    await user.dblClick(screen.getByText('"hello"'))
+    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('string')
   })
 
   test('onUpdate returning { error: string } surfaces that string', async () => {
