@@ -507,6 +507,35 @@ describe('JsonEditor — edit flow', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
     expect(screen.getByText('"hello"')).toBeInTheDocument()
   })
+
+  // Regression: a `draggable` ancestor — not just the immediate parent, ANY
+  // ancestor — suppresses native mouse text-selection / cursor-positioning
+  // inside a nested input (Chromium starts a drag on `mousedown` instead). So
+  // the entire chain from the open input up to the root must drop `draggable`,
+  // not only the editing node. jsdom can't reproduce the native interaction, so
+  // we pin the DOM contract: editing flips `draggable` off on the leaf AND its
+  // ancestor collection, and restores it once the edit closes.
+  test('the editing node and all its draggable ancestors lose `draggable` while the input is open', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <JsonEditor data={{ outer: { inner: 'hello' } }} setData={noop} restrictDrag={false} />
+    )
+
+    const leaf = container.querySelector('.jer-value-component') as HTMLElement
+    const ancestor = container.querySelector('.jer-collection-component') as HTMLElement
+    expect(leaf).toHaveAttribute('draggable', 'true')
+    expect(ancestor).toHaveAttribute('draggable', 'true')
+
+    await user.dblClick(screen.getByText('"hello"'))
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+    expect(leaf).toHaveAttribute('draggable', 'false')
+    expect(ancestor).toHaveAttribute('draggable', 'false')
+
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(leaf).toHaveAttribute('draggable', 'true')
+    expect(ancestor).toHaveAttribute('draggable', 'true')
+  })
 })
 
 describe('JsonEditor — structural mutations', () => {
