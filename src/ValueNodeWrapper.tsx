@@ -138,6 +138,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const revertToData = () => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
     setDataType(getDataType(data, customNodeData))
+    // Keep the enum selector in sync with the reverted value — a rejected or
+    // cancelled to-enum type change sets `enumType` synchronously before the
+    // commit resolves, so reverting only value/dataType would leave the
+    // selector stuck on the enum. (`setEnumType`/`allowedDataTypes` are
+    // declared below; `revertToData` only ever runs post-render.)
+    setEnumType(matchEnumType(data, allowedDataTypes))
   }
 
   useEffect(() => {

@@ -18,7 +18,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `externalTriggers` prop replaced by the `editorRef` imperative handle | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/cancelEdit/confirmEdit` — see §7 |
 | `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction` | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` (`errorMessage` → `error.message`) — see §8 |
 | `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`; return shape unified | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see §9 |
-| Callback payloads are now flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`); `JerError` → `JsonEditorError` | Update field names in `onUpdate` / `onChange` / `onError`; rename the error type — see §9, §10 |
+| Callback payloads for `onUpdate` / `onChange` are now flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`); `JerError` → `JsonEditorError` | Update field names in `onUpdate` / `onChange`; rename the error type — see §9 |
 | `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JsonEditorError` | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see §10 |
 
 ---
