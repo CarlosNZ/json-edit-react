@@ -473,7 +473,15 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         marginLeft: parentData !== null ? `${indent / 2}em` : 0,
         position: 'relative',
       }}
-      draggable={canDrag}
+      // A `draggable` ancestor suppresses native mouse text-selection /
+      // cursor-positioning inside a nested input (Chromium hijacks `mousedown`
+      // to start a drag), so this node drops `draggable` while its own
+      // value/key is being edited. The ancestor collections above it are
+      // handled by CollectionNode's `childrenEditing`, so the whole chain above
+      // the open input goes non-draggable. Per-node `isEditing`/`isEditingKey`
+      // mean only this node re-renders here — not the old global editing flag
+      // that re-rendered every draggable node (§16).
+      draggable={canDrag && !isEditing && !isEditingKey}
       {...dragSourceProps}
       {...getDropTargetProps('above')}
     >
