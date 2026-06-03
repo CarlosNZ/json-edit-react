@@ -1,118 +1,71 @@
 /**
- * End-to-end tests for the editing actions on the `editorRef` imperative
- * handle: `startEdit`, `cancelEdit`, `confirmEdit`.
+ * End-to-end tests for the `editorRef` imperative handle.
  *
- * These pin the public contract of the handle:
- *  - `startEdit({ path })` puts the targeted node into edit mode (a textbox).
- *  - `cancelEdit()` leaves edit mode without committing.
- *  - `confirmEdit()` commits the in-progress edit (calls `setData`).
- *  - `startEdit` reveals a target that's collapsed below the mount frontier,
- *    riding the same state-based reveal the Tab navigation uses.
- *  - `startEdit` respects the per-node `restrictEdit` filter by default (and
- *    returns `false` when blocked), and bypasses it when `overrideRestrictions:
- *    true` is passed.
+ * The handle is UI-interactions only: it opens a value-edit SESSION at a node,
+ * commits or aborts it, and collapses nodes. It never mutates data directly (the
+ * consumer owns `data`/`setData`). These pin the contract:
+ *  - `startEdit` returns `true` if it opened a session, else `'PATH_NOT_FOUND'`
+ *    (gone path) or `'RESTRICTED'` (`restrictEdit` blocks it, bypassable with
+ *    `overrideRestrictions`); it auto-reveals a target collapsed below the mount
+ *    frontier.
+ *  - `confirm()` commits the open session through `onUpdate` (which may veto);
+ *    `cancel()` aborts. `overrideRestrictions` skips ONLY the filter.
  */
 
 import { createRef } from 'react'
 import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
-import { type JsonEditorHandle } from '../src/types'
+import { type JsonEditorHandle, type UpdateFunction } from '../src/types'
 
 const noop = () => {}
 
-describe('editorRef handle — editing actions', () => {
-  test('startEdit opens an editor at a visible leaf', () => {
+describe('editorRef handle — startEdit', () => {
+  test('startEdit opens an editor at a visible leaf and returns true', () => {
     const ref = createRef<JsonEditorHandle>()
     render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} editorRef={ref} />)
     expect(screen.queryByRole('textbox')).toBeNull()
 
-    act(() => ref.current!.startEdit({ path: ['greeting'] }))
-
-    expect(screen.getByRole('textbox')).toBeInTheDocument()
-  })
-
-  test('cancelEdit leaves edit mode without committing', () => {
-    const setData = jest.fn()
-    const ref = createRef<JsonEditorHandle>()
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} editorRef={ref} />)
-
-    act(() => ref.current!.startEdit({ path: ['greeting'] }))
-    expect(screen.getByRole('textbox')).toBeInTheDocument()
-
-    act(() => ref.current!.cancelEdit())
-    expect(screen.queryByRole('textbox')).toBeNull()
-    expect(setData).not.toHaveBeenCalled()
-  })
-
-  test('confirmEdit commits the in-progress edit via setData', async () => {
-    const user = userEvent.setup()
-    const setData = jest.fn()
-    const ref = createRef<JsonEditorHandle>()
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} editorRef={ref} />)
-
-    act(() => ref.current!.startEdit({ path: ['greeting'] }))
-    const textbox = screen.getByRole('textbox')
-    await user.clear(textbox)
-    await user.type(textbox, 'world')
-
-    // The update path is async (onEdit awaits the consumer's update fn before
-    // calling setData), so flush microtasks inside act.
-    await act(async () => {
-      ref.current!.confirmEdit()
-    })
-
-    expect(setData).toHaveBeenCalledWith({ greeting: 'world' })
-    // confirmEdit also exits edit mode.
-    expect(screen.queryByRole('textbox')).toBeNull()
-  })
-
-  test('startEdit reveals a target collapsed below the mount frontier', () => {
-    // With `collapse={1}`, `outer` (level 1) starts collapsed and its
-    // descendants are NOT mounted. startEdit on a deep path must cascade the
-    // ancestors open (the same state-based reveal Tab navigation relies on)
-    // until the leaf mounts in edit mode.
-    const ref = createRef<JsonEditorHandle>()
-    render(
-      <JsonEditor
-        data={{ outer: { inner: { leaf: 'deep' } } }}
-        setData={noop}
-        collapse={1}
-        editorRef={ref}
-      />
-    )
-    // Pre-condition: the deep subtree is unmounted.
-    expect(screen.queryByText('inner')).toBeNull()
-    expect(screen.queryByRole('textbox')).toBeNull()
-
-    act(() => ref.current!.startEdit({ path: ['outer', 'inner', 'leaf'] }))
-
-    // The cascade revealed the target and put it in edit mode.
-    expect(screen.getByRole('textbox')).toBeInTheDocument()
-  })
-
-  test('startEdit respects restrictEdit by default (no-op when restricted)', () => {
-    const ref = createRef<JsonEditorHandle>()
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} restrictEdit editorRef={ref} />)
-
-    let result: boolean | undefined
+    let result: ReturnType<JsonEditorHandle['startEdit']> | undefined
     act(() => {
       result = ref.current!.startEdit({ path: ['greeting'] })
     })
 
-    // restrictEdit is honoured — returns false, no editor opened, and the target
-    // isn't redirected to some other node either.
-    expect(result).toBe(false)
+    expect(result).toBe(true)
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+
+  test('startEdit returns PATH_NOT_FOUND for a path that no longer exists', () => {
+    const ref = createRef<JsonEditorHandle>()
+    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} editorRef={ref} />)
+
+    let result: ReturnType<JsonEditorHandle['startEdit']> | undefined
+    act(() => {
+      result = ref.current!.startEdit({ path: ['nope'] })
+    })
+
+    expect(result).toBe('PATH_NOT_FOUND')
+    expect(screen.queryByRole('textbox')).toBeNull()
+  })
+
+  test('startEdit respects restrictEdit by default (RESTRICTED, no-op)', () => {
+    const ref = createRef<JsonEditorHandle>()
+    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} restrictEdit editorRef={ref} />)
+
+    let result: ReturnType<JsonEditorHandle['startEdit']> | undefined
+    act(() => {
+      result = ref.current!.startEdit({ path: ['greeting'] })
+    })
+
+    expect(result).toBe('RESTRICTED')
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
   test('startEdit with overrideRestrictions bypasses restrictEdit', () => {
-    // Intended use case: lock everything with restrictEdit, then imperatively
-    // enable editing on one node via an explicit override.
     const ref = createRef<JsonEditorHandle>()
     render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} restrictEdit editorRef={ref} />)
 
-    let result: boolean | undefined
+    let result: ReturnType<JsonEditorHandle['startEdit']> | undefined
     act(() => {
       result = ref.current!.startEdit({ path: ['greeting'], overrideRestrictions: true })
     })
@@ -121,8 +74,7 @@ describe('editorRef handle — editing actions', () => {
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
-  test('startEdit respects a per-node restrictEdit function and reports via return value', () => {
-    // Only `b` is restricted. Default startEdit should open `a` but not `b`.
+  test('startEdit honours a per-node restrictEdit function', () => {
     const ref = createRef<JsonEditorHandle>()
     render(
       <JsonEditor
@@ -133,18 +85,159 @@ describe('editorRef handle — editing actions', () => {
       />
     )
 
-    let blocked: boolean | undefined
     act(() => {
-      blocked = ref.current!.startEdit({ path: ['b'] })
+      expect(ref.current!.startEdit({ path: ['b'] })).toBe('RESTRICTED')
     })
-    expect(blocked).toBe(false)
     expect(screen.queryByRole('textbox')).toBeNull()
 
-    let allowed: boolean | undefined
     act(() => {
-      allowed = ref.current!.startEdit({ path: ['a'] })
+      expect(ref.current!.startEdit({ path: ['a'] })).toBe(true)
     })
-    expect(allowed).toBe(true)
     expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+
+  test('startEdit reveals a target collapsed below the mount frontier', () => {
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor
+        data={{ outer: { inner: { leaf: 'deep' } } }}
+        setData={noop}
+        collapse={1}
+        editorRef={ref}
+      />
+    )
+    expect(screen.queryByText('inner')).toBeNull()
+
+    act(() => ref.current!.startEdit({ path: ['outer', 'inner', 'leaf'] }))
+
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+})
+
+describe('editorRef handle — confirm / cancel', () => {
+  test('cancel() leaves the session without committing', () => {
+    const setData = jest.fn()
+    const ref = createRef<JsonEditorHandle>()
+    render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} editorRef={ref} />)
+
+    act(() => ref.current!.startEdit({ path: ['greeting'] }))
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+
+    act(() => ref.current!.cancel())
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('confirm() commits the open value-edit session via setData', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const ref = createRef<JsonEditorHandle>()
+    render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} editorRef={ref} />)
+
+    act(() => ref.current!.startEdit({ path: ['greeting'] }))
+    const textbox = screen.getByRole('textbox')
+    await user.clear(textbox)
+    await user.type(textbox, 'world')
+
+    await act(async () => {
+      ref.current!.confirm()
+    })
+
+    expect(setData).toHaveBeenCalledWith({ greeting: 'world' })
+    expect(screen.queryByRole('textbox')).toBeNull()
+  })
+
+  test('confirm() runs onUpdate, which can veto (onError fires, value not committed)', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onError = jest.fn()
+    const onUpdate = jest.fn<ReturnType<UpdateFunction>, Parameters<UpdateFunction>>(() => ({
+      error: 'nope',
+    }))
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor
+        data={{ greeting: 'hello' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        onError={onError}
+        editorRef={ref}
+      />
+    )
+
+    act(() => ref.current!.startEdit({ path: ['greeting'] }))
+    const textbox = screen.getByRole('textbox')
+    await user.clear(textbox)
+    await user.type(textbox, 'world')
+
+    await act(async () => {
+      ref.current!.confirm()
+    })
+
+    expect(onUpdate).toHaveBeenCalled()
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: expect.objectContaining({ code: 'UPDATE_ERROR', message: 'nope' }),
+      })
+    )
+    expect(setData).not.toHaveBeenCalledWith({ greeting: 'world' })
+  })
+
+  test('confirm() is a no-op with no value-edit control (does not cancel a key rename)', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn()
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor data={{ oldName: 1 }} setData={noop} onEditEvent={onEditEvent} editorRef={ref} />
+    )
+
+    // Start a key-rename session via the UI (the handle has no opener for it).
+    await user.dblClick(screen.getByText('oldName'))
+    expect(screen.getByDisplayValue('oldName')).toBeInTheDocument()
+    onEditEvent.mockClear()
+
+    // There's no live value-edit confirm control, so confirm() must be a no-op
+    // — NOT tear down the unrelated rename session via the trailing cancel.
+    await act(async () => {
+      ref.current!.confirm()
+    })
+
+    expect(onEditEvent.mock.calls.map(([e]: [{ event: string }]) => e.event)).not.toContain(
+      'cancelRename'
+    )
+    expect(screen.getByDisplayValue('oldName')).toBeInTheDocument()
+  })
+
+  test('overrideRestrictions opens past the filter, but onUpdate still runs at confirm', async () => {
+    // The §17 invariant: `overrideRestrictions` skips ONLY the `restrictEdit`
+    // filter; the consumer's `onUpdate` always runs and may reject.
+    const user = userEvent.setup()
+    const onUpdate = jest.fn<ReturnType<UpdateFunction>, Parameters<UpdateFunction>>(() => false)
+    const onError = jest.fn()
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor
+        data={{ greeting: 'hello' }}
+        setData={noop}
+        restrictEdit
+        onUpdate={onUpdate}
+        onError={onError}
+        editorRef={ref}
+      />
+    )
+
+    act(() => {
+      expect(ref.current!.startEdit({ path: ['greeting'], overrideRestrictions: true })).toBe(true)
+    })
+    const textbox = screen.getByRole('textbox')
+    await user.clear(textbox)
+    await user.type(textbox, 'world')
+
+    await act(async () => {
+      ref.current!.confirm()
+    })
+
+    expect(onUpdate).toHaveBeenCalled()
+    expect(onError).toHaveBeenCalled()
   })
 })

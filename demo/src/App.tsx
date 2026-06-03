@@ -252,23 +252,23 @@ function App() {
 
   // Stable references so the JsonEditor's memoized nodes can bail out: an inline
   // `theme` array would churn the theme context (re-rendering every node), and
-  // an inline `enableClipboard` would churn the per-node prop comparison.
+  // an inline `onCopy` would churn the per-node prop comparison.
   const editorTheme = useMemo(
     () => [theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }],
     [theme, dataDefinition]
   )
 
-  const enableClipboard = useCallback(
+  const onCopy = useCallback(
     ({
       stringValue,
       type,
       success,
-      errorMessage,
+      error,
     }: {
-      stringValue: unknown
+      stringValue: string
       type: 'value' | 'path'
       success: boolean
-      errorMessage: string | null
+      error?: { message: string }
     }) =>
       success
         ? toast({
@@ -280,7 +280,7 @@ function App() {
           })
         : toast({
             title: 'Problem copying to clipboard',
-            description: errorMessage,
+            description: error?.message,
             status: 'error',
             duration: 5000,
             isClosable: true,
@@ -492,16 +492,31 @@ function App() {
                   theme={editorTheme}
                   indent={indent}
                   onUpdate={async (nodeData) => {
-                    const demoOnUpdate = dataDefinition?.onUpdate ?? (() => undefined)
-                    const result = await demoOnUpdate(nodeData, toast as (options: unknown) => void)
-                    if (result) return result
-                    else {
-                      const { newData } = nodeData
-                      if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
+                    // §17: one `onUpdate`. The datasets' per-operation helpers
+                    // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
+                    // as the catch-all (delete/rename/move).
+                    const runDemoUpdate = () => {
+                      if (nodeData.event === 'edit' && dataDefinition?.onEdit)
+                        return dataDefinition.onEdit(nodeData)
+                      if (nodeData.event === 'add' && dataDefinition?.onAdd)
+                        return dataDefinition.onAdd(nodeData)
+                      return (dataDefinition?.onUpdate ?? (() => undefined))(
+                        nodeData,
+                        toast as (options: unknown) => void
+                      )
                     }
+                    const result = await runDemoUpdate()
+                    // Reject (false) or silent cancel (null): pass straight
+                    // through, no commit and no post-commit side effect.
+                    if (result === false || result === null) return result
+                    // Object result (error / { value } override): pass through to
+                    // the library. `true` is a plain commit — fall through to the
+                    // side effect like void/undefined.
+                    if (result && result !== true) return result
+                    // Commit (true | void | undefined): run the post-commit demo side effect.
+                    const { newData } = nodeData
+                    if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
                   }}
-                  onEdit={dataDefinition?.onEdit ?? undefined}
-                  onAdd={dataDefinition?.onAdd ?? undefined}
                   onError={
                     dataDefinition.onError
                       ? (errorData) => {
@@ -522,7 +537,8 @@ function App() {
                   showCollectionCount={
                     showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
                   }
-                  enableClipboard={allowCopy ? enableClipboard : false}
+                  allowClipboard={allowCopy}
+                  onCopy={onCopy}
                   restrictEdit={restrictEdit}
                   // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
                   restrictDelete={restrictDelete}
@@ -649,7 +665,7 @@ function App() {
                       : undefined
                   }
                   // collapseClickZones={['property', 'header']}
-                  onEditEvent={(path) => setIsEditing(path !== null)}
+                  onEditEvent={(e) => setIsEditing(e.event.startsWith('start'))}
                   onCollapse={(input) => {
                     // Showcase the onCollapse callback — only while the External
                     // Control panel is on screen (fires for both handle-driven
@@ -970,13 +986,17 @@ function App() {
                         <Button
                           size="sm"
                           onClick={() => {
-                            const started = editorRef.current?.startEdit({
+                            const result = editorRef.current?.startEdit({
                               path: splitPropertyString(handlePath),
                               // overrideRestrictions: handleOverrideRestrictions,
                             })
-                            if (started === false)
+                            if (result && result !== true)
                               toast({
                                 title: "Can't edit that node",
+                                description:
+                                  result === 'RESTRICTED'
+                                    ? 'That node is restricted from editing'
+                                    : 'No node found at that path',
                                 status: 'warning',
                                 duration: 2000,
                                 isClosable: true,
@@ -994,7 +1014,7 @@ function App() {
                         <Flex gap={2}>
                           <Button
                             size="sm"
-                            onClick={() => editorRef.current?.confirmEdit()}
+                            onClick={() => editorRef.current?.confirm()}
                             colorScheme="primaryScheme"
                             variant="outline"
                           >
@@ -1002,7 +1022,7 @@ function App() {
                           </Button>
                           <Button
                             size="sm"
-                            onClick={() => editorRef.current?.cancelEdit()}
+                            onClick={() => editorRef.current?.cancel()}
                             colorScheme="primaryScheme"
                             variant="outline"
                           >

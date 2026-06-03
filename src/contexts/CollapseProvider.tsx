@@ -72,7 +72,12 @@ import React, {
   useRef,
   useState,
 } from 'react'
-import { type CollectionKey, type OnCollapseFunction, type CollapseState } from '../types'
+import {
+  type CollectionKey,
+  type OnCollapseFunction,
+  type CollapseState,
+  type BuildNodeDataFromPathRef,
+} from '../types'
 
 interface CollapseContext {
   commands: CollapseState[] | null
@@ -85,9 +90,14 @@ const CollapseProviderContext = createContext<CollapseContext | null>(null)
 interface CollapseProps {
   children: React.ReactNode
   onCollapse?: OnCollapseFunction
+  buildNodeDataFromPathRef: BuildNodeDataFromPathRef
 }
 
-export const CollapseProvider = ({ children, onCollapse }: CollapseProps) => {
+export const CollapseProvider = ({
+  children,
+  onCollapse,
+  buildNodeDataFromPathRef,
+}: CollapseProps) => {
   const [inner, setInner] = useState<{ commands: CollapseState[] | null; version: number }>({
     commands: null,
     version: 0,
@@ -116,13 +126,26 @@ export const CollapseProvider = ({ children, onCollapse }: CollapseProps) => {
       const incoming = Array.isArray(state) ? state : [state]
       // Snapshot the commands. They're retained in provider state and
       // replayed to late mounts — a caller mutating the originals after
-      // dispatch must not silently change the pending broadcast. `onCollapse`
-      // still receives the originals (the caller's identity).
+      // dispatch must not silently change the pending broadcast.
       const commands = incoming.map((cmd) => ({ ...cmd, path: [...cmd.path] }))
       setInner((prev) => ({ commands, version: prev.version + 1 }))
-      incoming.forEach((cmd) => onCollapseRef.current?.(cmd))
+      // Fire the `onCollapse` observer once per command, carrying the node's
+      // flat `NodeData` (built from the live document) plus the collapse flags.
+      const onCollapse = onCollapseRef.current
+      if (onCollapse)
+        incoming.forEach((cmd) => {
+          const nodeData = buildNodeDataFromPathRef.current?.(cmd.path)
+          if (nodeData)
+            onCollapse({
+              ...nodeData,
+              collapsed: cmd.collapsed,
+              includeChildren: cmd.includeChildren,
+            })
+        })
     },
-    []
+    // `buildNodeDataFromPathRef` is a stable ref object (read lazily at call
+    // time), so listing it doesn't churn `setCollapseState` / the context value.
+    [buildNodeDataFromPathRef]
   )
 
   const value = useMemo(

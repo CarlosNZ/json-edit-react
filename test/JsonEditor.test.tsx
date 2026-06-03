@@ -1,9 +1,14 @@
 import { createRef, useState } from 'react'
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { JsonViewer } from '../src/JsonViewer'
-import { type FilterFunction, type JsonViewerHandle } from '../src/types'
+import {
+  type FilterFunction,
+  type JsonEditorHandle,
+  type JsonViewerHandle,
+  type EditEvent,
+} from '../src/types'
 
 const noop = () => {}
 
@@ -144,8 +149,8 @@ describe('JsonViewer — read-only contract', () => {
 
     // editing actions are genuinely absent
     expect((ref.current as Record<string, unknown>).startEdit).toBeUndefined()
-    expect((ref.current as Record<string, unknown>).cancelEdit).toBeUndefined()
-    expect((ref.current as Record<string, unknown>).confirmEdit).toBeUndefined()
+    expect((ref.current as Record<string, unknown>).cancel).toBeUndefined()
+    expect((ref.current as Record<string, unknown>).confirm).toBeUndefined()
   })
 })
 
@@ -618,6 +623,277 @@ describe('JsonEditor — structural mutations', () => {
   })
 })
 
+describe('JsonEditor — §17 onUpdate event discriminant', () => {
+  test('onUpdate receives event:"delete" with the node identity', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => true as const)
+    render(
+      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onUpdate={onUpdate} showIconTooltips />
+    )
+
+    const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
+    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ event: 'delete', key: 'x', path: ['x'], newData: { y: 'bye' } })
+    )
+  })
+
+  test('onUpdate receives event:"add" with the new node position and value', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => true as const)
+    const { container } = render(
+      <JsonEditor data={{ existing: 'value' }} setData={noop} onUpdate={onUpdate} showIconTooltips />
+    )
+
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(newKeyInput)
+    await user.type(newKeyInput, 'fresh{Enter}')
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'add',
+        key: 'fresh',
+        path: ['fresh'],
+        newValue: null,
+        newData: { existing: 'value', fresh: null },
+        // The payload describes the PRE-add state + the insertion position:
+        // value/size unset, and parentData/fullData are the pre-add document
+        // (NOT including the new `fresh` key).
+        value: undefined,
+        size: null,
+        parentData: { existing: 'value' },
+        fullData: { existing: 'value' },
+      })
+    )
+  })
+
+  test('onUpdate receives event:"rename" with the OLD identity and newKey', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => true as const)
+    render(<JsonEditor data={{ a: 1, oldName: 2, c: 3 }} setData={noop} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('oldName'))
+    const keyInput = screen.getByDisplayValue('oldName') as HTMLInputElement
+    await user.clear(keyInput)
+    await user.type(keyInput, 'newName{Enter}')
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'rename',
+        key: 'oldName',
+        path: ['oldName'],
+        newKey: 'newName',
+        newData: { a: 1, newName: 2, c: 3 },
+      })
+    )
+  })
+
+  // Move arrives as `event: 'move'` with `newPath` + the source-path NodeData,
+  // but exercising it needs a full drag-drop simulation — deferred with the
+  // rest of the DnD test gap (#270).
+  test.todo('onUpdate receives event:"move" on a drag-drop (needs DnD simulation — #270)')
+})
+
+describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
+  // A session ends in confirm* (committed) or cancel* (closed without a commit).
+  test('value edit: startEdit → confirmEdit on a real change', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'world{Enter}')
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'confirmEdit'])
+  })
+
+  test('value edit: startEdit → cancelEdit on a no-op confirm (no change)', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    // Confirm without changing anything.
+    await user.type(screen.getByRole('textbox'), '{Enter}')
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'cancelEdit'])
+  })
+
+  test('value edit: startEdit → cancelEdit on Escape', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    await user.type(screen.getByRole('textbox'), 'abc{Escape}')
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'cancelEdit'])
+  })
+
+  test('key rename: startRename → confirmRename with old + new keys', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ a: 1, oldName: 2 }} setData={noop} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('oldName'))
+    const keyInput = screen.getByDisplayValue('oldName') as HTMLInputElement
+    await user.clear(keyInput)
+    await user.type(keyInput, 'newName{Enter}')
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startRename', 'confirmRename'])
+    const confirm = onEditEvent.mock.calls.map(([e]) => e)[1]
+    expect(confirm).toMatchObject({
+      event: 'confirmRename',
+      key: 'oldName',
+      path: ['oldName'],
+      oldKey: 'oldName',
+      newKey: 'newName',
+    })
+  })
+
+  test('add (object): startAdd → confirmAdd; and startAdd → cancelAdd on Escape', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const { container } = render(
+      <JsonEditor data={{ existing: 'value' }} setData={noop} onEditEvent={onEditEvent} showIconTooltips />
+    )
+
+    // Open + confirm
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(newKeyInput)
+    await user.type(newKeyInput, 'fresh{Enter}')
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startAdd', 'confirmAdd'])
+
+    // Open + cancel
+    onEditEvent.mockClear()
+    await user.click(screen.getByTitle('Add'))
+    const reopened = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.type(reopened, '{Escape}')
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startAdd', 'cancelAdd'])
+  })
+
+  test('add (object): a rejected confirm still terminates the session with cancelAdd', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const onUpdate = jest.fn(() => false as const)
+    const { container } = render(
+      <JsonEditor
+        data={{ existing: 'value' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        onEditEvent={onEditEvent}
+        showIconTooltips
+      />
+    )
+
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(newKeyInput)
+    await user.type(newKeyInput, 'fresh{Enter}')
+
+    // The rejected add must close its startAdd session with cancelAdd — not
+    // leave an orphaned startAdd (matches the value-edit reject lifecycle).
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startAdd', 'cancelAdd'])
+  })
+
+  test('delete fires a single "delete" event', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(
+      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onEditEvent={onEditEvent} showIconTooltips />
+    )
+
+    const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
+    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['delete'])
+    expect(onEditEvent.mock.calls[0][0]).toMatchObject({ event: 'delete', key: 'x', path: ['x'] })
+  })
+
+  test('Tab-commit fires confirmEdit then startEdit(next) — no stray cancelEdit', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ a: 'x', b: 'y' }} setData={noop} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('"x"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'changed{Tab}')
+
+    // The commit is async (`.then`), so `confirmEdit` lands after the synchronous
+    // advance to the next node — order is start, start(next), confirm. The
+    // load-bearing guard: a `confirmEdit` fired and there's NO stray `cancelEdit`
+    // (which would mean the stale cancelOp reverted the just-committed value).
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toContain('confirmEdit')
+    expect(seq.filter((e) => e === 'startEdit')).toHaveLength(2)
+    expect(seq).not.toContain('cancelEdit')
+  })
+
+  test('node-switch fires cancelEdit for the displaced session before startEdit for the new one', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(
+      <JsonEditor data={{ a: 'first', b: 'second' }} setData={noop} onEditEvent={onEditEvent} />
+    )
+
+    // Open edit on `a`, then click Edit on `b` while `a` is still active.
+    await user.dblClick(screen.getByText('"first"'))
+    // Typed-but-uncommitted text on `a`. The displaced session must report as
+    // a cancel (not a silent close).
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'edited-a')
+    await user.dblClick(screen.getByText('"second"'))
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'cancelEdit', 'startEdit'])
+    expect(onEditEvent.mock.calls[0][0]).toMatchObject({ key: 'a' })
+    expect(onEditEvent.mock.calls[1][0]).toMatchObject({ event: 'cancelEdit', key: 'a' })
+    expect(onEditEvent.mock.calls[2][0]).toMatchObject({ event: 'startEdit', key: 'b' })
+  })
+
+  test('editorRef.cancel fires cancelEdit and clears the local edit buffer', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        onEditEvent={onEditEvent}
+        editorRef={ref}
+      />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'typed-but-not-committed')
+
+    // External cancel via the imperative handle.
+    act(() => {
+      ref.current!.cancel()
+    })
+
+    // The lifecycle event fires.
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'cancelEdit'])
+
+    // And the local buffer was reverted — re-opening the node shows the
+    // original value, not the typed-but-uncommitted text.
+    await user.dblClick(screen.getByText('"hello"'))
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('hello')
+  })
+})
+
 describe('JsonEditor — restrictions and callbacks', () => {
   test('restrictEdit hides the edit button and blocks dblClick', async () => {
     const user = userEvent.setup()
@@ -661,7 +937,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.queryByTitle('Add')).toBeNull()
   })
 
-  test('onUpdate returning false reverts the edit and shows an error', async () => {
+  test('onUpdate returning false reverts the display and shows an error, without calling setData', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const onUpdate = jest.fn(() => false as const)
@@ -674,16 +950,81 @@ describe('JsonEditor — restrictions and callbacks', () => {
 
     // onUpdate ran with the attempted new value
     expect(onUpdate).toHaveBeenCalledTimes(1)
-    // Revert path: setData fired with the ORIGINAL data, not the typed one
-    expect(setData).toHaveBeenCalledTimes(1)
-    expect(setData).toHaveBeenCalledWith({ x: 'hello' })
-    // The default error message is shown in the editor's error slug
+    // A reject never commits — nothing was applied, so the editor must NOT write
+    // back to external state (writing the pre-edit snapshot here could clobber a
+    // newer commit that landed while an async onUpdate was in flight).
+    expect(setData).not.toHaveBeenCalled()
+    // The node still reverts its own display, and the default error shows.
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+    expect(screen.queryByText('"rejected"')).toBeNull()
     expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
   })
 
-  test('onUpdate returning a custom error string surfaces that string', async () => {
+  test('onUpdate returning false on a delete shows the delete-specific message', async () => {
     const user = userEvent.setup()
-    const onUpdate = jest.fn(() => 'No can do')
+    const onUpdate = jest.fn(() => false as const)
+    render(
+      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onUpdate={onUpdate} showIconTooltips />
+    )
+
+    const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
+    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+
+    // Event-specific message, matching the DELETE_ERROR code routed to onError
+    expect(screen.getByText('Delete unsuccessful')).toBeInTheDocument()
+  })
+
+  test('onUpdate returning false on an add shows the add-specific message', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => false as const)
+    const { container } = render(
+      <JsonEditor data={{ existing: 'value' }} setData={noop} onUpdate={onUpdate} showIconTooltips />
+    )
+
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(newKeyInput)
+    await user.type(newKeyInput, 'fresh{Enter}')
+
+    // Event-specific message, matching the ADD_ERROR code routed to onError
+    expect(screen.getByText('Adding node unsuccessful')).toBeInTheDocument()
+  })
+
+  test('a rejected to-enum type change reverts the type selector (not stuck on the enum)', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => false as const)
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        restrictTypeSelection={['string', { enum: 'Color', values: ['red', 'green', 'blue'] }]}
+      />
+    )
+
+    // Enter edit mode on the value — the type <select> appears
+    await user.dblClick(screen.getByText('"hello"'))
+    const select = screen.getByRole('combobox') as HTMLSelectElement
+    expect(select.value).toBe('string')
+
+    // Switch the type to the enum. 'hello' isn't a valid Color, so the wrapper
+    // attempts a commit (the first enum value) which onUpdate rejects.
+    await user.selectOptions(select, 'Color')
+    expect(onUpdate).toHaveBeenCalled()
+
+    // The rejection reverts the value and closes the edit session.
+    await waitFor(() => expect(screen.queryByRole('combobox')).toBeNull())
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+
+    // Re-open editing: the type selector must reflect the reverted value
+    // (`string`), not stay stuck on the enum it was synchronously set to.
+    await user.dblClick(screen.getByText('"hello"'))
+    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('string')
+  })
+
+  test('onUpdate returning { error: string } surfaces that string', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => ({ error: 'No can do' }))
     render(<JsonEditor data={{ x: 'hello' }} setData={noop} onUpdate={onUpdate} />)
 
     await user.dblClick(screen.getByText('"hello"'))
@@ -694,10 +1035,51 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.getByText('No can do')).toBeInTheDocument()
   })
 
-  test("onUpdate returning ['value', override] passes the override straight to setData", async () => {
+  test('onUpdate returning { error: JsonEditorError } surfaces the message', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => ({
+      error: { code: 'UPDATE_ERROR' as const, message: 'Object-form error' },
+    }))
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'nope{Enter}')
+
+    expect(screen.getByText('Object-form error')).toBeInTheDocument()
+  })
+
+  test('onUpdate returning { error: "" } (empty message) still rejects — reverts + fires onError', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    const onUpdate = jest.fn(() => ['value', { x: 'OVERRIDDEN' }] as ['value', { x: string }])
+    const onError = jest.fn()
+    const onUpdate = jest.fn(() => ({ error: '' }))
+    render(
+      <JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} onError={onError} />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'rejected{Enter}')
+
+    // An empty error string is a rejection, not a silent success: no commit, the
+    // display reverts, and onError fires (with the empty message).
+    expect(setData).not.toHaveBeenCalled()
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: expect.objectContaining({ code: 'UPDATE_ERROR', message: '' }),
+      })
+    )
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+    expect(screen.queryByText('"rejected"')).toBeNull()
+  })
+
+  test('onUpdate returning { value } passes the override straight to setData', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(() => ({ value: { x: 'OVERRIDDEN' } }))
     render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
 
     await user.dblClick(screen.getByText('"hello"'))
@@ -708,6 +1090,65 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(setData).toHaveBeenCalledTimes(1)
     // The user's typed value is discarded; the override wins
     expect(setData).toHaveBeenCalledWith({ x: 'OVERRIDDEN' })
+  })
+
+  test('onUpdate returning null silently cancels: no commit, no error, input reverts', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(() => null)
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'discarded{Enter}')
+
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+    // Silent abort: no commit...
+    expect(setData).not.toHaveBeenCalled()
+    // ...no error message...
+    expect(screen.queryByText('Update unsuccessful')).toBeNull()
+    // ...and the input reverts to the original (not the typed-but-cancelled value)
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+    expect(screen.queryByText('"discarded"')).toBeNull()
+  })
+
+  test('a rejected edit reverts the displayed value (independent of the error message)', async () => {
+    const user = userEvent.setup()
+    // setData is a no-op, so `data` never changes — the revert here is the
+    // explicit display reset, not an effect riding a data change.
+    const onUpdate = jest.fn(() => false as const)
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'rejected{Enter}')
+
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+    expect(screen.queryByText('"rejected"')).toBeNull()
+  })
+
+  test('onUpdate receives event:"edit" with the node identity and new value', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => true as const)
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'world{Enter}')
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'edit',
+        key: 'x',
+        path: ['x'],
+        value: 'hello',
+        newValue: 'world',
+        newData: { x: 'world' },
+      })
+    )
   })
 
   test('async onUpdate resolving with true commits the edit', async () => {
@@ -726,7 +1167,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(setData).toHaveBeenCalledWith({ x: 'hi' })
   })
 
-  test('async onUpdate resolving with false reverts and shows an error', async () => {
+  test('async onUpdate resolving with false reverts the display and shows an error, without calling setData', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const onUpdate = jest.fn(async () => false as const)
@@ -737,7 +1178,11 @@ describe('JsonEditor — restrictions and callbacks', () => {
     await user.clear(input)
     await user.type(input, 'hi{Enter}')
 
-    expect(setData).toHaveBeenCalledWith({ x: 'hello' })
+    // A reject — even an async one — never writes to external state. (This is
+    // what prevents a slow rejection from clobbering a newer commit that landed
+    // while it was in flight.)
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
     expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
   })
 

@@ -40,7 +40,9 @@ import {
   type CollectionKey,
   type JsonData,
   type OnEditEventFunction,
+  type EditEvent,
   type EditingState,
+  type BuildNodeDataFromPathRef,
 } from '../types'
 import { editingStatesEqual, isDescendantOf, pathsEqual } from '../utils/pathTools'
 
@@ -52,11 +54,18 @@ export interface EditingStateBundle {
 }
 
 interface StartEditOptions {
-  mode?: 'key' | 'value'
+  mode?: 'key' | 'value' | 'add'
   cancelOp?: () => void
   // Imperative (handle-driven) edit — overrides `restrictEdit`. See
   // `EditingState.force`.
   force?: boolean
+}
+
+// The lifecycle event a session-mode transition fires (start / cancel).
+const eventForMode = (mode: EditingState['mode'], phase: 'start' | 'cancel'): EditEvent['event'] => {
+  if (mode === 'key') return phase === 'start' ? 'startRename' : 'cancelRename'
+  if (mode === 'add') return phase === 'start' ? 'startAdd' : 'cancelAdd'
+  return phase === 'start' ? 'startEdit' : 'cancelEdit'
 }
 
 export interface EditingStore {
@@ -64,7 +73,11 @@ export interface EditingStore {
   getSnapshot: () => EditingStateBundle
   getServerSnapshot: () => EditingStateBundle
   startEdit: (path: CollectionKey[], options?: StartEditOptions) => void
+  /** Abort the active session — fires `onEditEvent` cancel* (true user/external cancel). */
   cancelEdit: () => void
+  /** Close the active session silently — no event. Used by commit flows
+   *  (the terminal event is fired by the node, from the commit outcome). */
+  closeEdit: () => void
   setTabDirection: (dir: TabDirection) => void
   recordPreviousEdit: (path: CollectionKey[]) => void
   setPreviousValue: (value: JsonData | null) => void
@@ -80,15 +93,24 @@ const initialState: EditingStateBundle = {
 }
 
 const createEditingStore = (
-  onEditEventRef: React.RefObject<OnEditEventFunction | undefined>
+  onEditEventRef: React.RefObject<OnEditEventFunction | undefined>,
+  buildNodeDataFromPathRef: BuildNodeDataFromPathRef
 ): EditingStore => {
   let state = initialState
   const listeners = new Set<() => void>()
 
-  // cancelOp fires imperatively before transitioning to a new edit, letting the
-  // previously-editing node's UI reset. Held in a closure var (not state) so
-  // installing/clearing it never notifies subscribers.
+  // cancelOp fires imperatively when a session ends without a confirm — node
+  // switch, explicit cancel (Esc/✗), or external cancel (search reset,
+  // `editorRef.cancelEdit`) — so the previously-editing node can reset its
+  // local UI buffers. Held in a closure var (not state) so installing/clearing
+  // it never notifies subscribers.
   let cancelOp: (() => void) | null = null
+
+  // Re-entrancy guard. A registered cancelOp may itself call cancelEdit
+  // (some nodes route their user-cancel handler through the store); the
+  // recursive call no-ops so the outer flow owns the single state-clear and
+  // single cancel* emission.
+  let cancelling = false
 
   const emit = () => listeners.forEach((listener) => listener())
 
@@ -100,26 +122,81 @@ const createEditingStore = (
     emit()
   }
 
+  // Fire an `onEditEvent` for a session at `path`, building its `NodeData` from
+  // the live document. No-op if there's no consumer or the accessor isn't ready.
+  const fireEditEvent = (path: CollectionKey[], event: EditEvent['event']) => {
+    if (!onEditEventRef.current) return
+    const nodeData = buildNodeDataFromPathRef.current?.(path)
+    if (nodeData) onEditEventRef.current({ ...nodeData, event } as EditEvent)
+  }
+
   const startEdit = (path: CollectionKey[], options?: StartEditOptions) => {
     const mode = options?.mode ?? 'value'
     const next: EditingState = { path, mode, force: options?.force }
+    const prev = state.currentlyEditingElement
+    const isSwitch = prev !== null && !editingStatesEqual(prev, next)
 
-    if (cancelOp) cancelOp()
+    // Run the outgoing session's UI cleanup before installing the new one.
+    // If that cancelOp itself routed through `cancelEdit` (some nodes do),
+    // it will have cleared state and fired the cancel* already — the
+    // post-check below avoids a double-fire.
+    const op = cancelOp
+    cancelOp = null
+    if (op) op()
+
     cancelOp = options?.cancelOp ?? null
+
+    // Fire cancel* for the displaced session if the cancelOp didn't already
+    // tear it down. `state.currentlyEditingElement` still pointing at `prev`
+    // means no recursive cancelEdit fired the event.
+    if (
+      isSwitch &&
+      state.currentlyEditingElement !== null &&
+      editingStatesEqual(state.currentlyEditingElement, prev)
+    ) {
+      fireEditEvent(prev.path, prev.mode === 'key' ? 'cancelRename' : 'cancelEdit')
+    }
 
     if (!editingStatesEqual(state.currentlyEditingElement, next)) {
       commit({ ...state, currentlyEditingElement: next })
     }
 
-    onEditEventRef.current?.(path, mode === 'key')
+    fireEditEvent(path, eventForMode(mode, 'start'))
   }
 
+  // True cancel (user Esc/✗, node switch, `editorRef.cancel`, search reset): run
+  // the session's UI cleanup (`cancelOp`), close the session, AND fire cancel*.
+  // Snapshot `prev` before nulling so the event uses the prior path/mode. The
+  // `cancelling` guard makes a reentrant cancelEdit (a `cancelOp` that itself
+  // routes back through cancelEdit) a no-op rather than a double-fire.
   const cancelEdit = () => {
+    if (cancelling) return
+    const prev = state.currentlyEditingElement
+    cancelling = true
+    try {
+      const op = cancelOp
+      cancelOp = null
+      if (op) op()
+      if (prev !== null) {
+        if (state.currentlyEditingElement !== null) {
+          commit({ ...state, currentlyEditingElement: null })
+        }
+        fireEditEvent(prev.path, eventForMode(prev.mode, 'cancel'))
+      }
+    } finally {
+      cancelling = false
+    }
+  }
+
+  // Silent close for commit flows — clears state + cancelOp, fires NO event (the
+  // node fires the terminal confirm*/cancel* from the commit outcome). Clearing
+  // cancelOp is load-bearing: a Tab-commit closes then `startEdit(next)`, which
+  // would otherwise run the stale cancelOp and revert the just-committed value.
+  const closeEdit = () => {
     cancelOp = null
     if (state.currentlyEditingElement !== null) {
       commit({ ...state, currentlyEditingElement: null })
     }
-    onEditEventRef.current?.(null, false)
   }
 
   const setTabDirection = (dir: TabDirection) => {
@@ -149,6 +226,7 @@ const createEditingStore = (
     getServerSnapshot: () => state,
     startEdit,
     cancelEdit,
+    closeEdit,
     setTabDirection,
     recordPreviousEdit,
     setPreviousValue,
@@ -163,9 +241,14 @@ const EditingProviderContext = createContext<EditingStore | null>(null)
 interface EditingProps {
   children: React.ReactNode
   onEditEvent?: OnEditEventFunction
+  buildNodeDataFromPathRef: BuildNodeDataFromPathRef
 }
 
-export const EditingProvider = ({ children, onEditEvent }: EditingProps) => {
+export const EditingProvider = ({
+  children,
+  onEditEvent,
+  buildNodeDataFromPathRef,
+}: EditingProps) => {
   // Keep the latest `onEditEvent` in a ref so an inline consumer callback
   // doesn't force the store to be recreated. Written during render but only
   // ever *read* inside actions (event time), so this is safe.
@@ -173,9 +256,11 @@ export const EditingProvider = ({ children, onEditEvent }: EditingProps) => {
   onEditEventRef.current = onEditEvent
 
   // The store is created once and its identity never changes, so the context
-  // value is stable — `useContext` alone never triggers a re-render.
+  // value is stable — `useContext` alone never triggers a re-render. Both refs
+  // are read only at event time, after `Editor` has populated the accessor.
   const storeRef = useRef<EditingStore | null>(null)
-  if (storeRef.current === null) storeRef.current = createEditingStore(onEditEventRef)
+  if (storeRef.current === null)
+    storeRef.current = createEditingStore(onEditEventRef, buildNodeDataFromPathRef)
 
   return (
     <EditingProviderContext.Provider value={storeRef.current}>
@@ -231,6 +316,7 @@ export const useEditing = () => {
       ...bundle,
       startEdit: store.startEdit,
       cancelEdit: store.cancelEdit,
+      closeEdit: store.closeEdit,
       setTabDirection: store.setTabDirection,
       recordPreviousEdit: store.recordPreviousEdit,
       setPreviousValue: store.setPreviousValue,

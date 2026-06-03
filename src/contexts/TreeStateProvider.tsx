@@ -15,17 +15,29 @@ import React from 'react'
 import { EditingProvider } from './EditingProvider'
 import { CollapseProvider } from './CollapseProvider'
 import { DragSourceProvider } from '../hooks/DragSourceProvider'
-import { type OnEditEventFunction, type OnCollapseFunction } from '../types'
+import {
+  type OnEditEventFunction,
+  type OnCollapseFunction,
+  type BuildNodeDataFromPathRef,
+} from '../types'
 
 interface TreeStateProps {
   children: React.ReactNode
   onEditEvent?: OnEditEventFunction
   onCollapse?: OnCollapseFunction
+  // Bridges live `NodeData` construction from the inner `Editor` (which owns the
+  // data) into these provider contexts, which only know a node's path.
+  buildNodeDataFromPathRef: BuildNodeDataFromPathRef
 }
 
-export const TreeStateProvider = ({ children, onEditEvent, onCollapse }: TreeStateProps) => (
-  <EditingProvider onEditEvent={onEditEvent}>
-    <CollapseProvider onCollapse={onCollapse}>
+export const TreeStateProvider = ({
+  children,
+  onEditEvent,
+  onCollapse,
+  buildNodeDataFromPathRef,
+}: TreeStateProps) => (
+  <EditingProvider onEditEvent={onEditEvent} buildNodeDataFromPathRef={buildNodeDataFromPathRef}>
+    <CollapseProvider onCollapse={onCollapse} buildNodeDataFromPathRef={buildNodeDataFromPathRef}>
       <DragSourceProvider>{children}</DragSourceProvider>
     </CollapseProvider>
   </EditingProvider>
