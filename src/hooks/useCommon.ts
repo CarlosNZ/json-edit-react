@@ -8,7 +8,7 @@ import { useEditingSelector, useEditingStore } from '../contexts'
 import {
   type CollectionNodeProps,
   type ErrorString,
-  type JerError,
+  type JsonEditorError,
   type ValueData,
   type ValueNodeProps,
   type JsonData,
@@ -25,7 +25,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     data,
     nodeData: incomingNodeData,
     parentData,
-    onEdit,
+    onRename,
     onError: onErrorCallback,
     getLatestData,
     showErrorMessages,
@@ -81,7 +81,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const onErrorArgsRef = useRef({ data, name, path })
   onErrorArgsRef.current = { data, name, path }
   const onError = useCallback(
-    (error: JerError, errorValue: JsonData | string) => {
+    (error: JsonEditorError, errorValue: JsonData | string) => {
       showError(error.message)
       if (onErrorCallback) {
         const { data: liveData, name: liveName, path: livePath } = onErrorArgsRef.current
@@ -106,18 +106,17 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     cancelEdit()
     if (name === newKey) return
     if (!parentData) return
-    const parentPath = path.slice(0, -1)
     const existingKeys = Object.keys(parentData)
     if (existingKeys.includes(newKey)) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
       return
     }
 
-    // Need to update data in array form to preserve key order
-    const newData = Object.fromEntries(
-      Object.entries(parentData).map(([key, val]) => (key === name ? [newKey, val] : [key, val]))
-    )
-    onEdit(newData, parentPath).then((error) => {
+    // A rename is a first-class `event: 'rename'` update — `onRename` rebuilds
+    // the parent (preserving key order) and commits the whole document.
+    onRename(path, newKey).then((error) => {
+      // `false` means the consumer's `onUpdate` returned `null` (silent cancel);
+      // a non-empty string is a real error to surface.
       if (error) {
         onError({ code: 'UPDATE_ERROR', message: error }, newKey as ValueData)
       }

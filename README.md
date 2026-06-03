@@ -180,10 +180,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | ----------------- | ----------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `data`            | `object\|array`         | none    | The data to be displayed / edited                                                                                                   |
 | `setData`         | `object\|array => void` | none    | Method to update your `data` object. **Required.** See [Managing state](#managing-state) below for additional notes.                |
-| `onUpdate`        | `UpdateFunction`        | none    | A function to run whenever a value is **updated** (edit, delete *or* add) in the editor. See [Update functions](#update-functions). |
-| `onEdit`          | `UpdateFunction`        | none    | A function to run whenever a value is **edited**.                                                                                   |
-| `onDelete`        | `UpdateFunction`        | none    | A function to run whenever a value is **deleted**.                                                                                  |
-| `onAdd`           | `UpdateFunction`        | none    | A function to run whenever a new property is **added**.                                                                             |
+| `onUpdate`        | `UpdateFunction`        | none    | A function to run whenever a value is changed in the editor — edit, add, delete, rename *or* move. Branch on `event` to handle each. See [Update functions](#update-functions). |
 | `onChange`        | `OnChangeFunction`      | none    | A function to modify/constrain user input as they type — see [OnChange functions](#onchange-function).                              |
 | `onError`         | `OnErrorFunction`       | none    | A function to run whenever the component reports an error — see [OnErrorFunction](#onerror-function).                               |
 | `allowClipboard`  | `boolean`               | `true`  | Enable or disable the "Copy to clipboard" button in the UI.                                                                         |
@@ -303,7 +300,7 @@ More detail [below](#external-control-1)
 
 You manage the `data` state yourself outside this component and pass in a `setData` method, which is called internally to update your `data`. Both `data` and `setData` are required. If you only want a read-only display, use [`JsonViewer`](#viewer-mode) — it takes the same display props but doesn't require `setData` and exposes no edit affordances.
 
-The [Update functions](#update-functions) (`onUpdate` / `onEdit` / `onDelete` / `onAdd`) are not an alternative to `setData` — they are for side effects, validation, or mutating the value before it reaches `setData`. Trying to drive your own state from them leads to drift between the internal display state and your external copy.
+The [Update function](#update-functions) (`onUpdate`) is not an alternative to `setData` — it's for side effects, validation, or mutating the value before it reaches `setData`. Trying to drive your own state from them leads to drift between the internal display state and your external copy.
 
 > [!TIP]
 > Update functions should ideally be used only for implementing side effects (e.g. notifications), validation, or mutating the data before setting it with `setData`.
@@ -318,7 +315,7 @@ import { JsonViewer } from 'json-edit-react'
 <JsonViewer data={data} theme={someTheme} />
 ```
 
-`JsonViewer` is a thin wrapper over `JsonEditor` that locks all edit, add, delete and drag operations off. It accepts the same display, theming, keyboard, search, collapse, localisation and custom-node props, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), and the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`) — none of which are meaningful in a read-only context. Its `editorRef` handle (`JsonViewerHandle`) is collapse-only.
+`JsonViewer` is a thin wrapper over `JsonEditor` that locks all edit, add, delete and drag operations off. It accepts the same display, theming, keyboard, search, collapse, localisation and custom-node props, but drops `setData`, the update callbacks (`onUpdate` / `onChange`), and the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`) — none of which are meaningful in a read-only context. Its `editorRef` handle (`JsonViewerHandle`) is collapse-only.
 
 If you instead need an editor that *sometimes* locks editing (e.g. based on user permissions), keep using `<JsonEditor>` and toggle the relevant `restrict*` props dynamically — `restrictEdit={!canEdit}` etc.
 
@@ -344,44 +341,59 @@ const [user, setUser] = useState<User>(initialUser)
 />
 ```
 
-The generic flows through `data`, `setData`, the `onUpdate` / `onEdit` / `onDelete` / `onAdd` / `onChange` / `onError` callbacks (root data slots only — per-node `value` stays `unknown`), and `NodeData.fullData` inside `FilterFunction`s. Defaults to `JsonData` (≈ `unknown`) so untyped consumers don't need to change anything.
+The generic flows through `data`, `setData`, the `onUpdate` / `onChange` / `onError` callbacks (root data slots only — per-node `value` stays `unknown`), and `NodeData.fullData` inside `FilterFunction`s. Defaults to `JsonData` (≈ `unknown`) so untyped consumers don't need to change anything.
 
 > [!NOTE]
 > `T` describes the data you *provide*. It is an input contract, not a runtime invariant — if the user can freely restructure the JSON, post-edit values may not conform to `T`. Pair with `restrictAdd` / `restrictDelete` / `restrictTypeSelection` to lock the shape, or validate inside `onUpdate` if you depend on it.
 
 ## Update Functions
 
-A **callback** to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update some external state, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema.
+A single **`onUpdate`** callback runs whenever the data changes in the editor — for *every* kind of change. You might wish to use this to update some external state, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema. (It is *not* an alternative to `setData` — see [Managing state](#managing-state).)
 
-If you want the same function for all updates, then just the `onUpdate` prop is sufficient. However, should you require something different for **editing**, **deletion** and **addition**, then you can provide separate Update functions via the `onEdit`, `onDelete` and `onAdd` props.
-
-The function will receive the following object as a parameter:
+The function receives a single object, built on the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with an **`event`** discriminant plus the change-specific fields:
 
 ```js
 {
-    newData,      // data state after update
-    currentData,  // data state before update 
-    newValue,     // the new value of the property being updated
-    currentValue, // the current value of the property being updated
-    name,         // name of the property being updated
-    path          // full path to the property being updated,
-                  //   as an array of property keys
-                  //   (e.g. [ "user", "friends", 1, "name" ])
-                  //   (equivalent to "user.friends[1].name")
+    // ...standard node data (key, path, value, fullData, ...)
+    //    describing the node BEFORE the change — for `add`, this is the new
+    //    node's position, with `value` unset
+    event,        // 'edit' | 'add' | 'delete' | 'rename' | 'move'
+    newData,      // the whole document AFTER the change
+    // ...plus one event-specific field:
+    newValue,     // the new value           (event: 'edit' | 'add')
+    newKey,       // the new key             (event: 'rename')
+    newPath,      // the destination path    (event: 'move')
 }
 ```
-The function can return nothing (in which case the data is updated normally), or a value to represent success/failure, error value, or modified data. The return value can be one of the following, and handled accordingly:
-- `true` / `void` / `undefined`: data continues update as normal
-- `false`: considers the update to be an error, so data is not updated (reverts to previous value), and a generic error message is displayed in the UI
-- `string`: also considered an error, so no data update, but the UI error message will be your provided string
-- `[ "value", <value> ]`: tells the component to use the returned `<value>` instead of the input data. You might use this to automatically modify user input -- for example, sorting an array, or inserting a timestamp field into an object.
-- `[ "error", <value> ]`: same as `string`, but in the longer tuple format.
+
+Branch on `event` to handle each operation:
+
+```js
+onUpdate={(props) => {
+  switch (props.event) {
+    case 'edit':   /* props.newValue */ break
+    case 'rename': /* props.newKey   */ break
+    case 'move':   /* props.newPath  */ break
+    case 'add':    /* props.newValue */ break
+    case 'delete': break
+  }
+}}
+```
+
+The function can return nothing (the change proceeds as normal), or a value to accept/reject/transform/cancel the change. The return value can be one of:
+- `true` / `void` / `undefined`: the change proceeds as normal
+- `false`: treats the change as an error — the data is not updated (reverts to the previous value) and a generic error message is displayed in the UI
+- `null`: **silently cancels** the change — no update, and *no* error message (unlike `false`). Use this to quietly abort a change that isn't an error
+- `{ value: <value> }`: use the returned `<value>` instead of the input data. You might use this to automatically modify user input — for example, sorting an array, or inserting a timestamp field into an object
+- `{ error: <string> }` (or `{ error: { code, message } }`): treats the change as an error, with your provided message shown in the UI
+
+(Any of the above may also be returned from an `async` function / `Promise`.)
 
 ### OnChange Function
 
-Similar to the Update functions, the `onChange` function is executed as the user input changes. You can use this to restrict or constrain user input -- e.g. limiting numbers to positive values, or preventing line breaks in strings. The function *must* return a value in order to update the user input field, so if no changes are to be made, just return it unmodified.
+Similar to the Update function, the `onChange` function is executed as the user input changes. You can use this to restrict or constrain user input -- e.g. limiting numbers to positive values, or preventing line breaks in strings. The function *must* return a value in order to update the user input field, so if no changes are to be made, just return it unmodified.
 
-The input object is similar to the Update function input, but with no `newData` field (since this operation occurs before the data is updated).
+The input is the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with the in-progress `newValue` added. (Since this runs *before* the data is committed, there's no `newData` — `value` is the current value, `fullData` the current document.)
 
 <details>
 <summary>
@@ -392,16 +404,16 @@ The input object is similar to the Update function input, but with no `newData` 
 - Restrict "age" inputs to positive values up to 100:  
   ```js
   // in <JsonEditor /> props
-  onChange = ({ newValue, name }) => {
-        if (name === "age" && newValue < 0) return 0;
-        if (name === "age" && newValue > 100) return 100;
+  onChange = ({ newValue, key }) => {
+        if (key === "age" && newValue < 0) return 0;
+        if (key === "age" && newValue > 100) return 100;
         return newValue
       }
   ```
 - Only allow alphabetical or whitespace input for "name" field (including no line breaks):  
   ```js
-  onChange = ({ newValue, name }) => {
-      if (name === 'name' && typeof newValue === "string")
+  onChange = ({ newValue, key }) => {
+      if (key === 'name' && typeof newValue === "string")
         return newValue.replace(/[^a-zA-Z\s]|\n|\r/gm, '');
       return newValue;
     }
@@ -487,8 +499,8 @@ return
           description: errorMessage,
           status: 'error',
         })
-        // This string returned to and displayed in json-edit-react UI
-        return 'JSON Schema error'
+        // This message is returned to and displayed in the json-edit-react UI
+        return { error: 'JSON Schema error' }
       }
     }}
   { ...otherProps } />
@@ -1363,7 +1375,8 @@ A few helper functions, components and types that might be useful in your own im
 - `ThemeInput`: input type for the `theme` prop
 - `JsonEditorProps<T>`: all input props for the Json Editor component. Generic on the data type — see [Typed data](#typed-data).
 - `JsonData`: main `data` object -- any valid JSON structure. Used as the default for `T`.
-- [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`OnCopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
+- [`UpdateFunction`](#update-functions), [`UpdateResult`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`OnCopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
+- `JsonEditorError` / `JsonEditorErrorCode`: the canonical error shape (`{ code, message }`) reported to [`onError`](#onerror-function) and accepted in an [`UpdateFunction`](#update-functions) `{ error }` return
 - [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref), [`StartEditOptions`](#imperative-handle-editorref): input types of the respective props
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `LocalisedString`: keys for the [`translations`](#localisation) object

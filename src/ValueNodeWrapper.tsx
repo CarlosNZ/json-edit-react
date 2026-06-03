@@ -94,36 +94,47 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
   // `updateValue` keeps a stable identity (it's handed to a custom node as
-  // `setValue`, and `path`'s identity churns every render), so it can't close
-  // over `value`/`name`/`path` — once `onChange` is stabilized upstream the
-  // closure would freeze. Read those from a ref-to-latest, and the live
-  // document from `getLatestData()`.
+  // `setValue`, and `nodeData`'s identity churns every render), so it can't
+  // close over `value`/`nodeData` — once `onChange` is stabilized upstream the
+  // closure would freeze. Read the in-progress value and the node's `NodeData`
+  // from refs-to-latest, and the live document from `getLatestData()`.
   const onChangeArgsRef = useRef({ value, name, path })
   onChangeArgsRef.current = { value, name, path }
+  const nodeDataRef = useRef(nodeData)
+  nodeDataRef.current = nodeData
   const updateValue = useCallback(
     (newValue: ValueData) => {
       if (!onChange) {
         setValue(newValue)
         return
       }
-      const { value: liveValue, name: liveName, path: livePath } = onChangeArgsRef.current
+      // Flat `NodeData` payload (§17): `value` is the current (pre-keystroke)
+      // value, `fullData` the live document; the rest comes from `nodeData`.
       const modifiedValue = onChange({
-        currentData: getLatestData(),
+        ...nodeDataRef.current,
+        value: onChangeArgsRef.current.value as ValueData,
+        fullData: getLatestData(),
         newValue,
-        currentValue: liveValue as ValueData,
-        name: liveName,
-        path: livePath,
       })
       setValue(modifiedValue)
     },
     [onChange, getLatestData]
   )
 
-  useEffect(() => {
+  // Snap the local edit buffer (`value` + `dataType`) back to the committed
+  // `data`. The effect handles `data` changing from ANY source (external
+  // `setData`, undo, a parent re-render); reject/cancel call it explicitly
+  // (below) since neither changes `data`, so a non-committing edit never leaves
+  // the input showing the typed-but-discarded value.
+  const revertToData = () => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
     setDataType(getDataType(data, customNodeData))
+  }
+
+  useEffect(() => {
+    revertToData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, error])
+  }, [data])
 
   const {
     CustomNode,
@@ -227,14 +238,16 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (enumType) {
       if (typeof value !== 'string' || !enumType.values.includes(value)) {
         const attempted = enumType.values[0]
-        onEdit(attempted, path).then((error) => {
-          if (error) {
+        onEdit(attempted, path).then((result) => {
+          if (result === false) revertToData()
+          else if (result) {
             // `attempted` rather than `newValue` — `newValue` is declared
             // further down in this function and is never reached on this
             // branch (we return at `setEnumType` below), so referencing it
             // from this callback would throw a TDZ ReferenceError.
-            onError({ code: 'UPDATE_ERROR', message: error }, attempted as JsonData)
+            onError({ code: 'UPDATE_ERROR', message: result }, attempted as JsonData)
             cancelEdit()
+            revertToData()
           }
         })
       }
@@ -251,10 +264,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
     )
     if (!['string', 'number', 'boolean'].includes(type)) cancelEdit()
-    onEdit(newValue, path).then((error) => {
-      if (error) {
-        onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
+    onEdit(newValue, path).then((result) => {
+      if (result === false) revertToData()
+      else if (result) {
+        onError({ code: 'UPDATE_ERROR', message: result }, newValue as JsonData)
         cancelEdit()
+        revertToData()
       } else setEnumType(null)
     })
   }
@@ -282,8 +297,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           newValue = value
       }
     }
-    onEdit(newValue, path).then((error) => {
-      if (error) onError({ code: 'UPDATE_ERROR', message: error }, newValue)
+    onEdit(newValue, path).then((result) => {
+      if (result === false) revertToData()
+      else if (result) {
+        onError({ code: 'UPDATE_ERROR', message: result }, newValue)
+        revertToData()
+      }
     })
   }
 
@@ -298,13 +317,15 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       setPreviousValue(null)
       return
     }
-    setValue(data)
+    revertToData()
     setPreviousValue(null)
   }
 
   const handleDelete = () => {
-    onDelete(value, path).then((error) => {
-      if (error) onError({ code: 'DELETE_ERROR', message: error }, value as ValueData)
+    // `result === false` is a silent cancel (consumer returned `null`); a
+    // non-empty string is a real error. Neither edits this node's value buffer.
+    onDelete(value, path).then((result) => {
+      if (result) onError({ code: 'DELETE_ERROR', message: result }, value as ValueData)
     })
   }
 

@@ -17,12 +17,12 @@ import {
   type JsonEditorProps,
   type FilterFunction,
   type InternalUpdateFunction,
+  type InternalRenameFunction,
   type NodeData,
   type SearchFilterFunction,
   type CollectionKey,
-  type UpdateFunctionReturn,
-  type UpdateFunction,
   type UpdateFunctionProps,
+  type SortFunction,
   type JsonData,
   type KeyboardControls,
   ValueData,
@@ -89,9 +89,6 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   setData,
   rootName = 'root',
   onUpdate = NOOP,
-  onEdit: srcEdit = onUpdate,
-  onDelete: srcDelete = onUpdate,
-  onAdd: srcAdd = onUpdate,
   onChange,
   onError,
   onEditEvent,
@@ -189,12 +186,14 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   translateRef.current = translate
   const rootNodeDataRef = useRef(nodeData)
   rootNodeDataRef.current = nodeData
-  const srcEditRef = useRef(srcEdit)
-  srcEditRef.current = srcEdit
-  const srcDeleteRef = useRef(srcDelete)
-  srcDeleteRef.current = srcDelete
-  const srcAddRef = useRef(srcAdd)
-  srcAddRef.current = srcAdd
+  // Single result-producer source (§17): one `onUpdate` for every operation.
+  const onUpdateRef = useRef(onUpdate)
+  onUpdateRef.current = onUpdate
+  const rootNameRef = useRef(rootName)
+  rootNameRef.current = rootName
+  // Assigned just after `sort` is defined below; lets the stable update
+  // handlers build a node's full `NodeData` payload with the live comparator.
+  const sortRef = useRef<SortFunction | undefined>(undefined)
 
   // Stable accessor for the latest whole document, so a memoized node can read
   // the live tree at event time (onChange `currentData`, Tab navigation) rather
@@ -210,36 +209,44 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   const onEditEventStable = useStableCallback(onEditEvent)
   const onCopyStable = useStableCallback(onCopy)
 
-  // Common method for handling data update. It runs the updated data through
-  // provided "onUpdate" function, then updates data state or returns error
-  // information accordingly
+  // The one commit path (§17, Category 2). Runs the single `onUpdate` and acts
+  // on the canonical `UpdateResult`: commit (`true`/`void`/`{ value }`), reject
+  // (`false`/`{ error }` → revert + surface a message), or silent cancel
+  // (`null` → no commit, no error). Resolves to the error message a node routes
+  // to `onError`, or `false` to tell the node a cancel happened (revert display).
   const handleEdit = useCallback(
-    async (updateMethod: UpdateFunction, input: UpdateFunctionProps) => {
-      const result = await updateMethod(input)
+    async (input: UpdateFunctionProps): Promise<string | void | false> => {
+      const result = await onUpdateRef.current(input)
 
-      if (result === true || result === undefined) {
-        setDataRef.current(input.newData)
+      // Reject (generic): revert to the pre-edit document, default message
+      if (result === false) {
+        setDataRef.current(input.fullData)
+        return translateRef.current('ERROR_UPDATE', rootNodeDataRef.current)
+      }
+
+      // Silent cancel: no commit, no error — signal the node to revert its display
+      if (result === null) return false
+
+      // Object form: reject with a custom error, or override the committed value
+      if (result && typeof result === 'object') {
+        if (result.error !== undefined) {
+          setDataRef.current(input.fullData)
+          // A bare string is the message verbatim; a JsonEditorError carries one
+          return typeof result.error === 'string' ? result.error : result.error.message
+        }
+        setDataRef.current(result.value !== undefined ? (result.value as JsonData) : input.newData)
         return
       }
 
-      const returnTuple = isUpdateReturnTuple(result) ? result : ['error', result]
-      const [type, resultValue] = returnTuple
-
-      if (type === 'error') {
-        setDataRef.current(input.currentData)
-        return resultValue === false
-          ? translateRef.current('ERROR_UPDATE', rootNodeDataRef.current)
-          : String(resultValue)
-      }
-
-      setDataRef.current(resultValue)
+      // true | void | undefined → commit
+      setDataRef.current(input.newData)
     },
     []
   )
 
   const onEdit: InternalUpdateFunction = useCallback(
     async (value, path) => {
-      const { currentData, newData, currentValue, newValue } = updateDataObject(
+      const { newData, currentValue, newValue } = updateDataObject(
         dataRef.current,
         path,
         value,
@@ -247,13 +254,11 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
       )
       if (currentValue === newValue) return
 
-      return await handleEdit(srcEditRef.current, {
-        currentData,
+      return await handleEdit({
+        ...buildNodeData(dataRef.current, path, rootNameRef.current, sortRef.current),
         newData,
-        currentValue,
+        event: 'edit',
         newValue,
-        name: path.slice(-1)[0],
-        path,
       })
     },
     [handleEdit]
@@ -261,20 +266,12 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
 
   const onDelete: InternalUpdateFunction = useCallback(
     async (value, path) => {
-      const { currentData, newData, currentValue, newValue } = updateDataObject(
-        dataRef.current,
-        path,
-        value,
-        'delete'
-      )
+      const { newData } = updateDataObject(dataRef.current, path, value, 'delete')
 
-      return await handleEdit(srcDeleteRef.current, {
-        currentData,
+      return await handleEdit({
+        ...buildNodeData(dataRef.current, path, rootNameRef.current, sortRef.current),
         newData,
-        currentValue,
-        newValue,
-        name: path.slice(-1)[0],
-        path,
+        event: 'delete',
       })
     },
     [handleEdit]
@@ -282,21 +279,46 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
 
   const onAdd: InternalUpdateFunction = useCallback(
     async (value, path, options) => {
-      const { currentData, newData, currentValue, newValue } = updateDataObject(
-        dataRef.current,
-        path,
-        value,
-        'add',
-        options
-      )
+      const { newData, newValue } = updateDataObject(dataRef.current, path, value, 'add', options)
 
-      return await handleEdit(srcAddRef.current, {
-        currentData,
+      // The new node doesn't exist in the current tree yet, so build its
+      // `NodeData` from `newData` (where it does) to get the right position
+      // (`key`/`path`/`index`). Then describe it as the spec requires: `value`
+      // is unset until commit (matches V1), and `fullData` is the CURRENT
+      // (pre-add) document, consistent with the other events.
+      return await handleEdit({
+        ...buildNodeData(newData, path, rootNameRef.current, sortRef.current),
+        value: undefined,
+        fullData: dataRef.current,
         newData,
-        currentValue,
+        event: 'add',
         newValue,
-        name: path.slice(-1)[0],
-        path,
+      })
+    },
+    [handleEdit]
+  )
+
+  // A key rename is a first-class `event: 'rename'`. The parent collection is
+  // rebuilt preserving key order with the renamed key, then assigned back into
+  // the whole document; the `NodeData` describes the OLD node (`key`/`path`),
+  // with the new key carried in `newKey`.
+  const onRename: InternalRenameFunction = useCallback(
+    async (path, newKey) => {
+      const parentPath = path.slice(0, -1)
+      const oldKey = path[path.length - 1]
+      const parentData = extract(dataRef.current, parentPath) as Record<string, unknown>
+      const renamedParent = Object.fromEntries(
+        Object.entries(parentData).map(([k, v]) => (k === oldKey ? [newKey, v] : [k, v]))
+      )
+      // `updateDataObject` handles the root case (`parentPath === []`) — a
+      // top-level rename replaces the whole document with the rebuilt object.
+      const { newData } = updateDataObject(dataRef.current, parentPath, renamedParent, 'update')
+
+      return await handleEdit({
+        ...buildNodeData(dataRef.current, path, rootNameRef.current, sortRef.current),
+        newData,
+        event: 'rename',
+        newKey,
       })
     },
     [handleEdit]
@@ -304,7 +326,8 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
 
   // "onMove" is just a "Delete" followed by an "Add", but we combine into a
   // single "action" and only run one "onUpdate", which also means it'll be
-  // registered as a single event in the "Undo" queue.
+  // registered as a single event in the "Undo" queue. The `NodeData` describes
+  // the SOURCE node; `newPath` is the destination.
   // If either action returns an error, we reset the data the same way we do
   // when a single action returns error.
   const onMove = useCallback(
@@ -314,12 +337,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
       position: 'above' | 'below'
     ) => {
       if (sourcePath === null) return
-      const { currentData, newData, currentValue } = updateDataObject(
-        dataRef.current,
-        sourcePath,
-        '',
-        'delete'
-      )
+      const { newData, currentValue } = updateDataObject(dataRef.current, sourcePath, '', 'delete')
 
       // Immediate key of the item being moved
       const originalKey = sourcePath.slice(-1)[0]
@@ -356,7 +374,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
           ? { insertBefore: insertPos }
           : { insertAfter: insertPos }
 
-      const { newData: addedData, newValue: addedValue } = updateDataObject(
+      const { newData: addedData } = updateDataObject(
         newData,
         [...targetPath, targetKey],
         currentValue,
@@ -364,13 +382,11 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
         insertOptions as UpdateOptions
       )
 
-      return await handleEdit(srcEditRef.current, {
-        currentData,
+      return await handleEdit({
+        ...buildNodeData(dataRef.current, sourcePath, rootNameRef.current, sortRef.current),
         newData: addedData,
-        currentValue,
-        newValue: addedValue,
-        name: destPath.slice(-1)[0],
-        path: destPath,
+        event: 'move',
+        newPath: destPath,
       })
     },
     [handleEdit]
@@ -440,6 +456,9 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     },
     [keySort]
   )
+  // Late-assigned (see the ref declaration above): the stable update handlers
+  // read the live comparator from here when building a node's `NodeData`.
+  sortRef.current = sort
 
   // Imperative handle (`editorRef` prop). The methods call the LIVE setters /
   // read the LIVE tree at call time, never a frozen render closure (per
@@ -493,6 +512,7 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     onEdit,
     onDelete,
     onAdd,
+    onRename,
     onChange: onChangeStable,
     onError: onErrorStable,
     onEditEvent: onEditEventStable,
@@ -702,12 +722,6 @@ const getSearchFilter = (
       matchNode(inputData, searchText) || matchNodeKey(inputData, searchText)
   }
   return searchFilterInput
-}
-
-const isUpdateReturnTuple = (
-  input: UpdateFunctionReturn | string | boolean | undefined
-): input is UpdateFunctionReturn => {
-  return Array.isArray(input) && input.length === 2 && ['error', 'value'].includes(input[0])
 }
 
 // Combines all the replacer or reviver functions from the Custom node

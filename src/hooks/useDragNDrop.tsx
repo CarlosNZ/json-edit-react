@@ -6,7 +6,7 @@ import {
   type NodeData,
   type CollectionKey,
   type CollectionData,
-  type JerError,
+  type JsonEditorError,
   type Position,
   type InternalMoveFunction,
 } from '../types'
@@ -18,7 +18,7 @@ interface DnDProps {
   path: CollectionKey[]
   nodeData: NodeData
   onMove: InternalMoveFunction
-  onError: (error: JerError, errorValue: CollectionData | string) => unknown
+  onError: (error: JsonEditorError, errorValue: CollectionData | string) => unknown
   translate: TranslateFunction
 }
 

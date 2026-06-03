@@ -380,9 +380,10 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
   // document missing a sibling commit AND a stale `currentValue` after re-edit.
   test('onChange reports the live document and value, not stale snapshots', async () => {
     const user = userEvent.setup()
-    const seen: Array<{ currentData: unknown; currentValue: unknown }> = []
+    const seen: Array<{ fullData: unknown; value: unknown }> = []
     const onChange: OnChangeFunction = (p) => {
-      seen.push({ currentData: p.currentData, currentValue: p.currentValue })
+      // Flat NodeData (§17): `fullData` is the live document, `value` the current value.
+      seen.push({ fullData: p.fullData, value: p.value })
       return p.newValue
     }
     const Host = () => {
@@ -407,8 +408,8 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     await user.type(screen.getByRole('textbox'), 'Z')
 
     expect(seen.at(-1)).toEqual({
-      currentData: { a: 'aval2', b: 'bval2' },
-      currentValue: 'bval2',
+      fullData: { a: 'aval2', b: 'bval2' },
+      value: 'bval2',
     })
   })
 

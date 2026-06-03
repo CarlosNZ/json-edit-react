@@ -10,9 +10,6 @@ export interface JsonEditorProps<T = JsonData> {
   setData: (data: T) => void
   rootName?: string
   onUpdate?: UpdateFunction<T>
-  onEdit?: UpdateFunction<T>
-  onDelete?: UpdateFunction<T>
-  onAdd?: UpdateFunction<T>
   onChange?: OnChangeFunction<T>
   onError?: OnErrorFunction<T>
   showErrorMessages?: boolean
@@ -180,38 +177,70 @@ export interface TextEditorProps {
  * FUNCTIONS
  */
 
-export interface UpdateFunctionProps<T = JsonData> {
-  newData: T
-  currentData: T
-  newValue: unknown
-  currentValue: unknown
-  name: CollectionKey
-  path: CollectionKey[]
+/**
+ * The definitive error code list, split by surfacing channel:
+ *   - Group A (mutation / edit flow)   → `onError` observer + `UpdateResult.error`
+ *   - Group B (imperative command flow) → `CommandResult.error` (Category 4, later phase)
+ */
+export type JsonEditorErrorCode =
+  // Group A — mutation / edit flow
+  | 'UPDATE_ERROR' // an edit was rejected, or an internal failure occurred
+  | 'ADD_ERROR' // an add was rejected
+  | 'DELETE_ERROR' // a delete was rejected
+  | 'KEY_EXISTS' // a new/renamed key collides with an existing sibling
+  | 'INVALID_JSON' // raw JSON typed into the editor failed to parse
+  // Group B — imperative command flow (Category 4)
+  | 'PATH_NOT_FOUND' // a command targeted a path that doesn't exist in the current data
+  | 'RESTRICTED' // a command's action is blocked by an `allow*`/`restrict*` filter
+
+/** The one canonical error shape, used everywhere an error is produced or reported. */
+export interface JsonEditorError {
+  code: JsonEditorErrorCode
+  message: string
 }
 
-export type UpdateFunctionReturn<T = JsonData> = ['error' | 'value', T]
+/**
+ * The one canonical update result (§17, Category 2). `void`/`undefined`/`true`
+ * commit; `false` rejects with a generic error; `null` is a silent abort (no
+ * commit, no error); the object form overrides the committed `value` or rejects
+ * with a custom `error` (a bare `string` is wrapped into a `JsonEditorError`).
+ */
+export type UpdateResult<T = JsonData> =
+  | true
+  | void
+  | undefined
+  | false
+  | null
+  | {
+      value?: T
+      error?: string | JsonEditorError
+    }
 
+/**
+ * `NodeData` carries the CURRENT identity/value; the event-specific field
+ * carries the NEW bit; `newData` is always the resulting document. `rename` and
+ * `move` are first-class events even though both are delete+add under the hood —
+ * they arrive via distinct user interactions and carry distinct deltas. For
+ * `add`, `NodeData` describes the new node's *position* (`path`/`key`); `value`
+ * is unset until commit (matches V1).
+ */
+export type UpdateFunctionProps<T = JsonData> = NodeData<T> & { newData: T } & (
+    | { event: 'edit'; newValue: unknown } // value changes (incl. type change)
+    | { event: 'add'; newValue: unknown }
+    | { event: 'delete' } // `newData` reflects the removal
+    | { event: 'rename'; newKey: CollectionKey } // `NodeData.key`/`path` = OLD; use `newKey` + `newData`
+    | { event: 'move'; newPath: CollectionKey[] } // `NodeData.path` = source; `newPath` = destination
+  )
+
+/** One `onUpdate` — branch on `event`. Fires for user- and command-driven alike. */
 export type UpdateFunction<T = JsonData> = (
   props: UpdateFunctionProps<T>
-) =>
-  | void
-  | ErrorString
-  | boolean
-  | UpdateFunctionReturn<T>
-  | Promise<boolean | ErrorString | void | UpdateFunctionReturn<T>>
+) => UpdateResult<T> | Promise<UpdateResult<T>>
 
-export type OnChangeFunction<T = JsonData> = (props: {
-  currentData: T
-  newValue: ValueData
-  currentValue: ValueData
-  name: CollectionKey
-  path: CollectionKey[]
-}) => ValueData
-
-export interface JerError {
-  code: 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR' | 'INVALID_JSON' | 'KEY_EXISTS'
-  message: ErrorString
-}
+/** Transform (distinct contract — returns the value, not a result). */
+export type OnChangeFunction<T = JsonData> = (
+  props: NodeData<T> & { newValue: ValueData }
+) => ValueData
 
 export type OnErrorFunction<T = JsonData> = (props: {
   currentData: T
@@ -219,7 +248,7 @@ export type OnErrorFunction<T = JsonData> = (props: {
   currentValue: JsonData
   name: CollectionKey
   path: CollectionKey[]
-  error: JerError
+  error: JsonEditorError
 }) => unknown
 
 export type FilterFunction<T = JsonData> = (input: NodeData<T>) => boolean
@@ -269,12 +298,19 @@ export interface CollapseState {
 
 export type OnCollapseFunction = (input: CollapseState) => void
 
-// Internal update
+// Internal update. Resolves to an error message (`string`), `false` (the
+// consumer returned `null` — silent cancel; revert the display, no error), or
+// `void` (committed).
+type InternalResult = Promise<string | void | false>
 export type InternalUpdateFunction = (
   value: unknown,
   path: CollectionKey[],
   options?: AssignOptions
-) => Promise<string | void>
+) => InternalResult
+
+// Key rename (a first-class `event: 'rename'` update). `path`/`newKey` are the
+// OLD node path and the new key.
+export type InternalRenameFunction = (path: CollectionKey[], newKey: string) => InternalResult
 
 // For drag-n-drop
 export type Position = 'above' | 'below'
@@ -282,7 +318,7 @@ export type InternalMoveFunction = (
   source: CollectionKey[] | null,
   dest: CollectionKey[],
   position: Position
-) => Promise<string | void>
+) => InternalResult
 
 export interface KeyEvent {
   key: string
@@ -340,6 +376,7 @@ interface BaseNodeProps {
   getLatestData: () => JsonData
   onEdit: InternalUpdateFunction
   onDelete: InternalUpdateFunction
+  onRename: InternalRenameFunction
   onError?: OnErrorFunction
   showErrorMessages: boolean
   showIconTooltips: boolean
@@ -439,7 +476,7 @@ export interface CustomNodeProps<T = Record<string, unknown>>
   originalNodeKey?: JSX.Element
   canEdit: boolean
   keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
-  onError: (error: JerError, errorValue: JsonData | string) => void
+  onError: (error: JsonEditorError, errorValue: JsonData | string) => void
 }
 
 export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<string, unknown>> {

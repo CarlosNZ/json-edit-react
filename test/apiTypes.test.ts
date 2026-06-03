@@ -54,7 +54,7 @@ const onUpdate: UpdateFunction = (props) => {
     case 'edit':
       return { value: props.newValue as JsonData }
     case 'add':
-      return props.newValue === undefined ? { cancel: true } : true
+      return props.newValue === undefined ? null : true
     case 'delete':
       return // proceed (no extra field on this branch)
     case 'rename':

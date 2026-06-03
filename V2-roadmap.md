@@ -270,10 +270,10 @@ For [#117](https://github.com/CarlosNZ/json-edit-react/issues/117): intercept `d
 type UpdateResult<T = JsonData> =
   | true | void | undefined              // proceed
   | false                                // reject (generic error)
+  | null                                 // silent abort — no commit, no error (#117 / #249)
   | {
       value?: T                          // override the committed value
       error?: string | JsonEditorError   // reject with message
-      cancel?: true                      // silent abort — no commit, no error (#117 / #249)
     }
   // (or Promise of any of the above)
 

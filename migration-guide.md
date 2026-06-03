@@ -17,6 +17,8 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `setData` is now required; `viewOnly` removed; new `JsonViewer` export | Switch read-only usage to `<JsonViewer>`; replace `viewOnly={cond}` with the relevant `restrict*` toggles, including `restrictDrag` if drag was enabled — see §6 |
 | `externalTriggers` prop replaced by the `editorRef` imperative handle | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/cancelEdit/confirmEdit` — see §7 |
 | `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction` | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` (`errorMessage` → `error.message`) — see §8 |
+| `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`; return shape unified | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see §9 |
+| Callback payloads are now flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`); `JerError` → `JsonEditorError` | Update field names in `onUpdate` / `onChange` / `onError`; rename the error type — see §9 |
 
 ---
 
@@ -322,6 +324,87 @@ If you passed a callback (it both enabled the button *and* observed copies):
 ```
 
 Payload changes on the callback object: the explicit `key` / `path` / `value` fields are now part of the spread `NodeData` (so `key`, `path`, `value`, `fullData`, … are all still available); `errorMessage: string | null` becomes `error?: { message: string }` (present only when `success` is `false`).
+
+---
+
+## 9. One `onUpdate`; unified return shape; flat `NodeData` payloads
+
+The update callbacks are consolidated into a single result-producer with one consistent payload and return shape.
+
+### `onEdit` / `onAdd` / `onDelete` removed — use one `onUpdate`
+
+The discrete props are gone. Provide a single `onUpdate` and branch on the new `event` discriminant (`'edit' | 'add' | 'delete' | 'rename' | 'move'`):
+
+```diff
+- <JsonEditor
+-   data={data}
+-   setData={setData}
+-   onEdit={handleEdit}
+-   onAdd={handleAdd}
+-   onDelete={handleDelete}
+- />
++ <JsonEditor
++   data={data}
++   setData={setData}
++   onUpdate={(props) => {
++     switch (props.event) {
++       case 'edit':   return handleEdit(props)
++       case 'add':    return handleAdd(props)
++       case 'delete': return handleDelete(props)
++       // 'rename' and 'move' are now first-class events too (see below)
++     }
++   }}
++ />
+```
+
+Renaming a key and moving a node (drag-drop) previously reached the update callback disguised as edits. They now arrive as distinct events: `event: 'rename'` carries `newKey` (with `key`/`path` describing the *old* identity), and `event: 'move'` carries `newPath` (with `path` the source). `newData` is the resulting document in every case.
+
+### Unified `UpdateResult` return shape
+
+The five legacy return shapes collapse into one. The `['value', x]` / `['error', x]` tuple forms and the bare-string error are removed:
+
+```diff
+- return ['value', sortedArray]      // override the committed value
++ return { value: sortedArray }
+
+- return 'That value is not allowed' // reject with a message
++ return { error: 'That value is not allowed' }
+
+- return ['error', 'Nope']
++ return { error: 'Nope' }           // or { error: { code, message } }
+```
+
+`true` / `void` / `undefined` (proceed) and `false` (reject with a generic message) are unchanged. **New:** returning **`null`** silently cancels the change — no commit and *no* error message (use it to quietly abort a change that isn't an error; `false` still shows an error).
+
+### Flat `NodeData` payloads (`onUpdate` / `onChange`)
+
+Every callback now receives the standard flat [`NodeData`](README.md#filter-functions) plus its extras, so the bespoke field names are gone:
+
+```diff
+  onUpdate={({
+-   currentData,   // → fullData
+-   currentValue,  // → value
+-   name,          // → key
+    newData,
+    newValue,
+  }) => { /* ... */ }}
+```
+
+`onChange` changes the same way (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`):
+
+```diff
+- onChange={({ newValue, name }) => (name === 'age' ? clamp(newValue) : newValue)}
++ onChange={({ newValue, key }) => (key === 'age' ? clamp(newValue) : newValue)}
+```
+
+### `JerError` → `JsonEditorError`
+
+The error type reported to `onError` (and accepted in an `onUpdate` `{ error }` return) is renamed; its shape (`{ code, message }`) is unchanged, and the `code` union gains some forward-looking members. `onError`'s own payload fields are otherwise unchanged in this release.
+
+```diff
+- import { type JerError } from 'json-edit-react'
++ import { type JsonEditorError } from 'json-edit-react'
+```
 
 ---
 

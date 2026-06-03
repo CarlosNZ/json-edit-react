@@ -89,10 +89,10 @@ export type UpdateResult<T = JsonData> =
   | void
   | undefined
   | false // reject (generic error)
+  | null // silent abort — no commit, no error
   | {
       value?: T // override the committed value
       error?: string | JsonEditorError // reject with message (a bare string is wrapped)
-      cancel?: true // silent abort — no commit, no error
     }
 
 /**

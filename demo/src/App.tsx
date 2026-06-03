@@ -492,16 +492,26 @@ function App() {
                   theme={editorTheme}
                   indent={indent}
                   onUpdate={async (nodeData) => {
-                    const demoOnUpdate = dataDefinition?.onUpdate ?? (() => undefined)
-                    const result = await demoOnUpdate(nodeData, toast as (options: unknown) => void)
+                    // §17: one `onUpdate`. The datasets' per-operation helpers
+                    // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
+                    // as the catch-all (delete/rename/move).
+                    const runDemoUpdate = () => {
+                      if (nodeData.event === 'edit' && dataDefinition?.onEdit)
+                        return dataDefinition.onEdit(nodeData)
+                      if (nodeData.event === 'add' && dataDefinition?.onAdd)
+                        return dataDefinition.onAdd(nodeData)
+                      return (dataDefinition?.onUpdate ?? (() => undefined))(
+                        nodeData,
+                        toast as (options: unknown) => void
+                      )
+                    }
+                    const result = await runDemoUpdate()
                     if (result) return result
                     else {
                       const { newData } = nodeData
                       if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
                     }
                   }}
-                  onEdit={dataDefinition?.onEdit ?? undefined}
-                  onAdd={dataDefinition?.onAdd ?? undefined}
                   onError={
                     dataDefinition.onError
                       ? (errorData) => {
