@@ -407,7 +407,6 @@ The error type reported to `onError` (and accepted in an `onUpdate` `{ error }` 
 ```
 
 ---
-
 ## Need help?
 
 If you hit something this guide doesn't cover, please [open an issue](https://github.com/CarlosNZ/json-edit-react/issues) — happy to help triage and add to this doc.
