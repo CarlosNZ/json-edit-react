@@ -40,7 +40,9 @@ import {
   type CollectionKey,
   type JsonData,
   type OnEditEventFunction,
+  type EditEvent,
   type EditingState,
+  type BuildNodeDataFromPathRef,
 } from '../types'
 import { editingStatesEqual, isDescendantOf, pathsEqual } from '../utils/pathTools'
 
@@ -64,7 +66,11 @@ export interface EditingStore {
   getSnapshot: () => EditingStateBundle
   getServerSnapshot: () => EditingStateBundle
   startEdit: (path: CollectionKey[], options?: StartEditOptions) => void
+  /** Abort the active session — fires `onEditEvent` cancel* (true user/external cancel). */
   cancelEdit: () => void
+  /** Close the active session silently — no event. Used by commit/confirm flows
+   *  (the terminal event is fired by the node, from the commit outcome). */
+  closeEdit: () => void
   setTabDirection: (dir: TabDirection) => void
   recordPreviousEdit: (path: CollectionKey[]) => void
   setPreviousValue: (value: JsonData | null) => void
@@ -80,7 +86,8 @@ const initialState: EditingStateBundle = {
 }
 
 const createEditingStore = (
-  onEditEventRef: React.RefObject<OnEditEventFunction | undefined>
+  onEditEventRef: React.RefObject<OnEditEventFunction | undefined>,
+  buildNodeDataFromPathRef: BuildNodeDataFromPathRef
 ): EditingStore => {
   let state = initialState
   const listeners = new Set<() => void>()
@@ -100,6 +107,14 @@ const createEditingStore = (
     emit()
   }
 
+  // Fire an `onEditEvent` for a session at `path`, building its `NodeData` from
+  // the live document. No-op if there's no consumer or the accessor isn't ready.
+  const fireEditEvent = (path: CollectionKey[], event: EditEvent['event']) => {
+    if (!onEditEventRef.current) return
+    const nodeData = buildNodeDataFromPathRef.current?.(path)
+    if (nodeData) onEditEventRef.current({ ...nodeData, event } as EditEvent)
+  }
+
   const startEdit = (path: CollectionKey[], options?: StartEditOptions) => {
     const mode = options?.mode ?? 'value'
     const next: EditingState = { path, mode, force: options?.force }
@@ -111,15 +126,29 @@ const createEditingStore = (
       commit({ ...state, currentlyEditingElement: next })
     }
 
-    onEditEventRef.current?.(path, mode === 'key')
+    fireEditEvent(path, mode === 'key' ? 'startRename' : 'startEdit')
   }
 
+  // True cancel (user Esc/✗, node switch, `editorRef.cancelEdit`, search reset):
+  // close the session AND fire cancel*. Snapshot the element before nulling.
   const cancelEdit = () => {
+    const prev = state.currentlyEditingElement
+    cancelOp = null
+    if (prev !== null) {
+      commit({ ...state, currentlyEditingElement: null })
+      fireEditEvent(prev.path, prev.mode === 'key' ? 'cancelRename' : 'cancelEdit')
+    }
+  }
+
+  // Silent close for commit/confirm flows — clears state + cancelOp, fires NO
+  // event (the node fires the terminal confirm*/cancel* from the commit outcome).
+  // Clearing cancelOp is load-bearing: a Tab-commit closes then `startEdit(next)`,
+  // which would otherwise run the stale cancelOp and revert the just-committed value.
+  const closeEdit = () => {
     cancelOp = null
     if (state.currentlyEditingElement !== null) {
       commit({ ...state, currentlyEditingElement: null })
     }
-    onEditEventRef.current?.(null, false)
   }
 
   const setTabDirection = (dir: TabDirection) => {
@@ -149,6 +178,7 @@ const createEditingStore = (
     getServerSnapshot: () => state,
     startEdit,
     cancelEdit,
+    closeEdit,
     setTabDirection,
     recordPreviousEdit,
     setPreviousValue,
@@ -163,9 +193,14 @@ const EditingProviderContext = createContext<EditingStore | null>(null)
 interface EditingProps {
   children: React.ReactNode
   onEditEvent?: OnEditEventFunction
+  buildNodeDataFromPathRef: BuildNodeDataFromPathRef
 }
 
-export const EditingProvider = ({ children, onEditEvent }: EditingProps) => {
+export const EditingProvider = ({
+  children,
+  onEditEvent,
+  buildNodeDataFromPathRef,
+}: EditingProps) => {
   // Keep the latest `onEditEvent` in a ref so an inline consumer callback
   // doesn't force the store to be recreated. Written during render but only
   // ever *read* inside actions (event time), so this is safe.
@@ -173,9 +208,11 @@ export const EditingProvider = ({ children, onEditEvent }: EditingProps) => {
   onEditEventRef.current = onEditEvent
 
   // The store is created once and its identity never changes, so the context
-  // value is stable — `useContext` alone never triggers a re-render.
+  // value is stable — `useContext` alone never triggers a re-render. Both refs
+  // are read only at event time, after `Editor` has populated the accessor.
   const storeRef = useRef<EditingStore | null>(null)
-  if (storeRef.current === null) storeRef.current = createEditingStore(onEditEventRef)
+  if (storeRef.current === null)
+    storeRef.current = createEditingStore(onEditEventRef, buildNodeDataFromPathRef)
 
   return (
     <EditingProviderContext.Provider value={storeRef.current}>
@@ -231,6 +268,7 @@ export const useEditing = () => {
       ...bundle,
       startEdit: store.startEdit,
       cancelEdit: store.cancelEdit,
+      closeEdit: store.closeEdit,
       setTabDirection: store.setTabDirection,
       recordPreviousEdit: store.recordPreviousEdit,
       setPreviousValue: store.setPreviousValue,

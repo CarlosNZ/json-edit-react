@@ -3,7 +3,7 @@ import { act, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { JsonViewer } from '../src/JsonViewer'
-import { type FilterFunction, type JsonViewerHandle } from '../src/types'
+import { type FilterFunction, type JsonViewerHandle, type EditEvent } from '../src/types'
 
 const noop = () => {}
 
@@ -653,6 +653,126 @@ describe('JsonEditor — §17 onUpdate event discriminant', () => {
   // but exercising it needs a full drag-drop simulation — deferred with the
   // rest of the DnD test gap (#270).
   test.todo('onUpdate receives event:"move" on a drag-drop (needs DnD simulation — #270)')
+})
+
+describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
+  // A session ends in confirm* (committed) or cancel* (closed without a commit).
+  test('value edit: startEdit → confirmEdit on a real change', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'world{Enter}')
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'confirmEdit'])
+  })
+
+  test('value edit: startEdit → cancelEdit on a no-op confirm (no change)', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    // Confirm without changing anything.
+    await user.type(screen.getByRole('textbox'), '{Enter}')
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'cancelEdit'])
+  })
+
+  test('value edit: startEdit → cancelEdit on Escape', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    await user.type(screen.getByRole('textbox'), 'abc{Escape}')
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'cancelEdit'])
+  })
+
+  test('key rename: startRename → confirmRename with old + new keys', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ a: 1, oldName: 2 }} setData={noop} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('oldName'))
+    const keyInput = screen.getByDisplayValue('oldName') as HTMLInputElement
+    await user.clear(keyInput)
+    await user.type(keyInput, 'newName{Enter}')
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startRename', 'confirmRename'])
+    const confirm = onEditEvent.mock.calls.map(([e]) => e)[1]
+    expect(confirm).toMatchObject({
+      event: 'confirmRename',
+      key: 'oldName',
+      path: ['oldName'],
+      oldKey: 'oldName',
+      newKey: 'newName',
+    })
+  })
+
+  test('add (object): startAdd → confirmAdd; and startAdd → cancelAdd on Escape', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const { container } = render(
+      <JsonEditor data={{ existing: 'value' }} setData={noop} onEditEvent={onEditEvent} showIconTooltips />
+    )
+
+    // Open + confirm
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(newKeyInput)
+    await user.type(newKeyInput, 'fresh{Enter}')
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startAdd', 'confirmAdd'])
+
+    // Open + cancel
+    onEditEvent.mockClear()
+    await user.click(screen.getByTitle('Add'))
+    const reopened = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.type(reopened, '{Escape}')
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startAdd', 'cancelAdd'])
+  })
+
+  test('delete fires a single "delete" event', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(
+      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onEditEvent={onEditEvent} showIconTooltips />
+    )
+
+    const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
+    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['delete'])
+    expect(onEditEvent.mock.calls[0][0]).toMatchObject({ event: 'delete', key: 'x', path: ['x'] })
+  })
+
+  test('Tab-commit fires confirmEdit then startEdit(next) — no stray cancelEdit', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ a: 'x', b: 'y' }} setData={noop} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('"x"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'changed{Tab}')
+
+    // The commit is async (`.then`), so `confirmEdit` lands after the synchronous
+    // advance to the next node — order is start, start(next), confirm. The
+    // load-bearing guard: a `confirmEdit` fired and there's NO stray `cancelEdit`
+    // (which would mean the stale cancelOp reverted the just-committed value).
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toContain('confirmEdit')
+    expect(seq.filter((e) => e === 'startEdit')).toHaveLength(2)
+    expect(seq).not.toContain('cancelEdit')
+  })
 })
 
 describe('JsonEditor — restrictions and callbacks', () => {

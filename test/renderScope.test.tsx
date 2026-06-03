@@ -18,7 +18,7 @@ import { useState } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
-import { type OnChangeFunction, type OnCollapseFunction } from '../src/types'
+import { type OnChangeFunction, type OnCollapseFunction, type OnErrorFunction } from '../src/types'
 import { makeRenderSpy } from './helpers/renderSpy'
 
 // A controlled host so `setData` commits actually re-render the editor, the
@@ -413,14 +413,15 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     })
   })
 
-  // Same staleness class for `onError`: `useCommon` builds its `currentData` from
-  // `nodeData.fullData`, which a bailed sibling keeps stale. Triggering an error
-  // in a subtree that bailed on an earlier commit must still report the live doc.
+  // Same staleness class for `onError`: `useCommon` builds its `fullData` from
+  // `getLatestData()`, not the `nodeData.fullData` a bailed sibling keeps stale.
+  // Triggering an error in a subtree that bailed on an earlier commit must still
+  // report the live doc.
   test('onError reports the live document, not a stale snapshot', async () => {
     const user = userEvent.setup()
-    let seenCurrentData: unknown = null
-    const onError = jest.fn((p: { currentData: unknown }) => {
-      seenCurrentData = p.currentData
+    let seenFullData: unknown = null
+    const onError = jest.fn<void, Parameters<OnErrorFunction>>((p) => {
+      seenFullData = p.fullData
     })
     const Host = () => {
       const [data, setData] = useState<object>({ a: 'aval', obj: { x: 1 } })
@@ -441,6 +442,6 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     fireEvent.keyDown(ta, { key: 'Enter', metaKey: true })
 
     expect(onError).toHaveBeenCalled()
-    expect(seenCurrentData).toEqual({ a: 'aval2', obj: { x: 1 } })
+    expect(seenFullData).toEqual({ a: 'aval2', obj: { x: 1 } })
   })
 })

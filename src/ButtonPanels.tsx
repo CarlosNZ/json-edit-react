@@ -13,6 +13,7 @@ import {
   type OnCopyFunction,
   JsonData,
   OnEditEventFunction,
+  type EditEvent,
 } from './types'
 import { getModifier } from './utils/keyboard'
 
@@ -75,12 +76,14 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 
   const hasKeyOptionsList = Array.isArray(addingKeyState)
 
+  // Add events describe the parent collection (this node). `startAdd` fires when
+  // the key-entry UI opens; `confirmAdd` comes from the commit (CollectionNode),
+  // `cancelAdd` from the cancel handlers below.
+  const emitAddEvent = (event: 'startAdd' | 'cancelAdd') =>
+    onEditEvent?.({ ...nodeData, event } as EditEvent)
+
   const updateAddingState = (active: boolean) => {
-    // Add 'null' to the path to indicate that the actual path of where the new
-    // key will go is not yet known.
-    // Also, "active" matches the second "isKey" parameter here, even though it
-    // describes a different thing.
-    if (onEditEvent) onEditEvent(active ? [...path, null] : null, active)
+    if (active) emitAddEvent('startAdd')
 
     if (!active) {
       setAddingKeyState(false)
@@ -111,6 +114,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       },
       cancel: () => {
         updateAddingState(false)
+        emitAddEvent('cancelAdd')
         setNewKey(NEW_KEY_PROMPT)
       },
     })
@@ -139,7 +143,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           success: false,
           stringValue,
           type: copyType,
-          error: { message: "Can't access clipboard API" },
+          error: { code: 'CLIPBOARD_ERROR', message: "Can't access clipboard API" },
         })
         return
       }
@@ -156,7 +160,9 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             success,
             stringValue,
             type: copyType,
-            error: success ? undefined : { message: errorMessage ?? 'Copy failed' },
+            error: success
+              ? undefined
+              : { code: 'CLIPBOARD_ERROR', message: errorMessage ?? 'Copy failed' },
           })
         })
     }
@@ -225,7 +231,10 @@ export const EditButtons: React.FC<EditButtonProps> = ({
                 autoFocus
                 onKeyDown={(e: React.KeyboardEvent) => {
                   handleKeyboard(e, {
-                    cancel: () => updateAddingState(false),
+                    cancel: () => {
+                      updateAddingState(false)
+                      emitAddEvent('cancelAdd')
+                    },
                   })
                 }}
               >
@@ -264,6 +273,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             }}
             onCancel={() => {
               updateAddingState(false)
+              emitAddEvent('cancelAdd')
             }}
             nodeData={nodeData}
             editConfirmRef={editConfirmRef}

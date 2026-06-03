@@ -189,6 +189,7 @@ export type JsonEditorErrorCode =
   | 'DELETE_ERROR' // a delete was rejected
   | 'KEY_EXISTS' // a new/renamed key collides with an existing sibling
   | 'INVALID_JSON' // raw JSON typed into the editor failed to parse
+  | 'CLIPBOARD_ERROR' // a copy-to-clipboard write failed (onCopy)
   // Group B — imperative command flow (Category 4)
   | 'PATH_NOT_FOUND' // a command targeted a path that doesn't exist in the current data
   | 'RESTRICTED' // a command's action is blocked by an `allow*`/`restrict*` filter
@@ -242,14 +243,10 @@ export type OnChangeFunction<T = JsonData> = (
   props: NodeData<T> & { newValue: ValueData }
 ) => ValueData
 
-export type OnErrorFunction<T = JsonData> = (props: {
-  currentData: T
-  errorValue: JsonData
-  currentValue: JsonData
-  name: CollectionKey
-  path: CollectionKey[]
-  error: JsonEditorError
-}) => unknown
+/** Observer (Cat 3): after any error condition (Group A codes). Flat `NodeData`. */
+export type OnErrorFunction<T = JsonData> = (
+  props: NodeData<T> & { error: JsonEditorError; errorValue: JsonData }
+) => void
 
 export type FilterFunction<T = JsonData> = (input: NodeData<T>) => boolean
 export type TypeFilterFunction<T = JsonData> = (input: NodeData<T>) => boolean | TypeOptions
@@ -268,14 +265,13 @@ export type NewKeyOptionsFunction<T = JsonData> = (input: NodeData<T>) => string
 export type CopyType = 'path' | 'value'
 
 // Observer (Cat 3): fires after a copy-to-clipboard. Enablement is the
-// `allowClipboard` boolean (Cat 1). A failed copy carries `error.message`
-// (clipboard failures aren't part of the §17 error-code taxonomy).
+// `allowClipboard` boolean (Cat 1). A failed copy carries a `CLIPBOARD_ERROR`.
 export type OnCopyFunction<T = JsonData> = (
   props: NodeData<T> & {
     success: boolean
     stringValue: string
     type: CopyType
-    error?: { message: string }
+    error?: JsonEditorError
   }
 ) => void
 
@@ -286,17 +282,43 @@ export type CompareFunction = (
 
 export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
 
-export type OnEditEventFunction = (path: (CollectionKey | null)[] | null, isKey: boolean) => void
+/**
+ * Observer (Cat 3): the complete interaction-lifecycle stream. Value-edit,
+ * key-rename and add sessions each open with a `start*`, then terminate with
+ * `confirm*` (committed) or `cancel*` (closed without a commit — incl. a no-op
+ * confirm or a rejected/aborted change). `delete`/`move` are instant (one event
+ * on commit). `confirmRename` carries `{ oldKey, newKey }`. Absorbs the old
+ * `onRenameProperty` (§12).
+ */
+export type EditEvent<T = JsonData> = NodeData<T> &
+  (
+    | { event: 'startEdit' }
+    | { event: 'confirmEdit' }
+    | { event: 'cancelEdit' }
+    | { event: 'startRename' }
+    | { event: 'confirmRename'; oldKey: CollectionKey; newKey: CollectionKey }
+    | { event: 'cancelRename' }
+    | { event: 'startAdd' }
+    | { event: 'confirmAdd' }
+    | { event: 'cancelAdd' }
+    | { event: 'delete' }
+    | { event: 'move' }
+  )
 
-// Definition to externally set Collapse state -- also passed to OnCollapse
-// function
+export type OnEditEventFunction<T = JsonData> = (e: EditEvent<T>) => void
+
+// Definition to externally set Collapse state -- the `editorRef.collapse`
+// command input (NOT the OnCollapse observer payload, which is flat NodeData).
 export interface CollapseState {
   path: CollectionKey[]
   collapsed: boolean
   includeChildren: boolean
 }
 
-export type OnCollapseFunction = (input: CollapseState) => void
+/** Observer (Cat 3): on collapse/expand (user click or `editorRef.collapse`). */
+export type OnCollapseFunction<T = JsonData> = (
+  props: NodeData<T> & { collapsed: boolean; includeChildren: boolean }
+) => void
 
 // Internal update. Resolves to an error message (`string`), `false` (the
 // consumer returned `null` — silent cancel; revert the display, no error), or
@@ -311,6 +333,13 @@ export type InternalUpdateFunction = (
 // Key rename (a first-class `event: 'rename'` update). `path`/`newKey` are the
 // OLD node path and the new key.
 export type InternalRenameFunction = (path: CollectionKey[], newKey: string) => InternalResult
+
+// Builds a node's full `NodeData` from its path against the LIVE document.
+// Bridged via a ref from the inner `Editor` into the editing/collapse providers
+// (its ancestors), so observer events fired from those contexts (`onEditEvent`
+// start*/cancel*, `onCollapse` broadcast) can carry a flat `NodeData`.
+export type BuildNodeDataFromPath = (path: CollectionKey[]) => NodeData
+export type BuildNodeDataFromPathRef = React.RefObject<BuildNodeDataFromPath | undefined>
 
 // For drag-n-drop
 export type Position = 'above' | 'below'

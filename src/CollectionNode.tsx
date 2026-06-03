@@ -7,6 +7,7 @@ import {
   type NodeData,
   type CollectionData,
   type ValueData,
+  type EditEvent,
 } from './types'
 import { Icon } from './Icons'
 import { filterNode } from './utils/filter'
@@ -30,7 +31,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   // Actions + imperative reads from the (stable) store — no subscription, so
   // editing transitions elsewhere don't re-render this node.
-  const { startEdit, cancelEdit, setPreviousValue, areChildrenBeingEdited, getSnapshot } =
+  const { startEdit, cancelEdit, closeEdit, setPreviousValue, areChildrenBeingEdited, getSnapshot } =
     useEditingStore()
   const { setCollapseState } = useCollapse()
   const {
@@ -245,6 +246,13 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     })
   }
 
+  // Fire an `onEditEvent` for this collection's edit/add/delete lifecycle.
+  // `nodeData` is read live (handlers re-created each render). Add events
+  // describe the parent collection (this node).
+  const emitEditEvent = (
+    event: Extract<EditEvent['event'], 'confirmEdit' | 'cancelEdit' | 'confirmAdd' | 'delete'>
+  ) => onEditEvent?.({ ...nodeData, event } as EditEvent)
+
   const handleCollapse = (e: React.MouseEvent) => {
     e.stopPropagation()
     const modifier = getModifier(e)
@@ -255,7 +263,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     }
     if (!areChildrenBeingEdited(path)) {
       hasBeenOpened.current = true
-      if (onCollapse) onCollapse({ path, collapsed: !collapsed, includeChildren: false })
+      // Flat NodeData (§17): explicit `collapsed` (post-toggle) must come after
+      // `...nodeData` (whose `collapsed` is the pre-toggle value).
+      if (onCollapse) onCollapse({ ...nodeData, collapsed: !collapsed, includeChildren: false })
       animateCollapse(!collapsed)
     }
   }
@@ -269,7 +279,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     const textToParse = editBufferValue ?? jsonStringify(data)
     try {
       const value = jsonParse(textToParse)
-      cancelEdit()
+      closeEdit()
       setPreviousValue(null)
       setError(null)
       // No-op confirm: bail without committing. When the buffer was never
@@ -277,13 +287,21 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       // rather than serializing `data` a second time.
       const currentDataString = stringifiedValue === null ? textToParse : jsonStringify(data)
       clearEditBuffer()
-      if (jsonStringify(value) === currentDataString) return
-      onEdit(value, path).then((error) => {
-        if (error) {
-          onError({ code: 'UPDATE_ERROR', message: error }, value as CollectionData)
-        }
+      // No-op confirm (unchanged JSON) reports as a cancel (closed without change).
+      if (jsonStringify(value) === currentDataString) {
+        emitEditEvent('cancelEdit')
+        return
+      }
+      onEdit(value, path).then((result) => {
+        if (result === false) emitEditEvent('cancelEdit')
+        else if (result) {
+          onError({ code: 'UPDATE_ERROR', message: result }, value as CollectionData)
+          emitEditEvent('cancelEdit')
+        } else emitEditEvent('confirmEdit')
       })
     } catch {
+      // Parse failure leaves the edit session OPEN (user can fix the JSON), so
+      // no terminal event — only the error.
       onError(
         { code: 'INVALID_JSON', message: translate('ERROR_INVALID_JSON', nodeData) },
         textToParse
@@ -299,15 +317,17 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     if (collectionType === 'array') {
       const index = insertAtTop.array ? 0 : (data as unknown[]).length
       const options = insertAtTop.array ? { insert: true } : {}
-      onAdd(newValue, [...path, index], options).then((error) => {
-        if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
+      onAdd(newValue, [...path, index], options).then((result) => {
+        if (result) onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
+        else if (result === undefined) emitEditEvent('confirmAdd')
       })
     } else if (key in data) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
     } else {
       const options = insertAtTop.object ? { insertBefore: 0 } : {}
-      onAdd(newValue, [...path, key], options).then((error) => {
-        if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
+      onAdd(newValue, [...path, key], options).then((result) => {
+        if (result) onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
+        else if (result === undefined) emitEditEvent('confirmAdd')
       })
     }
   }
@@ -315,10 +335,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const handleDelete =
     path.length > 0
       ? () => {
-          onDelete(data, path).then((error) => {
-            if (error) {
-              onError({ code: 'DELETE_ERROR', message: error }, data)
-            }
+          onDelete(data, path).then((result) => {
+            if (result) onError({ code: 'DELETE_ERROR', message: result }, data)
+            else if (result === undefined) emitEditEvent('delete')
           })
         }
       : undefined

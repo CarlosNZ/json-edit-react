@@ -169,7 +169,10 @@ describe('Collapse broadcasts via editorRef handle', () => {
     act(() => ref.current!.collapse(command))
 
     expect(onCollapse).toHaveBeenCalledTimes(1)
-    expect(onCollapse).toHaveBeenCalledWith(command)
+    // Flat NodeData payload (§17) built from the command's path, plus the flags.
+    expect(onCollapse).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'a', path: ['a'], collapsed: true, includeChildren: false })
+    )
   })
 
   test('9. an array of commands applies each command independently', () => {
@@ -341,7 +344,9 @@ describe('Collapse broadcasts via editorRef handle', () => {
 
     act(() => ref.current!.collapse(command))
 
-    expect(onCollapseV2).toHaveBeenCalledWith(command)
+    expect(onCollapseV2).toHaveBeenCalledWith(
+      expect.objectContaining({ path: ['a'], collapsed: true, includeChildren: false })
+    )
     expect(onCollapseV1).not.toHaveBeenCalled()
   })
 })

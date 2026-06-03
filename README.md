@@ -422,21 +422,15 @@ The input is the standard [node data](#filter-functions) (`key`, `path`, `value`
 
 ### OnError Function
 
-Normally, the component will display simple error messages whenever an error condition is detected (e.g. invalid JSON input, duplicate keys, or custom errors returned by the [`onUpdate` functions)](#update-functions)). However, you can provide your own `onError` callback in order to implement your own error UI, or run additional side effects. (In the former case, you'd probably want to disable the `showErrorMessages` prop, too.) The input is similar to the other callbacks:
+Normally, the component will display simple error messages whenever an error condition is detected (e.g. invalid JSON input, duplicate keys, or custom errors returned by the [`onUpdate` function)](#update-functions)). However, you can provide your own `onError` callback in order to implement your own error UI, or run additional side effects. (In the former case, you'd probably want to disable the `showErrorMessages` prop, too.) It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with the following additional fields spread on top:
 
 ```js
 {
-    currentData,  // data state before update 
-    currentValue, // the current value of the property being updated
+    // ...standard node data (key, path, value, fullData, ...)
     errorValue,   // the erroneous value that failed to update the property
-    name,         // name of the property being updated
-    path,         // full path to the property being updated,
-                  //   as an array of property keys
-                  //   (e.g. [ "user", "friends", 1, "name" ] )
-                  //   (equivalent to "user.friends[1].name"),
-    error: {
-      code,       // one of 'UPDATE_ERROR' | 'DELETE_ERROR' |
-                  //   'ADD_ERROR' | 'INVALID_JSON' | 'KEY_EXISTS'
+    error: {      // a JsonEditorError
+      code,       // one of 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR'
+                  //   | 'INVALID_JSON' | 'KEY_EXISTS'
       message     // the (localised) error message that would be displayed
     }
 }
@@ -455,7 +449,8 @@ The `onCopy` callback runs whenever an item is **copied** to the clipboard. It r
     stringValue  // A nicely stringified version of the copied value
                  // (i.e. what the clipboard actually receives)
     success      // true/false -- whether the clipboard copy action actually succeeded
-    error        // `{ message }` with the failure detail when `success === false`
+    error        // a JsonEditorError `{ code: 'CLIPBOARD_ERROR', message }`
+                 //   present only when `success === false`
 }
 ```
 
@@ -1245,27 +1240,39 @@ You can interact with the component externally, with event callbacks and trigger
 
 Pass in a function to the props `onEditEvent` and `onCollapse` if you want your app to be able to respond to these events.
 
-The `onEditEvent` callback is executed whenever the user starts or stops editing a node, and has the following signature:
+The `onEditEvent` callback streams the complete **interaction lifecycle** — start/confirm/cancel for value-edit, key-rename and add sessions, plus the instant `delete`/`move`. It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, …) with an `event` discriminant spread on top:
 
 ```ts
-type OnEditEventFunction = 
-  (path: (CollectionKey | null)[] | null, isKey: boolean) => void
+type EditEvent =
+  // value edit
+  | { event: 'startEdit' } | { event: 'confirmEdit' } | { event: 'cancelEdit' }
+  // key rename ('confirmRename' also carries oldKey + newKey)
+  | { event: 'startRename' }
+  | { event: 'confirmRename'; oldKey: CollectionKey; newKey: CollectionKey }
+  | { event: 'cancelRename' }
+  // add
+  | { event: 'startAdd' } | { event: 'confirmAdd' } | { event: 'cancelAdd' }
+  // instant (no session)
+  | { event: 'delete' } | { event: 'move' }
+// ...each spread onto the node's NodeData
+type OnEditEventFunction = (e: EditEvent) => void
 ```
 
-The `path` will be an array representing the path components when starting to edit, and `null` when ending the edit. The `isKey` indicates whether the edit is for the property `key` rather than `value`.
+A session opens with a `start*` and terminates with **exactly one** of `confirm*` (the change was committed) or `cancel*` (the session closed *without* committing — an explicit cancel, a no-op confirm where nothing changed, or a change your `onUpdate` rejected/aborted). `delete` and `move` fire a single event on commit.
 
-> [!NOTE] 
-> After clicking the "Add key" button, the `path` in the `onEditEvent` callback will end with a `null` value, indicating that the final path where this key will end up is not yet known.
+A few things worth knowing:
+- **Add events describe the parent collection** (the node you're adding *into*); `confirmAdd` is where the add lands.
+- **Array adds are instant** — they emit only `confirmAdd` (no `startAdd`/`cancelAdd`, since there's no key-entry step).
+- A type change mid-edit is itself a commit, so it emits `confirmEdit` while the edit session stays open — one session can emit multiple `confirmEdit`s.
 
-The `onCollapse` callback is executed when user opens or collapses a node, and has the following signature:
+The `onCollapse` callback is executed when the user opens or collapses a node (or you drive it via `editorRef.collapse`). It receives the node's [node data](#filter-functions) with the collapse flags spread on top:
 
 ```ts
 type OnCollapseFunction = (
-  {
-    path: CollectionKey[],
-    collapsed: boolean, // closing = true, opening = false
-    includeChildren: boolean // if was clicked with Modifier key to
-                             // open/close all descendants as well
+  props: NodeData & {
+    collapsed: boolean // closing = true, opening = false
+    includeChildren: boolean // if opened/closed with the Modifier key to
+                             // affect all descendants as well
   }
 ) => void
 ```
@@ -1375,7 +1382,7 @@ A few helper functions, components and types that might be useful in your own im
 - `ThemeInput`: input type for the `theme` prop
 - `JsonEditorProps<T>`: all input props for the Json Editor component. Generic on the data type — see [Typed data](#typed-data).
 - `JsonData`: main `data` object -- any valid JSON structure. Used as the default for `T`.
-- [`UpdateFunction`](#update-functions), [`UpdateResult`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`OnCopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
+- [`UpdateFunction`](#update-functions), [`UpdateResult`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`OnCopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks) / [`EditEvent`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
 - `JsonEditorError` / `JsonEditorErrorCode`: the canonical error shape (`{ code, message }`) reported to [`onError`](#onerror-function) and accepted in an [`UpdateFunction`](#update-functions) `{ error }` return
 - [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref), [`StartEditOptions`](#imperative-handle-editorref): input types of the respective props
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string

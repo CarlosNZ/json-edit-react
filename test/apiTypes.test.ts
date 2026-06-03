@@ -19,14 +19,18 @@ import type {
   EventInterceptFunction,
   UpdateFunction,
   OnChangeFunction,
-  OnErrorFunction,
-  OnEditEventFunction,
-  OnCollapseFunction,
   CommandResult,
   JsonEditorHandle,
 } from '../src/apiTypes'
-// `OnCopyFunction` graduated to the public surface with the clipboard split.
-import type { JsonData, OnCopyFunction } from '../src/types'
+// Graduated to the public surface: `OnCopyFunction` (clipboard split), and the
+// Category-3 observers `OnErrorFunction` / `OnEditEventFunction` / `OnCollapseFunction` (Phase 3).
+import type {
+  JsonData,
+  OnCopyFunction,
+  OnErrorFunction,
+  OnEditEventFunction,
+  OnCollapseFunction,
+} from '../src/types'
 
 // --- Cat 1: async-capable gates -------------------------------------------
 

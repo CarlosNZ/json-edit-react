@@ -125,41 +125,10 @@ export type OnChangeFunction<T = JsonData> = (
  * Category 3 — Observers (run after, return ignored)
  * ========================================================================== */
 
-/** After any error condition (Group A codes). */
-export type OnErrorFunction<T = JsonData> = (
-  props: NodeData<T> & { error: JsonEditorError; errorValue: JsonData }
-) => void
-
-/**
- * The complete interaction-lifecycle stream: value-edit, key-rename and add
- * sessions (start/confirm/cancel), plus the instant `delete`/`move` (one event
- * each). `confirmRename` carries `{ oldKey, newKey }`.
- */
-export type EditEvent<T = JsonData> = NodeData<T> &
-  (
-    | { event: 'startEdit' }
-    | { event: 'confirmEdit' }
-    | { event: 'cancelEdit' }
-    | { event: 'startRename' }
-    | { event: 'confirmRename'; oldKey: CollectionKey; newKey: CollectionKey }
-    | { event: 'cancelRename' }
-    | { event: 'startAdd' }
-    | { event: 'confirmAdd' }
-    | { event: 'cancelAdd' }
-    | { event: 'delete' }
-    | { event: 'move' }
-  )
-
-export type OnEditEventFunction<T = JsonData> = (e: EditEvent<T>) => void
-
-/** On collapse/expand (user click or `editorRef.collapse`). */
-export type OnCollapseFunction<T = JsonData> = (
-  props: NodeData<T> & { collapsed: boolean; includeChildren: boolean }
-) => void
-
-// `OnCopyFunction` (the `onCopy` observer) graduated to `./types` (it's public,
-// wired by the clipboard split). The remaining staging types here are unused
-// until their phases land.
+// All Category 3 observers (`OnErrorFunction`, `EditEvent` / `OnEditEventFunction`,
+// `OnCollapseFunction`) graduated to `./types` (wired in by §17 Phase 3), as did
+// `OnCopyFunction` (the clipboard split). The remaining staging types below are
+// unused until their phases land.
 
 /* ============================================================================
  * Category 4 — Imperative commands (the `editorRef` handle)

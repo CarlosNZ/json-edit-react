@@ -660,7 +660,7 @@ function App() {
                       : undefined
                   }
                   // collapseClickZones={['property', 'header']}
-                  onEditEvent={(path) => setIsEditing(path !== null)}
+                  onEditEvent={(e) => setIsEditing(e.event.startsWith('start'))}
                   onCollapse={(input) => {
                     // Showcase the onCollapse callback — only while the External
                     // Control panel is on screen (fires for both handle-driven

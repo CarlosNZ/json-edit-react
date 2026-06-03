@@ -55,4 +55,25 @@ describe('onCopy', () => {
       )
     )
   })
+
+  test('a failed copy reports a CLIPBOARD_ERROR (§17: error is a JsonEditorError)', async () => {
+    const user = userEvent.setup()
+    const writeText = jest.fn().mockRejectedValue(new Error('denied'))
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
+
+    const onCopy = jest.fn()
+    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} onCopy={onCopy} showIconTooltips />)
+
+    const row = screen.getByText('"hello"').closest('.jer-component') as HTMLElement
+    await user.click(row.querySelector('[title="Copy to clipboard"]') as HTMLElement)
+
+    await waitFor(() =>
+      expect(onCopy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: { code: 'CLIPBOARD_ERROR', message: 'denied' },
+        })
+      )
+    )
+  })
 })

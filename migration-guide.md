@@ -18,7 +18,8 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `externalTriggers` prop replaced by the `editorRef` imperative handle | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/cancelEdit/confirmEdit` — see §7 |
 | `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction` | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` (`errorMessage` → `error.message`) — see §8 |
 | `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`; return shape unified | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see §9 |
-| Callback payloads are now flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`); `JerError` → `JsonEditorError` | Update field names in `onUpdate` / `onChange` / `onError`; rename the error type — see §9 |
+| Callback payloads are now flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`); `JerError` → `JsonEditorError` | Update field names in `onUpdate` / `onChange` / `onError`; rename the error type — see §9, §10 |
+| `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JsonEditorError` | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see §10 |
 
 ---
 
@@ -399,12 +400,65 @@ Every callback now receives the standard flat [`NodeData`](README.md#filter-func
 
 ### `JerError` → `JsonEditorError`
 
-The error type reported to `onError` (and accepted in an `onUpdate` `{ error }` return) is renamed; its shape (`{ code, message }`) is unchanged, and the `code` union gains some forward-looking members. `onError`'s own payload fields are otherwise unchanged in this release.
+The error type reported to `onError` (and accepted in an `onUpdate` `{ error }` return) is renamed; its shape (`{ code, message }`) is unchanged, and the `code` union gains some forward-looking members. (`onError`'s own payload also moves to flat `NodeData` — see §10.)
 
 ```diff
 - import { type JerError } from 'json-edit-react'
 + import { type JsonEditorError } from 'json-edit-react'
 ```
+
+---
+
+## 10. Observers reshaped: `onEditEvent` lifecycle stream; flat `onError` / `onCollapse`; `onCopy` error
+
+The observer callbacks move onto the same flat `NodeData` payload as the rest of the API, and `onEditEvent` becomes a full lifecycle stream.
+
+### `onEditEvent` — from `(path, isKey)` to a discriminated event stream
+
+```diff
+- onEditEvent={(path, isKey) => {
+-   if (path === null) /* ended editing */
+-   else if (isKey)   /* started editing a key */
+-   else              /* started editing a value */
+- }}
++ onEditEvent={(e) => {
++   switch (e.event) {
++     case 'startEdit': case 'startRename': case 'startAdd': /* a session opened */ break
++     case 'confirmEdit': case 'confirmRename': case 'confirmAdd': /* committed */ break
++     case 'cancelEdit': case 'cancelRename': case 'cancelAdd': /* closed, no change */ break
++     case 'delete': case 'move': /* instant */ break
++   }
++   // e is the node's NodeData + the `event`; 'confirmRename' also has oldKey/newKey
++ }}
+```
+
+It now fires for the **complete** lifecycle (start → confirm/cancel) of value-edit, key-rename and add sessions, plus the instant `delete`/`move` — not just edit start/stop. This absorbs the role a dedicated `onRenameProperty` would have played (a rename surfaces as `startRename`/`confirmRename`/`cancelRename`). A no-op confirm (closing with no change) and a rejected/aborted change both report as `cancel*`.
+
+### `onError` and `onCollapse` — flat `NodeData`
+
+Both now receive the standard flat node data instead of a bespoke object:
+
+```diff
+  // onError
+- onError={({ currentData, currentValue, name, path, error, errorValue }) => ...}
++ onError={({ fullData, value, key, path, error, errorValue }) => ...}
+
+  // onCollapse — the `collapsed` / `includeChildren` flags are unchanged; the
+  // rest of the payload is now full NodeData (so `key`, `value`, `fullData`, … too)
+  onCollapse={({ path, collapsed, includeChildren }) => ...} // still works
+```
+
+(`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`, matching §9.) `CollapseState` — the `editorRef.collapse` command **input** — is unchanged.
+
+### `onCopy` — `error` is now a `JsonEditorError`
+
+```diff
+- onCopy={({ success, error }) => { if (!success) console.error(error?.message) }}
++ onCopy={({ success, error }) => { if (!success) console.error(error?.message) }}
+  // error is now `{ code: 'CLIPBOARD_ERROR', message }` instead of `{ message }`
+```
+
+`error.message` still works; the addition is the `code` field (`'CLIPBOARD_ERROR'`).
 
 ---
 

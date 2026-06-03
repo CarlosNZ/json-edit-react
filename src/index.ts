@@ -21,6 +21,7 @@ export {
   type OnChangeFunction,
   type OnErrorFunction,
   type OnEditEventFunction,
+  type EditEvent,
   type OnCollapseFunction,
   type JsonEditorError,
   type JsonEditorErrorCode,

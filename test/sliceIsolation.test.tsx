@@ -11,7 +11,15 @@ import { useState } from 'react'
 import { act, render } from '@testing-library/react'
 import { TreeStateProvider, useEditing, useCollapse } from '../src/contexts'
 import { useDragSource } from '../src/hooks/DragSourceProvider'
-import { type CollectionKey, type CollapseState } from '../src/types'
+import {
+  type CollectionKey,
+  type CollapseState,
+  type BuildNodeDataFromPathRef,
+} from '../src/types'
+
+// Slice-isolation tests don't fire observer events, so the NodeData accessor is
+// never invoked — a stub ref satisfies the provider prop.
+const stubBuildNodeDataFromPathRef: BuildNodeDataFromPathRef = { current: undefined }
 
 type DragSourceValue = { path: CollectionKey[] | null }
 
@@ -58,7 +66,7 @@ const DragOnlyConsumer = () => {
 
 const renderTree = () =>
   render(
-    <TreeStateProvider>
+    <TreeStateProvider buildNodeDataFromPathRef={stubBuildNodeDataFromPathRef}>
       <Harness />
       <EditingOnlyConsumer />
       <CollapseOnlyConsumer />
@@ -136,7 +144,7 @@ describe('Tree-state providers — slice isolation', () => {
       const [, setCounter] = useState(0)
       bumpOuterCounter = () => setCounter((n) => n + 1)
       return (
-        <TreeStateProvider>
+        <TreeStateProvider buildNodeDataFromPathRef={stubBuildNodeDataFromPathRef}>
           <Observer />
         </TreeStateProvider>
       )

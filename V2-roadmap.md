@@ -223,6 +223,7 @@ type JsonEditorErrorCode =
   | 'DELETE_ERROR'    // a delete was rejected
   | 'KEY_EXISTS'      // a new/renamed key collides with an existing sibling
   | 'INVALID_JSON'    // raw JSON typed into the editor failed to parse
+  | 'CLIPBOARD_ERROR' // a copy-to-clipboard write failed (onCopy)
   // Group B — imperative command flow (Category 4)
   | 'PATH_NOT_FOUND'  // a command targeted a path that doesn't exist in the current data
   | 'RESTRICTED'      // a command's action is blocked by an allow* filter (no overrideRestrictions set)

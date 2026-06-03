@@ -17,6 +17,7 @@ import {
   type ValueData,
   type JsonData,
   type EnumDefinition,
+  type EditEvent,
 } from './types'
 import { useTheme, useEditingStore, useCollapse } from './contexts'
 import { type CustomNodeData } from './CustomNode'
@@ -35,6 +36,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     onDelete,
     onChange,
     onMove,
+    onEditEvent,
     allowClipboard,
     onCopy,
     canDragOnto,
@@ -64,8 +66,15 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // it's read from the snapshot at use-time rather than subscribed to. The only
   // editing state that drives this node's render (`isEditing`) comes from
   // `useCommon`'s per-node selector.
-  const { startEdit, cancelEdit, recordPreviousEdit, setTabDirection, setPreviousValue, getSnapshot } =
-    useEditingStore()
+  const {
+    startEdit,
+    cancelEdit,
+    closeEdit,
+    recordPreviousEdit,
+    setTabDirection,
+    setPreviousValue,
+    getSnapshot,
+  } = useEditingStore()
   const { setCollapseState } = useCollapse()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
@@ -212,6 +221,11 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   if (!isVisible) return null
 
+  // Fire an `onEditEvent` for this node's value-edit session. `nodeData` is read
+  // live (these handlers are re-created each render), so no ref needed.
+  const emitEditEvent = (event: Extract<EditEvent['event'], 'startEdit' | 'confirmEdit' | 'cancelEdit' | 'delete'>) =>
+    onEditEvent?.({ ...nodeData, event } as EditEvent)
+
   const handleChangeDataType = (type: DataType) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
     setCollapseState(null)
@@ -222,11 +236,14 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (getSnapshot().previousValue === null) setPreviousValue(value as JsonData)
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
-      onEdit(customNode.defaultValue, path)
+      onEdit(customNode.defaultValue, path).then((result) => {
+        if (result) revertToData()
+        else emitEditEvent('confirmEdit')
+      })
       setDataType(type)
       setEnumType(null)
       // Custom nodes will be instantiated expanded and NOT editing
-      cancelEdit()
+      closeEdit()
       setCollapseState({ path, collapsed: false, includeChildren: false })
       return
     }
@@ -239,16 +256,19 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       if (typeof value !== 'string' || !enumType.values.includes(value)) {
         const attempted = enumType.values[0]
         onEdit(attempted, path).then((result) => {
-          if (result === false) revertToData()
-          else if (result) {
+          if (result === false) {
+            revertToData()
+            emitEditEvent('cancelEdit')
+          } else if (result) {
             // `attempted` rather than `newValue` — `newValue` is declared
             // further down in this function and is never reached on this
             // branch (we return at `setEnumType` below), so referencing it
             // from this callback would throw a TDZ ReferenceError.
             onError({ code: 'UPDATE_ERROR', message: result }, attempted as JsonData)
-            cancelEdit()
+            closeEdit()
             revertToData()
-          }
+            emitEditEvent('cancelEdit')
+          } else emitEditEvent('confirmEdit')
         })
       }
       setEnumType(enumType)
@@ -263,19 +283,25 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       // that won't match the custom node condition any more
       customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
     )
-    if (!['string', 'number', 'boolean'].includes(type)) cancelEdit()
+    if (!['string', 'number', 'boolean'].includes(type)) closeEdit()
     onEdit(newValue, path).then((result) => {
-      if (result === false) revertToData()
-      else if (result) {
-        onError({ code: 'UPDATE_ERROR', message: result }, newValue as JsonData)
-        cancelEdit()
+      if (result === false) {
         revertToData()
-      } else setEnumType(null)
+        emitEditEvent('cancelEdit')
+      } else if (result) {
+        onError({ code: 'UPDATE_ERROR', message: result }, newValue as JsonData)
+        closeEdit()
+        revertToData()
+        emitEditEvent('cancelEdit')
+      } else {
+        setEnumType(null)
+        emitEditEvent('confirmEdit')
+      }
     })
   }
 
   const handleEdit = (inputValue?: unknown) => {
-    cancelEdit()
+    closeEdit()
     setPreviousValue(null)
     let newValue: JsonData
     if (inputValue !== undefined && !isJsEvent(inputValue)) newValue = inputValue as JsonData
@@ -298,11 +324,14 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       }
     }
     onEdit(newValue, path).then((result) => {
-      if (result === false) revertToData()
-      else if (result) {
+      if (result === false) {
+        revertToData()
+        emitEditEvent('cancelEdit')
+      } else if (result) {
         onError({ code: 'UPDATE_ERROR', message: result }, newValue)
         revertToData()
-      }
+        emitEditEvent('cancelEdit')
+      } else emitEditEvent('confirmEdit')
     })
   }
 
@@ -326,6 +355,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // non-empty string is a real error. Neither edits this node's value buffer.
     onDelete(value, path).then((result) => {
       if (result) onError({ code: 'DELETE_ERROR', message: result }, value as ValueData)
+      else if (result === undefined) emitEditEvent('delete')
     })
   }
 

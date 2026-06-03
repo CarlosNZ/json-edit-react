@@ -23,6 +23,9 @@ import {
   type CollectionKey,
   type UpdateFunctionProps,
   type SortFunction,
+  type BuildNodeDataFromPath,
+  type BuildNodeDataFromPathRef,
+  type EditEvent,
   type JsonData,
   type KeyboardControls,
   ValueData,
@@ -84,9 +87,12 @@ const EMPTY_CUSTOM_TEXT: NonNullable<JsonEditorProps<JsonData>['customText']> = 
 const EMPTY_KEYBOARD_CONTROLS: NonNullable<JsonEditorProps<JsonData>['keyboardControls']> = {}
 const EMPTY_CUSTOM_BUTTONS: NonNullable<JsonEditorProps<JsonData>['customButtons']> = []
 
-const Editor: React.FC<JsonEditorProps<JsonData>> = ({
+const Editor: React.FC<
+  JsonEditorProps<JsonData> & { buildNodeDataFromPathRef: BuildNodeDataFromPathRef }
+> = ({
   data,
   setData,
+  buildNodeDataFromPathRef,
   rootName = 'root',
   onUpdate = NOOP,
   onChange,
@@ -252,7 +258,10 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
         value,
         'update'
       )
-      if (currentValue === newValue) return
+      // No-op confirm (value unchanged): signal the caller to treat it as a
+      // cancel (the `false` sentinel — same channel as a silent `null` cancel),
+      // so the edit session reports `cancelEdit` rather than `confirmEdit`.
+      if (currentValue === newValue) return false
 
       return await handleEdit({
         ...buildNodeData(dataRef.current, path, rootNameRef.current, sortRef.current),
@@ -382,14 +391,27 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
         insertOptions as UpdateOptions
       )
 
-      return await handleEdit({
-        ...buildNodeData(dataRef.current, sourcePath, rootNameRef.current, sortRef.current),
+      // Source node's NodeData (pre-move tree — `dataRef` still holds it until
+      // the commit re-renders). Used for both the `onUpdate` move payload and
+      // the `onEditEvent` move observer.
+      const sourceNodeData = buildNodeData(
+        dataRef.current,
+        sourcePath,
+        rootNameRef.current,
+        sortRef.current
+      )
+      const result = await handleEdit({
+        ...sourceNodeData,
         newData: addedData,
         event: 'move',
         newPath: destPath,
       })
+      // Observer (Cat 3): a committed move fires `onEditEvent` with the source
+      // node. (Fired here, not at the drop site, which only has the target.)
+      if (result === undefined) onEditEventStable?.({ ...sourceNodeData, event: 'move' } as EditEvent)
+      return result
     },
-    [handleEdit]
+    [handleEdit, onEditEventStable]
   )
 
   const restrictEditFilter = useMemo(() => getFilterFunction(restrictEdit), [restrictEdit])
@@ -459,6 +481,16 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
   // Late-assigned (see the ref declaration above): the stable update handlers
   // read the live comparator from here when building a node's `NodeData`.
   sortRef.current = sort
+
+  // Populate the bridge the editing/collapse providers read at event time to
+  // build a node's flat `NodeData` from just a path (they're ancestors of this
+  // component, so they can't reach `getLatestData`/`sort` directly). Stable over
+  // `getLatestData`; reads `rootName`/`sort` from refs so the identity holds.
+  const buildNodeDataFromPath = useCallback<BuildNodeDataFromPath>(
+    (path) => buildNodeData(getLatestData(), path, rootNameRef.current, sortRef.current),
+    [getLatestData]
+  )
+  buildNodeDataFromPathRef.current = buildNodeDataFromPath
 
   // Imperative handle (`editorRef` prop). The methods call the LIVE setters /
   // read the LIVE tree at call time, never a frozen render closure (per
@@ -585,6 +617,11 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
 export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.ReactElement | null {
   const [docRoot, setDocRoot] = useState<HTMLElement>()
 
+  // Shared bridge: `Editor` (which owns the live data) populates this each
+  // render; the editing/collapse providers (its ancestors) read it at event
+  // time to build flat `NodeData` for the observer events they fire.
+  const buildNodeDataFromPathRef = useRef<BuildNodeDataFromPath | undefined>(undefined)
+
   // We want access to the global document.documentElement object, but can't
   // access it directly when used with SSR. So we set it inside a `useEffect`,
   // which won't run server-side (it'll just be undefined) until client
@@ -602,8 +639,12 @@ export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.React
 
   return (
     <ThemeProvider theme={innerProps.theme ?? defaultTheme} icons={innerProps.icons} docRoot={docRoot}>
-      <TreeStateProvider onEditEvent={innerProps.onEditEvent} onCollapse={innerProps.onCollapse}>
-        <Editor {...innerProps} />
+      <TreeStateProvider
+        onEditEvent={innerProps.onEditEvent}
+        onCollapse={innerProps.onCollapse}
+        buildNodeDataFromPathRef={buildNodeDataFromPathRef}
+      >
+        <Editor {...innerProps} buildNodeDataFromPathRef={buildNodeDataFromPathRef} />
       </TreeStateProvider>
     </ThemeProvider>
   )
