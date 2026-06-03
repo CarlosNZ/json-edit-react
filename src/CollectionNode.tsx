@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
+import React, { useEffect, useLayoutEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
@@ -8,6 +8,7 @@ import {
   type CollectionData,
   type ValueData,
   type EditEvent,
+  type JsonEditorError,
 } from './types'
 import { Icon } from './Icons'
 import { filterNode } from './utils/filter'
@@ -31,8 +32,15 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   // Actions + imperative reads from the (stable) store — no subscription, so
   // editing transitions elsewhere don't re-render this node.
-  const { startEdit, cancelEdit, closeEdit, setPreviousValue, areChildrenBeingEdited, getSnapshot } =
-    useEditingStore()
+  const {
+    startEdit,
+    cancelEdit,
+    closeEdit,
+    setPreviousValue,
+    registerSessionCommit,
+    areChildrenBeingEdited,
+    getSnapshot,
+  } = useEditingStore()
   const { setCollapseState } = useCollapse()
   const {
     mainContainerRef,
@@ -218,6 +226,16 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // For when children are accessed via Tab
   if (childrenEditing && collapsed) animateCollapse(false)
 
+  // Register how `editorRef.confirm()` commits this collection's raw-JSON edit
+  // while it's open. A stable indirection over `commitRef` (assigned the latest
+  // `handleEdit` after its definition below) so the committer tracks the live
+  // buffer without re-registering each render; the store clears it on
+  // close/cancel/session-switch, so no cleanup is needed here.
+  const commitRef = useRef<() => Promise<void | false | JsonEditorError>>(() => Promise.resolve())
+  useLayoutEffect(() => {
+    if (isEditing) registerSessionCommit(() => commitRef.current())
+  }, [isEditing, registerSessionCommit])
+
   // Early return if this node is filtered out
   const isVisible =
     filterNode('collection', nodeData, searchFilter, searchText) || nodeData.level === 0
@@ -270,66 +288,96 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     }
   }
 
-  const handleEdit = () => {
+  // Commits the raw-JSON edit of this collection. Returns the canonical session
+  // outcome (`undefined` = committed, `false` = silent no-op, `JsonEditorError`
+  // = rejected) so `editorRef.confirm()` can map it; keyboard/OK callers ignore
+  // the return.
+  const handleEdit = (): Promise<void | false | JsonEditorError> | false | JsonEditorError => {
     // Parse exactly the text shown: `editBufferValue` is the displayed buffer
     // and reuses the string the memo already serialized, so the parsed input
     // and the INVALID_JSON payload match the textarea, and confirming without
     // typing doesn't serialize `data` again. The `?? jsonStringify(data)` is a
     // type guard — `editBufferValue` is non-null whenever a confirm can fire.
     const textToParse = editBufferValue ?? jsonStringify(data)
+    let value: CollectionData
     try {
-      const value = jsonParse(textToParse)
-      closeEdit()
-      setPreviousValue(null)
-      setError(null)
-      // No-op confirm: bail without committing. When the buffer was never
-      // typed into, `textToParse` already IS `jsonStringify(data)`, so reuse it
-      // rather than serializing `data` a second time.
-      const currentDataString = stringifiedValue === null ? textToParse : jsonStringify(data)
-      clearEditBuffer()
-      // No-op confirm (unchanged JSON) reports as a cancel (closed without change).
-      if (jsonStringify(value) === currentDataString) {
-        emitEditEvent('cancelEdit')
-        return
-      }
-      onEdit(value, path).then((result) => {
-        if (result === false) emitEditEvent('cancelEdit')
-        else if (result) {
-          onError({ code: 'UPDATE_ERROR', message: result }, value as CollectionData)
-          emitEditEvent('cancelEdit')
-        } else emitEditEvent('confirmEdit')
-      })
+      value = jsonParse(textToParse) as CollectionData
     } catch {
       // Parse failure leaves the edit session OPEN (user can fix the JSON), so
       // no terminal event — only the error.
-      onError(
-        { code: 'INVALID_JSON', message: translate('ERROR_INVALID_JSON', nodeData) },
-        textToParse
-      )
+      const error: JsonEditorError = {
+        code: 'INVALID_JSON',
+        message: translate('ERROR_INVALID_JSON', nodeData),
+      }
+      onError(error, textToParse)
+      return error
     }
+    closeEdit()
+    setPreviousValue(null)
+    setError(null)
+    // No-op confirm: bail without committing. When the buffer was never
+    // typed into, `textToParse` already IS `jsonStringify(data)`, so reuse it
+    // rather than serializing `data` a second time.
+    const currentDataString = stringifiedValue === null ? textToParse : jsonStringify(data)
+    clearEditBuffer()
+    // No-op confirm (unchanged JSON) reports as a cancel (closed without change).
+    if (jsonStringify(value) === currentDataString) {
+      emitEditEvent('cancelEdit')
+      return false
+    }
+    return onEdit(value, path).then((result): void | false | JsonEditorError => {
+      if (result === false) {
+        emitEditEvent('cancelEdit')
+        return false
+      }
+      if (result) {
+        const error: JsonEditorError = { code: 'UPDATE_ERROR', message: result }
+        onError(error, value as CollectionData)
+        emitEditEvent('cancelEdit')
+        return error
+      }
+      emitEditEvent('confirmEdit')
+    })
   }
+  // Keep the registered committer pointing at the current closure (live buffer);
+  // the ref + registration effect are declared above the early return.
+  commitRef.current = () => Promise.resolve(handleEdit())
 
-  const handleAdd = (key: string) => {
+  // Commits an add. Returns the canonical session outcome (`undefined` =
+  // committed, `false` = silent no-op, `JsonEditorError` = rejected) so
+  // `editorRef.confirm()` can map it; the EditButtons callers ignore the return.
+  const handleAdd = (
+    key: string
+  ): Promise<void | false | JsonEditorError> | JsonEditorError => {
     // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
     setCollapseState(null)
     animateCollapse(false)
     const newValue = getDefaultNewValue(nodeData, key)
+    const mapAdd = (p: Promise<string | void | false>) =>
+      p.then((result): void | false | JsonEditorError => {
+        if (result === false) return false
+        if (result) {
+          const error: JsonEditorError = { code: 'ADD_ERROR', message: result }
+          onError(error, newValue as CollectionData)
+          return error
+        }
+        emitEditEvent('confirmAdd')
+      })
     if (collectionType === 'array') {
       const index = insertAtTop.array ? 0 : (data as unknown[]).length
       const options = insertAtTop.array ? { insert: true } : {}
-      onAdd(newValue, [...path, index], options).then((result) => {
-        if (result) onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
-        else if (result === undefined) emitEditEvent('confirmAdd')
-      })
-    } else if (key in data) {
-      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
-    } else {
-      const options = insertAtTop.object ? { insertBefore: 0 } : {}
-      onAdd(newValue, [...path, key], options).then((result) => {
-        if (result) onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
-        else if (result === undefined) emitEditEvent('confirmAdd')
-      })
+      return mapAdd(onAdd(newValue, [...path, index], options))
     }
+    if (key in data) {
+      const error: JsonEditorError = {
+        code: 'KEY_EXISTS',
+        message: translate('ERROR_KEY_EXISTS', nodeData),
+      }
+      onError(error, key)
+      return error
+    }
+    const options = insertAtTop.object ? { insertBefore: 0 } : {}
+    return mapAdd(onAdd(newValue, [...path, key], options))
   }
 
   const handleDelete =
@@ -510,7 +558,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       getNewKeyOptions={getNewKeyOptions}
       editConfirmRef={editConfirmRef}
       jsonStringify={jsonStringify}
-      onEditEvent={onEditEvent}
       showIconTooltips={showIconTooltips}
     />
   )

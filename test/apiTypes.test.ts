@@ -19,17 +19,18 @@ import type {
   EventInterceptFunction,
   UpdateFunction,
   OnChangeFunction,
-  CommandResult,
-  JsonEditorHandle,
 } from '../src/apiTypes'
-// Graduated to the public surface: `OnCopyFunction` (clipboard split), and the
-// Category-3 observers `OnErrorFunction` / `OnEditEventFunction` / `OnCollapseFunction` (Phase 3).
+// Graduated to the public surface: `OnCopyFunction` (clipboard split), the
+// Category-3 observers `OnErrorFunction` / `OnEditEventFunction` / `OnCollapseFunction`
+// (Phase 3), and the Category-4 `CommandResult` / `JsonEditorHandle` (Phase 4).
 import type {
   JsonData,
   OnCopyFunction,
   OnErrorFunction,
   OnEditEventFunction,
   OnCollapseFunction,
+  CommandResult,
+  JsonEditorHandle,
 } from '../src/types'
 
 // --- Cat 1: async-capable gates -------------------------------------------
@@ -97,17 +98,13 @@ const error: JsonEditorError = { code, message: 'gone' }
 const describeResult = (r: CommandResult): string =>
   r.success ? 'ok' : r.error.message // `error` only exists on the failure branch
 
+// UI-interactions only: session openers (sync), shared confirm/cancel, collapse.
 const handle: JsonEditorHandle = {
   startEdit: () => ({ success: true }),
   startRename: () => ({ success: true }),
   startAdd: () => ({ success: false, error }),
   confirm: async () => ({ success: true }),
   cancel: () => undefined,
-  delete: async () => ({ success: true }),
-  edit: async () => ({ success: true }),
-  add: async () => ({ success: true }),
-  rename: async () => ({ success: true }),
-  move: async () => ({ success: true }),
   collapse: () => undefined,
 }
 

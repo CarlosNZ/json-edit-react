@@ -18,6 +18,7 @@ import {
   type JsonData,
   type EnumDefinition,
   type EditEvent,
+  type JsonEditorError,
 } from './types'
 import { useTheme, useEditingStore, useCollapse } from './contexts'
 import { type CustomNodeData } from './CustomNode'
@@ -73,6 +74,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     recordPreviousEdit,
     setTabDirection,
     setPreviousValue,
+    registerSessionCommit,
     getSnapshot,
   } = useEditingStore()
   const { setCollapseState } = useCollapse()
@@ -219,6 +221,16 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEditing, isVisible, canEdit, startEdit, cancelEdit])
 
+  // Register how `editorRef.confirm()` commits THIS node's value session while
+  // it's open. A stable indirection over `commitRef` (assigned the latest
+  // `handleEdit` each render) so the committer always sees the live edit buffer
+  // without re-registering on every keystroke. The store clears it on
+  // close/cancel/session-switch, so no cleanup is needed here.
+  const commitRef = useRef<() => Promise<void | false | JsonEditorError>>(() => Promise.resolve())
+  useLayoutEffect(() => {
+    if (isEditing) registerSessionCommit(() => commitRef.current())
+  }, [isEditing, registerSessionCommit])
+
   if (!isVisible) return null
 
   // Fire an `onEditEvent` for this node's value-edit session. `nodeData` is read
@@ -300,7 +312,11 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     })
   }
 
-  const handleEdit = (inputValue?: unknown) => {
+  // Commits the in-progress value edit. Returns the canonical session outcome
+  // (`undefined` = committed, `false` = silent no-op, `JsonEditorError` =
+  // rejected) so `editorRef.confirm()` can await + map it; the OK button / Tab /
+  // keyboard callers ignore the return (existing behaviour unchanged).
+  const handleEdit = (inputValue?: unknown): Promise<void | false | JsonEditorError> => {
     closeEdit()
     setPreviousValue(null)
     let newValue: JsonData
@@ -323,17 +339,24 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           newValue = value
       }
     }
-    onEdit(newValue, path).then((result) => {
+    return onEdit(newValue, path).then((result): void | false | JsonEditorError => {
       if (result === false) {
         revertToData()
         emitEditEvent('cancelEdit')
-      } else if (result) {
-        onError({ code: 'UPDATE_ERROR', message: result }, newValue)
+        return false
+      }
+      if (result) {
+        const error: JsonEditorError = { code: 'UPDATE_ERROR', message: result }
+        onError(error, newValue)
         revertToData()
         emitEditEvent('cancelEdit')
-      } else emitEditEvent('confirmEdit')
+        return error
+      }
+      emitEditEvent('confirmEdit')
     })
   }
+  // Keep the registered committer pointing at the current closure (live buffer).
+  commitRef.current = () => handleEdit()
 
   const handleCancel = () => {
     cancelEdit()

@@ -1,7 +1,7 @@
-import React, { useState } from 'react'
+import React, { useLayoutEffect, useRef, useState } from 'react'
 import { extract } from './utils/extract'
 import { Icon } from './Icons'
-import { useTheme } from './contexts'
+import { useTheme, useEditingStore, useEditingSelector } from './contexts'
 import { type TranslateFunction } from './localisation'
 import {
   type CollectionKey,
@@ -11,18 +11,18 @@ import {
   type CustomButtonDefinition,
   type KeyboardControlsFull,
   type OnCopyFunction,
+  type JsonEditorError,
   JsonData,
-  OnEditEventFunction,
-  type EditEvent,
 } from './types'
 import { getModifier } from './utils/keyboard'
+import { pathsEqual } from './utils/pathTools'
 
 interface EditButtonProps {
   startEdit?: () => void
   handleDelete?: () => void
   allowClipboard: boolean
   onCopy?: OnCopyFunction
-  handleAdd?: (newKey: string) => void
+  handleAdd?: (newKey: string) => Promise<void | false | JsonEditorError> | JsonEditorError
   type?: CollectionDataType
   nodeData: NodeData
   translate: TranslateFunction
@@ -39,7 +39,6 @@ interface EditButtonProps {
     // eslint-disable-next-line
     replacer?: (this: any, key: string, value: unknown) => string
   ) => string
-  onEditEvent?: OnEditEventFunction
   showIconTooltips: boolean
 }
 
@@ -58,65 +57,86 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   editConfirmRef,
   getNewKeyOptions,
   jsonStringify,
-  onEditEvent,
   showIconTooltips,
 }) => {
   const { getStyles } = useTheme()
+  // Actions only (no subscription beyond the `isAddingHere` selector below).
+  // Aliased — `startEdit` is also an EditButtons prop (the value-edit icon).
+  const {
+    startEdit: startEditSession,
+    cancelEdit,
+    closeEdit,
+    registerSessionCommit,
+  } = useEditingStore()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
 
-  // This value indicates whether the user is adding a new key to an object.
-  // Normally such an indicator would be a boolean, but in this case it can also
-  // be an array of strings. This is to avoid having to have a separate state
-  // value for the list of key options as well as an "are we adding a key?"
-  // state value.
+  // Holds the new-key options list (or `true` for a free-text add). Open/close is
+  // now driven by the store (`mode: 'add'`) so a shared `editorRef.confirm()` /
+  // `cancel()` can act on it; this just carries the options *content* (which the
+  // primitive-only store selector can't), synced by the effect below.
   const [addingKeyState, setAddingKeyState] = useState<string[] | boolean>(false)
 
   const { path, value: data } = nodeData
 
+  // Is an add session open on THIS collection? The session lives in the editing
+  // store (`mode: 'add'`, `path` = this collection), so the start/cancel events
+  // and the one-session-at-a-time invariant are shared with edit/rename.
+  const isAddingHere = useEditingSelector((s) => {
+    const e = s.currentlyEditingElement
+    return e !== null && e.mode === 'add' && pathsEqual(e.path, path)
+  })
+
   const hasKeyOptionsList = Array.isArray(addingKeyState)
 
-  // Add events describe the parent collection (this node). `startAdd` fires when
-  // the key-entry UI opens; `confirmAdd` comes from the commit (CollectionNode),
-  // `cancelAdd` from the cancel handlers below.
-  const emitAddEvent = (event: 'startAdd' | 'cancelAdd') =>
-    onEditEvent?.({ ...nodeData, event } as EditEvent)
-
-  const updateAddingState = (active: boolean) => {
-    if (active) emitAddEvent('startAdd')
-
-    if (!active) {
+  // Sync the local options/content state to the store session. On open (user- or
+  // handle-driven) compute the available keys; on close reset. `startAdd` /
+  // `cancelAdd` are fired by the store; `confirmAdd` by CollectionNode's commit.
+  useLayoutEffect(() => {
+    if (!isAddingHere) {
       setAddingKeyState(false)
+      setNewKey(NEW_KEY_PROMPT)
       return
     }
-
-    // Don't show keys that already exist in the object. This reads the node's
-    // OWN subtree (by `path`), which structural sharing keeps consistent even if
-    // `fullData` is a stale bailed reference — so no `getLatestData()` needed
-    // here (unlike the event-time whole-document reads in onChange/onError/Tab).
+    // Don't offer keys that already exist. Reads the node's OWN subtree (by
+    // `path`), kept consistent by structural sharing even if `fullData` is stale.
     const existingKeys = Object.keys(extract(nodeData.fullData, path) as object)
-
     const options = getNewKeyOptions
       ? getNewKeyOptions(nodeData)?.filter((key) => !existingKeys.includes(key))
       : null
     if (options) setNewKey('')
     setAddingKeyState(options ?? true)
+    // Fire only on the open/close transition; the reads inside are intentionally
+    // captured at that moment, not re-subscribed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAddingHere])
+
+  // Open an add session on this collection (object: shows the key input; array:
+  // a no-UI session whose `confirm()` appends a default value).
+  const openAdd = () => startEditSession(path, { mode: 'add' })
+
+  // Commit the open add session. Returns the canonical outcome so the shared
+  // `editorRef.confirm()` can map it; the OK button / Enter callers ignore it.
+  const commitAdd = (): Promise<void | false | JsonEditorError> => {
+    if (!handleAdd) return Promise.resolve(false)
+    // Options-list with nothing chosen yet — silent no-op.
+    if (hasKeyOptionsList && !newKey) return Promise.resolve(false)
+    closeEdit()
+    return Promise.resolve(handleAdd(type === 'array' ? '' : newKey))
   }
+
+  // Stable indirection so the registered committer tracks the latest closure
+  // (live `newKey` + `handleAdd`) without re-registering each render.
+  const commitRef = useRef<() => Promise<void | false | JsonEditorError>>(() => Promise.resolve())
+  commitRef.current = commitAdd
+  useLayoutEffect(() => {
+    if (isAddingHere) registerSessionCommit(() => commitRef.current())
+  }, [isAddingHere, registerSessionCommit])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     handleKeyboard(e, {
-      stringConfirm: () => {
-        if (handleAdd) {
-          updateAddingState(false)
-          handleAdd(newKey)
-          setNewKey(NEW_KEY_PROMPT)
-        }
-      },
-      cancel: () => {
-        updateAddingState(false)
-        emitAddEvent('cancelAdd')
-        setNewKey(NEW_KEY_PROMPT)
-      },
+      stringConfirm: () => void commitAdd(),
+      cancel: () => cancelEdit(),
     })
   }
 
@@ -171,7 +191,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   return (
     <div
       className="jer-edit-buttons"
-      style={{ opacity: addingKeyState ? 1 : undefined }}
+      style={{ opacity: isAddingHere ? 1 : undefined }}
       onClick={(e) => e.stopPropagation()}
     >
       {allowClipboard && (
@@ -202,8 +222,9 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       {handleAdd && (
         <div
           onClick={() => {
-            if (type === 'object') updateAddingState(true)
-            // For arrays, we don't need to add a key
+            // Objects open a key-entry session; arrays add a default value
+            // immediately (no key to fill — a one-shot, as before).
+            if (type === 'object') openAdd()
             else handleAdd('')
           }}
           title={showIconTooltips ? translate('TOOLTIP_ADD', nodeData) : ''}
@@ -216,7 +237,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           <Element nodeData={nodeData} />
         </div>
       ))}
-      {addingKeyState && handleAdd && type === 'object' && (
+      {isAddingHere && handleAdd && type === 'object' && (
         <>
           {hasKeyOptionsList ? (
             <div className="jer-select jer-select-keys">
@@ -224,18 +245,14 @@ export const EditButtons: React.FC<EditButtonProps> = ({
                 name="new-key-select"
                 className="jer-select-inner"
                 onChange={(e) => {
+                  // The chosen option IS the key — commit it directly.
+                  closeEdit()
                   handleAdd(e.target.value)
-                  updateAddingState(false)
                 }}
                 defaultValue=""
                 autoFocus
                 onKeyDown={(e: React.KeyboardEvent) => {
-                  handleKeyboard(e, {
-                    cancel: () => {
-                      updateAddingState(false)
-                      emitAddEvent('cancelAdd')
-                    },
-                  })
+                  handleKeyboard(e, { cancel: () => cancelEdit() })
                 }}
               >
                 <option value="" disabled>
@@ -265,16 +282,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             />
           )}
           <InputButtons
-            onOk={() => {
-              if (hasKeyOptionsList && !newKey) return
-
-              updateAddingState(false)
-              handleAdd(newKey)
-            }}
-            onCancel={() => {
-              updateAddingState(false)
-              emitAddEvent('cancelAdd')
-            }}
+            onOk={() => void commitAdd()}
+            onCancel={() => cancelEdit()}
             nodeData={nodeData}
             editConfirmRef={editConfirmRef}
             hideOk={hasKeyOptionsList}

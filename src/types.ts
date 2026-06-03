@@ -66,39 +66,72 @@ export interface JsonEditorProps<T = JsonData> {
 }
 
 export interface StartEditOptions {
-  /** The node to edit. */
+  /**
+   * The target node. For `startEdit`/`startRename` it's the node being edited;
+   * for `startAdd` it's the collection node the new entry is added into.
+   */
   path: CollectionKey[]
   /**
-   * Bypass the node's `restrictEdit` filter (default `false`). When `false`,
-   * the filter is evaluated for this node at call time and the edit is a no-op
-   * if it's restricted; when `true`, editing starts regardless — the intended
-   * use is to lock the tree with `restrictEdit` and imperatively enable a
-   * single node.
+   * Bypass the relevant `restrict*` filter (default `false`). When `false`, the
+   * filter is evaluated for this node at call time and the command is a no-op
+   * (returning a `RESTRICTED` error) if it's restricted; when `true`, the
+   * session opens regardless — the intended use is to lock the tree and
+   * imperatively enable a single node. Skips ONLY the filter, never `onUpdate`:
+   * the consumer's `onUpdate` still runs (and may veto) at `confirm()`.
    */
   overrideRestrictions?: boolean
 }
 
 /**
- * Imperative handle exposed via the `editorRef` prop. Lets a consumer drive
- * collapse/expand and editing actions without a state-as-RPC prop.
+ * The result of an imperative command (§17, Category 4). Strictly binary: did
+ * the command run, or was it refused? All descriptive metadata (which node, the
+ * resulting data, …) comes from the observer that fires as a result, not from
+ * here — one source of truth, whether the trigger was user- or command-driven.
+ */
+export type CommandResult = { success: true } | { success: false; error: JsonEditorError }
+
+/**
+ * Imperative handle exposed via the `editorRef` prop (§17, Category 4). The
+ * commands drive editor *UI* a consumer can't otherwise reach — they open an
+ * edit/rename/add input session, confirm/cancel it, or collapse nodes. They
+ * deliberately do NOT mutate data directly: the consumer owns `data`/`setData`,
+ * so changing a value is just `setData(newData)` and the editor reflects it.
  *
- * `startEdit` auto-reveals a target that's collapsed below the mount frontier.
- * It respects the `restrictEdit` filter by default; pass `overrideRestrictions`
- * to bypass it. (Key/add/delete modes are tracked as a follow-up.)
+ * Session openers are synchronous (they only validate + open an input) and
+ * return a `CommandResult` (`PATH_NOT_FOUND` if the path is gone, `RESTRICTED`
+ * if a filter blocks it). `confirm()` is async — it commits the open session
+ * through `onUpdate`, which may reject — so it resolves to a `CommandResult`.
+ * Only one session is open at a time, so `confirm`/`cancel` are shared.
  */
 export interface JsonEditorHandle {
   /** Collapse/expand a node (or subtree, with `includeChildren`). */
   collapse: (state: CollapseState | CollapseState[]) => void
   /**
-   * Put a node into (value) edit mode. Respects `restrictEdit` unless
-   * `overrideRestrictions` is set. Returns `false` if the edit was blocked by
-   * `restrictEdit` (request not accepted), `true` otherwise.
+   * Open a value-edit session at a node. Respects `restrictEdit` unless
+   * `overrideRestrictions` is set. Auto-reveals a target collapsed below the
+   * mount frontier.
    */
-  startEdit: (options: StartEditOptions) => boolean
-  /** Leave edit mode without committing. */
-  cancelEdit: () => void
-  /** Commit the in-progress edit (equivalent to clicking the tick), then exit. */
-  confirmEdit: () => void
+  startEdit: (options: StartEditOptions) => CommandResult
+  /**
+   * Open a key-rename session at a node. A rename requires `restrictEdit`,
+   * `restrictAdd` AND `restrictDelete` to pass (unless overridden), and the node
+   * must be a non-root object member (array items have no key).
+   */
+  startRename: (options: StartEditOptions) => CommandResult
+  /**
+   * Open an "add" session on a collection node (`path` = the collection). For
+   * objects this opens the new-key input; for arrays there's no key to fill, so
+   * `confirm()` appends a default value. Respects `restrictAdd` on the target.
+   */
+  startAdd: (options: StartEditOptions) => CommandResult
+  /**
+   * Commit the active session (runs `onUpdate`), then exit. Resolves to
+   * `{ success: true }` on commit, or `{ success: false, error }` if `onUpdate`
+   * rejected it. A no-op (unchanged value) resolves to success.
+   */
+  confirm: () => Promise<CommandResult>
+  /** Abort the active session without committing (fires the `cancel*` event). */
+  cancel: () => void
 }
 
 /**
@@ -150,8 +183,10 @@ export type TabDirection = 'next' | 'prev'
 
 export interface EditingState {
   path: CollectionKey[]
-  mode: 'value' | 'key'
-  // Set when the edit was started imperatively via the `editorRef` handle.
+  // `value` = editing a leaf/raw value; `key` = renaming a key; `add` = an open
+  // add session on a collection (`path` is the collection being added into).
+  mode: 'value' | 'key' | 'add'
+  // Set when the session was started imperatively via the `editorRef` handle.
   // A forced edit overrides the `restrictEdit` filter — the node-skip redirect
   // in ValueNodeWrapper leaves it in place instead of bouncing off it.
   force?: boolean

@@ -127,7 +127,7 @@ Key implementation decisions:
 
 Tests: editing actions (incl. restrictEdit respect/override) in [test/imperativeHandle.test.tsx](test/imperativeHandle.test.tsx); the collapse broadcast suite ([test/collapseBroadcasts.test.tsx](test/collapseBroadcasts.test.tsx)) now drives via the handle.
 
-Follow-up: extend the handle to **key / add / delete** modes with the same per-call `overrideRestrictions` semantics — [#286](https://github.com/CarlosNZ/json-edit-react/issues/286). Each mode gates on a different filter (key needs edit+add+delete; add/delete are per-node operations, not central state), so they're a 2.x feature rather than part of this cleanup. These commands are now specified under §17 (Category 4), and the #117 confirmation flow is handled by §17's `onEventIntercept` gate + the `editorRef.delete` resume.
+Follow-up: extend the handle to **key / add** *session* modes — [#286](https://github.com/CarlosNZ/json-edit-react/issues/286). Delivered under §17 Phase 4 (Category 4) as `startRename` / `startAdd` session openers sharing one `confirm`/`cancel`. The *direct-mutation* half of #286 was declined (see §17 Category 4): a consumer owns `data`/`setData`, so a data-mutating command is redundant. The #117 confirmation flow is `onEventIntercept` gate → consumer's own modal → consumer mutates its own data (no `editorRef.delete`).
 
 ## 11. Export `JsonViewer` — ✅ done
 
@@ -339,6 +339,8 @@ type OnCopyFunction<T = JsonData> =
 (All event strings above are tentative — finalised in the end-of-review summary table.)
 
 ### Category 4 (not a callback) — Imperative commands
+
+> **Decided at implementation (Phase 4, [#299](https://github.com/CarlosNZ/json-edit-react/issues/299)): the direct mutators were DROPPED.** The shipped `JsonEditorHandle` is **UI-interactions only** — session openers (`startEdit`/`startRename`/`startAdd`), shared `confirm`/`cancel`, and `collapse`. The direct mutators (`delete`/`edit`/`add`/`rename`/`move`) sketched below were cut: a consumer owns `data`/`setData`, so mutating data is already `setData(newData)` and the editor reflects it — a command for it is a redundant second path (and the binary-`CommandResult`-can't-report-the-new-path tradeoff noted below dissolves). This also decouples Phase 4 from [#117](https://github.com/CarlosNZ/json-edit-react/issues/117): the confirm-before-delete *resume* becomes "consumer intercepts → runs its modal → deletes from its own data", needing no `editorRef.delete`. #117 closes when `onEventIntercept` lands; [#286](https://github.com/CarlosNZ/json-edit-react/issues/286) (extending the handle to mutation modes) is largely mooted — its session-opener half shipped here, its direct-mutation half is declined by design. The original design follows for the record.
 
 ```ts
 // Strictly binary: did the command run, or was it refused? All descriptive metadata

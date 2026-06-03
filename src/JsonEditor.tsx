@@ -8,6 +8,7 @@ import React, {
 } from 'react'
 import { assign, type AssignOptions, type AssignInput } from './utils/assign'
 import { extract } from './utils/extract'
+import { toPathString } from './utils/pathTools'
 import { CollectionNode } from './CollectionNode'
 import { getFullKeyboardControlMap, handleKeyPress } from './utils/keyboard'
 import { matchNode, matchNodeKey } from './utils/filter'
@@ -27,6 +28,8 @@ import {
   type BuildNodeDataFromPathRef,
   type EditEvent,
   type JsonData,
+  type JsonEditorError,
+  type CommandResult,
   type KeyboardControls,
   ValueData,
   CustomNodeDefinition,
@@ -144,7 +147,7 @@ const Editor: React.FC<
   // Root must not subscribe to editing state — that would re-render the whole
   // tree on every edit transition. Read the actions from the stable store
   // (used by the cancel-on-unmount cleanup and the `editorRef` handle below).
-  const { startEdit: startEditAction, cancelEdit } = useEditingStore()
+  const { startEdit: startEditAction, cancelEdit, confirmSession } = useEditingStore()
   const collapseFilter = useMemo(() => getFilterFunction(collapse), [collapse])
   const translate = useMemo(
     () => getTranslateFunction(translations, customText),
@@ -492,37 +495,104 @@ const Editor: React.FC<
   )
   buildNodeDataFromPathRef.current = buildNodeDataFromPath
 
-  // Imperative handle (`editorRef` prop). The methods call the LIVE setters /
-  // read the LIVE tree at call time, never a frozen render closure (per
-  // PERF-ARCHITECTURE). Declared after `sort` because the `startEdit` filter
-  // pre-check reconstructs the target's NodeData via it.
+  // Imperative handle (`editorRef` prop). UI-interactions only (§17, Category 4):
+  // the commands open/confirm/cancel an editing session or collapse nodes — they
+  // never mutate data directly (the consumer owns `data`/`setData`). Every method
+  // reads the LIVE tree at call time, never a frozen render closure (per
+  // PERF-ARCHITECTURE). Declared after `sort` because the opener filter pre-checks
+  // reconstruct the target's NodeData via it.
   useImperativeHandle(
     editorRef,
-    () => ({
-      collapse: (state) => setCollapseState(state),
-      startEdit: ({ path, overrideRestrictions = false }) => {
-        // Respect the node's `restrictEdit` filter unless explicitly overridden.
-        // Evaluated here, once, against the live tree — so an explicit target is
-        // never silently redirected to a neighbour (as the node-side Tab redirect
-        // would do). `force: true` then tells the node "already vetted, don't
-        // re-check"; it also auto-reveals a target collapsed below the mount
-        // frontier (the same cascade Tab nav rides). Returns whether the edit
-        // was accepted, so a caller can give its own feedback on a blocked edit.
-        if (
-          !overrideRestrictions &&
-          restrictEditFilter(buildNodeData(getLatestData(), path, rootName, sort))
-        )
-          return false
-        startEditAction(path, { force: true })
-        return true
-      },
-      cancelEdit: () => cancelEdit(),
-      confirmEdit: () => {
-        editConfirmRef.current?.click()
-        cancelEdit()
-      },
-    }),
-    [setCollapseState, startEditAction, cancelEdit, restrictEditFilter, getLatestData, rootName, sort]
+    () => {
+      // `extract` throws on a missing path; a sentinel turns that into a value
+      // we can test, so a stale path (e.g. the node deleted behind a modal) is a
+      // clean `PATH_NOT_FOUND` no-op rather than a throw.
+      const SENTINEL = Symbol('path-missing')
+      const liveNode = (path: CollectionKey[]): unknown => {
+        const value = extract(getLatestData(), path, SENTINEL)
+        return value === SENTINEL ? SENTINEL : value
+      }
+      const fail = (code: JsonEditorError['code'], message: string): CommandResult => ({
+        success: false,
+        error: { code, message },
+      })
+      const pathNotFound = (path: CollectionKey[]): CommandResult => {
+        console.warn(`[json-edit-react] editorRef command targeted a missing path: ${toPathString(path)}`)
+        return fail('PATH_NOT_FOUND', `Path not found: ${toPathString(path)}`)
+      }
+      // Shared opener: (path already verified to exist) check the restriction
+      // filter unless overridden — `overrideRestrictions` skips ONLY the filter,
+      // never `onUpdate` (which still runs at `confirm()`) — then open the
+      // session. `force: true` tells the node "already vetted, don't re-check",
+      // and auto-reveals a target collapsed below the mount frontier.
+      const open = (
+        path: CollectionKey[],
+        mode: 'value' | 'key' | 'add',
+        overrideRestrictions: boolean,
+        isRestricted: () => boolean
+      ): CommandResult => {
+        if (!overrideRestrictions && isRestricted())
+          return fail('RESTRICTED', `Action restricted at path: ${toPathString(path)}`)
+        startEditAction(path, { mode, force: true })
+        return { success: true }
+      }
+
+      return {
+        collapse: (state) => setCollapseState(state),
+
+        startEdit: ({ path, overrideRestrictions = false }) => {
+          if (liveNode(path) === SENTINEL) return pathNotFound(path)
+          return open(path, 'value', overrideRestrictions, () =>
+            restrictEditFilter(buildNodeData(getLatestData(), path, rootName, sort))
+          )
+        },
+
+        startRename: ({ path, overrideRestrictions = false }) => {
+          if (liveNode(path) === SENTINEL) return pathNotFound(path)
+          // A rename needs a non-root object member (array items have no key).
+          if (path.length === 0 || typeof path[path.length - 1] === 'number')
+            return fail('RESTRICTED', `Cannot rename a key at path: ${toPathString(path)}`)
+          return open(path, 'key', overrideRestrictions, () => {
+            // A rename is delete-old-key + add-new-key, so all three must pass.
+            const node = buildNodeData(getLatestData(), path, rootName, sort)
+            return restrictEditFilter(node) || restrictAddFilter(node) || restrictDeleteFilter(node)
+          })
+        },
+
+        startAdd: ({ path, overrideRestrictions = false }) => {
+          const target = liveNode(path)
+          if (target === SENTINEL) return pathNotFound(path)
+          if (!isCollection(target))
+            return fail('PATH_NOT_FOUND', `Cannot add to a non-collection at path: ${toPathString(path)}`)
+          return open(path, 'add', overrideRestrictions, () =>
+            restrictAddFilter(buildNodeData(getLatestData(), path, rootName, sort))
+          )
+        },
+
+        confirm: async () => {
+          const pending = confirmSession()
+          if (!pending) return fail('UPDATE_ERROR', 'No active editing session to confirm')
+          const result = await pending
+          // `undefined` = committed, `false` = silent no-op — both are "ran".
+          if (result === undefined || result === false) return { success: true }
+          return { success: false, error: result }
+        },
+
+        cancel: () => cancelEdit(),
+      }
+    },
+    [
+      setCollapseState,
+      startEditAction,
+      cancelEdit,
+      confirmSession,
+      restrictEditFilter,
+      restrictAddFilter,
+      restrictDeleteFilter,
+      getLatestData,
+      rootName,
+      sort,
+    ]
   )
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)

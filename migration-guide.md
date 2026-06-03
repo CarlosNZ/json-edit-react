@@ -15,7 +15,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | Several internal helpers are now part of the public API | No action needed — purely additive |
 | `JsonEditor` is now generic on the data type (`JsonEditor<T>`) | No action needed — defaults to `JsonData`, source-compatible. Opt in by writing `<JsonEditor<MyShape> ... />` |
 | `setData` is now required; `viewOnly` removed; new `JsonViewer` export | Switch read-only usage to `<JsonViewer>`; replace `viewOnly={cond}` with the relevant `restrict*` toggles, including `restrictDrag` if drag was enabled — see §6 |
-| `externalTriggers` prop replaced by the `editorRef` imperative handle | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/cancelEdit/confirmEdit` — see §7 |
+| `externalTriggers` prop replaced by the `editorRef` imperative handle | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/startRename/startAdd/confirm/cancel` — see §7 |
 | `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction` | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` (`errorMessage` → `error.message`) — see §8 |
 | `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`; return shape unified | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see §9 |
 | Callback payloads are now flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`); `JerError` → `JsonEditorError` | Update field names in `onUpdate` / `onChange` / `onError`; rename the error type — see §9, §10 |
@@ -281,13 +281,16 @@ Action mapping:
 |---|---|
 | `{ collapse: state }` | `editorRef.current.collapse(state)` |
 | `{ edit: { path } }` | `editorRef.current.startEdit({ path })` |
-| `{ edit: { action: 'accept' } }` | `editorRef.current.confirmEdit()` |
-| `{ edit: { action: 'cancel' } }` | `editorRef.current.cancelEdit()` |
+| `{ edit: { action: 'accept' } }` | `await editorRef.current.confirm()` |
+| `{ edit: { action: 'cancel' } }` | `editorRef.current.cancel()` |
 
-Two behaviours of `startEdit` worth noting:
+The handle is **UI-interactions only** — it opens/commits/cancels an editing session or collapses nodes; it has no data mutators (you own `data`/`setData`, so mutating data is just `setData(newData)`). Beyond the value-edit `startEdit`, there are now `startRename` (open the key editor) and `startAdd` (open the add input on a collection), all sharing one `confirm()` / `cancel()`.
 
-- It **respects `restrictEdit` by default** — the filter is evaluated for the target at call time and the call is a no-op if it's restricted (it returns `false`, so you can give your own feedback). Pass `{ path, overrideRestrictions: true }` to bypass it (e.g. lock the tree with `restrictEdit={true}` and imperatively open one node).
-- It **auto-reveals** a target collapsed below the current view: collapsed ancestors expand so the node becomes editable.
+Notes:
+
+- **The openers return a `CommandResult`** (`{ success: true } | { success: false; error }`), not a bare boolean. A refusal carries `error.code` of `'PATH_NOT_FOUND'` or `'RESTRICTED'`, so you can give your own feedback. They **respect the relevant `restrict*` filter by default**; pass `{ path, overrideRestrictions: true }` to bypass it (e.g. lock the tree with `restrictEdit={true}` and imperatively open one node). `overrideRestrictions` skips **only** the filter — your `onUpdate` still runs at `confirm()`.
+- **`confirm()` is now async** — it commits the open session through `onUpdate`, resolving to `{ success: true }` or `{ success: false, error }` if rejected. `await` it if you need the outcome.
+- The openers **auto-reveal** a target collapsed below the current view: collapsed ancestors expand so the node becomes editable.
 
 `JsonViewer` also accepts `editorRef`, but its `JsonViewerHandle` exposes only `collapse` — editing actions would bypass the read-only contract, so they aren't surfaced.
 

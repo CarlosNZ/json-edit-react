@@ -981,13 +981,14 @@ function App() {
                         <Button
                           size="sm"
                           onClick={() => {
-                            const started = editorRef.current?.startEdit({
+                            const result = editorRef.current?.startEdit({
                               path: splitPropertyString(handlePath),
                               // overrideRestrictions: handleOverrideRestrictions,
                             })
-                            if (started === false)
+                            if (result && !result.success)
                               toast({
                                 title: "Can't edit that node",
+                                description: result.error.message,
                                 status: 'warning',
                                 duration: 2000,
                                 isClosable: true,
@@ -1005,7 +1006,7 @@ function App() {
                         <Flex gap={2}>
                           <Button
                             size="sm"
-                            onClick={() => editorRef.current?.confirmEdit()}
+                            onClick={() => editorRef.current?.confirm()}
                             colorScheme="primaryScheme"
                             variant="outline"
                           >
@@ -1013,7 +1014,7 @@ function App() {
                           </Button>
                           <Button
                             size="sm"
-                            onClick={() => editorRef.current?.cancelEdit()}
+                            onClick={() => editorRef.current?.cancel()}
                             colorScheme="primaryScheme"
                             variant="outline"
                           >

@@ -134,48 +134,9 @@ export type OnChangeFunction<T = JsonData> = (
  * Category 4 — Imperative commands (the `editorRef` handle)
  * ========================================================================== */
 
-/**
- * Strictly binary: did the command run, or was it refused? All descriptive
- * metadata comes from the observer that fires as a result.
- */
-export type CommandResult = { success: true } | { success: false; error: JsonEditorError }
-
-// (No `<T>` generic yet — no method references the document type. A later phase
-// adds it if/when typed payloads are threaded through the commands.)
-export interface JsonEditorHandle {
-  // --- Session openers: enter an interactive session (open the input) at a
-  //     node; no value supplied. Sync (just opens). The eventual confirm runs
-  //     the pipeline. Distinct starts, SHARED confirm/cancel (one session open).
-  startEdit(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
-  startRename(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
-  startAdd(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): CommandResult
-  confirm(): Promise<CommandResult> // commit the active session (runs onUpdate)
-  cancel(): void // abort the active session
-
-  // --- Direct ("all-in-one") mutators: do the whole mutation with values
-  //     provided, no UI session. Run the pipeline → async.
-  delete(opts: { path: CollectionKey[]; overrideRestrictions?: boolean }): Promise<CommandResult>
-  edit(opts: {
-    path: CollectionKey[]
-    value: unknown
-    overrideRestrictions?: boolean
-  }): Promise<CommandResult>
-  add(opts: {
-    path: CollectionKey[]
-    value: unknown
-    overrideRestrictions?: boolean
-  }): Promise<CommandResult>
-  rename(opts: {
-    path: CollectionKey[]
-    newKey: CollectionKey
-    overrideRestrictions?: boolean
-  }): Promise<CommandResult>
-  move(opts: {
-    from: CollectionKey[]
-    to: CollectionKey[]
-    overrideRestrictions?: boolean
-  }): Promise<CommandResult>
-
-  // --- Non-mutating
-  collapse(opts: { path: CollectionKey[]; collapsed?: boolean; includeChildren?: boolean }): void
-}
+// `CommandResult` and `JsonEditorHandle` graduated to `./types` (wired in by §17
+// Phase 4). The handle is UI-interactions only — session openers (`startEdit` /
+// `startRename` / `startAdd`), shared `confirm`/`cancel`, and `collapse`. The
+// direct mutators sketched here in earlier drafts (`delete`/`edit`/`add`/
+// `rename`/`move`) were DROPPED: a consumer owns `data`/`setData`, so mutating
+// data is already `setData(newData)` — a command for it is a redundant path.
