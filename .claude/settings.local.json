@@ -6,7 +6,9 @@
       "Bash(echo \"exit: $?\")",
       "Bash(pnpm compile *)",
       "Bash(pnpm lint *)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(npx eslint *)",
+      "Bash(echo \"EXIT: $?\")"
     ]
   }
 }
