@@ -66,71 +66,46 @@ export interface JsonEditorProps<T = JsonData> {
 }
 
 export interface StartEditOptions {
-  /**
-   * The target node. For `startEdit`/`startRename` it's the node being edited;
-   * for `startAdd` it's the collection node the new entry is added into.
-   */
+  /** The target node to open a value-edit session on. */
   path: CollectionKey[]
   /**
-   * Bypass the relevant `restrict*` filter (default `false`). When `false`, the
-   * filter is evaluated for this node at call time and the command is a no-op
-   * (returning a `RESTRICTED` error) if it's restricted; when `true`, the
-   * session opens regardless — the intended use is to lock the tree and
-   * imperatively enable a single node. Skips ONLY the filter, never `onUpdate`:
-   * the consumer's `onUpdate` still runs (and may veto) at `confirm()`.
+   * Bypass `restrictEdit` (default `false`). When `false`, the filter is
+   * evaluated for this node at call time and `startEdit` is a no-op (returning
+   * `'RESTRICTED'`) if it's restricted; when `true`, the session opens
+   * regardless — the intended use is to lock the tree and imperatively enable a
+   * single node. Skips ONLY the filter, never `onUpdate`: the consumer's
+   * `onUpdate` still runs (and may veto) at `confirm()`.
    */
   overrideRestrictions?: boolean
 }
 
 /**
- * The result of an imperative command (§17, Category 4). Strictly binary: did
- * the command run, or was it refused? All descriptive metadata (which node, the
- * resulting data, …) comes from the observer that fires as a result, not from
- * here — one source of truth, whether the trigger was user- or command-driven.
+ * What `editorRef.startEdit` did: `true` if it opened a value-edit session, or
+ * the reason it didn't — `'PATH_NOT_FOUND'` (target gone) or `'RESTRICTED'`
+ * (`restrictEdit` blocked it, and `overrideRestrictions` wasn't set).
  */
-export type CommandResult = { success: true } | { success: false; error: JsonEditorError }
+export type StartEditResult = true | 'RESTRICTED' | 'PATH_NOT_FOUND'
 
 /**
- * Imperative handle exposed via the `editorRef` prop (§17, Category 4). The
- * commands drive editor *UI* a consumer can't otherwise reach — they open an
- * edit/rename/add input session, confirm/cancel it, or collapse nodes. They
- * deliberately do NOT mutate data directly: the consumer owns `data`/`setData`,
- * so changing a value is just `setData(newData)` and the editor reflects it.
- *
- * Session openers are synchronous (they only validate + open an input) and
- * return a `CommandResult` (`PATH_NOT_FOUND` if the path is gone, `RESTRICTED`
- * if a filter blocks it). `confirm()` is async — it commits the open session
- * through `onUpdate`, which may reject — so it resolves to a `CommandResult`.
- * Only one session is open at a time, so `confirm`/`cancel` are shared.
+ * Imperative handle exposed via the `editorRef` prop. The commands drive editor
+ * *UI* a consumer can't otherwise reach — they open a value-edit session,
+ * confirm/cancel it, or collapse nodes. They deliberately do NOT mutate data
+ * directly: the consumer owns `data`/`setData`, so changing a value is just
+ * `setData(newData)` and the editor reflects it.
  */
 export interface JsonEditorHandle {
   /** Collapse/expand a node (or subtree, with `includeChildren`). */
   collapse: (state: CollapseState | CollapseState[]) => void
   /**
    * Open a value-edit session at a node. Respects `restrictEdit` unless
-   * `overrideRestrictions` is set. Auto-reveals a target collapsed below the
-   * mount frontier.
+   * `overrideRestrictions` is set; auto-reveals a target collapsed below the
+   * mount frontier. Returns `true` if it opened, else why not — see
+   * `StartEditResult`.
    */
-  startEdit: (options: StartEditOptions) => CommandResult
-  /**
-   * Open a key-rename session at a node. A rename requires `restrictEdit`,
-   * `restrictAdd` AND `restrictDelete` to pass (unless overridden), and the node
-   * must be a non-root object member (array items have no key).
-   */
-  startRename: (options: StartEditOptions) => CommandResult
-  /**
-   * Open an "add" session on a collection node (`path` = the collection). For
-   * objects this opens the new-key input; for arrays there's no key to fill, so
-   * `confirm()` appends a default value. Respects `restrictAdd` on the target.
-   */
-  startAdd: (options: StartEditOptions) => CommandResult
-  /**
-   * Commit the active session (runs `onUpdate`), then exit. Resolves to
-   * `{ success: true }` on commit, or `{ success: false, error }` if `onUpdate`
-   * rejected it. A no-op (unchanged value) resolves to success.
-   */
-  confirm: () => Promise<CommandResult>
-  /** Abort the active session without committing (fires the `cancel*` event). */
+  startEdit: (options: StartEditOptions) => StartEditResult
+  /** Commit the active session (clicks the live confirm control), then exit. */
+  confirm: () => void
+  /** Abort the active session without committing (fires the matching `cancel*` event). */
   cancel: () => void
 }
 
@@ -212,22 +187,14 @@ export interface TextEditorProps {
  * FUNCTIONS
  */
 
-/**
- * The definitive error code list, split by surfacing channel:
- *   - Group A (mutation / edit flow)   → `onError` observer + `UpdateResult.error`
- *   - Group B (imperative command flow) → `CommandResult.error` (Category 4, later phase)
- */
+/** The definitive error code list — surfaced via the `onError` observer and `UpdateResult.error`. */
 export type JsonEditorErrorCode =
-  // Group A — mutation / edit flow
   | 'UPDATE_ERROR' // an edit was rejected, or an internal failure occurred
   | 'ADD_ERROR' // an add was rejected
   | 'DELETE_ERROR' // a delete was rejected
   | 'KEY_EXISTS' // a new/renamed key collides with an existing sibling
   | 'INVALID_JSON' // raw JSON typed into the editor failed to parse
   | 'CLIPBOARD_ERROR' // a copy-to-clipboard write failed (onCopy)
-  // Group B — imperative command flow (Category 4)
-  | 'PATH_NOT_FOUND' // a command targeted a path that doesn't exist in the current data
-  | 'RESTRICTED' // a command's action is blocked by an `allow*`/`restrict*` filter
 
 /** The one canonical error shape, used everywhere an error is produced or reported. */
 export interface JsonEditorError {

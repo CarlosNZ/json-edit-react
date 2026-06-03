@@ -1,16 +1,15 @@
 /**
- * End-to-end tests for the `editorRef` imperative handle (§17, Category 4).
+ * End-to-end tests for the `editorRef` imperative handle.
  *
- * The handle is UI-interactions only: it opens an edit / rename / add input
- * SESSION at a node, commits or aborts it, and collapses nodes. It never mutates
- * data directly (the consumer owns `data`/`setData`). These pin the contract:
- *  - session openers `startEdit` / `startRename` / `startAdd` return a sync
- *    `CommandResult` — `PATH_NOT_FOUND` for a gone path, `RESTRICTED` when a
- *    `restrict*` filter blocks it (bypassable with `overrideRestrictions`).
- *  - `confirm()` commits whichever session is open through `onUpdate` (so it's
- *    async + maps the accept/reject to a `CommandResult`); `cancel()` aborts.
- *  - `overrideRestrictions` skips ONLY the filter — `onUpdate` still runs/vetoes.
- *  - openers auto-reveal a target collapsed below the mount frontier.
+ * The handle is UI-interactions only: it opens a value-edit SESSION at a node,
+ * commits or aborts it, and collapses nodes. It never mutates data directly (the
+ * consumer owns `data`/`setData`). These pin the contract:
+ *  - `startEdit` returns `true` if it opened a session, else `'PATH_NOT_FOUND'`
+ *    (gone path) or `'RESTRICTED'` (`restrictEdit` blocks it, bypassable with
+ *    `overrideRestrictions`); it auto-reveals a target collapsed below the mount
+ *    frontier.
+ *  - `confirm()` commits the open session through `onUpdate` (which may veto);
+ *    `cancel()` aborts. `overrideRestrictions` skips ONLY the filter.
  */
 
 import { createRef } from 'react'
@@ -21,8 +20,8 @@ import { type JsonEditorHandle, type UpdateFunction } from '../src/types'
 
 const noop = () => {}
 
-describe('editorRef handle — session openers', () => {
-  test('startEdit opens an editor at a visible leaf and reports success', () => {
+describe('editorRef handle — startEdit', () => {
+  test('startEdit opens an editor at a visible leaf and returns true', () => {
     const ref = createRef<JsonEditorHandle>()
     render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} editorRef={ref} />)
     expect(screen.queryByRole('textbox')).toBeNull()
@@ -32,13 +31,12 @@ describe('editorRef handle — session openers', () => {
       result = ref.current!.startEdit({ path: ['greeting'] })
     })
 
-    expect(result).toEqual({ success: true })
+    expect(result).toBe(true)
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
   test('startEdit returns PATH_NOT_FOUND for a path that no longer exists', () => {
     const ref = createRef<JsonEditorHandle>()
-    const warn = jest.spyOn(console, 'warn').mockImplementation(noop)
     render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} editorRef={ref} />)
 
     let result: ReturnType<JsonEditorHandle['startEdit']> | undefined
@@ -46,10 +44,8 @@ describe('editorRef handle — session openers', () => {
       result = ref.current!.startEdit({ path: ['nope'] })
     })
 
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: 'PATH_NOT_FOUND' }) })
+    expect(result).toBe('PATH_NOT_FOUND')
     expect(screen.queryByRole('textbox')).toBeNull()
-    expect(warn).toHaveBeenCalled()
-    warn.mockRestore()
   })
 
   test('startEdit respects restrictEdit by default (RESTRICTED, no-op)', () => {
@@ -61,7 +57,7 @@ describe('editorRef handle — session openers', () => {
       result = ref.current!.startEdit({ path: ['greeting'] })
     })
 
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: 'RESTRICTED' }) })
+    expect(result).toBe('RESTRICTED')
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
@@ -74,7 +70,7 @@ describe('editorRef handle — session openers', () => {
       result = ref.current!.startEdit({ path: ['greeting'], overrideRestrictions: true })
     })
 
-    expect(result).toEqual({ success: true })
+    expect(result).toBe(true)
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
@@ -90,12 +86,12 @@ describe('editorRef handle — session openers', () => {
     )
 
     act(() => {
-      expect(ref.current!.startEdit({ path: ['b'] }).success).toBe(false)
+      expect(ref.current!.startEdit({ path: ['b'] })).toBe('RESTRICTED')
     })
     expect(screen.queryByRole('textbox')).toBeNull()
 
     act(() => {
-      expect(ref.current!.startEdit({ path: ['a'] }).success).toBe(true)
+      expect(ref.current!.startEdit({ path: ['a'] })).toBe(true)
     })
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
@@ -116,30 +112,6 @@ describe('editorRef handle — session openers', () => {
 
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
-
-  test('startRename refuses an array item (no key) with RESTRICTED', () => {
-    const ref = createRef<JsonEditorHandle>()
-    render(<JsonEditor data={{ list: [1, 2] }} setData={noop} editorRef={ref} />)
-
-    let result: ReturnType<JsonEditorHandle['startRename']> | undefined
-    act(() => {
-      result = ref.current!.startRename({ path: ['list', 0] })
-    })
-
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: 'RESTRICTED' }) })
-  })
-
-  test('startAdd refuses a restricted parent with RESTRICTED', () => {
-    const ref = createRef<JsonEditorHandle>()
-    render(<JsonEditor data={{ obj: { a: 1 } }} setData={noop} restrictAdd editorRef={ref} />)
-
-    let result: ReturnType<JsonEditorHandle['startAdd']> | undefined
-    act(() => {
-      result = ref.current!.startAdd({ path: ['obj'] })
-    })
-
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: 'RESTRICTED' }) })
-  })
 })
 
 describe('editorRef handle — confirm / cancel', () => {
@@ -156,7 +128,7 @@ describe('editorRef handle — confirm / cancel', () => {
     expect(setData).not.toHaveBeenCalled()
   })
 
-  test('confirm() commits a value-edit session via setData', async () => {
+  test('confirm() commits the open value-edit session via setData', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const ref = createRef<JsonEditorHandle>()
@@ -167,76 +139,30 @@ describe('editorRef handle — confirm / cancel', () => {
     await user.clear(textbox)
     await user.type(textbox, 'world')
 
-    let result: Awaited<ReturnType<JsonEditorHandle['confirm']>> | undefined
     await act(async () => {
-      result = await ref.current!.confirm()
+      ref.current!.confirm()
     })
 
-    expect(result).toEqual({ success: true })
     expect(setData).toHaveBeenCalledWith({ greeting: 'world' })
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
-  test('confirm() commits a rename session via setData', async () => {
+  test('confirm() runs onUpdate, which can veto (onError fires, value not committed)', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    const ref = createRef<JsonEditorHandle>()
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} editorRef={ref} />)
-
-    act(() => ref.current!.startRename({ path: ['greeting'] }))
-    const keyInput = screen.getByRole('textbox')
-    await user.clear(keyInput)
-    await user.type(keyInput, 'salutation')
-
-    let result: Awaited<ReturnType<JsonEditorHandle['confirm']>> | undefined
-    await act(async () => {
-      result = await ref.current!.confirm()
-    })
-
-    expect(result).toEqual({ success: true })
-    expect(setData).toHaveBeenCalledWith({ salutation: 'hello' })
-  })
-
-  test('confirm() commits an add session via setData', async () => {
-    const user = userEvent.setup()
-    const setData = jest.fn()
-    const ref = createRef<JsonEditorHandle>()
-    render(<JsonEditor data={{ a: 1 }} setData={setData} editorRef={ref} />)
-
-    act(() => ref.current!.startAdd({ path: [] }))
-    const keyInput = screen.getByRole('textbox')
-    await user.clear(keyInput)
-    await user.type(keyInput, 'b')
-
-    let result: Awaited<ReturnType<JsonEditorHandle['confirm']>> | undefined
-    await act(async () => {
-      result = await ref.current!.confirm()
-    })
-
-    expect(result).toEqual({ success: true })
-    expect(setData).toHaveBeenCalledTimes(1)
-    expect(setData.mock.calls[0][0]).toHaveProperty('b')
-  })
-
-  test('confirm() with no open session reports a failure', async () => {
-    const ref = createRef<JsonEditorHandle>()
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} editorRef={ref} />)
-
-    let result: Awaited<ReturnType<JsonEditorHandle['confirm']>> | undefined
-    await act(async () => {
-      result = await ref.current!.confirm()
-    })
-
-    expect(result).toEqual({ success: false, error: expect.objectContaining({ code: 'UPDATE_ERROR' }) })
-  })
-
-  test('confirm() maps an onUpdate rejection to a failure result', async () => {
-    const user = userEvent.setup()
-    const setData = jest.fn()
-    const onUpdate: UpdateFunction = () => ({ error: 'nope' })
+    const onError = jest.fn()
+    const onUpdate = jest.fn<ReturnType<UpdateFunction>, Parameters<UpdateFunction>>(() => ({
+      error: 'nope',
+    }))
     const ref = createRef<JsonEditorHandle>()
     render(
-      <JsonEditor data={{ greeting: 'hello' }} setData={setData} onUpdate={onUpdate} editorRef={ref} />
+      <JsonEditor
+        data={{ greeting: 'hello' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        onError={onError}
+        editorRef={ref}
+      />
     )
 
     act(() => ref.current!.startEdit({ path: ['greeting'] }))
@@ -244,22 +170,25 @@ describe('editorRef handle — confirm / cancel', () => {
     await user.clear(textbox)
     await user.type(textbox, 'world')
 
-    let result: Awaited<ReturnType<JsonEditorHandle['confirm']>> | undefined
     await act(async () => {
-      result = await ref.current!.confirm()
+      ref.current!.confirm()
     })
 
-    expect(result).toEqual({
-      success: false,
-      error: { code: 'UPDATE_ERROR', message: 'nope' },
-    })
+    expect(onUpdate).toHaveBeenCalled()
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: expect.objectContaining({ code: 'UPDATE_ERROR', message: 'nope' }),
+      })
+    )
+    expect(setData).not.toHaveBeenCalledWith({ greeting: 'world' })
   })
 
-  test('overrideRestrictions opens past the filter, but onUpdate still vetoes at confirm', async () => {
-    // The §17 invariant: `overrideRestrictions` skips ONLY the `restrict*`
+  test('overrideRestrictions opens past the filter, but onUpdate still runs at confirm', async () => {
+    // The §17 invariant: `overrideRestrictions` skips ONLY the `restrictEdit`
     // filter; the consumer's `onUpdate` always runs and may reject.
     const user = userEvent.setup()
     const onUpdate = jest.fn<ReturnType<UpdateFunction>, Parameters<UpdateFunction>>(() => false)
+    const onError = jest.fn()
     const ref = createRef<JsonEditorHandle>()
     render(
       <JsonEditor
@@ -267,25 +196,23 @@ describe('editorRef handle — confirm / cancel', () => {
         setData={noop}
         restrictEdit
         onUpdate={onUpdate}
+        onError={onError}
         editorRef={ref}
       />
     )
 
     act(() => {
-      expect(ref.current!.startEdit({ path: ['greeting'], overrideRestrictions: true }).success).toBe(
-        true
-      )
+      expect(ref.current!.startEdit({ path: ['greeting'], overrideRestrictions: true })).toBe(true)
     })
     const textbox = screen.getByRole('textbox')
     await user.clear(textbox)
     await user.type(textbox, 'world')
 
-    let result: Awaited<ReturnType<JsonEditorHandle['confirm']>> | undefined
     await act(async () => {
-      result = await ref.current!.confirm()
+      ref.current!.confirm()
     })
 
     expect(onUpdate).toHaveBeenCalled()
-    expect(result!.success).toBe(false)
+    expect(onError).toHaveBeenCalled()
   })
 })

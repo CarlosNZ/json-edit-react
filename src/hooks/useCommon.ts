@@ -99,9 +99,9 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     [onErrorCallback, showErrorMessages, getLatestData, errorMessageTimeout]
   )
 
-  // Commits a key rename. Returns the canonical session outcome (`undefined` =
-  // committed, `false` = silent no-op, `JsonEditorError` = rejected) so
-  // `editorRef.confirm()` can map it; the keyboard/Tab callers ignore the return.
+  // Commits a key rename and fires the matching `onEditEvent` (`confirmRename`/
+  // `cancelRename`). Returns the canonical outcome, which the keyboard/Tab
+  // callers ignore.
   const handleEditKey = (
     newKey: string
   ): void | false | JsonEditorError | Promise<void | false | JsonEditorError> => {

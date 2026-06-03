@@ -39,7 +39,6 @@ import {
   type TabDirection,
   type CollectionKey,
   type JsonData,
-  type JsonEditorError,
   type OnEditEventFunction,
   type EditEvent,
   type EditingState,
@@ -62,14 +61,6 @@ interface StartEditOptions {
   force?: boolean
 }
 
-/**
- * How to commit the currently-open session. The owning node registers it (it
- * holds the input buffer/value); `editorRef.confirm()` reads + awaits it. Returns
- * the canonical outcome: `undefined`/`false` = committed / silent no-op,
- * `JsonEditorError` = rejected.
- */
-export type SessionCommit = () => Promise<void | false | JsonEditorError>
-
 // The lifecycle event a session-mode transition fires (start / cancel).
 const eventForMode = (mode: EditingState['mode'], phase: 'start' | 'cancel'): EditEvent['event'] => {
   if (mode === 'key') return phase === 'start' ? 'startRename' : 'cancelRename'
@@ -84,14 +75,9 @@ export interface EditingStore {
   startEdit: (path: CollectionKey[], options?: StartEditOptions) => void
   /** Abort the active session — fires `onEditEvent` cancel* (true user/external cancel). */
   cancelEdit: () => void
-  /** Close the active session silently — no event. Used by commit/confirm flows
+  /** Close the active session silently — no event. Used by commit flows
    *  (the terminal event is fired by the node, from the commit outcome). */
   closeEdit: () => void
-  /** The owning node registers how to commit its open session (see `SessionCommit`). */
-  registerSessionCommit: (commit: SessionCommit) => void
-  /** Commit the active session via the registered committer — `null` if none is
-   *  open/registered. Used by `editorRef.confirm()`. */
-  confirmSession: () => ReturnType<SessionCommit> | null
   setTabDirection: (dir: TabDirection) => void
   recordPreviousEdit: (path: CollectionKey[]) => void
   setPreviousValue: (value: JsonData | null) => void
@@ -117,11 +103,6 @@ const createEditingStore = (
   // previously-editing node's UI reset. Held in a closure var (not state) so
   // installing/clearing it never notifies subscribers.
   let cancelOp: (() => void) | null = null
-
-  // How to commit the currently-open session. Registered by the owning node
-  // (which holds the live input buffer); read by `editorRef.confirm()`. Like
-  // `cancelOp`, a closure var — registering/clearing must never notify subscribers.
-  let sessionCommit: SessionCommit | null = null
 
   const emit = () => listeners.forEach((listener) => listener())
 
@@ -149,11 +130,6 @@ const createEditingStore = (
     cancelOp = options?.cancelOp ?? null
 
     if (!editingStatesEqual(state.currentlyEditingElement, next)) {
-      // Switching sessions: drop the previous committer so a `confirm()` in the
-      // gap before the new node re-registers can't commit the old node. (On a
-      // no-op re-issue the state is equal, so the existing committer is kept —
-      // the owning node's effect wouldn't re-fire to re-register it.)
-      sessionCommit = null
       commit({ ...state, currentlyEditingElement: next })
     }
 
@@ -165,31 +141,22 @@ const createEditingStore = (
   const cancelEdit = () => {
     const prev = state.currentlyEditingElement
     cancelOp = null
-    sessionCommit = null
     if (prev !== null) {
       commit({ ...state, currentlyEditingElement: null })
       fireEditEvent(prev.path, eventForMode(prev.mode, 'cancel'))
     }
   }
 
-  // Silent close for commit/confirm flows — clears state + cancelOp + committer,
-  // fires NO event (the node fires the terminal confirm*/cancel* from the commit
-  // outcome). Clearing cancelOp is load-bearing: a Tab-commit closes then
-  // `startEdit(next)`, which would otherwise run the stale cancelOp and revert
-  // the just-committed value.
+  // Silent close for commit flows — clears state + cancelOp, fires NO event (the
+  // node fires the terminal confirm*/cancel* from the commit outcome). Clearing
+  // cancelOp is load-bearing: a Tab-commit closes then `startEdit(next)`, which
+  // would otherwise run the stale cancelOp and revert the just-committed value.
   const closeEdit = () => {
     cancelOp = null
-    sessionCommit = null
     if (state.currentlyEditingElement !== null) {
       commit({ ...state, currentlyEditingElement: null })
     }
   }
-
-  const registerSessionCommit = (commit: SessionCommit) => {
-    sessionCommit = commit
-  }
-
-  const confirmSession = () => (sessionCommit ? sessionCommit() : null)
 
   const setTabDirection = (dir: TabDirection) => {
     if (state.tabDirection !== dir) commit({ ...state, tabDirection: dir })
@@ -219,8 +186,6 @@ const createEditingStore = (
     startEdit,
     cancelEdit,
     closeEdit,
-    registerSessionCommit,
-    confirmSession,
     setTabDirection,
     recordPreviousEdit,
     setPreviousValue,

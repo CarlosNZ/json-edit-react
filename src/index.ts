@@ -16,7 +16,7 @@ export {
   type JsonEditorHandle,
   type JsonViewerHandle,
   type StartEditOptions,
-  type CommandResult,
+  type StartEditResult,
   type UpdateFunction,
   type UpdateResult,
   type OnChangeFunction,

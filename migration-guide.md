@@ -281,16 +281,16 @@ Action mapping:
 |---|---|
 | `{ collapse: state }` | `editorRef.current.collapse(state)` |
 | `{ edit: { path } }` | `editorRef.current.startEdit({ path })` |
-| `{ edit: { action: 'accept' } }` | `await editorRef.current.confirm()` |
+| `{ edit: { action: 'accept' } }` | `editorRef.current.confirm()` |
 | `{ edit: { action: 'cancel' } }` | `editorRef.current.cancel()` |
 
-The handle is **UI-interactions only** — it opens/commits/cancels an editing session or collapses nodes; it has no data mutators (you own `data`/`setData`, so mutating data is just `setData(newData)`). Beyond the value-edit `startEdit`, there are now `startRename` (open the key editor) and `startAdd` (open the add input on a collection), all sharing one `confirm()` / `cancel()`.
+The handle is **UI-interactions only** — it opens/commits/cancels a value-edit session or collapses nodes; it has no data mutators (you own `data`/`setData`, so mutating data is just `setData(newData)`).
 
 Notes:
 
-- **The openers return a `CommandResult`** (`{ success: true } | { success: false; error }`), not a bare boolean. A refusal carries `error.code` of `'PATH_NOT_FOUND'` or `'RESTRICTED'`, so you can give your own feedback. They **respect the relevant `restrict*` filter by default**; pass `{ path, overrideRestrictions: true }` to bypass it (e.g. lock the tree with `restrictEdit={true}` and imperatively open one node). `overrideRestrictions` skips **only** the filter — your `onUpdate` still runs at `confirm()`.
-- **`confirm()` is now async** — it commits the open session through `onUpdate`, resolving to `{ success: true }` or `{ success: false, error }` if rejected. `await` it if you need the outcome.
-- The openers **auto-reveal** a target collapsed below the current view: collapsed ancestors expand so the node becomes editable.
+- **`startEdit` returns `true`** if it opened the session, or the reason it didn't — `'PATH_NOT_FOUND'` or `'RESTRICTED'` — so you can give your own feedback. It **respects `restrictEdit` by default**; pass `{ path, overrideRestrictions: true }` to bypass it (e.g. lock the tree with `restrictEdit={true}` and imperatively open one node). `overrideRestrictions` skips **only** the filter — your `onUpdate` still runs at `confirm()`.
+- **`confirm()`** commits the open session through `onUpdate` (the same path as clicking the editor's confirm button); **`cancel()`** discards it.
+- `startEdit` **auto-reveals** a target collapsed below the current view: collapsed ancestors expand so the node becomes editable.
 
 `JsonViewer` also accepts `editorRef`, but its `JsonViewerHandle` exposes only `collapse` — editing actions would bypass the read-only contract, so they aren't surfaced.
 

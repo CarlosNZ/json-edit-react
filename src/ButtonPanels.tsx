@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef, useState } from 'react'
+import React, { useLayoutEffect, useState } from 'react'
 import { extract } from './utils/extract'
 import { Icon } from './Icons'
 import { useTheme, useEditingStore, useEditingSelector } from './contexts'
@@ -62,19 +62,15 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const { getStyles } = useTheme()
   // Actions only (no subscription beyond the `isAddingHere` selector below).
   // Aliased — `startEdit` is also an EditButtons prop (the value-edit icon).
-  const {
-    startEdit: startEditSession,
-    cancelEdit,
-    closeEdit,
-    registerSessionCommit,
-  } = useEditingStore()
+  const { startEdit: startEditSession, cancelEdit, closeEdit } = useEditingStore()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
 
   // Holds the new-key options list (or `true` for a free-text add). Open/close is
-  // now driven by the store (`mode: 'add'`) so a shared `editorRef.confirm()` /
-  // `cancel()` can act on it; this just carries the options *content* (which the
-  // primitive-only store selector can't), synced by the effect below.
+  // driven by the store (`mode: 'add'`) so the start/cancel events and the
+  // one-session-at-a-time invariant are shared with edit/rename; this just
+  // carries the options *content* (which the primitive-only store selector
+  // can't), synced by the effect below.
   const [addingKeyState, setAddingKeyState] = useState<string[] | boolean>(false)
 
   const { path, value: data } = nodeData
@@ -89,9 +85,9 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 
   const hasKeyOptionsList = Array.isArray(addingKeyState)
 
-  // Sync the local options/content state to the store session. On open (user- or
-  // handle-driven) compute the available keys; on close reset. `startAdd` /
-  // `cancelAdd` are fired by the store; `confirmAdd` by CollectionNode's commit.
+  // Sync the local options/content state to the store session. On open compute
+  // the available keys; on close reset. `startAdd` / `cancelAdd` are fired by the
+  // store; `confirmAdd` by CollectionNode's commit.
   useLayoutEffect(() => {
     if (!isAddingHere) {
       setAddingKeyState(false)
@@ -111,12 +107,11 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAddingHere])
 
-  // Open an add session on this collection (object: shows the key input; array:
-  // a no-UI session whose `confirm()` appends a default value).
+  // Open an add session on this object collection (shows the new-key input).
   const openAdd = () => startEditSession(path, { mode: 'add' })
 
-  // Commit the open add session. Returns the canonical outcome so the shared
-  // `editorRef.confirm()` can map it; the OK button / Enter callers ignore it.
+  // Commit the open add session (OK button / Enter). Delegates to `handleAdd`,
+  // which fires the `confirmAdd` / error observer.
   const commitAdd = (): Promise<void | false | JsonEditorError> => {
     if (!handleAdd) return Promise.resolve(false)
     // Options-list with nothing chosen yet — silent no-op.
@@ -124,14 +119,6 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     closeEdit()
     return Promise.resolve(handleAdd(type === 'array' ? '' : newKey))
   }
-
-  // Stable indirection so the registered committer tracks the latest closure
-  // (live `newKey` + `handleAdd`) without re-registering each render.
-  const commitRef = useRef<() => Promise<void | false | JsonEditorError>>(() => Promise.resolve())
-  commitRef.current = commitAdd
-  useLayoutEffect(() => {
-    if (isAddingHere) registerSessionCommit(() => commitRef.current())
-  }, [isAddingHere, registerSessionCommit])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     handleKeyboard(e, {

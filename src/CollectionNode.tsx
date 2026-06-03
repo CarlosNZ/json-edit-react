@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState, useRef, useCallback, useMemo } from 'react'
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 import { EditButtons, InputButtons } from './ButtonPanels'
 import { getCustomNode } from './CustomNode'
@@ -37,7 +37,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     cancelEdit,
     closeEdit,
     setPreviousValue,
-    registerSessionCommit,
     areChildrenBeingEdited,
     getSnapshot,
   } = useEditingStore()
@@ -226,16 +225,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // For when children are accessed via Tab
   if (childrenEditing && collapsed) animateCollapse(false)
 
-  // Register how `editorRef.confirm()` commits this collection's raw-JSON edit
-  // while it's open. A stable indirection over `commitRef` (assigned the latest
-  // `handleEdit` after its definition below) so the committer tracks the live
-  // buffer without re-registering each render; the store clears it on
-  // close/cancel/session-switch, so no cleanup is needed here.
-  const commitRef = useRef<() => Promise<void | false | JsonEditorError>>(() => Promise.resolve())
-  useLayoutEffect(() => {
-    if (isEditing) registerSessionCommit(() => commitRef.current())
-  }, [isEditing, registerSessionCommit])
-
   // Early return if this node is filtered out
   const isVisible =
     filterNode('collection', nodeData, searchFilter, searchText) || nodeData.level === 0
@@ -288,10 +277,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     }
   }
 
-  // Commits the raw-JSON edit of this collection. Returns the canonical session
-  // outcome (`undefined` = committed, `false` = silent no-op, `JsonEditorError`
-  // = rejected) so `editorRef.confirm()` can map it; keyboard/OK callers ignore
-  // the return.
+  // Commits the raw-JSON edit of this collection and fires the matching
+  // `onEditEvent` (`confirmEdit`/`cancelEdit`). Returns the canonical outcome,
+  // which the keyboard/OK callers ignore.
   const handleEdit = (): Promise<void | false | JsonEditorError> | false | JsonEditorError => {
     // Parse exactly the text shown: `editBufferValue` is the displayed buffer
     // and reuses the string the memo already serialized, so the parsed input
@@ -339,13 +327,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       emitEditEvent('confirmEdit')
     })
   }
-  // Keep the registered committer pointing at the current closure (live buffer);
-  // the ref + registration effect are declared above the early return.
-  commitRef.current = () => Promise.resolve(handleEdit())
 
-  // Commits an add. Returns the canonical session outcome (`undefined` =
-  // committed, `false` = silent no-op, `JsonEditorError` = rejected) so
-  // `editorRef.confirm()` can map it; the EditButtons callers ignore the return.
+  // Commits an add and fires `confirmAdd` (or the error observer). Returns the
+  // canonical outcome, which the EditButtons callers ignore.
   const handleAdd = (
     key: string
   ): Promise<void | false | JsonEditorError> | JsonEditorError => {

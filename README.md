@@ -1279,8 +1279,8 @@ type OnCollapseFunction = (
 
 ### Imperative handle (`editorRef`)
 
-You can *drive* the editor's UI imperatively via a handle: open an edit, rename,
-or add **input session** at a node, commit or cancel it, and collapse nodes. The
+You can *drive* the editor's UI imperatively via a handle: open a value-edit
+**input session** at a node, commit or cancel it, and collapse nodes. The
 handle deliberately doesn't include data mutators — you already own `data` and
 `setData`, so changing a value is just `setData(newData)` and the editor reflects
 it. Create a ref with `useRef` and pass it to the `editorRef` prop (an ordinary
@@ -1298,11 +1298,9 @@ const editorRef = useRef<JsonEditorHandle>(null)
 
 // Then, from an event handler:
 editorRef.current?.collapse({ path: ['user'], collapsed: true, includeChildren: true })
-editorRef.current?.startEdit({ path: ['user', 'name'] })   // open the value editor
-editorRef.current?.startRename({ path: ['user', 'name'] }) // open the key editor
-editorRef.current?.startAdd({ path: ['user'] })            // open the "add" input
-await editorRef.current?.confirm()  // commit the open session (runs onUpdate)
-editorRef.current?.cancel()         // discard the open session
+editorRef.current?.startEdit({ path: ['user', 'name'] })  // open the value editor
+editorRef.current?.confirm()  // commit the open session (runs onUpdate)
+editorRef.current?.cancel()   // discard the open session
 ```
 
 The handle shape is:
@@ -1312,28 +1310,24 @@ interface JsonEditorHandle {
   // Collapse/expand a node (or a whole subtree, with `includeChildren`).
   // Same `CollapseState` shape as the `onCollapse` callback input.
   collapse: (state: CollapseState | CollapseState[]) => void
-  // Open a value-edit session at a node.
-  startEdit: (options: StartEditOptions) => CommandResult
-  // Open a key-rename session at a node (object members only).
-  startRename: (options: StartEditOptions) => CommandResult
-  // Open an "add" session on a collection node (`path` = the collection).
-  startAdd: (options: StartEditOptions) => CommandResult
-  // Commit the open session (runs onUpdate); async, resolves to the outcome.
-  confirm: () => Promise<CommandResult>
+  // Open a value-edit session at a node; returns whether it opened (see below).
+  startEdit: (options: StartEditOptions) => StartEditResult
+  // Commit the open session (clicks the live confirm control), then exit.
+  confirm: () => void
   // Discard the open session without committing.
   cancel: () => void
 }
 
 interface StartEditOptions {
-  // The target node; for `startAdd`, the collection to add into.
+  // The target node to edit.
   path: CollectionKey[]
-  // Bypass the relevant `restrict*` filter (default false). Skips ONLY the
-  // filter — your `onUpdate` still runs (and may reject) at `confirm()`.
+  // Bypass `restrictEdit` (default false). Skips ONLY the filter — your
+  // `onUpdate` still runs (and may reject) at `confirm()`.
   overrideRestrictions?: boolean
 }
 
-// Binary: did the command run, or was it refused?
-type CommandResult = { success: true } | { success: false; error: JsonEditorError }
+// `true` if the session opened, else why it didn't.
+type StartEditResult = true | 'RESTRICTED' | 'PATH_NOT_FOUND'
 
 interface CollapseState {
   path: CollectionKey[]
@@ -1344,20 +1338,19 @@ interface CollapseState {
 
 A few behaviours worth noting:
 
-- The **session openers are synchronous** and return a `CommandResult`. They
-  return `{ success: false, error }` with `error.code` of `'PATH_NOT_FOUND'` (the
-  path doesn't exist in the current data) or `'RESTRICTED'` (a `restrict*` filter
-  blocks the action) — so you can give your own feedback (e.g. a toast) on a
-  refused command. The target is never silently redirected to a different node.
+- **`startEdit` is synchronous** and returns `true` if it opened the session, or
+  the reason it didn't: `'PATH_NOT_FOUND'` (the path doesn't exist in the current
+  data) or `'RESTRICTED'` (`restrictEdit` blocks it) — so you can give your own
+  feedback (e.g. a toast) on a refused command. The target is never silently
+  redirected to a different node.
 - Pass **`overrideRestrictions: true`** to bypass the filter. A common pattern is
   to lock the whole tree with `restrictEdit={true}` and imperatively enable editing
   on one node through your own UI. It skips **only** the filter: your `onUpdate`
   still runs at `confirm()` and may reject or transform the value.
-- **`confirm()` is async** — it commits whichever session is open through
-  `onUpdate`, so it resolves to `{ success: true }` on commit or
-  `{ success: false, error }` if `onUpdate` rejected it. Only one session is open
-  at a time, so `confirm()`/`cancel()` take no arguments.
-- A session opener will **auto-reveal a target that's currently collapsed** — any
+- **`confirm()`** commits the open session — it triggers the same path as clicking
+  the editor's confirm button, running your `onUpdate`. **`cancel()`** discards it.
+  Only one session is open at a time, so both take no arguments.
+- `startEdit` will **auto-reveal a target that's currently collapsed** — any
   collapsed ancestors expand so the node becomes visible and enters the session.
 
 `JsonViewer` exposes the same `editorRef` prop, but its handle (`JsonViewerHandle`)
@@ -1398,7 +1391,7 @@ A few helper functions, components and types that might be useful in your own im
 - `JsonData`: main `data` object -- any valid JSON structure. Used as the default for `T`.
 - [`UpdateFunction`](#update-functions), [`UpdateResult`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`OnCopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks) / [`EditEvent`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
 - `JsonEditorError` / `JsonEditorErrorCode`: the canonical error shape (`{ code, message }`) reported to [`onError`](#onerror-function) and accepted in an [`UpdateFunction`](#update-functions) `{ error }` return
-- [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref), [`StartEditOptions`](#imperative-handle-editorref), [`CommandResult`](#imperative-handle-editorref): input/output types of the respective props
+- [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref), [`StartEditOptions`](#imperative-handle-editorref), [`StartEditResult`](#imperative-handle-editorref): input/output types of the respective props
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `LocalisedString`: keys for the [`translations`](#localisation) object
 - `IconReplacements`: input type for the `icons` prop

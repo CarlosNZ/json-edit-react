@@ -985,10 +985,13 @@ function App() {
                               path: splitPropertyString(handlePath),
                               // overrideRestrictions: handleOverrideRestrictions,
                             })
-                            if (result && !result.success)
+                            if (result && result !== true)
                               toast({
                                 title: "Can't edit that node",
-                                description: result.error.message,
+                                description:
+                                  result === 'RESTRICTED'
+                                    ? 'That node is restricted from editing'
+                                    : 'No node found at that path',
                                 status: 'warning',
                                 duration: 2000,
                                 isClosable: true,

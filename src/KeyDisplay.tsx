@@ -2,7 +2,7 @@
  * Component to display the "Property" value for both Collection and Value nodes
  */
 
-import React, { useLayoutEffect, useRef } from 'react'
+import React from 'react'
 import { useEditingStore } from './contexts'
 import {
   type KeyboardControlsFull,
@@ -10,7 +10,6 @@ import {
   type NodeData,
   type ThemeableElement,
   type ValueData,
-  type JsonEditorError,
 } from './types'
 import { type CustomNodeData } from './CustomNode'
 
@@ -57,21 +56,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   getStyles,
 }) => {
   // Actions only (no subscription) — `isEditingKey` arrives via props.
-  const { startEdit, cancelEdit, registerSessionCommit } = useEditingStore()
-
-  // The rename input is uncontrolled, so `editorRef.confirm()` commits the
-  // session by reading its live value at commit time. A stable indirection over
-  // `commitRef` so the committer tracks the latest `handleEditKey` without
-  // re-registering each render; the store clears it on close/cancel/switch.
-  const inputRef = useRef<HTMLInputElement>(null)
-  const commitRef = useRef<() => Promise<void | false | JsonEditorError>>(() => Promise.resolve())
-  commitRef.current = () => {
-    const v = inputRef.current?.value
-    return Promise.resolve(v === undefined ? false : handleEditKey(v))
-  }
-  useLayoutEffect(() => {
-    if (isEditingKey) registerSessionCommit(() => commitRef.current())
-  }, [isEditingKey, registerSessionCommit])
+  const { startEdit, cancelEdit } = useEditingStore()
 
   const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
 
@@ -121,7 +106,6 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
 
   return (
     <input
-      ref={inputRef}
       className="jer-input-text jer-key-edit"
       type="text"
       name={pathString}
