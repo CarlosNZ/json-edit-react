@@ -218,13 +218,15 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     async (input: UpdateFunctionProps): Promise<string | void | false> => {
       const result = await onUpdateRef.current(input)
 
-      // Reject (generic): revert to the pre-edit document, default message.
-      // The message is event-specific so it matches the `onError` code the node
-      // routes it to (`ADD_ERROR`/`DELETE_ERROR`). `rename`/`move` have no
-      // dedicated key, so they fall back to `ERROR_UPDATE` (their code is
-      // `UPDATE_ERROR`).
+      // Reject (generic): return the default message; the node reverts its own
+      // display. No `setData` — nothing was committed (we only ever `setData`
+      // AFTER `onUpdate` resolves), so writing `fullData` back would be a no-op
+      // at best and, with a slow async `onUpdate`, could clobber a newer commit
+      // that landed while this one was in flight. The message is event-specific
+      // so it matches the `onError` code the node routes it to
+      // (`ADD_ERROR`/`DELETE_ERROR`); `rename`/`move` have no dedicated key, so
+      // they fall back to `ERROR_UPDATE` (their code is `UPDATE_ERROR`).
       if (result === false) {
-        setDataRef.current(input.fullData)
         const errorKey =
           input.event === 'add'
             ? 'ERROR_ADD'
@@ -240,8 +242,9 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
       // Object form: reject with a custom error, or override the committed value
       if (result && typeof result === 'object') {
         if (result.error !== undefined) {
-          setDataRef.current(input.fullData)
-          // A bare string is the message verbatim; a JsonEditorError carries one
+          // Reject: no `setData` (same reasoning as the generic reject above —
+          // nothing was committed). A bare string is the message verbatim; a
+          // JsonEditorError carries one.
           return typeof result.error === 'string' ? result.error : result.error.message
         }
         setDataRef.current(result.value !== undefined ? (result.value as JsonData) : input.newData)

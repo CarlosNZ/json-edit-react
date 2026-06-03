@@ -116,8 +116,8 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     // the parent (preserving key order) and commits the whole document.
     onRename(path, newKey).then((error) => {
       // `false` means the consumer's `onUpdate` returned `null` (silent cancel);
-      // a non-empty string is a real error to surface.
-      if (error) {
+      // a string (including an empty one) is a real error to surface.
+      if (typeof error === 'string') {
         onError({ code: 'UPDATE_ERROR', message: error }, newKey as ValueData)
       }
     })

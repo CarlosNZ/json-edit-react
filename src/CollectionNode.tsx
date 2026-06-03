@@ -279,7 +279,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       clearEditBuffer()
       if (jsonStringify(value) === currentDataString) return
       onEdit(value, path).then((error) => {
-        if (error) {
+        if (typeof error === 'string') {
           onError({ code: 'UPDATE_ERROR', message: error }, value as CollectionData)
         }
       })
@@ -300,14 +300,16 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       const index = insertAtTop.array ? 0 : (data as unknown[]).length
       const options = insertAtTop.array ? { insert: true } : {}
       onAdd(newValue, [...path, index], options).then((error) => {
-        if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
+        if (typeof error === 'string')
+          onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
       })
     } else if (key in data) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
     } else {
       const options = insertAtTop.object ? { insertBefore: 0 } : {}
       onAdd(newValue, [...path, key], options).then((error) => {
-        if (error) onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
+        if (typeof error === 'string')
+          onError({ code: 'ADD_ERROR', message: error }, newValue as CollectionData)
       })
     }
   }
@@ -316,7 +318,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     path.length > 0
       ? () => {
           onDelete(data, path).then((error) => {
-            if (error) {
+            if (typeof error === 'string') {
               onError({ code: 'DELETE_ERROR', message: error }, data)
             }
           })
