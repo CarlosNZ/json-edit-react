@@ -6,6 +6,12 @@ import {
   monoDarkTheme,
   candyWrapperTheme,
   psychedelicTheme,
+  solarizedDarkTheme,
+  solarizedLightTheme,
+  draculaTheme,
+  nordTheme,
+  monokaiTheme,
+  tokyoNightTheme,
 } from '@json-edit-react/themes'
 
 // This file contains functions that return theme objects
@@ -17,6 +23,12 @@ export const getWhiteBlackTheme = (): Theme => monoLightTheme
 export const getBlackWhiteTheme = (): Theme => monoDarkTheme
 export const getCandyWrapperTheme = (): Theme => candyWrapperTheme
 export const getPsychedelicTheme = (): Theme => psychedelicTheme
+export const getSolarizedDarkTheme = (): Theme => solarizedDarkTheme
+export const getSolarizedLightTheme = (): Theme => solarizedLightTheme
+export const getDraculaTheme = (): Theme => draculaTheme
+export const getNordTheme = (): Theme => nordTheme
+export const getMonokaiTheme = (): Theme => monokaiTheme
+export const getTokyoNightTheme = (): Theme => tokyoNightTheme
 
 // Allow dynamic accessing of theme getter functions
 interface ThemeGetters {
@@ -31,4 +43,10 @@ export const themeGetters: ThemeGetters = {
   getBlackWhiteTheme,
   getCandyWrapperTheme,
   getPsychedelicTheme,
+  getSolarizedDarkTheme,
+  getSolarizedLightTheme,
+  getDraculaTheme,
+  getNordTheme,
+  getMonokaiTheme,
+  getTokyoNightTheme,
 }
