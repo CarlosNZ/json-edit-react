@@ -15,6 +15,18 @@ export const splitPropertyString = (propertyPath: string): Path =>
       return Number(match[1])
     })
 
+// The inverse of `splitPropertyString`: renders a path as a dot/bracket string
+// (e.g. ["data", "users", 0, "name"] => "data.users[0].name"). Used for
+// human-readable error messages and the copy-path feature.
+export const stringifyPath = (path: Path | string | number): string => {
+  if (typeof path === 'string') return path
+  if (typeof path === 'number') return String(path)
+  return path.reduce((str: string, part) => {
+    if (typeof part === 'number') return `${str}[${part}]`
+    else return str === '' ? part : `${str}.${part}`
+  }, '')
+}
+
 /**
  * Converts a path expressed as an array of CollectionKeys to a string suitable
  * for HTML `name`/`id` attributes. The encoding is injective: keys are
