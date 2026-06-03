@@ -107,8 +107,10 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // close over `value`/`nodeData` — once `onChange` is stabilized upstream the
   // closure would freeze. Read the in-progress value and the node's `NodeData`
   // from refs-to-latest, and the live document from `getLatestData()`.
-  const onChangeArgsRef = useRef({ value, name, path })
-  onChangeArgsRef.current = { value, name, path }
+  // Only the in-progress `value` needs a ref-to-latest; `name`/`path` come from
+  // `nodeDataRef` in the `onChange` payload below.
+  const onChangeValueRef = useRef(value)
+  onChangeValueRef.current = value
   const nodeDataRef = useRef(nodeData)
   nodeDataRef.current = nodeData
   const updateValue = useCallback(
@@ -121,7 +123,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       // value, `fullData` the live document; the rest comes from `nodeData`.
       const modifiedValue = onChange({
         ...nodeDataRef.current,
-        value: onChangeArgsRef.current.value as ValueData,
+        value: onChangeValueRef.current as ValueData,
         fullData: getLatestData(),
         newValue,
       })
@@ -230,7 +232,10 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // Fire an `onEditEvent` for this node's value-edit session. `nodeData` is read
   // live (these handlers are re-created each render), so no ref needed.
   const emitEditEvent = (event: Extract<EditEvent['event'], 'startEdit' | 'confirmEdit' | 'cancelEdit' | 'delete'>) =>
-    onEditEvent?.({ ...nodeData, event } as EditEvent)
+    // Live `fullData`, not the memoizable `nodeData.fullData` (a bailed node
+    // keeps it stale — `areNodePropsEqual` ignores its identity). Same rule as
+    // `onError` / `onChange`: observer payloads read the document live.
+    onEditEvent?.({ ...nodeData, fullData: getLatestData(), event } as EditEvent)
 
   const handleChangeDataType = (type: DataType) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.

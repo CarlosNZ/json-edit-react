@@ -260,7 +260,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       EditEvent['event'],
       'confirmEdit' | 'cancelEdit' | 'confirmAdd' | 'cancelAdd' | 'delete'
     >
-  ) => onEditEvent?.({ ...nodeData, event } as EditEvent)
+    // Live `fullData`, not the memoizable `nodeData.fullData` (a bailed node
+    // keeps it stale — `areNodePropsEqual` ignores its identity). Same rule as
+    // `onError`: observer payloads read the document live.
+  ) => onEditEvent?.({ ...nodeData, fullData: getLatestData(), event } as EditEvent)
 
   const handleCollapse = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -274,7 +277,14 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       hasBeenOpened.current = true
       // Flat NodeData (§17): explicit `collapsed` (post-toggle) must come after
       // `...nodeData` (whose `collapsed` is the pre-toggle value).
-      if (onCollapse) onCollapse({ ...nodeData, collapsed: !collapsed, includeChildren: false })
+      if (onCollapse)
+        onCollapse({
+          ...nodeData,
+          // Live `fullData` (a bailed node's `nodeData.fullData` is stale).
+          fullData: getLatestData(),
+          collapsed: !collapsed,
+          includeChildren: false,
+        })
       animateCollapse(!collapsed)
     }
   }

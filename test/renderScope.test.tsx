@@ -18,7 +18,12 @@ import { useState } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
-import { type OnChangeFunction, type OnCollapseFunction, type OnErrorFunction } from '../src/types'
+import {
+  type OnChangeFunction,
+  type OnCollapseFunction,
+  type OnErrorFunction,
+  type EditEvent,
+} from '../src/types'
 import { makeRenderSpy } from './helpers/renderSpy'
 
 // A controlled host so `setData` commits actually re-render the editor, the
@@ -443,5 +448,37 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
 
     expect(onError).toHaveBeenCalled()
     expect(seenFullData).toEqual({ a: 'aval2', obj: { x: 1 } })
+  })
+
+  // Same staleness class for the `onEditEvent` lifecycle stream: emitters must
+  // read `fullData` live (`getLatestData()`), not from the memoizable
+  // `nodeData.fullData` prop a bailed subtree keeps stale.
+  test('onEditEvent reports the live document, not a stale snapshot', async () => {
+    const user = userEvent.setup()
+    let seenFullData: unknown = null
+    const onEditEvent = jest.fn<void, [EditEvent]>((e) => {
+      if (e.event === 'confirmEdit') seenFullData = e.fullData
+    })
+    const Host = () => {
+      const [data, setData] = useState<object>({ a: 'aval', obj: { x: 1 } })
+      return <JsonEditor data={data} setData={setData} onEditEvent={onEditEvent} showIconTooltips />
+    }
+    render(<Host />)
+
+    // Commit a -> aval2; `obj`'s subtree (incl. `x`) bails on the commit, so its
+    // `nodeData.fullData` is now stale.
+    await user.dblClick(screen.getByText('"aval"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'aval2{Enter}')
+    await screen.findByText('"aval2"')
+
+    // Edit `x` (in the bailed subtree) and confirm — confirmEdit must carry the
+    // live document (`a: 'aval2'`), not the stale snapshot (`a: 'aval'`).
+    await user.dblClick(screen.getByText('1'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), '2{Enter}')
+
+    expect(onEditEvent).toHaveBeenCalled()
+    expect((seenFullData as { a: string }).a).toBe('aval2')
   })
 })

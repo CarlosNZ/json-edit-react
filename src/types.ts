@@ -341,6 +341,9 @@ export type InternalRenameFunction = (path: CollectionKey[], newKey: string) => 
 // (its ancestors), so observer events fired from those contexts (`onEditEvent`
 // start*/cancel*, `onCollapse` broadcast) can carry a flat `NodeData`.
 export type BuildNodeDataFromPath = (path: CollectionKey[]) => NodeData
+// `.current` is assigned in JsonEditor; that's fine — under the pinned
+// @types/react 19, `RefObject.current` is mutable (and `MutableRefObject` is
+// deprecated), so `RefObject` is the correct, non-deprecated type here.
 export type BuildNodeDataFromPathRef = React.RefObject<BuildNodeDataFromPath | undefined>
 
 // For drag-n-drop

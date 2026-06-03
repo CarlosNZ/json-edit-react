@@ -105,14 +105,14 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     closeEdit()
     // No-op rename (unchanged key) reports as a cancel (session closed, no change).
     if (name === newKey) {
-      onEditEvent?.({ ...nodeData, event: 'cancelRename' })
+      onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
       return
     }
     if (!parentData) return
     const existingKeys = Object.keys(parentData)
     if (existingKeys.includes(newKey)) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
-      onEditEvent?.({ ...nodeData, event: 'cancelRename' })
+      onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
       return
     }
 
@@ -124,15 +124,21 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     // one) is a real error → surface it and report the session as cancelled.
     onRename(path, newKey).then((result) => {
       if (result === false) {
-        onEditEvent?.({ ...nodeData, event: 'cancelRename' })
+        onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
         return
       }
       if (typeof result === 'string') {
         onError({ code: 'UPDATE_ERROR', message: result }, newKey as ValueData)
-        onEditEvent?.({ ...nodeData, event: 'cancelRename' })
+        onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
         return
       }
-      onEditEvent?.({ ...nodeData, event: 'confirmRename', oldKey: name, newKey })
+      onEditEvent?.({
+        ...nodeData,
+        fullData: getLatestData(),
+        event: 'confirmRename',
+        oldKey: name,
+        newKey,
+      })
     })
   }
 
