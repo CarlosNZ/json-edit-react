@@ -781,6 +781,30 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startAdd', 'cancelAdd'])
   })
 
+  test('add (object): a rejected confirm still terminates the session with cancelAdd', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const onUpdate = jest.fn(() => false as const)
+    const { container } = render(
+      <JsonEditor
+        data={{ existing: 'value' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        onEditEvent={onEditEvent}
+        showIconTooltips
+      />
+    )
+
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(newKeyInput)
+    await user.type(newKeyInput, 'fresh{Enter}')
+
+    // The rejected add must close its startAdd session with cancelAdd — not
+    // leave an orphaned startAdd (matches the value-edit reject lifecycle).
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startAdd', 'cancelAdd'])
+  })
+
   test('delete fires a single "delete" event', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()

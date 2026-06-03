@@ -256,7 +256,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // `nodeData` is read live (handlers re-created each render). Add events
   // describe the parent collection (this node).
   const emitEditEvent = (
-    event: Extract<EditEvent['event'], 'confirmEdit' | 'cancelEdit' | 'confirmAdd' | 'delete'>
+    event: Extract<
+      EditEvent['event'],
+      'confirmEdit' | 'cancelEdit' | 'confirmAdd' | 'cancelAdd' | 'delete'
+    >
   ) => onEditEvent?.({ ...nodeData, event } as EditEvent)
 
   const handleCollapse = (e: React.MouseEvent) => {
@@ -330,26 +333,43 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     setCollapseState(null)
     animateCollapse(false)
     const newValue = getDefaultNewValue(nodeData, key)
-    const onAddResult = (result: string | void | false) => {
-      if (result === false) return
-      if (typeof result === 'string') {
-        onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
-        return
-      }
-      emitEditEvent('confirmAdd')
-    }
+
     if (collectionType === 'array') {
+      // Array adds are instant — no `startAdd` session opens (no key-entry
+      // step), so only `confirmAdd` fires, on success. A rejected/errored array
+      // add emits no terminal event (there's no session to close).
       const index = insertAtTop.array ? 0 : (data as unknown[]).length
       const options = insertAtTop.array ? { insert: true } : {}
-      onAdd(newValue, [...path, index], options).then(onAddResult)
+      onAdd(newValue, [...path, index], options).then((result) => {
+        if (typeof result === 'string')
+          onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
+        else if (result === undefined) emitEditEvent('confirmAdd')
+      })
       return
     }
+
+    // Object add: a `startAdd` session is open (key entry), closed silently by
+    // the confirm. Terminate it with `confirmAdd` (committed) or `cancelAdd`
+    // (duplicate key, silent cancel, or rejected/errored) — mirroring the
+    // value-edit confirm flow, so a `startAdd` always pairs with a terminal.
     if (key in data) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
+      emitEditEvent('cancelAdd')
       return
     }
     const options = insertAtTop.object ? { insertBefore: 0 } : {}
-    onAdd(newValue, [...path, key], options).then(onAddResult)
+    onAdd(newValue, [...path, key], options).then((result) => {
+      if (result === false) {
+        emitEditEvent('cancelAdd')
+        return
+      }
+      if (typeof result === 'string') {
+        onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
+        emitEditEvent('cancelAdd')
+        return
+      }
+      emitEditEvent('confirmAdd')
+    })
   }
 
   const handleDelete =
