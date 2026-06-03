@@ -231,7 +231,9 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   // Fire an `onEditEvent` for this node's value-edit session. `nodeData` is read
   // live (these handlers are re-created each render), so no ref needed.
-  const emitEditEvent = (event: Extract<EditEvent['event'], 'startEdit' | 'confirmEdit' | 'cancelEdit' | 'delete'>) =>
+  const emitEditEvent = (
+    event: Extract<EditEvent['event'], 'startEdit' | 'confirmEdit' | 'cancelEdit' | 'delete'>
+  ) =>
     // Live `fullData`, not the memoizable `nodeData.fullData` (a bailed node
     // keeps it stale — `areNodePropsEqual` ignores its identity). Same rule as
     // `onError` / `onChange`: observer payloads read the document live.
@@ -252,10 +254,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           revertToData()
           emitEditEvent('cancelEdit')
         } else if (typeof result === 'string') {
-          onError(
-            { code: 'UPDATE_ERROR', message: result },
-            customNode.defaultValue as JsonData
-          )
+          onError({ code: 'UPDATE_ERROR', message: result }, customNode.defaultValue as JsonData)
           revertToData()
           emitEditEvent('cancelEdit')
         } else emitEditEvent('confirmEdit')
@@ -299,7 +298,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       value,
       type,
       translate('DEFAULT_NEW_KEY', nodeData),
-      // If coming *FROM* a custom type, need to change value to something
+      // If coming *FROM* a custom type, needs to change value to something
       // that won't match the custom node condition any more
       customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
     )
