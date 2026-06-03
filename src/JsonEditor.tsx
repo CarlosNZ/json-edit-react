@@ -418,7 +418,11 @@ const Editor: React.FC<
         ...sourceNodeData,
         newData: addedData,
         event: 'move',
-        newPath: destPath,
+        // The moved node's actual landing path, not the drop-target node's
+        // (`destPath`): `targetKey` carries the above/below offset, the kept
+        // object key, or the generated `arr_N` key, so this is where the node
+        // ends up in `addedData`.
+        newPath: [...targetPath, targetKey],
       })
       // Observer (Cat 3): a committed move fires `onEditEvent` with the source
       // node. (Fired here, not at the drop site, which only has the target.)
