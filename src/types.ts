@@ -228,7 +228,7 @@ export type UpdateFunctionProps<T = JsonData> = NodeData<T> & { newData: T } & (
     | { event: 'edit'; newValue: unknown } // value changes (incl. type change)
     | { event: 'add'; newValue: unknown }
     | { event: 'delete' } // `newData` reflects the removal
-    | { event: 'rename'; newKey: CollectionKey } // `NodeData.key`/`path` = OLD; use `newKey` + `newData`
+    | { event: 'rename'; newKey: string } // `NodeData.key`/`path` = OLD; use `newKey` + `newData`. Only object keys are renameable, so always a string
     | { event: 'move'; newPath: CollectionKey[] } // `NodeData.path` = source; `newPath` = destination
   )
 
