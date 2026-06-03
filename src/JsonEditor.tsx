@@ -218,10 +218,20 @@ const Editor: React.FC<JsonEditorProps<JsonData>> = ({
     async (input: UpdateFunctionProps): Promise<string | void | false> => {
       const result = await onUpdateRef.current(input)
 
-      // Reject (generic): revert to the pre-edit document, default message
+      // Reject (generic): revert to the pre-edit document, default message.
+      // The message is event-specific so it matches the `onError` code the node
+      // routes it to (`ADD_ERROR`/`DELETE_ERROR`). `rename`/`move` have no
+      // dedicated key, so they fall back to `ERROR_UPDATE` (their code is
+      // `UPDATE_ERROR`).
       if (result === false) {
         setDataRef.current(input.fullData)
-        return translateRef.current('ERROR_UPDATE', rootNodeDataRef.current)
+        const errorKey =
+          input.event === 'add'
+            ? 'ERROR_ADD'
+            : input.event === 'delete'
+            ? 'ERROR_DELETE'
+            : 'ERROR_UPDATE'
+        return translateRef.current(errorKey, rootNodeDataRef.current)
       }
 
       // Silent cancel: no commit, no error — signal the node to revert its display

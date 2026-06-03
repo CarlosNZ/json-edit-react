@@ -747,6 +747,36 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
   })
 
+  test('onUpdate returning false on a delete shows the delete-specific message', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => false as const)
+    render(
+      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onUpdate={onUpdate} showIconTooltips />
+    )
+
+    const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
+    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+
+    // Event-specific message, matching the DELETE_ERROR code routed to onError
+    expect(screen.getByText('Delete unsuccessful')).toBeInTheDocument()
+  })
+
+  test('onUpdate returning false on an add shows the add-specific message', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => false as const)
+    const { container } = render(
+      <JsonEditor data={{ existing: 'value' }} setData={noop} onUpdate={onUpdate} showIconTooltips />
+    )
+
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(newKeyInput)
+    await user.type(newKeyInput, 'fresh{Enter}')
+
+    // Event-specific message, matching the ADD_ERROR code routed to onError
+    expect(screen.getByText('Adding node unsuccessful')).toBeInTheDocument()
+  })
+
   test('onUpdate returning { error: string } surfaces that string', async () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn(() => ({ error: 'No can do' }))
