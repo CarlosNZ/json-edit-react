@@ -22,7 +22,7 @@
  * §17 phase.
  */
 
-import type { JsonData, CollectionKey, ValueData, CopyType, NodeData } from './types'
+import type { JsonData, CollectionKey, ValueData, NodeData } from './types'
 
 /* ============================================================================
  * Shared building blocks
@@ -157,15 +157,9 @@ export type OnCollapseFunction<T = JsonData> = (
   props: NodeData<T> & { collapsed: boolean; includeChildren: boolean }
 ) => void
 
-/** After a copy-to-clipboard. Enablement is the `allowClipboard` boolean (Cat 1). */
-export type OnCopyFunction<T = JsonData> = (
-  props: NodeData<T> & {
-    success: boolean
-    stringValue: string
-    type: CopyType
-    error?: JsonEditorError
-  }
-) => void
+// `OnCopyFunction` (the `onCopy` observer) graduated to `./types` (it's public,
+// wired by the clipboard split). The remaining staging types here are unused
+// until their phases land.
 
 /* ============================================================================
  * Category 4 — Imperative commands (the `editorRef` handle)

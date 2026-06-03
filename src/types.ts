@@ -16,7 +16,7 @@ export interface JsonEditorProps<T = JsonData> {
   onChange?: OnChangeFunction<T>
   onError?: OnErrorFunction<T>
   showErrorMessages?: boolean
-  enableClipboard?: boolean | CopyFunction
+  allowClipboard?: boolean
   theme?: ThemeInput
   icons?: IconReplacements
   className?: string
@@ -61,6 +61,7 @@ export interface JsonEditorProps<T = JsonData> {
   // Additional events
   onEditEvent?: OnEditEventFunction
   onCollapse?: OnCollapseFunction
+  onCopy?: OnCopyFunction<T>
   // Imperative handle — see `JsonEditorHandle`. Attach with `useRef` and the
   // `editorRef` prop (a plain ref-valued prop, not the `ref` attribute, so the
   // component stays a generic function with full type inference).
@@ -236,15 +237,18 @@ export type SearchFilterInputFunction<T = JsonData> = (
 export type NewKeyOptionsFunction<T = JsonData> = (input: NodeData<T>) => string[] | null | void
 
 export type CopyType = 'path' | 'value'
-export type CopyFunction = (input: {
-  success: boolean
-  errorMessage: string | null
-  key: CollectionKey
-  path: CollectionKey[]
-  value: unknown
-  stringValue: string
-  type: CopyType
-}) => void
+
+// Observer (Cat 3): fires after a copy-to-clipboard. Enablement is the
+// `allowClipboard` boolean (Cat 1). A failed copy carries `error.message`
+// (clipboard failures aren't part of the §17 error-code taxonomy).
+export type OnCopyFunction<T = JsonData> = (
+  props: NodeData<T> & {
+    success: boolean
+    stringValue: string
+    type: CopyType
+    error?: { message: string }
+  }
+) => void
 
 export type CompareFunction = (
   a: [string | number, unknown],
@@ -340,7 +344,8 @@ interface BaseNodeProps {
   showErrorMessages: boolean
   showIconTooltips: boolean
   onMove: InternalMoveFunction
-  enableClipboard: boolean | CopyFunction
+  allowClipboard: boolean
+  onCopy?: OnCopyFunction
   onEditEvent?: OnEditEventFunction
   restrictEditFilter: FilterFunction
   restrictDeleteFilter: FilterFunction

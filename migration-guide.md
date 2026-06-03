@@ -16,6 +16,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `JsonEditor` is now generic on the data type (`JsonEditor<T>`) | No action needed — defaults to `JsonData`, source-compatible. Opt in by writing `<JsonEditor<MyShape> ... />` |
 | `setData` is now required; `viewOnly` removed; new `JsonViewer` export | Switch read-only usage to `<JsonViewer>`; replace `viewOnly={cond}` with the relevant `restrict*` toggles, including `restrictDrag` if drag was enabled — see §6 |
 | `externalTriggers` prop replaced by the `editorRef` imperative handle | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/cancelEdit/confirmEdit` — see §7 |
+| `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction` | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` (`errorMessage` → `error.message`) — see §8 |
 
 ---
 
@@ -286,6 +287,41 @@ Two behaviours of `startEdit` worth noting:
 - It **auto-reveals** a target collapsed below the current view: collapsed ancestors expand so the node becomes editable.
 
 `JsonViewer` also accepts `editorRef`, but its `JsonViewerHandle` exposes only `collapse` — editing actions would bypass the read-only contract, so they aren't surfaced.
+
+---
+
+## 8. `enableClipboard` split into `allowClipboard` + `onCopy`
+
+The dual-purpose `enableClipboard?: boolean | CopyFunction` prop is split into two single-purpose props: `allowClipboard?: boolean` (default `true`) controls whether the copy button shows, and the new `onCopy?: OnCopyFunction` observer runs after a copy. The `CopyFunction` type is removed in favour of `OnCopyFunction`.
+
+**Why:** one prop doing two unrelated jobs (a boolean toggle *and* a callback) was awkward to type and document. The split is single-purpose, and `onCopy` now receives the same flat [`NodeData`](https://carlosnz.github.io/json-edit-react/) payload every other callback gets.
+
+### Migration
+
+If you only enabled/disabled the button:
+
+```diff
+- <JsonEditor data={data} setData={setData} enableClipboard={false} />
++ <JsonEditor data={data} setData={setData} allowClipboard={false} />
+```
+
+If you passed a callback (it both enabled the button *and* observed copies):
+
+```diff
+- import { JsonEditor, type CopyFunction } from 'json-edit-react'
++ import { JsonEditor, type OnCopyFunction } from 'json-edit-react'
+
+- const handleCopy: CopyFunction = ({ stringValue, type, success, errorMessage }) => {
+-   if (!success) console.error(errorMessage)
++ const handleCopy: OnCopyFunction = ({ stringValue, type, success, error }) => {
++   if (!success) console.error(error?.message)
+  }
+
+- <JsonEditor data={data} setData={setData} enableClipboard={handleCopy} />
++ <JsonEditor data={data} setData={setData} onCopy={handleCopy} />
+```
+
+Payload changes on the callback object: the explicit `key` / `path` / `value` fields are now part of the spread `NodeData` (so `key`, `path`, `value`, `fullData`, … are all still available); `errorMessage: string | null` becomes `error?: { message: string }` (present only when `success` is `false`).
 
 ---
 
