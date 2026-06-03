@@ -506,11 +506,15 @@ function App() {
                       )
                     }
                     const result = await runDemoUpdate()
+                    // Reject (false) or silent cancel (null): pass straight
+                    // through, no commit and no post-commit side effect.
+                    if (result === false || result === null) return result
+                    // Truthy result (error object / { value } override / true):
+                    // pass through.
                     if (result) return result
-                    else {
-                      const { newData } = nodeData
-                      if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
-                    }
+                    // Commit (void/undefined): run the post-commit demo side effect.
+                    const { newData } = nodeData
+                    if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
                   }}
                   onError={
                     dataDefinition.onError
