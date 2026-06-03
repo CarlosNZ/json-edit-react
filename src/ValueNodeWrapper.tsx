@@ -17,6 +17,7 @@ import {
   type ValueData,
   type JsonData,
   type EnumDefinition,
+  type EditEvent,
 } from './types'
 import { useTheme, useEditingStore, useCollapse } from './contexts'
 import { type CustomNodeData } from './CustomNode'
@@ -35,6 +36,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     onDelete,
     onChange,
     onMove,
+    onEditEvent,
     allowClipboard,
     onCopy,
     canDragOnto,
@@ -64,8 +66,15 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // it's read from the snapshot at use-time rather than subscribed to. The only
   // editing state that drives this node's render (`isEditing`) comes from
   // `useCommon`'s per-node selector.
-  const { startEdit, cancelEdit, recordPreviousEdit, setTabDirection, setPreviousValue, getSnapshot } =
-    useEditingStore()
+  const {
+    startEdit,
+    cancelEdit,
+    closeEdit,
+    recordPreviousEdit,
+    setTabDirection,
+    setPreviousValue,
+    getSnapshot,
+  } = useEditingStore()
   const { setCollapseState } = useCollapse()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
@@ -94,36 +103,55 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
   // `updateValue` keeps a stable identity (it's handed to a custom node as
-  // `setValue`, and `path`'s identity churns every render), so it can't close
-  // over `value`/`name`/`path` — once `onChange` is stabilized upstream the
-  // closure would freeze. Read those from a ref-to-latest, and the live
-  // document from `getLatestData()`.
-  const onChangeArgsRef = useRef({ value, name, path })
-  onChangeArgsRef.current = { value, name, path }
+  // `setValue`, and `nodeData`'s identity churns every render), so it can't
+  // close over `value`/`nodeData` — once `onChange` is stabilized upstream the
+  // closure would freeze. Read the in-progress value and the node's `NodeData`
+  // from refs-to-latest, and the live document from `getLatestData()`.
+  // Only the in-progress `value` needs a ref-to-latest; `name`/`path` come from
+  // `nodeDataRef` in the `onChange` payload below.
+  const onChangeValueRef = useRef(value)
+  onChangeValueRef.current = value
+  const nodeDataRef = useRef(nodeData)
+  nodeDataRef.current = nodeData
   const updateValue = useCallback(
     (newValue: ValueData) => {
       if (!onChange) {
         setValue(newValue)
         return
       }
-      const { value: liveValue, name: liveName, path: livePath } = onChangeArgsRef.current
+      // Flat `NodeData` payload (§17): `value` is the current (pre-keystroke)
+      // value, `fullData` the live document; the rest comes from `nodeData`.
       const modifiedValue = onChange({
-        currentData: getLatestData(),
+        ...nodeDataRef.current,
+        value: onChangeValueRef.current as ValueData,
+        fullData: getLatestData(),
         newValue,
-        currentValue: liveValue as ValueData,
-        name: liveName,
-        path: livePath,
       })
       setValue(modifiedValue)
     },
     [onChange, getLatestData]
   )
 
-  useEffect(() => {
+  // Snap the local edit buffer (`value` + `dataType`) back to the committed
+  // `data`. The effect handles `data` changing from ANY source (external
+  // `setData`, undo, a parent re-render); reject/cancel call it explicitly
+  // (below) since neither changes `data`, so a non-committing edit never leaves
+  // the input showing the typed-but-discarded value.
+  const revertToData = () => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
     setDataType(getDataType(data, customNodeData))
+    // Keep the enum selector in sync with the reverted value — a rejected or
+    // cancelled to-enum type change sets `enumType` synchronously before the
+    // commit resolves, so reverting only value/dataType would leave the
+    // selector stuck on the enum. (`setEnumType`/`allowedDataTypes` are
+    // declared below; `revertToData` only ever runs post-render.)
+    setEnumType(matchEnumType(data, allowedDataTypes))
+  }
+
+  useEffect(() => {
+    revertToData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data, error])
+  }, [data])
 
   const {
     CustomNode,
@@ -201,6 +229,16 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   if (!isVisible) return null
 
+  // Fire an `onEditEvent` for this node's value-edit session. `nodeData` is read
+  // live (these handlers are re-created each render), so no ref needed.
+  const emitEditEvent = (
+    event: Extract<EditEvent['event'], 'startEdit' | 'confirmEdit' | 'cancelEdit' | 'delete'>
+  ) =>
+    // Live `fullData`, not the memoizable `nodeData.fullData` (a bailed node
+    // keeps it stale — `areNodePropsEqual` ignores its identity). Same rule as
+    // `onError` / `onChange`: observer payloads read the document live.
+    onEditEvent?.({ ...nodeData, fullData: getLatestData(), event } as EditEvent)
+
   const handleChangeDataType = (type: DataType) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
     setCollapseState(null)
@@ -211,11 +249,20 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (getSnapshot().previousValue === null) setPreviousValue(value as JsonData)
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
-      onEdit(customNode.defaultValue, path)
+      onEdit(customNode.defaultValue, path).then((result) => {
+        if (result === false) {
+          revertToData()
+          emitEditEvent('cancelEdit')
+        } else if (typeof result === 'string') {
+          onError({ code: 'UPDATE_ERROR', message: result }, customNode.defaultValue as JsonData)
+          revertToData()
+          emitEditEvent('cancelEdit')
+        } else emitEditEvent('confirmEdit')
+      })
       setDataType(type)
       setEnumType(null)
       // Custom nodes will be instantiated expanded and NOT editing
-      cancelEdit()
+      closeEdit()
       setCollapseState({ path, collapsed: false, includeChildren: false })
       return
     }
@@ -227,15 +274,20 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (enumType) {
       if (typeof value !== 'string' || !enumType.values.includes(value)) {
         const attempted = enumType.values[0]
-        onEdit(attempted, path).then((error) => {
-          if (error) {
+        onEdit(attempted, path).then((result) => {
+          if (result === false) {
+            revertToData()
+            emitEditEvent('cancelEdit')
+          } else if (typeof result === 'string') {
             // `attempted` rather than `newValue` — `newValue` is declared
             // further down in this function and is never reached on this
             // branch (we return at `setEnumType` below), so referencing it
             // from this callback would throw a TDZ ReferenceError.
-            onError({ code: 'UPDATE_ERROR', message: error }, attempted as JsonData)
-            cancelEdit()
-          }
+            onError({ code: 'UPDATE_ERROR', message: result }, attempted as JsonData)
+            closeEdit()
+            revertToData()
+            emitEditEvent('cancelEdit')
+          } else emitEditEvent('confirmEdit')
         })
       }
       setEnumType(enumType)
@@ -250,17 +302,27 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       // that won't match the custom node condition any more
       customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
     )
-    if (!['string', 'number', 'boolean'].includes(type)) cancelEdit()
-    onEdit(newValue, path).then((error) => {
-      if (error) {
-        onError({ code: 'UPDATE_ERROR', message: error }, newValue as JsonData)
-        cancelEdit()
-      } else setEnumType(null)
+    if (!['string', 'number', 'boolean'].includes(type)) closeEdit()
+    onEdit(newValue, path).then((result) => {
+      if (result === false) {
+        revertToData()
+        emitEditEvent('cancelEdit')
+      } else if (typeof result === 'string') {
+        onError({ code: 'UPDATE_ERROR', message: result }, newValue as JsonData)
+        closeEdit()
+        revertToData()
+        emitEditEvent('cancelEdit')
+      } else {
+        setEnumType(null)
+        emitEditEvent('confirmEdit')
+      }
     })
   }
 
+  // Commits the in-progress value edit and fires the matching `onEditEvent`
+  // (`confirmEdit` on commit; `cancelEdit` on no-op/reject).
   const handleEdit = (inputValue?: unknown) => {
-    cancelEdit()
+    closeEdit()
     setPreviousValue(null)
     let newValue: JsonData
     if (inputValue !== undefined && !isJsEvent(inputValue)) newValue = inputValue as JsonData
@@ -282,13 +344,30 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           newValue = value
       }
     }
-    onEdit(newValue, path).then((error) => {
-      if (error) onError({ code: 'UPDATE_ERROR', message: error }, newValue)
+    onEdit(newValue, path).then((result) => {
+      if (result === false) {
+        revertToData()
+        emitEditEvent('cancelEdit')
+        return
+      }
+      if (typeof result === 'string') {
+        onError({ code: 'UPDATE_ERROR', message: result }, newValue)
+        revertToData()
+        emitEditEvent('cancelEdit')
+        return
+      }
+      emitEditEvent('confirmEdit')
     })
   }
 
-  const handleCancel = () => {
-    cancelEdit()
+  // Per-node UI/data cleanup for any session-ending path that isn't a
+  // confirm: explicit cancel (Esc/✗), node switch (another node steals the
+  // edit), or external cancel (search reset, `editorRef.cancelEdit`).
+  // Registered as the store's `cancelOp` so the store invokes it uniformly;
+  // it does NOT call back into the store. Both steps are idempotent so the
+  // function is safe to run twice in the user-cancel path (once from
+  // `handleCancel` directly, once from the store invoking `cancelOp`).
+  const revertSession = () => {
     const previousValue = getSnapshot().previousValue
     if (previousValue !== null) {
       onEdit(previousValue, path)
@@ -298,13 +377,29 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       setPreviousValue(null)
       return
     }
-    setValue(data)
+    revertToData()
     setPreviousValue(null)
   }
 
+  const handleCancel = () => {
+    // Revert locally then drive the store cancel. Driving the store also runs
+    // `cancelOp` (= `revertSession`) for the canonical external-cancel path,
+    // so this looks redundant — but `revertSession` is idempotent, and we
+    // still want the local revert to happen on entry paths that don't
+    // register a `cancelOp` (Tab-arrival, redirect from a filtered node),
+    // where the store has no op to invoke.
+    revertSession()
+    cancelEdit()
+  }
+
   const handleDelete = () => {
-    onDelete(value, path).then((error) => {
-      if (error) onError({ code: 'DELETE_ERROR', message: error }, value as ValueData)
+    // `result === false` is a silent cancel (consumer returned `null`); a string
+    // (including an empty one) is a real error. Neither edits this node's value
+    // buffer.
+    onDelete(value, path).then((result) => {
+      if (typeof result === 'string')
+        onError({ code: 'DELETE_ERROR', message: result }, value as ValueData)
+      else if (result === undefined) emitEditEvent('delete')
     })
   }
 
@@ -322,7 +417,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     setValue: updateValue,
     isEditing,
     canEdit,
-    setIsEditing: canEdit ? () => startEdit(path) : NOOP,
+    setIsEditing: canEdit ? () => startEdit(path, { cancelOp: revertSession }) : NOOP,
     handleEdit,
     handleCancel,
     path,
@@ -386,7 +481,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
-      setIsEditing={() => startEdit(path)}
+      setIsEditing={() => startEdit(path, { cancelOp: revertSession })}
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, inputProps) : undefined}
       originalNodeKey={
@@ -456,7 +551,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
                         // previously-abandoned edit session so a cancel
                         // doesn't unexpectedly revert to a stale value.
                         setPreviousValue(null)
-                        startEdit(path, { cancelOp: handleCancel })
+                        startEdit(path, { cancelOp: revertSession })
                       }
                     : undefined
                 }

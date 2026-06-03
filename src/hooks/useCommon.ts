@@ -8,7 +8,7 @@ import { useEditingSelector, useEditingStore } from '../contexts'
 import {
   type CollectionNodeProps,
   type ErrorString,
-  type JerError,
+  type JsonEditorError,
   type ValueData,
   type ValueNodeProps,
   type JsonData,
@@ -22,11 +22,11 @@ interface CommonProps {
 
 export const useCommon = ({ props, collapsed }: CommonProps) => {
   const {
-    data,
     nodeData: incomingNodeData,
     parentData,
-    onEdit,
+    onRename,
     onError: onErrorCallback,
+    onEditEvent,
     getLatestData,
     showErrorMessages,
     restrictEditFilter,
@@ -36,7 +36,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     translate,
     errorMessageTimeout,
   } = props
-  const { cancelEdit } = useEditingStore()
+  const { closeEdit } = useEditingStore()
   const [error, setError] = useState<string | null>(null)
 
   const nodeData = { ...incomingNodeData, collapsed }
@@ -75,23 +75,20 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
 
   // `onError` keeps a stable identity (it's a node prop, threaded down and
   // compared by the memo), so it can't close over the live document or this
-  // node's `data`/`name`/`path` — once `onErrorCallback` is stabilized upstream
-  // the closure freezes. Read the document from `getLatestData()` and the
-  // per-node args from a ref-to-latest.
-  const onErrorArgsRef = useRef({ data, name, path })
-  onErrorArgsRef.current = { data, name, path }
+  // node's churning `nodeData` — once `onErrorCallback` is stabilized upstream
+  // the closure freezes. Read this node's `NodeData` from a ref-to-latest and
+  // the live document from `getLatestData()` (so the flat payload is current).
+  const nodeDataRef = useRef(nodeData)
+  nodeDataRef.current = nodeData
   const onError = useCallback(
-    (error: JerError, errorValue: JsonData | string) => {
+    (error: JsonEditorError, errorValue: JsonData | string) => {
       showError(error.message)
       if (onErrorCallback) {
-        const { data: liveData, name: liveName, path: livePath } = onErrorArgsRef.current
         onErrorCallback({
-          currentData: getLatestData(),
-          errorValue,
-          currentValue: liveData,
-          name: liveName,
-          path: livePath,
+          ...nodeDataRef.current,
+          fullData: getLatestData(),
           error,
+          errorValue,
         })
       }
     },
@@ -102,25 +99,46 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     [onErrorCallback, showErrorMessages, getLatestData, errorMessageTimeout]
   )
 
+  // Commits a key rename and fires the matching `onEditEvent` (`confirmRename`/
+  // `cancelRename`).
   const handleEditKey = (newKey: string) => {
-    cancelEdit()
-    if (name === newKey) return
+    closeEdit()
+    // No-op rename (unchanged key) reports as a cancel (session closed, no change).
+    if (name === newKey) {
+      onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
+      return
+    }
     if (!parentData) return
-    const parentPath = path.slice(0, -1)
     const existingKeys = Object.keys(parentData)
     if (existingKeys.includes(newKey)) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
+      onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
       return
     }
 
-    // Need to update data in array form to preserve key order
-    const newData = Object.fromEntries(
-      Object.entries(parentData).map(([key, val]) => (key === name ? [newKey, val] : [key, val]))
-    )
-    onEdit(newData, parentPath).then((error) => {
-      if (error) {
-        onError({ code: 'UPDATE_ERROR', message: error }, newKey as ValueData)
+    // A rename is a first-class `event: 'rename'` update — `onRename` rebuilds
+    // the parent (preserving key order) and commits the whole document. The
+    // session terminates with `confirmRename` (committed) or `cancelRename`
+    // (rejected/aborted); `confirmRename` carries the old + new keys. `false` is
+    // a silent cancel (consumer returned `null`); a string (including an empty
+    // one) is a real error → surface it and report the session as cancelled.
+    onRename(path, newKey).then((result) => {
+      if (result === false) {
+        onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
+        return
       }
+      if (typeof result === 'string') {
+        onError({ code: 'UPDATE_ERROR', message: result }, newKey as ValueData)
+        onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
+        return
+      }
+      onEditEvent?.({
+        ...nodeData,
+        fullData: getLatestData(),
+        event: 'confirmRename',
+        oldKey: name,
+        newKey,
+      })
     })
   }
 

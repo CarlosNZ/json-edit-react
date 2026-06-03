@@ -180,10 +180,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | ----------------- | ----------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `data`            | `object\|array`         | none    | The data to be displayed / edited                                                                                                   |
 | `setData`         | `object\|array => void` | none    | Method to update your `data` object. **Required.** See [Managing state](#managing-state) below for additional notes.                |
-| `onUpdate`        | `UpdateFunction`        | none    | A function to run whenever a value is **updated** (edit, delete *or* add) in the editor. See [Update functions](#update-functions). |
-| `onEdit`          | `UpdateFunction`        | none    | A function to run whenever a value is **edited**.                                                                                   |
-| `onDelete`        | `UpdateFunction`        | none    | A function to run whenever a value is **deleted**.                                                                                  |
-| `onAdd`           | `UpdateFunction`        | none    | A function to run whenever a new property is **added**.                                                                             |
+| `onUpdate`        | `UpdateFunction`        | none    | A function to run whenever a value is changed in the editor — edit, add, delete, rename *or* move. Branch on `event` to handle each. See [Update functions](#update-functions). |
 | `onChange`        | `OnChangeFunction`      | none    | A function to modify/constrain user input as they type — see [OnChange functions](#onchange-function).                              |
 | `onError`         | `OnErrorFunction`       | none    | A function to run whenever the component reports an error — see [OnErrorFunction](#onerror-function).                               |
 | `allowClipboard`  | `boolean`               | `true`  | Enable or disable the "Copy to clipboard" button in the UI.                                                                         |
@@ -303,7 +300,7 @@ More detail [below](#external-control-1)
 
 You manage the `data` state yourself outside this component and pass in a `setData` method, which is called internally to update your `data`. Both `data` and `setData` are required. If you only want a read-only display, use [`JsonViewer`](#viewer-mode) — it takes the same display props but doesn't require `setData` and exposes no edit affordances.
 
-The [Update functions](#update-functions) (`onUpdate` / `onEdit` / `onDelete` / `onAdd`) are not an alternative to `setData` — they are for side effects, validation, or mutating the value before it reaches `setData`. Trying to drive your own state from them leads to drift between the internal display state and your external copy.
+The [Update function](#update-functions) (`onUpdate`) is not an alternative to `setData` — it's for side effects, validation, or mutating the value before it reaches `setData`. Trying to drive your own state from them leads to drift between the internal display state and your external copy.
 
 > [!TIP]
 > Update functions should ideally be used only for implementing side effects (e.g. notifications), validation, or mutating the data before setting it with `setData`.
@@ -318,7 +315,7 @@ import { JsonViewer } from 'json-edit-react'
 <JsonViewer data={data} theme={someTheme} />
 ```
 
-`JsonViewer` is a thin wrapper over `JsonEditor` that locks all edit, add, delete and drag operations off. It accepts the same display, theming, keyboard, search, collapse, localisation and custom-node props, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), and the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`) — none of which are meaningful in a read-only context. Its `editorRef` handle (`JsonViewerHandle`) is collapse-only.
+`JsonViewer` is a thin wrapper over `JsonEditor` that locks all edit, add, delete and drag operations off. It accepts the same display, theming, keyboard, search, collapse, localisation and custom-node props, but drops `setData`, the update callbacks (`onUpdate` / `onChange`), and the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`) — none of which are meaningful in a read-only context. Its `editorRef` handle (`JsonViewerHandle`) is collapse-only.
 
 If you instead need an editor that *sometimes* locks editing (e.g. based on user permissions), keep using `<JsonEditor>` and toggle the relevant `restrict*` props dynamically — `restrictEdit={!canEdit}` etc.
 
@@ -344,44 +341,59 @@ const [user, setUser] = useState<User>(initialUser)
 />
 ```
 
-The generic flows through `data`, `setData`, the `onUpdate` / `onEdit` / `onDelete` / `onAdd` / `onChange` / `onError` callbacks (root data slots only — per-node `value` stays `unknown`), and `NodeData.fullData` inside `FilterFunction`s. Defaults to `JsonData` (≈ `unknown`) so untyped consumers don't need to change anything.
+The generic flows through `data`, `setData`, the `onUpdate` / `onChange` / `onError` callbacks (root data slots only — per-node `value` stays `unknown`), and `NodeData.fullData` inside `FilterFunction`s. Defaults to `JsonData` (≈ `unknown`) so untyped consumers don't need to change anything.
 
 > [!NOTE]
 > `T` describes the data you *provide*. It is an input contract, not a runtime invariant — if the user can freely restructure the JSON, post-edit values may not conform to `T`. Pair with `restrictAdd` / `restrictDelete` / `restrictTypeSelection` to lock the shape, or validate inside `onUpdate` if you depend on it.
 
 ## Update Functions
 
-A **callback** to be executed whenever a data update (edit, delete or add) occurs can be provided. You might wish to use this to update some external state, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema.
+A single **`onUpdate`** callback runs whenever the data changes in the editor — for *every* kind of change. You might wish to use this to update some external state, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema. (It is *not* an alternative to `setData` — see [Managing state](#managing-state).)
 
-If you want the same function for all updates, then just the `onUpdate` prop is sufficient. However, should you require something different for **editing**, **deletion** and **addition**, then you can provide separate Update functions via the `onEdit`, `onDelete` and `onAdd` props.
-
-The function will receive the following object as a parameter:
+The function receives a single object, built on the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with an **`event`** discriminant plus the change-specific fields:
 
 ```js
 {
-    newData,      // data state after update
-    currentData,  // data state before update 
-    newValue,     // the new value of the property being updated
-    currentValue, // the current value of the property being updated
-    name,         // name of the property being updated
-    path          // full path to the property being updated,
-                  //   as an array of property keys
-                  //   (e.g. [ "user", "friends", 1, "name" ])
-                  //   (equivalent to "user.friends[1].name")
+    // ...standard node data (key, path, value, fullData, ...)
+    //    describing the node BEFORE the change — for `add`, this is the new
+    //    node's position, with `value` unset
+    event,        // 'edit' | 'add' | 'delete' | 'rename' | 'move'
+    newData,      // the whole document AFTER the change
+    // ...plus one event-specific field:
+    newValue,     // the new value           (event: 'edit' | 'add')
+    newKey,       // the new key             (event: 'rename')
+    newPath,      // the destination path    (event: 'move')
 }
 ```
-The function can return nothing (in which case the data is updated normally), or a value to represent success/failure, error value, or modified data. The return value can be one of the following, and handled accordingly:
-- `true` / `void` / `undefined`: data continues update as normal
-- `false`: considers the update to be an error, so data is not updated (reverts to previous value), and a generic error message is displayed in the UI
-- `string`: also considered an error, so no data update, but the UI error message will be your provided string
-- `[ "value", <value> ]`: tells the component to use the returned `<value>` instead of the input data. You might use this to automatically modify user input -- for example, sorting an array, or inserting a timestamp field into an object.
-- `[ "error", <value> ]`: same as `string`, but in the longer tuple format.
+
+Branch on `event` to handle each operation:
+
+```js
+onUpdate={(props) => {
+  switch (props.event) {
+    case 'edit':   /* props.newValue */ break
+    case 'rename': /* props.newKey   */ break
+    case 'move':   /* props.newPath  */ break
+    case 'add':    /* props.newValue */ break
+    case 'delete': break
+  }
+}}
+```
+
+The function can return nothing (the change proceeds as normal), or a value to accept/reject/transform/cancel the change. The return value can be one of:
+- `true` / `void` / `undefined`: the change proceeds as normal
+- `false`: treats the change as an error — the data is not updated (reverts to the previous value) and a generic error message is displayed in the UI
+- `null`: **silently cancels** the change — no update, and *no* error message (unlike `false`). Use this to quietly abort a change that isn't an error
+- `{ value: <value> }`: use the returned `<value>` instead of the input data. You might use this to automatically modify user input — for example, sorting an array, or inserting a timestamp field into an object
+- `{ error: <string> }` (or `{ error: { code, message } }`): treats the change as an error, with your provided message shown in the UI
+
+(Any of the above may also be returned from an `async` function / `Promise`.)
 
 ### OnChange Function
 
-Similar to the Update functions, the `onChange` function is executed as the user input changes. You can use this to restrict or constrain user input -- e.g. limiting numbers to positive values, or preventing line breaks in strings. The function *must* return a value in order to update the user input field, so if no changes are to be made, just return it unmodified.
+Similar to the Update function, the `onChange` function is executed as the user input changes. You can use this to restrict or constrain user input -- e.g. limiting numbers to positive values, or preventing line breaks in strings. The function *must* return a value in order to update the user input field, so if no changes are to be made, just return it unmodified.
 
-The input object is similar to the Update function input, but with no `newData` field (since this operation occurs before the data is updated).
+The input is the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with the in-progress `newValue` added. (Since this runs *before* the data is committed, there's no `newData` — `value` is the current value, `fullData` the current document.)
 
 <details>
 <summary>
@@ -392,16 +404,16 @@ The input object is similar to the Update function input, but with no `newData` 
 - Restrict "age" inputs to positive values up to 100:  
   ```js
   // in <JsonEditor /> props
-  onChange = ({ newValue, name }) => {
-        if (name === "age" && newValue < 0) return 0;
-        if (name === "age" && newValue > 100) return 100;
+  onChange = ({ newValue, key }) => {
+        if (key === "age" && newValue < 0) return 0;
+        if (key === "age" && newValue > 100) return 100;
         return newValue
       }
   ```
 - Only allow alphabetical or whitespace input for "name" field (including no line breaks):  
   ```js
-  onChange = ({ newValue, name }) => {
-      if (name === 'name' && typeof newValue === "string")
+  onChange = ({ newValue, key }) => {
+      if (key === 'name' && typeof newValue === "string")
         return newValue.replace(/[^a-zA-Z\s]|\n|\r/gm, '');
       return newValue;
     }
@@ -410,21 +422,15 @@ The input object is similar to the Update function input, but with no `newData` 
 
 ### OnError Function
 
-Normally, the component will display simple error messages whenever an error condition is detected (e.g. invalid JSON input, duplicate keys, or custom errors returned by the [`onUpdate` functions)](#update-functions)). However, you can provide your own `onError` callback in order to implement your own error UI, or run additional side effects. (In the former case, you'd probably want to disable the `showErrorMessages` prop, too.) The input is similar to the other callbacks:
+Normally, the component will display simple error messages whenever an error condition is detected (e.g. invalid JSON input, duplicate keys, or custom errors returned by the [`onUpdate` function](#update-functions)). However, you can provide your own `onError` callback in order to implement your own error UI, or run additional side effects. (In the former case, you'd probably want to disable the `showErrorMessages` prop, too.) It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with the following additional fields spread on top:
 
 ```js
 {
-    currentData,  // data state before update 
-    currentValue, // the current value of the property being updated
+    // ...standard node data (key, path, value, fullData, ...)
     errorValue,   // the erroneous value that failed to update the property
-    name,         // name of the property being updated
-    path,         // full path to the property being updated,
-                  //   as an array of property keys
-                  //   (e.g. [ "user", "friends", 1, "name" ] )
-                  //   (equivalent to "user.friends[1].name"),
-    error: {
-      code,       // one of 'UPDATE_ERROR' | 'DELETE_ERROR' |
-                  //   'ADD_ERROR' | 'INVALID_JSON' | 'KEY_EXISTS'
+    error: {      // a JsonEditorError
+      code,       // one of 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR'
+                  //   | 'INVALID_JSON' | 'KEY_EXISTS'
       message     // the (localised) error message that would be displayed
     }
 }
@@ -443,7 +449,8 @@ The `onCopy` callback runs whenever an item is **copied** to the clipboard. It r
     stringValue  // A nicely stringified version of the copied value
                  // (i.e. what the clipboard actually receives)
     success      // true/false -- whether the clipboard copy action actually succeeded
-    error        // `{ message }` with the failure detail when `success === false`
+    error        // a JsonEditorError `{ code: 'CLIPBOARD_ERROR', message }`
+                 //   present only when `success === false`
 }
 ```
 
@@ -487,8 +494,8 @@ return
           description: errorMessage,
           status: 'error',
         })
-        // This string returned to and displayed in json-edit-react UI
-        return 'JSON Schema error'
+        // This message is returned to and displayed in the json-edit-react UI
+        return { error: 'JSON Schema error' }
       }
     }}
   { ...otherProps } />
@@ -1233,37 +1240,52 @@ You can interact with the component externally, with event callbacks and trigger
 
 Pass in a function to the props `onEditEvent` and `onCollapse` if you want your app to be able to respond to these events.
 
-The `onEditEvent` callback is executed whenever the user starts or stops editing a node, and has the following signature:
+The `onEditEvent` callback streams the complete **interaction lifecycle** — start/confirm/cancel for value-edit, key-rename and add sessions, plus the instant `delete`/`move`. It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, …) with an `event` discriminant spread on top:
 
 ```ts
-type OnEditEventFunction = 
-  (path: (CollectionKey | null)[] | null, isKey: boolean) => void
+type EditEvent =
+  // value edit
+  | { event: 'startEdit' } | { event: 'confirmEdit' } | { event: 'cancelEdit' }
+  // key rename ('confirmRename' also carries oldKey + newKey)
+  | { event: 'startRename' }
+  | { event: 'confirmRename'; oldKey: CollectionKey; newKey: CollectionKey }
+  | { event: 'cancelRename' }
+  // add
+  | { event: 'startAdd' } | { event: 'confirmAdd' } | { event: 'cancelAdd' }
+  // instant (no session)
+  | { event: 'delete' } | { event: 'move' }
+// ...each spread onto the node's NodeData
+type OnEditEventFunction = (e: EditEvent) => void
 ```
 
-The `path` will be an array representing the path components when starting to edit, and `null` when ending the edit. The `isKey` indicates whether the edit is for the property `key` rather than `value`.
+A session opens with a `start*` and terminates with **exactly one** of `confirm*` (the change was committed) or `cancel*` (the session closed *without* committing — an explicit cancel, a no-op confirm where nothing changed, or a change your `onUpdate` rejected/aborted). `delete` and `move` fire a single event on commit.
 
-> [!NOTE] 
-> After clicking the "Add key" button, the `path` in the `onEditEvent` callback will end with a `null` value, indicating that the final path where this key will end up is not yet known.
+A few things worth knowing:
+- **Add events describe the parent collection** (the node you're adding *into*); `confirmAdd` is where the add lands.
+- **Array adds are instant** — they emit only `confirmAdd` (no `startAdd`/`cancelAdd`, since there's no key-entry step).
+- A type change mid-edit is itself a commit, so it emits `confirmEdit` while the edit session stays open — one session can emit multiple `confirmEdit`s.
 
-The `onCollapse` callback is executed when user opens or collapses a node, and has the following signature:
+The `onCollapse` callback is executed when the user opens or collapses a node (or you drive it via `editorRef.collapse`). It receives the node's [node data](#filter-functions) with the collapse flags spread on top:
 
 ```ts
 type OnCollapseFunction = (
-  {
-    path: CollectionKey[],
-    collapsed: boolean, // closing = true, opening = false
-    includeChildren: boolean // if was clicked with Modifier key to
-                             // open/close all descendants as well
+  props: NodeData & {
+    collapsed: boolean // closing = true, opening = false
+    includeChildren: boolean // if opened/closed with the Modifier key to
+                             // affect all descendants as well
   }
 ) => void
 ```
 
 ### Imperative handle (`editorRef`)
 
-You can *drive* collapse and editing actions imperatively via a handle. Create a
-ref with `useRef` and pass it to the `editorRef` prop (an ordinary prop, not the
-`ref` attribute — this keeps `JsonEditor` a generic component with full type
-inference):
+You can *drive* the editor's UI imperatively via a handle: open a value-edit
+**input session** at a node, commit or cancel it, and collapse nodes. The
+handle deliberately doesn't include data mutators — you already own `data` and
+`setData`, so changing a value is just `setData(newData)` and the editor reflects
+it. Create a ref with `useRef` and pass it to the `editorRef` prop (an ordinary
+prop, not the `ref` attribute — this keeps `JsonEditor` a generic component with
+full type inference):
 
 ```ts
 import { useRef } from 'react'
@@ -1276,9 +1298,9 @@ const editorRef = useRef<JsonEditorHandle>(null)
 
 // Then, from an event handler:
 editorRef.current?.collapse({ path: ['user'], collapsed: true, includeChildren: true })
-editorRef.current?.startEdit({ path: ['user', 'name'] })
-editorRef.current?.confirmEdit()  // commit the current edit
-editorRef.current?.cancelEdit()   // discard the current edit
+editorRef.current?.startEdit({ path: ['user', 'name'] })  // open the value editor
+editorRef.current?.confirm()  // commit the open session (runs onUpdate)
+editorRef.current?.cancel()   // discard the open session
 ```
 
 The handle shape is:
@@ -1288,20 +1310,24 @@ interface JsonEditorHandle {
   // Collapse/expand a node (or a whole subtree, with `includeChildren`).
   // Same `CollapseState` shape as the `onCollapse` callback input.
   collapse: (state: CollapseState | CollapseState[]) => void
-  // Put a node into (value) edit mode. Returns `false` if blocked by
-  // `restrictEdit` (and not overridden), `true` otherwise.
-  startEdit: (options: StartEditOptions) => boolean
-  // Leave edit mode without committing.
-  cancelEdit: () => void
-  // Commit the in-progress edit (equivalent to clicking the tick), then exit.
-  confirmEdit: () => void
+  // Open a value-edit session at a node; returns whether it opened (see below).
+  startEdit: (options: StartEditOptions) => StartEditResult
+  // Commit the open session (clicks the live confirm control), then exit.
+  confirm: () => void
+  // Discard the open session without committing.
+  cancel: () => void
 }
 
 interface StartEditOptions {
+  // The target node to edit.
   path: CollectionKey[]
-  // Bypass the node's `restrictEdit` filter (default false).
+  // Bypass `restrictEdit` (default false). Skips ONLY the filter — your
+  // `onUpdate` still runs (and may reject) at `confirm()`.
   overrideRestrictions?: boolean
 }
+
+// `true` if the session opened, else why it didn't.
+type StartEditResult = true | 'RESTRICTED' | 'PATH_NOT_FOUND'
 
 interface CollapseState {
   path: CollectionKey[]
@@ -1312,20 +1338,20 @@ interface CollapseState {
 
 A few behaviours worth noting:
 
-- `startEdit` **respects the node's `restrictEdit` filter by default** — the filter
-  is evaluated for the target at call time, and the call is a no-op if that node
-  is restricted (it is never redirected to a different node).
+- **`startEdit` is synchronous** and returns `true` if it opened the session, or
+  the reason it didn't: `'PATH_NOT_FOUND'` (the path doesn't exist in the current
+  data) or `'RESTRICTED'` (`restrictEdit` blocks it) — so you can give your own
+  feedback (e.g. a toast) on a refused command. The target is never silently
+  redirected to a different node.
 - Pass **`overrideRestrictions: true`** to bypass the filter. A common pattern is
   to lock the whole tree with `restrictEdit={true}` and imperatively enable editing
-  on one node through your own UI, without maintaining a `restrictEdit` function
-  that mirrors that selection.
-- `startEdit` **returns `false`** when the edit was blocked by `restrictEdit` (and
-  not overridden), `true` otherwise — so you can give your own feedback (e.g. a
-  toast) on a blocked edit.
+  on one node through your own UI. It skips **only** the filter: your `onUpdate`
+  still runs at `confirm()` and may reject or transform the value.
+- **`confirm()`** commits the open session — it triggers the same path as clicking
+  the editor's confirm button, running your `onUpdate`. **`cancel()`** discards it.
+  Only one session is open at a time, so both take no arguments.
 - `startEdit` will **auto-reveal a target that's currently collapsed** — any
-  collapsed ancestors expand so the node becomes visible and enters edit mode.
-- `confirmEdit`/`cancelEdit` act on whichever node is currently being edited, so
-  they take no arguments.
+  collapsed ancestors expand so the node becomes visible and enters the session.
 
 `JsonViewer` exposes the same `editorRef` prop, but its handle (`JsonViewerHandle`)
 is **collapse-only** — the editing actions aren't meaningful (and would bypass the
@@ -1363,8 +1389,9 @@ A few helper functions, components and types that might be useful in your own im
 - `ThemeInput`: input type for the `theme` prop
 - `JsonEditorProps<T>`: all input props for the Json Editor component. Generic on the data type — see [Typed data](#typed-data).
 - `JsonData`: main `data` object -- any valid JSON structure. Used as the default for `T`.
-- [`UpdateFunction`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`OnCopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
-- [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref), [`StartEditOptions`](#imperative-handle-editorref): input types of the respective props
+- [`UpdateFunction`](#update-functions), [`UpdateResult`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`OnCopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks) / [`EditEvent`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
+- `JsonEditorError` / `JsonEditorErrorCode`: the canonical error shape (`{ code, message }`) reported to [`onError`](#onerror-function) and accepted in an [`UpdateFunction`](#update-functions) `{ error }` return
+- [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref), [`StartEditOptions`](#imperative-handle-editorref), [`StartEditResult`](#imperative-handle-editorref): input/output types of the respective props
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `LocalisedString`: keys for the [`translations`](#localisation) object
 - `IconReplacements`: input type for the `icons` prop

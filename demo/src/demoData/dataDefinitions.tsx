@@ -31,7 +31,7 @@ import {
   ThemeStyles,
   TypeFilterFunction,
   UpdateFunction,
-  ErrorString,
+  UpdateResult,
   TypeOptions,
   UpdateFunctionProps,
   type AssignInput,
@@ -72,7 +72,7 @@ export interface DemoData {
   onUpdate?: (
     props: UpdateFunctionProps,
     toast: (options: unknown) => void
-  ) => void | ErrorString | boolean | Promise<boolean | ErrorString | void>
+  ) => UpdateResult | Promise<UpdateResult>
   onAdd?: UpdateFunction
   onEdit?: UpdateFunction
   onChange?: OnChangeFunction
@@ -338,9 +338,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         }
       return 'New Value'
     },
-    onChange: ({ newValue, name }) => {
-      if (name === 'name') return (newValue as string).replace(/[^a-zA-Z\s]|\n|\r/gm, '')
-      if (['username', 'email', 'phone', 'website'].includes(name as string))
+    onChange: ({ newValue, key }) => {
+      if (key === 'name') return (newValue as string).replace(/[^a-zA-Z\s]|\n|\r/gm, '')
+      if (['username', 'email', 'phone', 'website'].includes(key as string))
         return (newValue as string).replace(/\n|\r/gm, '')
       return newValue
     },
@@ -403,7 +403,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           duration: 5000,
           isClosable: true,
         })
-        return 'JSON Schema error'
+        return { error: 'JSON Schema error' }
       }
     },
     restrictTypeSelection: ({ key }) => {
@@ -518,13 +518,13 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return false
     },
     onEdit: ({ newData, path }) => {
-      if (path[0] !== 'messages' && path.length !== 3) return ['value', newData]
+      if (path[0] !== 'messages' && path.length !== 3) return { value: newData }
       const parentPath = [path[0], path[1]]
       const messageObject = (newData as { messages: { [key: number]: { timeStamp: string } } })
         ?.messages?.[path[1] as number]
       messageObject.timeStamp = new Date().toISOString()
       const data = assign(newData as AssignInput, parentPath, messageObject)
-      return ['value', data]
+      return { value: data }
     },
     onAdd: ({ path, newData }) => {
       if (path[0] === 'messages' && path.length === 2) {
@@ -532,7 +532,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         const messages = [...(newData?.messages ?? [])]
         messages.sort((a, b) => new Date(b.timeStamp).getTime() - new Date(a.timeStamp).getTime())
         const data = assign(newData as AssignInput, 'messages', messages)
-        return ['value', data]
+        return { value: data }
       }
       return
     },
@@ -687,7 +687,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           duration: 5000,
           isClosable: true,
         })
-        return 'JSON Schema error'
+        return { error: 'JSON Schema error' }
       }
     },
     onError: (errorData) => errorData.error.message,

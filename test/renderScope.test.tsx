@@ -18,7 +18,12 @@ import { useState } from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
-import { type OnChangeFunction, type OnCollapseFunction } from '../src/types'
+import {
+  type OnChangeFunction,
+  type OnCollapseFunction,
+  type OnErrorFunction,
+  type EditEvent,
+} from '../src/types'
 import { makeRenderSpy } from './helpers/renderSpy'
 
 // A controlled host so `setData` commits actually re-render the editor, the
@@ -380,9 +385,10 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
   // document missing a sibling commit AND a stale `currentValue` after re-edit.
   test('onChange reports the live document and value, not stale snapshots', async () => {
     const user = userEvent.setup()
-    const seen: Array<{ currentData: unknown; currentValue: unknown }> = []
+    const seen: Array<{ fullData: unknown; value: unknown }> = []
     const onChange: OnChangeFunction = (p) => {
-      seen.push({ currentData: p.currentData, currentValue: p.currentValue })
+      // Flat NodeData (§17): `fullData` is the live document, `value` the current value.
+      seen.push({ fullData: p.fullData, value: p.value })
       return p.newValue
     }
     const Host = () => {
@@ -407,19 +413,20 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     await user.type(screen.getByRole('textbox'), 'Z')
 
     expect(seen.at(-1)).toEqual({
-      currentData: { a: 'aval2', b: 'bval2' },
-      currentValue: 'bval2',
+      fullData: { a: 'aval2', b: 'bval2' },
+      value: 'bval2',
     })
   })
 
-  // Same staleness class for `onError`: `useCommon` builds its `currentData` from
-  // `nodeData.fullData`, which a bailed sibling keeps stale. Triggering an error
-  // in a subtree that bailed on an earlier commit must still report the live doc.
+  // Same staleness class for `onError`: `useCommon` builds its `fullData` from
+  // `getLatestData()`, not the `nodeData.fullData` a bailed sibling keeps stale.
+  // Triggering an error in a subtree that bailed on an earlier commit must still
+  // report the live doc.
   test('onError reports the live document, not a stale snapshot', async () => {
     const user = userEvent.setup()
-    let seenCurrentData: unknown = null
-    const onError = jest.fn((p: { currentData: unknown }) => {
-      seenCurrentData = p.currentData
+    let seenFullData: unknown = null
+    const onError = jest.fn<void, Parameters<OnErrorFunction>>((p) => {
+      seenFullData = p.fullData
     })
     const Host = () => {
       const [data, setData] = useState<object>({ a: 'aval', obj: { x: 1 } })
@@ -440,6 +447,38 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     fireEvent.keyDown(ta, { key: 'Enter', metaKey: true })
 
     expect(onError).toHaveBeenCalled()
-    expect(seenCurrentData).toEqual({ a: 'aval2', obj: { x: 1 } })
+    expect(seenFullData).toEqual({ a: 'aval2', obj: { x: 1 } })
+  })
+
+  // Same staleness class for the `onEditEvent` lifecycle stream: emitters must
+  // read `fullData` live (`getLatestData()`), not from the memoizable
+  // `nodeData.fullData` prop a bailed subtree keeps stale.
+  test('onEditEvent reports the live document, not a stale snapshot', async () => {
+    const user = userEvent.setup()
+    let seenFullData: unknown = null
+    const onEditEvent = jest.fn<void, [EditEvent]>((e) => {
+      if (e.event === 'confirmEdit') seenFullData = e.fullData
+    })
+    const Host = () => {
+      const [data, setData] = useState<object>({ a: 'aval', obj: { x: 1 } })
+      return <JsonEditor data={data} setData={setData} onEditEvent={onEditEvent} showIconTooltips />
+    }
+    render(<Host />)
+
+    // Commit a -> aval2; `obj`'s subtree (incl. `x`) bails on the commit, so its
+    // `nodeData.fullData` is now stale.
+    await user.dblClick(screen.getByText('"aval"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'aval2{Enter}')
+    await screen.findByText('"aval2"')
+
+    // Edit `x` (in the bailed subtree) and confirm — confirmEdit must carry the
+    // live document (`a: 'aval2'`), not the stale snapshot (`a: 'aval'`).
+    await user.dblClick(screen.getByText('1'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), '2{Enter}')
+
+    expect(onEditEvent).toHaveBeenCalled()
+    expect((seenFullData as { a: string }).a).toBe('aval2')
   })
 })
