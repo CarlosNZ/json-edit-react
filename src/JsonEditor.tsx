@@ -222,7 +222,24 @@ const Editor: React.FC<
   // to `onError`, or `false` to tell the node a cancel happened (revert display).
   const handleEdit = useCallback(
     async (input: UpdateFunctionProps): Promise<string | void | false> => {
-      const result = await onUpdateRef.current(input)
+      let result
+      try {
+        result = await onUpdateRef.current(input)
+      } catch (err) {
+        // Rejected promise: treat like the generic `false` reject — no commit
+        // (same reasoning as below: nothing was written, so we don't `setData`),
+        // surface the thrown message if present, otherwise the default. This
+        // also stops the rejection from escaping as an unhandled rejection.
+        if (err instanceof Error && err.message) return err.message
+        if (typeof err === 'string' && err) return err
+        const errorKey =
+          input.event === 'add'
+            ? 'ERROR_ADD'
+            : input.event === 'delete'
+            ? 'ERROR_DELETE'
+            : 'ERROR_UPDATE'
+        return translateRef.current(errorKey, rootNodeDataRef.current)
+      }
 
       // Reject (generic): return the default message; the node reverts its own
       // display. No `setData` — nothing was committed (we only ever `setData`

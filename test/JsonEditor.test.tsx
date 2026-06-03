@@ -1186,10 +1186,40 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
   })
 
-  // A rejected onUpdate promise currently loses the edit silently and leaks an
-  // unhandled rejection. Tracked as #271 — promote to a real test once the
-  // editor wraps `await updateMethod(...)` in a try/catch and reverts cleanly.
-  test.todo('async onUpdate that rejects should revert and show an error (#271)')
+  test('async onUpdate that rejects should revert and show an error (#271)', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(async () => {
+      throw new Error('boom')
+    })
+    // Catch the unhandled-rejection signal Node emits when a rejection escapes
+    // the editor's control flow. If the bug regresses this fires and we fail.
+    const unhandled = jest.fn()
+    process.on('unhandledRejection', unhandled)
+
+    try {
+      render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
+
+      await user.dblClick(screen.getByText('"hello"'))
+      const input = screen.getByRole('textbox')
+      await user.clear(input)
+      await user.type(input, 'hi{Enter}')
+
+      // No commit: a rejected onUpdate must not write to external state (same
+      // contract as a `false`/`{ error }` reject).
+      expect(setData).not.toHaveBeenCalled()
+      // Display reverts to the original value.
+      expect(screen.getByText('"hello"')).toBeInTheDocument()
+      expect(screen.queryByText('"hi"')).toBeNull()
+      // The thrown Error's message is surfaced verbatim in the error slug.
+      expect(screen.getByText('boom')).toBeInTheDocument()
+      // Let any microtasks settle so a leaked rejection would have surfaced.
+      await new Promise((r) => setTimeout(r, 0))
+      expect(unhandled).not.toHaveBeenCalled()
+    } finally {
+      process.off('unhandledRejection', unhandled)
+    }
+  })
 
   test('restrictEdit as a function selectively allows/blocks per node', async () => {
     const user = userEvent.setup()
