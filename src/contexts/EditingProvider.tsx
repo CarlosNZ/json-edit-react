@@ -92,10 +92,18 @@ const createEditingStore = (
   let state = initialState
   const listeners = new Set<() => void>()
 
-  // cancelOp fires imperatively before transitioning to a new edit, letting the
-  // previously-editing node's UI reset. Held in a closure var (not state) so
-  // installing/clearing it never notifies subscribers.
+  // cancelOp fires imperatively when a session ends without a confirm — node
+  // switch, explicit cancel (Esc/✗), or external cancel (search reset,
+  // `editorRef.cancelEdit`) — so the previously-editing node can reset its
+  // local UI buffers. Held in a closure var (not state) so installing/clearing
+  // it never notifies subscribers.
   let cancelOp: (() => void) | null = null
+
+  // Re-entrancy guard. A registered cancelOp may itself call cancelEdit
+  // (some nodes route their user-cancel handler through the store); the
+  // recursive call no-ops so the outer flow owns the single state-clear and
+  // single cancel* emission.
+  let cancelling = false
 
   const emit = () => listeners.forEach((listener) => listener())
 
@@ -118,9 +126,29 @@ const createEditingStore = (
   const startEdit = (path: CollectionKey[], options?: StartEditOptions) => {
     const mode = options?.mode ?? 'value'
     const next: EditingState = { path, mode, force: options?.force }
+    const prev = state.currentlyEditingElement
+    const isSwitch = prev !== null && !editingStatesEqual(prev, next)
 
-    if (cancelOp) cancelOp()
+    // Run the outgoing session's UI cleanup before installing the new one.
+    // If that cancelOp itself routed through `cancelEdit` (some nodes do),
+    // it will have cleared state and fired the cancel* already — the
+    // post-check below avoids a double-fire.
+    const op = cancelOp
+    cancelOp = null
+    if (op) op()
+
     cancelOp = options?.cancelOp ?? null
+
+    // Fire cancel* for the displaced session if the cancelOp didn't already
+    // tear it down. `state.currentlyEditingElement` still pointing at `prev`
+    // means no recursive cancelEdit fired the event.
+    if (
+      isSwitch &&
+      state.currentlyEditingElement !== null &&
+      editingStatesEqual(state.currentlyEditingElement, prev)
+    ) {
+      fireEditEvent(prev.path, prev.mode === 'key' ? 'cancelRename' : 'cancelEdit')
+    }
 
     if (!editingStatesEqual(state.currentlyEditingElement, next)) {
       commit({ ...state, currentlyEditingElement: next })
@@ -129,14 +157,25 @@ const createEditingStore = (
     fireEditEvent(path, mode === 'key' ? 'startRename' : 'startEdit')
   }
 
-  // True cancel (user Esc/✗, node switch, `editorRef.cancelEdit`, search reset):
-  // close the session AND fire cancel*. Snapshot the element before nulling.
+  // True cancel (user Esc/✗, `editorRef.cancelEdit`, search reset): run the
+  // session's UI cleanup, close the session, AND fire cancel*. Snapshot
+  // `prev` before nulling so the event uses the prior path/mode.
   const cancelEdit = () => {
+    if (cancelling) return
     const prev = state.currentlyEditingElement
-    cancelOp = null
-    if (prev !== null) {
-      commit({ ...state, currentlyEditingElement: null })
-      fireEditEvent(prev.path, prev.mode === 'key' ? 'cancelRename' : 'cancelEdit')
+    cancelling = true
+    try {
+      const op = cancelOp
+      cancelOp = null
+      if (op) op()
+      if (prev !== null) {
+        if (state.currentlyEditingElement !== null) {
+          commit({ ...state, currentlyEditingElement: null })
+        }
+        fireEditEvent(prev.path, prev.mode === 'key' ? 'cancelRename' : 'cancelEdit')
+      }
+    } finally {
+      cancelling = false
     }
   }
 

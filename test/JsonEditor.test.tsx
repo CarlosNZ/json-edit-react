@@ -3,7 +3,12 @@ import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { JsonViewer } from '../src/JsonViewer'
-import { type FilterFunction, type JsonViewerHandle, type EditEvent } from '../src/types'
+import {
+  type FilterFunction,
+  type JsonEditorHandle,
+  type JsonViewerHandle,
+  type EditEvent,
+} from '../src/types'
 
 const noop = () => {}
 
@@ -801,6 +806,60 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     expect(seq).toContain('confirmEdit')
     expect(seq.filter((e) => e === 'startEdit')).toHaveLength(2)
     expect(seq).not.toContain('cancelEdit')
+  })
+
+  test('node-switch fires cancelEdit for the displaced session before startEdit for the new one', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(
+      <JsonEditor data={{ a: 'first', b: 'second' }} setData={noop} onEditEvent={onEditEvent} />
+    )
+
+    // Open edit on `a`, then click Edit on `b` while `a` is still active.
+    await user.dblClick(screen.getByText('"first"'))
+    // Typed-but-uncommitted text on `a`. The displaced session must report as
+    // a cancel (not a silent close).
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'edited-a')
+    await user.dblClick(screen.getByText('"second"'))
+
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'cancelEdit', 'startEdit'])
+    expect(onEditEvent.mock.calls[0][0]).toMatchObject({ key: 'a' })
+    expect(onEditEvent.mock.calls[1][0]).toMatchObject({ event: 'cancelEdit', key: 'a' })
+    expect(onEditEvent.mock.calls[2][0]).toMatchObject({ event: 'startEdit', key: 'b' })
+  })
+
+  test('editorRef.cancelEdit fires cancelEdit and clears the local edit buffer', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        onEditEvent={onEditEvent}
+        editorRef={ref}
+      />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'typed-but-not-committed')
+
+    // External cancel via the imperative handle.
+    act(() => {
+      ref.current!.cancelEdit()
+    })
+
+    // The lifecycle event fires.
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'cancelEdit'])
+
+    // And the local buffer was reverted — re-opening the node shows the
+    // original value, not the typed-but-uncommitted text.
+    await user.dblClick(screen.getByText('"hello"'))
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('hello')
   })
 })
 
