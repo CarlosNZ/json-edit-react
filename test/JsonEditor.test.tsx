@@ -1,5 +1,5 @@
 import { createRef, useState } from 'react'
-import { act, render, screen } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { JsonViewer } from '../src/JsonViewer'
@@ -775,6 +775,38 @@ describe('JsonEditor — restrictions and callbacks', () => {
 
     // Event-specific message, matching the ADD_ERROR code routed to onError
     expect(screen.getByText('Adding node unsuccessful')).toBeInTheDocument()
+  })
+
+  test('a rejected to-enum type change reverts the type selector (not stuck on the enum)', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => false as const)
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        restrictTypeSelection={['string', { enum: 'Color', values: ['red', 'green', 'blue'] }]}
+      />
+    )
+
+    // Enter edit mode on the value — the type <select> appears
+    await user.dblClick(screen.getByText('"hello"'))
+    const select = screen.getByRole('combobox') as HTMLSelectElement
+    expect(select.value).toBe('string')
+
+    // Switch the type to the enum. 'hello' isn't a valid Color, so the wrapper
+    // attempts a commit (the first enum value) which onUpdate rejects.
+    await user.selectOptions(select, 'Color')
+    expect(onUpdate).toHaveBeenCalled()
+
+    // The rejection reverts the value and closes the edit session.
+    await waitFor(() => expect(screen.queryByRole('combobox')).toBeNull())
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+
+    // Re-open editing: the type selector must reflect the reverted value
+    // (`string`), not stay stuck on the enum it was synchronously set to.
+    await user.dblClick(screen.getByText('"hello"'))
+    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('string')
   })
 
   test('onUpdate returning { error: string } surfaces that string', async () => {

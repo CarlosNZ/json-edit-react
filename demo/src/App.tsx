@@ -509,10 +509,11 @@ function App() {
                     // Reject (false) or silent cancel (null): pass straight
                     // through, no commit and no post-commit side effect.
                     if (result === false || result === null) return result
-                    // Truthy result (error object / { value } override / true):
-                    // pass through.
-                    if (result) return result
-                    // Commit (void/undefined): run the post-commit demo side effect.
+                    // Object result (error / { value } override): pass through to
+                    // the library. `true` is a plain commit — fall through to the
+                    // side effect like void/undefined.
+                    if (result && result !== true) return result
+                    // Commit (true | void | undefined): run the post-commit demo side effect.
                     const { newData } = nodeData
                     if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
                   }}
