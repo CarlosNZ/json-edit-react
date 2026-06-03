@@ -315,7 +315,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
         emitEditEvent('cancelEdit')
         return
       }
-      if (result) {
+      if (typeof result === 'string') {
         onError({ code: 'UPDATE_ERROR', message: result }, value as CollectionData)
         emitEditEvent('cancelEdit')
         return
@@ -332,7 +332,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     const newValue = getDefaultNewValue(nodeData, key)
     const onAddResult = (result: string | void | false) => {
       if (result === false) return
-      if (result) {
+      if (typeof result === 'string') {
         onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
         return
       }
@@ -356,7 +356,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     path.length > 0
       ? () => {
           onDelete(data, path).then((result) => {
-            if (result) onError({ code: 'DELETE_ERROR', message: result }, data)
+            if (typeof result === 'string') onError({ code: 'DELETE_ERROR', message: result }, data)
             else if (result === undefined) emitEditEvent('delete')
           })
         }

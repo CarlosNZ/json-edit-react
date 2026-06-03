@@ -913,7 +913,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.queryByTitle('Add')).toBeNull()
   })
 
-  test('onUpdate returning false reverts the edit and shows an error', async () => {
+  test('onUpdate returning false reverts the display and shows an error, without calling setData', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const onUpdate = jest.fn(() => false as const)
@@ -926,10 +926,13 @@ describe('JsonEditor — restrictions and callbacks', () => {
 
     // onUpdate ran with the attempted new value
     expect(onUpdate).toHaveBeenCalledTimes(1)
-    // Revert path: setData fired with the ORIGINAL data, not the typed one
-    expect(setData).toHaveBeenCalledTimes(1)
-    expect(setData).toHaveBeenCalledWith({ x: 'hello' })
-    // The default error message is shown in the editor's error slug
+    // A reject never commits — nothing was applied, so the editor must NOT write
+    // back to external state (writing the pre-edit snapshot here could clobber a
+    // newer commit that landed while an async onUpdate was in flight).
+    expect(setData).not.toHaveBeenCalled()
+    // The node still reverts its own display, and the default error shows.
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+    expect(screen.queryByText('"rejected"')).toBeNull()
     expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
   })
 
@@ -1023,6 +1026,32 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.getByText('Object-form error')).toBeInTheDocument()
   })
 
+  test('onUpdate returning { error: "" } (empty message) still rejects — reverts + fires onError', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onError = jest.fn()
+    const onUpdate = jest.fn(() => ({ error: '' }))
+    render(
+      <JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} onError={onError} />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'rejected{Enter}')
+
+    // An empty error string is a rejection, not a silent success: no commit, the
+    // display reverts, and onError fires (with the empty message).
+    expect(setData).not.toHaveBeenCalled()
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        error: expect.objectContaining({ code: 'UPDATE_ERROR', message: '' }),
+      })
+    )
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+    expect(screen.queryByText('"rejected"')).toBeNull()
+  })
+
   test('onUpdate returning { value } passes the override straight to setData', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
@@ -1114,7 +1143,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(setData).toHaveBeenCalledWith({ x: 'hi' })
   })
 
-  test('async onUpdate resolving with false reverts and shows an error', async () => {
+  test('async onUpdate resolving with false reverts the display and shows an error, without calling setData', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const onUpdate = jest.fn(async () => false as const)
@@ -1125,7 +1154,11 @@ describe('JsonEditor — restrictions and callbacks', () => {
     await user.clear(input)
     await user.type(input, 'hi{Enter}')
 
-    expect(setData).toHaveBeenCalledWith({ x: 'hello' })
+    // A reject — even an async one — never writes to external state. (This is
+    // what prevents a slow rejection from clobbering a newer commit that landed
+    // while it was in flight.)
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
     expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
   })
 
