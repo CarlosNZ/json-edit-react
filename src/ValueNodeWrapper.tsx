@@ -298,7 +298,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       value,
       type,
       translate('DEFAULT_NEW_KEY', nodeData),
-      // If coming *FROM* a custom type, needs to change value to something
+      // If coming *FROM* a custom type, need to change value to something
       // that won't match the custom node condition any more
       customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
     )
