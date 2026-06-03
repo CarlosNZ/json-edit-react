@@ -117,10 +117,12 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     // A rename is a first-class `event: 'rename'` update — `onRename` rebuilds
     // the parent (preserving key order) and commits the whole document. The
     // session terminates with `confirmRename` (committed) or `cancelRename`
-    // (rejected/aborted); `confirmRename` carries the old + new keys.
+    // (rejected/aborted); `confirmRename` carries the old + new keys. `false` is
+    // a silent cancel (consumer returned `null`); a string (including an empty
+    // one) is a real error → surface it and report the session as cancelled.
     onRename(path, newKey).then((result) => {
       if (result === false) onEditEvent?.({ ...nodeData, event: 'cancelRename' })
-      else if (result) {
+      else if (typeof result === 'string') {
         onError({ code: 'UPDATE_ERROR', message: result }, newKey as ValueData)
         onEditEvent?.({ ...nodeData, event: 'cancelRename' })
       } else onEditEvent?.({ ...nodeData, event: 'confirmRename', oldKey: name, newKey })

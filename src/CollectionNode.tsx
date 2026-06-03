@@ -294,7 +294,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       }
       onEdit(value, path).then((result) => {
         if (result === false) emitEditEvent('cancelEdit')
-        else if (result) {
+        else if (typeof result === 'string') {
           onError({ code: 'UPDATE_ERROR', message: result }, value as CollectionData)
           emitEditEvent('cancelEdit')
         } else emitEditEvent('confirmEdit')
@@ -318,7 +318,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       const index = insertAtTop.array ? 0 : (data as unknown[]).length
       const options = insertAtTop.array ? { insert: true } : {}
       onAdd(newValue, [...path, index], options).then((result) => {
-        if (result) onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
+        if (typeof result === 'string')
+          onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
         else if (result === undefined) emitEditEvent('confirmAdd')
       })
     } else if (key in data) {
@@ -326,7 +327,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     } else {
       const options = insertAtTop.object ? { insertBefore: 0 } : {}
       onAdd(newValue, [...path, key], options).then((result) => {
-        if (result) onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
+        if (typeof result === 'string')
+          onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
         else if (result === undefined) emitEditEvent('confirmAdd')
       })
     }
@@ -336,7 +338,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     path.length > 0
       ? () => {
           onDelete(data, path).then((result) => {
-            if (result) onError({ code: 'DELETE_ERROR', message: result }, data)
+            if (typeof result === 'string') onError({ code: 'DELETE_ERROR', message: result }, data)
             else if (result === undefined) emitEditEvent('delete')
           })
         }

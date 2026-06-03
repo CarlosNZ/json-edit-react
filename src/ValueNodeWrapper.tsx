@@ -274,7 +274,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           if (result === false) {
             revertToData()
             emitEditEvent('cancelEdit')
-          } else if (result) {
+          } else if (typeof result === 'string') {
             // `attempted` rather than `newValue` — `newValue` is declared
             // further down in this function and is never reached on this
             // branch (we return at `setEnumType` below), so referencing it
@@ -303,7 +303,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       if (result === false) {
         revertToData()
         emitEditEvent('cancelEdit')
-      } else if (result) {
+      } else if (typeof result === 'string') {
         onError({ code: 'UPDATE_ERROR', message: result }, newValue as JsonData)
         closeEdit()
         revertToData()
@@ -342,7 +342,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       if (result === false) {
         revertToData()
         emitEditEvent('cancelEdit')
-      } else if (result) {
+      } else if (typeof result === 'string') {
         onError({ code: 'UPDATE_ERROR', message: result }, newValue)
         revertToData()
         emitEditEvent('cancelEdit')
@@ -383,10 +383,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   }
 
   const handleDelete = () => {
-    // `result === false` is a silent cancel (consumer returned `null`); a
-    // non-empty string is a real error. Neither edits this node's value buffer.
+    // `result === false` is a silent cancel (consumer returned `null`); a string
+    // (including an empty one) is a real error. Neither edits this node's value
+    // buffer.
     onDelete(value, path).then((result) => {
-      if (result) onError({ code: 'DELETE_ERROR', message: result }, value as ValueData)
+      if (typeof result === 'string')
+        onError({ code: 'DELETE_ERROR', message: result }, value as ValueData)
       else if (result === undefined) emitEditEvent('delete')
     })
   }
