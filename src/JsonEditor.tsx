@@ -245,13 +245,7 @@ const Editor: React.FC<
         // also stops the rejection from escaping as an unhandled rejection.
         if (err instanceof Error && err.message) return err.message
         if (typeof err === 'string' && err) return err
-        const errorKey =
-          input.event === 'add'
-            ? 'ERROR_ADD'
-            : input.event === 'delete'
-            ? 'ERROR_DELETE'
-            : 'ERROR_UPDATE'
-        return translateRef.current(errorKey, rootNodeDataRef.current)
+        return translateRef.current(ERROR_MESSAGE_KEY[input.event], rootNodeDataRef.current)
       }
 
       // Reject (generic): return the default message; the node reverts its own
