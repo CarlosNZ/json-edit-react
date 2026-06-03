@@ -183,6 +183,31 @@ describe('editorRef handle — confirm / cancel', () => {
     expect(setData).not.toHaveBeenCalledWith({ greeting: 'world' })
   })
 
+  test('confirm() is a no-op with no value-edit control (does not cancel a key rename)', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn()
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor data={{ oldName: 1 }} setData={noop} onEditEvent={onEditEvent} editorRef={ref} />
+    )
+
+    // Start a key-rename session via the UI (the handle has no opener for it).
+    await user.dblClick(screen.getByText('oldName'))
+    expect(screen.getByDisplayValue('oldName')).toBeInTheDocument()
+    onEditEvent.mockClear()
+
+    // There's no live value-edit confirm control, so confirm() must be a no-op
+    // — NOT tear down the unrelated rename session via the trailing cancel.
+    await act(async () => {
+      ref.current!.confirm()
+    })
+
+    expect(onEditEvent.mock.calls.map(([e]: [{ event: string }]) => e.event)).not.toContain(
+      'cancelRename'
+    )
+    expect(screen.getByDisplayValue('oldName')).toBeInTheDocument()
+  })
+
   test('overrideRestrictions opens past the filter, but onUpdate still runs at confirm', async () => {
     // The §17 invariant: `overrideRestrictions` skips ONLY the `restrictEdit`
     // filter; the consumer's `onUpdate` always runs and may reject.

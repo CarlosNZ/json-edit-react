@@ -537,8 +537,13 @@ const Editor: React.FC<
         },
 
         // Commit the open session by clicking the live confirm button, then exit.
+        // No-op when there's no live confirm control to click (no session, or a
+        // session whose confirm control isn't mounted/tracked here): the
+        // unconditional `cancelEdit()` would otherwise tear down a session we
+        // never committed (e.g. silently cancelling a key-rename).
         confirm: () => {
-          editConfirmRef.current?.click()
+          if (!editConfirmRef.current) return
+          editConfirmRef.current.click()
           cancelEdit()
         },
 

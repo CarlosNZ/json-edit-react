@@ -80,8 +80,8 @@ export interface StartEditOptions {
 }
 
 /**
- * What `editorRef.startEdit` did: `true` if it opened a value-edit session, or
- * the reason it didn't — `'PATH_NOT_FOUND'` (target gone) or `'RESTRICTED'`
+ * The result of `editorRef.startEdit`: `true` if it opens a value-edit session,
+ * or the reason it doesn't — `'PATH_NOT_FOUND'` (target gone) or `'RESTRICTED'`
  * (`restrictEdit` blocked it, and `overrideRestrictions` wasn't set).
  */
 export type StartEditResult = true | 'RESTRICTED' | 'PATH_NOT_FOUND'
