@@ -653,6 +653,13 @@ describe('JsonEditor — §17 onUpdate event discriminant', () => {
         path: ['fresh'],
         newValue: null,
         newData: { existing: 'value', fresh: null },
+        // The payload describes the PRE-add state + the insertion position:
+        // value/size unset, and parentData/fullData are the pre-add document
+        // (NOT including the new `fresh` key).
+        value: undefined,
+        size: null,
+        parentData: { existing: 'value' },
+        fullData: { existing: 'value' },
       })
     )
   })
