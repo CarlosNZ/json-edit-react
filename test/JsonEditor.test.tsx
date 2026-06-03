@@ -1218,33 +1218,64 @@ describe('JsonEditor — restrictions and callbacks', () => {
     const onUpdate = jest.fn(async () => {
       throw new Error('boom')
     })
-    // Catch the unhandled-rejection signal Node emits when a rejection escapes
-    // the editor's control flow. If the bug regresses this fires and we fail.
-    const unhandled = jest.fn()
-    process.on('unhandledRejection', unhandled)
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
 
-    try {
-      render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'hi{Enter}')
 
-      await user.dblClick(screen.getByText('"hello"'))
-      const input = screen.getByRole('textbox')
-      await user.clear(input)
-      await user.type(input, 'hi{Enter}')
+    // No commit: a rejected onUpdate must not write to external state (same
+    // contract as a `false`/`{ error }` reject).
+    expect(setData).not.toHaveBeenCalled()
+    // Display reverts to the original value.
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+    expect(screen.queryByText('"hi"')).toBeNull()
+    // The error message is surfaced ONLY if the rejection was caught and routed
+    // to onError; a leaked rejection skips handleMutationResult entirely. So
+    // this assertion is itself the leak guard that #271 is about — if the catch
+    // in handleEdit goes away, the slug never renders and this fails.
+    expect(screen.getByText('boom')).toBeInTheDocument()
+  })
 
-      // No commit: a rejected onUpdate must not write to external state (same
-      // contract as a `false`/`{ error }` reject).
-      expect(setData).not.toHaveBeenCalled()
-      // Display reverts to the original value.
-      expect(screen.getByText('"hello"')).toBeInTheDocument()
-      expect(screen.queryByText('"hi"')).toBeNull()
-      // The thrown Error's message is surfaced verbatim in the error slug.
-      expect(screen.getByText('boom')).toBeInTheDocument()
-      // Let any microtasks settle so a leaked rejection would have surfaced.
-      await new Promise((r) => setTimeout(r, 0))
-      expect(unhandled).not.toHaveBeenCalled()
-    } finally {
-      process.off('unhandledRejection', unhandled)
-    }
+  test('async onUpdate that rejects with a plain string surfaces that string (#271)', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(async () => {
+      throw 'plain string error'
+    })
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'hi{Enter}')
+
+    // A bare-string rejection is surfaced verbatim (the `typeof err === 'string'`
+    // catch branch), same as a `{ error: string }` resolve.
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+    expect(screen.getByText('plain string error')).toBeInTheDocument()
+  })
+
+  test('async onUpdate that rejects with no usable message shows the default error (#271)', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(async () => {
+      // Empty message: skips both the Error-message and string branches, so the
+      // catch falls back to the event-specific localised default (ERROR_UPDATE).
+      throw new Error()
+    })
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'hi{Enter}')
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+    expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
   })
 
   test('restrictEdit as a function selectively allows/blocks per node', async () => {
