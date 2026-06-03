@@ -17,12 +17,10 @@ import {
   type ValueData,
   type JsonData,
   type EnumDefinition,
-  type EditEvent,
 } from './types'
 import { useTheme, useEditingStore, useCollapse } from './contexts'
 import { type CustomNodeData } from './CustomNode'
 import { filterNode } from './utils/filter'
-import { getNextOrPrevious } from './utils/keyboard'
 import { isJsEvent, matchEnumType, NOOP } from './utils/misc'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'
@@ -36,7 +34,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     onDelete,
     onChange,
     onMove,
-    onEditEvent,
     allowClipboard,
     onCopy,
     canDragOnto,
@@ -46,14 +43,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     showLabel,
     stringTruncate,
     showStringQuotes,
-    arrayIndexFromOne,
     indent,
     translate,
     customNodeDefinitions,
     customNodeData,
     handleKeyboard,
     keyboardControls,
-    sort,
     editConfirmRef,
     jsonStringify,
     showIconTooltips,
@@ -82,7 +77,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   )
 
   const {
-    pathString,
     nodeData,
     path,
     name,
@@ -91,9 +85,11 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     canDrag,
     error,
     onError,
-    handleEditKey,
-    emptyStringKey,
     derivedValues,
+    handleMutationResult,
+    getNextOrPreviousAtPath,
+    revertPreviousValue,
+    buildKeyDisplayProps,
   } = useCommon({ props })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
@@ -213,7 +209,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // search-filtered-out node (`!isVisible`) still redirects — it can't render.
     if (isVisible && getSnapshot().currentlyEditingElement?.force) return
     const { tabDirection, previouslyEditedElement } = getSnapshot()
-    const next = getNextOrPrevious(getLatestData(), path, tabDirection, sort)
+    const next = getNextOrPreviousAtPath(tabDirection)
     if (next) startEdit(next)
     else if (previouslyEditedElement) startEdit(previouslyEditedElement)
     else cancelEdit()
@@ -229,15 +225,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   if (!isVisible) return null
 
-  // Fire an `onEditEvent` for this node's value-edit session. `nodeData` is read
-  // live (these handlers are re-created each render), so no ref needed.
-  const emitEditEvent = (
-    event: Extract<EditEvent['event'], 'startEdit' | 'confirmEdit' | 'cancelEdit' | 'delete'>
-  ) =>
-    // Live `fullData`, not the memoizable `nodeData.fullData` (a bailed node
-    // keeps it stale — `areNodePropsEqual` ignores its identity). Same rule as
-    // `onError` / `onChange`: observer payloads read the document live.
-    onEditEvent?.({ ...nodeData, fullData: getLatestData(), event } as EditEvent)
+  // `emitEditEvent` is provided by `useCommon` (lifted to dedup with
+  // `CollectionNode`).
 
   const handleChangeDataType = (type: DataType) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
@@ -249,16 +238,16 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (getSnapshot().previousValue === null) setPreviousValue(value as JsonData)
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
-      onEdit(customNode.defaultValue, path).then((result) => {
-        if (result === false) {
-          revertToData()
-          emitEditEvent('cancelEdit')
-        } else if (typeof result === 'string') {
-          onError({ code: 'UPDATE_ERROR', message: result }, customNode.defaultValue as JsonData)
-          revertToData()
-          emitEditEvent('cancelEdit')
-        } else emitEditEvent('confirmEdit')
-      })
+      onEdit(customNode.defaultValue, path).then((result) =>
+        handleMutationResult({
+          result,
+          errorCode: 'UPDATE_ERROR',
+          errorValue: customNode.defaultValue as JsonData,
+          cancelEvent: 'cancelEdit',
+          confirmEvent: 'confirmEdit',
+          onRevert: revertToData,
+        })
+      )
       setDataType(type)
       setEnumType(null)
       // Custom nodes will be instantiated expanded and NOT editing
@@ -274,21 +263,23 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (enumType) {
       if (typeof value !== 'string' || !enumType.values.includes(value)) {
         const attempted = enumType.values[0]
-        onEdit(attempted, path).then((result) => {
-          if (result === false) {
-            revertToData()
-            emitEditEvent('cancelEdit')
-          } else if (typeof result === 'string') {
+        onEdit(attempted, path).then((result) =>
+          handleMutationResult({
+            result,
+            errorCode: 'UPDATE_ERROR',
             // `attempted` rather than `newValue` — `newValue` is declared
             // further down in this function and is never reached on this
             // branch (we return at `setEnumType` below), so referencing it
             // from this callback would throw a TDZ ReferenceError.
-            onError({ code: 'UPDATE_ERROR', message: result }, attempted as JsonData)
-            closeEdit()
-            revertToData()
-            emitEditEvent('cancelEdit')
-          } else emitEditEvent('confirmEdit')
-        })
+            errorValue: attempted as JsonData,
+            cancelEvent: 'cancelEdit',
+            confirmEvent: 'confirmEdit',
+            onRevert: revertToData,
+            // Extra `closeEdit()` only on the string-error branch (matches
+            // the pre-refactor inline copy; the `false` branch did not).
+            onErrorExtra: closeEdit,
+          })
+        )
       }
       setEnumType(enumType)
       return
@@ -303,20 +294,18 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
     )
     if (!['string', 'number', 'boolean'].includes(type)) closeEdit()
-    onEdit(newValue, path).then((result) => {
-      if (result === false) {
-        revertToData()
-        emitEditEvent('cancelEdit')
-      } else if (typeof result === 'string') {
-        onError({ code: 'UPDATE_ERROR', message: result }, newValue as JsonData)
-        closeEdit()
-        revertToData()
-        emitEditEvent('cancelEdit')
-      } else {
-        setEnumType(null)
-        emitEditEvent('confirmEdit')
-      }
-    })
+    onEdit(newValue, path).then((result) =>
+      handleMutationResult({
+        result,
+        errorCode: 'UPDATE_ERROR',
+        errorValue: newValue as JsonData,
+        cancelEvent: 'cancelEdit',
+        confirmEvent: 'confirmEdit',
+        onRevert: revertToData,
+        onErrorExtra: closeEdit,
+        onConfirmExtra: () => setEnumType(null),
+      })
+    )
   }
 
   // Commits the in-progress value edit and fires the matching `onEditEvent`
@@ -344,20 +333,16 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           newValue = value
       }
     }
-    onEdit(newValue, path).then((result) => {
-      if (result === false) {
-        revertToData()
-        emitEditEvent('cancelEdit')
-        return
-      }
-      if (typeof result === 'string') {
-        onError({ code: 'UPDATE_ERROR', message: result }, newValue)
-        revertToData()
-        emitEditEvent('cancelEdit')
-        return
-      }
-      emitEditEvent('confirmEdit')
-    })
+    onEdit(newValue, path).then((result) =>
+      handleMutationResult({
+        result,
+        errorCode: 'UPDATE_ERROR',
+        errorValue: newValue,
+        cancelEvent: 'cancelEdit',
+        confirmEvent: 'confirmEdit',
+        onRevert: revertToData,
+      })
+    )
   }
 
   // Per-node UI/data cleanup for any session-ending path that isn't a
@@ -368,17 +353,9 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // function is safe to run twice in the user-cancel path (once from
   // `handleCancel` directly, once from the store invoking `cancelOp`).
   const revertSession = () => {
-    const previousValue = getSnapshot().previousValue
-    if (previousValue !== null) {
-      onEdit(previousValue, path)
-      // Clear the snapshot after applying it — otherwise it lingers in
-      // editing state and a later cancel (here or on another node) would
-      // see a non-null `previousValue` and trigger an unintended revert.
-      setPreviousValue(null)
-      return
-    }
-    revertToData()
-    setPreviousValue(null)
+    // `revertPreviousValue` returns true when a type-change snapshot was
+    // applied; otherwise we fall back to reverting the local edit buffer.
+    if (!revertPreviousValue()) revertToData()
   }
 
   const handleCancel = () => {
@@ -396,15 +373,18 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // `result === false` is a silent cancel (consumer returned `null`); a string
     // (including an empty one) is a real error. Neither edits this node's value
     // buffer.
-    onDelete(value, path).then((result) => {
-      if (typeof result === 'string')
-        onError({ code: 'DELETE_ERROR', message: result }, value as ValueData)
-      else if (result === undefined) emitEditEvent('delete')
-    })
+    onDelete(value, path).then((result) =>
+      handleMutationResult({
+        result,
+        errorCode: 'DELETE_ERROR',
+        errorValue: value as ValueData,
+        confirmEvent: 'delete',
+      })
+    )
   }
 
   // DERIVED VALUES (this makes the JSX logic less messy)
-  const { isEditingKey, canEditKey } = derivedValues
+  const { isEditingKey } = derivedValues
   const showErrorString = !isEditing && error
   const showTypeSelector = isEditing && allowedDataTypes.length > 1
   const showEditButtons = (dataType !== 'invalid' || CustomNode) && !error && showEditTools
@@ -432,7 +412,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       tabForward: () => {
         setTabDirection('next')
         recordPreviousEdit(path)
-        const next = getNextOrPrevious(getLatestData(), path, 'next', sort)
+        const next = getNextOrPreviousAtPath('next')
         if (next) {
           handleEdit()
           startEdit(next)
@@ -441,7 +421,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       tabBack: () => {
         setTabDirection('prev')
         recordPreviousEdit(path)
-        const prev = getNextOrPrevious(getLatestData(), path, 'prev', sort)
+        const prev = getNextOrPreviousAtPath('prev')
         if (prev) {
           handleEdit()
           startEdit(prev)
@@ -450,24 +430,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     },
   }
 
-  const keyDisplayProps = {
-    canEditKey,
-    isEditingKey,
-    pathString,
-    path,
-    name,
-    arrayIndexFromOne,
-    handleKeyboard,
-    handleEditKey,
-    handleCancel,
-    styles: getStyles('property', nodeData),
-    getNextOrPrevious: (type: 'next' | 'prev') =>
-      getNextOrPrevious(getLatestData(), path, type, sort),
-    emptyStringKey,
-    nodeData,
-    customNodeData,
-    getStyles,
-  }
+  const keyDisplayProps = buildKeyDisplayProps({ handleCancel, getStyles })
 
   const ValueComponent = showCustomNode ? (
     <CustomNode

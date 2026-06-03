@@ -3,16 +3,21 @@
  * Nodes and Value Nodes
  */
 
-import { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { useEditingSelector, useEditingStore } from '../contexts'
 import {
+  type CollectionKey,
   type CollectionNodeProps,
+  type EditEvent,
   type ErrorString,
   type JsonEditorError,
+  type JsonEditorErrorCode,
+  type ThemeableElement,
   type ValueData,
   type ValueNodeProps,
   type JsonData,
 } from '../types'
+import { getNextOrPrevious } from '../utils/keyboard'
 import { pathsEqual, toPathString } from '../utils/pathTools'
 
 interface CommonProps {
@@ -24,6 +29,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const {
     nodeData: incomingNodeData,
     parentData,
+    onEdit,
     onRename,
     onError: onErrorCallback,
     onEditEvent,
@@ -35,8 +41,12 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     restrictDragFilter,
     translate,
     errorMessageTimeout,
+    sort,
+    arrayIndexFromOne,
+    handleKeyboard,
+    customNodeData,
   } = props
-  const { closeEdit } = useEditingStore()
+  const { closeEdit, setPreviousValue, getSnapshot } = useEditingStore()
   const [error, setError] = useState<string | null>(null)
 
   const nodeData = { ...incomingNodeData, collapsed }
@@ -99,20 +109,95 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     [onErrorCallback, showErrorMessages, getLatestData, errorMessageTimeout]
   )
 
+  // Fires an `onEditEvent` for this node — single source of truth for the
+  // `{ ...nodeData, fullData: <live>, event }` shape (replaces the duplicate
+  // `emitEditEvent` closures in CollectionNode and ValueNodeWrapper, plus the
+  // four inlined copies in `handleEditKey` below). `nodeData` is read live
+  // (closure recreated each render); `fullData` is read live from the latest
+  // document — same rule as `onError`. `extra` carries the optional payload
+  // fields (`oldKey`/`newKey` on `confirmRename`).
+  const emitEditEvent = (
+    event: EditEvent['event'],
+    extra?: { oldKey?: CollectionKey; newKey?: CollectionKey }
+  ) => onEditEvent?.({ ...nodeData, fullData: getLatestData(), event, ...extra } as EditEvent)
+
+  // Collapses the three-branch `result === false | string | else` dance after
+  // every internal `onEdit` / `onAdd` / `onDelete` / `onRename` call. Single
+  // helper so the per-site copies can't drift. Optional callbacks cover the
+  // per-site nuances (revert-to-data, extra `closeEdit()` on the error path,
+  // success-only side effects); omit `cancelEvent` for "instant" mutations
+  // (delete, array add) which have no session to terminate on `false`.
+  const handleMutationResult = ({
+    result,
+    errorCode,
+    errorValue,
+    cancelEvent,
+    confirmEvent,
+    confirmExtra,
+    onRevert,
+    onErrorExtra,
+    onConfirmExtra,
+  }: {
+    result: string | void | false
+    errorCode: JsonEditorErrorCode
+    errorValue: JsonData
+    cancelEvent?: EditEvent['event']
+    confirmEvent?: EditEvent['event']
+    confirmExtra?: { oldKey?: CollectionKey; newKey?: CollectionKey }
+    onRevert?: () => void
+    onErrorExtra?: () => void
+    onConfirmExtra?: () => void
+  }) => {
+    if (result === false) {
+      onRevert?.()
+      if (cancelEvent) emitEditEvent(cancelEvent)
+      return
+    }
+    if (typeof result === 'string') {
+      onError({ code: errorCode, message: result }, errorValue)
+      onErrorExtra?.()
+      onRevert?.()
+      if (cancelEvent) emitEditEvent(cancelEvent)
+      return
+    }
+    onConfirmExtra?.()
+    if (confirmEvent) emitEditEvent(confirmEvent, confirmExtra)
+  }
+
+  // Stable wrapper around `getNextOrPrevious` against the LIVE document for
+  // this node's `path`, so callers (`KeyDisplay`, value-node `tabForward` /
+  // `tabBack`) don't need to re-thread `getLatestData` / `path` / `sort`.
+  const getNextOrPreviousAtPath = (type: 'next' | 'prev') =>
+    getNextOrPrevious(getLatestData(), path, type, sort)
+
+  // Reverts a value-node type-change snapshot if one is active. Returns true
+  // if a revert fired (caller can skip its own fallback). Used by both
+  // CollectionNode's `handleCancel` (no fallback) and ValueNodeWrapper's
+  // `revertSession` (which falls back to `revertToData` when no snapshot).
+  const revertPreviousValue = () => {
+    const previousValue = getSnapshot().previousValue
+    setPreviousValue(null)
+    if (previousValue !== null) {
+      onEdit(previousValue, path)
+      return true
+    }
+    return false
+  }
+
   // Commits a key rename and fires the matching `onEditEvent` (`confirmRename`/
   // `cancelRename`).
   const handleEditKey = (newKey: string) => {
     closeEdit()
     // No-op rename (unchanged key) reports as a cancel (session closed, no change).
     if (name === newKey) {
-      onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
+      emitEditEvent('cancelRename')
       return
     }
     if (!parentData) return
     const existingKeys = Object.keys(parentData)
     if (existingKeys.includes(newKey)) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
-      onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
+      emitEditEvent('cancelRename')
       return
     }
 
@@ -122,24 +207,16 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     // (rejected/aborted); `confirmRename` carries the old + new keys. `false` is
     // a silent cancel (consumer returned `null`); a string (including an empty
     // one) is a real error → surface it and report the session as cancelled.
-    onRename(path, newKey).then((result) => {
-      if (result === false) {
-        onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
-        return
-      }
-      if (typeof result === 'string') {
-        onError({ code: 'UPDATE_ERROR', message: result }, newKey as ValueData)
-        onEditEvent?.({ ...nodeData, fullData: getLatestData(), event: 'cancelRename' })
-        return
-      }
-      onEditEvent?.({
-        ...nodeData,
-        fullData: getLatestData(),
-        event: 'confirmRename',
-        oldKey: name,
-        newKey,
+    onRename(path, newKey).then((result) =>
+      handleMutationResult({
+        result,
+        errorCode: 'UPDATE_ERROR',
+        errorValue: newKey as ValueData,
+        cancelEvent: 'cancelRename',
+        confirmEvent: 'confirmRename',
+        confirmExtra: { oldKey: name, newKey },
       })
-    })
+    )
   }
 
   // Common DERIVED VALUES (this makes the JSX logic less messy). `isEditing` /
@@ -150,6 +227,40 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const derivedValues = { isEditing, isEditingKey, isArray, canEditKey }
 
   const emptyStringKey = name === '' && path.length > 0 ? translate('EMPTY_STRING', nodeData) : null
+
+  // Shared `KeyDisplay` props. Caller supplies `handleCancel`, `getStyles`,
+  // and (collection-only) `keyValueArray` + `handleClick`; `useCommon` already
+  // owns the rest. Centralizes the prop list so a new `KeyDisplay` field
+  // doesn't need to be threaded through both call sites.
+  const buildKeyDisplayProps = ({
+    handleCancel,
+    getStyles,
+    keyValueArray,
+    handleClick,
+  }: {
+    handleCancel: () => void
+    getStyles: (component: ThemeableElement, nodeData: typeof incomingNodeData) => React.CSSProperties
+    keyValueArray?: Array<[string | number, ValueData]>
+    handleClick?: (e: React.MouseEvent) => void
+  }) => ({
+    canEditKey,
+    isEditingKey,
+    pathString,
+    path,
+    name,
+    arrayIndexFromOne,
+    handleKeyboard,
+    handleEditKey,
+    handleCancel,
+    styles: getStyles('property', nodeData),
+    getNextOrPrevious: getNextOrPreviousAtPath,
+    emptyStringKey,
+    nodeData,
+    customNodeData,
+    getStyles,
+    ...(keyValueArray !== undefined ? { keyValueArray } : {}),
+    ...(handleClick !== undefined ? { handleClick } : {}),
+  })
 
   return {
     pathString,
@@ -168,5 +279,10 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     handleEditKey,
     derivedValues,
     emptyStringKey,
+    emitEditEvent,
+    handleMutationResult,
+    getNextOrPreviousAtPath,
+    revertPreviousValue,
+    buildKeyDisplayProps,
   }
 }
