@@ -7,11 +7,10 @@ import {
   type NodeData,
   type CollectionData,
   type ValueData,
-  type EditEvent,
 } from './types'
 import { Icon } from './Icons'
 import { filterNode } from './utils/filter'
-import { getModifier, getNextOrPrevious, insertCharInTextArea } from './utils/keyboard'
+import { getModifier, insertCharInTextArea } from './utils/keyboard'
 import { isCollection } from './utils/misc'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { KeyDisplay } from './KeyDisplay'
@@ -37,7 +36,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     closeEdit,
     setPreviousValue,
     areChildrenBeingEdited,
-    getSnapshot,
   } = useEditingStore()
   const { setCollapseState } = useCollapse()
   const {
@@ -55,14 +53,12 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     onMove,
     allowClipboard,
     onCopy,
-    onEditEvent,
     showIconTooltips,
     searchFilter,
     searchText,
     indent,
     sort,
     showArrayIndices,
-    arrayIndexFromOne,
     defaultValue,
     newKeyOptions,
     translate,
@@ -109,9 +105,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     error,
     setError,
     onError,
-    handleEditKey,
-    emptyStringKey,
     derivedValues,
+    emitEditEvent,
+    handleMutationResult,
+    revertPreviousValue,
+    buildKeyDisplayProps,
   } = useCommon({ props, collapsed })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
@@ -125,7 +123,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   // DERIVED VALUES (this makes the JSX conditional logic easier to follow
   // further down)
-  const { isEditing, isEditingKey, isArray, canEditKey } = derivedValues
+  const { isEditing, isEditingKey, isArray } = derivedValues
 
   // No eager `jsonStringify(data)` sync here: the edit buffer is computed on
   // demand when the node enters JSON-edit mode. A non-editing node never needs
@@ -252,18 +250,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     })
   }
 
-  // Fire an `onEditEvent` for this collection's edit/add/delete lifecycle.
-  // `nodeData` is read live (handlers re-created each render). Add events
-  // describe the parent collection (this node).
-  const emitEditEvent = (
-    event: Extract<
-      EditEvent['event'],
-      'confirmEdit' | 'cancelEdit' | 'confirmAdd' | 'cancelAdd' | 'delete'
-    >
-    // Live `fullData`, not the memoizable `nodeData.fullData` (a bailed node
-    // keeps it stale — `areNodePropsEqual` ignores its identity). Same rule as
-    // `onError`: observer payloads read the document live.
-  ) => onEditEvent?.({ ...nodeData, fullData: getLatestData(), event } as EditEvent)
+  // `emitEditEvent` is provided by `useCommon` (lifted to dedup with
+  // `ValueNodeWrapper` and the four inlined copies in `handleEditKey`).
 
   const handleCollapse = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -323,18 +311,15 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       emitEditEvent('cancelEdit')
       return
     }
-    onEdit(value, path).then((result) => {
-      if (result === false) {
-        emitEditEvent('cancelEdit')
-        return
-      }
-      if (typeof result === 'string') {
-        onError({ code: 'UPDATE_ERROR', message: result }, value as CollectionData)
-        emitEditEvent('cancelEdit')
-        return
-      }
-      emitEditEvent('confirmEdit')
-    })
+    onEdit(value, path).then((result) =>
+      handleMutationResult({
+        result,
+        errorCode: 'UPDATE_ERROR',
+        errorValue: value as CollectionData,
+        cancelEvent: 'cancelEdit',
+        confirmEvent: 'confirmEdit',
+      })
+    )
   }
 
   // Commits an add and fires `confirmAdd` (or the error observer).
@@ -350,11 +335,14 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       // add emits no terminal event (there's no session to close).
       const index = insertAtTop.array ? 0 : (data as unknown[]).length
       const options = insertAtTop.array ? { insert: true } : {}
-      onAdd(newValue, [...path, index], options).then((result) => {
-        if (typeof result === 'string')
-          onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
-        else if (result === undefined) emitEditEvent('confirmAdd')
-      })
+      onAdd(newValue, [...path, index], options).then((result) =>
+        handleMutationResult({
+          result,
+          errorCode: 'ADD_ERROR',
+          errorValue: newValue as CollectionData,
+          confirmEvent: 'confirmAdd',
+        })
+      )
       return
     }
 
@@ -368,27 +356,28 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       return
     }
     const options = insertAtTop.object ? { insertBefore: 0 } : {}
-    onAdd(newValue, [...path, key], options).then((result) => {
-      if (result === false) {
-        emitEditEvent('cancelAdd')
-        return
-      }
-      if (typeof result === 'string') {
-        onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
-        emitEditEvent('cancelAdd')
-        return
-      }
-      emitEditEvent('confirmAdd')
-    })
+    onAdd(newValue, [...path, key], options).then((result) =>
+      handleMutationResult({
+        result,
+        errorCode: 'ADD_ERROR',
+        errorValue: newValue as CollectionData,
+        cancelEvent: 'cancelAdd',
+        confirmEvent: 'confirmAdd',
+      })
+    )
   }
 
   const handleDelete =
     path.length > 0
       ? () => {
-          onDelete(data, path).then((result) => {
-            if (typeof result === 'string') onError({ code: 'DELETE_ERROR', message: result }, data)
-            else if (result === undefined) emitEditEvent('delete')
-          })
+          onDelete(data, path).then((result) =>
+            handleMutationResult({
+              result,
+              errorCode: 'DELETE_ERROR',
+              errorValue: data,
+              confirmEvent: 'delete',
+            })
+          )
         }
       : undefined
 
@@ -396,12 +385,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     cancelEdit()
     setError(null)
     clearEditBuffer()
-    const previousValue = getSnapshot().previousValue
-    if (previousValue !== null) onEdit(previousValue, path)
-    // Clear the snapshot after any revert — otherwise it lingers in editing
-    // state and a later cancel (here or on another node) would see a non-null
-    // `previousValue` and trigger an unintended revert.
-    setPreviousValue(null)
+    revertPreviousValue()
   }
 
   const showLabel = showArrayIndices || !isArray
@@ -564,31 +548,17 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     />
   )
 
-  const keyDisplayProps = {
-    canEditKey,
-    isEditingKey,
-    pathString,
-    path,
-    name,
-    arrayIndexFromOne,
-    handleKeyboard,
-    handleEditKey,
+  const keyDisplayProps = buildKeyDisplayProps({
     handleCancel,
+    getStyles,
     keyValueArray,
-    styles: getStyles('property', nodeData),
-    getNextOrPrevious: (type: 'next' | 'prev') =>
-      getNextOrPrevious(getLatestData(), path, type, sort),
     handleClick: collapseClickZones.includes('property')
       ? handleCollapse
       : // The "property" area is technically part of the "header" div, so this
         // prevents clicks being passed through when "property" is not enabled
         // but "header" is
         (e: React.MouseEvent) => e.stopPropagation(),
-    emptyStringKey,
-    nodeData,
-    customNodeData,
-    getStyles,
-  }
+  })
 
   const CollectionNodeComponent = (
     <div
