@@ -430,7 +430,7 @@ Normally, the component will display simple error messages whenever an error con
     errorValue,   // the erroneous value that failed to update the property
     error: {      // a JsonEditorError
       code,       // one of 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR'
-                  //   | 'INVALID_JSON' | 'KEY_EXISTS'
+                  //   | 'RENAME_ERROR' | 'MOVE_ERROR' | 'INVALID_JSON' | 'KEY_EXISTS'
       message     // the (localised) error message that would be displayed
     }
 }
@@ -987,6 +987,8 @@ Localise your implementation (or just customise the default messages) by passing
   ERROR_UPDATE: 'Update unsuccessful',
   ERROR_DELETE: 'Delete unsuccessful',
   ERROR_ADD: 'Adding node unsuccessful',
+  ERROR_RENAME: 'Rename unsuccessful',
+  ERROR_MOVE: 'Move unsuccessful',
   DEFAULT_STRING: 'New data!',
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
