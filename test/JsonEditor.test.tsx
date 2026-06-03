@@ -990,6 +990,32 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.getByText('Adding node unsuccessful')).toBeInTheDocument()
   })
 
+  test('onUpdate returning false on a rename shows the rename-specific message and code', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => false as const)
+    const onError = jest.fn()
+    render(
+      <JsonEditor data={{ oldName: 2 }} setData={noop} onUpdate={onUpdate} onError={onError} />
+    )
+
+    await user.dblClick(screen.getByText('oldName'))
+    const keyInput = screen.getByDisplayValue('oldName') as HTMLInputElement
+    await user.clear(keyInput)
+    await user.type(keyInput, 'newName{Enter}')
+
+    // Event-specific message...
+    expect(screen.getByText('Rename unsuccessful')).toBeInTheDocument()
+    // ...matching the RENAME_ERROR code routed to onError
+    expect(onError).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.objectContaining({ code: 'RENAME_ERROR' }) })
+    )
+  })
+
+  // A rejected move would surface 'Move unsuccessful' (code MOVE_ERROR), but
+  // exercising it needs a full drag-drop simulation — deferred with the rest of
+  // the DnD test gap (#270), like the move happy-path above.
+  test.todo('onUpdate returning false on a move shows the move-specific message (needs DnD — #270)')
+
   test('a rejected to-enum type change reverts the type selector (not stuck on the enum)', async () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn(() => false as const)

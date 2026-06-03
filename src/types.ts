@@ -192,6 +192,8 @@ export type JsonEditorErrorCode =
   | 'UPDATE_ERROR' // an edit was rejected, or an internal failure occurred
   | 'ADD_ERROR' // an add was rejected
   | 'DELETE_ERROR' // a delete was rejected
+  | 'RENAME_ERROR' // a key rename was rejected
+  | 'MOVE_ERROR' // a drag-and-drop move was rejected
   | 'KEY_EXISTS' // a new/renamed key collides with an existing sibling
   | 'INVALID_JSON' // raw JSON typed into the editor failed to parse
   | 'CLIPBOARD_ERROR' // a copy-to-clipboard write failed (onCopy)

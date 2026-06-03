@@ -410,6 +410,21 @@ The error type reported to `onError` (and accepted in an `onUpdate` `{ error }` 
 + import { type JsonEditorError } from 'json-edit-react'
 ```
 
+### New localisation keys: `ERROR_RENAME` / `ERROR_MOVE`
+
+Rejected `rename` and `move` operations now show operation-specific messages (`'Rename unsuccessful'` / `'Move unsuccessful'`) instead of the generic `'Update unsuccessful'`, mirroring `ERROR_ADD` / `ERROR_DELETE`. Their `onError` codes are likewise `RENAME_ERROR` / `MOVE_ERROR` (additive members of `JsonEditorErrorCode`).
+
+No action is strictly required — a `translations` object doesn't have to be exhaustive, so any key you don't define falls back to the English default. But if you ship a localised `translations` object and want these two messages translated too, add the new keys:
+
+```diff
+  translations={{
+    // ...existing keys
+    ERROR_UPDATE: '…',
++   ERROR_RENAME: '…',
++   ERROR_MOVE: '…',
+  }}
+```
+
 ---
 ## 10. Observers reshaped: `onEditEvent` lifecycle stream; flat `onError` / `onCollapse`; `onCopy` error
 

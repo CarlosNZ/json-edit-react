@@ -210,7 +210,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     onRename(path, newKey).then((result) =>
       handleMutationResult({
         result,
-        errorCode: 'UPDATE_ERROR',
+        errorCode: 'RENAME_ERROR',
         errorValue: newKey as ValueData,
         cancelEvent: 'cancelRename',
         confirmEvent: 'confirmRename',
