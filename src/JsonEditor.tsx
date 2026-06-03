@@ -39,7 +39,7 @@ import {
   useEditingStore,
   useCollapse,
 } from './contexts'
-import { getTranslateFunction } from './localisation'
+import { getTranslateFunction, type LocalisedStrings } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
 import './style.css'
@@ -51,6 +51,19 @@ const defaultJsonStringify = (
   data: JsonData,
   replacer?: (key: string, value: unknown) => unknown
 ) => JSON.stringify(data, replacer, 2)
+
+// The localisation key for a generic reject (`onUpdate` → `false`), per event,
+// so the message matches the `onError` code the node routes it to (`ADD_ERROR`,
+// `DELETE_ERROR`, `RENAME_ERROR`, `MOVE_ERROR`). `edit` uses `ERROR_UPDATE`,
+// which also covers internal failures (code `UPDATE_ERROR`). Typed as an
+// exhaustive `Record` over the event union so a new event can't slip through.
+const ERROR_MESSAGE_KEY: Record<UpdateFunctionProps['event'], keyof LocalisedStrings> = {
+  edit: 'ERROR_UPDATE',
+  add: 'ERROR_ADD',
+  delete: 'ERROR_DELETE',
+  rename: 'ERROR_RENAME',
+  move: 'ERROR_MOVE',
+}
 
 // Wrap an optional consumer callback so its identity stays STABLE across
 // renders (lets the React.memo'd nodes bail) while always invoking the LATEST
@@ -228,18 +241,12 @@ const Editor: React.FC<
       // display. No `setData` — nothing was committed (we only ever `setData`
       // AFTER `onUpdate` resolves), so writing `fullData` back would be a no-op
       // at best and, with a slow async `onUpdate`, could clobber a newer commit
-      // that landed while this one was in flight. The message is event-specific
-      // so it matches the `onError` code the node routes it to
-      // (`ADD_ERROR`/`DELETE_ERROR`); `rename`/`move` have no dedicated key, so
-      // they fall back to `ERROR_UPDATE` (their code is `UPDATE_ERROR`).
+      // that landed while this one was in flight. `ERROR_MESSAGE_KEY` picks the
+      // event-specific message so it matches the `onError` code the node routes
+      // it to (`ADD_ERROR`/`DELETE_ERROR`/`RENAME_ERROR`/`MOVE_ERROR`); `edit`
+      // (and internal failures) use `ERROR_UPDATE` / `UPDATE_ERROR`.
       if (result === false) {
-        const errorKey =
-          input.event === 'add'
-            ? 'ERROR_ADD'
-            : input.event === 'delete'
-            ? 'ERROR_DELETE'
-            : 'ERROR_UPDATE'
-        return translateRef.current(errorKey, rootNodeDataRef.current)
+        return translateRef.current(ERROR_MESSAGE_KEY[input.event], rootNodeDataRef.current)
       }
 
       // Silent cancel: no commit, no error — signal the node to revert its display
