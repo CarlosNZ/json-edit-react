@@ -530,7 +530,17 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
         ...getStyles('collection', nodeData),
         position: 'relative',
       }}
-      draggable={canDrag}
+      // ANY `draggable` ancestor (not just the immediate parent) suppresses
+      // native mouse text-selection / cursor-positioning inside a nested input
+      // — Chromium hijacks `mousedown` to start a drag. So the whole ancestor
+      // chain above an open input must drop `draggable`, not just the editing
+      // node itself: `childrenEditing` (already computed for collapse) is true
+      // for this node and every ancestor of the editing node, so reading it
+      // here adds no extra re-renders. `isEditing`/`isEditingKey` cover this
+      // node's own value/key edit. Together they keep every node from the open
+      // input up to the root non-draggable, without the old global editing flag
+      // that re-rendered every draggable node in the tree (§16).
+      draggable={canDrag && !isEditing && !isEditingKey && !childrenEditing}
       {...dragSourceProps}
       {...getDropTargetProps('above')}
     >
