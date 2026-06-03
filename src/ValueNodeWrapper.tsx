@@ -18,7 +18,6 @@ import {
   type JsonData,
   type EnumDefinition,
   type EditEvent,
-  type JsonEditorError,
 } from './types'
 import { useTheme, useEditingStore, useCollapse } from './contexts'
 import { type CustomNodeData } from './CustomNode'
@@ -302,9 +301,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   }
 
   // Commits the in-progress value edit and fires the matching `onEditEvent`
-  // (`confirmEdit` on commit; `cancelEdit` on no-op/reject). Returns the
-  // canonical outcome too, but the OK button / Tab / keyboard callers ignore it.
-  const handleEdit = (inputValue?: unknown): Promise<void | false | JsonEditorError> => {
+  // (`confirmEdit` on commit; `cancelEdit` on no-op/reject).
+  const handleEdit = (inputValue?: unknown) => {
     closeEdit()
     setPreviousValue(null)
     let newValue: JsonData
@@ -327,18 +325,17 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           newValue = value
       }
     }
-    return onEdit(newValue, path).then((result): void | false | JsonEditorError => {
+    onEdit(newValue, path).then((result) => {
       if (result === false) {
         revertToData()
         emitEditEvent('cancelEdit')
-        return false
+        return
       }
       if (result) {
-        const error: JsonEditorError = { code: 'UPDATE_ERROR', message: result }
-        onError(error, newValue)
+        onError({ code: 'UPDATE_ERROR', message: result }, newValue)
         revertToData()
         emitEditEvent('cancelEdit')
-        return error
+        return
       }
       emitEditEvent('confirmEdit')
     })

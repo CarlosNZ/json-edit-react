@@ -626,9 +626,16 @@ const Editor: React.FC<
 export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.ReactElement | null {
   const [docRoot, setDocRoot] = useState<HTMLElement>()
 
-  // Shared bridge: `Editor` (which owns the live data) populates this each
-  // render; the editing/collapse providers (its ancestors) read it at event
-  // time to build flat `NodeData` for the observer events they fire.
+  // Shared bridge (load-bearing, by design — not a leak). The §16 perf work put
+  // the editing store and collapse state in ancestor providers so nodes can
+  // subscribe to slivers via `useSyncExternalStore` without re-rendering the
+  // tree. Those providers fire some observer events imperatively — `onEditEvent`
+  // start/cancel (EditingProvider) and the once-per-command `onCollapse`
+  // broadcast (CollapseProvider) — but they sit ABOVE `Editor`, which owns the
+  // data, so they can't build a node's `NodeData` themselves. `Editor` writes
+  // this ref each render (below); the providers read it at event time to turn a
+  // path into flat `NodeData`. (The node-driven events — confirm*/delete/move,
+  // user-click collapse — fire straight from the node and never touch this.)
   const buildNodeDataFromPathRef = useRef<BuildNodeDataFromPath | undefined>(undefined)
 
   // We want access to the global document.documentElement object, but can't

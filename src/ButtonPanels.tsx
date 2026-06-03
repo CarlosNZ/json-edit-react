@@ -11,7 +11,6 @@ import {
   type CustomButtonDefinition,
   type KeyboardControlsFull,
   type OnCopyFunction,
-  type JsonEditorError,
   JsonData,
 } from './types'
 import { getModifier } from './utils/keyboard'
@@ -22,7 +21,7 @@ interface EditButtonProps {
   handleDelete?: () => void
   allowClipboard: boolean
   onCopy?: OnCopyFunction
-  handleAdd?: (newKey: string) => Promise<void | false | JsonEditorError> | JsonEditorError
+  handleAdd?: (newKey: string) => void
   type?: CollectionDataType
   nodeData: NodeData
   translate: TranslateFunction
@@ -112,17 +111,17 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 
   // Commit the open add session (OK button / Enter). Delegates to `handleAdd`,
   // which fires the `confirmAdd` / error observer.
-  const commitAdd = (): Promise<void | false | JsonEditorError> => {
-    if (!handleAdd) return Promise.resolve(false)
+  const commitAdd = () => {
+    if (!handleAdd) return
     // Options-list with nothing chosen yet — silent no-op.
-    if (hasKeyOptionsList && !newKey) return Promise.resolve(false)
+    if (hasKeyOptionsList && !newKey) return
     closeEdit()
-    return Promise.resolve(handleAdd(type === 'array' ? '' : newKey))
+    handleAdd(type === 'array' ? '' : newKey)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     handleKeyboard(e, {
-      stringConfirm: () => void commitAdd(),
+      stringConfirm: () => commitAdd(),
       cancel: () => cancelEdit(),
     })
   }
@@ -269,7 +268,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             />
           )}
           <InputButtons
-            onOk={() => void commitAdd()}
+            onOk={() => commitAdd()}
             onCancel={() => cancelEdit()}
             nodeData={nodeData}
             editConfirmRef={editConfirmRef}

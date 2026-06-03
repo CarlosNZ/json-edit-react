@@ -100,43 +100,35 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   )
 
   // Commits a key rename and fires the matching `onEditEvent` (`confirmRename`/
-  // `cancelRename`). Returns the canonical outcome, which the keyboard/Tab
-  // callers ignore.
-  const handleEditKey = (
-    newKey: string
-  ): void | false | JsonEditorError | Promise<void | false | JsonEditorError> => {
+  // `cancelRename`).
+  const handleEditKey = (newKey: string) => {
     closeEdit()
     // No-op rename (unchanged key) reports as a cancel (session closed, no change).
     if (name === newKey) {
       onEditEvent?.({ ...nodeData, event: 'cancelRename' })
-      return false
+      return
     }
-    if (!parentData) return false
+    if (!parentData) return
     const existingKeys = Object.keys(parentData)
     if (existingKeys.includes(newKey)) {
-      const error: JsonEditorError = {
-        code: 'KEY_EXISTS',
-        message: translate('ERROR_KEY_EXISTS', nodeData),
-      }
-      onError(error, newKey)
+      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
       onEditEvent?.({ ...nodeData, event: 'cancelRename' })
-      return error
+      return
     }
 
     // A rename is a first-class `event: 'rename'` update — `onRename` rebuilds
     // the parent (preserving key order) and commits the whole document. The
     // session terminates with `confirmRename` (committed) or `cancelRename`
     // (rejected/aborted); `confirmRename` carries the old + new keys.
-    return onRename(path, newKey).then((result): void | false | JsonEditorError => {
+    onRename(path, newKey).then((result) => {
       if (result === false) {
         onEditEvent?.({ ...nodeData, event: 'cancelRename' })
-        return false
+        return
       }
       if (result) {
-        const error: JsonEditorError = { code: 'UPDATE_ERROR', message: result }
-        onError(error, newKey as ValueData)
+        onError({ code: 'UPDATE_ERROR', message: result }, newKey as ValueData)
         onEditEvent?.({ ...nodeData, event: 'cancelRename' })
-        return error
+        return
       }
       onEditEvent?.({ ...nodeData, event: 'confirmRename', oldKey: name, newKey })
     })

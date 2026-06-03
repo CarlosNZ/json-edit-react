@@ -8,7 +8,6 @@ import {
   type CollectionData,
   type ValueData,
   type EditEvent,
-  type JsonEditorError,
 } from './types'
 import { Icon } from './Icons'
 import { filterNode } from './utils/filter'
@@ -278,9 +277,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   }
 
   // Commits the raw-JSON edit of this collection and fires the matching
-  // `onEditEvent` (`confirmEdit`/`cancelEdit`). Returns the canonical outcome,
-  // which the keyboard/OK callers ignore.
-  const handleEdit = (): Promise<void | false | JsonEditorError> | false | JsonEditorError => {
+  // `onEditEvent` (`confirmEdit`/`cancelEdit`).
+  const handleEdit = () => {
     // Parse exactly the text shown: `editBufferValue` is the displayed buffer
     // and reuses the string the memo already serialized, so the parsed input
     // and the INVALID_JSON payload match the textarea, and confirming without
@@ -293,12 +291,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     } catch {
       // Parse failure leaves the edit session OPEN (user can fix the JSON), so
       // no terminal event — only the error.
-      const error: JsonEditorError = {
-        code: 'INVALID_JSON',
-        message: translate('ERROR_INVALID_JSON', nodeData),
-      }
-      onError(error, textToParse)
-      return error
+      onError(
+        { code: 'INVALID_JSON', message: translate('ERROR_INVALID_JSON', nodeData) },
+        textToParse
+      )
+      return
     }
     closeEdit()
     setPreviousValue(null)
@@ -311,57 +308,48 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     // No-op confirm (unchanged JSON) reports as a cancel (closed without change).
     if (jsonStringify(value) === currentDataString) {
       emitEditEvent('cancelEdit')
-      return false
+      return
     }
-    return onEdit(value, path).then((result): void | false | JsonEditorError => {
+    onEdit(value, path).then((result) => {
       if (result === false) {
         emitEditEvent('cancelEdit')
-        return false
+        return
       }
       if (result) {
-        const error: JsonEditorError = { code: 'UPDATE_ERROR', message: result }
-        onError(error, value as CollectionData)
+        onError({ code: 'UPDATE_ERROR', message: result }, value as CollectionData)
         emitEditEvent('cancelEdit')
-        return error
+        return
       }
       emitEditEvent('confirmEdit')
     })
   }
 
-  // Commits an add and fires `confirmAdd` (or the error observer). Returns the
-  // canonical outcome, which the EditButtons callers ignore.
-  const handleAdd = (
-    key: string
-  ): Promise<void | false | JsonEditorError> | JsonEditorError => {
+  // Commits an add and fires `confirmAdd` (or the error observer).
+  const handleAdd = (key: string) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
     setCollapseState(null)
     animateCollapse(false)
     const newValue = getDefaultNewValue(nodeData, key)
-    const mapAdd = (p: Promise<string | void | false>) =>
-      p.then((result): void | false | JsonEditorError => {
-        if (result === false) return false
-        if (result) {
-          const error: JsonEditorError = { code: 'ADD_ERROR', message: result }
-          onError(error, newValue as CollectionData)
-          return error
-        }
-        emitEditEvent('confirmAdd')
-      })
+    const onAddResult = (result: string | void | false) => {
+      if (result === false) return
+      if (result) {
+        onError({ code: 'ADD_ERROR', message: result }, newValue as CollectionData)
+        return
+      }
+      emitEditEvent('confirmAdd')
+    }
     if (collectionType === 'array') {
       const index = insertAtTop.array ? 0 : (data as unknown[]).length
       const options = insertAtTop.array ? { insert: true } : {}
-      return mapAdd(onAdd(newValue, [...path, index], options))
+      onAdd(newValue, [...path, index], options).then(onAddResult)
+      return
     }
     if (key in data) {
-      const error: JsonEditorError = {
-        code: 'KEY_EXISTS',
-        message: translate('ERROR_KEY_EXISTS', nodeData),
-      }
-      onError(error, key)
-      return error
+      onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
+      return
     }
     const options = insertAtTop.object ? { insertBefore: 0 } : {}
-    return mapAdd(onAdd(newValue, [...path, key], options))
+    onAdd(newValue, [...path, key], options).then(onAddResult)
   }
 
   const handleDelete =
