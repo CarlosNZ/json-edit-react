@@ -4,7 +4,6 @@ import { Icon } from './Icons'
 import { useTheme } from './contexts'
 import { type TranslateFunction } from './localisation'
 import {
-  type CollectionKey,
   type CollectionDataType,
   type CopyType,
   type NodeData,
@@ -16,6 +15,7 @@ import {
   type EditEvent,
 } from './types'
 import { getModifier } from './utils/keyboard'
+import { stringifyPath } from './utils/pathTools'
 
 interface EditButtonProps {
   startEdit?: () => void
@@ -306,9 +306,3 @@ export const InputButtons: React.FC<{
     </div>
   )
 }
-
-const stringifyPath = (path: CollectionKey[]): string =>
-  path.reduce((str: string, part) => {
-    if (typeof part === 'number') return `${str}[${part}]`
-    else return str === '' ? part : `${str}.${part}`
-  }, '')

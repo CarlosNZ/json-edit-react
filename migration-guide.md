@@ -408,7 +408,6 @@ The error type reported to `onError` (and accepted in an `onUpdate` `{ error }` 
 ```
 
 ---
-
 ## 10. Observers reshaped: `onEditEvent` lifecycle stream; flat `onError` / `onCollapse`; `onCopy` error
 
 The observer callbacks move onto the same flat `NodeData` payload as the rest of the API, and `onEditEvent` becomes a full lifecycle stream.
