@@ -429,9 +429,9 @@ Not tied to one operation: `onChange` (Cat 2 transform), `onError` / `onCollapse
 
 ## Additional cleanup (do while breaking changes are allowed)
 
-### Keyboard config: preset + overrides
+### Keyboard config: preset + overrides — ✗ won't do
 
-16 fine-grained fields. Consider named presets (`'default' | 'vim' | ...`) with selective overrides.
+16 fine-grained fields. ~~Consider named presets (`'default' | 'vim' | ...`) with selective overrides.~~ The defaults are sensible and intuitive; most consumers override at most a couple of keys, if any, and there's no demand for alternative preset schemes. The flat granular object stays as-is.
 
 ### Stop mutating in `restoreUndefined`
 
@@ -441,9 +441,9 @@ Not tied to one operation: `onChange` (Cat 2 transform), `onError` / `onCollapse
 
 [`JsonEditor`](src/JsonEditor.tsx) returns `null` pre-hydration → layout pop. Reserve height with a placeholder.
 
-### Bump React peer to ≥18
+### Bump React peer to ≥18 — ✅ done
 
-The `import React from 'react'` rule and JSX namespace handling exist for 16/17. v2.0 is the moment.
+Peer dep is now `react: ">=18.0.0"`. The `import React from 'react'` rule and JSX namespace handling — kept around to support 16/17 — are now optional: the `react/react-in-jsx-scope` ESLint rule is still enforced, so relaxing it (and switching to the automatic JSX runtime) remains an available follow-on, not part of this item. → tracked in [#322](https://github.com/CarlosNZ/json-edit-react/issues/322).
 
 ### Drop default re-exports of `assign` / `extract`
 
