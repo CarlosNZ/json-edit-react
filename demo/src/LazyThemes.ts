@@ -9,7 +9,6 @@ import {
   solarizedDarkTheme,
   solarizedLightTheme,
   draculaTheme,
-  nordTheme,
   monokaiTheme,
   tokyoNightTheme,
 } from '@json-edit-react/themes'
@@ -26,7 +25,6 @@ export const getPsychedelicTheme = (): Theme => psychedelicTheme
 export const getSolarizedDarkTheme = (): Theme => solarizedDarkTheme
 export const getSolarizedLightTheme = (): Theme => solarizedLightTheme
 export const getDraculaTheme = (): Theme => draculaTheme
-export const getNordTheme = (): Theme => nordTheme
 export const getMonokaiTheme = (): Theme => monokaiTheme
 export const getTokyoNightTheme = (): Theme => tokyoNightTheme
 
@@ -46,7 +44,6 @@ export const themeGetters: ThemeGetters = {
   getSolarizedDarkTheme,
   getSolarizedLightTheme,
   getDraculaTheme,
-  getNordTheme,
   getMonokaiTheme,
   getTokyoNightTheme,
 }

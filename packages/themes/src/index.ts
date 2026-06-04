@@ -252,36 +252,6 @@ export const draculaTheme: Theme = {
   },
 }
 
-export const nordTheme: Theme = {
-  displayName: 'Nord',
-  fragments: {
-    polarNight0: '#2e3440',
-    polarNight3: '#4c566a',
-    snowStorm2: '#eceff4',
-    frost1: '#88c0d0',
-    frost3: '#5e81ac',
-  },
-  styles: {
-    container: { color: '#eceff4', backgroundColor: '#2e3440' },
-    dropZone: 'rgba(136, 192, 208, 0.18)',
-    property: '#eceff4',
-    bracket: '#88c0d0',
-    itemCount: '#4c566a',
-    string: '#a3be8c',
-    number: { color: '#b48ead', fontSize: '95%' },
-    boolean: { color: '#ebcb8b', fontWeight: 'bold', fontSize: '90%' },
-    null: { color: '#bf616a', fontWeight: 'bold' },
-    input: { border: '1px solid #4c566a' },
-    iconCollection: '#81a1c1',
-    iconEdit: '#d08770',
-    iconDelete: '#bf616a',
-    iconAdd: '#a3be8c',
-    iconCopy: '#5e81ac',
-    iconOk: '#a3be8c',
-    iconCancel: '#bf616a',
-  },
-}
-
 export const monokaiTheme: Theme = {
   displayName: 'Monokai',
   fragments: {

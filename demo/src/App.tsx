@@ -92,7 +92,6 @@ const themeNames = [
   'Solarized Dark',
   'Solarized Light',
   'Dracula',
-  'Nord',
   'Monokai',
   'Tokyo Night',
 ]
