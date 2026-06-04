@@ -30,13 +30,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   // Actions + imperative reads from the (stable) store — no subscription, so
   // editing transitions elsewhere don't re-render this node.
-  const {
-    startEdit,
-    cancelEdit,
-    closeEdit,
-    setPreviousValue,
-    areChildrenBeingEdited,
-  } = useEditingStore()
+  const { startEdit, cancelEdit, closeEdit, setPreviousValue, areChildrenBeingEdited } =
+    useEditingStore()
   const { setCollapseState } = useCollapse()
   const {
     mainContainerRef,
@@ -604,7 +599,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
               style={{ zIndex: 11 + nodeData.level * 2, transition: cssTransitionValue }}
               onClick={handleCollapse}
             >
-              <Icon name="chevron" rotate={collapsed} nodeData={nodeData} />
+              <Icon name="chevron" nodeData={nodeData} />
             </div>
             {showKey && <KeyDisplay {...keyDisplayProps} />}
             {!isEditing && (

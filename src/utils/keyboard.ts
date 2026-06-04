@@ -92,6 +92,14 @@ const defaultKeyboardControls: KeyboardControlsFull = {
   collapseModifier: ['Alt'],
 }
 
+// Value-node confirm controls that fall back to the generic "confirm" when not
+// specifically defined by the user.
+const confirmFallbackKeys: Array<keyof KeyboardControls> = [
+  'stringConfirm',
+  'numberConfirm',
+  'booleanConfirm',
+]
+
 export const getFullKeyboardControlMap = (userControls: KeyboardControls): KeyboardControlsFull => {
   const controls = { ...defaultKeyboardControls }
   for (const key of Object.keys(defaultKeyboardControls)) {
@@ -107,20 +115,15 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
       })() as KeyEvent & React.ModifierKey[]
 
       controls[typedKey] = definition
-
-      // Set value node defaults to generic "confirm" if not specifically
-      // defined.
-      const fallbackKeys: Array<keyof KeyboardControls> = [
-        'stringConfirm',
-        'numberConfirm',
-        'booleanConfirm',
-      ]
-      fallbackKeys.forEach((key) => {
-        if (!userControls[key] && userControls.confirm)
-          controls[key] = controls.confirm as KeyEvent & React.ModifierKey[]
-      })
     }
   }
+
+  // Apply the generic "confirm" fallback once, after the loop has fully
+  // resolved any user-supplied "confirm" control.
+  confirmFallbackKeys.forEach((key) => {
+    if (!userControls[key] && userControls.confirm)
+      controls[key] = controls.confirm as KeyEvent & React.ModifierKey[]
+  })
 
   return controls
 }

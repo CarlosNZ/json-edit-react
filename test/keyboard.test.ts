@@ -1,4 +1,30 @@
-import { getNextOrPrevious } from '../src/utils/keyboard'
+import { getFullKeyboardControlMap, getNextOrPrevious } from '../src/utils/keyboard'
+
+describe('getFullKeyboardControlMap', () => {
+  test('leaves value-node confirm keys at their defaults when no controls are supplied', () => {
+    const controls = getFullKeyboardControlMap({})
+    expect(controls.confirm).toEqual({ key: 'Enter' })
+    expect(controls.stringConfirm).toEqual({ key: 'Enter' })
+    expect(controls.numberConfirm).toEqual({ key: 'Enter' })
+    expect(controls.booleanConfirm).toEqual({ key: 'Enter' })
+  })
+
+  test('propagates a generic "confirm" override to all value-node confirm keys', () => {
+    const controls = getFullKeyboardControlMap({ confirm: 'Tab' })
+    expect(controls.confirm).toEqual({ key: 'Tab' })
+    expect(controls.stringConfirm).toEqual({ key: 'Tab' })
+    expect(controls.numberConfirm).toEqual({ key: 'Tab' })
+    expect(controls.booleanConfirm).toEqual({ key: 'Tab' })
+  })
+
+  test('does not override a value-node confirm key that is explicitly defined', () => {
+    const controls = getFullKeyboardControlMap({ confirm: 'Tab', stringConfirm: 'a' })
+    expect(controls.stringConfirm).toEqual({ key: 'a' })
+    // Others still fall back to the generic confirm
+    expect(controls.numberConfirm).toEqual({ key: 'Tab' })
+    expect(controls.booleanConfirm).toEqual({ key: 'Tab' })
+  })
+})
 
 describe('getNextOrPrevious', () => {
   const getNext = (data: object, path: (string | number)[]) =>
