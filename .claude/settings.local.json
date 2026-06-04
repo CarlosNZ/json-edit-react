@@ -9,7 +9,8 @@
       "Bash(pnpm build *)",
       "Bash(npx eslint *)",
       "Bash(echo \"EXIT: $?\")",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "WebFetch(domain:github.com)"
     ]
   }
 }
