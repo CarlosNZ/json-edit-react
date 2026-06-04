@@ -5,7 +5,7 @@
  * commits or aborts it, and collapses nodes. It never mutates data directly (the
  * consumer owns `data`/`setData`). These pin the contract:
  *  - `startEdit` returns `true` if it opened a session, else `'PATH_NOT_FOUND'`
- *    (gone path) or `'RESTRICTED'` (`restrictEdit` blocks it, bypassable with
+ *    (gone path) or `'RESTRICTED'` (`allowEdit` blocks it, bypassable with
  *    `overrideRestrictions`); it auto-reveals a target collapsed below the mount
  *    frontier.
  *  - `confirm()` commits the open session through `onUpdate` (which may veto);
@@ -48,9 +48,11 @@ describe('editorRef handle — startEdit', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
-  test('startEdit respects restrictEdit by default (RESTRICTED, no-op)', () => {
+  test('startEdit respects allowEdit by default (RESTRICTED, no-op)', () => {
     const ref = createRef<JsonEditorHandle>()
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} restrictEdit editorRef={ref} />)
+    render(
+      <JsonEditor data={{ greeting: 'hello' }} setData={noop} allowEdit={false} editorRef={ref} />
+    )
 
     let result: ReturnType<JsonEditorHandle['startEdit']> | undefined
     act(() => {
@@ -61,9 +63,11 @@ describe('editorRef handle — startEdit', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
-  test('startEdit with overrideRestrictions bypasses restrictEdit', () => {
+  test('startEdit with overrideRestrictions bypasses allowEdit', () => {
     const ref = createRef<JsonEditorHandle>()
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} restrictEdit editorRef={ref} />)
+    render(
+      <JsonEditor data={{ greeting: 'hello' }} setData={noop} allowEdit={false} editorRef={ref} />
+    )
 
     let result: ReturnType<JsonEditorHandle['startEdit']> | undefined
     act(() => {
@@ -74,13 +78,13 @@ describe('editorRef handle — startEdit', () => {
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
-  test('startEdit honours a per-node restrictEdit function', () => {
+  test('startEdit honours a per-node allowEdit function', () => {
     const ref = createRef<JsonEditorHandle>()
     render(
       <JsonEditor
         data={{ a: 'one', b: 'two' }}
         setData={noop}
-        restrictEdit={({ key }) => key === 'b'}
+        allowEdit={({ key }) => key !== 'b'}
         editorRef={ref}
       />
     )
@@ -209,7 +213,7 @@ describe('editorRef handle — confirm / cancel', () => {
   })
 
   test('overrideRestrictions opens past the filter, but onUpdate still runs at confirm', async () => {
-    // The §17 invariant: `overrideRestrictions` skips ONLY the `restrictEdit`
+    // The §17 invariant: `overrideRestrictions` skips ONLY the `allowEdit`
     // filter; the consumer's `onUpdate` always runs and may reject.
     const user = userEvent.setup()
     const onUpdate = jest.fn<ReturnType<UpdateFunction>, Parameters<UpdateFunction>>(() => false)
@@ -219,7 +223,7 @@ describe('editorRef handle — confirm / cancel', () => {
       <JsonEditor
         data={{ greeting: 'hello' }}
         setData={noop}
-        restrictEdit
+        allowEdit={false}
         onUpdate={onUpdate}
         onError={onError}
         editorRef={ref}

@@ -55,7 +55,7 @@ function App() {
         <SourceIndicator />
       </Suspense>
       <JsonEditor<TestData>
-        // restrictEdit={true}
+        // allowEdit={false}
         data={data}
         setData={setData}
         customNodeDefinitions={[

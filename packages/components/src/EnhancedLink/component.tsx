@@ -11,7 +11,7 @@ export interface EnhancedLinkProps {
   propertyStyles?: React.CSSProperties
   labels?: { text: string; url: string }
   fieldNames?: { text: string; url: string }
-  stringTruncate?: number
+  stringTruncateLength?: number
   [key: string]: unknown
 }
 
@@ -28,7 +28,7 @@ export const EnhancedLinkCustomComponent: React.FC<CustomNodeProps<EnhancedLinkP
     propertyStyles = {},
     labels: { text: textLabel, url: urlLabel } = { text: 'Text', url: 'Link' },
     fieldNames: { text: textField, url: urlField } = { text: 'text', url: 'url' },
-    stringTruncate = 120,
+    stringTruncateLength = 120,
   } = customNodeProps
   const [text, setText] = useState((nodeData.value as EnhancedLink)[textField])
   const [url, setUrl] = useState((nodeData.value as EnhancedLink)[urlField])
@@ -74,7 +74,7 @@ export const EnhancedLinkCustomComponent: React.FC<CustomNodeProps<EnhancedLinkP
           pathString={toPathString(nodeData.path)}
           styles={{ ...styles }}
           value={text}
-          stringTruncate={stringTruncate}
+          stringTruncateLength={stringTruncateLength}
           TextWrapper={({ children }) => {
             return (
               <a

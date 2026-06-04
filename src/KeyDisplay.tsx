@@ -19,7 +19,7 @@ interface KeyDisplayProps {
   pathString: string
   path: CollectionKey[]
   name: string | number
-  arrayIndexFromOne: boolean
+  arrayIndexStart: number
   handleKeyboard: (
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
@@ -42,7 +42,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   pathString,
   path,
   name,
-  arrayIndexFromOne,
+  arrayIndexStart,
   handleKeyboard,
   handleEditKey,
   handleCancel,
@@ -58,7 +58,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   // Actions only (no subscription) — `isEditingKey` arrives via props.
   const { startEdit, cancelEdit } = useEditingStore()
 
-  const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
+  const displayKey = typeof name === 'number' ? String(name + arrayIndexStart) : name
 
   if (!isEditingKey) {
     // Theme styles plus the same layout derivation the default key span

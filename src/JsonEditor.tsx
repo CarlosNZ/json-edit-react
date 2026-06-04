@@ -118,25 +118,25 @@ const Editor: React.FC<
   collapse = false,
   collapseAnimationTime = 300, // must be equivalent to CSS value
   showCollectionCount = true,
-  restrictEdit = false,
-  restrictDelete = false,
-  restrictAdd = false,
-  restrictTypeSelection = false,
-  restrictDrag = true,
+  allowEdit = true,
+  allowDelete = true,
+  allowAdd = true,
+  allowTypeSelection = true,
+  allowDrag = false,
   searchFilter: searchFilterInput,
   searchText,
   searchDebounceTime = 350,
-  keySort = false,
-  showArrayIndices = true,
-  arrayIndexFromOne = false,
+  sortKeys = false,
+  showArrayIndexes = true,
+  arrayIndexStart = 0,
   showStringQuotes = true,
   showIconTooltips = false,
   defaultValue = null,
   newKeyOptions,
   minWidth = 250,
   maxWidth = 'min(600px, 90vw)',
-  rootFontSize,
-  stringTruncate = 250,
+  baseFontSize,
+  stringTruncateLength = 250,
   translations = EMPTY_TRANSLATIONS,
   className,
   id,
@@ -146,7 +146,7 @@ const Editor: React.FC<
   jsonParse = JSON.parse,
   jsonStringify = defaultJsonStringify,
   TextEditor,
-  errorMessageTimeout = 2500,
+  errorDisplayTime = 2500,
   keyboardControls = EMPTY_KEYBOARD_CONTROLS,
   editorRef,
   insertAtTop = false,
@@ -453,10 +453,10 @@ const Editor: React.FC<
     [handleEdit, onEditEventStable]
   )
 
-  const restrictEditFilter = useMemo(() => getFilterFunction(restrictEdit), [restrictEdit])
-  const restrictDeleteFilter = useMemo(() => getFilterFunction(restrictDelete), [restrictDelete])
-  const restrictAddFilter = useMemo(() => getFilterFunction(restrictAdd), [restrictAdd])
-  const restrictDragFilter = useMemo(() => getFilterFunction(restrictDrag), [restrictDrag])
+  const allowEditFilter = useMemo(() => getFilterFunction(allowEdit), [allowEdit])
+  const allowDeleteFilter = useMemo(() => getFilterFunction(allowDelete), [allowDelete])
+  const allowAddFilter = useMemo(() => getFilterFunction(allowAdd), [allowAdd])
+  const allowDragFilter = useMemo(() => getFilterFunction(allowDrag), [allowDrag])
   const searchFilter = useMemo(() => getSearchFilter(searchFilterInput), [searchFilterInput])
 
   const fullKeyboardControls = useMemo(
@@ -490,7 +490,7 @@ const Editor: React.FC<
   const editConfirmRef = useRef<HTMLDivElement>(null)
   const { setCollapseState } = useCollapse()
 
-  // Common "sort" method for ordering nodes, based on the `keySort` prop
+  // Common "sort" method for ordering nodes, based on the `sortKeys` prop
   // - If it's false (the default), we do nothing
   // - If true, use default array sort on the node's key
   // - Otherwise sort via the defined comparison function
@@ -500,10 +500,10 @@ const Editor: React.FC<
   //   expected by the comparison function
   const sort = useCallback(
     <T,>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => {
-      if (keySort === false) return
+      if (sortKeys === false) return
 
-      if (typeof keySort === 'function') {
-        arr.sort((a, b) => keySort(nodeMap(a), nodeMap(b)))
+      if (typeof sortKeys === 'function') {
+        arr.sort((a, b) => sortKeys(nodeMap(a), nodeMap(b)))
         return
       }
 
@@ -515,7 +515,7 @@ const Editor: React.FC<
         return 0
       })
     },
-    [keySort]
+    [sortKeys]
   )
   // Late-assigned (see the ref declaration above): the stable update handlers
   // read the live comparator from here when building a node's `NodeData`.
@@ -547,14 +547,14 @@ const Editor: React.FC<
         collapse: (state) => setCollapseState(state),
 
         // Open a value-edit session, or report why it couldn't: `'PATH_NOT_FOUND'`
-        // if the target is gone, `'RESTRICTED'` if `restrictEdit` blocks it
+        // if the target is gone, `'RESTRICTED'` if `allowEdit` blocks it
         // (unless `overrideRestrictions`). `force: true` skips the node's own
         // re-check and auto-reveals a target collapsed below the mount frontier.
         startEdit: ({ path, overrideRestrictions = false }) => {
           if (extract(getLatestData(), path, SENTINEL) === SENTINEL) return 'PATH_NOT_FOUND'
           if (
             !overrideRestrictions &&
-            restrictEditFilter(buildNodeData(getLatestData(), path, rootName, sort))
+            !allowEditFilter(buildNodeData(getLatestData(), path, rootName, sort))
           )
             return 'RESTRICTED'
           startEditAction(path, { force: true })
@@ -575,7 +575,7 @@ const Editor: React.FC<
         cancel: () => cancelEdit(),
       }
     },
-    [setCollapseState, startEditAction, cancelEdit, restrictEditFilter, getLatestData, rootName, sort]
+    [setCollapseState, startEditAction, cancelEdit, allowEditFilter, getLatestData, rootName, sort]
   )
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
@@ -606,26 +606,26 @@ const Editor: React.FC<
     showCollectionCount,
     collapseFilter,
     collapseAnimationTime,
-    restrictEditFilter,
-    restrictDeleteFilter,
-    restrictAddFilter,
-    restrictTypeSelection,
-    restrictDragFilter,
+    allowEditFilter,
+    allowDeleteFilter,
+    allowAddFilter,
+    allowTypeSelection,
+    allowDragFilter,
     canDragOnto: false, // can't drag onto outermost container
     searchFilter,
     searchText: debouncedSearchText,
     allowClipboard,
     onCopy: onCopyStable,
-    keySort,
+    sortKeys,
     sort,
-    showArrayIndices,
-    arrayIndexFromOne,
+    showArrayIndexes,
+    arrayIndexStart,
     showStringQuotes,
     showIconTooltips,
     indent,
     defaultValue,
     newKeyOptions,
-    stringTruncate,
+    stringTruncateLength,
     translate,
     customNodeDefinitions,
     customNodeData,
@@ -634,7 +634,7 @@ const Editor: React.FC<
     jsonParse: jsonParseReplacement,
     jsonStringify: jsonStringifyReplacement,
     TextEditor,
-    errorMessageTimeout,
+    errorDisplayTime,
     handleKeyboard: handleKeyboardCallback,
     keyboardControls: fullKeyboardControls,
     insertAtTop: insertAtTopOption,
@@ -649,7 +649,7 @@ const Editor: React.FC<
   // 16 (from CSS sheet) if neither are provided. Having a defined base size
   // ensures the component doesn't have its fontSize affected from the parent
   // environment
-  mainContainerStyles.fontSize = rootFontSize ?? mainContainerStyles.fontSize
+  mainContainerStyles.fontSize = baseFontSize ?? mainContainerStyles.fontSize
 
   return (
     <div
@@ -751,10 +751,10 @@ const updateDataObject = (
 
 // Canonical `NodeData` builder: construct the data for any node from the live
 // tree given its path. Used for the root node and by the `editorRef` handle to
-// run a node's `restrictEdit` filter at call time (the filter takes the full
+// run a node's `allowEdit` filter at call time (the filter takes the full
 // NodeData, not just a path). `index`/`size` mirror the child construction in
 // CollectionNode so a filter keying off them sees the same input the rendered
-// node would; `sort` (the `keySort` comparator) is only needed to resolve the
+// node would; `sort` (the `sortKeys` comparator) is only needed to resolve the
 // `index` of an object child, so it's optional.
 const buildNodeData = (
   fullData: JsonData,

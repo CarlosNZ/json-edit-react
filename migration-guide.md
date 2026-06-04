@@ -14,7 +14,8 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `LinkCustomComponent` / `LinkCustomNodeDefinition` moved | `npm i @json-edit-react/components` and update those imports |
 | Several internal helpers are now part of the public API | No action needed — purely additive |
 | `JsonEditor` is now generic on the data type (`JsonEditor<T>`) | No action needed — defaults to `JsonData`, source-compatible. Opt in by writing `<JsonEditor<MyShape> ... />` |
-| `setData` is now required; `viewOnly` removed; new `JsonViewer` export | Switch read-only usage to `<JsonViewer>`; replace `viewOnly={cond}` with the relevant `restrict*` toggles, including `restrictDrag` if drag was enabled — see §6 |
+| `setData` is now required; `viewOnly` removed; new `JsonViewer` export | Switch read-only usage to `<JsonViewer>`; replace `viewOnly={cond}` with the relevant `allow*` toggles, including `allowDrag` if drag was enabled — see §6 |
+| `restrict*` props renamed to `allow*` (polarity inverted); plus several display-prop renames | Rename `restrictEdit`→`allowEdit` etc. and **invert** booleans / filter results; rename `keySort`→`sortKeys`, `rootFontSize`→`baseFontSize`, `errorMessageTimeout`→`errorDisplayTime`, `stringTruncate`→`stringTruncateLength`, `showArrayIndices`→`showArrayIndexes`, `arrayIndexFromOne`→`arrayIndexStart` — see §11 |
 | `externalTriggers` prop replaced by the `editorRef` imperative handle | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/confirm/cancel` — see §7 |
 | `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction` | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` (`errorMessage` → `error.message`) — see §8 |
 | `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`; return shape unified | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see §9 |
@@ -156,7 +157,7 @@ Callbacks then receive your shape:
 The generic flows to root-level slots only: `data`, `setData`, the `newData` / `currentData` fields on `UpdateFunctionProps`, `currentData` on `OnChangeFunction` / `OnErrorFunction`, and `fullData` on `NodeData` (used by `FilterFunction`, `SearchFilterFunction`, etc.). Per-node `value` and `parentData` slots stay `unknown` — they are arbitrary-depth slices that no static type can describe.
 
 > [!NOTE]
-> Same mental model as `useState<T>`: `T` describes the data you provided, not a runtime invariant. If structural edits are unrestricted, post-edit values may not conform to `T` — pair with `restrictAdd` / `restrictDelete` / `restrictTypeSelection`, or validate in `onUpdate`, if you depend on the shape.
+> Same mental model as `useState<T>`: `T` describes the data you provided, not a runtime invariant. If structural edits are unrestricted, post-edit values may not conform to `T` — pair with `allowAdd` / `allowDelete` / `allowTypeSelection`, or validate in `onUpdate`, if you depend on the shape.
 
 `CustomNodeDefinition` is intentionally **not** generic on the data type — its two existing generics (for `customNodeProps` and wrapper props) are unchanged, and custom-node `condition` / `element` continue to receive `NodeData<JsonData>`.
 
@@ -217,11 +218,11 @@ import { JsonViewer } from 'json-edit-react'
 <JsonViewer data={data} />
 ```
 
-`JsonViewer` accepts all the display, theming, keyboard, search, collapse, custom-node, and localisation props of `JsonEditor`, but drops `setData`, the update callbacks (`onUpdate` / `onEdit` / `onAdd` / `onDelete` / `onChange`), and the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`) — none are meaningful in a read-only context. It does accept `editorRef`, but its handle is collapse-only (see §7). If you were passing any of the dropped props alongside `viewOnly={true}`, you can drop them when moving to `JsonViewer`.
+`JsonViewer` accepts all the display, theming, keyboard, search, collapse, custom-node, and localisation props of `JsonEditor`, but drops `setData`, the update callbacks (`onUpdate` / `onChange`), and the edit-permission props (`allowEdit` / `allowAdd` / `allowDelete` / `allowDrag` / `allowTypeSelection`) — none are meaningful in a read-only context. It does accept `editorRef`, but its handle is collapse-only (see §7). If you were passing any of the dropped props alongside `viewOnly={true}`, you can drop them when moving to `JsonViewer`.
 
 ### If you used `viewOnly={cond}` to toggle editing dynamically
 
-Replace with the `restrict*` props on `JsonEditor`:
+Replace with the `allow*` props on `JsonEditor`. Note the inverted polarity — `allow*` props say what's *permitted*, so the condition is no longer negated:
 
 ```tsx
 // Before (v1)
@@ -231,14 +232,14 @@ Replace with the `restrict*` props on `JsonEditor`:
 <JsonEditor
   data={data}
   setData={setData}
-  restrictEdit={!canEdit}
-  restrictAdd={!canEdit}
-  restrictDelete={!canEdit}
-  restrictDrag={!canEdit}   // only needed if you've enabled drag with restrictDrag={false}
+  allowEdit={canEdit}
+  allowAdd={canEdit}
+  allowDelete={canEdit}
+  allowDrag={canEdit}   // only needed if you'd enabled drag with allowDrag
 />
 ```
 
-This keeps the same component mounted across the toggle, so internal state (collapse, search, currently-editing element) is preserved. `restrictDrag` defaults to `true` (drag off), so you only need to thread the toggle through it if you'd previously opted in to drag-and-drop.
+This keeps the same component mounted across the toggle, so internal state (collapse, search, currently-editing element) is preserved. `allowDrag` defaults to `false` (drag off), so you only need to thread the toggle through it if you'd previously opted in to drag-and-drop. See [§11](#11-restrict-props-renamed-to-allow-semantics-inverted) for the full `restrict*` → `allow*` mapping.
 
 ### If you relied on the uncontrolled "fire-and-forget" mode
 
@@ -288,7 +289,7 @@ The handle is **UI-interactions only** — it opens/commits/cancels a value-edit
 
 Notes:
 
-- **`startEdit` returns `true`** if it opened the session, or the reason it didn't — `'PATH_NOT_FOUND'` or `'RESTRICTED'` — so you can give your own feedback. It **respects `restrictEdit` by default**; pass `{ path, overrideRestrictions: true }` to bypass it (e.g. lock the tree with `restrictEdit={true}` and imperatively open one node). `overrideRestrictions` skips **only** the filter — your `onUpdate` still runs at `confirm()`.
+- **`startEdit` returns `true`** if it opened the session, or the reason it didn't — `'PATH_NOT_FOUND'` or `'RESTRICTED'` — so you can give your own feedback. It **respects `allowEdit` by default**; pass `{ path, overrideRestrictions: true }` to bypass it (e.g. lock the tree with `allowEdit={false}` and imperatively open one node). `overrideRestrictions` skips **only** the filter — your `onUpdate` still runs at `confirm()`.
 - **`confirm()`** commits the open session through `onUpdate` (the same path as clicking the editor's confirm button); **`cancel()`** discards it.
 - `startEdit` **auto-reveals** a target collapsed below the current view: collapsed ancestors expand so the node becomes editable.
 
@@ -476,6 +477,67 @@ Both now receive the standard flat node data instead of a bespoke object:
 ```
 
 `error.message` still works; the addition is the `code` field (`'CLIPBOARD_ERROR'`).
+
+---
+
+## 11. `restrict*` props renamed to `allow*` (semantics inverted)
+
+The five `restrict*` props are renamed to `allow*`. This is **not just a rename** — the polarity flips, so the meaning of every value inverts: a `boolean` flips, and a `FilterFunction`'s return value flips (a `restrict*` filter returned `true` to **block** a node; an `allow*` filter returns `true` to **permit** it).
+
+| v1 (`restrict*`) | v2 (`allow*`) | Default (v1 → v2) |
+| --- | --- | --- |
+| `restrictEdit` | `allowEdit` | `false` → `true` |
+| `restrictDelete` | `allowDelete` | `false` → `true` |
+| `restrictAdd` | `allowAdd` | `false` → `true` |
+| `restrictTypeSelection` | `allowTypeSelection` | `false` → `true` |
+| `restrictDrag` | `allowDrag` | `true` → `false` (drag still off by default) |
+
+### Booleans flip
+
+```diff
+- restrictEdit={true}      // editing fully blocked
++ allowEdit={false}        // editing fully blocked
+
+- restrictDrag={false}     // drag enabled
++ allowDrag={true}         // drag enabled
+```
+
+### Filter functions flip their return value
+
+```diff
+- restrictEdit={({ key }) => key === 'id'}        // block editing of `id`
++ allowEdit={({ key }) => key !== 'id'}           // permit editing of everything except `id`
+```
+
+Negate the whole predicate. For guard-style functions with early returns, flip every `return true`/`return false`.
+
+### `allowTypeSelection` — the array and function forms
+
+The **array** form (a whitelist of available types) is unchanged — it always meant "these types are available". Only the **boolean** form (and a function *returning* a boolean) flips: under `allowTypeSelection`, `true` means "all types available", `false` means "no type change". So a function that returned `false` to mean "no restriction" should now return `true`, and one that returned `true` to lock the type should now return `false`.
+
+### No cascade
+
+`allowEdit={false}` only disables *value editing* — it does **not** also disable add/delete/drag. The four axes are independent; set each one you want to restrict. (For a fully read-only display, use [`JsonViewer`](#6-setdata-is-required-viewonly-removed-jsonviewer-added) instead.)
+
+## 12. Display / config prop renames
+
+A handful of props were renamed for naming consistency. These are **pure renames** (no behaviour change) except `arrayIndexStart`, whose type changed from `boolean` to `number`:
+
+| v1 | v2 | Notes |
+| --- | --- | --- |
+| `keySort` | `sortKeys` | |
+| `rootFontSize` | `baseFontSize` | |
+| `errorMessageTimeout` | `errorDisplayTime` | |
+| `stringTruncate` | `stringTruncateLength` | |
+| `showArrayIndices` | `showArrayIndexes` | |
+| `arrayIndexFromOne` | `arrayIndexStart` | `boolean` → `number`: `arrayIndexFromOne={true}` becomes `arrayIndexStart={1}` (default `0`) |
+
+```diff
+- arrayIndexFromOne={true}
++ arrayIndexStart={1}
+```
+
+> The same `stringTruncate` → `stringTruncateLength` rename applies to the `customNodeProps` of the `Hyperlink` / `EnhancedLink` components in `@json-edit-react/components`.
 
 ---
 

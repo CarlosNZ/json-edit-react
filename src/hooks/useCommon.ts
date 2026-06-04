@@ -35,14 +35,14 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     onEditEvent,
     getLatestData,
     showErrorMessages,
-    restrictEditFilter,
-    restrictDeleteFilter,
-    restrictAddFilter,
-    restrictDragFilter,
+    allowEditFilter,
+    allowDeleteFilter,
+    allowAddFilter,
+    allowDragFilter,
     translate,
-    errorMessageTimeout,
+    errorDisplayTime,
     sort,
-    arrayIndexFromOne,
+    arrayIndexStart,
     handleKeyboard,
     customNodeData,
   } = props
@@ -66,19 +66,19 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     return editing !== null && editing.mode === 'key' && pathsEqual(editing.path, path)
   })
 
-  const canEdit = !restrictEditFilter(nodeData)
-  const canDelete = !restrictDeleteFilter(nodeData)
-  const canAdd = !restrictAddFilter(nodeData)
+  const canEdit = allowEditFilter(nodeData)
+  const canDelete = allowDeleteFilter(nodeData)
+  const canAdd = allowAddFilter(nodeData)
   // Drag permission no longer depends on global editing state (which would
   // re-render every node when editing starts/ends). "Don't drag while editing"
   // is enforced at drag-start instead (see useDragNDrop), reading the store
   // imperatively.
-  const canDrag = !restrictDragFilter(nodeData) && canDelete
+  const canDrag = allowDragFilter(nodeData) && canDelete
 
   const showError = (errorString: ErrorString) => {
     if (showErrorMessages) {
       setError(errorString)
-      setTimeout(() => setError(null), errorMessageTimeout)
+      setTimeout(() => setError(null), errorDisplayTime)
     }
     console.warn('Error', errorString)
   }
@@ -103,10 +103,10 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
       }
     },
     // `showError` itself isn't listed (it'd churn onError every render); its
-    // closure values (`showErrorMessages`, `errorMessageTimeout`) are, so onError
+    // closure values (`showErrorMessages`, `errorDisplayTime`) are, so onError
     // re-captures a fresh `showError` whenever either changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onErrorCallback, showErrorMessages, getLatestData, errorMessageTimeout]
+    [onErrorCallback, showErrorMessages, getLatestData, errorDisplayTime]
   )
 
   // Fires an `onEditEvent` for this node — single source of truth for the
@@ -248,7 +248,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     pathString,
     path,
     name,
-    arrayIndexFromOne,
+    arrayIndexStart,
     handleKeyboard,
     handleEditKey,
     handleCancel,

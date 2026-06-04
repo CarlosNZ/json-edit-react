@@ -63,10 +63,10 @@ export interface DemoData {
   data: object
   rootName?: string
   collapse?: number | FilterFunction
-  restrictEdit?: boolean | FilterFunction
-  restrictDelete?: boolean | FilterFunction
-  restrictAdd?: boolean | FilterFunction
-  restrictTypeSelection?: boolean | TypeOptions | TypeFilterFunction
+  allowEdit?: boolean | FilterFunction
+  allowDelete?: boolean | FilterFunction
+  allowAdd?: boolean | FilterFunction
+  allowTypeSelection?: boolean | TypeOptions | TypeFilterFunction
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction
   searchPlaceholder?: string
   onUpdate?: (
@@ -76,7 +76,9 @@ export interface DemoData {
   onAdd?: UpdateFunction
   onEdit?: UpdateFunction
   onChange?: OnChangeFunction
-  onError?: OnErrorFunction
+  // Demo datasets return an error *string* to display in a toast; core's
+  // `OnErrorFunction` returns `void`, so we reuse only its input shape here.
+  onError?: (props: Parameters<OnErrorFunction>[0]) => string
   showErrorMessages?: boolean
   defaultValue?: DefaultValueFunction
   newKeyOptions?: string[] | NewKeyOptionsFunction
@@ -121,9 +123,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     collapse: 2,
     data: data.intro,
     customNodeDefinitions: [DatePickerDefinition],
-    // restrictEdit: ({ key }) => key === 'number',
+    // allowEdit: ({ key }) => key !== 'number',
     customTextEditorAvailable: true,
-    restrictTypeSelection: ({ key }) => {
+    allowTypeSelection: ({ key }) => {
       if (key === 'enum')
         return [
           ...standardDataTypes,
@@ -134,7 +136,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
             matchPriority: 1,
           },
         ]
-      return false
+      return true
     },
   },
   starWars: {
@@ -149,9 +151,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         </Text>
         <Text>
           Note the additional editing restrictions in addition to the toggles above. This has been
-          achieved by specifying filter functions for the <span className="code">restrictEdit</span>
-          , <span className="code">restrictDelete</span>, <span className="code">restrictAdd</span>{' '}
-          and <span className="code">restrictTypeSelection</span> props.{' '}
+          achieved by specifying filter functions for the <span className="code">allowEdit</span>
+          , <span className="code">allowDelete</span>, <span className="code">allowAdd</span>{' '}
+          and <span className="code">allowTypeSelection</span> props.{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#readme" isExternal>
             Learn more
           </Link>
@@ -167,10 +169,10 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'Star Wars data',
-    restrictEdit: ({ value }) => typeof value === 'object' && value !== null,
-    restrictDelete: ({ value }) => typeof value === 'object' && value !== null,
-    restrictAdd: ({ value }) => !Array.isArray(value),
-    restrictTypeSelection: ({ key, path }) => {
+    allowEdit: ({ value }) => typeof value !== 'object' || value === null,
+    allowDelete: ({ value }) => typeof value !== 'object' || value === null,
+    allowAdd: ({ value }) => Array.isArray(value),
+    allowTypeSelection: ({ key, path }) => {
       if (path.slice(-2)[0] === 'films' || (path.slice(-3)[0] === 'films' && key === 'title'))
         return [
           {
@@ -244,7 +246,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
             matchPriority: 1,
           },
         ]
-      return true
+      return false
     },
     collapse: 1,
     customNodeDefinitions: [DatePickerDefinition, LinkCustomNodeDefinition],
@@ -265,7 +267,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           You'll note that the <span className="code">id</span> field is not editable, which would
           be important if this saved back to a database. An additional{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#filter-functions" isExternal>
-            <span className="code">restrictEdit</span> function
+            <span className="code">allowEdit</span> function
           </Link>{' '}
           has been included which targets the <span className="code">id</span> field specifically.
           You also can't add or delete fields to the main "Person" objects.
@@ -296,9 +298,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'Clients',
-    restrictEdit: ({ key, level }) => key === 'id' || level === 0 || level === 1,
-    restrictAdd: ({ level }) => level === 1,
-    restrictDelete: ({ level }) => level !== 1,
+    allowEdit: ({ key, level }) => key !== 'id' && level !== 0 && level !== 1,
+    allowAdd: ({ level }) => level !== 1,
+    allowDelete: ({ level }) => level === 1,
     collapse: 2,
     searchFilter: ({ path, fullData }, searchText) => {
       const data = fullData as { name: string; username: string }[]
@@ -406,7 +408,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         return { error: 'JSON Schema error' }
       }
     },
-    restrictTypeSelection: ({ key }) => {
+    allowTypeSelection: ({ key }) => {
       if (key === 'category')
         return [
           ...standardDataTypes,
@@ -416,7 +418,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
             matchPriority: 1,
           },
         ]
-      return false
+      return true
     },
     newKeyOptions: ({ key }) => {
       if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category', 'isAlive']
@@ -486,36 +488,36 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       if (Array.isArray(parentData) && key === parentData.length - 1) return false
       return true
     },
-    restrictEdit: ({ key, value, level, parentData }) => {
-      if (level < 3) return true
+    allowEdit: ({ key, value, level, parentData }) => {
+      if (level < 3) return false
       if (parentData && 'timeStamp' in parentData) {
         const timeStamp = parentData.timeStamp as string
-        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return true
+        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return false
       }
-      if (key === 'timeStamp') return true
-      if (value instanceof Object) return true
-      return false
+      if (key === 'timeStamp') return false
+      if (value instanceof Object) return false
+      return true
     },
-    restrictDelete: ({ level, key, parentData }) => {
-      if (level !== 3 || ['name', 'timeStamp', 'message'].includes(key as string)) return true
+    allowDelete: ({ level, key, parentData }) => {
+      if (level !== 3 || ['name', 'timeStamp', 'message'].includes(key as string)) return false
       if (parentData && 'timeStamp' in parentData) {
         const timeStamp = parentData.timeStamp as string
-        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return true
+        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return false
       }
-      return false
+      return true
     },
-    restrictAdd: ({ path, parentData, value, key }) => {
-      if (path[0] !== 'messages') return true
-      if (key !== 'messages' && path.slice(-1)[0] !== 0) return true
+    allowAdd: ({ path, parentData, value, key }) => {
+      if (path[0] !== 'messages') return false
+      if (key !== 'messages' && path.slice(-1)[0] !== 0) return false
       if (value instanceof Object && 'timeStamp' in value) {
         const timeStamp = value.timeStamp as string
-        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return true
+        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return false
       }
       if (parentData && 'timeStamp' in parentData) {
         const timeStamp = parentData.timeStamp as string
-        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return true
+        if (Date.now() - new Date(timeStamp).getTime() > 300_000) return false
       }
-      return false
+      return true
     },
     onEdit: ({ newData, path }) => {
       if (path[0] !== 'messages' && path.length !== 3) return { value: newData }
@@ -536,7 +538,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       }
       return
     },
-    restrictTypeSelection: ['string', 'number', 'boolean'],
+    allowTypeSelection: ['string', 'number', 'boolean'],
     defaultValue: ({ level }) => {
       if (level === 1)
         return {
@@ -603,11 +605,11 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'theme',
-    restrictEdit: ({ key, level }) =>
-      level === 0 || ['fragments', 'styles'].includes(key as string),
-    restrictDelete: ({ key }) => ['displayName', 'fragments', 'styles'].includes(key as string),
-    restrictAdd: ({ level }) => level === 0,
-    restrictTypeSelection: ['string', 'object', 'array'],
+    allowEdit: ({ key, level }) =>
+      level !== 0 && !['fragments', 'styles'].includes(key as string),
+    allowDelete: ({ key }) => !['displayName', 'fragments', 'styles'].includes(key as string),
+    allowAdd: ({ level }) => level !== 0,
+    allowTypeSelection: ['string', 'object', 'array'],
     collapse: 2,
     searchFilter: 'key',
     searchPlaceholder: 'Search Theme keys',
@@ -670,9 +672,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     },
     searchPlaceholder: 'Search by character name',
     data: data.customNodes,
-    restrictEdit: ({ level }) => level > 0,
-    restrictAdd: true,
-    restrictDelete: true,
+    allowEdit: ({ level }) => level === 0,
+    allowAdd: false,
+    allowDelete: false,
     onUpdate: ({ newData }, toast) => {
       const valid = validateCustomNodes(newData)
       if (!valid) {
@@ -864,8 +866,8 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'dossier',
     collapse: 2,
     data: data.customKeys,
-    restrictAdd: ({ level }) => level === 0,
-    restrictDelete: ({ level }) => level === 0,
+    allowAdd: ({ level }) => level !== 0,
+    allowDelete: ({ level }) => level !== 0,
     customNodeDefinitions: [
       // 1. "REDACTED_" prefix — blacked-out key, original visible on hover.
       // Must come before the `_` matcher (which would still match these

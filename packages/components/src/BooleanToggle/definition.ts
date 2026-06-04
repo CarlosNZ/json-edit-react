@@ -3,7 +3,7 @@ import { BooleanToggleComponent } from './component'
 
 export const BooleanToggleDefinition: CustomNodeDefinition<{
   linkStyles?: React.CSSProperties
-  stringTruncate?: number
+  stringTruncateLength?: number
 }> = {
   condition: ({ value }) => typeof value === 'boolean',
   element: BooleanToggleComponent,

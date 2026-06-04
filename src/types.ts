@@ -22,25 +22,25 @@ export interface JsonEditorProps<T = JsonData> {
   collapse?: boolean | number | FilterFunction<T>
   collapseAnimationTime?: number // ms
   showCollectionCount?: boolean | 'when-closed'
-  restrictEdit?: boolean | FilterFunction<T>
-  restrictDelete?: boolean | FilterFunction<T>
-  restrictAdd?: boolean | FilterFunction<T>
-  restrictTypeSelection?: boolean | TypeOptions | TypeFilterFunction<T>
-  restrictDrag?: boolean | FilterFunction<T>
+  allowEdit?: boolean | FilterFunction<T>
+  allowDelete?: boolean | FilterFunction<T>
+  allowAdd?: boolean | FilterFunction<T>
+  allowTypeSelection?: boolean | TypeOptions | TypeFilterFunction<T>
+  allowDrag?: boolean | FilterFunction<T>
   searchText?: string
   searchFilter?: 'key' | 'value' | 'all' | SearchFilterFunction<T>
   searchDebounceTime?: number
-  keySort?: boolean | CompareFunction
-  showArrayIndices?: boolean
-  arrayIndexFromOne?: boolean
+  sortKeys?: boolean | CompareFunction
+  showArrayIndexes?: boolean
+  arrayIndexStart?: number
   showStringQuotes?: boolean
   showIconTooltips?: boolean
   defaultValue?: string | number | boolean | null | object | DefaultValueFunction<T>
   newKeyOptions?: string[] | NewKeyOptionsFunction<T>
   minWidth?: string | number
   maxWidth?: string | number
-  rootFontSize?: string | number
-  stringTruncate?: number
+  baseFontSize?: string | number
+  stringTruncateLength?: number
   translations?: Partial<LocalisedStrings>
   // Using "any" here, as internal props don't matter, the generic is just for
   // enforcing consistency between the component and the definition that uses it
@@ -51,7 +51,7 @@ export interface JsonEditorProps<T = JsonData> {
   jsonParse?: (input: string, reviver?: (key: string, value: string) => unknown) => JsonData
   jsonStringify?: (input: JsonData, replacer?: (key: string, value: unknown) => unknown) => string
   TextEditor?: React.FC<TextEditorProps>
-  errorMessageTimeout?: number // ms
+  errorDisplayTime?: number // ms
   keyboardControls?: KeyboardControls
   insertAtTop?: boolean | 'array' | 'object'
   collapseClickZones?: Array<'left' | 'header' | 'property'>
@@ -69,9 +69,9 @@ export interface StartEditOptions {
   /** The target node to open a value-edit session on. */
   path: CollectionKey[]
   /**
-   * Bypass `restrictEdit` (default `false`). When `false`, the filter is
+   * Bypass `allowEdit` (default `false`). When `false`, the filter is
    * evaluated for this node at call time and `startEdit` is a no-op (returning
-   * `'RESTRICTED'`) if it's restricted; when `true`, the session opens
+   * `'RESTRICTED'`) if editing isn't permitted; when `true`, the session opens
    * regardless — the intended use is to lock the tree and imperatively enable a
    * single node. Skips ONLY the filter, never `onUpdate`: the consumer's
    * `onUpdate` still runs (and may veto) at `confirm()`.
@@ -82,7 +82,7 @@ export interface StartEditOptions {
 /**
  * The result of `editorRef.startEdit`: `true` if it opens a value-edit session,
  * or the reason it doesn't — `'PATH_NOT_FOUND'` (target gone) or `'RESTRICTED'`
- * (`restrictEdit` blocked it, and `overrideRestrictions` wasn't set).
+ * (`allowEdit` blocked it, and `overrideRestrictions` wasn't set).
  */
 export type StartEditResult = true | 'RESTRICTED' | 'PATH_NOT_FOUND'
 
@@ -97,7 +97,7 @@ export interface JsonEditorHandle {
   /** Collapse/expand a node (or subtree, with `includeChildren`). */
   collapse: (state: CollapseState | CollapseState[]) => void
   /**
-   * Open a value-edit session at a node. Respects `restrictEdit` unless
+   * Open a value-edit session at a node. Respects `allowEdit` unless
    * `overrideRestrictions` is set; auto-reveals a target collapsed below the
    * mount frontier. Returns `true` if it opened, else why not — see
    * `StartEditResult`.
@@ -119,15 +119,12 @@ export type JsonViewerProps<T = JsonData> = Omit<
   JsonEditorProps<T>,
   | 'setData'
   | 'onUpdate'
-  | 'onEdit'
-  | 'onAdd'
-  | 'onDelete'
   | 'onChange'
-  | 'restrictEdit'
-  | 'restrictAdd'
-  | 'restrictDelete'
-  | 'restrictDrag'
-  | 'restrictTypeSelection'
+  | 'allowEdit'
+  | 'allowAdd'
+  | 'allowDelete'
+  | 'allowDrag'
+  | 'allowTypeSelection'
   | 'editorRef'
 > & {
   /** Collapse-only imperative handle — see `JsonViewerHandle`. */
@@ -162,7 +159,7 @@ export interface EditingState {
   // add session on a collection (`path` is the collection being added into).
   mode: 'value' | 'key' | 'add'
   // Set when the session was started imperatively via the `editorRef` handle.
-  // A forced edit overrides the `restrictEdit` filter — the node-skip redirect
+  // A forced edit overrides the `allowEdit` filter — the node-skip redirect
   // in ValueNodeWrapper leaves it in place instead of bouncing off it.
   force?: boolean
 }
@@ -420,23 +417,23 @@ interface BaseNodeProps {
   allowClipboard: boolean
   onCopy?: OnCopyFunction
   onEditEvent?: OnEditEventFunction
-  restrictEditFilter: FilterFunction
-  restrictDeleteFilter: FilterFunction
-  restrictAddFilter: FilterFunction
-  restrictDragFilter: FilterFunction
+  allowEditFilter: FilterFunction
+  allowDeleteFilter: FilterFunction
+  allowAddFilter: FilterFunction
+  allowDragFilter: FilterFunction
   canDragOnto: boolean
   searchFilter?: SearchFilterFunction
   searchText?: string
-  restrictTypeSelection: boolean | TypeOptions | TypeFilterFunction
-  stringTruncate: number
+  allowTypeSelection: boolean | TypeOptions | TypeFilterFunction
+  stringTruncateLength: number
   indent: number
-  arrayIndexFromOne: boolean
+  arrayIndexStart: number
   sort: SortFunction
   translate: TranslateFunction
   customNodeDefinitions: CustomNodeDefinition[]
   customNodeData: CustomNodeData
   customButtons: CustomButtonDefinition[]
-  errorMessageTimeout: number
+  errorDisplayTime: number
   keyboardControls: KeyboardControlsFull
   handleKeyboard: (
     e: React.KeyboardEvent,
@@ -456,7 +453,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   collapseFilter: FilterFunction
   collapseAnimationTime: number
   onAdd: InternalUpdateFunction
-  showArrayIndices: boolean
+  showArrayIndexes: boolean
   showCollectionCount: boolean | 'when-closed'
   showStringQuotes: boolean
   defaultValue: unknown
@@ -483,7 +480,7 @@ export interface ValueNodeProps extends BaseNodeProps {
 export interface CustomKeyProps<T = Record<string, unknown>> {
   nodeData: NodeData
   // The displayed key — already a string, and for array indices already
-  // offset for `arrayIndexFromOne`. Use `nodeData.key` for the raw key.
+  // offset for `arrayIndexStart`. Use `nodeData.key` for the raw key.
   name: string
   path: CollectionKey[]
   canEditKey: boolean
@@ -555,7 +552,7 @@ export interface InputProps {
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   handleEdit: () => void
   path: CollectionKey[]
-  stringTruncate: number
+  stringTruncateLength: number
   showStringQuotes: boolean
   nodeData: NodeData
   translate: TranslateFunction

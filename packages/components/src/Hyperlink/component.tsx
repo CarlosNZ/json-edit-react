@@ -10,15 +10,17 @@ import { toPathString, StringDisplay, type CustomNodeProps } from 'json-edit-rea
 
 export interface LinkProps {
   linkStyles?: React.CSSProperties
-  stringTruncate?: number
+  stringTruncateLength?: number
   [key: string]: unknown
 }
 
 export const LinkCustomComponent: React.FC<CustomNodeProps<LinkProps>> = (props) => {
   const { setIsEditing, getStyles, nodeData, customNodeProps = {} } = props
   const styles = getStyles('string', nodeData)
-  const { linkStyles = { fontWeight: 'bold', textDecoration: 'underline' }, stringTruncate = 60 } =
-    customNodeProps
+  const {
+    linkStyles = { fontWeight: 'bold', textDecoration: 'underline' },
+    stringTruncateLength = 60,
+  } = customNodeProps
   return (
     <div
       onClick={(e) => {
@@ -31,7 +33,7 @@ export const LinkCustomComponent: React.FC<CustomNodeProps<LinkProps>> = (props)
         pathString={toPathString(nodeData.path)}
         styles={{ ...styles }}
         value={nodeData.value as string}
-        stringTruncate={stringTruncate}
+        stringTruncateLength={stringTruncateLength}
         TextWrapper={({ children }) => {
           return (
             <a

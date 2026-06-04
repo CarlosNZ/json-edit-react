@@ -18,7 +18,7 @@ interface StringDisplayProps {
   styles: React.CSSProperties
   pathString: string
   showStringQuotes?: boolean
-  stringTruncate?: number
+  stringTruncateLength?: number
   canEdit: boolean
   setIsEditing: (value: React.SetStateAction<boolean>) => void
   translate: TranslateFunction
@@ -31,7 +31,7 @@ interface StringDisplayProps {
 export const StringDisplay: React.FC<StringDisplayProps> = ({
   nodeData,
   showStringQuotes = true,
-  stringTruncate = 200,
+  stringTruncateLength = 200,
   pathString,
   canEdit,
   setIsEditing,
@@ -45,7 +45,7 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
 
   const quoteChar = showStringQuotes ? '"' : ''
 
-  const requiresTruncation = value.length > stringTruncate
+  const requiresTruncation = value.length > stringTruncateLength
 
   const handleMaybeEdit = () => {
     if (canEdit) setIsEditing(true)
@@ -81,7 +81,7 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
       ) : (
         <>
           <TextWrapper>
-            <span>{value.slice(0, stringTruncate - 2).trimEnd()}</span>{' '}
+            <span>{value.slice(0, stringTruncateLength - 2).trimEnd()}</span>{' '}
           </TextWrapper>
           <span className="jer-string-expansion jer-ellipsis" onClick={() => setIsExpanded(true)}>
             ...
