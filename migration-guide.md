@@ -515,13 +515,9 @@ Negate the whole predicate. For guard-style functions with early returns, flip e
 
 The **array** form (a whitelist of available types) is unchanged — it always meant "these types are available". Only the **boolean** form (and a function *returning* a boolean) flips: under `allowTypeSelection`, `true` means "all types available", `false` means "no type change". So a function that returned `false` to mean "no restriction" should now return `true`, and one that returned `true` to lock the type should now return `false`.
 
-### No cascade
-
-`allowEdit={false}` only disables *value editing* — it does **not** also disable add/delete/drag. The four axes are independent; set each one you want to restrict. (For a fully read-only display, use [`JsonViewer`](#6-setdata-is-required-viewonly-removed-jsonviewer-added) instead.)
-
 ## 12. Display / config prop renames
 
-A handful of props were renamed for naming consistency. These are **pure renames** (no behaviour change) except `arrayIndexStart`, whose type changed from `boolean` to `number`:
+A handful of props were renamed. These are **pure renames** (no behaviour change) except `arrayIndexStart`, whose type changed from `boolean` to `number`:
 
 | v1 | v2 | Notes |
 | --- | --- | --- |
