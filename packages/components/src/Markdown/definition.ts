@@ -3,8 +3,8 @@ import { MarkdownComponent, MarkdownCustomProps } from './component'
 
 export const MarkdownNodeDefinition: CustomNodeDefinition<MarkdownCustomProps> = {
   condition: () => false, // Over-ride this for specific cases
-  element: MarkdownComponent,
-  // customNodeProps: {},
+  component: MarkdownComponent,
+  // componentProps: {},
   showOnView: true,
   showOnEdit: false,
 }

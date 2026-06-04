@@ -1,17 +1,17 @@
 import React from 'react'
-import { useKeyboardListener, type CustomNodeProps } from 'json-edit-react'
+import { useKeyboardListener, type CustomComponentProps } from 'json-edit-react'
 
 export interface UndefinedProps {
   style?: React.CSSProperties
 }
 
-export const UndefinedCustomComponent: React.FC<CustomNodeProps<UndefinedProps>> = ({
+export const UndefinedCustomComponent: React.FC<CustomComponentProps<UndefinedProps>> = ({
   isEditing,
   setIsEditing,
   handleKeyboard,
   handleEdit,
   keyboardCommon,
-  customNodeProps = {},
+  componentProps = {},
 }) => {
   const listenForSubmit = (e: unknown) =>
     handleKeyboard(e as React.KeyboardEvent, {
@@ -25,7 +25,7 @@ export const UndefinedCustomComponent: React.FC<CustomNodeProps<UndefinedProps>>
     <div
       onDoubleClick={() => setIsEditing(true)}
       className="jer-value-undefined"
-      style={{ fontStyle: 'italic', color: '#9b9b9b', ...customNodeProps?.style }}
+      style={{ fontStyle: 'italic', color: '#9b9b9b', ...componentProps?.style }}
     >
       undefined
     </div>

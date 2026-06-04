@@ -10,7 +10,7 @@ import { HsvColor } from 'react-colorful'
 import { colord, extend, getFormat, HsvaColor } from 'colord'
 import namesPlugin from 'colord/plugins/names'
 import { useDebouncedCallback } from 'use-debounce'
-import { StringEdit, toPathString, type CustomNodeProps } from 'json-edit-react'
+import { StringEdit, toPathString, type CustomComponentProps } from 'json-edit-react'
 import { Loading } from '../_common/Loading'
 
 extend([namesPlugin])
@@ -40,7 +40,7 @@ export interface ColorPickerProps {
   keepAsColor?: boolean
 }
 
-export const ColorPickerComponent: React.FC<CustomNodeProps<ColorPickerProps>> = ({
+export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProps>> = ({
   isEditing,
   setIsEditing,
   handleKeyPress,
@@ -49,7 +49,7 @@ export const ColorPickerComponent: React.FC<CustomNodeProps<ColorPickerProps>> =
   getStyles,
   nodeData,
   originalNode,
-  customNodeProps = {},
+  componentProps = {},
   onError,
   handleEdit,
   ...props
@@ -60,7 +60,7 @@ export const ColorPickerComponent: React.FC<CustomNodeProps<ColorPickerProps>> =
     alpha = false,
     keepAsColor = true,
     invalidColorError = 'Invalid Color',
-  } = customNodeProps
+  } = componentProps
 
   const text = value as string
 

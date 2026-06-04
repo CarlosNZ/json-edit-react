@@ -3,18 +3,18 @@
  */
 
 import React from 'react'
-import { type CustomNodeProps } from 'json-edit-react'
+import { type CustomComponentProps } from 'json-edit-react'
 
 export interface ImageProps {
   imageStyles?: React.CSSProperties
   altText?: string
 }
 
-export const ImageComponent: React.FC<CustomNodeProps<ImageProps>> = (props) => {
-  const { value, customNodeProps = {} } = props
+export const ImageComponent: React.FC<CustomComponentProps<ImageProps>> = (props) => {
+  const { value, componentProps = {} } = props
 
   const { imageStyles = { maxWidth: 200, maxHeight: 200 }, altText = value as string } =
-    customNodeProps
+    componentProps
 
   return (
     <a href={value as string} target="_blank" rel="noreferrer">

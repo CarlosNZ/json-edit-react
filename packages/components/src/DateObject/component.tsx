@@ -1,11 +1,11 @@
 import React, { useRef } from 'react'
-import { StringDisplay, toPathString, StringEdit, type CustomNodeProps } from 'json-edit-react'
+import { StringDisplay, toPathString, StringEdit, type CustomComponentProps } from 'json-edit-react'
 
 export interface DateObjectProps {
   showTime?: boolean
 }
 
-export const DateObjectCustomComponent: React.FC<CustomNodeProps<DateObjectProps>> = (props) => {
+export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObjectProps>> = (props) => {
   const {
     nodeData,
     isEditing,
@@ -15,11 +15,11 @@ export const DateObjectCustomComponent: React.FC<CustomNodeProps<DateObjectProps
     value,
     handleEdit,
     onError,
-    customNodeProps = {},
+    componentProps = {},
   } = props
   const lastValidDate = useRef(value)
 
-  const { showTime = true } = customNodeProps
+  const { showTime = true } = componentProps
 
   if (value instanceof Date) lastValidDate.current = value
 

@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react'
-import { toPathString, StringDisplay, StringEdit, type CustomNodeProps } from 'json-edit-react'
+import { toPathString, StringDisplay, StringEdit, type CustomComponentProps } from 'json-edit-react'
 
 export interface EnhancedLinkProps {
   linkStyles?: React.CSSProperties
@@ -19,17 +19,17 @@ type EnhancedLink = {
   [key: string]: string
 }
 
-export const EnhancedLinkCustomComponent: React.FC<CustomNodeProps<EnhancedLinkProps>> = (
+export const EnhancedLinkCustomComponent: React.FC<CustomComponentProps<EnhancedLinkProps>> = (
   props
 ) => {
-  const { setIsEditing, getStyles, nodeData, customNodeProps = {}, isEditing, handleEdit } = props
+  const { setIsEditing, getStyles, nodeData, componentProps = {}, isEditing, handleEdit } = props
   const {
     linkStyles = { fontWeight: 'bold', textDecoration: 'underline' },
     propertyStyles = {},
     labels: { text: textLabel, url: urlLabel } = { text: 'Text', url: 'Link' },
     fieldNames: { text: textField, url: urlField } = { text: 'text', url: 'url' },
     stringTruncateLength = 120,
-  } = customNodeProps
+  } = componentProps
   const [text, setText] = useState((nodeData.value as EnhancedLink)[textField])
   const [url, setUrl] = useState((nodeData.value as EnhancedLink)[urlField])
 

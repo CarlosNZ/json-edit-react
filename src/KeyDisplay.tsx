@@ -1,5 +1,5 @@
 /**
- * Component to display the "Property" value for both Collection and Value nodes
+ * Renders the key ("Property") label for both Collection and Value nodes
  */
 
 import React from 'react'
@@ -70,10 +70,10 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
       minWidth: `${Math.min(displayKey.length + 1, 5)}ch`,
       flexShrink: displayKey.length > 10 ? 1 : 0,
     }
-    if (customNodeData?.CustomKey && nodeData && getStyles) {
-      const { CustomKey, customNodeProps } = customNodeData
+    if (customNodeData?.CustomKeyComponent && nodeData && getStyles) {
+      const { CustomKeyComponent, componentProps } = customNodeData
       return (
-        <CustomKey
+        <CustomKeyComponent
           nodeData={nodeData}
           name={emptyStringKey ?? displayKey}
           path={path}
@@ -86,7 +86,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
           }}
           handleClick={handleClick}
           styles={derivedKeyStyles}
-          customNodeProps={customNodeProps}
+          componentProps={componentProps}
           getStyles={getStyles}
         />
       )

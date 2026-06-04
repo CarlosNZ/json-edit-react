@@ -10,7 +10,7 @@
 
 import React, { lazy, Suspense } from 'react'
 import { Button } from './Button'
-import { CustomNodeProps } from 'json-edit-react'
+import { CustomComponentProps } from 'json-edit-react'
 
 // Styles
 import 'react-datepicker/dist/react-datepicker.css'
@@ -26,7 +26,7 @@ export interface DatePickerCustomProps {
   loadingText?: string
 }
 
-export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = ({
+export const DateTimePicker: React.FC<CustomComponentProps<DatePickerCustomProps>> = ({
   value,
   setValue,
   handleEdit,
@@ -36,14 +36,14 @@ export const DateTimePicker: React.FC<CustomNodeProps<DatePickerCustomProps>> = 
   setIsEditing,
   getStyles,
   nodeData,
-  customNodeProps,
+  componentProps,
 }) => {
   const {
     dateFormat = 'MMM d, yyyy',
     dateTimeFormat = 'MMM d, yyyy h:mm aa',
     showTime = true,
     loadingText = 'Loading Date Picker',
-  } = customNodeProps ?? {}
+  } = componentProps ?? {}
 
   const date = new Date(value as string)
 

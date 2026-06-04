@@ -3,13 +3,13 @@
  *
  * - Provides an alternative to the default boolean input -- a checkbox that can
  *   be toggled on and off without having to explicity enable "editing" of the
- *   element.
+ *   value.
  */
 
 import React from 'react'
-import { toPathString, type CustomNodeProps } from 'json-edit-react'
+import { toPathString, type CustomComponentProps } from 'json-edit-react'
 
-export const BooleanToggleComponent: React.FC<CustomNodeProps> = (props) => {
+export const BooleanToggleComponent: React.FC<CustomComponentProps> = (props) => {
   const { nodeData, value, handleEdit, canEdit } = props
   const { path } = nodeData
   return (

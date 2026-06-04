@@ -195,11 +195,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   )
 
   const {
-    CustomNode,
-    customNodeProps,
-    CustomWrapper,
+    CustomComponent,
+    componentProps,
+    CustomWrapperComponent,
     wrapperProps = {},
-    hideKey,
+    showKey = true,
     showEditTools = true,
     showOnEdit,
     showOnView,
@@ -386,9 +386,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const showLabel = showArrayIndexes || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
-  const showKey = showLabel && !hideKey && name !== undefined
+  const shouldShowKey = showLabel && showKey && name !== undefined
   const showCustomNodeContents =
-    CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
+    CustomComponent && ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
   const keyValueArray = Object.entries(data).map(
     ([key, value]) =>
@@ -508,9 +508,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const CollectionContents = showCustomNodeContents ? (
-    <CustomNode customNodeProps={customNodeProps} {...customNodeAllProps}>
+    <CustomComponent componentProps={componentProps} {...customNodeAllProps}>
       {CollectionChildren}
-    </CustomNode>
+    </CustomComponent>
   ) : (
     CollectionChildren
   )
@@ -601,7 +601,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
             >
               <Icon name="chevron" nodeData={nodeData} />
             </div>
-            {showKey && <KeyDisplay {...keyDisplayProps} />}
+            {shouldShowKey && <KeyDisplay {...keyDisplayProps} />}
             {!isEditing && (
               <span
                 className="jer-brackets jer-bracket-open"
@@ -629,7 +629,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           </div>
           {EditButtonDisplay}
         </div>
-      ) : hideKey ? (
+      ) : !showKey ? (
         <></>
       ) : (
         <div className="jer-collection-header-row" style={{ position: 'relative' }}>
@@ -672,10 +672,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     </div>
   )
 
-  return CustomWrapper ? (
-    <CustomWrapper customNodeProps={wrapperProps} {...customNodeAllProps}>
+  return CustomWrapperComponent ? (
+    <CustomWrapperComponent wrapperProps={wrapperProps} {...customNodeAllProps}>
       {CollectionNodeComponent}
-    </CustomWrapper>
+    </CustomWrapperComponent>
   ) : (
     CollectionNodeComponent
   )

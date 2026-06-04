@@ -5,7 +5,7 @@
  */
 
 import React, { lazy, Suspense } from 'react'
-import { type CustomNodeProps } from 'json-edit-react'
+import { type CustomComponentProps } from 'json-edit-react'
 import { Options } from 'react-markdown'
 import { Loading } from '../_common/Loading'
 
@@ -15,8 +15,8 @@ export interface MarkdownCustomProps extends Options {
   loadingText?: string
 }
 
-export const MarkdownComponent: React.FC<CustomNodeProps<MarkdownCustomProps>> = (props) => {
-  const { setIsEditing, getStyles, nodeData, customNodeProps } = props
+export const MarkdownComponent: React.FC<CustomComponentProps<MarkdownCustomProps>> = (props) => {
+  const { setIsEditing, getStyles, nodeData, componentProps } = props
   const styles = getStyles('string', nodeData)
 
   return (
@@ -28,8 +28,8 @@ export const MarkdownComponent: React.FC<CustomNodeProps<MarkdownCustomProps>> =
       style={{ ...styles }}
       className="jer-markdown-block"
     >
-      <Suspense fallback={<Loading text={customNodeProps?.loadingText ?? 'Loading Markdown'} />}>
-        <Markdown {...props.customNodeProps}>{nodeData.value as string}</Markdown>
+      <Suspense fallback={<Loading text={componentProps?.loadingText ?? 'Loading Markdown'} />}>
+        <Markdown {...props.componentProps}>{nodeData.value as string}</Markdown>
       </Suspense>
     </div>
   )

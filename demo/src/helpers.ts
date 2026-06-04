@@ -32,7 +32,7 @@ export const getConditionalDefinitions = (
     if (definition?.name === 'Image')
       return {
         ...definition,
-        customNodeProps: {
+        componentProps: {
           imageStyles: {
             maxHeight: data?.Images?.['Image properties']?.maxHeight,
             maxWidth: data?.Images?.['Image properties']?.maxWidth,
@@ -43,7 +43,7 @@ export const getConditionalDefinitions = (
     if (definition?.name === 'Date Object')
       return {
         ...definition,
-        customNodeProps: { showTime: data?.['Date & Time']?.['Show Time in Date?'] ?? false },
+        componentProps: { showTime: data?.['Date & Time']?.['Show Time in Date?'] ?? false },
       }
 
     return definition

@@ -8,7 +8,7 @@
  * unchanged (`passOriginalNode`) but bumps a counter keyed by a label every
  * time it renders.
  *
- * Because a custom-node element is created fresh on every render of its
+ * Because a custom-node component is created fresh on every render of its
  * host `ValueNodeWrapper` / `CollectionNode`, the sentinel's render count is
  * a faithful proxy for "did this node re-render?". When a later stage adds a
  * `React.memo` boundary that bails out, the host stops rendering and the
@@ -27,7 +27,7 @@ import { pathsEqual } from '../../src/utils/pathTools'
 import {
   type CollectionKey,
   type CustomNodeDefinition,
-  type CustomNodeProps,
+  type CustomComponentProps,
   type NodeData,
 } from '../../src/types'
 
@@ -53,7 +53,7 @@ export const makeRenderSpy = (targets: Record<string, CollectionKey[]>): RenderS
 
   const definitions: CustomNodeDefinition[] = Object.entries(targets).map(([label, path]) => ({
     condition: (nodeData: NodeData) => pathsEqual(nodeData.path, path),
-    element: ({ originalNode, children }: CustomNodeProps) => {
+    component: ({ originalNode, children }: CustomComponentProps) => {
       counts[label]++
       return <>{originalNode ?? children}</>
     },

@@ -1,26 +1,26 @@
 import React from 'react'
-import { toPathString, StringEdit, type CustomNodeProps } from 'json-edit-react'
+import { toPathString, StringEdit, type CustomComponentProps } from 'json-edit-react'
 
 export interface SymbolProps {
   style?: React.CSSProperties
   descriptionStyle?: React.CSSProperties
 }
 
-export const SymbolComponent: React.FC<CustomNodeProps<SymbolProps>> = (props) => {
+export const SymbolComponent: React.FC<CustomComponentProps<SymbolProps>> = (props) => {
   const {
     setValue,
     isEditing,
     setIsEditing,
     getStyles,
     nodeData,
-    customNodeProps = {},
+    componentProps = {},
     value,
     handleEdit,
     ...rest
   } = props
   const { path } = nodeData
   const { style = { color: '#006291', fontSize: '90%' }, descriptionStyle = { color: '#ff9300' } } =
-    customNodeProps
+    componentProps
 
   const editDisplayValue = typeof value === 'symbol' ? value.description ?? '' : (value as string)
 

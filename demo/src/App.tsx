@@ -593,7 +593,7 @@ function App() {
                   // customNodeDefinitions={[
                   //   {
                   //     condition: ({ key }) => key === 'string',
-                  //     element: ({ nodeData, value, originalNode, originalNodeKey }) => (
+                  //     component: ({ nodeData, value, originalNode, originalNodeKey }) => (
                   //       <div
                   //         style={{
                   //           display: 'flex',
@@ -608,7 +608,7 @@ function App() {
                   //         <span style={{ lineHeight: 'unset !important' }}>{originalNode}</span>
                   //       </div>
                   //     ),
-                  //     hideKey: true,
+                  //     showKey: false,
                   //     passOriginalNode: true,
                   //     showOnEdit: true,
                   //   },

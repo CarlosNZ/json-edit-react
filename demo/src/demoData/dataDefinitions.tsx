@@ -45,7 +45,7 @@ const validateJsonSchema = ajv.compile(jsonSchema)
 const validateCustomNodes = ajv.compile(customNodesSchema)
 
 // Used by the "Custom Keys" data set — a small glossary of agent codenames
-// and field abbreviations, passed via `customNodeProps` to the matching
+// and field abbreviations, passed via `componentProps` to the matching
 // custom-key component.
 const codenameGlossary: Record<string, string> = {
   M: 'handler',
@@ -568,7 +568,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     customNodeDefinitions: [
       {
         condition: DatePickerDefinition.condition,
-        element: ({ data, getStyles, nodeData }) => {
+        component: ({ data, getStyles, nodeData }) => {
           return (
             <p style={getStyles('string', nodeData)}>{new Date(data as string).toLocaleString()}</p>
           )
@@ -701,7 +701,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           typeof value === 'string' &&
           value.startsWith('http') &&
           value.endsWith('.png'),
-        element: ({ data }) => {
+        component: ({ data }) => {
           const truncate = (string: string, length = 50) =>
             string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
           return (
@@ -716,7 +716,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       },
       {
         condition: ({ key }) => key === 'publisher',
-        element: ({ data }) => {
+        component: ({ data }) => {
           return (
             <p
               style={{
@@ -734,23 +734,23 @@ export const demoDataDefinitions: Record<string, DemoData> = {
             </p>
           )
         },
-        hideKey: true,
+        showKey: false,
       },
       {
         ...DatePickerDefinition,
         showOnView: true,
-        showInTypesSelector: true,
-        customNodeProps: { showTime: false, dateFormat: 'MMM d, yyyy' },
+        showInTypeSelector: true,
+        componentProps: { showTime: false, dateFormat: 'MMM d, yyyy' },
       },
       // Uncomment to test a custom Collection node
       // {
       //   condition: ({ key }) => key === 'portrayedBy',
-      //   element: ({ nodeData, data, getStyles, children }) => {
+      //   component: ({ nodeData, data, getStyles, children }) => {
       //     const styles = getStyles('string', nodeData)
       //     return (
       //       <div style={{ border: '1px solid red', padding: '0.5em', borderRadius: '1em' }}>
       //         <p style={{ marginBottom: '0.5em' }}>
-      //           <em>Regular custom element</em>
+      //           <em>Regular custom component</em>
       //         </p>
       //         <ol style={{ ...styles, paddingLeft: '3em' }}>
       //           {data.map((val) => (
@@ -761,7 +761,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       //       </div>
       //     )
       //   },
-      //   wrapperElement: ({ children }) => (
+      //   wrapperComponent: ({ children }) => (
       //     <div
       //       style={{
       //         border: '1px solid blue',
@@ -771,13 +771,13 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       //         marginBottom: '1em',
       //       }}
       //     >
-      //       <em>Custom Wrapper element</em>: {children}
+      //       <em>Custom Wrapper component</em>: {children}
       //     </div>
       //   ),
       //   showOnEdit: true,
       //   showOnView: true,
       //   // showEditTools: false,
-      //   // hideKey: true,
+      //   // showKey: false,
       //   // showCollectionWrapper: false,
       // },
     ],
@@ -811,7 +811,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         <Text>
           This dossier demonstrates the{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#customising-keys" isExternal>
-            <span className="code">customKey</span>
+            <span className="code">keyComponent</span>
           </Link>{' '}
           property of{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
@@ -839,7 +839,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
             <Text>
               Codename keys (<span className="code">M</span>, <span className="code">Q</span>,{' '}
               <span className="code">dob</span>, <span className="code">bp</span>) get an inline
-              expansion via a shared <span className="code">customNodeProps</span> map.
+              expansion via a shared <span className="code">componentProps</span> map.
             </Text>
           </ListItem>
           <ListItem>
@@ -850,8 +850,8 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           <ListItem>
             <Text>
               URLs under <span className="code">Field Reports</span> use{' '}
-              <span className="code">customKey</span> <em>and</em>{' '}
-              <span className="code">element</span> in one definition — 🔗 in the key, clickable
+              <span className="code">keyComponent</span> <em>and</em>{' '}
+              <span className="code">component</span> in one definition — 🔗 in the key, clickable
               anchor in the value.
             </Text>
           </ListItem>
@@ -875,7 +875,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       // ordering this first is cleaner).
       {
         condition: ({ key }) => typeof key === 'string' && key.startsWith('REDACTED_'),
-        customKey: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => {
+        keyComponent: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => {
           const display = String(name)
           return (
             <span
@@ -908,7 +908,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       // collection-key case.
       {
         condition: ({ key }) => typeof key === 'string' && key.startsWith('_'),
-        customKey: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => (
+        keyComponent: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => (
           <span
             className="jer-key-text"
             style={{ ...styles, fontStyle: 'italic', opacity: 0.85 }}
@@ -924,22 +924,22 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         ),
       },
       // 3. Codename glossary — keys in the map get a subscript expansion.
-      // `customNodeProps` carries the map so a single component can serve
-      // many keys, and the same generic could be shared with an `element`
+      // `componentProps` carries the map so a single component can serve
+      // many keys, and the same generic could be shared with a `component`
       // for this definition if you wanted both.
       {
         condition: ({ key }) =>
           typeof key === 'string' && key in (codenameGlossary as Record<string, string>),
-        customNodeProps: { glossary: codenameGlossary },
-        customKey: ({
+        componentProps: { glossary: codenameGlossary },
+        keyComponent: ({
           name,
           canEditKey,
           styles,
           handleClick,
           setIsEditingKey,
-          customNodeProps,
+          componentProps,
         }) => {
-          const glossary = (customNodeProps as { glossary: Record<string, string> } | undefined)
+          const glossary = (componentProps as { glossary: Record<string, string> } | undefined)
             ?.glossary
           return (
             <span
@@ -975,7 +975,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       // can differ from the stored key (we strip the trailing "!").
       {
         condition: ({ key }) => typeof key === 'string' && key.endsWith('!'),
-        customKey: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => {
+        keyComponent: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => {
           const display = String(name).slice(0, -1)
           return (
             <span
@@ -993,7 +993,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           )
         },
       },
-      // 5. Field-report URLs — `customKey` AND `element` on the same node:
+      // 5. Field-report URLs — `keyComponent` AND `component` on the same node:
       // a link icon in the key slot, clickable anchor in the value slot.
       // Scoped via `path.includes('Field Reports')` so it doesn't fight
       // with normal string values elsewhere.
@@ -1002,7 +1002,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           typeof value === 'string' &&
           /^https?:\/\/.+\..+$/.test(value) &&
           path.includes('Field Reports'),
-        customKey: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => (
+        keyComponent: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => (
           <span
             className="jer-key-text"
             style={{ ...styles }}
@@ -1016,7 +1016,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
             <span className="jer-key-colon">:</span>
           </span>
         ),
-        element: ({ nodeData, getStyles, setIsEditing }) => {
+        component: ({ nodeData, getStyles, setIsEditing }) => {
           const url = nodeData.value as string
           const styles = getStyles('string', nodeData)
           return (
@@ -1093,7 +1093,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       // Must keep this one first as we override it by index in App.tsx
       {
         ...DateObjectDefinition,
-        customNodeProps: { showTime: false },
+        componentProps: { showTime: false },
       },
       ImageNodeDefinition,
       LinkCustomNodeDefinition,
@@ -1111,8 +1111,8 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       {
         ...MarkdownNodeDefinition,
         condition: ({ key }) => key === 'Intro',
-        hideKey: true,
-        customNodeProps: {
+        showKey: false,
+        componentProps: {
           components: {
             // @ts-expect-error Ignore _ var
             a: ({ _, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,

@@ -1,25 +1,25 @@
 import React from 'react'
-import { toPathString, StringEdit, type CustomNodeProps } from 'json-edit-react'
+import { toPathString, StringEdit, type CustomComponentProps } from 'json-edit-react'
 
 export interface BigIntProps {
   style?: React.CSSProperties
   descriptionStyle?: React.CSSProperties
 }
 
-export const BigIntComponent: React.FC<CustomNodeProps<BigIntProps>> = (props) => {
+export const BigIntComponent: React.FC<CustomComponentProps<BigIntProps>> = (props) => {
   const {
     setValue,
     isEditing,
     setIsEditing,
     getStyles,
     nodeData,
-    customNodeProps = {},
+    componentProps = {},
     value,
     handleEdit,
     ...rest
   } = props
   const { path } = nodeData
-  const { style = { color: '#006291', fontSize: '90%' } } = customNodeProps
+  const { style = { color: '#006291', fontSize: '90%' } } = componentProps
 
   const editDisplayValue = typeof value === 'bigint' ? String(value) : (value as string)
 

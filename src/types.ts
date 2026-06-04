@@ -488,14 +488,14 @@ export interface CustomKeyProps<T = Record<string, unknown>> {
   setIsEditingKey: () => void
   handleClick?: (e: React.MouseEvent) => void
   styles: React.CSSProperties
-  customNodeProps?: T
+  componentProps?: T
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
 }
 
-export interface CustomNodeProps<T = Record<string, unknown>>
+export interface CustomComponentProps<T = Record<string, unknown>>
   extends Omit<BaseNodeProps, 'onError'> {
   value: JsonData
-  customNodeProps?: T
+  componentProps?: T
   parentData: CollectionData | null
   setValue: (value: ValueData) => void
   handleEdit: (value?: unknown) => void
@@ -512,23 +512,37 @@ export interface CustomNodeProps<T = Record<string, unknown>>
   onError: (error: JsonEditorError, errorValue: JsonData | string) => void
 }
 
+// Props received by a `wrapperComponent` — the standard node machinery plus the
+// `wrapperProps` configured on the definition (delivered here, not as
+// `componentProps`).
+export interface CustomWrapperProps<U = Record<string, unknown>>
+  extends Omit<CustomComponentProps, 'componentProps'> {
+  wrapperProps?: U
+}
+
 export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<string, unknown>> {
   condition: FilterFunction
-  element?: React.FC<CustomNodeProps<T>>
-  customKey?: React.FC<CustomKeyProps<T>>
+  component?: React.FC<CustomComponentProps<T>>
+  keyComponent?: React.FC<CustomKeyProps<T>>
   name?: string // appears in "Type" selector
-  customNodeProps?: T
-  hideKey?: boolean
+  componentProps?: T // shared by `component` and `keyComponent`
+  showKey?: boolean // default true
   defaultValue?: unknown
-  showInTypesSelector?: boolean // default false
+  showInTypeSelector?: boolean // default false
+  // `showOnView`/`showOnEdit` default to rendering the custom node in view mode
+  // and the standard editor while editing — the common case. Set `showOnEdit`
+  // for nodes that need a custom editor too (e.g. a date picker).
   showOnEdit?: boolean // default false
   showOnView?: boolean // default true
   showEditTools?: boolean // default true
+  // Opt-in (default false) because it makes the editor build the original node's
+  // JSX up-front to pass as `originalNode`/`originalNodeKey` — wasted work for
+  // custom nodes that fully replace the rendering.
   passOriginalNode?: boolean // default false
 
   // For collection nodes only:
   showCollectionWrapper?: boolean // default true
-  wrapperElement?: React.FC<CustomNodeProps<U>>
+  wrapperComponent?: React.FC<CustomWrapperProps<U>>
   wrapperProps?: Record<string, unknown>
   renderCollectionAsValue?: boolean
 

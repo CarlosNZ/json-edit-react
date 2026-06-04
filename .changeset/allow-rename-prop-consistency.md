@@ -12,7 +12,7 @@ Renamed the `restrict*` props to `allow*` (inverting their polarity), plus a bat
 - `keySort` → `sortKeys`
 - `rootFontSize` → `baseFontSize`
 - `errorMessageTimeout` → `errorDisplayTime`
-- `stringTruncate` → `stringTruncateLength` (also the `customNodeProps` of `Hyperlink` / `EnhancedLink` in `@json-edit-react/components`)
+- `stringTruncate` → `stringTruncateLength` (also the `componentProps` of `Hyperlink` / `EnhancedLink` in `@json-edit-react/components`)
 - `showArrayIndices` → `showArrayIndexes`
 - `arrayIndexFromOne` (`boolean`) → `arrayIndexStart` (`number`): `arrayIndexFromOne={true}` becomes `arrayIndexStart={1}` (default `0`)
 
