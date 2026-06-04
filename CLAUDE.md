@@ -4,14 +4,15 @@ Guidance for Claude Code when working in this repository.
 
 ## What this is
 
-`json-edit-react` is a published React component library (`JsonEditor`) for inline editing/viewing of JSON / object data. The core package is intentionally **self-contained**: plain HTML/CSS, no UI framework dependencies, no runtime dependencies, and React as a peer dependency (`>=16.0.0`).
+`json-edit-react` is a published React component library (`JsonEditor`) for inline editing/viewing of JSON / object data. The core package is intentionally **self-contained**: plain HTML/CSS, no UI framework dependencies, no runtime dependencies, and React as a peer dependency (`>=18.0.0`).
 
-Two companion packages ship optional extras:
+Three companion packages ship optional extras:
 
 - `@json-edit-react/themes` — pre-built themes (peer-deps on core, no runtime deps)
 - `@json-edit-react/components` — pre-built custom node components (peer-deps on core, regular deps on lazy-loaded third-party libs like `react-datepicker`)
+- `@json-edit-react/utils` — utility hooks and helpers (peer-deps on core, default zero runtime deps). **Nascent** — scaffolded ahead of its first helper; see [packages/utils/CLAUDE.md](packages/utils/CLAUDE.md) and issues #307 / #285 / #319.
 
-All three publish independently to npm with their own versions.
+All publish independently to npm with their own versions.
 
 A high-level architectural overview is maintained at https://deepwiki.com/CarlosNZ/json-edit-react and the full user-facing API is documented in [README.md](README.md). Toolchain commands and release flow are in [package-management-guide.md](package-management-guide.md). v1 → v2 migration notes for consumers are in [migration-guide.md](migration-guide.md).
 
@@ -22,6 +23,7 @@ This is a **pnpm workspace** (root, plus `packages/*`). [demo/](demo/) and [cust
 - [src/](src/) — the core published library (entry: [src/index.ts](src/index.ts))
 - [packages/themes/](packages/themes/) — `@json-edit-react/themes`
 - [packages/components/](packages/components/) — `@json-edit-react/components`
+- [packages/utils/](packages/utils/) — `@json-edit-react/utils` (nascent; utility hooks + helpers)
 - [demo/](demo/) — Vite app deployed to https://carlosnz.github.io/json-edit-react. Independent yarn project. Doubles as the dev environment for all three packages via the `VITE_JRE_SOURCE` toggle.
 - [custom-component-library/](custom-component-library/) — separate Vite app showcasing how third parties consume `@json-edit-react/components`. Independent yarn project.
 - [test/](test/) — Jest tests for core.
@@ -95,7 +97,7 @@ The demo and CCL can each resolve `json-edit-react`, `@json-edit-react/themes`, 
 - Single ESM entry with `sideEffects: false` (Option B+). Sub-path exports are documented as the escape hatch if legacy CJS consumers report bundle bloat — see [packages/components/CLAUDE.md](packages/components/CLAUDE.md).
 
 ### React compatibility
-- Peer dep is `react >=16.0.0`. The ESLint config enforces `react/react-in-jsx-scope: error` — keep `import React from 'react'` (or the JSX namespace) available where needed. Don't rely on React 17+ JSX transform behaviour in library code.
+- Peer dep is `react >=18.0.0`. The ESLint config enforces `react/react-in-jsx-scope: error` — keep `import React from 'react'` (or the JSX namespace) available where needed rather than relying on the automatic JSX runtime.
 
 ### Dependencies
 - The **core** library has **zero** runtime deps. Don't add any without a strong reason — the "no external UI library" promise is part of the product. UI-rich features (CodeMirror, Chakra, AJV, Firebase) belong in the demo, not in `src/`.
