@@ -56,7 +56,7 @@ export interface EditingStateBundle {
 interface StartEditOptions {
   mode?: 'key' | 'value' | 'add'
   cancelOp?: () => void
-  // Imperative (handle-driven) edit — overrides `restrictEdit`. See
+  // Imperative (handle-driven) edit — overrides `allowEdit`. See
   // `EditingState.force`.
   force?: boolean
 }

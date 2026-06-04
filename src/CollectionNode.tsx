@@ -58,7 +58,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     searchText,
     indent,
     sort,
-    showArrayIndices,
+    showArrayIndexes,
     defaultValue,
     newKeyOptions,
     translate,
@@ -388,7 +388,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     revertPreviousValue()
   }
 
-  const showLabel = showArrayIndices || !isArray
+  const showLabel = showArrayIndexes || !isArray
   const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
   const showKey = showLabel && !hideKey && name !== undefined
@@ -442,7 +442,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
               parentData={data}
               nodeData={childNodeData}
               canDragOnto={canEdit}
-              showLabel={collectionType === 'object' ? true : showArrayIndices}
+              showLabel={collectionType === 'object' ? true : showArrayIndexes}
               customNodeData={childCustomNodeData}
             />
           )}

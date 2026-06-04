@@ -53,10 +53,34 @@ describe('JsonEditor — collections', () => {
     expect(screen.getByText('"apple"')).toBeInTheDocument()
     expect(screen.getByText('"banana"')).toBeInTheDocument()
     expect(screen.getByText('"cherry"')).toBeInTheDocument()
-    // showArrayIndices defaults true; arrayIndexFromOne defaults false
+    // showArrayIndexes defaults true; arrayIndexStart defaults 0
     expect(screen.getByText('0')).toBeInTheDocument()
     expect(screen.getByText('1')).toBeInTheDocument()
     expect(screen.getByText('2')).toBeInTheDocument()
+  })
+
+  test('arrayIndexStart offsets the displayed array index labels', () => {
+    const { rerender } = render(
+      <JsonEditor data={['apple', 'banana', 'cherry']} setData={noop} arrayIndexStart={1} />
+    )
+    // 1-based: labels are 1, 2, 3 (no "0")
+    expect(screen.getByText('1')).toBeInTheDocument()
+    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getByText('3')).toBeInTheDocument()
+    expect(screen.queryByText('0')).toBeNull()
+
+    // Accepts any number, not just 0 | 1 — labels become 7, 8, 9
+    rerender(<JsonEditor data={['apple', 'banana', 'cherry']} setData={noop} arrayIndexStart={7} />)
+    expect(screen.getByText('7')).toBeInTheDocument()
+    expect(screen.getByText('8')).toBeInTheDocument()
+    expect(screen.getByText('9')).toBeInTheDocument()
+  })
+
+  test('showArrayIndexes={false} hides array index labels', () => {
+    render(<JsonEditor data={['apple', 'banana']} setData={noop} showArrayIndexes={false} />)
+    expect(screen.getByText('"apple"')).toBeInTheDocument()
+    expect(screen.queryByText('0')).toBeNull()
+    expect(screen.queryByText('1')).toBeNull()
   })
 
   test('renders a nested object — deep leaves are reachable on first render', () => {
@@ -118,14 +142,14 @@ describe('JsonViewer — read-only contract', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
-  test('passing restrictEdit={false} past the type wall does NOT unlock editing', async () => {
+  test('passing allowEdit={true} past the type wall does NOT unlock editing', async () => {
     const user = userEvent.setup()
     render(
       <JsonViewer
         data={{ greeting: 'hello' }}
-        // @ts-expect-error — restrictEdit is omitted from JsonViewerProps;
+        // @ts-expect-error — allowEdit is omitted from JsonViewerProps;
         // a JS consumer could still pass it. JsonViewer must clobber it.
-        restrictEdit={false}
+        allowEdit={true}
       />
     )
 
@@ -135,7 +159,7 @@ describe('JsonViewer — read-only contract', () => {
   })
 
   test('the editorRef handle exposes collapse but not the editing actions', () => {
-    // A consumer's imperative startEdit supersedes restrictEdit by design, so
+    // A consumer's imperative startEdit supersedes allowEdit by design, so
     // a viewer must not expose it — otherwise the read-only contract could be
     // bypassed through the ref. JsonViewer's handle proxies only `collapse`;
     // the editing methods live on a private inner ref and are unreachable.
@@ -523,7 +547,7 @@ describe('JsonEditor — edit flow', () => {
   test('the editing node and all its draggable ancestors lose `draggable` while the input is open', async () => {
     const user = userEvent.setup()
     const { container } = render(
-      <JsonEditor data={{ outer: { inner: 'hello' } }} setData={noop} restrictDrag={false} />
+      <JsonEditor data={{ outer: { inner: 'hello' } }} setData={noop} allowDrag={true} />
     )
 
     const leaf = container.querySelector('.jer-value-component') as HTMLElement
@@ -540,6 +564,14 @@ describe('JsonEditor — edit flow', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
     expect(leaf).toHaveAttribute('draggable', 'true')
     expect(ancestor).toHaveAttribute('draggable', 'true')
+  })
+
+  test('allowDrag defaults to false — nodes are not draggable without it', () => {
+    const { container } = render(
+      <JsonEditor data={{ outer: { inner: 'hello' } }} setData={noop} />
+    )
+    const leaf = container.querySelector('.jer-value-component') as HTMLElement
+    expect(leaf).toHaveAttribute('draggable', 'false')
   })
 })
 
@@ -895,17 +927,10 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
 })
 
 describe('JsonEditor — restrictions and callbacks', () => {
-  test('restrictEdit hides the edit button and blocks dblClick', async () => {
+  test('allowEdit={false} hides the edit button and blocks dblClick', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    render(
-      <JsonEditor
-        data={{ x: 'hello' }}
-        setData={setData}
-        restrictEdit
-        showIconTooltips
-      />
-    )
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} allowEdit={false} showIconTooltips />)
 
     expect(screen.queryByTitle('Edit')).toBeNull()
     await user.dblClick(screen.getByText('"hello"'))
@@ -913,26 +938,14 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(setData).not.toHaveBeenCalled()
   })
 
-  test('restrictDelete hides the delete button', () => {
-    render(
-      <JsonEditor
-        data={{ x: 'hello' }}
-        setData={noop}
-        restrictDelete
-        showIconTooltips
-      />
-    )
+  test('allowDelete={false} hides the delete button', () => {
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} allowDelete={false} showIconTooltips />)
     expect(screen.queryByTitle('Delete')).toBeNull()
   })
 
-  test('restrictAdd hides the add button', () => {
+  test('allowAdd={false} hides the add button', () => {
     render(
-      <JsonEditor
-        data={{ existing: 'value' }}
-        setData={noop}
-        restrictAdd
-        showIconTooltips
-      />
+      <JsonEditor data={{ existing: 'value' }} setData={noop} allowAdd={false} showIconTooltips />
     )
     expect(screen.queryByTitle('Add')).toBeNull()
   })
@@ -1024,7 +1037,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
         data={{ x: 'hello' }}
         setData={noop}
         onUpdate={onUpdate}
-        restrictTypeSelection={['string', { enum: 'Color', values: ['red', 'green', 'blue'] }]}
+        allowTypeSelection={['string', { enum: 'Color', values: ['red', 'green', 'blue'] }]}
       />
     )
 
@@ -1278,14 +1291,14 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
   })
 
-  test('restrictEdit as a function selectively allows/blocks per node', async () => {
+  test('allowEdit as a function selectively allows/blocks per node', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     render(
       <JsonEditor
         data={{ readonly: 'cant', editable: 'can' }}
         setData={setData}
-        restrictEdit={({ key }) => key === 'readonly'}
+        allowEdit={({ key }) => key !== 'readonly'}
         showIconTooltips
       />
     )
@@ -1305,12 +1318,12 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.getByRole('textbox')).toBeInTheDocument()
   })
 
-  test('restrictDelete as a function selectively allows/blocks per node', () => {
+  test('allowDelete as a function selectively allows/blocks per node', () => {
     render(
       <JsonEditor
         data={{ keep: 'must', drop: 'can' }}
         setData={noop}
-        restrictDelete={({ key }) => key === 'keep'}
+        allowDelete={({ key }) => key !== 'keep'}
         showIconTooltips
       />
     )
@@ -1322,12 +1335,12 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(dropRow.querySelector('[title="Delete"]')).not.toBeNull()
   })
 
-  test('restrictAdd as a function selectively allows/blocks per collection', () => {
+  test('allowAdd as a function selectively allows/blocks per collection', () => {
     render(
       <JsonEditor
         data={{ closed: { a: 1 }, open: { b: 1 } }}
         setData={noop}
-        restrictAdd={({ key }) => key === 'closed'}
+        allowAdd={({ key }) => key !== 'closed'}
         showIconTooltips
       />
     )

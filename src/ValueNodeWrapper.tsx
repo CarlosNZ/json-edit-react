@@ -37,11 +37,11 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     allowClipboard,
     onCopy,
     canDragOnto,
-    restrictTypeSelection,
+    allowTypeSelection,
     searchFilter,
     searchText,
     showLabel,
-    stringTruncate,
+    stringTruncateLength,
     showStringQuotes,
     indent,
     translate,
@@ -168,17 +168,17 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   ]
 
   const allowedDataTypes = useMemo(() => {
-    if (typeof restrictTypeSelection === 'boolean') return restrictTypeSelection ? [] : allDataTypes
+    if (typeof allowTypeSelection === 'boolean') return allowTypeSelection ? allDataTypes : []
 
-    if (Array.isArray(restrictTypeSelection)) return restrictTypeSelection
+    if (Array.isArray(allowTypeSelection)) return allowTypeSelection
 
-    const result = restrictTypeSelection(nodeData)
+    const result = allowTypeSelection(nodeData)
 
-    if (typeof result === 'boolean') return result ? [] : allDataTypes
+    if (typeof result === 'boolean') return result ? allDataTypes : []
 
     return result
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeData, restrictTypeSelection])
+  }, [nodeData, allowTypeSelection])
 
   const [enumType, setEnumType] = useState<EnumDefinition | null>(
     matchEnumType(value, allowedDataTypes)
@@ -204,7 +204,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   useLayoutEffect(() => {
     if (!isEditing) return
     if (isVisible && canEdit) return
-    // A forced (imperative `editorRef.startEdit`) edit overrides `restrictEdit`,
+    // A forced (imperative `editorRef.startEdit`) edit overrides `allowEdit`,
     // so don't bounce off this node just because it's normally uneditable. A
     // search-filtered-out node (`!isVisible`) still redirects — it can't render.
     if (isVisible && getSnapshot().currentlyEditingElement?.force) return
@@ -401,7 +401,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     handleEdit,
     handleCancel,
     path,
-    stringTruncate,
+    stringTruncateLength,
     showStringQuotes,
     nodeData,
     enumType,

@@ -62,7 +62,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [Copy Function](#copy-function)
   - [JSON Schema Validation](#json-schema-validation)
 - [Advanced Editing Control](#advanced-editing-control)
-  - [`restrictEdit`, `restrictDelete` \& `restrictAdd`](#restrictedit-restrictdelete--restrictadd)
+  - [`allowEdit`, `allowDelete` \& `allowAdd`](#allowedit-allowdelete--allowadd)
   - [`collapse`](#collapse)
   - [Data Type Restrictions](#data-type-restrictions)
   - [New Key Restrictions \& Default Values](#new-key-restrictions--default-values)
@@ -196,13 +196,13 @@ This is a reference list of *all* possible props, divided into related sections.
 
 | Prop                    | Type                                      | Default | Description                                                                                                                                                             |
 | ----------------------- | ----------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `restrictEdit`          | `boolean\|FilterFunction`                 | `false` | If `true`, no editing at all is permitted. A callback function can be provided — see [Advanced Editing Control](#advanced-editing-control)                              |
-| `restrictDelete`        | `boolean\|FilterFunction`                 | `false` | As with `restrictEdit` but for deletion                                                                                                                                 |
-| `restrictAdd`           | `boolean\|FilterFunction`                 | `false` | As with `restrictEdit` but for adding new properties                                                                                                                    |
-| `restrictTypeSelection` | `boolean\|DataType[]\|TypeFilterFunction` | `false` | For restricting the data types the user can select, including [Custom Node](#custom-nodes) types, and **Enums** — see [Data Type Restrictions](#data-type-restrictions) |
+| `allowEdit`             | `boolean\|FilterFunction`                 | `true`  | If `false`, no editing at all is permitted. A callback function can be provided (return `true` to permit a given node) — see [Advanced Editing Control](#advanced-editing-control) |
+| `allowDelete`           | `boolean\|FilterFunction`                 | `true`  | As with `allowEdit` but for deletion                                                                                                                                    |
+| `allowAdd`              | `boolean\|FilterFunction`                 | `true`  | As with `allowEdit` but for adding new properties                                                                                                                       |
+| `allowTypeSelection`    | `boolean\|DataType[]\|TypeFilterFunction` | `true`  | Controls which data types the user can select, including [Custom Node](#custom-nodes) types, and **Enums** — see [Data Type Restrictions](#data-type-restrictions)      |
 | `newKeyOptions`         | `string[] \| NewKeyOptionsFunction`       | none    | New keys can be restricted to certain values — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                       |
 | `defaultValue`          | `any\|DefaultValueFilterFunction`         | `null`  | Value that new properties are initialised with — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                     |
-| `restrictDrag`          | `boolean\|FilterFunction`                 | `true`  | Set to `false` to enable drag and drop functionality — see [Drag-n-drop](#drag-n-drop)                                                                                  |
+| `allowDrag`             | `boolean\|FilterFunction`                 | `false` | Set to `true` to enable drag and drop functionality — see [Drag-n-drop](#drag-n-drop)                                                                                   |
 
 </details>
 
@@ -222,17 +222,17 @@ This is a reference list of *all* possible props, divided into related sections.
 | `collapseAnimationTime` | `number`                                  | `300`                | Time (in milliseconds) for the transition animation when collapsing collection nodes.                                                                                                                                                                                                                                                                                                                     |
 | `collapseClickZones`    | `Array<"left" \| "header" \| "property">` | `["left", "header"]` | Aside from the <span style="font-size: 140%">`⌄`</span> icon, you can specify other regions of the UI to be clickable for collapsing/opening a collection.                                                                                                                                                                                                                                                |
 | `rootName`              | `string`                                  | `"data"`             | A name to display in the editor as the root of the data object.                                                                                                                                                                                                                                                                                                                                           |
-| `showArrayIndices`      | `boolean`                                 | `true`               | Whether or not to display the index (as a property key) for array elements.                                                                                                                                                                                                                                                                                                                               |
-| `arrayIndexFromOne`     | `boolean`                                 | `false`              | When displaying array indices, first item will be labelled "1" (as opposed to "0").                                                                                                                                                                                                                                                                                                                       |
+| `showArrayIndexes`      | `boolean`                                 | `true`               | Whether or not to display the index (as a property key) for array elements.                                                                                                                                                                                                                                                                                                                               |
+| `arrayIndexStart`       | `0 \| 1`                                  | `0`                  | The number the *first* array element's index label starts from. `0` (default) gives `0, 1, 2…`; `1` gives `1, 2, 3…`.                                                                                                                                                                                                                                                                                      |
 | `showStringQuotes`      | `boolean`                                 | `true`               | Whether or not to display string values in "quotes".                                                                                                                                                                                                                                                                                                                                                      |
 | `showCollectionCount`   | `boolean\|"when-closed"`                  | `true`               | Whether or not to display the number of items in each collection (object or array).                                                                                                                                                                                                                                                                                                                       |
-| `stringTruncate`        | `number`                                  | `250`                | String values longer than this many characters will be displayed truncated (with `...`). The full string will always be visible when editing.                                                                                                                                                                                                                                                             |
-| `keySort`               | `boolean\|CompareFunction`                | `false`              | If `true`, object keys will be ordered (using default JS `.sort()`). A [compare function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) can also be provided to define sorting behaviour, except the input type should be a tuple of the key and the value of a node i.e. `(a: [string \| number, ValueData], b: [string \| number, ValueData]) => number` |
+| `stringTruncateLength`  | `number`                                  | `250`                | String values longer than this many characters will be displayed truncated (with `...`). The full string will always be visible when editing.                                                                                                                                                                                                                                                             |
+| `sortKeys`              | `boolean\|CompareFunction`                | `false`              | If `true`, object keys will be ordered (using default JS `.sort()`). A [compare function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) can also be provided to define sorting behaviour, except the input type should be a tuple of the key and the value of a node i.e. `(a: [string \| number, ValueData], b: [string \| number, ValueData]) => number` |
 | `minWidth`              | `number\|string` (CSS value)              | `250`                | Minimum width for the editor container.                                                                                                                                                                                                                                                                                                                                                                   |
 | `maxWidth`              | `number\|string` (CSS value)              | `600`                | Maximum width for the editor container.                                                                                                                                                                                                                                                                                                                                                                   |
-| `rootFontSize`          | `number\|string` (CSS value)              | `16px`               | The "base" font size from which all other sizings are derived (in `em`s). By changing this you will scale the entire component.                                                                                                                                                                                                                                                                           |
+| `baseFontSize`          | `number\|string` (CSS value)              | `16px`               | The "base" font size from which all other sizings are derived (in `em`s). By changing this you will scale the entire component.                                                                                                                                                                                                                                                                           |
 | `insertAtTop`           | `boolean\| "object \| "array"`            | `false`              | If `true`, inserts new values at the *top* rather than bottom. Can set the behaviour just for arrays or objects by setting to `"object"` or `"array"` respectively.                                                                                                                                                                                                                                       |  |
-| `errorMessageTimeout`   | `number`                                  | `2500`               | Time (in milliseconds) to display the error message in the UI.                                                                                                                                                                                                                                                                                                                                            |  |
+| `errorDisplayTime`      | `number`                                  | `2500`               | Time (in milliseconds) to display the error message in the UI.                                                                                                                                                                                                                                                                                                                                            |  |
 | `showErrorMessages`     | `boolean `                                | `true`               | Whether or not the component should display its own error messages (you'd probably only want to disable this if you provided your own [`onError` function](#onerror-function))                                                                                                                                                                                                                            |
 </details>
 <details>
@@ -315,9 +315,9 @@ import { JsonViewer } from 'json-edit-react'
 <JsonViewer data={data} theme={someTheme} />
 ```
 
-`JsonViewer` is a thin wrapper over `JsonEditor` that locks all edit, add, delete and drag operations off. It accepts the same display, theming, keyboard, search, collapse, localisation and custom-node props, but drops `setData`, the update callbacks (`onUpdate` / `onChange`), and the edit-restriction props (`restrictEdit` / `restrictAdd` / `restrictDelete` / `restrictDrag` / `restrictTypeSelection`) — none of which are meaningful in a read-only context. Its `editorRef` handle (`JsonViewerHandle`) is collapse-only.
+`JsonViewer` is a thin wrapper over `JsonEditor` that locks all edit, add, delete and drag operations off. It accepts the same display, theming, keyboard, search, collapse, localisation and custom-node props, but drops `setData`, the update callbacks (`onUpdate` / `onChange`), and the edit-permission props (`allowEdit` / `allowAdd` / `allowDelete` / `allowDrag` / `allowTypeSelection`) — none of which are meaningful in a read-only context. Its `editorRef` handle (`JsonViewerHandle`) is collapse-only.
 
-If you instead need an editor that *sometimes* locks editing (e.g. based on user permissions), keep using `<JsonEditor>` and toggle the relevant `restrict*` props dynamically — `restrictEdit={!canEdit}` etc.
+If you instead need an editor that *sometimes* locks editing (e.g. based on user permissions), keep using `<JsonEditor>` and toggle the relevant `allow*` props dynamically — `allowEdit={canEdit}` etc.
 
 ### Typed data
 
@@ -344,7 +344,7 @@ const [user, setUser] = useState<User>(initialUser)
 The generic flows through `data`, `setData`, the `onUpdate` / `onChange` / `onError` callbacks (root data slots only — per-node `value` stays `unknown`), and `NodeData.fullData` inside `FilterFunction`s. Defaults to `JsonData` (≈ `unknown`) so untyped consumers don't need to change anything.
 
 > [!NOTE]
-> `T` describes the data you *provide*. It is an input contract, not a runtime invariant — if the user can freely restructure the JSON, post-edit values may not conform to `T`. Pair with `restrictAdd` / `restrictDelete` / `restrictTypeSelection` to lock the shape, or validate inside `onUpdate` if you depend on it.
+> `T` describes the data you *provide*. It is an input contract, not a runtime invariant — if the user can freely restructure the JSON, post-edit values may not conform to `T`. Pair with `allowAdd` / `allowDelete` / `allowTypeSelection` to lock the shape, or validate inside `onUpdate` if you depend on it.
 
 ## Update Functions
 
@@ -514,12 +514,12 @@ As well as configuring which nodes of can be **edited**, **deleted**, or **added
 
 As outlined in the [props list](#restricting-editing) above, most of these props can take either:
 
-- a `boolean` (in which case `true` means that edit mode is fully restricted, `false` means no restrictions)
+- a `boolean` (in which case `true` means the operation is fully permitted, `false` means it's fully disabled)
 - a `FilterFunction` callback, which allows edit controls to be defined dynamically
 
-The callback for each type of restriction is slightly different, so let's look at each in turn:
+The callback for each type of permission is slightly different, so let's look at each in turn:
 
-### `restrictEdit`, `restrictDelete` & `restrictAdd`
+### `allowEdit`, `allowDelete` & `allowAdd`
 
 > [!TIP]
 > If you want to display data with no editing at all, use the [`JsonViewer`](#viewer-mode) component instead of `JsonEditor` — it disables every edit affordance without needing to combine these props.
@@ -542,10 +542,10 @@ These each take a `boolean` value, or a `FilterFunction` callback, with the foll
 }
 ```
 
-The callback must return a `boolean` value -- if `true` that node will **not** be editable.
+The callback must return a `boolean` value -- if `false` that node will **not** be editable (return `true` to permit it).
 
 > [!TIP]
-> There is no specific restriction function for editing object **property names**, but the node must return `false` for *both* `restrictEdit` and `restrictDelete` (and `restrictAdd` for collections), since changing a property name is equivalent to deleting a property and adding a new one.
+> There is no specific permission function for editing object **property names**, but the node must return `true` for *both* `allowEdit` and `allowDelete` (and `allowAdd` for collections), since changing a property name is equivalent to deleting a property and adding a new one.
 
 <details>
 <summary>
@@ -557,25 +557,25 @@ The callback must return a `boolean` value -- if `true` that node will **not** b
 
 ```js
 // in <JsonEditor /> props
-restrictEdit = { ({ level }) => level === 0 }
+allowEdit = { ({ level }) => level !== 0 }
 ```
 
 - *Don't let the `id` field be edited:*
 
 ```js
-restrictEdit = { ({ key }) => key === "id" }
-// You'd probably want to include this in `restrictDelete` as well
+allowEdit = { ({ key }) => key !== "id" }
+// You'd probably want to include this in `allowDelete` as well
 ```
 
 - *Only individual properties can be deleted, not objects or arrays:*
 
 ```js
-restrictDelete = { ({ size }) => size !== null }
+allowDelete = { ({ size }) => size === null }
 ```
 
 - *The only collections that can have new items added are the "address" object and the "users" array:*
 ```js
-restrictAdd = { ({ key }) => key !== "address" && key !== "users" }
+allowAdd = { ({ key }) => key === "address" || key === "users" }
 // "Adding" is irrelevant for non-collection nodes
 ```
 </details>
@@ -586,7 +586,7 @@ The `collapse` prop can take a `boolean` value, in which case the data is initia
 
 ### Data Type Restrictions
 
-The `restrictDataType` prop can take either a `boolean` (`true` means data type can **not** be changed at all) or a (slightly different) `FilterFunction` as above, or an **array** of available data types. The core types are:
+The `allowTypeSelection` prop can take either a `boolean` (`false` means the data type can **not** be changed at all, `true` means any type is allowed) or a (slightly different) `FilterFunction` as above, or an **array** of available data types. The core types are:
 
 - `"string"`
 - `"number"`
@@ -600,7 +600,7 @@ The data type array can also specify [Custom Node](#custom-nodes) types (as defi
 Similarly, the `FilterFunction` for data types, while it takes the same input shape, can return either a simple `boolean` *or* an `array` of available types.
 
 > [!NOTE]
-> If `restrictTypeSelection` returns less than two available types for a given node, the "Type Selector" drop-down won't appear for that node.
+> If `allowTypeSelection` returns less than two available types for a given node, the "Type Selector" drop-down won't appear for that node.
 
 <details>
 <summary>
@@ -608,16 +608,16 @@ Similarly, the `FilterFunction` for data types, while it takes the same input sh
 #### Type restriction example
 </summary>
 
-This `restrictTypeSelection` function defines the following restrictions:
+This `allowTypeSelection` function defines the following restrictions:
   - `string` values can only be changed to strings or objects (for nesting)
   - `null` is not allowed anywhere
-  - `boolean` values must remain boolean
+  - `boolean` values must remain boolean (returning `false` means no type can be selected)
   - data nested below the "user" field can be any simple property (i.e. not objects or arrays), and doesn't have to follow the above rules (except no "null")
 
 ```js
-restrictTypeSelection = { ({ path, value }) => {
+allowTypeSelection = { ({ path, value }) => {
   if (path.includes('user')) return ['string', 'number', 'boolean']
-  if (typeof value === 'boolean') return false
+  if (typeof value === 'boolean') return false // locked — no type change
   if (typeof value === 'string') return ['string', 'object']
   return ['string', 'number', 'boolean', 'array', 'object'] // no "null"
 } }
@@ -647,7 +647,7 @@ To define an Enum, just add an object with the following structure to your "Type
 
 What is `matchPriority`? Well, when the data object is initialised, we have no way to know whether a given string value is "just a string" or is supposed to be one of the values of an Enum type (and we don't want to assume that if it's listed somewhere in an Enum `values` list that it definitely *should* be restricted to that type). So, if `matchPriority` is not defined, then that Enum type will *never* be initially assigned to a potentially matching Enum value when editing. If `matchPriority` is defined, then the highest priority Enum that has the value in its `values` list will be assigned (so if multiple Enums have overlapping `values`, the one with the highest priority will be applied.).
 
-If the type of a given node is going to be *restricted* to a particular Enum type (i.e. the `restrictEditType` prop returns *only* one value), then a `matchPriority` is essential, otherwise it wouldn't be possible to switch a `string` to that type.
+If the type of a given node is going to be *restricted* to a particular Enum type (i.e. the `allowTypeSelection` prop returns *only* one value), then a `matchPriority` is essential, otherwise it wouldn't be possible to switch a `string` to that type.
 
 You can see examples of this in the [Star Wars data set](https://carlosnz.github.io/json-edit-react/?data=starWars) of the Demo — the `eye_color`, `skin_color`, `hair_color` and `films` values are all restricted to a single, matching Enum type.
 
@@ -663,7 +663,7 @@ You can see examples of this in the [Star Wars data set](https://carlosnz.github
 - *All nodes can be any of the standard data types plus a couple of custom Enum types:*
 
 ```js
-restrictTypeSelection = [
+allowTypeSelection = [
   'string',
   'number',
   'boolean',
@@ -686,12 +686,12 @@ restrictTypeSelection = [
 
 > **💡 TIP**
 > 
-> For convenience, the core set of data types is exported from the package as `standardDataTypes`, so the previous example could simply have been: `restrictTypeSelection = [...standardDataTypes, ...enumDefinitionsAsAbove]`
+> For convenience, the core set of data types is exported from the package as `standardDataTypes`, so the previous example could simply have been: `allowTypeSelection = [...standardDataTypes, ...enumDefinitionsAsAbove]`
 
 - *Types cannot be changed on any node, and there is an Enum for "Eye colour" if the key matches:*
 
 ```js
-restrictTypeSelection = ({ key }) => {
+allowTypeSelection = ({ key }) => {
   if (key === 'eye_color')
     return [
       // Only one type returned, so can't be changed to another type
@@ -702,7 +702,7 @@ restrictTypeSelection = ({ key }) => {
       },
     ]
 
-  return true // No other node types can be changed either
+  return false // No other node types can be changed either
 }
 ```
 </details>
@@ -756,7 +756,7 @@ defaultValue = (_, newKey) => { // Ignoring normal first parameter in this case
 
 ### Drag-n-drop
 
-The `restrictDrag` property controls which items (if any) can be dragged into new positions. By default, this is *off*, so you must set `restrictDrag = false` to enable this functionality. Like the Edit restrictions above, this property can also take a Filter function for fine-grained control. There are a couple of additional considerations, though:
+The `allowDrag` property controls which items (if any) can be dragged into new positions. By default, this is *off*, so you must set `allowDrag = true` to enable this functionality. Like the Edit permissions above, this property can also take a Filter function for fine-grained control. There are a couple of additional considerations, though:
 
 - JavaScript does *not* guarantee object property order, so enabling this feature may yield unpredictable results. See [here](https://dev.to/frehner/the-order-of-js-object-keys-458d) for an explanation of how key ordering is handled.
 > [!WARNING]
@@ -764,13 +764,13 @@ The `restrictDrag` property controls which items (if any) can be dragged into ne
 > 1. you're sure object keys will always be simple strings (i.e. not digits or non-standard characters)
 > 2. you're saving the data in a serialisation format that preserves key order. For example, storing in a Postgres database using the `jsonb` (binary JSON) type, key order is meaningless, so the next time the object is loaded, the keys will be listed alphabetically.
 
-- The `restrictDrag` filter applies to the *source* element (i.e. the node being dragged), not the destination.
-- To be draggable, the node must *also* be delete-able (via the `restrictDelete` prop), as dragging a node to a new destination is essentially just deleting it and adding it back elsewhere.
+- The `allowDrag` filter applies to the *source* element (i.e. the node being dragged), not the destination.
+- To be draggable, the node must *also* be delete-able (via the `allowDelete` prop), as dragging a node to a new destination is essentially just deleting it and adding it back elsewhere.
 - Similarly, the destination collection must be editable in order to drop it in there. This ensures that if you've gone to the trouble of configuring restrictive editing constraints using Filter functions, you can be confident that they can't be circumvented via drag-n-drop.
 
 ## Full object editing
 
-The user can edit the entire JSON object (or a sub-node) as raw text (provided you haven't restricted it using a [`restrictEdit` function](#filter-functions)). By default, we just display a native HTML [textarea](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea) element for plain-text editing. However, you can offer a more sophisticated text/code editor by passing the component into the `TextEditor` prop. Your component must provide the following props for json-edit-react to use:
+The user can edit the entire JSON object (or a sub-node) as raw text (provided you haven't disabled it using an [`allowEdit` function](#filter-functions)). By default, we just display a native HTML [textarea](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea) element for plain-text editing. However, you can offer a more sophisticated text/code editor by passing the component into the `TextEditor` prop. Your component must provide the following props for json-edit-react to use:
 
 - `value: string` — the current text
 - `onChange: (value: string) => void`  — should be called on every keystroke to update `value`
@@ -950,7 +950,7 @@ iconEdit: [ "iconAdjust", "anotherFragment", { marginLeft: "1em" } ]
 
 > [!NOTE]
 > ### About sizing and scaling
-> Internally, all sizing and spacing is done in `em`s, never `px` (aside from the [`rootFontSize`](#look-and-feel--ui), which sets the "base" size). This makes scaling a lot easier — just change the `rootFontSize` prop (or set `fontSize` on the main container via targeting the class, or tweaking the [theme](#themes--styles)), and watch the *whole* component scale accordingly.
+> Internally, all sizing and spacing is done in `em`s, never `px` (aside from the [`baseFontSize`](#look-and-feel--ui), which sets the "base" size). This makes scaling a lot easier — just change the `baseFontSize` prop (or set `fontSize` on the main container via targeting the class, or tweaking the [theme](#themes--styles)), and watch the *whole* component scale accordingly.
 
 
 
@@ -1069,7 +1069,7 @@ If you want a single component to render the **entire row** (both key and value 
 A `customKey` component is rendered in place of the default property label, in **view mode**. It receives the following props ([`CustomKeyProps`](https://github.com/CarlosNZ/json-edit-react/blob/main/src/types.ts)):
 
 - `nodeData` — the full [NodeData](#filter-functions) for this node
-- `name` — the key as **displayed** (always `string`; for array indices already offset for `arrayIndexFromOne`, and for empty-string keys already substituted with the `emptyStringKey` placeholder when one is configured). For the raw key, use `nodeData.key`.
+- `name` — the key as **displayed** (always `string`; for array indices already offset by `arrayIndexStart`, and for empty-string keys already substituted with the `emptyStringKey` placeholder when one is configured). For the raw key, use `nodeData.key`.
 - `path` — the full path to this node
 - `canEditKey` — whether key editing is permitted for this node
 - `setIsEditingKey()` — call to enter key-edit mode (replaces your custom render with the standard input). No-ops if `canEditKey` is false.
@@ -1323,7 +1323,7 @@ interface JsonEditorHandle {
 interface StartEditOptions {
   // The target node to edit.
   path: CollectionKey[]
-  // Bypass `restrictEdit` (default false). Skips ONLY the filter — your
+  // Bypass `allowEdit` (default false). Skips ONLY the filter — your
   // `onUpdate` still runs (and may reject) at `confirm()`.
   overrideRestrictions?: boolean
 }
@@ -1342,11 +1342,11 @@ A few behaviours worth noting:
 
 - **`startEdit` is synchronous** and returns `true` if it opened the session, or
   the reason it didn't: `'PATH_NOT_FOUND'` (the path doesn't exist in the current
-  data) or `'RESTRICTED'` (`restrictEdit` blocks it) — so you can give your own
+  data) or `'RESTRICTED'` (`allowEdit` blocks it) — so you can give your own
   feedback (e.g. a toast) on a refused command. The target is never silently
   redirected to a different node.
 - Pass **`overrideRestrictions: true`** to bypass the filter. A common pattern is
-  to lock the whole tree with `restrictEdit={true}` and imperatively enable editing
+  to lock the whole tree with `allowEdit={false}` and imperatively enable editing
   on one node through your own UI. It skips **only** the filter: your `onUpdate`
   still runs at `confirm()` and may reject or transform the value.
 - **`confirm()`** commits the open session — it triggers the same path as clicking

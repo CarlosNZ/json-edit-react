@@ -5,7 +5,6 @@ import {
   Theme,
   FilterFunction,
   JsonData,
-  OnErrorFunction,
   defaultTheme,
   splitPropertyString,
   extract,
@@ -195,34 +194,37 @@ function App() {
     showStringQuotes,
     allowCopy,
     defaultNewValue,
-    allowEdit,
-    allowDelete,
-    allowAdd,
+    allowEdit: allowEditEnabled,
+    allowDelete: allowDeleteEnabled,
+    allowAdd: allowAddEnabled,
     customTextEditor,
   } = state
 
-  const restrictEdit: FilterFunction | boolean = (() => {
-    const customRestrictor = dataDefinition?.restrictEdit
-    if (typeof customRestrictor === 'function')
-      return (input) => !allowEdit || customRestrictor(input)
-    if (customRestrictor !== undefined) return customRestrictor
-    return !allowEdit
+  // Compose the global toggle (the "Allow editing" checkbox) with any per-node
+  // filter the data set defines: a node is permitted only if the toggle is on
+  // AND the data set's own filter permits it.
+  const allowEdit: FilterFunction | boolean = (() => {
+    const customAllow = dataDefinition?.allowEdit
+    if (typeof customAllow === 'function')
+      return (input) => allowEditEnabled && customAllow(input)
+    if (customAllow !== undefined) return customAllow
+    return allowEditEnabled
   })()
 
-  const restrictDelete: FilterFunction | boolean = (() => {
-    const customRestrictor = dataDefinition?.restrictDelete
-    if (typeof customRestrictor === 'function')
-      return (input) => !allowDelete || customRestrictor(input)
-    if (customRestrictor !== undefined) return customRestrictor
-    return !allowDelete
+  const allowDelete: FilterFunction | boolean = (() => {
+    const customAllow = dataDefinition?.allowDelete
+    if (typeof customAllow === 'function')
+      return (input) => allowDeleteEnabled && customAllow(input)
+    if (customAllow !== undefined) return customAllow
+    return allowDeleteEnabled
   })()
 
-  const restrictAdd: FilterFunction | boolean = (() => {
-    const customRestrictor = dataDefinition?.restrictAdd
-    if (typeof customRestrictor === 'function')
-      return (input) => !allowAdd || customRestrictor(input)
-    if (customRestrictor !== undefined) return customRestrictor
-    return !allowAdd
+  const allowAdd: FilterFunction | boolean = (() => {
+    const customAllow = dataDefinition?.allowAdd
+    if (typeof customAllow === 'function')
+      return (input) => allowAddEnabled && customAllow(input)
+    if (customAllow !== undefined) return customAllow
+    return allowAddEnabled
   })()
 
   // The "Show External Control" toggle is disabled on the custom-nodes data set,
@@ -520,10 +522,10 @@ function App() {
                   onError={
                     dataDefinition.onError
                       ? (errorData) => {
-                          const error = (dataDefinition.onError as OnErrorFunction)(errorData)
+                          const message = dataDefinition.onError!(errorData)
                           toast({
                             title: 'ERROR 😢',
-                            description: error as string,
+                            description: message,
                             status: 'error',
                             duration: 5000,
                             isClosable: true,
@@ -539,12 +541,12 @@ function App() {
                   }
                   allowClipboard={allowCopy}
                   onCopy={onCopy}
-                  restrictEdit={restrictEdit}
-                  // restrictEdit={(nodeData) => !(typeof nodeData.value === 'string')}
-                  restrictDelete={restrictDelete}
-                  restrictAdd={restrictAdd}
-                  restrictTypeSelection={dataDefinition?.restrictTypeSelection}
-                  // restrictTypeSelection={[
+                  allowEdit={allowEdit}
+                  // allowEdit={(nodeData) => typeof nodeData.value === 'string'}
+                  allowDelete={allowDelete}
+                  allowAdd={allowAdd}
+                  allowTypeSelection={dataDefinition?.allowTypeSelection}
+                  // allowTypeSelection={[
                   //   'string',
                   //   'number',
                   //   'boolean',
@@ -561,11 +563,11 @@ function App() {
                   //     matchPriority: 2,
                   //   },
                   // ]}
-                  restrictDrag={false}
+                  allowDrag={true}
                   searchFilter={dataDefinition?.searchFilter}
                   searchText={searchText}
-                  keySort={sortKeys}
-                  // keySort={
+                  sortKeys={sortKeys}
+                  // sortKeys={
                   //   sortKeys
                   //     ? (a, b) => {
                   //         const nameRev1 = String(a[0]).length
@@ -582,13 +584,13 @@ function App() {
                   // }
                   defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
                   newKeyOptions={dataDefinition?.newKeyOptions}
-                  showArrayIndices={showIndices}
-                  arrayIndexFromOne={arraysFromOne}
+                  showArrayIndexes={showIndices}
+                  arrayIndexStart={arraysFromOne ? 1 : 0}
                   showStringQuotes={showStringQuotes}
                   minWidth={'min(500px, 95vw)'}
                   maxWidth="min(670px, 90vw)"
                   className="block-shadow"
-                  stringTruncate={90}
+                  stringTruncateLength={90}
                   customNodeDefinitions={customNodeDefinitions}
                   // customNodeDefinitions={[
                   //   {
@@ -645,7 +647,7 @@ function App() {
                   //   booleanToggle: 'r',
                   // }}
                   // insertAtBeginning="object"
-                  // rootFontSize={20}
+                  // baseFontSize={20}
                   TextEditor={
                     customTextEditor
                       ? (props) => (
@@ -872,8 +874,8 @@ function App() {
                   <Flex w="100%" justify="flex-start">
                     <Checkbox
                       id="allowEditCheckbox"
-                      isChecked={allowEdit}
-                      disabled={dataDefinition.restrictEdit !== undefined}
+                      isChecked={allowEditEnabled}
+                      disabled={dataDefinition.allowEdit !== undefined}
                       onChange={() => toggleState('allowEdit')}
                       w="50%"
                     >
@@ -881,8 +883,8 @@ function App() {
                     </Checkbox>
                     <Checkbox
                       id="allowDeleteCheckbox"
-                      isChecked={allowDelete}
-                      disabled={dataDefinition.restrictDelete !== undefined}
+                      isChecked={allowDeleteEnabled}
+                      disabled={dataDefinition.allowDelete !== undefined}
                       onChange={() => toggleState('allowDelete')}
                       w="50%"
                     >
@@ -892,8 +894,8 @@ function App() {
                   <Flex w="100%" justify="flex-start">
                     <Checkbox
                       id="allowAddCheckbox"
-                      isChecked={allowAdd}
-                      disabled={dataDefinition.restrictAdd !== undefined}
+                      isChecked={allowAddEnabled}
+                      disabled={dataDefinition.allowAdd !== undefined}
                       onChange={() => toggleState('allowAdd')}
                       w="50%"
                     >
