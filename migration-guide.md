@@ -160,7 +160,7 @@ The generic flows to root-level slots only: `data`, `setData`, the `newData` / `
 > [!NOTE]
 > Same mental model as `useState<T>`: `T` describes the data you provided, not a runtime invariant. If structural edits are unrestricted, post-edit values may not conform to `T` — pair with `allowAdd` / `allowDelete` / `allowTypeSelection`, or validate in `onUpdate`, if you depend on the shape.
 
-`CustomNodeDefinition` is intentionally **not** generic on the data type — its two existing generics (for `componentProps` and wrapper props) are unchanged, and custom-node `condition` / `component` continue to receive `NodeData<JsonData>`.
+`CustomNodeDefinition` is intentionally **not** generic on the data type. `customNodeDefinitions` is a *single* array whose entries each match (via `condition`) differently-shaped nodes anywhere in the tree — so one document-level `T` can't describe them, and making it generic would render mixed-shape definition arrays unusable. Its two existing generics (for `componentProps` and wrapper props) are unchanged, and custom-node `condition` / `component` continue to receive `NodeData<JsonData>`.
 
 ---
 
