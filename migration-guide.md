@@ -21,6 +21,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`; return shape unified | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see §9 |
 | Callback payloads for `onUpdate` / `onChange` are now flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`); `JerError` → `JsonEditorError` | Update field names in `onUpdate` / `onChange`; rename the error type — see §9 |
 | `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JsonEditorError` | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see §10 |
+| `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps` | Rename the fields in your definitions and the props type in your components — see §13 |
 
 ---
 
@@ -107,7 +108,7 @@ Usage is unchanged:
 
 | Component | Use case |
 |---|---|
-| `LinkCustomComponent` | URL strings → clickable links (functionally a superset of the v1 version, with configurable `customNodeProps`) |
+| `LinkCustomComponent` | URL strings → clickable links (functionally a superset of the v1 version, with configurable `componentProps`) |
 | `EnhancedLinkCustomComponent` | Object-shaped data `{ text, url }` → clickable string |
 | `DateTimePicker` | ISO date strings, edited via `react-datepicker` |
 | `DateObject` | JavaScript `Date` objects |
@@ -159,7 +160,7 @@ The generic flows to root-level slots only: `data`, `setData`, the `newData` / `
 > [!NOTE]
 > Same mental model as `useState<T>`: `T` describes the data you provided, not a runtime invariant. If structural edits are unrestricted, post-edit values may not conform to `T` — pair with `allowAdd` / `allowDelete` / `allowTypeSelection`, or validate in `onUpdate`, if you depend on the shape.
 
-`CustomNodeDefinition` is intentionally **not** generic on the data type — its two existing generics (for `customNodeProps` and wrapper props) are unchanged, and custom-node `condition` / `element` continue to receive `NodeData<JsonData>`.
+`CustomNodeDefinition` is intentionally **not** generic on the data type. `customNodeDefinitions` is a *single* array whose entries each match (via `condition`) differently-shaped nodes anywhere in the tree — so one document-level `T` can't describe them, and making it generic would render mixed-shape definition arrays unusable. Its two existing generics (for `componentProps` and wrapper props) are unchanged, and custom-node `condition` / `component` continue to receive `NodeData<JsonData>`.
 
 ---
 
@@ -533,7 +534,50 @@ A handful of props were renamed. These are **pure renames** (no behaviour change
 + arrayIndexStart={1}
 ```
 
-> The same `stringTruncate` → `stringTruncateLength` rename applies to the `customNodeProps` of the `Hyperlink` / `EnhancedLink` components in `@json-edit-react/components`.
+> The same `stringTruncate` → `stringTruncateLength` rename applies to the `componentProps` of the `Hyperlink` / `EnhancedLink` components in `@json-edit-react/components`.
+
+---
+
+## 13. `CustomNodeDefinition` field renames
+
+The custom-node API was aligned around one distinction: a **node** is a position in the data tree; a **component** is the React function that renders it. The render-slot fields now say `component` (they hold React components, not "elements"), the visibility flags are all positive `show*`, and the props type is named for what it is.
+
+| v1 | v2 | Notes |
+| --- | --- | --- |
+| `element` | `component` | The value / contents render slot |
+| `customKey` | `keyComponent` | The key render slot |
+| `wrapperElement` | `wrapperComponent` | The collection wrapper slot |
+| `customNodeProps` | `componentProps` | Config passed to `component` + `keyComponent` |
+| `hideKey: true` | `showKey: false` | **Polarity inverted** — `showKey` defaults to `true` |
+| `showInTypesSelector` | `showInTypeSelector` | Matches the "Type" selector label |
+| type `CustomNodeProps` | `CustomComponentProps` | The props your component receives; also resolves the old `CustomNodeProps` / `CustomNodeDefinition` name clash |
+
+`wrapperProps` keeps its name, but is now delivered to your `wrapperComponent` as `wrapperProps` (previously it arrived as `customNodeProps`); the wrapper's props type is the new `CustomWrapperProps`. `CustomNodeDefinition` and `CustomKeyProps` are unchanged.
+
+In your definitions:
+
+```diff
+  const myDefinition = {
+    condition: ({ key }) => key === 'avatar',
+-   element: AvatarComponent,
+-   customNodeProps: { size: 'large' },
+-   customKey: AvatarKey,
+-   hideKey: true,
+-   showInTypesSelector: true,
++   component: AvatarComponent,
++   componentProps: { size: 'large' },
++   keyComponent: AvatarKey,
++   showKey: false,
++   showInTypeSelector: true,
+  }
+```
+
+And inside your component, rename the props type and the config prop:
+
+```diff
+- const AvatarComponent: React.FC<CustomNodeProps> = ({ value, customNodeProps }) => {
++ const AvatarComponent: React.FC<CustomComponentProps> = ({ value, componentProps }) => {
+```
 
 ---
 

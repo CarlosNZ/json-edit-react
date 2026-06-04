@@ -150,9 +150,9 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   }, [data])
 
   const {
-    CustomNode,
-    customNodeProps,
-    hideKey,
+    CustomComponent,
+    componentProps,
+    showKey = true,
     showEditTools = true,
     showOnEdit,
     showOnView,
@@ -163,7 +163,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const allDataTypes = [
     ...standardDataTypes,
     ...customNodeDefinitions
-      .filter(({ showInTypesSelector = false, name }) => showInTypesSelector && !!name)
+      .filter(({ showInTypeSelector = false, name }) => showInTypeSelector && !!name)
       .map(({ name }) => name as string),
   ]
 
@@ -291,7 +291,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       translate('DEFAULT_NEW_KEY', nodeData),
       // If coming *FROM* a custom type, need to change value to something
       // that won't match the custom node condition any more
-      customNodeData?.CustomNode ? translate('DEFAULT_STRING', nodeData) : undefined
+      customNodeData?.CustomComponent ? translate('DEFAULT_STRING', nodeData) : undefined
     )
     if (!['string', 'number', 'boolean'].includes(type)) closeEdit()
     onEdit(newValue, path).then((result) =>
@@ -387,9 +387,9 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const { isEditingKey } = derivedValues
   const showErrorString = !isEditing && error
   const showTypeSelector = isEditing && allowedDataTypes.length > 1
-  const showEditButtons = (dataType !== 'invalid' || CustomNode) && !error && showEditTools
-  const showKey = showLabel && !hideKey
-  const showCustomNode = CustomNode && ((isEditing && showOnEdit) || (!isEditing && showOnView))
+  const showEditButtons = (dataType !== 'invalid' || CustomComponent) && !error && showEditTools
+  const shouldShowKey = showLabel && showKey
+  const showCustomNode = CustomComponent && ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
   const inputProps = {
     value,
@@ -433,10 +433,10 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const keyDisplayProps = buildKeyDisplayProps({ handleCancel, getStyles })
 
   const ValueComponent = showCustomNode ? (
-    <CustomNode
+    <CustomComponent
       {...props}
       value={value}
-      customNodeProps={customNodeProps}
+      componentProps={componentProps}
       setValue={updateValue}
       handleEdit={handleEdit}
       handleCancel={handleCancel}
@@ -450,7 +450,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       originalNodeKey={
         passOriginalNode ? (
           // `originalNodeKey` is contracted to be what would have been rendered
-          // if it wasn't intercepted, so suppress any matching `customKey` here
+          // if it wasn't intercepted, so suppress any matching `keyComponent` here
           // and let the default renderer run.
           <KeyDisplay {...keyDisplayProps} customNodeData={undefined} />
         ) : undefined
@@ -494,7 +494,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           flexWrap: (name as string).length > 10 ? 'wrap' : 'nowrap',
         }}
       >
-        {showKey && <KeyDisplay {...keyDisplayProps} />}
+        {shouldShowKey && <KeyDisplay {...keyDisplayProps} />}
         <div className="jer-value-and-buttons">
           <div className="jer-input-component">{ValueComponent}</div>
           {isEditing ? (
@@ -575,7 +575,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 export const ValueNodeWrapper = React.memo(ValueNodeWrapperBase, areNodePropsEqual)
 
 const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
-  if (customNodeData?.CustomNode && customNodeData?.name && customNodeData.showInTypesSelector) {
+  if (customNodeData?.CustomComponent && customNodeData?.name && customNodeData.showInTypeSelector) {
     return customNodeData.name
   }
   if (typeof value === 'string') return 'string'

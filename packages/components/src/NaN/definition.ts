@@ -3,11 +3,11 @@ import { isCollection, type CustomNodeDefinition } from 'json-edit-react'
 
 export const NanDefinition: CustomNodeDefinition<NaNProps> = {
   condition: ({ value }) => Number.isNaN(value),
-  element: NotANumberComponent,
+  component: NotANumberComponent,
   showEditTools: true,
   showOnEdit: true,
   name: 'NaN', // shown in the Type selector menu
-  showInTypesSelector: true,
+  showInTypeSelector: true,
   defaultValue: NaN,
   stringifyReplacer: (value) => (Number.isNaN(value) ? { __type: 'NaN', value: 'NaN' } : value),
   parseReviver: (value) =>

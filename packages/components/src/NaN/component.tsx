@@ -1,17 +1,17 @@
 import React from 'react'
-import { useKeyboardListener, type CustomNodeProps } from 'json-edit-react'
+import { useKeyboardListener, type CustomComponentProps } from 'json-edit-react'
 
 export interface NaNProps {
   style?: React.CSSProperties
 }
 
-export const NotANumberComponent: React.FC<CustomNodeProps<NaNProps>> = ({
+export const NotANumberComponent: React.FC<CustomComponentProps<NaNProps>> = ({
   isEditing,
   setIsEditing,
   handleKeyboard,
   handleEdit,
   keyboardCommon,
-  customNodeProps = {},
+  componentProps = {},
 }) => {
   const listenForSubmit = (e: unknown) =>
     handleKeyboard(e as React.KeyboardEvent, {
@@ -23,7 +23,7 @@ export const NotANumberComponent: React.FC<CustomNodeProps<NaNProps>> = ({
 
   return (
     <div
-      style={{ color: 'rgb(220, 50, 47)', ...customNodeProps?.style }}
+      style={{ color: 'rgb(220, 50, 47)', ...componentProps?.style }}
       onDoubleClick={() => setIsEditing(true)}
     >
       NaN

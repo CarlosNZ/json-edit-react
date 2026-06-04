@@ -6,7 +6,7 @@
  */
 
 import React from 'react'
-import { toPathString, StringDisplay, type CustomNodeProps } from 'json-edit-react'
+import { toPathString, StringDisplay, type CustomComponentProps } from 'json-edit-react'
 
 export interface LinkProps {
   linkStyles?: React.CSSProperties
@@ -14,13 +14,13 @@ export interface LinkProps {
   [key: string]: unknown
 }
 
-export const LinkCustomComponent: React.FC<CustomNodeProps<LinkProps>> = (props) => {
-  const { setIsEditing, getStyles, nodeData, customNodeProps = {} } = props
+export const LinkCustomComponent: React.FC<CustomComponentProps<LinkProps>> = (props) => {
+  const { setIsEditing, getStyles, nodeData, componentProps = {} } = props
   const styles = getStyles('string', nodeData)
   const {
     linkStyles = { fontWeight: 'bold', textDecoration: 'underline' },
     stringTruncateLength = 60,
-  } = customNodeProps
+  } = componentProps
   return (
     <div
       onClick={(e) => {

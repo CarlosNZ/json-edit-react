@@ -4,12 +4,12 @@ import { colord } from 'colord'
 
 export const ColorPickerNodeDefinition: CustomNodeDefinition<ColorPickerProps> = {
   condition: ({ value }) => typeof value === 'string' && colord(value).isValid(),
-  element: ColorPickerComponent,
+  component: ColorPickerComponent,
   name: 'Color Picker',
-  // customNodeProps: {},
+  // componentProps: {},
   showOnView: true,
   showOnEdit: true,
-  showInTypesSelector: true,
+  showInTypeSelector: true,
   defaultValue: '#ff69B4', // Hot Pink!
   passOriginalNode: true,
 }

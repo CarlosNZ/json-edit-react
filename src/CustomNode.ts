@@ -1,20 +1,21 @@
 import {
+  type CustomComponentProps,
   type CustomKeyProps,
   type CustomNodeDefinition,
-  type CustomNodeProps,
+  type CustomWrapperProps,
   type NodeData,
 } from './types'
 
 export interface CustomNodeData {
-  CustomNode?: React.FC<CustomNodeProps>
-  CustomWrapper?: React.FC<CustomNodeProps>
-  CustomKey?: React.FC<CustomKeyProps>
+  CustomComponent?: React.FC<CustomComponentProps>
+  CustomWrapperComponent?: React.FC<CustomWrapperProps>
+  CustomKeyComponent?: React.FC<CustomKeyProps>
   name?: string
-  customNodeProps?: Record<string, unknown>
+  componentProps?: Record<string, unknown>
   wrapperProps?: Record<string, unknown>
-  hideKey?: boolean
+  showKey?: boolean
   defaultValue?: unknown
-  showInTypesSelector?: boolean
+  showInTypeSelector?: boolean
   showOnEdit?: boolean
   showOnView?: boolean
   showEditTools?: boolean
@@ -34,10 +35,10 @@ export const getCustomNode = (
 
   // Only take the first one that matches
   const {
-    element,
-    wrapperElement,
-    customKey,
-    hideKey = false,
+    component,
+    wrapperComponent,
+    keyComponent,
+    showKey = true,
     showEditTools = true,
     showOnEdit = false,
     showOnView = true,
@@ -46,10 +47,10 @@ export const getCustomNode = (
   } = matchingDefinition
 
   return {
-    CustomNode: element,
-    CustomWrapper: wrapperElement,
-    CustomKey: customKey,
-    hideKey,
+    CustomComponent: component,
+    CustomWrapperComponent: wrapperComponent,
+    CustomKeyComponent: keyComponent,
+    showKey,
     showEditTools,
     showOnEdit,
     showOnView,

@@ -22,11 +22,11 @@ export const DatePickerDefinition: CustomNodeDefinition<DatePickerCustomProps> =
   condition: ({ value }) =>
     typeof value === 'string' &&
     /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)?$/.test(value),
-  element: DateTimePicker,
+  component: DateTimePicker,
   showOnView: true,
   showOnEdit: true,
   name: 'Date (ISO)', // shown in the Type selector menu
-  showInTypesSelector: true,
+  showInTypeSelector: true,
   defaultValue: new Date().toISOString(), // when instantiated, default to the current date/time
-  customNodeProps: { showTime: true },
+  componentProps: { showTime: true },
 }

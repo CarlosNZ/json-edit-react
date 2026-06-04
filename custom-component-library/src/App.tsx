@@ -59,12 +59,12 @@ function App() {
         data={data}
         setData={setData}
         customNodeDefinitions={[
-          { ...ImageNodeDefinition, customNodeProps: { imageStyles: { maxWidth, maxHeight } } },
+          { ...ImageNodeDefinition, componentProps: { imageStyles: { maxWidth, maxHeight } } },
           LinkCustomNodeDefinition,
           ColorPickerNodeDefinition,
           {
             ...(STORE_DATE_AS_DATE_OBJECT ? DateObjectDefinition : DatePickerDefinition),
-            customNodeProps: { showTime },
+            componentProps: { showTime },
           },
           EnhancedLinkCustomNodeDefinition,
           UndefinedDefinition,
@@ -81,7 +81,7 @@ function App() {
           {
             ...MarkdownNodeDefinition,
             condition: ({ key }) => key === 'Intro',
-            hideKey: true,
+            showKey: false,
           },
         ]}
         rootName=""

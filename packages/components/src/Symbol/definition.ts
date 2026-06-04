@@ -3,13 +3,13 @@ import { SymbolComponent, SymbolProps } from './component'
 
 export const SymbolDefinition: CustomNodeDefinition<SymbolProps> = {
   condition: ({ value }) => typeof value === 'symbol',
-  element: SymbolComponent,
-  // customNodeProps: {},
+  component: SymbolComponent,
+  // componentProps: {},
   showOnView: true,
   showEditTools: true,
   showOnEdit: true,
   name: 'Symbol', // shown in the Type selector menu
-  showInTypesSelector: true,
+  showInTypeSelector: true,
   defaultValue: Symbol('New symbol'),
   stringifyReplacer: (value) =>
     typeof value === 'symbol' ? { __type: 'Symbol', value: value.description ?? '' } : value,

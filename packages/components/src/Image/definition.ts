@@ -5,8 +5,8 @@ const imageLinkRegex = /^https?:\/\/[^\s]+?\.(?:jpe?g|png|svg|gif)/i
 
 export const ImageNodeDefinition: CustomNodeDefinition<ImageProps> = {
   condition: ({ value }) => typeof value === 'string' && imageLinkRegex.test(value),
-  element: ImageComponent,
-  // customNodeProps: {},
+  component: ImageComponent,
+  // componentProps: {},
   showOnView: true,
   showOnEdit: false,
   name: 'Image',

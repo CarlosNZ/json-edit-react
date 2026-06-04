@@ -61,7 +61,7 @@ Output: `build/index.cjs.js`, `build/index.esm.js`, `build/index.d.ts`.
 
 Components import the following from `json-edit-react`:
 
-- Types: `CustomNodeProps`, `CustomNodeDefinition`, `ValueNodeProps`, `NodeData`, `JsonData` etc. (compile-time only, erased at build)
+- Types: `CustomComponentProps`, `CustomNodeDefinition`, `ValueNodeProps`, `NodeData`, `JsonData` etc. (compile-time only, erased at build)
 - Runtime primitives: `StringDisplay`, `StringEdit`, `toPathString`, `AutogrowTextArea` — these were promoted to public API in core v2 specifically so this package can compose on top of them.
 
 The core peer-dep range is `workspace:^` during dev; at publish, Changesets/pnpm rewrites it to the actual semver.

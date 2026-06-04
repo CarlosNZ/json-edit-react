@@ -4,8 +4,8 @@ import { LinkCustomComponent, LinkProps } from './component'
 export const LinkCustomNodeDefinition: CustomNodeDefinition<LinkProps> = {
   // Condition is a regex to match url strings
   condition: ({ value }) => typeof value === 'string' && /^https?:\/\/.+\..+$/.test(value),
-  element: LinkCustomComponent,
-  customNodeProps: { stringTruncateLength: 80 },
+  component: LinkCustomComponent,
+  componentProps: { stringTruncateLength: 80 },
   showOnView: true,
   showOnEdit: false,
 }

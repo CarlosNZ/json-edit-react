@@ -6,7 +6,7 @@ export const BooleanToggleDefinition: CustomNodeDefinition<{
   stringTruncateLength?: number
 }> = {
   condition: ({ value }) => typeof value === 'boolean',
-  element: BooleanToggleComponent,
+  component: BooleanToggleComponent,
   showOnView: true,
   showOnEdit: false,
   showEditTools: true,
