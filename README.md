@@ -45,6 +45,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 
 ## Contents  <!-- omit in toc -->
 - [Installation](#installation)
+  - [Optional companion packages](#optional-companion-packages)
 - [Implementation](#implementation)
 - [Usage](#usage)
 - [Props Reference](#props-reference)
@@ -56,6 +57,8 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [External control](#external-control)
   - [Miscellaneous](#miscellaneous)
 - [Managing State](#managing-state)
+  - [Viewer mode](#viewer-mode)
+  - [Typed data](#typed-data)
 - [Update Functions](#update-functions)
   - [OnChange Function](#onchange-function)
   - [OnError Function](#onerror-function)
@@ -85,7 +88,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 - [Keyboard customisation](#keyboard-customisation)
 - [External control](#external-control-1)
   - [Event callbacks](#event-callbacks)
-  - [Event triggers](#event-triggers)
+  - [Imperative handle (`editorRef`)](#imperative-handle-editorref)
 - [Undo functionality](#undo-functionality)
 - [Exported helpers](#exported-helpers)
   - [Functions \& Components](#functions--components)
@@ -176,15 +179,15 @@ This is a reference list of *all* possible props, divided into related sections.
 
 </summary>
 
-| Prop              | Type                    | Default | Description                                                                                                                         |
-| ----------------- | ----------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `data`            | `object\|array`         | none    | The data to be displayed / edited                                                                                                   |
-| `setData`         | `object\|array => void` | none    | Method to update your `data` object. **Required.** See [Managing state](#managing-state) below for additional notes.                |
-| `onUpdate`        | `UpdateFunction`        | none    | A function to run whenever a value is changed in the editor — edit, add, delete, rename *or* move. Branch on `event` to handle each. See [Update functions](#update-functions). |
-| `onChange`        | `OnChangeFunction`      | none    | A function to modify/constrain user input as they type — see [OnChange functions](#onchange-function).                              |
-| `onError`         | `OnErrorFunction`       | none    | A function to run whenever the component reports an error — see [OnErrorFunction](#onerror-function).                               |
-| `allowClipboard`  | `boolean`               | `true`  | Enable or disable the "Copy to clipboard" button in the UI.                                                                         |
-| `onCopy`          | `OnCopyFunction`        | none    | A function to run whenever an item is **copied** to the clipboard — see [Copy Function](#copy-function).                            |
+| Prop             | Type                    | Default | Description                                                                                                                                                                     |
+| ---------------- | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`           | `object\|array`         | none    | The data to be displayed / edited                                                                                                                                               |
+| `setData`        | `object\|array => void` | none    | Method to update your `data` object. **Required.** See [Managing state](#managing-state) below for additional notes.                                                            |
+| `onUpdate`       | `UpdateFunction`        | none    | A function to run whenever a value is changed in the editor — edit, add, delete, rename *or* move. Branch on `event` to handle each. See [Update functions](#update-functions). |
+| `onChange`       | `OnChangeFunction`      | none    | A function to modify/constrain user input as they type — see [OnChange functions](#onchange-function).                                                                          |
+| `onError`        | `OnErrorFunction`       | none    | A function to run whenever the component reports an error — see [OnErrorFunction](#onerror-function).                                                                           |
+| `allowClipboard` | `boolean`               | `true`  | Enable or disable the "Copy to clipboard" button in the UI.                                                                                                                     |
+| `onCopy`         | `OnCopyFunction`        | none    | A function to run whenever an item is **copied** to the clipboard — see [Copy Function](#copy-function).                                                                        |
 
 </details>
 <details>
@@ -194,15 +197,15 @@ This is a reference list of *all* possible props, divided into related sections.
 
 </summary>
 
-| Prop                    | Type                                      | Default | Description                                                                                                                                                             |
-| ----------------------- | ----------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `allowEdit`             | `boolean\|FilterFunction`                 | `true`  | If `false`, no editing at all is permitted. A callback function can be provided (return `true` to permit a given node) — see [Advanced Editing Control](#advanced-editing-control) |
-| `allowDelete`           | `boolean\|FilterFunction`                 | `true`  | As with `allowEdit` but for deletion                                                                                                                                    |
-| `allowAdd`              | `boolean\|FilterFunction`                 | `true`  | As with `allowEdit` but for adding new properties                                                                                                                       |
-| `allowTypeSelection`    | `boolean\|DataType[]\|TypeFilterFunction` | `true`  | Controls which data types the user can select, including [Custom Node](#custom-nodes) types, and **Enums** — see [Data Type Restrictions](#data-type-restrictions)      |
-| `newKeyOptions`         | `string[] \| NewKeyOptionsFunction`       | none    | New keys can be restricted to certain values — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                       |
-| `defaultValue`          | `any\|DefaultValueFilterFunction`         | `null`  | Value that new properties are initialised with — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                     |
-| `allowDrag`             | `boolean\|FilterFunction`                 | `false` | Set to `true` to enable drag and drop functionality — see [Drag-n-drop](#drag-n-drop)                                                                                   |
+| Prop                 | Type                                      | Default | Description                                                                                                                                                                        |
+| -------------------- | ----------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `allowEdit`          | `boolean\|FilterFunction`                 | `true`  | If `false`, no editing at all is permitted. A callback function can be provided (return `true` to permit a given node) — see [Advanced Editing Control](#advanced-editing-control) |
+| `allowDelete`        | `boolean\|FilterFunction`                 | `true`  | As with `allowEdit` but for deletion                                                                                                                                               |
+| `allowAdd`           | `boolean\|FilterFunction`                 | `true`  | As with `allowEdit` but for adding new properties                                                                                                                                  |
+| `allowTypeSelection` | `boolean\|DataType[]\|TypeFilterFunction` | `true`  | Controls which data types the user can select, including [Custom Node](#custom-nodes) types, and **Enums** — see [Data Type Restrictions](#data-type-restrictions)                 |
+| `newKeyOptions`      | `string[] \| NewKeyOptionsFunction`       | none    | New keys can be restricted to certain values — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                                  |
+| `defaultValue`       | `any\|DefaultValueFilterFunction`         | `null`  | Value that new properties are initialised with — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                                |
+| `allowDrag`          | `boolean\|FilterFunction`                 | `false` | Set to `true` to enable drag and drop functionality — see [Drag-n-drop](#drag-n-drop)                                                                                              |
 
 </details>
 
@@ -223,7 +226,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | `collapseClickZones`    | `Array<"left" \| "header" \| "property">` | `["left", "header"]` | Aside from the <span style="font-size: 140%">`⌄`</span> icon, you can specify other regions of the UI to be clickable for collapsing/opening a collection.                                                                                                                                                                                                                                                |
 | `rootName`              | `string`                                  | `"data"`             | A name to display in the editor as the root of the data object.                                                                                                                                                                                                                                                                                                                                           |
 | `showArrayIndexes`      | `boolean`                                 | `true`               | Whether or not to display the index (as a property key) for array elements.                                                                                                                                                                                                                                                                                                                               |
-| `arrayIndexStart`       | `0 \| 1`                                  | `0`                  | The number the *first* array element's index label starts from. `0` (default) gives `0, 1, 2…`; `1` gives `1, 2, 3…`.                                                                                                                                                                                                                                                                                      |
+| `arrayIndexStart`       | `0 \| 1`                                  | `0`                  | The number the *first* array element's index label starts from. `0` (default) gives `0, 1, 2…`; `1` gives `1, 2, 3…`.                                                                                                                                                                                                                                                                                     |
 | `showStringQuotes`      | `boolean`                                 | `true`               | Whether or not to display string values in "quotes".                                                                                                                                                                                                                                                                                                                                                      |
 | `showCollectionCount`   | `boolean\|"when-closed"`                  | `true`               | Whether or not to display the number of items in each collection (object or array).                                                                                                                                                                                                                                                                                                                       |
 | `stringTruncateLength`  | `number`                                  | `250`                | String values longer than this many characters will be displayed truncated (with `...`). The full string will always be visible when editing.                                                                                                                                                                                                                                                             |
@@ -274,11 +277,11 @@ This is a reference list of *all* possible props, divided into related sections.
 
 More detail [below](#external-control-1)
 
-| Prop               | Type                  | Default | Description                                                                                            |
-| ------------------ | --------------------- | ------- | ------------------------------------------------------------------------------------------------------ |
-| `onEditEvent`      | `OnEditEventFunction` | none    | Callback to execute whenever the user starts or stops editing a node                                   |
-| `onCollapse`       | `OnCollapseFunction`  | none    | Callback to execute whenever the user collapses or opens a node                                        |
-| `editorRef`        | `Ref<JsonEditorHandle>` | none  | Imperative handle to collapse/open nodes or start/stop editing. See [Imperative handle](#imperative-handle-editorref) |
+| Prop          | Type                    | Default | Description                                                                                                           |
+| ------------- | ----------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| `onEditEvent` | `OnEditEventFunction`   | none    | Callback to execute whenever the user starts or stops editing a node                                                  |
+| `onCollapse`  | `OnCollapseFunction`    | none    | Callback to execute whenever the user collapses or opens a node                                                       |
+| `editorRef`   | `Ref<JsonEditorHandle>` | none    | Imperative handle to collapse/open nodes or start/stop editing. See [Imperative handle](#imperative-handle-editorref) |
 
 </details>
 
@@ -1046,10 +1049,10 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
 
 A definition can target two slots independently — the **key** slot (via `keyComponent`) and the **value/contents** slot (via `component`). Either or both. The same model applies uniformly to value nodes and collection nodes:
 
-| Slot                | Value node                                    | Collection node                                                    |
-| ------------------- | --------------------------------------------- | ------------------------------------------------------------------ |
-| Key                 | `keyComponent`                                   | `keyComponent`                                                        |
-| Value / contents    | `component`                                     | `component` (renders **between** the brackets)                       |
+| Slot                | Value node                                       | Collection node                                                      |
+| ------------------- | ------------------------------------------------ | -------------------------------------------------------------------- |
+| Key                 | `keyComponent`                                   | `keyComponent`                                                       |
+| Value / contents    | `component`                                      | `component` (renders **between** the brackets)                       |
 | Whole-node override | `component` with `showKey: false` (escape hatch) | `wrapperComponent`, or `showCollectionWrapper: false` (escape hatch) |
 
 Most cases are best served by targeting the specific slot you want to change — e.g. for a clickable or highlighted key, use `keyComponent`; for an alternative value renderer (image, date picker, etc.), use `component`.
