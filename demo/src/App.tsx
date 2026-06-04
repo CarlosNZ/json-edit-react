@@ -10,7 +10,13 @@ import {
   extract,
   isCollection,
   type JsonEditorHandle,
+  type UpdateFunctionProps,
 } from '@json-edit-react'
+// DEMO (Intro dataset): confirm-before-update via @json-edit-react/utils.
+// Comment out this import + the wiring below to disable. Swap the commented
+// import to demo the Layer-1 primitive instead.
+import { useConfirmOnUpdate /*, useJsonEditorConfirm */ } from '@json-edit-react/utils'
+import { ConfirmDialog } from './ConfirmDialog'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -179,6 +185,59 @@ function App() {
   const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
 
   const toggleState = (field: keyof AppState) => updateState({ [field]: !state[field] })
+
+  // §17: one `onUpdate`. The datasets' per-operation helpers (onEdit/onAdd) are
+  // dispatched by `event`, with `onUpdate` as the catch-all (delete/rename/move),
+  // followed by any post-commit demo side effect. Extracted to a named function
+  // so the confirm-hook demo below can wrap it.
+  const demoOnUpdate = async (nodeData: UpdateFunctionProps) => {
+    const runDemoUpdate = () => {
+      if (nodeData.event === 'edit' && dataDefinition?.onEdit)
+        return dataDefinition.onEdit(nodeData)
+      if (nodeData.event === 'add' && dataDefinition?.onAdd) return dataDefinition.onAdd(nodeData)
+      return (dataDefinition?.onUpdate ?? (() => undefined))(
+        nodeData,
+        toast as (options: unknown) => void
+      )
+    }
+    const result = await runDemoUpdate()
+    // Reject (false) or silent cancel (null): pass straight through, no commit
+    // and no post-commit side effect.
+    if (result === false || result === null) return result
+    // Object result (error / { value } override): pass through to the library.
+    // `true` is a plain commit — fall through to the side effect like void.
+    if (result && result !== true) return result
+    // Commit (true | void | undefined): run the post-commit demo side effect.
+    const { newData } = nodeData
+    if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
+  }
+
+  // ── DEMO: confirm-before-update on the Intro dataset (@json-edit-react/utils) ──
+  // To disable for production: comment this hook, the <ConfirmDialog/> render, and
+  // revert the editor's `onUpdate` prop to `demoOnUpdate`. Layer 2 (declarative)
+  // gates delete/edit and runs `demoOnUpdate` only after the user confirms.
+  const introConfirm = useConfirmOnUpdate({
+    confirmOn: ['delete', 'edit'],
+    title: 'Are you sure?',
+    message: (node) => {
+      const action = node.event[0].toUpperCase() + node.event.slice(1)
+      // Array items have a numeric key — name the item generically rather than
+      // quoting the index.
+      const target = typeof node.key === 'string' ? `"${node.key}"` : 'array item'
+      return `${action} ${target}?`
+    },
+    onUpdate: demoOnUpdate,
+  })
+  // Layer-1 equivalent (flip to this to demo the primitive instead): replace the
+  // hook above with `const introConfirm = useJsonEditorConfirm()` and gate at the
+  // top of `demoOnUpdate`:
+  //   if (selectedDataSet === 'intro' && (nodeData.event === 'delete' || nodeData.event === 'edit')) {
+  //     const action = nodeData.event[0].toUpperCase() + nodeData.event.slice(1)
+  //     const target = typeof nodeData.key === 'string' ? `"${nodeData.key}"` : 'array item'
+  //     const ok = await introConfirm.confirm({ title: 'Are you sure?', message: `${action} ${target}?` })
+  //     if (!ok) return null
+  //   }
+  // ───────────────────────────────────────────────────────────────────────────
 
   const {
     searchText,
@@ -491,32 +550,9 @@ function App() {
                   rootName={rootName}
                   theme={editorTheme}
                   indent={indent}
-                  onUpdate={async (nodeData) => {
-                    // §17: one `onUpdate`. The datasets' per-operation helpers
-                    // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
-                    // as the catch-all (delete/rename/move).
-                    const runDemoUpdate = () => {
-                      if (nodeData.event === 'edit' && dataDefinition?.onEdit)
-                        return dataDefinition.onEdit(nodeData)
-                      if (nodeData.event === 'add' && dataDefinition?.onAdd)
-                        return dataDefinition.onAdd(nodeData)
-                      return (dataDefinition?.onUpdate ?? (() => undefined))(
-                        nodeData,
-                        toast as (options: unknown) => void
-                      )
-                    }
-                    const result = await runDemoUpdate()
-                    // Reject (false) or silent cancel (null): pass straight
-                    // through, no commit and no post-commit side effect.
-                    if (result === false || result === null) return result
-                    // Object result (error / { value } override): pass through to
-                    // the library. `true` is a plain commit — fall through to the
-                    // side effect like void/undefined.
-                    if (result && result !== true) return result
-                    // Commit (true | void | undefined): run the post-commit demo side effect.
-                    const { newData } = nodeData
-                    if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
-                  }}
+                  // Intro dataset: gate via the confirm hook (which then runs
+                  // `demoOnUpdate`); every other dataset uses it directly.
+                  onUpdate={selectedDataSet === 'intro' ? introConfirm.onUpdate : demoOnUpdate}
                   onError={
                     dataDefinition.onError
                       ? (errorData) => {
@@ -692,6 +728,8 @@ function App() {
               </RenderProfiler>
             </Suspense>
           </Box>
+          {/* DEMO: confirm-before-update modal (Intro dataset). Comment out to disable. */}
+          <ConfirmDialog {...introConfirm.dialog} />
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
               <Button
