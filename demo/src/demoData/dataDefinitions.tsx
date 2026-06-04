@@ -151,9 +151,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         </Text>
         <Text>
           Note the additional editing restrictions in addition to the toggles above. This has been
-          achieved by specifying filter functions for the <span className="code">allowEdit</span>
-          , <span className="code">allowDelete</span>, <span className="code">allowAdd</span>{' '}
-          and <span className="code">allowTypeSelection</span> props.{' '}
+          achieved by specifying filter functions for the <span className="code">allowEdit</span>,{' '}
+          <span className="code">allowDelete</span>, <span className="code">allowAdd</span> and{' '}
+          <span className="code">allowTypeSelection</span> props.{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#readme" isExternal>
             Learn more
           </Link>
@@ -459,8 +459,8 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           </ListItem>
         </UnorderedList>
         <Text>
-          Notice also (these are achieved by customising the <span className="code">onEdit</span>{' '}
-          and <span className="code">onAdd</span> props):
+          Notice also (these are achieved by customising the <span className="code">onUpdate</span>{' '}
+          prop):
         </Text>
         <UnorderedList>
           <ListItem>
@@ -605,8 +605,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'theme',
-    allowEdit: ({ key, level }) =>
-      level !== 0 && !['fragments', 'styles'].includes(key as string),
+    allowEdit: ({ key, level }) => level !== 0 && !['fragments', 'styles'].includes(key as string),
     allowDelete: ({ key }) => !['displayName', 'fragments', 'styles'].includes(key as string),
     allowAdd: ({ level }) => level !== 0,
     allowTypeSelection: ['string', 'object', 'array'],
@@ -805,7 +804,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     customTextEditorAvailable: true,
   },
   customKeys: {
-    name: '🕵️ Custom Keys',
+    name: '🕵️ Custom Node keys',
     description: (
       <Flex flexDir="column" gap={2}>
         <Text>
@@ -817,8 +816,8 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
             Custom Nodes
           </Link>{' '}
-          — a definition can render its own component in place of the property label, for both
-          value <em>and</em> collection nodes.
+          — a definition can render its own component in place of the property label, for both value{' '}
+          <em>and</em> collection nodes.
         </Text>
         <Text>Five inline definitions are at work here:</Text>
         <UnorderedList>
@@ -1060,7 +1059,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           </Link>
           , which aims to provide ready-to-go{' '}
           <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
-            Custom Nodes
+            Custom Node definitions & components
           </Link>{' '}
           for common (yet non-JSON) data types or useful data structures.
         </Text>

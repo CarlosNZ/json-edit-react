@@ -70,7 +70,7 @@ interface AppState {
   allowAdd: boolean
   allowCopy: boolean
   sortKeys: boolean
-  showIndices: boolean
+  showIndexes: boolean
   arraysFromOne: boolean
   showStringQuotes: boolean
   defaultNewValue: string
@@ -115,7 +115,7 @@ function App() {
     allowAdd: true,
     allowCopy: true,
     sortKeys: false,
-    showIndices: true,
+    showIndexes: true,
     arraysFromOne: false,
     showStringQuotes: true,
     defaultNewValue: 'New data!',
@@ -188,7 +188,7 @@ function App() {
     collapseLevel,
     collapseTime,
     showCount,
-    showIndices,
+    showIndexes,
     arraysFromOne,
     sortKeys,
     showStringQuotes,
@@ -582,7 +582,7 @@ function App() {
                   // }
                   defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
                   newKeyOptions={dataDefinition?.newKeyOptions}
-                  showArrayIndexes={showIndices}
+                  showArrayIndexes={showIndexes}
                   arrayIndexStart={arraysFromOne ? 1 : 0}
                   showStringQuotes={showStringQuotes}
                   minWidth={'min(500px, 95vw)'}
@@ -932,12 +932,12 @@ function App() {
                   </Flex>
                   <Flex w="100%" justify="flex-start">
                     <Checkbox
-                      id="showIndicesCheckbox"
-                      isChecked={showIndices}
-                      onChange={() => toggleState('showIndices')}
+                      id="showIndexesCheckbox"
+                      isChecked={showIndexes}
+                      onChange={() => toggleState('showIndexes')}
                       w="50%"
                     >
-                      Show Array indices
+                      Show Array indexes
                     </Checkbox>
                     <Checkbox
                       id="arraysFromOneCheckbox"
