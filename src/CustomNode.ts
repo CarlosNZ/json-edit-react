@@ -29,30 +29,26 @@ export const getCustomNode = (
   customNodeDefinitions: CustomNodeDefinition[] = [],
   nodeData: NodeData
 ): CustomNodeData => {
-  const matchingDefinitions = customNodeDefinitions.filter(({ condition }) => condition(nodeData))
-  if (matchingDefinitions.length === 0) return {}
+  const matchingDefinition = customNodeDefinitions.find(({ condition }) => condition(nodeData))
+  if (!matchingDefinition) return {}
 
   // Only take the first one that matches
   const {
     element,
     wrapperElement,
     customKey,
-    customNodeProps,
-    wrapperProps,
     hideKey = false,
     showEditTools = true,
     showOnEdit = false,
     showOnView = true,
     showCollectionWrapper = true,
     ...rest
-  } = matchingDefinitions[0]
+  } = matchingDefinition
 
   return {
     CustomNode: element,
     CustomWrapper: wrapperElement,
     CustomKey: customKey,
-    customNodeProps,
-    wrapperProps,
     hideKey,
     showEditTools,
     showOnEdit,
