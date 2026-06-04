@@ -11,6 +11,9 @@ export default tseslint.config(
       'node_modules',
       'dist',
       'build',
+      // Claude Code harness data, incl. git worktrees that carry their own
+      // (unlinted) demo/ and custom-component-library/ checkouts.
+      '.claude',
       'demo',
       '.rollup.cache',
       'custom-component-library',

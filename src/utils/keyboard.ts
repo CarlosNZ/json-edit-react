@@ -19,9 +19,7 @@ export const handleKeyPress = (
   eventMap: Partial<Record<keyof KeyboardControls, () => void>>,
   e: React.KeyboardEvent
 ) => {
-  const definitions = Object.entries(eventMap)
-
-  for (const [definition, action] of definitions) {
+  for (const [definition, action] of Object.entries(eventMap)) {
     if (eventMatch(e, controls[definition as keyof KeyboardControlsFull], definition)) {
       e.preventDefault()
       action()
@@ -136,14 +134,14 @@ export const insertCharInTextArea = (
   insertionString: string
 ) => {
   const textArea = textAreaRef.current
-  const startPos: number = textArea?.selectionStart ?? Infinity
-  const endPos: number = textArea?.selectionEnd ?? Infinity
-  const strStart = textArea?.textContent?.slice(0, startPos)
-  const strEnd = textArea?.textContent?.slice(endPos)
+  const startPos: number = textArea.selectionStart ?? Infinity
+  const endPos: number = textArea.selectionEnd ?? Infinity
+  const strStart = textArea.value.slice(0, startPos)
+  const strEnd = textArea.value.slice(endPos)
 
   const newString = strStart + insertionString + strEnd
   textArea.value = newString
-  textArea?.setSelectionRange(startPos + 1, startPos + 1)
+  textArea.setSelectionRange(startPos + 1, startPos + 1)
   return newString
 }
 
@@ -208,19 +206,8 @@ const getChildRecursive = (
 // Transform a collections (Array or Object) into a structure that is easier to
 // navigate forward and back within
 const transformCollection = (collection: CollectionData) => {
-  if (Array.isArray(collection))
-    return collection.map((value, index) => ({ index, value, key: index }))
-  return Object.entries(collection).map(([key, value], index) => ({ key, value, index }))
+  if (Array.isArray(collection)) return collection.map((value, index) => ({ value, key: index }))
+  return Object.entries(collection).map(([key, value]) => ({ key, value }))
 }
 
-type TransformedCollection =
-  | {
-      index: number
-      value: unknown
-      key: number
-    }
-  | {
-      key: string
-      value: unknown
-      index: number
-    }
+type TransformedCollection = { key: string | number; value: unknown }

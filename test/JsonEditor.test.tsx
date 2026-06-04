@@ -1,5 +1,5 @@
 import { createRef, useState } from 'react'
-import { act, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { JsonViewer } from '../src/JsonViewer'
@@ -1452,5 +1452,44 @@ describe('JsonEditor — search and filter', () => {
     } finally {
       jest.useRealTimers()
     }
+  })
+})
+
+describe('JsonEditor — textarea character insertion via keyboard', () => {
+  // End-to-end coverage that a hotkey actually mutates the open textarea's
+  // content at the caret (the `insertCharInTextArea` path), exercised through
+  // both wiring points: Tab in the raw-JSON collection editor, and a
+  // non-default `stringLineBreak` control in a string value editor.
+  test('Tab inside the JSON editor inserts a literal tab rather than navigating away', async () => {
+    const user = userEvent.setup()
+    render(<JsonEditor data={{ outer: { inner: 1 } }} setData={noop} showIconTooltips />)
+
+    await user.click(screen.getAllByTitle('Edit')[0])
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    const before = textarea.value
+    textarea.setSelectionRange(0, 0)
+
+    fireEvent.keyDown(textarea, { key: 'Tab' })
+
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe(`\t${before}`)
+  })
+
+  test('a non-default stringLineBreak control inserts a newline at the caret', async () => {
+    const user = userEvent.setup()
+    render(
+      <JsonEditor
+        data={{ greeting: 'hello' }}
+        setData={noop}
+        keyboardControls={{ stringLineBreak: { key: 'm', modifier: 'Meta' } }}
+      />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    textarea.setSelectionRange(2, 2) // caret after 'he'
+
+    fireEvent.keyDown(textarea, { key: 'm', metaKey: true })
+
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('he\nllo')
   })
 })

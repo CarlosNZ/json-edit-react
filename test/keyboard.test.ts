@@ -1,4 +1,75 @@
-import { getFullKeyboardControlMap, getNextOrPrevious } from '../src/utils/keyboard'
+import { type MutableRefObject } from 'react'
+import {
+  getFullKeyboardControlMap,
+  getNextOrPrevious,
+  insertCharInTextArea,
+} from '../src/utils/keyboard'
+
+describe('insertCharInTextArea', () => {
+  // Mirrors how the editor's textarea is populated when it opens: setting
+  // `.textContent` populates both `.value` and `.textContent` in jsdom (as a
+  // controlled React textarea does at mount), which is the state these hotkeys
+  // fire in. The element must be attached for selection APIs to apply.
+  const setup = (content: string, selStart: number, selEnd = selStart) => {
+    const textArea = document.createElement('textarea')
+    document.body.appendChild(textArea)
+    textArea.textContent = content
+    textArea.setSelectionRange(selStart, selEnd)
+    return { textArea, ref: { current: textArea } as MutableRefObject<HTMLTextAreaElement> }
+  }
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  test('inserts the character at a collapsed caret and writes it back to the textarea', () => {
+    const { textArea, ref } = setup('abcdef', 3)
+    const result = insertCharInTextArea(ref, '\t')
+    expect(result).toBe('abc\tdef')
+    expect(textArea.value).toBe('abc\tdef')
+  })
+
+  test('advances the caret to immediately after the inserted character', () => {
+    const { textArea, ref } = setup('abcdef', 3)
+    insertCharInTextArea(ref, '\t')
+    expect(textArea.selectionStart).toBe(4)
+    expect(textArea.selectionEnd).toBe(4)
+  })
+
+  test('inserts at the very start of the content', () => {
+    const { ref } = setup('abcdef', 0)
+    expect(insertCharInTextArea(ref, '\n')).toBe('\nabcdef')
+  })
+
+  test('inserts at the very end of the content', () => {
+    const { ref } = setup('abcdef', 6)
+    expect(insertCharInTextArea(ref, '\n')).toBe('abcdef\n')
+  })
+
+  test('replaces the active selection when start and end differ', () => {
+    const { textArea, ref } = setup('abcdef', 1, 4) // selection spans 'bcd'
+    const result = insertCharInTextArea(ref, '\t')
+    expect(result).toBe('a\tef')
+    expect(textArea.value).toBe('a\tef')
+    expect(textArea.selectionStart).toBe(2)
+  })
+
+  test('operates on the live value after the field has been edited, not the original content', () => {
+    // A textarea's `.textContent` reflects its original (default) content, while
+    // `.value` tracks live edits — they diverge once the user types. Setting
+    // both here reproduces that post-edit state.
+    const textArea = document.createElement('textarea')
+    document.body.appendChild(textArea)
+    textArea.textContent = 'original' // stale default content
+    textArea.value = 'edited text' // current, edited value
+    textArea.setSelectionRange(6, 6) // caret just after 'edited'
+    const ref = { current: textArea } as MutableRefObject<HTMLTextAreaElement>
+
+    const result = insertCharInTextArea(ref, '\t')
+    expect(result).toBe('edited\t text')
+    expect(textArea.value).toBe('edited\t text')
+  })
+})
 
 describe('getFullKeyboardControlMap', () => {
   test('leaves value-node confirm keys at their defaults when no controls are supplied', () => {

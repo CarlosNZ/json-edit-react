@@ -205,8 +205,7 @@ function App() {
   // AND the data set's own filter permits it.
   const allowEdit: FilterFunction | boolean = (() => {
     const customAllow = dataDefinition?.allowEdit
-    if (typeof customAllow === 'function')
-      return (input) => allowEditEnabled && customAllow(input)
+    if (typeof customAllow === 'function') return (input) => allowEditEnabled && customAllow(input)
     if (customAllow !== undefined) return customAllow
     return allowEditEnabled
   })()
@@ -221,8 +220,7 @@ function App() {
 
   const allowAdd: FilterFunction | boolean = (() => {
     const customAllow = dataDefinition?.allowAdd
-    if (typeof customAllow === 'function')
-      return (input) => allowAddEnabled && customAllow(input)
+    if (typeof customAllow === 'function') return (input) => allowAddEnabled && customAllow(input)
     if (customAllow !== undefined) return customAllow
     return allowAddEnabled
   })()
@@ -635,17 +633,21 @@ function App() {
                   // ]}
                   onChange={dataDefinition?.onChange ?? undefined}
                   jsonParse={JSON5.parse}
-                  // keyboardControls={{
-                  //   cancel: 'Tab',
-                  //   confirm: { key: 'Enter', modifier: 'Meta' },
-                  //   objectConfirm: { key: 'Enter', modifier: 'Shift' },
-                  //   stringLineBreak: { key: 'Enter' },
-                  //   stringConfirm: { key: 'Enter', modifier: 'Meta' },
-                  //   clipboardModifier: ['Alt', 'Shift'],
-                  //   collapseModifier: 'Control',
-                  //   booleanConfirm: 'Enter',
-                  //   booleanToggle: 'r',
-                  // }}
+                  keyboardControls={
+                    {
+                      // cancel: 'Tab',
+                      // confirm: { key: 'Enter', modifier: 'Meta' },
+                      // objectConfirm: { key: 'Enter', modifier: 'Shift' },
+                      // stringLineBreak: { key: 'Enter' },
+                      // stringConfirm: { key: 'Enter', modifier: 'Meta' },
+                      // clipboardModifier: ['Alt', 'Shift'],
+                      // collapseModifier: 'Control',
+                      // booleanConfirm: 'Enter',
+                      // booleanToggle: 'r',
+                      // tabForward: { key: 'Tab', modifier: 'Shift' },
+                      // tabBack: { key: 'Tab' },
+                    }
+                  }
                   // insertAtBeginning="object"
                   // baseFontSize={20}
                   TextEditor={
