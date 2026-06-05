@@ -30,7 +30,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   // Actions + imperative reads from the (stable) store — no subscription, so
   // editing transitions elsewhere don't re-render this node.
-  const { startEdit, cancelEdit, closeEdit, setPreviousValue, areChildrenBeingEdited } =
+  const { startEdit, cancelEdit, beginCommit, endCommit, setPreviousValue, areChildrenBeingEdited } =
     useEditingStore()
   const { setCollapseState } = useCollapse()
   const {
@@ -273,7 +273,15 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   }
 
   // Commits the raw-JSON edit of this collection and fires the matching
-  // `onEditEvent` (`confirmEdit`/`cancelEdit`).
+  // `onEditEvent` (`confirmEdit`/`cancelEdit`). The session close is
+  // deferred until `onEdit` resolves (issue #325): the editor stays open
+  // with the user's typed JSON while `onUpdate` is pending. The
+  // `stringifiedValue` buffer is retained for the same reason — clearing
+  // it synchronously while `isEditing` was still true would re-derive
+  // `editBufferValue` from old `data`, flashing the pre-commit JSON in
+  // the open textarea. `beginCommit` clears `cancelOp` synchronously and
+  // marks this session as mid-commit; `endCommit(path)` closes the
+  // session on resolve (only if a Tab-style advance hasn't displaced it).
   const handleEdit = () => {
     // Parse exactly the text shown: `editBufferValue` is the displayed buffer
     // and reuses the string the memo already serialized, so the parsed input
@@ -293,20 +301,21 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       )
       return
     }
-    closeEdit()
+    beginCommit()
     setPreviousValue(null)
     setError(null)
     // No-op confirm: bail without committing. When the buffer was never
     // typed into, `textToParse` already IS `jsonStringify(data)`, so reuse it
     // rather than serializing `data` a second time.
     const currentDataString = stringifiedValue === null ? textToParse : jsonStringify(data)
-    clearEditBuffer()
     // No-op confirm (unchanged JSON) reports as a cancel (closed without change).
     if (jsonStringify(value) === currentDataString) {
       emitEditEvent('cancelEdit')
+      clearEditBuffer()
+      endCommit(path)
       return
     }
-    onEdit(value, path).then((result) =>
+    onEdit(value, path).then((result) => {
       handleMutationResult({
         result,
         errorCode: 'UPDATE_ERROR',
@@ -314,7 +323,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
         cancelEvent: 'cancelEdit',
         confirmEvent: 'confirmEdit',
       })
-    )
+      clearEditBuffer()
+      endCommit(path)
+    })
   }
 
   // Commits an add and fires `confirmAdd` (or the error observer).

@@ -65,6 +65,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     startEdit,
     cancelEdit,
     closeEdit,
+    beginCommit,
+    endCommit,
     recordPreviousEdit,
     setTabDirection,
     setPreviousValue,
@@ -309,9 +311,21 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   }
 
   // Commits the in-progress value edit and fires the matching `onEditEvent`
-  // (`confirmEdit` on commit; `cancelEdit` on no-op/reject).
+  // (`confirmEdit` on commit; `cancelEdit` on no-op/reject). The session
+  // close is deferred until `onEdit` resolves (issue #325): the editor
+  // stays open with the user's typed value while `onUpdate` is pending
+  // (e.g. a confirm modal or a slow remote round-trip), so the node never
+  // briefly renders the settled `data` during the pending window.
+  // `beginCommit` clears `cancelOp` synchronously (preserves the
+  // Tab-commit invariant: `startEdit(next)` mustn't run a stale revert)
+  // and marks this session as mid-commit so `startEdit`'s displacement
+  // logic doesn't fire a spurious `cancelEdit` over the deferred
+  // `confirmEdit`. `endCommit(path)` runs in the resolve handler — it
+  // closes the session only if `currentlyEditingElement` still points at
+  // this node (a Tab-driven advance during the pending window leaves the
+  // new session intact).
   const handleEdit = (inputValue?: unknown) => {
-    closeEdit()
+    beginCommit()
     setPreviousValue(null)
     let newValue: JsonData
     if (inputValue !== undefined && !isJsEvent(inputValue)) newValue = inputValue as JsonData
@@ -333,7 +347,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           newValue = value
       }
     }
-    onEdit(newValue, path).then((result) =>
+    onEdit(newValue, path).then((result) => {
       handleMutationResult({
         result,
         errorCode: 'UPDATE_ERROR',
@@ -342,7 +356,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         confirmEvent: 'confirmEdit',
         onRevert: revertToData,
       })
-    )
+      endCommit(path)
+    })
   }
 
   // Per-node UI/data cleanup for any session-ending path that isn't a

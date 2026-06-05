@@ -44,7 +44,7 @@ import {
   type EditingState,
   type BuildNodeDataFromPathRef,
 } from '../types'
-import { editingStatesEqual, isDescendantOf, pathsEqual } from '../utils/pathTools'
+import { editingStatesEqual, isDescendantOf, pathsEqual, toPathString } from '../utils/pathTools'
 
 export interface EditingStateBundle {
   currentlyEditingElement: EditingState | null
@@ -78,6 +78,21 @@ export interface EditingStore {
   /** Close the active session silently — no event. Used by commit flows
    *  (the terminal event is fired by the node, from the commit outcome). */
   closeEdit: () => void
+  /**
+   * Synchronous phase 1 of a deferred commit. Clears `cancelOp` (so a
+   * follow-up Tab-commit doesn't run a stale revert), and registers the
+   * currently-editing path as "mid-commit" so `startEdit`'s displacement
+   * logic doesn't fire a spurious `cancelEdit` over the pending
+   * `confirmEdit`/`cancelEdit` the node will fire when `onUpdate`
+   * resolves. Leaves `currentlyEditingElement` in place — the editor
+   * stays open with the user's in-progress value until `endCommit`. */
+  beginCommit: () => void
+  /**
+   * Phase 2 of a deferred commit. Deregisters `path` from the
+   * mid-commit set; if `currentlyEditingElement` still points at `path`
+   * (no Tab-driven advance happened in the meantime), clears the
+   * session — closing the editor on the originating node only. */
+  endCommit: (path: CollectionKey[]) => void
   setTabDirection: (dir: TabDirection) => void
   recordPreviousEdit: (path: CollectionKey[]) => void
   setPreviousValue: (value: JsonData | null) => void
@@ -111,6 +126,15 @@ const createEditingStore = (
   // recursive call no-ops so the outer flow owns the single state-clear and
   // single cancel* emission.
   let cancelling = false
+
+  // Paths whose session is mid-commit: `beginCommit` cleared `cancelOp`
+  // and the node is awaiting `onUpdate`. While a path is in this set,
+  // `startEdit`'s displacement logic must NOT fire `cancelEdit` for it
+  // (the node's own commit outcome will fire `confirmEdit`/`cancelEdit`).
+  // `endCommit` deregisters and, if `currentlyEditingElement` still points
+  // at that path, closes the session. Held in a closure var (not state)
+  // so begin/end never notify subscribers.
+  const committingPaths = new Set<string>()
 
   const emit = () => listeners.forEach((listener) => listener())
 
@@ -148,11 +172,15 @@ const createEditingStore = (
 
     // Fire cancel* for the displaced session if the cancelOp didn't already
     // tear it down. `state.currentlyEditingElement` still pointing at `prev`
-    // means no recursive cancelEdit fired the event.
+    // means no recursive cancelEdit fired the event. A `prev` that is
+    // mid-commit (its node is awaiting `onUpdate`) is exempt — it will
+    // fire its own `confirmEdit`/`cancelEdit` from the commit outcome, so
+    // emitting `cancelEdit` here would be a contradictory double-fire.
     if (
       isSwitch &&
       state.currentlyEditingElement !== null &&
-      editingStatesEqual(state.currentlyEditingElement, prev)
+      editingStatesEqual(state.currentlyEditingElement, prev) &&
+      !committingPaths.has(toPathString(prev.path))
     ) {
       fireEditEvent(prev.path, prev.mode === 'key' ? 'cancelRename' : 'cancelEdit')
     }
@@ -199,6 +227,31 @@ const createEditingStore = (
     }
   }
 
+  // Two-phase deferred commit (issue #325). The synchronous phase clears
+  // `cancelOp` (same load-bearing reason as `closeEdit` — keeps Tab-commit
+  // safe by ensuring `startEdit(next)` can't run a stale revert) and marks
+  // the active session as mid-commit, but leaves `currentlyEditingElement`
+  // in place so `isEditing` stays true and the editor (with the user's
+  // in-progress value) remains visible until `onUpdate` resolves.
+  const beginCommit = () => {
+    cancelOp = null
+    const cur = state.currentlyEditingElement
+    if (cur !== null) committingPaths.add(toPathString(cur.path))
+  }
+
+  // Resolve phase: deregister and, only if `currentlyEditingElement` still
+  // points at the originating path, close the session. A Tab-driven
+  // `startEdit(next)` may have advanced the editing target during the
+  // pending window — in that case the new session owns the visible state,
+  // and we just remove the stale committing-path entry.
+  const endCommit = (path: CollectionKey[]) => {
+    committingPaths.delete(toPathString(path))
+    const cur = state.currentlyEditingElement
+    if (cur !== null && pathsEqual(cur.path, path)) {
+      commit({ ...state, currentlyEditingElement: null })
+    }
+  }
+
   const setTabDirection = (dir: TabDirection) => {
     if (state.tabDirection !== dir) commit({ ...state, tabDirection: dir })
   }
@@ -227,6 +280,8 @@ const createEditingStore = (
     startEdit,
     cancelEdit,
     closeEdit,
+    beginCommit,
+    endCommit,
     setTabDirection,
     recordPreviousEdit,
     setPreviousValue,
@@ -317,6 +372,8 @@ export const useEditing = () => {
       startEdit: store.startEdit,
       cancelEdit: store.cancelEdit,
       closeEdit: store.closeEdit,
+      beginCommit: store.beginCommit,
+      endCommit: store.endCommit,
       setTabDirection: store.setTabDirection,
       recordPreviousEdit: store.recordPreviousEdit,
       setPreviousValue: store.setPreviousValue,

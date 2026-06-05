@@ -924,6 +924,124 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     await user.dblClick(screen.getByText('"hello"'))
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('hello')
   })
+
+  // Regression coverage for #325. The editor must stay open while a
+  // deferred `onUpdate` (confirm-modal hook, slow remote round-trip) is
+  // pending, so the node never briefly renders a misleading state — the
+  // optimistic-display window where a value node showed the new typed
+  // value as if already applied (or a collection node re-rendered
+  // children from old `data`) before the consumer had confirmed.
+  test('value edit: editor stays open while a deferred onUpdate is pending, closes on resolve', async () => {
+    const user = userEvent.setup()
+    let resolveUpdate: (value: true) => void = () => {}
+    const onUpdate = jest.fn(
+      () =>
+        new Promise<true>((resolve) => {
+          resolveUpdate = resolve
+        })
+    )
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        onEditEvent={onEditEvent}
+      />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox') as HTMLInputElement
+    await user.clear(input)
+    await user.type(input, 'pending{Enter}')
+
+    // onUpdate has been called but hasn't resolved yet — the editor must
+    // remain open with the user's typed value, not flip closed and render
+    // the settled (old) data.
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+    const stillOpen = screen.getByRole('textbox') as HTMLInputElement
+    expect(stillOpen.value).toBe('pending')
+    // No terminal event yet — confirmEdit fires only on resolution.
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startEdit'])
+
+    // Resolve the deferred commit; the session closes and confirmEdit fires.
+    await act(async () => {
+      resolveUpdate(true)
+    })
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).toBeNull()
+    })
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startEdit', 'confirmEdit'])
+  })
+
+  test('value edit: a deferred onUpdate that rejects reverts and closes the editor', async () => {
+    const user = userEvent.setup()
+    let resolveUpdate: (value: false) => void = () => {}
+    const onUpdate = jest.fn(
+      () =>
+        new Promise<false>((resolve) => {
+          resolveUpdate = resolve
+        })
+    )
+    render(<JsonEditor data={{ x: 'hello' }} setData={noop} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox') as HTMLInputElement
+    await user.clear(input)
+    await user.type(input, 'rejected-pending{Enter}')
+
+    // While pending, the editor stays open with the typed value.
+    expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('rejected-pending')
+
+    // Reject the commit — the editor closes, the display reverts to the
+    // original value (no setData call landed).
+    await act(async () => {
+      resolveUpdate(false)
+    })
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).toBeNull()
+    })
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+  })
+
+  test('collection edit: the JSON edit buffer is retained while onUpdate is pending', async () => {
+    const user = userEvent.setup()
+    let resolveUpdate: (value: true) => void = () => {}
+    const onUpdate = jest.fn(
+      () =>
+        new Promise<true>((resolve) => {
+          resolveUpdate = resolve
+        })
+    )
+    const setData = jest.fn()
+    render(<JsonEditor data={{ a: 1, b: 2 }} setData={setData} onUpdate={onUpdate} showIconTooltips />)
+
+    // Open the JSON edit on the root collection. Multiple "Edit" buttons
+    // exist (root + per-value) so pick the first (root) explicitly.
+    await user.click(screen.getAllByTitle('Edit')[0])
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    await user.clear(textarea)
+    await user.type(textarea, '{{"a":1,"b":2,"c":3}')
+    // Confirm the edit — kicks off the deferred onUpdate.
+    await user.keyboard('{Control>}{Enter}{/Control}')
+
+    // While pending the textarea must still be visible, and its content
+    // must be the user's typed JSON — clearing the buffer here would
+    // re-derive it from old `data` and flash the pre-commit JSON.
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+    expect(setData).not.toHaveBeenCalled()
+    const stillOpen = screen.queryByRole('textbox') as HTMLTextAreaElement | null
+    expect(stillOpen).not.toBeNull()
+    expect(stillOpen!.value).toContain('"c":3')
+
+    await act(async () => {
+      resolveUpdate(true)
+    })
+    await waitFor(() => {
+      expect(screen.queryByRole('textbox')).toBeNull()
+    })
+    expect(setData).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('JsonEditor — restrictions and callbacks', () => {
