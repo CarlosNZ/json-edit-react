@@ -2,8 +2,7 @@
 
 Utility hooks and helpers for [json-edit-react](https://github.com/CarlosNZ/json-edit-react).
 
-> **Status: early/nascent.** This package is being assembled — the helpers below
-> are planned, not all shipped yet. See the linked issues for current state.
+> **Status: early/nascent.** This package is being assembled — the helpers below are planned, not all shipped yet. See the linked issues for current state.
 
 ## Install
 
@@ -19,29 +18,17 @@ pnpm add @json-edit-react/utils
 
 ## What's here
 
-- **Confirm-before-update hooks** — gate edits/deletes on a confirmation dialog
-  without hand-rolling the deferred-promise dance. _Available now._
-  ([#307](https://github.com/CarlosNZ/json-edit-react/issues/307))
-- **JSON Schema → Filter Functions** — generate `allowEdit` / `allowDelete` /
-  `allowAdd` (etc.) functions from a JSON Schema so the editor UI can't produce
-  invalid data in the first place. _Planned._
-  ([#285](https://github.com/CarlosNZ/json-edit-react/issues/285))
-- **Search helpers** — ready-made `searchFilter` functions for common search
-  patterns. _Planned._ ([#319](https://github.com/CarlosNZ/json-edit-react/issues/319))
+- **Confirm-before-update hooks** — gate edits/deletes on a confirmation dialog without hand-rolling the deferred-promise dance. _Available now._ ([#307](https://github.com/CarlosNZ/json-edit-react/issues/307))
+- **JSON Schema → Filter Functions** — generate `allowEdit` / `allowDelete` / `allowAdd` (etc.) functions from a JSON Schema so the editor UI can't produce invalid data in the first place. _Planned._ ([#285](https://github.com/CarlosNZ/json-edit-react/issues/285))
+- **Search helpers** — ready-made `searchFilter` functions for common search patterns. _Planned._ ([#319](https://github.com/CarlosNZ/json-edit-react/issues/319))
 
 ## Confirm before update
 
-`JsonEditor` `await`s your `onUpdate` before committing a change, and treats a
-returned `null` as a silent cancel. These hooks build on that: they let you hold
-an edit open until the user answers a confirmation dialog, then commit or revert
-based on the answer. **No modal ships with the library** — you bring your own (any
-modal component, or a plain `<div>`) and drive it from the returned `dialog`
-object.
+`JsonEditor` `await`s your `onUpdate` before committing a change, and treats a returned `null` as a silent cancel. These hooks build on that: they let you hold an edit open until the user answers a confirmation dialog, then commit or revert based on the answer. **No modal ships with the library** — you bring your own (any modal component, or a plain `<div>`) and drive it from the returned `dialog` object.
 
 ### `useConfirmOnUpdate` — the common case
 
-Declare _when_ to confirm and _what_ to say; you get back a ready-made `onUpdate`
-plus the `dialog` state for your modal:
+Declare _when_ to confirm and _what_ to say; you get back a ready-made `onUpdate` plus the `dialog` state for your modal:
 
 ```tsx
 import { JsonEditor } from 'json-edit-react'
@@ -69,8 +56,7 @@ const MyEditor = () => {
 
 ### `useJsonEditorConfirm` — the primitive
 
-When your gating is richer than "ask on these events," use the lower-level hook
-and write the `onUpdate` yourself. `confirm()` returns a `Promise<boolean>`:
+`useConfirmOnUpdate`'s `confirmOn` predicate already covers any _condition_, so reach for this lower-level hook for flows its single, synchronous confirm can't express: confirming based on `await`ed work, more than one confirmation in a single update, or reusing the dialog for actions outside `onUpdate`. You write the `onUpdate` yourself; `confirm()` returns a `Promise<boolean>`:
 
 ```tsx
 const { confirm, dialog } = useJsonEditorConfirm()
@@ -78,20 +64,46 @@ const { confirm, dialog } = useJsonEditorConfirm()
 <JsonEditor
   onUpdate={async (input) => {
     if (input.event === 'delete') {
-      const ok = await confirm({ title: 'Delete?', message: `Delete "${String(input.key)}"?` })
-      if (!ok) return null // null = silent cancel; the node reverts
+      // The decision to confirm — and the message — come from async work, which
+      // `useConfirmOnUpdate`'s synchronous `confirmOn`/`message` can't do.
+      const { inUse, usedBy } = await checkReferences(input.path)
+      if (inUse) {
+        const ok = await confirm({
+          title: 'Still in use',
+          message: `Referenced by ${usedBy.join(', ')}. Delete anyway?`,
+        })
+        if (!ok) return null // null = silent cancel; the node reverts
+      }
     }
-    // …any other custom logic, then fall through to commit
   }}
 />
 <MyModal {...dialog} />
 ```
 
+### Pending-node overlay (opt-in)
+
+Usually unnecessary: for a _delete_-confirm the node already shows the item until you confirm. Reach for this only when you confirm _edits_ (whose node would otherwise look already-applied) or run a slow async `onUpdate`. **The library ships no UI** — supply your own custom-node component as `pendingComponent`, and the hook returns a ready `pendingNodeDefinition`:
+
+```tsx
+const { onUpdate, dialog, pendingNodeDefinition } = useConfirmOnUpdate({
+  confirmOn: ['delete', 'edit'],
+  message,
+  pendingComponent: MyPendingNode,
+})
+
+const customNodeDefinitions = useMemo(
+  () => (pendingNodeDefinition ? [pendingNodeDefinition, ...myDefinitions] : myDefinitions),
+  [pendingNodeDefinition, myDefinitions]
+)
+
+<JsonEditor onUpdate={onUpdate} customNodeDefinitions={customNodeDefinitions} />
+```
+
+Omit `pendingComponent` and behaviour is unchanged. Keep `customNodeDefinitions` referentially stable (see the CustomNodes docs).
+
 ### Wiring your modal
 
-`dialog` is the only contract. Render your modal from it — `isOpen` controls
-visibility, `onConfirm` / `onCancel` are the button handlers, and `title` /
-`message` (plus any extra keys you pass to `confirm()`) carry the content:
+`dialog` is the only contract. Render your modal from it — `isOpen` controls visibility, `onConfirm` / `onCancel` are the button handlers, and `title` / `message` (plus any extra keys you pass to `confirm()`) carry the content:
 
 ```tsx
 const MyModal = (dialog) =>

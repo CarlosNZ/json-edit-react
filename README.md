@@ -1067,6 +1067,9 @@ By default, your `component` is presented to the right of the property key it be
 
 If you want a single component to render the **entire row** (both key and value together — for example a tightly-coupled composite where the layout can't be decomposed into two slots), you can set `showKey: false` and let your `component` take the whole row. This is supported as an escape hatch; for most cases the `keyComponent` + `component` split is cleaner and preserves the standard key-editing UX.
 
+> [!IMPORTANT]
+> Keep your `customNodeDefinitions` array **referentially stable** — define it at module scope, or wrap it in `useMemo`. The editor compares this prop by reference to decide whether a node can skip re-rendering, so a brand-new inline array (`customNodeDefinitions={[...]}`) on every render forces every node to re-render every time, defeating the editor's fine-grained re-rendering. It still works correctly — just slower. The same guidance applies to your `condition` and other function/object props.
+
 ### Customising keys
 
 A `keyComponent` component is rendered in place of the default property label, in **view mode**. It receives the following props ([`CustomKeyProps`](https://github.com/CarlosNZ/json-edit-react/blob/main/src/types.ts)):

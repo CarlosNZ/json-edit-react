@@ -1,9 +1,14 @@
 import { act, renderHook } from '@testing-library/react'
-import type { JsonData, UpdateFunctionProps } from '../src'
+import { toPathString } from '../src'
+import type { CustomNodeDefinition, JsonData, UpdateFunctionProps } from '../src'
 import {
+  createPendingCommitDefinition,
   useConfirmOnUpdate,
   useJsonEditorConfirm,
-} from '../packages/utils/src/confirm-update'
+} from '../packages/utils/src'
+
+// A throwaway custom-node component for definition tests.
+const PendingStub: NonNullable<CustomNodeDefinition['component']> = () => null
 
 // Minimal synthetic update input. The discriminated union's per-event extras
 // (newValue / newKey / newPath) are irrelevant to the gating logic, so a cast
@@ -194,5 +199,120 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
 
     expect(result.current.dialog.title).toBe('Confirm')
     expect(result.current.dialog.message).toBe('delete "widget"?')
+  })
+})
+
+describe('useConfirmOnUpdate — pending lifecycle', () => {
+  it('exposes the pending node while a gated update awaits, then clears it on confirm', async () => {
+    const { result } = renderHook(() =>
+      useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'], message: 'sure?' })
+    )
+    expect(result.current.pending).toBeNull()
+
+    let res!: Promise<unknown>
+    act(() => {
+      res = Promise.resolve(result.current.onUpdate(makeInput('delete', { path: ['a', 'b'] })))
+    })
+
+    expect(result.current.dialog.isOpen).toBe(true)
+    expect(result.current.pending).toEqual({ path: toPathString(['a', 'b']), event: 'delete' })
+
+    act(() => result.current.dialog.onConfirm())
+    await act(async () => {
+      await res
+    })
+    expect(result.current.pending).toBeNull()
+  })
+
+  it('clears pending on cancel', async () => {
+    const { result } = renderHook(() =>
+      useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'], message: 'sure?' })
+    )
+
+    let res!: Promise<unknown>
+    act(() => {
+      res = Promise.resolve(result.current.onUpdate(makeInput('delete')))
+    })
+    expect(result.current.pending).not.toBeNull()
+
+    act(() => result.current.dialog.onCancel())
+    await act(async () => {
+      await res
+    })
+    expect(result.current.pending).toBeNull()
+  })
+
+  it('leaves pending null for a non-gated synchronous update', async () => {
+    const { result } = renderHook(() => useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'] }))
+
+    let res!: Promise<unknown>
+    act(() => {
+      res = Promise.resolve(result.current.onUpdate(makeInput('edit')))
+    })
+    await act(async () => {
+      await res
+    })
+    expect(result.current.pending).toBeNull()
+  })
+})
+
+describe('createPendingCommitDefinition', () => {
+  it('matches the pending path, carries the event, and locks the node', () => {
+    const def = createPendingCommitDefinition(
+      { path: toPathString(['a', 'b']), event: 'delete' },
+      PendingStub
+    )
+    expect(def.condition(makeInput('delete', { path: ['a', 'b'] }))).toBe(true)
+    expect(def.condition(makeInput('delete', { path: ['a', 'c'] }))).toBe(false)
+    expect(def.component).toBe(PendingStub)
+    expect(def.componentProps).toEqual({ event: 'delete' })
+    expect(def.showOnView).toBe(true)
+    expect(def.showEditTools).toBe(false)
+    expect(def.passOriginalNode).toBe(true)
+  })
+
+  it('never matches when pending is null', () => {
+    const def = createPendingCommitDefinition(null, PendingStub)
+    expect(def.condition(makeInput('delete'))).toBe(false)
+  })
+})
+
+describe('useConfirmOnUpdate — pendingNodeDefinition', () => {
+  it('returns no pendingNodeDefinition without a pendingComponent', () => {
+    const { result } = renderHook(() => useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'] }))
+    expect(result.current.pendingNodeDefinition).toBeUndefined()
+  })
+
+  it('builds a definition that matches the in-flight node once an update starts', async () => {
+    const { result } = renderHook(() =>
+      useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'], pendingComponent: PendingStub })
+    )
+    // Defined, but matches nothing while idle (pending is null).
+    const idle = result.current.pendingNodeDefinition
+    expect(idle).toBeDefined()
+    expect(idle!.condition(makeInput('delete', { path: ['a'] }))).toBe(false)
+    expect(idle!.component).toBe(PendingStub)
+
+    let res!: Promise<unknown>
+    act(() => {
+      res = Promise.resolve(result.current.onUpdate(makeInput('delete', { path: ['a'] })))
+    })
+
+    // New identity (memo keyed on pending), now matching the in-flight node.
+    expect(result.current.pendingNodeDefinition).not.toBe(idle)
+    expect(result.current.pendingNodeDefinition!.condition(makeInput('delete', { path: ['a'] }))).toBe(
+      true
+    )
+    expect(result.current.pendingNodeDefinition!.condition(makeInput('delete', { path: ['b'] }))).toBe(
+      false
+    )
+
+    act(() => result.current.dialog.onConfirm())
+    await act(async () => {
+      await res
+    })
+    expect(result.current.pendingNodeDefinition!.condition(makeInput('delete', { path: ['a'] }))).toBe(
+      false
+    )
   })
 })

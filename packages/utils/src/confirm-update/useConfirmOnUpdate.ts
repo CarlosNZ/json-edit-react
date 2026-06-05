@@ -1,6 +1,8 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
+import { toPathString } from 'json-edit-react'
 import type { JsonData, UpdateFunction, UpdateFunctionProps } from 'json-edit-react'
 import { useJsonEditorConfirm } from './useJsonEditorConfirm'
+import { createPendingCommitDefinition, type PendingUpdate } from '../_common/pendingNode'
 import type { ConfirmMessage, UseConfirmOnUpdateOptions, UseConfirmOnUpdateResult } from './types'
 
 const resolveMessage = <T,>(message: ConfirmMessage<T> | undefined, input: UpdateFunctionProps<T>) =>
@@ -20,24 +22,44 @@ export const useConfirmOnUpdate = <T = JsonData,>(
   opts: UseConfirmOnUpdateOptions<T>
 ): UseConfirmOnUpdateResult<T> => {
   const { confirm, dialog } = useJsonEditorConfirm()
-  const { confirmOn, message, title, onUpdate: inner } = opts
+  const { confirmOn, message, title, onUpdate: inner, pendingComponent } = opts
+
+  // The node whose update is in flight. Set at the start of every update and
+  // cleared in `finally`, so it spans both the confirm dialog and a slow inner
+  // `onUpdate`. The synchronous, non-confirmed path sets + clears with no `await`
+  // between, so React batches it to a no-op (no flicker).
+  const [pending, setPending] = useState<PendingUpdate | null>(null)
+
+  // Build the pending-overlay definition only when the consumer supplies a UI
+  // component (the library ships none). Memoized on `[pending, pendingComponent]`
+  // so its identity changes exactly when `pending` does — the editor's memo
+  // comparator needs that to re-render the affected node.
+  const pendingNodeDefinition = useMemo(
+    () => (pendingComponent ? createPendingCommitDefinition(pending, pendingComponent) : undefined),
+    [pending, pendingComponent]
+  )
 
   const onUpdate: UpdateFunction<T> = useCallback(
     async (input) => {
-      const shouldConfirm = Array.isArray(confirmOn)
-        ? confirmOn.includes(input.event)
-        : confirmOn(input)
-      if (shouldConfirm) {
-        const ok = await confirm({
-          title: resolveMessage(title, input),
-          message: resolveMessage(message, input),
-        })
-        if (!ok) return null
+      setPending({ path: toPathString(input.path), event: input.event })
+      try {
+        const shouldConfirm = Array.isArray(confirmOn)
+          ? confirmOn.includes(input.event)
+          : confirmOn(input)
+        if (shouldConfirm) {
+          const ok = await confirm({
+            title: resolveMessage(title, input),
+            message: resolveMessage(message, input),
+          })
+          if (!ok) return null
+        }
+        return inner ? inner(input) : undefined
+      } finally {
+        setPending(null)
       }
-      return inner ? inner(input) : undefined
     },
     [confirm, confirmOn, message, title, inner]
   )
 
-  return { onUpdate, dialog }
+  return { onUpdate, dialog, pending, pendingNodeDefinition }
 }

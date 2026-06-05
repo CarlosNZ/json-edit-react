@@ -17,6 +17,7 @@ import {
 // import to demo the Layer-1 primitive instead.
 import { useConfirmOnUpdate /*, useJsonEditorConfirm */ } from '@json-edit-react/utils'
 import { ConfirmDialog } from './ConfirmDialog'
+import { PendingCommit } from './PendingCommit'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
@@ -227,6 +228,10 @@ function App() {
       return `${action} ${target}?`
     },
     onUpdate: demoOnUpdate,
+    // Consumer-supplied pending overlay (the hooks ship no UI). Shows the
+    // affected node as "pending" while the modal is open — mainly useful here
+    // because we also confirm `edit`; a delete-only confirm wouldn't need it.
+    pendingComponent: PendingCommit,
   })
   // Layer-1 equivalent (flip to this to demo the primitive instead): replace the
   // hook above with `const introConfirm = useJsonEditorConfirm()` and gate at the
@@ -238,6 +243,17 @@ function App() {
   //     if (!ok) return null
   //   }
   // ───────────────────────────────────────────────────────────────────────────
+
+  // Merge the pending-overlay definition into the dataset's own custom nodes
+  // (kept referentially stable — see the CustomNodes docs). Guard on
+  // `pendingNodeDefinition`, which is undefined when no `pendingComponent` is set.
+  const introCustomNodeDefinitions = useMemo(
+    () =>
+      introConfirm.pendingNodeDefinition
+        ? [introConfirm.pendingNodeDefinition, ...(customNodeDefinitions ?? [])]
+        : customNodeDefinitions,
+    [introConfirm.pendingNodeDefinition, customNodeDefinitions]
+  )
 
   const {
     searchText,
@@ -625,7 +641,9 @@ function App() {
                   maxWidth="min(670px, 90vw)"
                   className="block-shadow"
                   stringTruncateLength={90}
-                  customNodeDefinitions={customNodeDefinitions}
+                  customNodeDefinitions={
+                    selectedDataSet === 'intro' ? introCustomNodeDefinitions : customNodeDefinitions
+                  }
                   // customNodeDefinitions={[
                   //   {
                   //     condition: ({ key }) => key === 'string',
