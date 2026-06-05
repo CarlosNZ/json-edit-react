@@ -9,7 +9,7 @@ import {
   type ThemeFunction,
   type NodeData,
   type IconReplacements,
-} from '../types'
+} from '../../types'
 
 export const defaultTheme: Theme = {
   displayName: 'Default',
