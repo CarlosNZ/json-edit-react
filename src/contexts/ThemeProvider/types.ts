@@ -127,8 +127,12 @@ export type ResolvedStyles = Record<ThemeableElement, ElementStyle>
 export type CompiledThemeFunction = (nodeData: NodeData) => React.CSSProperties
 
 /**
- * The compiled theme — every element mapped to its final style, and what
- * `getStyles` returns directly. Each value is either a static object (no
- * functions involved; a stable reference reused every render) or a single closure.
+ * The compiled theme. Partial: an element that no theme styles has no entry, so
+ * the map carries only what's actually styled. `getStyles` is the read boundary
+ * that fills the gap with `{}`, so consumers always get a concrete object. Each
+ * present value is either a static object (a stable reference reused every render)
+ * or a single closure.
  */
-export type CompiledStyles = Record<ThemeableElement, React.CSSProperties | CompiledThemeFunction>
+export type CompiledStyles = Partial<
+  Record<ThemeableElement, React.CSSProperties | CompiledThemeFunction>
+>

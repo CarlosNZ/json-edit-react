@@ -70,15 +70,16 @@ export const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
   return compiled
 }
 
-// Resolve a compiled element to concrete CSS: call the closure, or return the
-// object as-is (a stable reference, reused every render).
+// Resolve a compiled element to concrete CSS: call the closure, return the object
+// as-is (a stable reference), or `{}` for an element no theme styles — so the
+// public contract is always a concrete CSSProperties object.
 export const getStyles = (
   compiled: CompiledStyles,
   element: ThemeableElement,
   nodeData: NodeData
 ) => {
   const value = compiled[element]
-  return typeof value === 'function' ? value(nodeData) : value
+  return typeof value === 'function' ? value(nodeData) : value ?? {}
 }
 
 // Bridge for the two properties that can't be set inline — they feed static

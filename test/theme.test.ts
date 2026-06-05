@@ -25,16 +25,16 @@ const nodeData = makeNodeData()
 describe('compileStyles — shorthand & merge over default', () => {
   it('produces the default theme for empty input', () => {
     const c = compileStyles({})
-    expect(c.string).toEqual({ color: 'rgb(203, 75, 22)' })
-    expect(c.number).toEqual({ color: 'rgb(38, 139, 210)' })
+    expect(c.string).toEqual({ color: '#cb4b16' })
+    expect(c.number).toEqual({ color: '#268bd2' })
     expect(c.boolean).toEqual({ color: 'green' })
     expect(c.container).toEqual({ backgroundColor: '#f6f6f6', fontFamily: 'monospace' })
     expect(c.null).toEqual({
-      color: 'rgb(220, 50, 47)',
+      color: '#dc322f',
       fontVariant: 'small-caps',
       fontWeight: 'bold',
     })
-    expect(c.dropZone).toEqual({})
+    expect(c.dropZone).toBeUndefined() // unstyled by default → absent from the compiled map
   })
 
   it('treats a string value as the colour', () => {
@@ -118,7 +118,7 @@ describe('compileStyles — groups', () => {
     expect(c.null).toEqual({ color: 'green', fontVariant: 'small-caps', fontWeight: 'bold' })
     // non-members untouched
     expect(c.property).toEqual({ color: '#292929' })
-    expect(c.bracket).toEqual({ color: 'rgb(0, 43, 54)', fontWeight: 'bold' })
+    expect(c.bracket).toEqual({ color: '#002b36', fontWeight: 'bold' })
   })
 
   it('fans `icon` out to every icon element', () => {
@@ -129,7 +129,7 @@ describe('compileStyles — groups', () => {
     expect(c.iconCopy).toEqual({ color: 'grey' })
     expect(c.iconCancel).toEqual({ color: 'grey' })
     // a non-icon is untouched
-    expect(c.string).toEqual({ color: 'rgb(203, 75, 22)' })
+    expect(c.string).toEqual({ color: '#cb4b16' })
   })
 
   it('lets a specific element override a group within the same theme', () => {
@@ -141,7 +141,7 @@ describe('compileStyles — groups', () => {
   it('merges group and specific per property', () => {
     const c = compileStyles({ value: { opacity: 0.5 }, string: { color: 'red' } })
     expect(c.string).toEqual({ color: 'red', opacity: 0.5 })
-    expect(c.number).toEqual({ color: 'rgb(38, 139, 210)', opacity: 0.5 })
+    expect(c.number).toEqual({ color: '#268bd2', opacity: 0.5 })
   })
 
   it('never leaks group keys into the compiled output', () => {
@@ -179,7 +179,7 @@ describe('compileStyles — array layering', () => {
   })
 
   it('keeps defaults for unspecified elements', () => {
-    expect(compileStyles({ string: 'red' }).number).toEqual({ color: 'rgb(38, 139, 210)' })
+    expect(compileStyles({ string: 'red' }).number).toEqual({ color: '#268bd2' })
   })
 })
 
@@ -202,15 +202,15 @@ describe('compileStyles — function composition', () => {
     const c = compileStyles({ string: fn })
     expect(getStyles(c, 'string', makeNodeData({ value: 'x' }))).toEqual({ color: 'red' })
     expect(getStyles(c, 'string', makeNodeData({ value: 'y' }))).toEqual({
-      color: 'rgb(203, 75, 22)',
+      color: '#cb4b16',
     })
   })
 
   it('fans a group function out to each member, over that member’s base', () => {
     const c = compileStyles({ value: () => ({ opacity: 0.5 }) })
     expect(typeof c.string).toBe('function')
-    expect(getStyles(c, 'string', nodeData)).toEqual({ color: 'rgb(203, 75, 22)', opacity: 0.5 })
-    expect(getStyles(c, 'number', nodeData)).toEqual({ color: 'rgb(38, 139, 210)', opacity: 0.5 })
+    expect(getStyles(c, 'string', nodeData)).toEqual({ color: '#cb4b16', opacity: 0.5 })
+    expect(getStyles(c, 'number', nodeData)).toEqual({ color: '#268bd2', opacity: 0.5 })
   })
 
   it('composes a group function and a specific function per property', () => {
@@ -267,6 +267,12 @@ describe('getStyles', () => {
     })
     expect(getStyles(c, 'string', makeNodeData({ value: 'hot' }))).toEqual({ color: 'red' })
     expect(getStyles(c, 'string', makeNodeData({ value: 'cold' }))).toEqual({ color: 'blue' })
+  })
+
+  it('falls back to {} for an element no theme styles', () => {
+    // `dropZone` is absent from the compiled map, but the public contract is
+    // always a concrete object — never undefined.
+    expect(getStyles(compileStyles({}), 'dropZone', nodeData)).toEqual({})
   })
 })
 
