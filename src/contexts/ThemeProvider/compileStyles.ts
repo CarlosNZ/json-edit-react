@@ -7,8 +7,8 @@ import {
   type ThemeableElement,
   type CompiledStyles,
   type Theme,
-} from './types'
-import { type NodeData } from '../../types'
+  type NodeData,
+} from '../../types'
 import { defaultTheme } from './defaultTheme'
 
 // Built-in groups: a group key fans its value onto these element members.

@@ -33,10 +33,11 @@ export const ThemeProvider = ({
   docRoot: HTMLElement
   children: React.ReactNode
 }) => {
-  // Memoize so the context value is referentially stable across unrelated parent
-  // re-renders. Without this, every render handed `useTheme` consumers a fresh
-  // `{ getStyles, icons }`, re-rendering every node in the tree (a context update
-  // pierces React.memo) — defeating the §16 node memo boundary on every commit.
+  // Memoize so the context value is referentially stable across unrelated
+  // parent re-renders. Without this, every render handed `useTheme` consumers a
+  // fresh `{ getStyles, icons }`, re-rendering every node in the tree (a
+  // context update pierces React.memo) — defeating the §16 node memo boundary
+  // on every commit.
   // Pass a stable `theme` reference (e.g. memoize an inline theme array) to get
   // the full benefit.
   const styles = useMemo(() => compileStyles(theme), [theme])

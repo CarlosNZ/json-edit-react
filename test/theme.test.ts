@@ -3,8 +3,7 @@ import {
   getStyles,
   writeThemeCssVars,
 } from '../src/contexts/ThemeProvider/compileStyles'
-import { type ThemeFunction } from '../src/contexts/ThemeProvider/types'
-import { type NodeData } from '../src/types'
+import { type ThemeFunction, type NodeData } from '../src/types'
 
 // Minimal NodeData fixture — theme functions only read the few fields they need.
 const makeNodeData = (overrides: Partial<NodeData> = {}): NodeData => ({
