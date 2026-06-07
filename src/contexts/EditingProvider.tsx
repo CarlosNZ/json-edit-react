@@ -348,14 +348,11 @@ const createEditingStore = (
       if (applied) return
       applied = true
       applyDoc()
-      // Close the originating editing session (a Tab/onCommit may reopen next).
+      // Close the originating session — `sameSession` is phase-agnostic, so this
+      // matches both an `editing` submit and the release of a `held` op (same
+      // path + op). A Tab/onCommit may reopen the next node after.
       cancelOp = null
-      if (sameSession(state.active, { path, op, phase: 'editing' })) {
-        commit({ ...state, active: null })
-      } else if (state.active?.phase === 'held' && pathsEqual(state.active.path, path) && state.active.op === op) {
-        // Release of a held op.
-        commit({ ...state, active: null })
-      }
+      if (sameSession(state.active, { path, op, phase: 'editing' })) commit({ ...state, active: null })
       if (hasUpdate) addSettling(pathStr, token)
       const commitEvent = eventForOp(op, 'commit')
       // Frozen snapshot: the live doc has just mutated (delete/rename destroy the
@@ -385,32 +382,24 @@ const createEditingStore = (
     if (!held) apply() // default: optimistic close at submit
 
     return promise.then((outcome) =>
-      reconcile({ path, op, token, outcome, apply, revert, applied: () => applied, nodeData, extra })
+      reconcile(path, op, token, outcome, apply, revert, () => applied, nodeData, extra)
     )
   }
 
   // ── reconcile: settle the commit's outcome (token-gated) ──────────────────
-  const reconcile = ({
-    path,
-    op,
-    token,
-    outcome,
-    apply,
-    revert,
-    applied,
-    nodeData,
-    extra,
-  }: {
-    path: CollectionKey[]
-    op: EditOperation
-    token: Token
-    outcome: UpdateOutcome
-    apply: () => void
-    revert: () => void
-    applied: () => boolean
-    nodeData: NodeData
+  // Positional args (not an options object): this is once-called internal
+  // plumbing, and object keys can't be minified whereas positional params can.
+  const reconcile = (
+    path: CollectionKey[],
+    op: EditOperation,
+    token: Token,
+    outcome: UpdateOutcome,
+    apply: () => void,
+    revert: () => void,
+    applied: () => boolean,
+    nodeData: NodeData,
     extra?: { oldKey?: CollectionKey; newKey?: CollectionKey }
-  }): UpdateOutcome | undefined => {
+  ): UpdateOutcome | undefined => {
     const pathStr = toPathString(path)
 
     // Held-without-release: this resolve IS the apply/close moment.
