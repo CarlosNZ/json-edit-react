@@ -20,6 +20,8 @@
       "@json-edit-react/themes/*": ["../packages/themes/src/*"],
       "@json-edit-react/components": ["../packages/components/src"],
       "@json-edit-react/components/*": ["../packages/components/src/*"],
+      "@json-edit-react/utils": ["../packages/utils/src"],
+      "@json-edit-react/utils/*": ["../packages/utils/src/*"],
       "@json-edit-react": ["../src/"],
       "@json-edit-react/*": ["../src/*"],
       // `@json-edit-react` is mapped to core's source (`../src`), which lives in

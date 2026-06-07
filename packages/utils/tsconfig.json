@@ -4,7 +4,7 @@
     "jsx": "react-jsx",
     "declaration": true,
     "declarationDir": "build/dts",
-    "lib": ["dom", "es6"],
+    "lib": ["dom", "es2020"],
     "esModuleInterop": true,
     "outDir": "build",
     "rootDir": "src",
