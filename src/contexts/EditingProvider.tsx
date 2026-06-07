@@ -1,31 +1,35 @@
 /**
- * Editing state for the tree:
- * - the currently editing node (ensures only one node at a time can be edited)
- * - the "cancel" callback for the editing node (lets the UI reset a node when
- *   the user clicks another "Edit" button elsewhere)
- * - tab-navigation bookkeeping (direction + previously edited path)
- * - the "previous value" snapshot used when the user changes a node's data
- *   type and then cancels (the type change is a real data update, so cancel
- *   needs an explicit revert path)
+ * Editing + commit state for the tree. This store is the single control centre
+ * for the whole edit lifecycle (§ EditingModel-new.md):
+ *
+ * - `active`: the one open/held operation (only one node edits at a time).
+ * - `settling`: the in-flight optimistic commits, keyed by path-string → token,
+ *   so a node can show a "settling" state and a resolving commit can tell whether
+ *   it's still the live one (latest-edit-wins).
+ * - Tab-navigation bookkeeping (direction + previously-edited path).
+ *
+ * The Provider OWNS the commit pipeline: `submit()` runs the consumer's
+ * `onUpdate` (optimistic by default; `hold()` gates), `apply()` is the single
+ * "apply value + close editor + fire commit*" moment, and `reconcile()` settles
+ * the result (token-gated). It fires EVERY `onEditEvent`. The data-owner
+ * (`JsonEditor`) supplies the actual document mutation via the `CommitPrimitives`
+ * ref — this keeps the store free of `setData`/`updateDataObject` while owning
+ * the lifecycle.
  *
  * ## Why an external store (not useState + context value)
  *
  * Every node reads editing state, so with a plain context value any edit
  * transition re-rendered *every* consumer (`React.memo` can't stop a context
- * update). On a large tree that's the dominant cost of starting/moving an edit.
+ * update). Instead the state lives in a tiny external store (a mutable bundle +
+ * a listener `Set`), exposed through `useSyncExternalStore`. The context value
+ * is the store object itself — a stable reference — so `useContext` alone never
+ * re-renders. Components subscribe to a derived PRIMITIVE *slice* via
+ * `useEditingSelector`; a node selecting `isEditing` for its own path re-renders
+ * only when that boolean flips. Actions/imperative reads go through the
+ * non-subscribing `useEditingStore`.
  *
- * Instead the state lives in a tiny external store (a mutable bundle + a
- * listener `Set`), exposed through React's built-in `useSyncExternalStore`
- * (React >=18). The *context value is the store object itself* — a stable
- * reference that never changes — so `useContext` alone never re-renders anyone.
- * Components subscribe to a derived *slice* via `useEditingSelector`; a node
- * that selects a boolean (`isEditing` for its own path) re-renders only when
- * that boolean flips. Moving an edit from node A to node B re-renders exactly A
- * and B. Actions are read via the non-subscribing `useEditingStore`.
- *
- * `useEditing` remains as a whole-bundle compatibility hook (used by the
- * slice-isolation test); it subscribes to every change, so it must NOT be used
- * on the per-node hot path — use selectors there.
+ * `useEditing` remains as a whole-bundle compatibility hook (slice-isolation
+ * test); it wakes on every change, so never use it on the per-node hot path.
  */
 
 import React, {
@@ -38,165 +42,384 @@ import React, {
 import {
   type TabDirection,
   type CollectionKey,
-  type JsonData,
   type OnEditEventFunction,
   type EditEvent,
   type EditingState,
+  type EditOperation,
   type BuildNodeDataFromPathRef,
+  type UpdateFunctionProps,
+  type JsonData,
+  type UpdateControl,
+  type JsonEditorError,
 } from '../types'
-import { editingStatesEqual, isDescendantOf, pathsEqual } from '../utils/pathTools'
+import { type AssignOptions } from '../utils/assign'
+import { isDescendantOf, pathsEqual, toPathString } from '../utils/pathTools'
+
+type Token = number
+type PathString = string
 
 export interface EditingStateBundle {
-  currentlyEditingElement: EditingState | null
+  /** The one open/held operation (null = nothing active). */
+  active: EditingState | null
+  /** In-flight optimistic commits: path-string → the commit's token. */
+  settling: Record<PathString, Token>
   previouslyEditedElement: CollectionKey[] | null
   tabDirection: TabDirection
-  previousValue: JsonData | null
 }
 
-interface StartEditOptions {
-  mode?: 'key' | 'value' | 'add'
+/** A commit to perform, discriminated by `op`. `path` is the target/source. */
+export type CommitRequest =
+  | { op: 'edit'; path: CollectionKey[]; value: unknown }
+  // `path` is the COLLECTION being added into (the add session + events live
+  // there); `key` is the new child's key/index (the commit targets `[...path, key]`).
+  | { op: 'add'; path: CollectionKey[]; key: CollectionKey; value: unknown; options?: AssignOptions }
+  | { op: 'delete'; path: CollectionKey[] }
+  | { op: 'rename'; path: CollectionKey[]; newKey: CollectionKey }
+  | { op: 'move'; path: CollectionKey[]; to: { path: CollectionKey[]; position: 'above' | 'below' } }
+
+/** The normalised result of a settled commit. `JsonEditor`'s `runUpdate` maps
+ *  `onUpdate`'s raw return (incl. localised reject messages) to this. */
+export type UpdateOutcome =
+  | { status: 'commit' }
+  | { status: 'override'; value: JsonData }
+  | { status: 'cancel' }
+  | { status: 'error'; error: JsonEditorError }
+
+/** What `buildCommit` returns: the `onUpdate` input plus apply/revert thunks. */
+export interface BuiltCommit {
+  input: UpdateFunctionProps
+  /** True for an unchanged-value edit — skip `onUpdate`/settlement entirely. */
+  isNoOp: boolean
+  /** Optimistic `setData` for this op. */
+  apply: () => void
+  /** Per-path inverse, so a late failure reverts the right node without
+   *  clobbering concurrent commits to other paths. Reads the live document. */
+  revert: () => void
+  /** Terminal-event extras (rename carries `oldKey`/`newKey`). */
+  extra?: { oldKey?: CollectionKey; newKey?: CollectionKey }
+}
+
+/**
+ * Document-mutation primitives supplied by the data-owner (`JsonEditor`) via a
+ * ref. The store calls these from the commit engine; it never touches
+ * `setData`/`updateDataObject` itself.
+ */
+export interface CommitPrimitives {
+  /** Run the consumer's `onUpdate` and normalise its result to an outcome.
+   *  `undefined` when no `onUpdate` was supplied (the engine then skips the
+   *  settlement phase — no `update*`). */
+  runUpdate?: (input: UpdateFunctionProps, control: UpdateControl) => Promise<UpdateOutcome>
+  /** Prepare a commit (compute `newData`, the input, and apply/revert). `null`
+   *  if the target path no longer exists. */
+  buildCommit: (request: CommitRequest) => BuiltCommit | null
+  /** Apply an arbitrary value at `path` (used for an `{ value }` override). */
+  applyValue: (path: CollectionKey[], value: unknown) => void
+}
+
+/** Arguments to `submit()` — the one commit entry point the nodes call. */
+export type SubmitArgs = CommitRequest & {
+  /** Instant ops (delete, array-add, move): no `start*`/`submit*`, no session. */
+  instant?: boolean
+  /** Runs inside `apply()`, right after `commit*` (Tab passes `open(next)`). */
+  onCommit?: () => void
+}
+
+interface OpenOptions {
+  op?: EditOperation
   cancelOp?: () => void
-  // Imperative (handle-driven) edit — overrides `allowEdit`. See
-  // `EditingState.force`.
+  // Imperative (handle-driven) edit — overrides `allowEdit`. See `EditingState.force`.
   force?: boolean
 }
 
-// The lifecycle event a session-mode transition fires (start / cancel).
-const eventForMode = (mode: EditingState['mode'], phase: 'start' | 'cancel'): EditEvent['event'] => {
-  if (mode === 'key') return phase === 'start' ? 'startRename' : 'cancelRename'
-  if (mode === 'add') return phase === 'start' ? 'startAdd' : 'cancelAdd'
-  return phase === 'start' ? 'startEdit' : 'cancelEdit'
+// Phase-specific event for an operation. `delete`/`move` only ever fire at commit.
+const eventForOp = (
+  op: EditOperation,
+  phase: 'start' | 'submit' | 'commit' | 'cancel'
+): EditEvent['event'] | null => {
+  if (op === 'delete') return phase === 'commit' ? 'delete' : null
+  if (op === 'move') return phase === 'commit' ? 'move' : null
+  const suffix = op === 'rename' ? 'Rename' : op === 'add' ? 'Add' : 'Edit'
+  if (phase === 'start') return `start${suffix}` as EditEvent['event']
+  if (phase === 'submit') return `submit${suffix}` as EditEvent['event']
+  if (phase === 'cancel') return `cancel${suffix}` as EditEvent['event']
+  return `commit${suffix}` as EditEvent['event']
 }
+
+// Two sessions target the "same thing" when path + op match (phase may differ:
+// an `editing` session that becomes `held` is still the same session).
+const sameSession = (a: EditingState | null, b: EditingState | null) =>
+  a !== null && b !== null && a.op === b.op && pathsEqual(a.path, b.path)
 
 export interface EditingStore {
   subscribe: (onChange: () => void) => () => void
   getSnapshot: () => EditingStateBundle
   getServerSnapshot: () => EditingStateBundle
-  startEdit: (path: CollectionKey[], options?: StartEditOptions) => void
-  /** Abort the active session — fires `onEditEvent` cancel* (true user/external cancel). */
-  cancelEdit: () => void
-  /** Close the active session silently — no event. Used by commit flows
-   *  (the terminal event is fired by the node, from the commit outcome). */
-  closeEdit: () => void
+  /** Open an inline edit/rename/add session (`active.phase = 'editing'`). */
+  open: (path: CollectionKey[], options?: OpenOptions) => void
+  /** Abort the active session — runs its cleanup and fires `cancel*`. */
+  cancel: () => void
+  /** Run the full commit pipeline (optimistic by default; `hold()` gates).
+   *  Resolves with the settlement outcome (or `undefined` for a no-op / no
+   *  `onUpdate`) so the calling node can report errors via its own `onError`. */
+  submit: (args: SubmitArgs) => Promise<UpdateOutcome | undefined>
   setTabDirection: (dir: TabDirection) => void
   recordPreviousEdit: (path: CollectionKey[]) => void
-  setPreviousValue: (value: JsonData | null) => void
   /** Imperative read for event handlers — does not subscribe. */
   areChildrenBeingEdited: (path: CollectionKey[]) => boolean
 }
 
 const initialState: EditingStateBundle = {
-  currentlyEditingElement: null,
+  active: null,
+  settling: {},
   previouslyEditedElement: null,
   tabDirection: 'next',
-  previousValue: null,
 }
 
 const createEditingStore = (
   onEditEventRef: React.RefObject<OnEditEventFunction | undefined>,
-  buildNodeDataFromPathRef: BuildNodeDataFromPathRef
+  buildNodeDataFromPathRef: BuildNodeDataFromPathRef,
+  commitRef: React.RefObject<CommitPrimitives | undefined>
 ): EditingStore => {
   let state = initialState
   const listeners = new Set<() => void>()
 
-  // cancelOp fires imperatively when a session ends without a confirm — node
-  // switch, explicit cancel (Esc/✗), or external cancel (search reset,
-  // `editorRef.cancelEdit`) — so the previously-editing node can reset its
-  // local UI buffers. Held in a closure var (not state) so installing/clearing
-  // it never notifies subscribers.
+  // Cleanup for the *editing*-phase session's local UI buffer, run when that
+  // session is displaced (a switch) or cancelled (Esc/✗/external). Held in a
+  // closure var (not state) so installing/clearing it never notifies.
   let cancelOp: (() => void) | null = null
 
-  // Re-entrancy guard. A registered cancelOp may itself call cancelEdit
-  // (some nodes route their user-cancel handler through the store); the
-  // recursive call no-ops so the outer flow owns the single state-clear and
-  // single cancel* emission.
+  // Re-entrancy guard: a registered `cancelOp` may itself route back through
+  // `cancel()`; the recursive call no-ops so the outer flow owns the single
+  // state-clear + single cancel* emission.
   let cancelling = false
+
+  // Monotonic per-commit identity. A resolving commit acts only if it's still
+  // the current token for its path (`settling[path] === token`); otherwise a
+  // newer commit superseded it and the stale result is ignored.
+  let nextToken = 0
 
   const emit = () => listeners.forEach((listener) => listener())
 
-  // Replace the bundle and notify. Callers pass an already-changed bundle; the
-  // per-action equality guards below avoid emitting on no-op transitions (so
-  // re-issuing the same edit target doesn't churn subscribers).
+  // Replace the bundle and notify. The per-action equality guards below avoid
+  // emitting on no-op transitions.
   const commit = (next: EditingStateBundle) => {
     state = next
     emit()
   }
 
-  // Fire an `onEditEvent` for a session at `path`, building its `NodeData` from
-  // the live document. No-op if there's no consumer or the accessor isn't ready.
-  const fireEditEvent = (path: CollectionKey[], event: EditEvent['event']) => {
+  // Fire an `onEditEvent`, building `NodeData` from the live document. No-op if
+  // there's no consumer or the accessor isn't ready. `extra` carries the
+  // rename keys / settlement `operation` / `error`.
+  const fireEditEvent = (
+    path: CollectionKey[],
+    event: EditEvent['event'],
+    extra?: Record<string, unknown>
+  ) => {
     if (!onEditEventRef.current) return
     const nodeData = buildNodeDataFromPathRef.current?.(path)
-    if (nodeData) onEditEventRef.current({ ...nodeData, event } as EditEvent)
+    if (nodeData) onEditEventRef.current({ ...nodeData, ...extra, event } as EditEvent)
   }
 
-  const startEdit = (path: CollectionKey[], options?: StartEditOptions) => {
-    const mode = options?.mode ?? 'value'
-    const next: EditingState = { path, mode, force: options?.force }
-    const prev = state.currentlyEditingElement
-    const isSwitch = prev !== null && !editingStatesEqual(prev, next)
+  const setActive = (active: EditingState | null) => {
+    if (sameSession(state.active, active) && state.active?.phase === active?.phase) return
+    commit({ ...state, active })
+  }
 
-    // Run the outgoing session's UI cleanup before installing the new one.
-    // If that cancelOp itself routed through `cancelEdit` (some nodes do),
-    // it will have cleared state and fired the cancel* already — the
-    // post-check below avoids a double-fire.
-    const op = cancelOp
+  // ── open: start an inline editing session ────────────────────────────────
+  const open = (path: CollectionKey[], options?: OpenOptions) => {
+    // Blocked while a held op is mid-gate (one operation at a time).
+    if (state.active?.phase === 'held') return
+
+    const op = options?.op ?? 'edit'
+    const next: EditingState = { path, op, phase: 'editing', force: options?.force }
+    const prev = state.active
+    const isSwitch = prev !== null && !sameSession(prev, next)
+
+    // Run the outgoing session's UI cleanup before installing the new one. If
+    // that cancelOp itself routed through `cancel()`, it cleared state + fired
+    // cancel* already — the post-check below avoids a double-fire.
+    const op0 = cancelOp
     cancelOp = null
-    if (op) op()
+    if (op0) op0()
 
     cancelOp = options?.cancelOp ?? null
 
-    // Fire cancel* for the displaced session if the cancelOp didn't already
-    // tear it down. `state.currentlyEditingElement` still pointing at `prev`
-    // means no recursive cancelEdit fired the event.
-    if (
-      isSwitch &&
-      state.currentlyEditingElement !== null &&
-      editingStatesEqual(state.currentlyEditingElement, prev)
-    ) {
-      fireEditEvent(prev.path, prev.mode === 'key' ? 'cancelRename' : 'cancelEdit')
+    // Fire cancel* for the displaced session if its cleanup didn't already tear
+    // it down (state.active still pointing at `prev`). A displaced session is
+    // always `editing`-phase here (a `held` one blocked us above), so it was
+    // never committed — discarding it is correct.
+    if (isSwitch && sameSession(state.active, prev)) {
+      const cancelEvent = eventForOp(prev.op, 'cancel')
+      if (cancelEvent) fireEditEvent(prev.path, cancelEvent)
     }
 
-    if (!editingStatesEqual(state.currentlyEditingElement, next)) {
-      commit({ ...state, currentlyEditingElement: next })
-    }
-
-    fireEditEvent(path, eventForMode(mode, 'start'))
+    setActive(next)
+    const startEvent = eventForOp(op, 'start')
+    if (startEvent) fireEditEvent(path, startEvent)
   }
 
-  // True cancel (user Esc/✗, node switch, `editorRef.cancel`, search reset): run
-  // the session's UI cleanup (`cancelOp`), close the session, AND fire cancel*.
-  // Snapshot `prev` before nulling so the event uses the prior path/mode. The
-  // `cancelling` guard makes a reentrant cancelEdit (a `cancelOp` that itself
-  // routes back through cancelEdit) a no-op rather than a double-fire.
-  const cancelEdit = () => {
+  // ── cancel: abort the active session (true user/external cancel) ──────────
+  const cancel = () => {
     if (cancelling) return
-    const prev = state.currentlyEditingElement
+    // A held op resolves only through its gate (we can't abort the in-flight
+    // onUpdate promise), so external cancel is inert against it.
+    if (state.active?.phase === 'held') return
+    const prev = state.active
     cancelling = true
     try {
-      const op = cancelOp
+      const op0 = cancelOp
       cancelOp = null
-      if (op) op()
+      if (op0) op0()
       if (prev !== null) {
-        if (state.currentlyEditingElement !== null) {
-          commit({ ...state, currentlyEditingElement: null })
-        }
-        fireEditEvent(prev.path, eventForMode(prev.mode, 'cancel'))
+        if (state.active !== null) commit({ ...state, active: null })
+        const cancelEvent = eventForOp(prev.op, 'cancel')
+        if (cancelEvent) fireEditEvent(prev.path, cancelEvent)
       }
     } finally {
       cancelling = false
     }
   }
 
-  // Silent close for commit flows — clears state + cancelOp, fires NO event (the
-  // node fires the terminal confirm*/cancel* from the commit outcome). Clearing
-  // cancelOp is load-bearing: a Tab-commit closes then `startEdit(next)`, which
-  // would otherwise run the stale cancelOp and revert the just-committed value.
-  const closeEdit = () => {
-    cancelOp = null
-    if (state.currentlyEditingElement !== null) {
-      commit({ ...state, currentlyEditingElement: null })
+  const addSettling = (pathStr: PathString, token: Token) =>
+    commit({ ...state, settling: { ...state.settling, [pathStr]: token } })
+
+  const dropSettling = (pathStr: PathString) => {
+    if (!(pathStr in state.settling)) return
+    const rest = { ...state.settling }
+    delete rest[pathStr]
+    commit({ ...state, settling: rest })
+  }
+
+  // ── submit: the one commit pipeline ───────────────────────────────────────
+  const submit = (request: SubmitArgs) => {
+    const { op, path, instant, onCommit } = request
+    const prims = commitRef.current
+    const built = prims?.buildCommit(request)
+    const extra = built?.extra
+    const pathStr = toPathString(path)
+    const token = ++nextToken
+
+    if (!instant) {
+      const submitEvent = eventForOp(op, 'submit')
+      if (submitEvent) fireEditEvent(path, submitEvent)
     }
+
+    // No-op edit (unchanged value): close the session, fire commit*, no onUpdate
+    // / settlement / update*.
+    if (!built || built.isNoOp) {
+      if (sameSession(state.active, { path, op, phase: 'editing' })) commit({ ...state, active: null })
+      cancelOp = null
+      const commitEvent = eventForOp(op, 'commit')
+      if (commitEvent) fireEditEvent(path, commitEvent, extra)
+      return Promise.resolve(undefined)
+    }
+
+    const { input, apply: applyDoc, revert } = built
+    const hasUpdate = !!prims?.runUpdate
+    let applied = false
+    let held = false
+
+    const apply = () => {
+      if (applied) return
+      applied = true
+      applyDoc()
+      // Close the originating editing session (a Tab/onCommit may reopen next).
+      cancelOp = null
+      if (sameSession(state.active, { path, op, phase: 'editing' })) {
+        commit({ ...state, active: null })
+      } else if (state.active?.phase === 'held' && pathsEqual(state.active.path, path) && state.active.op === op) {
+        // Release of a held op.
+        commit({ ...state, active: null })
+      }
+      if (hasUpdate) addSettling(pathStr, token)
+      const commitEvent = eventForOp(op, 'commit')
+      if (commitEvent) fireEditEvent(path, commitEvent, extra)
+      onCommit?.()
+    }
+
+    const control: UpdateControl = {
+      hold: () => {
+        held = true
+        // Mark the session held (blocks the tree). Instant ops have no prior
+        // session, so create one; editor ops flip their phase to 'held'.
+        commit({ ...state, active: { path, op, phase: 'held', force: state.active?.force } })
+        return () => apply()
+      },
+    }
+
+    if (!hasUpdate) {
+      // No consumer onUpdate — apply optimistically and we're done (no settle).
+      apply()
+      return Promise.resolve(undefined)
+    }
+
+    const promise = prims!.runUpdate!(input, control)
+    if (!held) apply() // default: optimistic close at submit
+
+    return promise.then((outcome) =>
+      reconcile({ path, op, token, outcome, apply, revert, applied: () => applied, extra })
+    )
+  }
+
+  // ── reconcile: settle the commit's outcome (token-gated) ──────────────────
+  const reconcile = ({
+    path,
+    op,
+    token,
+    outcome,
+    apply,
+    revert,
+    applied,
+    extra,
+  }: {
+    path: CollectionKey[]
+    op: EditOperation
+    token: Token
+    outcome: UpdateOutcome
+    apply: () => void
+    revert: () => void
+    applied: () => boolean
+    extra?: { oldKey?: CollectionKey; newKey?: CollectionKey }
+  }): UpdateOutcome => {
+    const pathStr = toPathString(path)
+
+    // Held-without-release: this resolve IS the apply/close moment.
+    if (!applied()) {
+      if (outcome.status === 'cancel' || outcome.status === 'error') {
+        // Gate declined (or rejected) before applying → cancel the session.
+        if (state.active?.phase === 'held' && pathsEqual(state.active.path, path)) {
+          commit({ ...state, active: null })
+        }
+        const cancelEvent = eventForOp(op, 'cancel')
+        if (cancelEvent) fireEditEvent(path, cancelEvent)
+        if (outcome.status === 'error')
+          fireEditEvent(path, 'updateError', { operation: op, error: outcome.error })
+        return outcome
+      }
+      apply()
+    }
+
+    // Token gate: a newer commit for this path superseded us → ignore silently.
+    if (state.settling[pathStr] !== token) return outcome
+    dropSettling(pathStr)
+
+    switch (outcome.status) {
+      case 'cancel':
+        revert() // silent cancel after an optimistic apply
+        break
+      case 'error':
+        revert()
+        fireEditEvent(path, 'updateError', { operation: op, error: outcome.error })
+        break
+      case 'override':
+        commitRef.current?.applyValue(path, outcome.value)
+        fireEditEvent(path, 'updateSuccessful', { operation: op, ...extra })
+        break
+      case 'commit':
+        fireEditEvent(path, 'updateSuccessful', { operation: op, ...extra })
+        break
+    }
+    return outcome
   }
 
   const setTabDirection = (dir: TabDirection) => {
@@ -204,17 +427,10 @@ const createEditingStore = (
   }
 
   const recordPreviousEdit = (path: CollectionKey[]) => {
-    // Callers pass a freshly-allocated `path`, so guard on value equality —
-    // otherwise every Tab re-commits an equal path and wakes all `useEditing`
-    // subscribers for nothing.
     const prev = state.previouslyEditedElement
     if (prev === null || !pathsEqual(prev, path)) {
       commit({ ...state, previouslyEditedElement: path })
     }
-  }
-
-  const setPreviousValue = (value: JsonData | null) => {
-    if (state.previousValue !== value) commit({ ...state, previousValue: value })
   }
 
   return {
@@ -224,15 +440,13 @@ const createEditingStore = (
     },
     getSnapshot: () => state,
     getServerSnapshot: () => state,
-    startEdit,
-    cancelEdit,
-    closeEdit,
+    open,
+    cancel,
+    submit,
     setTabDirection,
     recordPreviousEdit,
-    setPreviousValue,
     areChildrenBeingEdited: (path) =>
-      state.currentlyEditingElement !== null &&
-      isDescendantOf(state.currentlyEditingElement.path, path),
+      state.active !== null && isDescendantOf(state.active.path, path),
   }
 }
 
@@ -242,25 +456,26 @@ interface EditingProps {
   children: React.ReactNode
   onEditEvent?: OnEditEventFunction
   buildNodeDataFromPathRef: BuildNodeDataFromPathRef
+  commitRef: React.RefObject<CommitPrimitives | undefined>
 }
 
 export const EditingProvider = ({
   children,
   onEditEvent,
   buildNodeDataFromPathRef,
+  commitRef,
 }: EditingProps) => {
   // Keep the latest `onEditEvent` in a ref so an inline consumer callback
-  // doesn't force the store to be recreated. Written during render but only
-  // ever *read* inside actions (event time), so this is safe.
+  // doesn't force the store to be recreated. Read only at event time.
   const onEditEventRef = useRef(onEditEvent)
   onEditEventRef.current = onEditEvent
 
-  // The store is created once and its identity never changes, so the context
-  // value is stable — `useContext` alone never triggers a re-render. Both refs
-  // are read only at event time, after `Editor` has populated the accessor.
+  // The store is created once; its identity never changes, so the context value
+  // is stable. All three refs are read only at event time, after `Editor` has
+  // populated the accessors.
   const storeRef = useRef<EditingStore | null>(null)
   if (storeRef.current === null)
-    storeRef.current = createEditingStore(onEditEventRef, buildNodeDataFromPathRef)
+    storeRef.current = createEditingStore(onEditEventRef, buildNodeDataFromPathRef, commitRef)
 
   return (
     <EditingProviderContext.Provider value={storeRef.current}>
@@ -277,18 +492,15 @@ export const useEditingStore = (): EditingStore => {
 }
 
 // The slice a selector may return: a primitive only. Primitives are
-// `Object.is`-stable, so the `getSnapshot` result is referentially stable when
-// nothing changed; a selector returning a fresh object/array would compare
-// unequal on every store emit and re-render its subscriber each time.
+// `Object.is`-stable, so a component re-renders only when the selected value
+// actually changes.
 type EditingSelection = string | number | boolean | bigint | symbol | null | undefined
 
 /**
- * Subscribe to a derived slice of editing state. The selector must return a
- * PRIMITIVE — primitives are `Object.is`-stable, so the component re-renders
- * only when the selected value actually changes, sidestepping the
- * `getSnapshot` caching pitfall without the external `with-selector` shim. The
- * `T extends EditingSelection` bound enforces that contract at compile time:
- * a selector returning a fresh object/array won't type-check.
+ * Subscribe to a derived PRIMITIVE slice of editing state. The `T extends
+ * EditingSelection` bound enforces the primitive-only contract at compile time
+ * (a selector returning a fresh object/array won't type-check, which would
+ * re-render on every emit).
  */
 export const useEditingSelector = <T extends EditingSelection>(
   selector: (state: EditingStateBundle) => T
@@ -303,10 +515,8 @@ export const useEditingSelector = <T extends EditingSelection>(
 
 /**
  * Whole-bundle compatibility hook: subscribes to every editing change and
- * returns the full state plus the (stable) actions. The returned object is
- * memoized so an unrelated parent re-render hands back the same reference
- * (what a downstream `React.memo` relies on). Do NOT use on the per-node hot
- * path — it wakes on every edit transition; use `useEditingSelector` there.
+ * returns the full state plus the (stable) actions. Do NOT use on the per-node
+ * hot path — it wakes on every edit transition; use `useEditingSelector` there.
  */
 export const useEditing = () => {
   const store = useEditingStore()
@@ -314,12 +524,11 @@ export const useEditing = () => {
   return useMemo(
     () => ({
       ...bundle,
-      startEdit: store.startEdit,
-      cancelEdit: store.cancelEdit,
-      closeEdit: store.closeEdit,
+      open: store.open,
+      cancel: store.cancel,
+      submit: store.submit,
       setTabDirection: store.setTabDirection,
       recordPreviousEdit: store.recordPreviousEdit,
-      setPreviousValue: store.setPreviousValue,
       areChildrenBeingEdited: store.areChildrenBeingEdited,
     }),
     [bundle, store]

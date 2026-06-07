@@ -54,5 +54,5 @@ export const isDescendantOf = (node: CollectionKey[], ancestor: CollectionKey[])
 
 export const editingStatesEqual = (a: EditingState | null, b: EditingState | null): boolean => {
   if (a === null || b === null) return a === b
-  return a.mode === b.mode && pathsEqual(a.path, b.path)
+  return a.op === b.op && pathsEqual(a.path, b.path)
 }

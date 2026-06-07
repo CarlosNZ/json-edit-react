@@ -30,8 +30,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   // Actions + imperative reads from the (stable) store — no subscription, so
   // editing transitions elsewhere don't re-render this node.
-  const { startEdit, cancelEdit, closeEdit, setPreviousValue, areChildrenBeingEdited } =
-    useEditingStore()
+  const { open, cancel, submit, areChildrenBeingEdited } = useEditingStore()
   const { setCollapseState } = useCollapse()
   const {
     mainContainerRef,
@@ -39,13 +38,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     nodeData: incomingNodeData,
     parentData,
     showCollectionCount,
-    onEdit,
-    onAdd,
-    onDelete,
     canDragOnto,
     collapseFilter,
     collapseAnimationTime,
-    onMove,
     allowClipboard,
     onCopy,
     showIconTooltips,
@@ -101,14 +96,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     setError,
     onError,
     derivedValues,
-    emitEditEvent,
-    handleMutationResult,
-    revertPreviousValue,
     buildKeyDisplayProps,
   } = useCommon({ props, collapsed })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
-    { canDrag, canDragOnto, path, nodeData, onMove, onError, translate }
+    { canDrag, canDragOnto, path, nodeData, onError, translate }
   )
 
   // This allows us to not render the children on load if they're hidden (which
@@ -210,8 +202,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // re-renders this node only when an edit enters or leaves its subtree (keeps
   // it expanded while a descendant is edited via Tab).
   const childrenEditing = useEditingSelector(
-    (s) =>
-      s.currentlyEditingElement !== null && isDescendantOf(s.currentlyEditingElement.path, path)
+    (s) => s.active !== null && isDescendantOf(s.active.path, path)
   )
 
   // For when children are accessed via Tab
@@ -272,49 +263,29 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     }
   }
 
-  // Commits the raw-JSON edit of this collection and fires the matching
-  // `onEditEvent` (`confirmEdit`/`cancelEdit`).
+  // Commits the raw-JSON edit of this collection through the store's commit
+  // engine. Parse failure keeps the session open (only the error fires).
   const handleEdit = () => {
-    // Parse exactly the text shown: `editBufferValue` is the displayed buffer
-    // and reuses the string the memo already serialized, so the parsed input
-    // and the INVALID_JSON payload match the textarea, and confirming without
-    // typing doesn't serialize `data` again. The `?? jsonStringify(data)` is a
-    // type guard — `editBufferValue` is non-null whenever a confirm can fire.
+    // Parse exactly the text shown: `editBufferValue` reuses the string the memo
+    // already serialized, so the parsed input and the INVALID_JSON payload match
+    // the textarea. The `?? jsonStringify(data)` is a type guard.
     const textToParse = editBufferValue ?? jsonStringify(data)
     let value: CollectionData
     try {
       value = jsonParse(textToParse) as CollectionData
     } catch {
-      // Parse failure leaves the edit session OPEN (user can fix the JSON), so
-      // no terminal event — only the error.
       onError(
         { code: 'INVALID_JSON', message: translate('ERROR_INVALID_JSON', nodeData) },
         textToParse
       )
       return
     }
-    closeEdit()
-    setPreviousValue(null)
     setError(null)
-    // No-op confirm: bail without committing. When the buffer was never
-    // typed into, `textToParse` already IS `jsonStringify(data)`, so reuse it
-    // rather than serializing `data` a second time.
-    const currentDataString = stringifiedValue === null ? textToParse : jsonStringify(data)
-    clearEditBuffer()
-    // No-op confirm (unchanged JSON) reports as a cancel (closed without change).
-    if (jsonStringify(value) === currentDataString) {
-      emitEditEvent('cancelEdit')
-      return
-    }
-    onEdit(value, path).then((result) =>
-      handleMutationResult({
-        result,
-        errorCode: 'UPDATE_ERROR',
-        errorValue: value as CollectionData,
-        cancelEvent: 'cancelEdit',
-        confirmEvent: 'confirmEdit',
-      })
-    )
+    // `onCommit: clearEditBuffer` clears the buffer at the commit moment, so a
+    // `hold()` keeps the typed JSON visible until then (buffer ⊥ data).
+    submit({ op: 'edit', path, value, onCommit: clearEditBuffer }).then((outcome) => {
+      if (outcome?.status === 'error') onError(outcome.error, value as CollectionData)
+    })
   }
 
   // Commits an add and fires `confirmAdd` (or the error observer).
@@ -325,62 +296,44 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     const newValue = getDefaultNewValue(nodeData, key)
 
     if (collectionType === 'array') {
-      // Array adds are instant — no `startAdd` session opens (no key-entry
-      // step), so only `confirmAdd` fires, on success. A rejected/errored array
-      // add emits no terminal event (there's no session to close).
+      // Array adds are instant — no key-entry session. The engine fires
+      // `commitAdd` and settles; a rejected add surfaces the error here.
       const index = insertAtTop.array ? 0 : (data as unknown[]).length
       const options = insertAtTop.array ? { insert: true } : {}
-      onAdd(newValue, [...path, index], options).then((result) =>
-        handleMutationResult({
-          result,
-          errorCode: 'ADD_ERROR',
-          errorValue: newValue as CollectionData,
-          confirmEvent: 'confirmAdd',
-        })
+      submit({ op: 'add', path, key: index, value: newValue, options, instant: true }).then(
+        (outcome) => {
+          if (outcome?.status === 'error') onError(outcome.error, newValue as CollectionData)
+        }
       )
       return
     }
 
-    // Object add: a `startAdd` session is open (key entry), closed silently by
-    // the confirm. Terminate it with `confirmAdd` (committed) or `cancelAdd`
-    // (duplicate key, silent cancel, or rejected/errored) — mirroring the
-    // value-edit confirm flow, so a `startAdd` always pairs with a terminal.
+    // Object add: a key-entry session is open on this collection. A duplicate
+    // key cancels it; otherwise commit (the engine fires submitAdd → commitAdd).
     if (key in data) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
-      emitEditEvent('cancelAdd')
+      cancel()
       return
     }
     const options = insertAtTop.object ? { insertBefore: 0 } : {}
-    onAdd(newValue, [...path, key], options).then((result) =>
-      handleMutationResult({
-        result,
-        errorCode: 'ADD_ERROR',
-        errorValue: newValue as CollectionData,
-        cancelEvent: 'cancelAdd',
-        confirmEvent: 'confirmAdd',
-      })
-    )
+    submit({ op: 'add', path, key, value: newValue, options }).then((outcome) => {
+      if (outcome?.status === 'error') onError(outcome.error, newValue as CollectionData)
+    })
   }
 
   const handleDelete =
     path.length > 0
       ? () => {
-          onDelete(data, path).then((result) =>
-            handleMutationResult({
-              result,
-              errorCode: 'DELETE_ERROR',
-              errorValue: data,
-              confirmEvent: 'delete',
-            })
-          )
+          submit({ op: 'delete', path, instant: true }).then((outcome) => {
+            if (outcome?.status === 'error') onError(outcome.error, data)
+          })
         }
       : undefined
 
   const handleCancel = () => {
-    cancelEdit()
+    cancel()
     setError(null)
     clearEditBuffer()
-    revertPreviousValue()
   }
 
   const showLabel = showArrayIndexes || !isArray
@@ -494,12 +447,12 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     value: data,
     parentData,
     nodeData,
-    setValue: async (val: unknown) => await onEdit(val, path),
+    setValue: (val: unknown) => submit({ op: 'edit', path, value: val }),
     handleEdit,
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
-    setIsEditing: () => startEdit(path, { cancelOp: clearEditBuffer }),
+    setIsEditing: () => open(path, { cancelOp: clearEditBuffer }),
     getStyles,
     canDragOnto: canEdit,
     canEdit,
@@ -521,8 +474,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
         canEdit
           ? () => {
               hasBeenOpened.current = true
-              setPreviousValue(null)
-              startEdit(path, { cancelOp: clearEditBuffer })
+              open(path, { cancelOp: clearEditBuffer })
             }
           : undefined
       }

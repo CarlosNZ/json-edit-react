@@ -60,7 +60,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const { getStyles } = useTheme()
   // Actions only (no subscription beyond the `isAddingHere` selector below).
   // Aliased — `startEdit` is also an EditButtons prop (the value-edit icon).
-  const { startEdit: startEditSession, cancelEdit, closeEdit } = useEditingStore()
+  const { open, cancel } = useEditingStore()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
 
@@ -77,8 +77,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   // store (`mode: 'add'`, `path` = this collection), so the start/cancel events
   // and the one-session-at-a-time invariant are shared with edit/rename.
   const isAddingHere = useEditingSelector((s) => {
-    const e = s.currentlyEditingElement
-    return e !== null && e.mode === 'add' && pathsEqual(e.path, path)
+    const e = s.active
+    return e !== null && e.op === 'add' && pathsEqual(e.path, path)
   })
 
   const hasKeyOptionsList = Array.isArray(addingKeyState)
@@ -106,7 +106,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   }, [isAddingHere])
 
   // Open an add session on this object collection (shows the new-key input).
-  const openAdd = () => startEditSession(path, { mode: 'add' })
+  const openAdd = () => open(path, { op: 'add' })
 
   // Commit the open add session (OK button / Enter). Delegates to `handleAdd`,
   // which fires the `confirmAdd` / error observer.
@@ -114,14 +114,13 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     if (!handleAdd) return
     // Options-list with nothing chosen yet — silent no-op.
     if (hasKeyOptionsList && !newKey) return
-    closeEdit()
     handleAdd(type === 'array' ? '' : newKey)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     handleKeyboard(e, {
       stringConfirm: () => commitAdd(),
-      cancel: () => cancelEdit(),
+      cancel: () => cancel(),
     })
   }
 
@@ -231,13 +230,12 @@ export const EditButtons: React.FC<EditButtonProps> = ({
                 className="jer-select-inner"
                 onChange={(e) => {
                   // The chosen option IS the key — commit it directly.
-                  closeEdit()
                   handleAdd(e.target.value)
                 }}
                 defaultValue=""
                 autoFocus
                 onKeyDown={(e: React.KeyboardEvent) => {
-                  handleKeyboard(e, { cancel: () => cancelEdit() })
+                  handleKeyboard(e, { cancel: () => cancel() })
                 }}
               >
                 <option value="" disabled>
@@ -268,7 +266,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           )}
           <InputButtons
             onOk={() => commitAdd()}
-            onCancel={() => cancelEdit()}
+            onCancel={() => cancel()}
             nodeData={nodeData}
             editConfirmRef={editConfirmRef}
             hideOk={hasKeyOptionsList}

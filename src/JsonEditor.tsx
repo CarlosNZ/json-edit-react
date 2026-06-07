@@ -16,16 +16,15 @@ import {
   type CollectionData,
   type JsonEditorProps,
   type FilterFunction,
-  type InternalUpdateFunction,
-  type InternalRenameFunction,
   type NodeData,
   type SearchFilterFunction,
   type CollectionKey,
   type UpdateFunctionProps,
+  type UpdateControl,
+  type JsonEditorErrorCode,
   type SortFunction,
   type BuildNodeDataFromPath,
   type BuildNodeDataFromPathRef,
-  type EditEvent,
   type JsonData,
   type KeyboardControls,
   ValueData,
@@ -39,6 +38,12 @@ import {
   useEditingStore,
   useCollapse,
 } from './contexts'
+import {
+  type CommitPrimitives,
+  type CommitRequest,
+  type BuiltCommit,
+  type UpdateOutcome,
+} from './contexts/EditingProvider'
 import { getTranslateFunction, type LocalisedStrings } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
@@ -63,6 +68,16 @@ const ERROR_MESSAGE_KEY: Record<UpdateFunctionProps['event'], keyof LocalisedStr
   delete: 'ERROR_DELETE',
   rename: 'ERROR_RENAME',
   move: 'ERROR_MOVE',
+}
+
+// The `onError` code per event, so a generic (`false`) reject surfaces with the
+// matching code alongside the `ERROR_MESSAGE_KEY` message.
+const ERROR_CODE: Record<UpdateFunctionProps['event'], JsonEditorErrorCode> = {
+  edit: 'UPDATE_ERROR',
+  add: 'ADD_ERROR',
+  delete: 'DELETE_ERROR',
+  rename: 'RENAME_ERROR',
+  move: 'MOVE_ERROR',
 }
 
 // Wrap an optional consumer callback so its identity stays STABLE across
@@ -101,11 +116,15 @@ const EMPTY_KEYBOARD_CONTROLS: NonNullable<JsonEditorProps<JsonData>['keyboardCo
 const EMPTY_CUSTOM_BUTTONS: NonNullable<JsonEditorProps<JsonData>['customButtons']> = []
 
 const Editor: React.FC<
-  JsonEditorProps<JsonData> & { buildNodeDataFromPathRef: BuildNodeDataFromPathRef }
+  JsonEditorProps<JsonData> & {
+    buildNodeDataFromPathRef: BuildNodeDataFromPathRef
+    commitRef: React.RefObject<CommitPrimitives | undefined>
+  }
 > = ({
   data,
   setData,
   buildNodeDataFromPathRef,
+  commitRef,
   rootName = 'root',
   onUpdate = NOOP,
   onChange,
@@ -157,7 +176,7 @@ const Editor: React.FC<
   // Root must not subscribe to editing state — that would re-render the whole
   // tree on every edit transition. Read the actions from the stable store
   // (used by the cancel-on-unmount cleanup and the `editorRef` handle below).
-  const { startEdit: startEditAction, cancelEdit } = useEditingStore()
+  const { open: openEditSession, cancel: cancelEditSession } = useEditingStore()
   const collapseFilter = useMemo(() => getFilterFunction(collapse), [collapse])
   const translate = useMemo(
     () => getTranslateFunction(translations, customText),
@@ -168,16 +187,15 @@ const Editor: React.FC<
   const mainContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    cancelEdit()
+    cancelEditSession()
     const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
     return () => clearTimeout(debounce)
-    // `cancelEdit` is intentionally excluded. It's useCallback-stable over
-    // `onEditEvent`, but a consumer passing `onEditEvent={() => ...}` inline
-    // would re-bind it on every render — including it here would re-fire this
-    // effect on unrelated renders and cancel in-progress edits mid-keystroke.
-    // React's effect semantics still pick up the latest `cancelEdit` closure
-    // at fire time when one of the listed deps changes, so behaviour is
-    // correct: cancel runs once per genuine search-input change.
+    // `cancelEditSession` is intentionally excluded — same reasoning as the
+    // editorRef deps below: it's store-stable, but a consumer's inline
+    // `onEditEvent` would re-bind it every render and re-fire this effect,
+    // cancelling in-progress edits mid-keystroke. React still picks up the
+    // latest closure when a listed dep changes, so cancel runs once per
+    // genuine search-input change.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchText, searchDebounceTime])
 
@@ -228,230 +246,219 @@ const Editor: React.FC<
   const onEditEventStable = useStableCallback(onEditEvent)
   const onCopyStable = useStableCallback(onCopy)
 
-  // The one commit path (§17, Category 2). Runs the single `onUpdate` and acts
-  // on the canonical `UpdateResult`: commit (`true`/`void`/`{ value }`), reject
-  // (`false`/`{ error }` → revert + surface a message), or silent cancel
-  // (`null` → no commit, no error). Resolves to the error message a node routes
-  // to `onError`, or `false` to tell the node a cancel happened (revert display).
-  const handleEdit = useCallback(
-    async (input: UpdateFunctionProps): Promise<string | void | false> => {
+  // Document-mutation primitives the EditingProvider's commit engine calls. The
+  // Provider owns the lifecycle (when to apply optimistically, gate, settle, and
+  // which events fire); these own `setData`/`updateDataObject`. Read the live
+  // document via refs so their identity stays stable (the memo'd nodes bail).
+  const applyValue = useCallback((path: CollectionKey[], value: unknown) => {
+    setDataRef.current(updateDataObject(dataRef.current, path, value, 'update').newData as JsonData)
+  }, [])
+
+  // Prepare a commit for any op: compute `newData`, the `onUpdate` input, and
+  // the optimistic `apply` + per-path `revert` thunks. `revert` reads the LIVE
+  // doc so a late failure restores the right node without clobbering concurrent
+  // commits to other paths (an edit re-sets the old value; add/delete invert;
+  // move restores the pre-move doc — see the `move` case).
+  const buildCommit = useCallback((request: CommitRequest): BuiltCommit | null => {
+    const data = dataRef.current
+    const rootName = rootNameRef.current
+    const sort = sortRef.current
+    const commitData = (d: unknown) => setDataRef.current(d as JsonData)
+    const { op, path } = request
+
+    switch (op) {
+      case 'edit': {
+        const { newData, currentValue, newValue } = updateDataObject(data, path, request.value, 'update')
+        return {
+          input: {
+            ...buildNodeData(data, path, rootName, sort),
+            newData,
+            event: 'edit',
+            newValue,
+          } as UpdateFunctionProps,
+          isNoOp: currentValue === newValue,
+          apply: () => commitData(newData),
+          revert: () =>
+            commitData(updateDataObject(dataRef.current, path, currentValue, 'update').newData),
+        }
+      }
+      case 'delete': {
+        const { newData, currentValue } = updateDataObject(data, path, '', 'delete')
+        return {
+          input: {
+            ...buildNodeData(data, path, rootName, sort),
+            newData,
+            event: 'delete',
+          } as UpdateFunctionProps,
+          isNoOp: false,
+          apply: () => commitData(newData),
+          // Re-insert the removed value at its original path (best-effort position).
+          revert: () => commitData(updateDataObject(dataRef.current, path, currentValue, 'add').newData),
+        }
+      }
+      case 'add': {
+        // `path` is the collection; the new child lands at `[...path, key]`.
+        const childPath = [...path, request.key]
+        const { newData, newValue } = updateDataObject(
+          data,
+          childPath,
+          request.value,
+          'add',
+          request.options
+        )
+        return {
+          // The new node doesn't exist in `data` yet — build its `NodeData` from
+          // `newData` for the right position; describe the PRE-add state
+          // otherwise (value unset, size null, current parent + document).
+          input: {
+            ...buildNodeData(newData, childPath, rootName, sort),
+            value: undefined,
+            size: null,
+            parentData: (extract(data, path) ?? null) as object | null,
+            fullData: data,
+            newData,
+            event: 'add',
+            newValue,
+          } as UpdateFunctionProps,
+          isNoOp: false,
+          apply: () => commitData(newData),
+          revert: () => commitData(updateDataObject(dataRef.current, childPath, '', 'delete').newData),
+        }
+      }
+      case 'rename': {
+        const parentPath = path.slice(0, -1)
+        const oldKey = path[path.length - 1]
+        const { newKey } = request
+        const parentData = extract(data, parentPath) as Record<string, unknown>
+        const renamedParent = Object.fromEntries(
+          Object.entries(parentData).map(([k, v]) => (k === oldKey ? [newKey, v] : [k, v]))
+        )
+        // `updateDataObject` handles the root case (`parentPath === []`).
+        const { newData } = updateDataObject(data, parentPath, renamedParent, 'update')
+        return {
+          input: {
+            ...buildNodeData(data, path, rootName, sort),
+            newData,
+            event: 'rename',
+            newKey,
+          } as UpdateFunctionProps,
+          isNoOp: false,
+          apply: () => commitData(newData),
+          // Restore the parent with its original key order.
+          revert: () =>
+            commitData(updateDataObject(dataRef.current, parentPath, parentData, 'update').newData),
+          extra: { oldKey, newKey },
+        }
+      }
+      case 'move': {
+        // Delete source + add at target, combined into one commit (the old
+        // `onMove`). A combined op can't be per-path-reversed, so `revert`
+        // restores the pre-move document (the rare optimistic-move-then-fail).
+        const sourcePath = path
+        const { path: destPath, position } = request.to
+        const preMove = data
+        const { newData: deletedData, currentValue } = updateDataObject(data, sourcePath, '', 'delete')
+        const originalKey = sourcePath.slice(-1)[0]
+        const targetPath = destPath.slice(0, -1)
+        const insertPos = destPath.slice(-1)[0]
+        let targetKey =
+          typeof insertPos === 'number'
+            ? position === 'above'
+              ? insertPos
+              : insertPos + 1
+            : typeof originalKey === 'number'
+            ? `arr_${originalKey}`
+            : originalKey
+        const sourceBase = sourcePath.slice(0, -1).join('.')
+        const destBase = destPath.slice(0, -1).join('.')
+        if (
+          sourceBase === destBase &&
+          typeof originalKey === 'number' &&
+          typeof targetKey === 'number' &&
+          originalKey < targetKey
+        ) {
+          targetKey -= 1
+        }
+        const insertOptions =
+          typeof targetKey === 'number'
+            ? { insert: true }
+            : position === 'above'
+            ? { insertBefore: insertPos }
+            : { insertAfter: insertPos }
+        const landingPath = [...targetPath, targetKey]
+        const { newData } = updateDataObject(
+          deletedData,
+          landingPath,
+          currentValue,
+          'add',
+          insertOptions as UpdateOptions
+        )
+        return {
+          input: {
+            ...buildNodeData(data, sourcePath, rootName, sort),
+            newData,
+            event: 'move',
+            newPath: landingPath,
+          } as UpdateFunctionProps,
+          isNoOp: false,
+          apply: () => commitData(newData),
+          revert: () => commitData(preMove),
+        }
+      }
+    }
+  }, [])
+
+  // Runs the consumer's `onUpdate` and normalises its raw return to the canonical
+  // outcome the commit engine acts on — including the localised, event-specific
+  // reject message (so it matches the `onError` code the node surfaces). This is
+  // the old synchronous result-protocol, minus `setData` (now the engine's job).
+  const runUpdate = useCallback(
+    async (input: UpdateFunctionProps, control: UpdateControl): Promise<UpdateOutcome> => {
+      const code = ERROR_CODE[input.event]
+      const defaultMessage = () =>
+        translateRef.current(ERROR_MESSAGE_KEY[input.event], rootNodeDataRef.current)
       let result
       try {
-        result = await onUpdateRef.current(input)
+        result = await onUpdateRef.current(input, control)
       } catch (err) {
-        // Rejected promise: treat like the generic `false` reject — no commit
-        // (same reasoning as below: nothing was written, so we don't `setData`),
-        // surface the thrown message if present, otherwise the default. This
-        // also stops the rejection from escaping as an unhandled rejection.
-        if (err instanceof Error && err.message) return err.message
-        if (typeof err === 'string' && err) return err
-        return translateRef.current(ERROR_MESSAGE_KEY[input.event], rootNodeDataRef.current)
+        // Rejected promise → treat as a reject; surface the thrown message if
+        // present (also stops it escaping as an unhandled rejection).
+        const message =
+          err instanceof Error && err.message
+            ? err.message
+            : typeof err === 'string' && err
+            ? err
+            : defaultMessage()
+        return { status: 'error', error: { code, message } }
       }
-
-      // Reject (generic): return the default message; the node reverts its own
-      // display. No `setData` — nothing was committed (we only ever `setData`
-      // AFTER `onUpdate` resolves), so writing `fullData` back would be a no-op
-      // at best and, with a slow async `onUpdate`, could clobber a newer commit
-      // that landed while this one was in flight. `ERROR_MESSAGE_KEY` picks the
-      // event-specific message so it matches the `onError` code the node routes
-      // it to (`ADD_ERROR`/`DELETE_ERROR`/`RENAME_ERROR`/`MOVE_ERROR`); `edit`
-      // (and internal failures) use `ERROR_UPDATE` / `UPDATE_ERROR`.
-      if (result === false) {
-        return translateRef.current(ERROR_MESSAGE_KEY[input.event], rootNodeDataRef.current)
-      }
-
-      // Silent cancel: no commit, no error — signal the node to revert its display
-      if (result === null) return false
-
-      // Object form: reject with a custom error, or override the committed value
+      if (result === false) return { status: 'error', error: { code, message: defaultMessage() } }
+      if (result === null) return { status: 'cancel' }
       if (result && typeof result === 'object') {
-        if (result.error !== undefined) {
-          // Reject: no `setData` (same reasoning as the generic reject above —
-          // nothing was committed). A bare string is the message verbatim; a
-          // JsonEditorError carries one.
-          return typeof result.error === 'string' ? result.error : result.error.message
-        }
-        setDataRef.current(result.value !== undefined ? (result.value as JsonData) : input.newData)
-        return
+        if (result.error !== undefined)
+          return typeof result.error === 'string'
+            ? { status: 'error', error: { code, message: result.error } }
+            : { status: 'error', error: result.error }
+        if (result.value !== undefined) return { status: 'override', value: result.value as JsonData }
       }
-
-      // true | void | undefined → commit
-      setDataRef.current(input.newData)
+      return { status: 'commit' }
     },
     []
   )
 
-  const onEdit: InternalUpdateFunction = useCallback(
-    async (value, path) => {
-      const { newData, currentValue, newValue } = updateDataObject(
-        dataRef.current,
-        path,
-        value,
-        'update'
-      )
-      // No-op confirm (value unchanged): signal the caller to treat it as a
-      // cancel (the `false` sentinel — same channel as a silent `null` cancel),
-      // so the edit session reports `cancelEdit` rather than `confirmEdit`.
-      if (currentValue === newValue) return false
-
-      return await handleEdit({
-        ...buildNodeData(dataRef.current, path, rootNameRef.current, sortRef.current),
-        newData,
-        event: 'edit',
-        newValue,
-      })
-    },
-    [handleEdit]
+  // The commit primitives handed to the EditingProvider via `commitRef`. Assigned
+  // every render (same bridge pattern as `buildNodeDataFromPathRef`); the store
+  // reads it only at event time.
+  const commitPrimitives = useMemo<CommitPrimitives>(
+    () => ({
+      // `undefined` when the consumer supplied no `onUpdate` (it defaulted to
+      // NOOP) — the engine then skips the settlement phase (no `update*`).
+      runUpdate: onUpdate === NOOP ? undefined : runUpdate,
+      buildCommit,
+      applyValue,
+    }),
+    [runUpdate, buildCommit, applyValue, onUpdate]
   )
-
-  const onDelete: InternalUpdateFunction = useCallback(
-    async (value, path) => {
-      const { newData } = updateDataObject(dataRef.current, path, value, 'delete')
-
-      return await handleEdit({
-        ...buildNodeData(dataRef.current, path, rootNameRef.current, sortRef.current),
-        newData,
-        event: 'delete',
-      })
-    },
-    [handleEdit]
-  )
-
-  const onAdd: InternalUpdateFunction = useCallback(
-    async (value, path, options) => {
-      const { newData, newValue } = updateDataObject(dataRef.current, path, value, 'add', options)
-
-      // The new node doesn't exist in the current tree yet, so build its
-      // `NodeData` from `newData` (where it does) to get the right position
-      // (`key`/`path`/`level`/`index`). Everything else describes the PRE-add
-      // state for a coherent payload: `value` is unset until commit (matches
-      // V1), `size` is null (no committed value yet), and `parentData` /
-      // `fullData` are the CURRENT (pre-add) parent + document — consistent with
-      // each other and with the other events.
-      return await handleEdit({
-        ...buildNodeData(newData, path, rootNameRef.current, sortRef.current),
-        value: undefined,
-        size: null,
-        parentData: (extract(dataRef.current, path.slice(0, -1)) ?? null) as object | null,
-        fullData: dataRef.current,
-        newData,
-        event: 'add',
-        newValue,
-      })
-    },
-    [handleEdit]
-  )
-
-  // A key rename is a first-class `event: 'rename'`. The parent collection is
-  // rebuilt preserving key order with the renamed key, then assigned back into
-  // the whole document; the `NodeData` describes the OLD node (`key`/`path`),
-  // with the new key carried in `newKey`.
-  const onRename: InternalRenameFunction = useCallback(
-    async (path, newKey) => {
-      const parentPath = path.slice(0, -1)
-      const oldKey = path[path.length - 1]
-      const parentData = extract(dataRef.current, parentPath) as Record<string, unknown>
-      const renamedParent = Object.fromEntries(
-        Object.entries(parentData).map(([k, v]) => (k === oldKey ? [newKey, v] : [k, v]))
-      )
-      // `updateDataObject` handles the root case (`parentPath === []`) — a
-      // top-level rename replaces the whole document with the rebuilt object.
-      const { newData } = updateDataObject(dataRef.current, parentPath, renamedParent, 'update')
-
-      return await handleEdit({
-        ...buildNodeData(dataRef.current, path, rootNameRef.current, sortRef.current),
-        newData,
-        event: 'rename',
-        newKey,
-      })
-    },
-    [handleEdit]
-  )
-
-  // "onMove" is just a "Delete" followed by an "Add", but we combine into a
-  // single "action" and only run one "onUpdate", which also means it'll be
-  // registered as a single event in the "Undo" queue. The `NodeData` describes
-  // the SOURCE node; `newPath` is the destination.
-  // If either action returns an error, we reset the data the same way we do
-  // when a single action returns error.
-  const onMove = useCallback(
-    async (
-      sourcePath: CollectionKey[] | null,
-      destPath: CollectionKey[],
-      position: 'above' | 'below'
-    ) => {
-      if (sourcePath === null) return
-      const { newData, currentValue } = updateDataObject(dataRef.current, sourcePath, '', 'delete')
-
-      // Immediate key of the item being moved
-      const originalKey = sourcePath.slice(-1)[0]
-      // Where it's going
-      const targetPath = destPath.slice(0, -1)
-      // The key in the target path to insert before or after
-      const insertPos = destPath.slice(-1)[0]
-
-      let targetKey =
-        typeof insertPos === 'number' // Moving TO an array
-          ? position === 'above'
-            ? insertPos
-            : insertPos + 1
-          : typeof originalKey === 'number'
-          ? `arr_${originalKey}` // Moving FROM an array, so needs a key
-          : originalKey // Moving from object to object
-
-      const sourceBase = sourcePath.slice(0, -1).join('.')
-      const destBase = destPath.slice(0, -1).join('.')
-
-      if (
-        sourceBase === destBase &&
-        typeof originalKey === 'number' &&
-        typeof targetKey === 'number' &&
-        originalKey < targetKey
-      ) {
-        targetKey -= 1
-      }
-
-      const insertOptions =
-        typeof targetKey === 'number'
-          ? { insert: true }
-          : position === 'above'
-          ? { insertBefore: insertPos }
-          : { insertAfter: insertPos }
-
-      const { newData: addedData } = updateDataObject(
-        newData,
-        [...targetPath, targetKey],
-        currentValue,
-        'add',
-        insertOptions as UpdateOptions
-      )
-
-      // Source node's NodeData (pre-move tree — `dataRef` still holds it until
-      // the commit re-renders). Used for both the `onUpdate` move payload and
-      // the `onEditEvent` move observer.
-      const sourceNodeData = buildNodeData(
-        dataRef.current,
-        sourcePath,
-        rootNameRef.current,
-        sortRef.current
-      )
-      const result = await handleEdit({
-        ...sourceNodeData,
-        newData: addedData,
-        event: 'move',
-        // The moved node's actual landing path, not the drop-target node's
-        // (`destPath`): `targetKey` carries the above/below offset, the kept
-        // object key, or the generated `arr_N` key, so this is where the node
-        // ends up in `addedData`.
-        newPath: [...targetPath, targetKey],
-      })
-      // Observer (Cat 3): a committed move fires `onEditEvent` with the source
-      // node. (Fired here, not at the drop site, which only has the target.)
-      if (result === undefined) onEditEventStable?.({ ...sourceNodeData, event: 'move' } as EditEvent)
-      return result
-    },
-    [handleEdit, onEditEventStable]
-  )
+  commitRef.current = commitPrimitives
 
   const allowEditFilter = useMemo(() => getFilterFunction(allowEdit), [allowEdit])
   const allowDeleteFilter = useMemo(() => getFilterFunction(allowDelete), [allowDelete])
@@ -557,25 +564,25 @@ const Editor: React.FC<
             !allowEditFilter(buildNodeData(getLatestData(), path, rootName, sort))
           )
             return 'RESTRICTED'
-          startEditAction(path, { force: true })
+          openEditSession(path, { force: true })
           return true
         },
 
         // Commit the open session by clicking the live confirm button, then exit.
         // No-op when there's no live confirm control to click (no session, or a
         // session whose confirm control isn't mounted/tracked here): the
-        // unconditional `cancelEdit()` would otherwise tear down a session we
+        // unconditional `cancelEditSession()` would otherwise tear down a session we
         // never committed (e.g. silently cancelling a key-rename).
         confirm: () => {
           if (!editConfirmRef.current) return
           editConfirmRef.current.click()
-          cancelEdit()
+          cancelEditSession()
         },
 
-        cancel: () => cancelEdit(),
+        cancel: () => cancelEditSession(),
       }
     },
-    [setCollapseState, startEditAction, cancelEdit, allowEditFilter, getLatestData, rootName, sort]
+    [setCollapseState, openEditSession, cancelEditSession, allowEditFilter, getLatestData, rootName, sort]
   )
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
@@ -594,15 +601,10 @@ const Editor: React.FC<
     name: rootName,
     nodeData,
     getLatestData,
-    onEdit,
-    onDelete,
-    onAdd,
-    onRename,
     onChange: onChangeStable,
     onError: onErrorStable,
     onEditEvent: onEditEventStable,
     showErrorMessages,
-    onMove,
     showCollectionCount,
     collapseFilter,
     collapseAnimationTime,
@@ -681,6 +683,9 @@ export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.React
   // path into flat `NodeData`. (The node-driven events — confirm*/delete/move,
   // user-click collapse — fire straight from the node and never touch this.)
   const buildNodeDataFromPathRef = useRef<BuildNodeDataFromPath | undefined>(undefined)
+  // Same bridge pattern: the inner `Editor` (data owner) populates this with the
+  // commit primitives the EditingProvider's engine calls at event time.
+  const commitRef = useRef<CommitPrimitives | undefined>(undefined)
 
   // We want access to the global document.documentElement object, but can't
   // access it directly when used with SSR. So we set it inside a `useEffect`,
@@ -703,8 +708,13 @@ export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.React
         onEditEvent={innerProps.onEditEvent}
         onCollapse={innerProps.onCollapse}
         buildNodeDataFromPathRef={buildNodeDataFromPathRef}
+        commitRef={commitRef}
       >
-        <Editor {...innerProps} buildNodeDataFromPathRef={buildNodeDataFromPathRef} />
+        <Editor
+          {...innerProps}
+          buildNodeDataFromPathRef={buildNodeDataFromPathRef}
+          commitRef={commitRef}
+        />
       </TreeStateProvider>
     </ThemeProvider>
   )

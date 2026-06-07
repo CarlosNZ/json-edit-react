@@ -12,7 +12,7 @@
  */
 
 import React from 'react'
-import { EditingProvider } from './EditingProvider'
+import { EditingProvider, type CommitPrimitives } from './EditingProvider'
 import { CollapseProvider } from './CollapseProvider'
 import { DragSourceProvider } from '../hooks/DragSourceProvider'
 import {
@@ -28,6 +28,8 @@ interface TreeStateProps {
   // Bridges live `NodeData` construction from the inner `Editor` (which owns the
   // data) into these provider contexts, which only know a node's path.
   buildNodeDataFromPathRef: BuildNodeDataFromPathRef
+  // The commit primitives the inner `Editor` supplies to the EditingProvider.
+  commitRef: React.RefObject<CommitPrimitives | undefined>
 }
 
 export const TreeStateProvider = ({
@@ -35,8 +37,13 @@ export const TreeStateProvider = ({
   onEditEvent,
   onCollapse,
   buildNodeDataFromPathRef,
+  commitRef,
 }: TreeStateProps) => (
-  <EditingProvider onEditEvent={onEditEvent} buildNodeDataFromPathRef={buildNodeDataFromPathRef}>
+  <EditingProvider
+    onEditEvent={onEditEvent}
+    buildNodeDataFromPathRef={buildNodeDataFromPathRef}
+    commitRef={commitRef}
+  >
     <CollapseProvider onCollapse={onCollapse} buildNodeDataFromPathRef={buildNodeDataFromPathRef}>
       <DragSourceProvider>{children}</DragSourceProvider>
     </CollapseProvider>

@@ -1,5 +1,4 @@
 import { type JSX } from 'react'
-import { type AssignOptions } from './utils/assign'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { CustomNodeData } from './CustomNode'
 
@@ -153,11 +152,17 @@ export type ErrorString = string
 
 export type TabDirection = 'next' | 'prev'
 
+// The operation an active/held session represents. Editor ops (`edit`/`rename`/
+// `add`) open an inline UI; `delete`/`move` are instant and only occupy the
+// active slot while a `hold()` gate is running (phase `held`).
+export type EditOperation = 'edit' | 'rename' | 'add' | 'delete' | 'move'
+
 export interface EditingState {
   path: CollectionKey[]
-  // `value` = editing a leaf/raw value; `key` = renaming a key; `add` = an open
-  // add session on a collection (`path` is the collection being added into).
-  mode: 'value' | 'key' | 'add'
+  op: EditOperation
+  // `editing` = the inline UI is open (pre-submit); `held` = submitted and a
+  // `hold()` gate is running (tree blocked) until `release()`/settlement.
+  phase: 'editing' | 'held'
   // Set when the session was started imperatively via the `editorRef` handle.
   // A forced edit overrides the `allowEdit` filter — the node-skip redirect
   // in ValueNodeWrapper leaves it in place instead of bouncing off it.
@@ -234,9 +239,20 @@ export type UpdateFunctionProps<T = JsonData> = NodeData<T> & { newData: T } & (
     | { event: 'move'; newPath: CollectionKey[] } // `NodeData.path` = source; `newPath` = destination
   )
 
+/**
+ * Control object passed as the 2nd arg to `onUpdate`. `hold()` opts this commit
+ * out of the default optimistic close — the editor stays open and the tree is
+ * blocked ("gate") until the returned `release()` is called (or `onUpdate`
+ * settles). MUST be called synchronously, before the first `await`.
+ */
+export interface UpdateControl {
+  hold: () => () => void
+}
+
 /** One `onUpdate` — branch on `event`. Fires for user- and command-driven alike. */
 export type UpdateFunction<T = JsonData> = (
-  props: UpdateFunctionProps<T>
+  props: UpdateFunctionProps<T>,
+  control: UpdateControl
 ) => UpdateResult<T> | Promise<UpdateResult<T>>
 
 /** Transform (distinct contract — returns the value, not a result). */
@@ -285,25 +301,34 @@ export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number
 
 /**
  * Observer (Cat 3): the complete interaction-lifecycle stream. Value-edit,
- * key-rename and add sessions each open with a `start*`, then terminate with
- * `confirm*` (committed) or `cancel*` (closed without a commit — incl. a no-op
- * confirm or a rejected/aborted change). `delete`/`move` are instant (one event
- * on commit). `confirmRename` carries `{ oldKey, newKey }`. Absorbs the old
- * `onRenameProperty` (§12).
+ * key-rename and add sessions open with a `start*`, then `submit*` (the user
+ * committed; a `hold()` gate may run), then terminate with `commit*` (applied —
+ * editor closed) or `cancel*` (closed without applying — Esc/✗, or a `null`
+ * gate). `delete`/`move` are instant (one event at commit). When `onUpdate`
+ * runs, the background settlement reports `updateSuccessful` / `updateError`
+ * after the `commit*`/`delete`/`move`. `commitRename` carries `{ oldKey, newKey
+ * }`; `updateError` carries the `error`. Both settlement events carry the
+ * `operation` so interleaved background settlements can be correlated. Absorbs
+ * the old `onRenameProperty` (§12).
  */
 export type EditEvent<T = JsonData> = NodeData<T> &
   (
     | { event: 'startEdit' }
-    | { event: 'confirmEdit' }
+    | { event: 'submitEdit' }
+    | { event: 'commitEdit' }
     | { event: 'cancelEdit' }
     | { event: 'startRename' }
-    | { event: 'confirmRename'; oldKey: CollectionKey; newKey: CollectionKey }
+    | { event: 'submitRename' }
+    | { event: 'commitRename'; oldKey: CollectionKey; newKey: CollectionKey }
     | { event: 'cancelRename' }
     | { event: 'startAdd' }
-    | { event: 'confirmAdd' }
+    | { event: 'submitAdd' }
+    | { event: 'commitAdd' }
     | { event: 'cancelAdd' }
     | { event: 'delete' }
     | { event: 'move' }
+    | { event: 'updateSuccessful'; operation: EditOperation }
+    | { event: 'updateError'; operation: EditOperation; error: JsonEditorError }
   )
 
 export type OnEditEventFunction<T = JsonData> = (e: EditEvent<T>) => void
@@ -321,20 +346,6 @@ export type OnCollapseFunction<T = JsonData> = (
   props: NodeData<T> & { collapsed: boolean; includeChildren: boolean }
 ) => void
 
-// Internal update. Resolves to an error message (`string`), `false` (the
-// consumer returned `null` — silent cancel; revert the display, no error), or
-// `void` (committed).
-type InternalResult = Promise<string | void | false>
-export type InternalUpdateFunction = (
-  value: unknown,
-  path: CollectionKey[],
-  options?: AssignOptions
-) => InternalResult
-
-// Key rename (a first-class `event: 'rename'` update). `path`/`newKey` are the
-// OLD node path and the new key.
-export type InternalRenameFunction = (path: CollectionKey[], newKey: string) => InternalResult
-
 // Builds a node's full `NodeData` from its path against the LIVE document.
 // Bridged via a ref from the inner `Editor` into the editing/collapse providers
 // (its ancestors), so observer events fired from those contexts (`onEditEvent`
@@ -347,11 +358,6 @@ export type BuildNodeDataFromPathRef = React.RefObject<BuildNodeDataFromPath | u
 
 // For drag-n-drop
 export type Position = 'above' | 'below'
-export type InternalMoveFunction = (
-  source: CollectionKey[] | null,
-  dest: CollectionKey[],
-  position: Position
-) => InternalResult
 
 export interface KeyEvent {
   key: string
@@ -407,13 +413,9 @@ interface BaseNodeProps {
   // not the `nodeData.fullData` prop a memoized sibling keeps stale after a
   // commit elsewhere. Stable identity, so it doesn't weaken the node memo.
   getLatestData: () => JsonData
-  onEdit: InternalUpdateFunction
-  onDelete: InternalUpdateFunction
-  onRename: InternalRenameFunction
   onError?: OnErrorFunction
   showErrorMessages: boolean
   showIconTooltips: boolean
-  onMove: InternalMoveFunction
   allowClipboard: boolean
   onCopy?: OnCopyFunction
   onEditEvent?: OnEditEventFunction
@@ -452,7 +454,6 @@ export interface CollectionNodeProps extends BaseNodeProps {
   data: CollectionData
   collapseFilter: FilterFunction
   collapseAnimationTime: number
-  onAdd: InternalUpdateFunction
   showArrayIndexes: boolean
   showCollectionCount: boolean | 'when-closed'
   showStringQuotes: boolean

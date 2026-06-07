@@ -56,7 +56,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   getStyles,
 }) => {
   // Actions only (no subscription) — `isEditingKey` arrives via props.
-  const { startEdit, cancelEdit } = useEditingStore()
+  const { open, cancel } = useEditingStore()
 
   const displayKey = typeof name === 'number' ? String(name + arrayIndexStart) : name
 
@@ -82,7 +82,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
             if (canEditKey) handleEditKey(newKey)
           }}
           setIsEditingKey={() => {
-            if (canEditKey) startEdit(path, { mode: 'key' })
+            if (canEditKey) open(path, { op: 'rename' })
           }}
           handleClick={handleClick}
           styles={derivedKeyStyles}
@@ -95,7 +95,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
       <span
         className="jer-key-text"
         style={derivedKeyStyles}
-        onDoubleClick={() => canEditKey && startEdit(path, { mode: 'key' })}
+        onDoubleClick={() => canEditKey && open(path, { op: 'rename' })}
         onClick={handleClick}
       >
         {emptyStringKey ? <span className="jer-empty-string">{emptyStringKey}</span> : displayKey}
@@ -121,15 +121,15 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
             if (keyValueArray) {
               const firstChildKey = keyValueArray?.[0][0]
               const next = firstChildKey ? [...path, firstChildKey] : getNextOrPrevious('next')
-              if (next) startEdit(next)
-              else cancelEdit()
-            } else startEdit(path)
+              if (next) open(next)
+              else cancel()
+            } else open(path)
           },
           tabBack: () => {
             handleEditKey((e.target as HTMLInputElement).value)
             const prev = getNextOrPrevious('prev')
-            if (prev) startEdit(prev)
-            else cancelEdit()
+            if (prev) open(prev)
+            else cancel()
           },
         })
       }
