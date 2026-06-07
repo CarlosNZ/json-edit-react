@@ -19,6 +19,7 @@ pnpm add @json-edit-react/utils
 ## What's here
 
 - **Confirm-before-update hooks** — gate edits/deletes on a confirmation dialog without hand-rolling the deferred-promise dance. _Available now._ ([#307](https://github.com/CarlosNZ/json-edit-react/issues/307))
+- **Undo / redo** — wrap a consumer-owned `data`/`setData` pair with undo/redo (snapshot stacks plus `canUndo` / `canRedo`), zero-dep. _Available now._
 - **JSON Schema → Filter Functions** — generate `allowEdit` / `allowDelete` / `allowAdd` (etc.) functions from a JSON Schema so the editor UI can't produce invalid data in the first place. _Planned._ ([#285](https://github.com/CarlosNZ/json-edit-react/issues/285))
 - **Search helpers** — ready-made `searchFilter` functions for common search patterns. _Planned._ ([#319](https://github.com/CarlosNZ/json-edit-react/issues/319))
 
@@ -118,6 +119,36 @@ const MyModal = (dialog) =>
     </div>
   ) : null
 ```
+
+## Undo / redo
+
+`useUndo` wraps your `data`/`setData` pair with undo/redo. It's **controlled** — you keep owning the data (your own `useState`); the hook holds only the snapshot stacks and commits through your `setData`. Pass the returned `set` as the editor's `setData`:
+
+```tsx
+import { JsonEditor } from 'json-edit-react'
+import { useUndo } from '@json-edit-react/utils'
+
+const MyEditor = () => {
+  const [data, setData] = useState(initialData)
+  const { set, undo, redo, canUndo, canRedo } = useUndo(data, setData)
+
+  return (
+    <>
+      <button onClick={undo} disabled={!canUndo}>
+        Undo
+      </button>
+      <button onClick={redo} disabled={!canRedo}>
+        Redo
+      </button>
+      <JsonEditor data={data} setData={set} />
+    </>
+  )
+}
+```
+
+`set` records a snapshot then commits; `undo` / `redo` step through history (no-ops at the ends); `replace` commits without a snapshot; `reset` commits a new baseline and clears history; `canUndo` / `canRedo` drive your buttons.
+
+**Loading a new dataset:** call `reset(newData)`, not `setData` — the hook only sees changes that go through its own API, so `reset` is how you swap the document and clear stale history in one step. See [src/undo/README.md](src/undo/README.md) for the full rationale.
 
 ## License
 

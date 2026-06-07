@@ -15,14 +15,13 @@ import {
 // DEMO (Intro dataset): confirm-before-update via @json-edit-react/utils.
 // Comment out this import + the wiring below to disable. Swap the commented
 // import to demo the Layer-1 primitive instead.
-import { useConfirmOnUpdate /*, useJsonEditorConfirm */ } from '@json-edit-react/utils'
+import { useConfirmOnUpdate, useUndo /*, useJsonEditorConfirm */ } from '@json-edit-react/utils'
 import { ConfirmDialog } from './ConfirmDialog'
 import { PendingCommit } from './PendingCommit'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
 import { useState } from 'react'
-import useUndo from 'use-undo'
 import {
   Box,
   Flex,
@@ -155,13 +154,14 @@ function App() {
 
   const { liveData, loading, updateLiveData } = useDatabase()
 
-  const [
-    { present: data, past, future },
-    { set: setData, reset, undo: undoData, redo: redoData, canUndo, canRedo },
-  ] = useUndo<JsonData>(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data)
-  // Provides a named version of these methods (i.e undo.name = "undo")
-  const undo = () => undoData()
-  const redo = () => redoData()
+  // The consumer owns the data state; `useUndo` (controlled) layers undo/redo on
+  // top, recording snapshots and committing through `setRawData`. Switch datasets
+  // with `reset(newData)` (see `handleChangeData`) — never a raw `setRawData` — so
+  // history is cleared rather than left pointing at the previous dataset.
+  const [rawData, setRawData] = useState<JsonData>(
+    selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data
+  )
+  const { data, set: setData, reset, undo, redo, canUndo, canRedo } = useUndo(rawData, setRawData)
 
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
@@ -213,9 +213,6 @@ function App() {
     // Object result (error / { value } override): pass through to the library.
     // `true` is a plain commit — fall through to the side effect like void.
     if (result && result !== true) return result
-    // Commit (true | void | undefined): run the post-commit demo side effect.
-    const { newData } = nodeData
-    if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
   }
 
   // ── DEMO: confirm-before-update on the Intro dataset (@json-edit-react/utils) ──
@@ -333,9 +330,16 @@ function App() {
   // Stable references so the JsonEditor's memoized nodes can bail out: an inline
   // `theme` array would churn the theme context (re-rendering every node), and
   // an inline `onCopy` would churn the per-node prop comparison.
+  // For the editTheme dataset the document IS the theme, so style the editor from
+  // `data` directly — a pure derivation, no second copy of the theme to keep in
+  // sync. Every other dataset styles from the chosen `theme`.
   const editorTheme = useMemo(
-    () => [theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }],
-    [theme, dataDefinition]
+    () => [
+      selectedDataSet === 'editTheme' ? (data as Theme) : theme,
+      dataDefinition?.styles ?? {},
+      { container: { paddingTop: '1em' } },
+    ],
+    [selectedDataSet, data, theme, dataDefinition]
   )
 
   const onCopy = useCallback(
@@ -377,6 +381,11 @@ function App() {
       collapseLevel: newDataDefinition.collapse ?? state.collapseLevel,
       rootName: newDataDefinition.rootName ?? 'data',
       customTextEditor: false,
+      // Leaving the theme editor: persist the live-edited theme (the `data`) into
+      // `state.theme` so the other datasets are styled with the theme you built.
+      // The editTheme view derives its styling from `data`, so this is the one
+      // point where that work needs writing back to the standing theme.
+      ...(selectedDataSet === 'editTheme' ? { theme: data as Theme } : {}),
     })
 
     switch (selected) {
@@ -434,14 +443,6 @@ function App() {
       setData(theme)
       previousTheme.current = theme
     }
-  }
-
-  const handleHistory = (method: () => void) => {
-    if (selectedDataSet === 'editTheme') {
-      const theme = (method.name === 'undo' ? past.slice(-1)[0] : future[0]) as Theme
-      updateState({ theme })
-    }
-    method()
   }
 
   const handleReset = async () => {
@@ -758,7 +759,7 @@ function App() {
               <Button
                 colorScheme="primaryScheme"
                 leftIcon={<ArrowBackIcon />}
-                onClick={() => handleHistory(undo)}
+                onClick={() => undo()}
                 isDisabled={!canUndo}
               >
                 Undo
@@ -767,7 +768,7 @@ function App() {
               <Button
                 colorScheme="primaryScheme"
                 rightIcon={<ArrowForwardIcon />}
-                onClick={() => handleHistory(redo)}
+                onClick={() => redo()}
                 isDisabled={!canRedo}
               >
                 Redo

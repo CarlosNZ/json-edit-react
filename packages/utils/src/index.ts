@@ -8,6 +8,7 @@
 //
 //   - Confirm-before-update hooks   — useJsonEditorConfirm / useConfirmOnUpdate
 //                                     https://github.com/CarlosNZ/json-edit-react/issues/307
+//   - Undo / redo hook              — useUndo
 //   - JSON Schema → Filter Functions generator [planned]
 //                                     https://github.com/CarlosNZ/json-edit-react/issues/285
 //   - Ready-made `searchFilter` helpers for common search use cases [planned]
@@ -19,3 +20,4 @@ export * from './_common/events'
 export * from './_common/pendingNode'
 
 export * from './confirm-update'
+export * from './undo'
