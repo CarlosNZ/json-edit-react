@@ -20,6 +20,8 @@ import {
 // Slice-isolation tests don't fire observer events, so the NodeData accessor is
 // never invoked — a stub ref satisfies the provider prop.
 const stubBuildNodeDataFromPathRef: BuildNodeDataFromPathRef = { current: undefined }
+// Likewise the commit primitives — never invoked by these slice-isolation tests.
+const stubCommitRef = { current: undefined }
 
 type DragSourceValue = { path: CollectionKey[] | null }
 
@@ -28,18 +30,13 @@ type DragSourceValue = { path: CollectionKey[] | null }
 // is purely defensive against that ever changing.
 const setters: {
   setDrag: ((s: DragSourceValue) => void) | null
-  startEdit:
-    | ((
-        path: CollectionKey[],
-        options?: { mode?: 'key' | 'value'; cancelOp?: () => void }
-      ) => void)
-    | null
+  open: ((path: CollectionKey[]) => void) | null
   setCollapse: ((s: CollapseState | CollapseState[] | null) => void) | null
-} = { setDrag: null, startEdit: null, setCollapse: null }
+} = { setDrag: null, open: null, setCollapse: null }
 
 const Harness = () => {
   setters.setDrag = useDragSource().setDragSource
-  setters.startEdit = useEditing().startEdit
+  setters.open = useEditing().open
   setters.setCollapse = useCollapse().setCollapseState
   return null
 }
@@ -66,7 +63,10 @@ const DragOnlyConsumer = () => {
 
 const renderTree = () =>
   render(
-    <TreeStateProvider buildNodeDataFromPathRef={stubBuildNodeDataFromPathRef}>
+    <TreeStateProvider
+      buildNodeDataFromPathRef={stubBuildNodeDataFromPathRef}
+      commitRef={stubCommitRef}
+    >
       <Harness />
       <EditingOnlyConsumer />
       <CollapseOnlyConsumer />
@@ -79,7 +79,7 @@ beforeEach(() => {
   renderCounts.collapse = 0
   renderCounts.drag = 0
   setters.setDrag = null
-  setters.startEdit = null
+  setters.open = null
   setters.setCollapse = null
 })
 
@@ -116,7 +116,7 @@ describe('Tree-state providers — slice isolation', () => {
     const before = { ...renderCounts }
 
     act(() => {
-      setters.startEdit!(['some', 'path'])
+      setters.open!(['some', 'path'])
     })
 
     expect(renderCounts.editing).toBeGreaterThan(before.editing)
@@ -144,7 +144,10 @@ describe('Tree-state providers — slice isolation', () => {
       const [, setCounter] = useState(0)
       bumpOuterCounter = () => setCounter((n) => n + 1)
       return (
-        <TreeStateProvider buildNodeDataFromPathRef={stubBuildNodeDataFromPathRef}>
+        <TreeStateProvider
+        buildNodeDataFromPathRef={stubBuildNodeDataFromPathRef}
+        commitRef={stubCommitRef}
+      >
           <Observer />
         </TreeStateProvider>
       )

@@ -457,7 +457,7 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     const user = userEvent.setup()
     let seenFullData: unknown = null
     const onEditEvent = jest.fn<void, [EditEvent]>((e) => {
-      if (e.event === 'confirmEdit') seenFullData = e.fullData
+      if (e.event === 'commitEdit') seenFullData = e.fullData
     })
     const Host = () => {
       const [data, setData] = useState<object>({ a: 'aval', obj: { x: 1 } })

@@ -47,6 +47,7 @@ import {
   type EditingState,
   type EditOperation,
   type BuildNodeDataFromPathRef,
+  type NodeData,
   type UpdateFunctionProps,
   type JsonData,
   type UpdateControl,
@@ -88,6 +89,12 @@ export type UpdateOutcome =
 /** What `buildCommit` returns: the `onUpdate` input plus apply/revert thunks. */
 export interface BuiltCommit {
   input: UpdateFunctionProps
+  /** Flat `NodeData` snapshot for the `commit*`/`updateSuccessful`/`updateError`
+   *  events, captured at build time per-op (delete/rename describe the PRE-apply
+   *  node, add the child). Frozen so the event fires the committed identity even
+   *  though the live document has since mutated (or been reverted) — re-deriving
+   *  from the live doc would describe the wrong node or throw on a vanished path. */
+  nodeData: NodeData
   /** True for an unchanged-value edit — skip `onUpdate`/settlement entirely. */
   isNoOp: boolean
   /** Optimistic `setData` for this op. */
@@ -207,9 +214,19 @@ const createEditingStore = (
     emit()
   }
 
-  // Fire an `onEditEvent`, building `NodeData` from the live document. No-op if
-  // there's no consumer or the accessor isn't ready. `extra` carries the
-  // rename keys / settlement `operation` / `error`.
+  // Fire an `onEditEvent` from a prebuilt `NodeData` payload. No-op if there's
+  // no consumer. `extra` carries the rename keys / settlement `operation`/`error`.
+  const emitEvent = (
+    nodeData: NodeData,
+    event: EditEvent['event'],
+    extra?: Record<string, unknown>
+  ) => {
+    onEditEventRef.current?.({ ...nodeData, ...extra, event } as EditEvent)
+  }
+
+  // Fire an `onEditEvent`, building `NodeData` from the LIVE document at `path`.
+  // For pre-apply events (start*/submit*/cancel*) where the node still exists;
+  // committed ops use the frozen `BuiltCommit.nodeData` via `emitEvent` instead.
   const fireEditEvent = (
     path: CollectionKey[],
     event: EditEvent['event'],
@@ -217,7 +234,7 @@ const createEditingStore = (
   ) => {
     if (!onEditEventRef.current) return
     const nodeData = buildNodeDataFromPathRef.current?.(path)
-    if (nodeData) onEditEventRef.current({ ...nodeData, ...extra, event } as EditEvent)
+    if (nodeData) emitEvent(nodeData, event, extra)
   }
 
   const setActive = (active: EditingState | null) => {
@@ -305,16 +322,24 @@ const createEditingStore = (
     }
 
     // No-op edit (unchanged value): close the session, fire commit*, no onUpdate
-    // / settlement / update*.
+    // / settlement / update*. Still runs `onCommit` so a Tab off an untouched
+    // field advances to the next node (the value didn't change, but the session
+    // did close).
     if (!built || built.isNoOp) {
       if (sameSession(state.active, { path, op, phase: 'editing' })) commit({ ...state, active: null })
       cancelOp = null
       const commitEvent = eventForOp(op, 'commit')
-      if (commitEvent) fireEditEvent(path, commitEvent, extra)
+      if (commitEvent) {
+        // `built` present (genuine no-op) → fire its frozen snapshot; otherwise
+        // the target's gone, so best-effort rebuild from the live path.
+        if (built) emitEvent(built.nodeData, commitEvent, extra)
+        else fireEditEvent(path, commitEvent, extra)
+      }
+      onCommit?.()
       return Promise.resolve(undefined)
     }
 
-    const { input, apply: applyDoc, revert } = built
+    const { input, nodeData, apply: applyDoc, revert } = built
     const hasUpdate = !!prims?.runUpdate
     let applied = false
     let held = false
@@ -333,7 +358,10 @@ const createEditingStore = (
       }
       if (hasUpdate) addSettling(pathStr, token)
       const commitEvent = eventForOp(op, 'commit')
-      if (commitEvent) fireEditEvent(path, commitEvent, extra)
+      // Frozen snapshot: the live doc has just mutated (delete/rename destroy the
+      // node identity at `path`), so rebuilding from it would describe the wrong
+      // node or throw.
+      if (commitEvent) emitEvent(nodeData, commitEvent, extra)
       onCommit?.()
     }
 
@@ -357,7 +385,7 @@ const createEditingStore = (
     if (!held) apply() // default: optimistic close at submit
 
     return promise.then((outcome) =>
-      reconcile({ path, op, token, outcome, apply, revert, applied: () => applied, extra })
+      reconcile({ path, op, token, outcome, apply, revert, applied: () => applied, nodeData, extra })
     )
   }
 
@@ -370,6 +398,7 @@ const createEditingStore = (
     apply,
     revert,
     applied,
+    nodeData,
     extra,
   }: {
     path: CollectionKey[]
@@ -379,8 +408,9 @@ const createEditingStore = (
     apply: () => void
     revert: () => void
     applied: () => boolean
+    nodeData: NodeData
     extra?: { oldKey?: CollectionKey; newKey?: CollectionKey }
-  }): UpdateOutcome => {
+  }): UpdateOutcome | undefined => {
     const pathStr = toPathString(path)
 
     // Held-without-release: this resolve IS the apply/close moment.
@@ -391,32 +421,39 @@ const createEditingStore = (
           commit({ ...state, active: null })
         }
         const cancelEvent = eventForOp(op, 'cancel')
-        if (cancelEvent) fireEditEvent(path, cancelEvent)
+        if (cancelEvent) emitEvent(nodeData, cancelEvent)
         if (outcome.status === 'error')
-          fireEditEvent(path, 'updateError', { operation: op, error: outcome.error })
+          emitEvent(nodeData, 'updateError', { operation: op, error: outcome.error })
         return outcome
       }
       apply()
     }
 
-    // Token gate: a newer commit for this path superseded us → ignore silently.
-    if (state.settling[pathStr] !== token) return outcome
+    // Token gate: a newer commit for this path superseded us. Ignore silently AND
+    // report `undefined` so the originating node treats this stale resolve as a
+    // no-op (it must not revert its buffer or show an error — the live commit owns
+    // the node now).
+    if (state.settling[pathStr] !== token) return undefined
     dropSettling(pathStr)
 
+    // Frozen snapshot for settlement events — a revert has just mutated the live
+    // doc (and an add's child path no longer exists), so don't rebuild from it.
     switch (outcome.status) {
       case 'cancel':
         revert() // silent cancel after an optimistic apply
         break
       case 'error':
         revert()
-        fireEditEvent(path, 'updateError', { operation: op, error: outcome.error })
+        emitEvent(nodeData, 'updateError', { operation: op, error: outcome.error })
         break
       case 'override':
-        commitRef.current?.applyValue(path, outcome.value)
-        fireEditEvent(path, 'updateSuccessful', { operation: op, ...extra })
+        // An override replaces the WHOLE document (`onUpdate` returned a modified
+        // `newData`), not just the edited node — apply it at the root path.
+        commitRef.current?.applyValue([], outcome.value)
+        emitEvent(nodeData, 'updateSuccessful', { operation: op, ...extra })
         break
       case 'commit':
-        fireEditEvent(path, 'updateSuccessful', { operation: op, ...extra })
+        emitEvent(nodeData, 'updateSuccessful', { operation: op, ...extra })
         break
     }
     return outcome

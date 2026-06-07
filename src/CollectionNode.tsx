@@ -236,9 +236,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     })
   }
 
-  // `emitEditEvent` is provided by `useCommon` (lifted to dedup with
-  // `ValueNodeWrapper` and the four inlined copies in `handleEditKey`).
-
   const handleCollapse = (e: React.MouseEvent) => {
     e.stopPropagation()
     const modifier = getModifier(e)
@@ -288,7 +285,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     })
   }
 
-  // Commits an add and fires `confirmAdd` (or the error observer).
+  // Commits an add and fires `commitAdd` (or the error observer).
   const handleAdd = (key: string) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
     setCollapseState(null)

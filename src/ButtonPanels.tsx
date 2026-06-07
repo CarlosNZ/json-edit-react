@@ -85,7 +85,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 
   // Sync the local options/content state to the store session. On open compute
   // the available keys; on close reset. `startAdd` / `cancelAdd` are fired by the
-  // store; `confirmAdd` by CollectionNode's commit.
+  // store; `commitAdd` by CollectionNode's commit.
   useLayoutEffect(() => {
     if (!isAddingHere) {
       setAddingKeyState(false)
@@ -109,7 +109,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const openAdd = () => open(path, { op: 'add' })
 
   // Commit the open add session (OK button / Enter). Delegates to `handleAdd`,
-  // which fires the `confirmAdd` / error observer.
+  // which fires the `commitAdd` / error observer.
   const commitAdd = () => {
     if (!handleAdd) return
     // Options-list with nothing chosen yet — silent no-op.

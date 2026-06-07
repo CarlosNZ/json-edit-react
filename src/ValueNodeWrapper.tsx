@@ -18,9 +18,10 @@ import {
   type JsonData,
   type EnumDefinition,
 } from './types'
-import { useTheme, useEditingStore, useCollapse } from './contexts'
+import { useTheme, useEditingStore, useCollapse, type UpdateOutcome } from './contexts'
 import { type CustomNodeData } from './CustomNode'
 import { filterNode } from './utils/filter'
+import { pathsEqual } from './utils/pathTools'
 import { isJsEvent, matchEnumType, NOOP } from './utils/misc'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'
@@ -53,7 +54,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   } = props
   const { getStyles } = useTheme()
   // Actions + a getSnapshot for imperative reads. The editing *state* this node
-  // needs (tabDirection, previouslyEditedElement, previousValue) is only read
+  // needs (active, tabDirection, previouslyEditedElement) is only read
   // inside event handlers / the Tab-redirect effect — never during render — so
   // it's read from the snapshot at use-time rather than subscribed to. The only
   // editing state that drives this node's render (`isEditing`) comes from
@@ -214,9 +215,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   if (!isVisible) return null
 
-  // `emitEditEvent` is provided by `useCommon` (lifted to dedup with
-  // `CollectionNode`).
-
   const handleChangeDataType = (type: DataType) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
     setCollapseState(null)
@@ -224,9 +222,9 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
       // To a custom node: a structural change — commit + remount (editor closes).
-      submit({ op: 'edit', path, value: customNode.defaultValue }).then((outcome) => {
-        if (outcome?.status === 'error') onError(outcome.error, customNode.defaultValue as JsonData)
-      })
+      submit({ op: 'edit', path, value: customNode.defaultValue }).then(
+        settleEdit(customNode.defaultValue as JsonData)
+      )
       setCollapseState({ path, collapsed: false, includeChildren: false })
       return
     }
@@ -254,9 +252,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
     if (type === 'object' || type === 'array') {
       // To a collection: structural — commit + remount (editor closes).
-      submit({ op: 'edit', path, value: newValue }).then((outcome) => {
-        if (outcome?.status === 'error') onError(outcome.error, newValue as JsonData)
-      })
+      submit({ op: 'edit', path, value: newValue }).then(settleEdit(newValue as JsonData))
       return
     }
 
@@ -265,6 +261,22 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     setValue(newValue as ValueData | CollectionData)
     setDataType(type)
     setEnumType(null)
+  }
+
+  // Settles a value-edit / type-change commit on the NODE side. A rejected
+  // settlement surfaces the error via this node's `onError` (inline + observer);
+  // a rejected OR silently-cancelled (`null`) settlement also reverts the local
+  // buffer — neither changes `data`, so the `[data]` effect won't do it (§9.1).
+  // Skipped when the user has already reopened THIS node: a stale settlement must
+  // not clobber the new in-progress edit (a superseded commit resolves to
+  // `undefined`, so it falls through untouched).
+  const settleEdit = (attempted: JsonData) => (outcome: UpdateOutcome | undefined) => {
+    if (outcome?.status === 'error') onError(outcome.error, attempted)
+    if (outcome?.status === 'error' || outcome?.status === 'cancel') {
+      const active = getSnapshot().active
+      const reopened = active?.phase === 'editing' && pathsEqual(active.path, path)
+      if (!reopened) revertToData()
+    }
   }
 
   // Commits the in-progress value edit through the store's commit engine (it
@@ -292,9 +304,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           newValue = value
       }
     }
-    submit({ op: 'edit', path, value: newValue, onCommit }).then((outcome) => {
-      if (outcome?.status === 'error') onError(outcome.error, newValue)
-    })
+    submit({ op: 'edit', path, value: newValue, onCommit }).then(settleEdit(newValue))
   }
 
   // Per-node buffer cleanup when a session ends without committing (Esc/✗, node

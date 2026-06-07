@@ -573,10 +573,6 @@ function App() {
                   theme={editorTheme}
                   indent={indent}
                   onUpdate={async (nodeData) => {
-                    console.log('⏳ onUpdate START — holding 4s:', nodeData.event, nodeData.path)
-                    await new Promise((r) => setTimeout(r, 4000))
-                    return
-
                     // §17: one `onUpdate`. The datasets' per-operation helpers
                     // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
                     // as the catch-all (delete/rename/move).
@@ -756,10 +752,14 @@ function App() {
                       : undefined
                   }
                   // collapseClickZones={['property', 'header']}
-                  // onEditEvent={(e) => setIsEditing(e.event.startsWith('start'))}
                   onEditEvent={(e) => {
-                    console.log('🔔 EDIT EVENT:', e.event, e.path)
-                    setIsEditing(e.event.startsWith('start'))
+                    // A session is "editing" from `start*` until it closes with
+                    // `commit*`/`cancel*`. `submit*` happens mid-session (the
+                    // editor may still be open during a `hold()` gate), so it
+                    // mustn't flip the flag; settlement/instant events don't either.
+                    if (e.event.startsWith('start')) setIsEditing(true)
+                    else if (e.event.startsWith('commit') || e.event.startsWith('cancel'))
+                      setIsEditing(false)
                   }}
                   onCollapse={(input) => {
                     // Showcase the onCollapse callback — only while the External

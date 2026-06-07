@@ -30,8 +30,9 @@ export const createPendingCommitDefinition = (
   condition: ({ path }) => pending !== null && toPathString(path) === pending.path,
   component,
   componentProps: { event: pending?.event },
-  // The node is in VIEW mode during the pending window (core's `closeEdit` fires
-  // before the awaited commit), so render on view; lock its edit tools.
+  // The node is in VIEW mode during the pending window (core commits
+  // optimistically — the editor closes before the awaited confirm resolves), so
+  // render on view; lock its edit tools.
   showOnView: true,
   showEditTools: false,
   passOriginalNode: true,

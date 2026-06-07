@@ -1,4 +1,4 @@
-import { type CollectionKey, type EditingState } from '../types'
+import { type CollectionKey } from '../types'
 
 export type Path = (string | number)[]
 
@@ -51,8 +51,3 @@ export const pathsEqual = (a: CollectionKey[], b: CollectionKey[]): boolean =>
 // callers (areChildrenBeingEdited, drag-onto-self guard) want this behaviour.
 export const isDescendantOf = (node: CollectionKey[], ancestor: CollectionKey[]): boolean =>
   node.length >= ancestor.length && ancestor.every((k, i) => k === node[i])
-
-export const editingStatesEqual = (a: EditingState | null, b: EditingState | null): boolean => {
-  if (a === null || b === null) return a === b
-  return a.op === b.op && pathsEqual(a.path, b.path)
-}

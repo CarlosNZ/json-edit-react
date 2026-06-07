@@ -250,9 +250,27 @@ const Editor: React.FC<
   // Provider owns the lifecycle (when to apply optimistically, gate, settle, and
   // which events fire); these own `setData`/`updateDataObject`. Read the live
   // document via refs so their identity stays stable (the memo'd nodes bail).
-  const applyValue = useCallback((path: CollectionKey[], value: unknown) => {
-    setDataRef.current(updateDataObject(dataRef.current, path, value, 'update').newData as JsonData)
+  //
+  // Every document write goes through `commitDocument`, which updates `dataRef`
+  // *synchronously* before calling `setData`. This keeps the latest-data ref
+  // consistent with optimistic writes rather than only with rendered state: a
+  // synchronous `onUpdate` (e.g. `() => false`) resolves its settlement in a
+  // microtask that runs *before* React re-renders, so a revert reading
+  // `dataRef.current` would otherwise see the pre-apply document and either undo
+  // the wrong thing or throw (deleting a not-yet-present added key). The next
+  // render's `dataRef.current = data` (above) reconciles it back to the real
+  // state — identical when `setData` is the recommended controlled setter.
+  const commitDocument = useCallback((d: unknown) => {
+    dataRef.current = d as JsonData
+    setDataRef.current(d as JsonData)
   }, [])
+
+  const applyValue = useCallback(
+    (path: CollectionKey[], value: unknown) => {
+      commitDocument(updateDataObject(dataRef.current, path, value, 'update').newData)
+    },
+    [commitDocument]
+  )
 
   // Prepare a commit for any op: compute `newData`, the `onUpdate` input, and
   // the optimistic `apply` + per-path `revert` thunks. `revert` reads the LIVE
@@ -263,19 +281,16 @@ const Editor: React.FC<
     const data = dataRef.current
     const rootName = rootNameRef.current
     const sort = sortRef.current
-    const commitData = (d: unknown) => setDataRef.current(d as JsonData)
+    const commitData = commitDocument
     const { op, path } = request
 
     switch (op) {
       case 'edit': {
         const { newData, currentValue, newValue } = updateDataObject(data, path, request.value, 'update')
+        const nodeData = buildNodeData(data, path, rootName, sort)
         return {
-          input: {
-            ...buildNodeData(data, path, rootName, sort),
-            newData,
-            event: 'edit',
-            newValue,
-          } as UpdateFunctionProps,
+          input: { ...nodeData, newData, event: 'edit', newValue } as UpdateFunctionProps,
+          nodeData,
           isNoOp: currentValue === newValue,
           apply: () => commitData(newData),
           revert: () =>
@@ -284,12 +299,10 @@ const Editor: React.FC<
       }
       case 'delete': {
         const { newData, currentValue } = updateDataObject(data, path, '', 'delete')
+        const nodeData = buildNodeData(data, path, rootName, sort)
         return {
-          input: {
-            ...buildNodeData(data, path, rootName, sort),
-            newData,
-            event: 'delete',
-          } as UpdateFunctionProps,
+          input: { ...nodeData, newData, event: 'delete' } as UpdateFunctionProps,
+          nodeData,
           isNoOp: false,
           apply: () => commitData(newData),
           // Re-insert the removed value at its original path (best-effort position).
@@ -306,12 +319,14 @@ const Editor: React.FC<
           'add',
           request.options
         )
+        // Event payload describes the committed child (post-add position/value).
+        const nodeData = buildNodeData(newData, childPath, rootName, sort)
         return {
-          // The new node doesn't exist in `data` yet — build its `NodeData` from
-          // `newData` for the right position; describe the PRE-add state
+          // The new node doesn't exist in `data` yet for the `onUpdate` input —
+          // build its position from `newData`, but describe the PRE-add state
           // otherwise (value unset, size null, current parent + document).
           input: {
-            ...buildNodeData(newData, childPath, rootName, sort),
+            ...nodeData,
             value: undefined,
             size: null,
             parentData: (extract(data, path) ?? null) as object | null,
@@ -320,6 +335,7 @@ const Editor: React.FC<
             event: 'add',
             newValue,
           } as UpdateFunctionProps,
+          nodeData,
           isNoOp: false,
           apply: () => commitData(newData),
           revert: () => commitData(updateDataObject(dataRef.current, childPath, '', 'delete').newData),
@@ -335,13 +351,10 @@ const Editor: React.FC<
         )
         // `updateDataObject` handles the root case (`parentPath === []`).
         const { newData } = updateDataObject(data, parentPath, renamedParent, 'update')
+        const nodeData = buildNodeData(data, path, rootName, sort)
         return {
-          input: {
-            ...buildNodeData(data, path, rootName, sort),
-            newData,
-            event: 'rename',
-            newKey,
-          } as UpdateFunctionProps,
+          input: { ...nodeData, newData, event: 'rename', newKey } as UpdateFunctionProps,
+          nodeData,
           isNoOp: false,
           apply: () => commitData(newData),
           // Restore the parent with its original key order.
@@ -393,20 +406,17 @@ const Editor: React.FC<
           'add',
           insertOptions as UpdateOptions
         )
+        const nodeData = buildNodeData(data, sourcePath, rootName, sort)
         return {
-          input: {
-            ...buildNodeData(data, sourcePath, rootName, sort),
-            newData,
-            event: 'move',
-            newPath: landingPath,
-          } as UpdateFunctionProps,
+          input: { ...nodeData, newData, event: 'move', newPath: landingPath } as UpdateFunctionProps,
+          nodeData,
           isNoOp: false,
           apply: () => commitData(newData),
           revert: () => commitData(preMove),
         }
       }
     }
-  }, [])
+  }, [commitDocument])
 
   // Runs the consumer's `onUpdate` and normalises its raw return to the canonical
   // outcome the commit engine acts on — including the localised, event-specific
