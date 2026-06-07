@@ -20,7 +20,7 @@ pnpm dev        # runs the demo against local src (VITE_JRE_SOURCE=local)
 
 ## 2. Instrument the demo (temporary)
 
-All edits are in **[demo/src/App.tsx](demo/src/App.tsx)**.
+All edits are in **[demo/src/App.tsx](../demo/src/App.tsx)**.
 
 ### 2a. Add a mode switch
 

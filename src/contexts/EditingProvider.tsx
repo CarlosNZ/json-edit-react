@@ -1,6 +1,6 @@
 /**
  * Editing + commit state for the tree. This store is the single control centre
- * for the whole edit lifecycle (§ EditingModel-new.md):
+ * for the whole edit lifecycle:
  *
  * - `active`: the one open/held operation (only one node edits at a time).
  * - `settling`: the in-flight optimistic commits, keyed by path-string → token,

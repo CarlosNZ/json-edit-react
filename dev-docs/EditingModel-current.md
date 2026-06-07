@@ -2,7 +2,7 @@
 
 A complete inventory of the editing/commit lifecycle as it exists today, so we can design the replacement against the full surface rather than the value-edit happy path. Temporary working doc (like `ThemeModel.md`) — delete once the new model lands.
 
-Source of truth: [src/contexts/EditingProvider.tsx](src/contexts/EditingProvider.tsx) (the store), [src/hooks/useCommon.ts](src/hooks/useCommon.ts) (`handleMutationResult`, rename), [src/ValueNodeWrapper.tsx](src/ValueNodeWrapper.tsx), [src/CollectionNode.tsx](src/CollectionNode.tsx), [src/KeyDisplay.tsx](src/KeyDisplay.tsx), [src/ButtonPanels.tsx](src/ButtonPanels.tsx), [src/JsonEditor.tsx](src/JsonEditor.tsx), [src/utils/keyboard.ts](src/utils/keyboard.ts).
+Source of truth: [src/contexts/EditingProvider.tsx](../src/contexts/EditingProvider.tsx) (the store), [src/hooks/useCommon.ts](../src/hooks/useCommon.ts) (`handleMutationResult`, rename), [src/ValueNodeWrapper.tsx](../src/ValueNodeWrapper.tsx), [src/CollectionNode.tsx](../src/CollectionNode.tsx), [src/KeyDisplay.tsx](../src/KeyDisplay.tsx), [src/ButtonPanels.tsx](../src/ButtonPanels.tsx), [src/JsonEditor.tsx](../src/JsonEditor.tsx), [src/utils/keyboard.ts](../src/utils/keyboard.ts).
 
 ---
 
@@ -29,9 +29,9 @@ The store is a single mutable bundle + a listener `Set`, exposed via `useSyncExt
 
 **Per-node subscriptions (primitive selectors):**
 
-- `isEditing` = `mode==='value' && pathsEqual(path)` — [useCommon.ts:60](src/hooks/useCommon.ts#L60)
+- `isEditing` = `mode==='value' && pathsEqual(path)` — [useCommon.ts:60](../src/hooks/useCommon.ts#L60)
 - `isEditingKey` = `mode==='key' && pathsEqual(path)`
-- `isAddingHere` = `mode==='add' && pathsEqual(path)` — [ButtonPanels.tsx:79](src/ButtonPanels.tsx#L79)
+- `isAddingHere` = `mode==='add' && pathsEqual(path)` — [ButtonPanels.tsx:79](../src/ButtonPanels.tsx#L79)
 - `childrenEditing` / `areChildrenBeingEdited` = `isDescendantOf(editing.path, path)` — keeps ancestors expanded
 
 > **Key fact:** there is no representation of "a session that has been submitted but not yet resolved." `currentlyEditingElement` is binary (editing / not). #325 tried to add the third state out-of-band in `committingPaths`. This is the root of the redesign.
@@ -49,7 +49,7 @@ Don't conflate these:
 
 ## 3. The public `onEditEvent` lifecycle (the contract)
 
-`EditEvent` union ([types.ts:294](src/types.ts#L294)):
+`EditEvent` union ([types.ts:294](../src/types.ts#L294)):
 
 | Session kind | Start | Commit | Close-without-commit |
 | --- | --- | --- | --- |
@@ -65,7 +65,7 @@ Don't conflate these:
 
 ## 4. The `onUpdate` result protocol
 
-Every commit funnels through one `onUpdate` ([JsonEditor.tsx:236](src/JsonEditor.tsx#L236)). The node's internal `onEdit`/`onAdd`/`onDelete`/`onRename` promise resolves to `string | void | false`, which `handleMutationResult` ([useCommon.ts:130](src/hooks/useCommon.ts#L130)) interprets:
+Every commit funnels through one `onUpdate` ([JsonEditor.tsx:236](../src/JsonEditor.tsx#L236)). The node's internal `onEdit`/`onAdd`/`onDelete`/`onRename` promise resolves to `string | void | false`, which `handleMutationResult` ([useCommon.ts:130](../src/hooks/useCommon.ts#L130)) interprets:
 
 | `onUpdate` returns | `onEdit` resolves to | `handleMutationResult` branch | Effect |
 | --- | --- | --- | --- |
@@ -76,7 +76,7 @@ Every commit funnels through one `onUpdate` ([JsonEditor.tsx:236](src/JsonEditor
 | `{ error }` | error string | `typeof result==='string'` | same as reject |
 | (thrown / rejected promise) | error string | string branch | caught in `handleEdit`, treated as reject |
 
-Also: a no-op value edit (`currentValue === newValue`) short-circuits in `onEdit` ([JsonEditor.tsx:295](src/JsonEditor.tsx#L295)) and returns `false` **before `onUpdate` is ever called** — so a no-op never opens an async window.
+Also: a no-op value edit (`currentValue === newValue`) short-circuits in `onEdit` ([JsonEditor.tsx:295](../src/JsonEditor.tsx#L295)) and returns `false` **before `onUpdate` is ever called** — so a no-op never opens an async window.
 
 > Testing note: `onUpdate` returning `false` hits the **error** branch, not the silent-cancel branch. Only `null` exercises the `result===false` revert path.
 
@@ -84,7 +84,7 @@ Also: a no-op value edit (`currentValue === newValue`) short-circuits in `onEdit
 
 ## 5. Store transitions (precise)
 
-### `startEdit(path, { mode='value', cancelOp?, force? })` — [L157](src/contexts/EditingProvider.tsx#L157)
+### `startEdit(path, { mode='value', cancelOp?, force? })` — [L157](../src/contexts/EditingProvider.tsx#L157)
 1. `next = { path, mode, force }`; `prev = currentlyEditingElement`; `isSwitch = prev!==null && !equal(prev,next)`.
 2. **Run the outgoing session's cleanup:** `op = cancelOp; cancelOp = null; if (op) op()`. *(This is the previous session's `cancelOp`, e.g. revert its buffer.)*
 3. **Install the new session's cleanup:** `cancelOp = options.cancelOp ?? null`.
@@ -92,19 +92,19 @@ Also: a no-op value edit (`currentValue === newValue`) short-circuits in `onEdit
 5. If `currentlyEditingElement !== next` → `commit({ currentlyEditingElement: next })`.
 6. **Always** fire `eventForMode(mode,'start')` (`startEdit`/`startRename`/`startAdd`).
 
-### `cancelEdit()` — [L200](src/contexts/EditingProvider.tsx#L200)
+### `cancelEdit()` — [L200](../src/contexts/EditingProvider.tsx#L200)
 1. Re-entrancy guard (`cancelling`).
 2. `op = cancelOp; cancelOp = null; if (op) op()`.
 3. If `prev!==null`: clear session (`commit(null)`), then fire `eventForMode(prev.mode,'cancel')` — uses the **correct** mode (`cancelEdit`/`cancelRename`/`cancelAdd`).
 4. **Does not touch `committingPaths`.**
 
-### `closeEdit()` — [L223](src/contexts/EditingProvider.tsx#L223)
+### `closeEdit()` — [L223](../src/contexts/EditingProvider.tsx#L223)
 - `cancelOp = null`; clear session. Fires **no** event (the node fires the terminal event itself from the commit outcome). **Does not touch `committingPaths`.**
 
-### `beginCommit()` (#325) — [L236](src/contexts/EditingProvider.tsx#L236)
+### `beginCommit()` (#325) — [L236](../src/contexts/EditingProvider.tsx#L236)
 - `cancelOp = null`; if a session is open, `committingPaths.add(toPathString(cur.path))`. **Leaves `currentlyEditingElement`** (editor stays open). No event.
 
-### `endCommit(path)` (#325) — [L247](src/contexts/EditingProvider.tsx#L247)
+### `endCommit(path)` (#325) — [L247](../src/contexts/EditingProvider.tsx#L247)
 - `committingPaths.delete(toPathString(path))`; if `currentlyEditingElement` still `pathsEqual(path)` → clear session. **Matches by path only — ignores mode.** No event.
 
 ### Support
@@ -148,7 +148,7 @@ Conventions below: **trigger** → handler → `store calls` → *onEditEvent*.
 
 ### 8.1 Value edit
 - **Open:** click Edit icon, or double-click the value (`setIsEditing`) → `startEdit(path, {cancelOp: revertSession})` → *startEdit*. Local `value` buffer mirrors `data`; typing sets `value` (via `updateValue`).
-- **Commit:** OK button (`onOk={handleEdit}`, [L517](src/ValueNodeWrapper.tsx#L517)), or Enter (`stringConfirm`/`numberConfirm`/`booleanConfirm` → `handleEdit`). `handleEdit` → `beginCommit()` → `setPreviousValue(null)` → `onEdit(newValue,path).then(...)` → `handleMutationResult({onRevert: revertToData})` then `endCommit(path)`. → *confirmEdit* (commit) or *cancelEdit* (no-op/reject).
+- **Commit:** OK button (`onOk={handleEdit}`, [L517](../src/ValueNodeWrapper.tsx#L517)), or Enter (`stringConfirm`/`numberConfirm`/`booleanConfirm` → `handleEdit`). `handleEdit` → `beginCommit()` → `setPreviousValue(null)` → `onEdit(newValue,path).then(...)` → `handleMutationResult({onRevert: revertToData})` then `endCommit(path)`. → *confirmEdit* (commit) or *cancelEdit* (no-op/reject).
 - **Cancel:** Esc (`cancel`) or ✗ (`onCancel`) → `handleCancel` → `revertSession()` (direct local revert) + `cancelEdit()` → *cancelEdit*.
 - **Tab:** `tabForward`/`tabBack` → `setTabDirection` + `recordPreviousEdit(path)` + `handleEdit()` + `startEdit(nextOrPrev)` (no cancelOp) → *confirmEdit(this)* then *startEdit(next)*.
 - **`data` sync:** `useEffect([data])` calls `revertToData()` whenever `data` changes (external setData, undo, commit) — **no `isEditing` guard**.
@@ -157,7 +157,7 @@ Conventions below: **trigger** → handler → `store calls` → *onEditEvent*.
 - **Open:** click Edit on a collection → `startEdit(path, {cancelOp: clearEditBuffer})` → *startEdit*. Textarea shows `editBufferValue = stringifiedValue ?? jsonStringify(data)`; typing sets `stringifiedValue`.
 - **Commit:** Ctrl/Cmd/Shift+Enter (`objectConfirm` → `handleEdit`). Parse first; **parse failure** → `onError`, leave open, **no event**. Else `beginCommit()` → no-op check (`jsonStringify(value)===currentDataString` → *cancelEdit* + `clearEditBuffer()` + `endCommit(path)`) → else `onEdit(value,path).then(handleMutationResult → clearEditBuffer() → endCommit(path))`. → *confirmEdit*/*cancelEdit*. (No `onRevert` passed; `clearEditBuffer` re-derives from `data`.)
 - **Cancel:** Esc / ✗ → `handleCancel` → `clearEditBuffer` happens via the registered `cancelOp` (through `cancelEdit`) → *cancelEdit*.
-- **Tab inside textarea:** plain Tab inserts a literal `\t` (no commit) — [CollectionNode.tsx:233](src/CollectionNode.tsx#L233).
+- **Tab inside textarea:** plain Tab inserts a literal `\t` (no commit) — [CollectionNode.tsx:233](../src/CollectionNode.tsx#L233).
 
 ### 8.3 Key rename
 - **Open:** double-click the key (`canEditKey`) → `startEdit(path, {mode:'key'})` (**no cancelOp**) → *startRename*. Key `<input>` is uncontrolled (`defaultValue`).
@@ -168,8 +168,8 @@ Conventions below: **trigger** → handler → `store calls` → *onEditEvent*.
 > Note: rename commits via **synchronous `closeEdit`**, not `beginCommit`/`endCommit`. Not converted by #325.
 
 ### 8.4 Type change
-- **Trigger:** the type `<select>` while a value is being edited → `handleChangeDataType(type)` ([L233](src/ValueNodeWrapper.tsx#L233)). Snapshots `previousValue` (once per session) so a later cancel reverts.
-- **Custom-node / enum / non-primitive target:** `onEdit(...).then(handleMutationResult)` **+ synchronous `closeEdit()`** ([L256](src/ValueNodeWrapper.tsx#L256), [L298](src/ValueNodeWrapper.tsx#L298)). → *confirmEdit*/*cancelEdit*.
+- **Trigger:** the type `<select>` while a value is being edited → `handleChangeDataType(type)` ([L233](../src/ValueNodeWrapper.tsx#L233)). Snapshots `previousValue` (once per session) so a later cancel reverts.
+- **Custom-node / enum / non-primitive target:** `onEdit(...).then(handleMutationResult)` **+ synchronous `closeEdit()`** ([L256](../src/ValueNodeWrapper.tsx#L256), [L298](../src/ValueNodeWrapper.tsx#L298)). → *confirmEdit*/*cancelEdit*.
 - **string/number/boolean target:** **no `closeEdit`** — the session stays open so the user keeps editing the new primitive type.
 - Cancelling later restores `previousValue` via `revertPreviousValue` (inside `revertSession`).
 
@@ -185,18 +185,18 @@ Conventions below: **trigger** → handler → `store calls` → *onEditEvent*.
 
 ### 8.6 Delete (no session)
 - Value: delete icon → `handleDelete` → `onDelete(value,path).then(handleMutationResult({confirmEvent:'delete'}))` → *delete* (no `cancelEvent`, no session).
-- Collection: same shape, plus `clearEditBuffer()` ([CollectionNode.tsx:393](src/CollectionNode.tsx#L393)). → *delete*.
+- Collection: same shape, plus `clearEditBuffer()` ([CollectionNode.tsx:393](../src/CollectionNode.tsx#L393)). → *delete*.
 
 ---
 
 ## 9. Tab navigation details
-- Target picked by `getNextOrPrevious(liveData, path, dir, sort)` ([keyboard.ts:152](src/utils/keyboard.ts#L152)) — walks the **rendered/sorted** tree, descends into non-empty collections, recurses to the parent at edges; returns `null` past the ends.
+- Target picked by `getNextOrPrevious(liveData, path, dir, sort)` ([keyboard.ts:152](../src/utils/keyboard.ts#L152)) — walks the **rendered/sorted** tree, descends into non-empty collections, recurses to the parent at edges; returns `null` past the ends.
 - Sequence per Tab (value): `setTabDirection` → `recordPreviousEdit(path)` → `handleEdit()` (commit, async) → `startEdit(target)` (sync, **no cancelOp**). The commit's `endCommit(path)` resolves later; the `startEdit(target)` already moved the session.
 - If `getNextOrPrevious` returns `null`: value Tab simply doesn't move (the `if (next)` guard); key Tab calls `cancelEdit()`.
 
 ---
 
-## 10. Filtered-node redirect — [ValueNodeWrapper.tsx:206](src/ValueNodeWrapper.tsx#L206)
+## 10. Filtered-node redirect — [ValueNodeWrapper.tsx:206](../src/ValueNodeWrapper.tsx#L206)
 A `useLayoutEffect` keyed on `[isEditing, isVisible, canEdit, startEdit, cancelEdit]`: if this node becomes `isEditing` but is search-filtered-out or uneditable (and not `force`), it re-targets: `startEdit(getNextOrPrevious(tabDirection))`, else `startEdit(previouslyEditedElement)`, else `cancelEdit()`. This is how Tab skips hidden/locked nodes. Runs synchronously pre-paint to avoid a flicker.
 
 ---
@@ -205,8 +205,8 @@ A `useLayoutEffect` keyed on `[isEditing, isVisible, canEdit, startEdit, cancelE
 - **`editorRef.startEdit({path, overrideRestrictions})`** — restriction pre-check → `startEditAction(path,{force:true})`. Returns `'PATH_NOT_FOUND'` / `'RESTRICTED'` / `true`.
 - **`editorRef.confirm()`** — clicks the live `editConfirmRef` OK button, then `cancelEdit()` (the click already committed; cancel tidies any residue — but note it fires `cancel*` if a session is still open).
 - **`editorRef.cancel()`** — `cancelEdit()`.
-- **Search input change** — `useEffect([searchText, searchDebounceTime])` calls `cancelEdit()` unconditionally ([JsonEditor.tsx:171](src/JsonEditor.tsx#L171)) → *cancel\** for any open session.
-- **Root keyboard handler** ([JsonEditor.tsx:575](src/JsonEditor.tsx#L575)) — `cancel: () => cancelEdit()`.
+- **Search input change** — `useEffect([searchText, searchDebounceTime])` calls `cancelEdit()` unconditionally ([JsonEditor.tsx:171](../src/JsonEditor.tsx#L171)) → *cancel\** for any open session.
+- **Root keyboard handler** ([JsonEditor.tsx:575](../src/JsonEditor.tsx#L575)) — `cancel: () => cancelEdit()`.
 
 ---
 
