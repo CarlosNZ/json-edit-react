@@ -492,6 +492,10 @@ function App() {
                   theme={editorTheme}
                   indent={indent}
                   onUpdate={async (nodeData) => {
+                    console.log('⏳ onUpdate START — holding 4s:', nodeData.event, nodeData.path)
+                    await new Promise((r) => setTimeout(r, 4000))
+                    return
+
                     // §17: one `onUpdate`. The datasets' per-operation helpers
                     // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
                     // as the catch-all (delete/rename/move).
@@ -669,7 +673,11 @@ function App() {
                       : undefined
                   }
                   // collapseClickZones={['property', 'header']}
-                  onEditEvent={(e) => setIsEditing(e.event.startsWith('start'))}
+                  // onEditEvent={(e) => setIsEditing(e.event.startsWith('start'))}
+                  onEditEvent={(e) => {
+                    console.log('🔔 EDIT EVENT:', e.event, e.path)
+                    setIsEditing(e.event.startsWith('start'))
+                  }}
                   onCollapse={(input) => {
                     // Showcase the onCollapse callback — only while the External
                     // Control panel is on screen (fires for both handle-driven
