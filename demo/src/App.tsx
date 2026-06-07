@@ -10,12 +10,18 @@ import {
   extract,
   isCollection,
   type JsonEditorHandle,
+  type UpdateFunctionProps,
 } from '@json-edit-react'
+// DEMO (Intro dataset): confirm-before-update via @json-edit-react/utils.
+// Comment out this import + the wiring below to disable. Swap the commented
+// import to demo the Layer-1 primitive instead.
+import { useConfirmOnUpdate, useUndo /*, useJsonEditorConfirm */ } from '@json-edit-react/utils'
+import { ConfirmDialog } from './ConfirmDialog'
+import { PendingCommit } from './PendingCommit'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
 import { useState } from 'react'
-import useUndo from 'use-undo'
 import {
   Box,
   Flex,
@@ -88,6 +94,11 @@ const themeNames = [
   'Black & White',
   'Candy Wrapper',
   'Psychedelic',
+  'Solarized Dark',
+  'Solarized Light',
+  'Dracula',
+  'Monokai',
+  'Tokyo Night',
 ]
 
 // Only default theme is loaded initially
@@ -143,13 +154,14 @@ function App() {
 
   const { liveData, loading, updateLiveData } = useDatabase()
 
-  const [
-    { present: data, past, future },
-    { set: setData, reset, undo: undoData, redo: redoData, canUndo, canRedo },
-  ] = useUndo<JsonData>(selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data)
-  // Provides a named version of these methods (i.e undo.name = "undo")
-  const undo = () => undoData()
-  const redo = () => redoData()
+  // The consumer owns the data state; `useUndo` (controlled) layers undo/redo on
+  // top, recording snapshots and committing through `setRawData`. Switch datasets
+  // with `reset(newData)` (see `handleChangeData`) — never a raw `setRawData` — so
+  // history is cleared rather than left pointing at the previous dataset.
+  const [rawData, setRawData] = useState<JsonData>(
+    selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data
+  )
+  const { data, set: setData, reset, undo, redo, canUndo, canRedo } = useUndo(rawData, setRawData)
 
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
@@ -179,6 +191,71 @@ function App() {
   const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
 
   const toggleState = (field: keyof AppState) => updateState({ [field]: !state[field] })
+
+  // §17: one `onUpdate`. The datasets' per-operation helpers (onEdit/onAdd) are
+  // dispatched by `event`, with `onUpdate` as the catch-all (delete/rename/move),
+  // followed by any post-commit demo side effect. Extracted to a named function
+  // so the confirm-hook demo below can wrap it.
+  const demoOnUpdate = async (nodeData: UpdateFunctionProps) => {
+    const runDemoUpdate = () => {
+      if (nodeData.event === 'edit' && dataDefinition?.onEdit)
+        return dataDefinition.onEdit(nodeData)
+      if (nodeData.event === 'add' && dataDefinition?.onAdd) return dataDefinition.onAdd(nodeData)
+      return (dataDefinition?.onUpdate ?? (() => undefined))(
+        nodeData,
+        toast as (options: unknown) => void
+      )
+    }
+    const result = await runDemoUpdate()
+    // Reject (false) or silent cancel (null): pass straight through, no commit
+    // and no post-commit side effect.
+    if (result === false || result === null) return result
+    // Object result (error / { value } override): pass through to the library.
+    // `true` is a plain commit — fall through to the side effect like void.
+    if (result && result !== true) return result
+  }
+
+  // ── DEMO: confirm-before-update on the Intro dataset (@json-edit-react/utils) ──
+  // To disable for production: comment this hook, the <ConfirmDialog/> render, and
+  // revert the editor's `onUpdate` prop to `demoOnUpdate`. Layer 2 (declarative)
+  // gates delete/edit and runs `demoOnUpdate` only after the user confirms.
+  const introConfirm = useConfirmOnUpdate({
+    confirmOn: ['delete', 'edit'],
+    title: 'Are you sure?',
+    message: (node) => {
+      const action = node.event[0].toUpperCase() + node.event.slice(1)
+      // Array items have a numeric key — name the item generically rather than
+      // quoting the index.
+      const target = typeof node.key === 'string' ? `"${node.key}"` : 'array item'
+      return `${action} ${target}?`
+    },
+    onUpdate: demoOnUpdate,
+    // Consumer-supplied pending overlay (the hooks ship no UI). Shows the
+    // affected node as "pending" while the modal is open — mainly useful here
+    // because we also confirm `edit`; a delete-only confirm wouldn't need it.
+    pendingComponent: PendingCommit,
+  })
+  // Layer-1 equivalent (flip to this to demo the primitive instead): replace the
+  // hook above with `const introConfirm = useJsonEditorConfirm()` and gate at the
+  // top of `demoOnUpdate`:
+  //   if (selectedDataSet === 'intro' && (nodeData.event === 'delete' || nodeData.event === 'edit')) {
+  //     const action = nodeData.event[0].toUpperCase() + nodeData.event.slice(1)
+  //     const target = typeof nodeData.key === 'string' ? `"${nodeData.key}"` : 'array item'
+  //     const ok = await introConfirm.confirm({ title: 'Are you sure?', message: `${action} ${target}?` })
+  //     if (!ok) return null
+  //   }
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // Merge the pending-overlay definition into the dataset's own custom nodes
+  // (kept referentially stable — see the CustomNodes docs). Guard on
+  // `pendingNodeDefinition`, which is undefined when no `pendingComponent` is set.
+  const introCustomNodeDefinitions = useMemo(
+    () =>
+      introConfirm.pendingNodeDefinition
+        ? [introConfirm.pendingNodeDefinition, ...(customNodeDefinitions ?? [])]
+        : customNodeDefinitions,
+    [introConfirm.pendingNodeDefinition, customNodeDefinitions]
+  )
 
   const {
     searchText,
@@ -253,9 +330,16 @@ function App() {
   // Stable references so the JsonEditor's memoized nodes can bail out: an inline
   // `theme` array would churn the theme context (re-rendering every node), and
   // an inline `onCopy` would churn the per-node prop comparison.
+  // For the editTheme dataset the document IS the theme, so style the editor from
+  // `data` directly — a pure derivation, no second copy of the theme to keep in
+  // sync. Every other dataset styles from the chosen `theme`.
   const editorTheme = useMemo(
-    () => [theme, dataDefinition?.styles ?? {}, { container: { paddingTop: '1em' } }],
-    [theme, dataDefinition]
+    () => [
+      selectedDataSet === 'editTheme' ? (data as Theme) : theme,
+      dataDefinition?.styles ?? {},
+      { container: { paddingTop: '1em' } },
+    ],
+    [selectedDataSet, data, theme, dataDefinition]
   )
 
   const onCopy = useCallback(
@@ -297,6 +381,11 @@ function App() {
       collapseLevel: newDataDefinition.collapse ?? state.collapseLevel,
       rootName: newDataDefinition.rootName ?? 'data',
       customTextEditor: false,
+      // Leaving the theme editor: persist the live-edited theme (the `data`) into
+      // `state.theme` so the other datasets are styled with the theme you built.
+      // The editTheme view derives its styling from `data`, so this is the one
+      // point where that work needs writing back to the standing theme.
+      ...(selectedDataSet === 'editTheme' ? { theme: data as Theme } : {}),
     })
 
     switch (selected) {
@@ -354,14 +443,6 @@ function App() {
       setData(theme)
       previousTheme.current = theme
     }
-  }
-
-  const handleHistory = (method: () => void) => {
-    if (selectedDataSet === 'editTheme') {
-      const theme = (method.name === 'undo' ? past.slice(-1)[0] : future[0]) as Theme
-      updateState({ theme })
-    }
-    method()
   }
 
   const handleReset = async () => {
@@ -593,7 +674,9 @@ function App() {
                   maxWidth="min(670px, 90vw)"
                   className="block-shadow"
                   stringTruncateLength={90}
-                  customNodeDefinitions={customNodeDefinitions}
+                  customNodeDefinitions={
+                    selectedDataSet === 'intro' ? introCustomNodeDefinitions : customNodeDefinitions
+                  }
                   // customNodeDefinitions={[
                   //   {
                   //     condition: ({ key }) => key === 'string',
@@ -700,12 +783,14 @@ function App() {
               </RenderProfiler>
             </Suspense>
           </Box>
+          {/* DEMO: confirm-before-update modal (Intro dataset). Comment out to disable. */}
+          <ConfirmDialog {...introConfirm.dialog} />
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
               <Button
                 colorScheme="primaryScheme"
                 leftIcon={<ArrowBackIcon />}
-                onClick={() => handleHistory(undo)}
+                onClick={() => undo()}
                 isDisabled={!canUndo}
               >
                 Undo
@@ -714,7 +799,7 @@ function App() {
               <Button
                 colorScheme="primaryScheme"
                 rightIcon={<ArrowForwardIcon />}
-                onClick={() => handleHistory(redo)}
+                onClick={() => redo()}
                 isDisabled={!canRedo}
               >
                 Redo

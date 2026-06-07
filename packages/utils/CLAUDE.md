@@ -66,7 +66,7 @@ Output: `build/index.cjs.js`, `build/index.esm.js`, `build/index.d.ts`.
 
 ## Adding a helper
 
-1. Create `src/<group>/` (`confirm`, `schema`, `search`) with the
+1. Create `src/<group>/` (`confirm-update`, `schema`, `search`) with the
    implementation and an `index.ts` barrel.
 2. Re-export it from [src/index.ts](src/index.ts).
 3. Check the dependency policy above — prefer zero runtime deps.

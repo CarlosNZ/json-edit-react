@@ -4,17 +4,20 @@
 // don't belong in the zero-dependency core. Keep this package free of runtime
 // dependencies wherever possible (see CLAUDE.md for the dependency policy).
 //
-// Planned contents (re-export each group from here as it lands):
+// Contents (re-export each group from here as it lands):
 //
 //   - Confirm-before-update hooks   — useJsonEditorConfirm / useConfirmOnUpdate
 //                                     https://github.com/CarlosNZ/json-edit-react/issues/307
-//   - JSON Schema → Filter Functions generator
+//   - Undo / redo hook              — useUndo
+//   - JSON Schema → Filter Functions generator [planned]
 //                                     https://github.com/CarlosNZ/json-edit-react/issues/285
-//   - Ready-made `searchFilter` helpers for common search use cases
+//   - Ready-made `searchFilter` helpers for common search use cases [planned]
 //                                     https://github.com/CarlosNZ/json-edit-react/issues/319
-//
-// e.g.  export * from './confirm'
-//       export * from './schema'
-//       export * from './search'
 
-export {}
+// Cross-utility shared pieces (event-name vocabulary, the in-flight pending-node
+// mechanism). Internal `_common`, surfaced here as public API.
+export * from './_common/events'
+export * from './_common/pendingNode'
+
+export * from './confirm-update'
+export * from './undo'

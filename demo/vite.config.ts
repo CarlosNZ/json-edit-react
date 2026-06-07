@@ -45,6 +45,13 @@ const componentsSrcMap: Record<PackageOption, string> = {
   pack: path.resolve(__dirname, '../pack-output/components/package'),
 }
 
+const utilsSrcMap: Record<PackageOption, string> = {
+  npm: '@json-edit-react/utils',
+  local: path.resolve(__dirname, '../packages/utils/src'),
+  build: path.resolve(__dirname, '../packages/utils/build/index.esm.js'),
+  pack: path.resolve(__dirname, '../pack-output/utils/package'),
+}
+
 const packageFile = coreSrcMap[provider].pkgJson
 const jsonEditReactPath = coreSrcMap[provider].src
 const pkg = fs.readJsonSync(packageFile)
@@ -86,6 +93,7 @@ export default defineConfig({
     alias: [
       { find: /^@json-edit-react\/themes$/, replacement: themesSrcMap[provider] },
       { find: /^@json-edit-react\/components$/, replacement: componentsSrcMap[provider] },
+      { find: /^@json-edit-react\/utils$/, replacement: utilsSrcMap[provider] },
       { find: /^@json-edit-react$/, replacement: jsonEditReactPath },
       { find: /^json-edit-react$/, replacement: jsonEditReactPath },
     ],
