@@ -26,4 +26,11 @@ export const examples: Record<string, ExampleDef> = {
       'Exercise the optimistic commit lifecycle, the hold() gate and the full onEditEvent stream. Pick an onUpdate behaviour, then edit / rename / add / delete and watch the event viewer.',
     load: () => import('./editing-model/Example'),
   },
+  'heat-map': {
+    kind: 'static',
+    title: 'Heat map',
+    blurb: 'A static example showing a heat map of temperatures across different cities.',
+    load: () => import('./static/heat-map/Example'),
+    code: () => import('./static/heat-map/Example.tsx?raw'),
+  },
 }

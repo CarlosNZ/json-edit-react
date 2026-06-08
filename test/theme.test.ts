@@ -160,6 +160,22 @@ describe('compileStyles — function composition', () => {
     const c = compileStyles([{ string: () => ({ color: 'red' }) }, { string: { color: 'blue' } }])
     expect(getStyles(c, 'string', nodeData)).toEqual({ color: 'red' })
   })
+
+  it('compiles a function for an element with no static base anywhere', () => {
+    // `collection` is unstyled by the default theme, so when only a later theme
+    // supplies a *function* for it (no static layer ever seeds the base), the
+    // function must still be compiled — regression for the heat-map demo, where
+    // `number` (which has a default base) worked but `collection` did not.
+    const c = compileStyles([
+      { number: 'red' },
+      {
+        number: () => ({ fontWeight: 'bold' }),
+        collection: () => ({ backgroundColor: 'blue' }),
+      },
+    ])
+    expect(getStyles(c, 'number', nodeData)).toEqual({ color: 'red', fontWeight: 'bold' })
+    expect(getStyles(c, 'collection', nodeData)).toEqual({ backgroundColor: 'blue' })
+  })
 })
 
 // ─── E — getStyles ───────────────────────────────────────────────────────────
