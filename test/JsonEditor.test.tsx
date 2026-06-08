@@ -1134,23 +1134,64 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
     expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['delete', 'updateSuccessful'])
   })
 
-  test('a rejected delete restores the removed key to its ORIGINAL position, not the end', async () => {
+  test('a synchronously rejected delete shows the error in place and never touches external state', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const onUpdate = jest.fn(() => false as const)
+    // Controlled, so an optimistic removal would actually unmount the node (as
+    // in a real app) — the regression this guards against.
+    const Controlled = () => {
+      const [data, setLocal] = useState<Record<string, number>>({ a: 1, b: 2, c: 3 })
+      return (
+        <JsonEditor
+          data={data}
+          setData={(d) => {
+            setData(d)
+            setLocal(d as Record<string, number>)
+          }}
+          onUpdate={onUpdate}
+          showIconTooltips
+        />
+      )
+    }
+    render(<Controlled />)
+
+    const bRow = screen.getByText('2').closest('.jer-component') as HTMLElement
+    await user.click(bRow.querySelector('[title="Delete"]') as HTMLElement)
+
+    // Sync validation rejects before the optimistic-apply timer fires, so the
+    // node is never removed: the inline error renders on it (V1-like) and
+    // external state is untouched — no optimistic remove + revert churn.
+    await waitFor(() => expect(screen.getByText('Delete unsuccessful')).toBeInTheDocument())
+    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('a rejected SLOW delete restores the removed key to its original position, not the end', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const deferred = makeDeferred()
+    const onUpdate = jest.fn<ReturnType<UpdateFunction>, Parameters<UpdateFunction>>(
+      () => deferred.promise as ReturnType<UpdateFunction> // pending past the optimistic-apply timer
+    )
     render(
       <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} onUpdate={onUpdate} showIconTooltips />
     )
 
-    // Delete the MIDDLE key 'b' — optimistically removed, then the rejection
-    // reverts. The revert must put 'b' back in its original slot, so key order
-    // stays ['a','b','c'] — not append it to the end (['a','c','b']).
+    // Delete the MIDDLE key 'b'. The slow onUpdate hasn't settled, so it applies
+    // optimistically once the timer fires (b removed).
     const bRow = screen.getByText('2').closest('.jer-component') as HTMLElement
     await user.click(bRow.querySelector('[title="Delete"]') as HTMLElement)
+    await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ a: 1, c: 3 }))
 
+    // Now it rejects: the revert must put 'b' back in its original slot, so key
+    // order stays ['a','b','c'] — not append it to the end (['a','c','b']).
+    await act(async () => {
+      deferred.resolve(false)
+    })
     await waitFor(() => {
-      const last = setData.mock.calls[setData.mock.calls.length - 1]?.[0] as Record<string, unknown>
-      expect(Object.keys(last ?? {})).toEqual(['a', 'b', 'c'])
+      const last = setData.mock.calls[setData.mock.calls.length - 1][0] as Record<string, unknown>
+      expect(Object.keys(last)).toEqual(['a', 'b', 'c'])
     })
   })
 })

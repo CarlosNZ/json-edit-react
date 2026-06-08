@@ -175,6 +175,13 @@ export interface EditingStore {
   areChildrenBeingEdited: (path: CollectionKey[]) => boolean
 }
 
+// How long an INSTANT op (delete/move/array-add) waits for `onUpdate` before
+// applying optimistically. A faster result (sync or sub-threshold) settles in
+// place, so the node is never removed/relocated and a rejection's inline error
+// renders on it. ~100ms is the "feels instant" perception threshold, so it
+// rarely needs tuning — kept a constant (not a prop) to hold the API flat.
+const OPTIMISTIC_DELAY_MS = 100
+
 const initialState: EditingStateBundle = {
   active: null,
   settling: {},
@@ -379,11 +386,23 @@ const createEditingStore = (
     }
 
     const promise = prims!.runUpdate!(input, control)
-    if (!held) apply() // default: optimistic close at submit
+    // Editor ops (edit/rename/object-add) apply immediately: the node survives a
+    // later revert (so a rejection's inline error still shows) and Tab/close must
+    // feel instant. INSTANT ops (delete/move/array-add) defer the optimistic
+    // apply by OPTIMISTIC_DELAY_MS — if `onUpdate` settles first (sync or fast
+    // validation), the node is never removed/relocated, so a rejection's inline
+    // error renders on it (a V1 behaviour the always-optimistic path lost). A
+    // slow `onUpdate` still applies optimistically once the timer fires.
+    let optimisticTimer: ReturnType<typeof setTimeout> | undefined
+    if (!held) {
+      if (instant) optimisticTimer = setTimeout(apply, OPTIMISTIC_DELAY_MS)
+      else apply()
+    }
 
-    return promise.then((outcome) =>
-      reconcile(path, op, token, outcome, apply, revert, () => applied, nodeData, extra)
-    )
+    return promise.then((outcome) => {
+      clearTimeout(optimisticTimer)
+      return reconcile(path, op, token, outcome, apply, revert, () => applied, nodeData, extra)
+    })
   }
 
   // ── reconcile: settle the commit's outcome (token-gated) ──────────────────
