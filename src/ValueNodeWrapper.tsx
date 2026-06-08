@@ -515,11 +515,16 @@ const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
 }
 
 const getInputComponent = (data: JsonData, inputProps: InputProps) => {
-  // Need to check for DataType again -- if it's a custom component it could
-  // have a custom type, but if we're rendering this (a standard component),
-  // then it must be set to not show in current condition (editing or view), so
-  // we need interpret it as a simple type, not the Custom type.
-  const rawDataType = getDataType(data)
+  // Pick the input from the in-progress buffer `value`, not the committed
+  // `data`: a local primitive type-change coerces `value` (and the `dataType`
+  // selector) without committing, so keying off `data` would render the input
+  // for the old type. (When not editing, the buffer is synced to `data`, so
+  // they agree.) A function has no editable input — it shows as `invalid`
+  // (the buffer holds a placeholder string, so guard on `data` directly). We
+  // deliberately interpret a custom-typed node as its underlying primitive
+  // here: this branch only renders when the custom component is hidden for the
+  // current view/edit state.
+  const rawDataType = typeof data === 'function' ? 'invalid' : getDataType(inputProps.value)
   const { value } = inputProps
   switch (rawDataType) {
     case 'string':

@@ -671,6 +671,33 @@ describe('JsonEditor — structural mutations', () => {
     expect(setData).toHaveBeenCalledTimes(1)
     expect(setData).toHaveBeenCalledWith({ x: 0 })
   })
+
+  test('switching the value type renders the matching input, not the committed type', async () => {
+    const user = userEvent.setup()
+    const { container } = render(<JsonEditor data={{ x: 'hello' }} setData={noop} />)
+    const typeSelect = () => container.querySelector('.jer-select-types select') as HTMLSelectElement
+
+    await user.dblClick(screen.getByText('"hello"'))
+    // String value → the string textarea editor.
+    expect(container.querySelector('textarea.jer-input-text')).not.toBeNull()
+
+    // → number: the numeric input replaces the string textarea (the local type
+    // change coerces the buffer; the input must follow the buffer, not `data`).
+    await user.selectOptions(typeSelect(), 'number')
+    expect(container.querySelector('input.jer-input-number')).not.toBeNull()
+    expect(container.querySelector('textarea.jer-input-text')).toBeNull()
+
+    // → boolean: the checkbox input.
+    await user.selectOptions(typeSelect(), 'boolean')
+    expect(container.querySelector('input.jer-input-boolean')).not.toBeNull()
+    expect(container.querySelector('input.jer-input-number')).toBeNull()
+
+    // → back to string: the textarea returns (regression — it used to stay stuck
+    // on the committed type's input, e.g. a numeric input for a string value).
+    await user.selectOptions(typeSelect(), 'string')
+    expect(container.querySelector('textarea.jer-input-text')).not.toBeNull()
+    expect(container.querySelector('input.jer-input-boolean')).toBeNull()
+  })
 })
 
 describe('JsonEditor — §17 onUpdate event discriminant', () => {
@@ -1105,6 +1132,26 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
       deferred.resolve(true)
     })
     expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['delete', 'updateSuccessful'])
+  })
+
+  test('a rejected delete restores the removed key to its ORIGINAL position, not the end', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(() => false as const)
+    render(
+      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} onUpdate={onUpdate} showIconTooltips />
+    )
+
+    // Delete the MIDDLE key 'b' — optimistically removed, then the rejection
+    // reverts. The revert must put 'b' back in its original slot, so key order
+    // stays ['a','b','c'] — not append it to the end (['a','c','b']).
+    const bRow = screen.getByText('2').closest('.jer-component') as HTMLElement
+    await user.click(bRow.querySelector('[title="Delete"]') as HTMLElement)
+
+    await waitFor(() => {
+      const last = setData.mock.calls[setData.mock.calls.length - 1]?.[0] as Record<string, unknown>
+      expect(Object.keys(last ?? {})).toEqual(['a', 'b', 'c'])
+    })
   })
 })
 

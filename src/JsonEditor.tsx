@@ -305,8 +305,18 @@ const Editor: React.FC<
           nodeData,
           isNoOp: false,
           apply: () => commitData(newData),
-          // Re-insert the removed value at its original path (best-effort position).
-          revert: () => commitData(updateDataObject(dataRef.current, path, currentValue, 'add').newData),
+          // Re-insert the removed value at its ORIGINAL position (a plain `add`
+          // appends the key to the end of the object). `nodeData.index` is the
+          // node's position in its parent. `insertBefore` is read for an object
+          // parent, `insert` for an array — passing both is harmless (each path
+          // ignores the other).
+          revert: () =>
+            commitData(
+              updateDataObject(dataRef.current, path, currentValue, 'add', {
+                insert: true,
+                insertBefore: nodeData.index,
+              }).newData
+            ),
         }
       }
       case 'add': {
