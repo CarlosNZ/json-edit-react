@@ -142,12 +142,11 @@ export const useDragNDrop = ({
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
     } else {
       // Move is an instant op: the engine fires `move` (with the SOURCE node)
-      // and settles; a rejected move surfaces the error here.
-      editingStore
-        .submit({ op: 'move', path: dragSource.path, to: { path, position }, instant: true })
-        .then((outcome) => {
-          if (outcome?.status === 'error') onError(outcome.error, nodeData.value as CollectionData)
-        })
+      // and settles. A rejected move reverts and reports via the `updateError`
+      // event (which carries the correct SOURCE identity) — NOT a node-local
+      // `onError` here, since this handler runs on the DESTINATION node, so its
+      // error would show on the wrong place once the node reverts to its origin.
+      editingStore.submit({ op: 'move', path: dragSource.path, to: { path, position }, instant: true })
     }
   }
 
