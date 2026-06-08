@@ -6,12 +6,9 @@
 import React, { useCallback, useRef, useState } from 'react'
 import { useEditingSelector, useEditingStore } from '../contexts'
 import {
-  type CollectionKey,
   type CollectionNodeProps,
-  type EditEvent,
   type ErrorString,
   type JsonEditorError,
-  type JsonEditorErrorCode,
   type ThemeableElement,
   type ValueData,
   type ValueNodeProps,
@@ -29,10 +26,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const {
     nodeData: incomingNodeData,
     parentData,
-    onEdit,
-    onRename,
     onError: onErrorCallback,
-    onEditEvent,
     getLatestData,
     showErrorMessages,
     allowEditFilter,
@@ -46,7 +40,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     handleKeyboard,
     customNodeData,
   } = props
-  const { closeEdit, setPreviousValue, getSnapshot } = useEditingStore()
+  const { submit, cancel } = useEditingStore()
   const [error, setError] = useState<string | null>(null)
 
   const nodeData = { ...incomingNodeData, collapsed }
@@ -58,12 +52,12 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   // when its OWN boolean flips, so moving an edit between nodes re-renders just
   // the two involved, not the whole tree.
   const isEditing = useEditingSelector((s) => {
-    const editing = s.currentlyEditingElement
-    return editing !== null && editing.mode === 'value' && pathsEqual(editing.path, path)
+    const active = s.active
+    return active !== null && active.op === 'edit' && pathsEqual(active.path, path)
   })
   const isEditingKey = useEditingSelector((s) => {
-    const editing = s.currentlyEditingElement
-    return editing !== null && editing.mode === 'key' && pathsEqual(editing.path, path)
+    const active = s.active
+    return active !== null && active.op === 'rename' && pathsEqual(active.path, path)
   })
 
   const canEdit = allowEditFilter(nodeData)
@@ -109,114 +103,32 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     [onErrorCallback, showErrorMessages, getLatestData, errorDisplayTime]
   )
 
-  // Fires an `onEditEvent` for this node — single source of truth for the
-  // `{ ...nodeData, fullData: <live>, event }` shape (replaces the duplicate
-  // `emitEditEvent` closures in CollectionNode and ValueNodeWrapper, plus the
-  // four inlined copies in `handleEditKey` below). `nodeData` is read live
-  // (closure recreated each render); `fullData` is read live from the latest
-  // document — same rule as `onError`. `extra` carries the optional payload
-  // fields (`oldKey`/`newKey` on `confirmRename`).
-  const emitEditEvent = (
-    event: EditEvent['event'],
-    extra?: { oldKey?: CollectionKey; newKey?: CollectionKey }
-  ) => onEditEvent?.({ ...nodeData, fullData: getLatestData(), event, ...extra } as EditEvent)
-
-  // Collapses the three-branch `result === false | string | else` dance after
-  // every internal `onEdit` / `onAdd` / `onDelete` / `onRename` call. Single
-  // helper so the per-site copies can't drift. Optional callbacks cover the
-  // per-site nuances (revert-to-data, extra `closeEdit()` on the error path,
-  // success-only side effects); omit `cancelEvent` for "instant" mutations
-  // (delete, array add) which have no session to terminate on `false`.
-  const handleMutationResult = ({
-    result,
-    errorCode,
-    errorValue,
-    cancelEvent,
-    confirmEvent,
-    confirmExtra,
-    onRevert,
-    onErrorExtra,
-    onConfirmExtra,
-  }: {
-    result: string | void | false
-    errorCode: JsonEditorErrorCode
-    errorValue: JsonData
-    cancelEvent?: EditEvent['event']
-    confirmEvent?: EditEvent['event']
-    confirmExtra?: { oldKey?: CollectionKey; newKey?: CollectionKey }
-    onRevert?: () => void
-    onErrorExtra?: () => void
-    onConfirmExtra?: () => void
-  }) => {
-    if (result === false) {
-      onRevert?.()
-      if (cancelEvent) emitEditEvent(cancelEvent)
-      return
-    }
-    if (typeof result === 'string') {
-      onError({ code: errorCode, message: result }, errorValue)
-      onErrorExtra?.()
-      onRevert?.()
-      if (cancelEvent) emitEditEvent(cancelEvent)
-      return
-    }
-    onConfirmExtra?.()
-    if (confirmEvent) emitEditEvent(confirmEvent, confirmExtra)
-  }
-
   // Stable wrapper around `getNextOrPrevious` against the LIVE document for
   // this node's `path`, so callers (`KeyDisplay`, value-node `tabForward` /
   // `tabBack`) don't need to re-thread `getLatestData` / `path` / `sort`.
   const getNextOrPreviousAtPath = (type: 'next' | 'prev') =>
     getNextOrPrevious(getLatestData(), path, type, sort)
 
-  // Reverts a value-node type-change snapshot if one is active. Returns true
-  // if a revert fired (caller can skip its own fallback). Used by both
-  // CollectionNode's `handleCancel` (no fallback) and ValueNodeWrapper's
-  // `revertSession` (which falls back to `revertToData` when no snapshot).
-  const revertPreviousValue = () => {
-    const previousValue = getSnapshot().previousValue
-    setPreviousValue(null)
-    if (previousValue !== null) {
-      onEdit(previousValue, path)
-      return true
-    }
-    return false
-  }
-
-  // Commits a key rename and fires the matching `onEditEvent` (`confirmRename`/
-  // `cancelRename`).
+  // Commits a key rename through the store's commit engine. The no-op /
+  // duplicate-key checks stay client-side and close the session as a cancel.
   const handleEditKey = (newKey: string) => {
-    closeEdit()
-    // No-op rename (unchanged key) reports as a cancel (session closed, no change).
+    // No-op rename (unchanged key): close the session without committing.
     if (name === newKey) {
-      emitEditEvent('cancelRename')
+      cancel()
       return
     }
     if (!parentData) return
-    const existingKeys = Object.keys(parentData)
-    if (existingKeys.includes(newKey)) {
+    if (Object.keys(parentData).includes(newKey)) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
-      emitEditEvent('cancelRename')
+      cancel()
       return
     }
-
-    // A rename is a first-class `event: 'rename'` update — `onRename` rebuilds
-    // the parent (preserving key order) and commits the whole document. The
-    // session terminates with `confirmRename` (committed) or `cancelRename`
-    // (rejected/aborted); `confirmRename` carries the old + new keys. `false` is
-    // a silent cancel (consumer returned `null`); a string (including an empty
-    // one) is a real error → surface it and report the session as cancelled.
-    onRename(path, newKey).then((result) =>
-      handleMutationResult({
-        result,
-        errorCode: 'RENAME_ERROR',
-        errorValue: newKey as ValueData,
-        cancelEvent: 'cancelRename',
-        confirmEvent: 'confirmRename',
-        confirmExtra: { oldKey: name, newKey },
-      })
-    )
+    // First-class `event: 'rename'`: the engine fires `submitRename` →
+    // `commitRename` (carrying old + new keys) and settles. A rejected
+    // settlement reverts and surfaces the error here.
+    submit({ op: 'rename', path, newKey }).then((outcome) => {
+      if (outcome?.status === 'error') onError(outcome.error, newKey as ValueData)
+    })
   }
 
   // Common DERIVED VALUES (this makes the JSX logic less messy). `isEditing` /
@@ -279,10 +191,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     handleEditKey,
     derivedValues,
     emptyStringKey,
-    emitEditEvent,
-    handleMutationResult,
     getNextOrPreviousAtPath,
-    revertPreviousValue,
     buildKeyDisplayProps,
   }
 }

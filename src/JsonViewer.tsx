@@ -8,7 +8,7 @@ export function JsonViewer<T = JsonData>(props: JsonViewerProps<T>): React.React
 
   // The viewer holds a PRIVATE handle to the underlying editor and exposes only
   // `collapse` to its consumer. Editing actions supersede `allowEdit` by
-  // design, so surfacing `startEdit`/`confirmEdit` here would let a consumer
+  // design, so surfacing `startEdit`/`confirm` here would let a consumer
   // bypass the read-only contract through the ref. Keeping them on the private
   // `innerRef` makes them genuinely unreachable, not merely type-hidden.
   const innerRef = useRef<JsonEditorHandle>(null)

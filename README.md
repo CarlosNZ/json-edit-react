@@ -353,7 +353,7 @@ The generic flows through `data`, `setData`, the `onUpdate` / `onChange` / `onEr
 
 A single **`onUpdate`** callback runs whenever the data changes in the editor — for *every* kind of change. You might wish to use this to update some external state, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema. (It is *not* an alternative to `setData` — see [Managing state](#managing-state).)
 
-The function receives a single object, built on the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with an **`event`** discriminant plus the change-specific fields:
+The function receives two arguments. The first is a single object, built on the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with an **`event`** discriminant plus the change-specific fields; the second is a `control` object for [gating the commit](#optimistic-updates-and-gating-hold):
 
 ```js
 {
@@ -391,6 +391,28 @@ The function can return nothing (the change proceeds as normal), or a value to a
 - `{ error: <string> }` (or `{ error: { code, message } }`): treats the change as an error, with your provided message shown in the UI
 
 (Any of the above may also be returned from an `async` function / `Promise`.)
+
+### Optimistic updates and gating (`hold`)
+
+By default, commits are **optimistic**: when the user submits an edit the input closes and the data updates immediately, then `onUpdate` runs in the background. If it rejects (`false`, `{ error }`, a thrown error, or a rejected promise), the change is automatically reverted and the error surfaced. A slow `onUpdate` — say a network save — therefore never blocks the editor, and the user can keep working. Each in-flight commit is tracked independently, so a late failure reverts only its own node and can't clobber a newer edit.
+
+Structural changes — **delete**, drag-and-drop **move**, and adding an **array** item — settle a little differently. With no open input to keep responsive, they wait a brief moment (~100ms) for `onUpdate`: a fast result (e.g. synchronous schema validation) applies or rejects *in place*, so a rejected delete keeps the node and shows its error immediately; only a slow `onUpdate` falls back to the optimistic path (apply, then revert on failure). A rejected **move** has no settled position to anchor an inline message to, so it reports through the [`onEditEvent`](#event-callbacks) `updateError` event rather than an inline error.
+
+If instead you want to **hold the editor open** until a decision resolves — e.g. to show a confirmation dialog, or to validate before the value is committed — call `hold()` on the second argument:
+
+```js
+onUpdate={async (props, { hold }) => {
+  const release = hold()          // editor stays open; the rest of the tree is blocked
+  const ok = await myConfirmDialog(props)
+  if (!ok) return null            // abort — the edit is discarded
+  release()                       // commit now (closes the editor)
+}}
+```
+
+- `hold()` **must be called synchronously**, before the first `await`.
+- While held, the editor stays open and the rest of the tree can't be edited (one operation at a time).
+- `release()` applies the change and closes the editor.
+- If you `hold()` but never `release()`, the eventual `onUpdate` result decides — the change commits when the promise resolves (unless it resolves to a reject/cancel). So a plain `hold()` → `await` → `return` keeps the editor open for the duration and then commits.
 
 ### OnChange Function
 
@@ -1241,30 +1263,34 @@ You can interact with the component externally, with event callbacks and trigger
 
 Pass in a function to the props `onEditEvent` and `onCollapse` if you want your app to be able to respond to these events.
 
-The `onEditEvent` callback streams the complete **interaction lifecycle** — start/confirm/cancel for value-edit, key-rename and add sessions, plus the instant `delete`/`move`. It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, …) with an `event` discriminant spread on top:
+The `onEditEvent` callback streams the complete **interaction lifecycle** — start/submit/commit/cancel for value-edit, key-rename and add sessions, the instant `delete`/`move`, and the background settlement (`updateSuccessful`/`updateError`) of any committed change whose `onUpdate` ran. It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, …) with an `event` discriminant spread on top:
 
 ```ts
 type EditEvent =
   // value edit
-  | { event: 'startEdit' } | { event: 'confirmEdit' } | { event: 'cancelEdit' }
-  // key rename ('confirmRename' also carries oldKey + newKey)
-  | { event: 'startRename' }
-  | { event: 'confirmRename'; oldKey: CollectionKey; newKey: CollectionKey }
+  | { event: 'startEdit' } | { event: 'submitEdit' } | { event: 'commitEdit' } | { event: 'cancelEdit' }
+  // key rename ('commitRename' also carries oldKey + newKey)
+  | { event: 'startRename' } | { event: 'submitRename' }
+  | { event: 'commitRename'; oldKey: CollectionKey; newKey: CollectionKey }
   | { event: 'cancelRename' }
   // add
-  | { event: 'startAdd' } | { event: 'confirmAdd' } | { event: 'cancelAdd' }
+  | { event: 'startAdd' } | { event: 'submitAdd' } | { event: 'commitAdd' } | { event: 'cancelAdd' }
   // instant (no session)
   | { event: 'delete' } | { event: 'move' }
+  // background settlement (only fired when an onUpdate runs)
+  | { event: 'updateSuccessful'; operation: EditOperation }
+  | { event: 'updateError'; operation: EditOperation; error: JsonEditorError }
 // ...each spread onto the node's NodeData
 type OnEditEventFunction = (e: EditEvent) => void
 ```
 
-A session opens with a `start*` and terminates with **exactly one** of `confirm*` (the change was committed) or `cancel*` (the session closed *without* committing — an explicit cancel, a no-op confirm where nothing changed, or a change your `onUpdate` rejected/aborted). `delete` and `move` fire a single event on commit.
+A session opens with a `start*`, then `submit*` (the user committed — a [`hold()` gate](#optimistic-updates-and-gating-hold) may run in this window), then terminates with **exactly one** of `commit*` (the change was applied and the editor closed) or `cancel*` (the session closed *without* applying — an explicit cancel, or a `null` returned from `onUpdate`). `delete` and `move` fire a single event on commit. When `onUpdate` runs, its background result then arrives as `updateSuccessful` or `updateError` (carrying the `operation` and, on error, the `error`).
 
 A few things worth knowing:
-- **Add events describe the parent collection** (the node you're adding *into*); `confirmAdd` is where the add lands.
-- **Array adds are instant** — they emit only `confirmAdd` (no `startAdd`/`cancelAdd`, since there's no key-entry step).
-- A type change mid-edit is itself a commit, so it emits `confirmEdit` while the edit session stays open — one session can emit multiple `confirmEdit`s.
+- **Add events describe the parent collection** (the node you're adding *into*); `commitAdd` is where the add lands.
+- **Array adds are instant** — they emit only `commitAdd` (no `startAdd`/`submitAdd`/`cancelAdd`, since there's no key-entry step).
+- A **no-op confirm** (the user submits without changing the value) still emits `commitEdit` — the session closed cleanly, it just didn't change anything (and no `update*` follows, since `onUpdate` isn't run).
+- A type change mid-edit that's structural (to an object/array/custom node) is itself a commit, so it emits `commitEdit` while editing continues — one session can emit multiple `commitEdit`s.
 
 The `onCollapse` callback is executed when the user opens or collapses a node (or you drive it via `editorRef.collapse`). It receives the node's [node data](#filter-functions) with the collapse flags spread on top:
 

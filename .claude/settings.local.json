@@ -10,7 +10,9 @@
       "Bash(npx eslint *)",
       "Bash(echo \"EXIT: $?\")",
       "Bash(git checkout *)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(npx jest *)",
+      "Bash(gzip -c build/index.esm.js)"
     ]
   }
 }

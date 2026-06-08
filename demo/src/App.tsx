@@ -572,9 +572,32 @@ function App() {
                   rootName={rootName}
                   theme={editorTheme}
                   indent={indent}
-                  // Intro dataset: gate via the confirm hook (which then runs
-                  // `demoOnUpdate`); every other dataset uses it directly.
-                  onUpdate={selectedDataSet === 'intro' ? introConfirm.onUpdate : demoOnUpdate}
+                  onUpdate={async (nodeData) => {
+                    // §17: one `onUpdate`. The datasets' per-operation helpers
+                    // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
+                    // as the catch-all (delete/rename/move).
+                    const runDemoUpdate = () => {
+                      if (nodeData.event === 'edit' && dataDefinition?.onEdit)
+                        return dataDefinition.onEdit(nodeData)
+                      if (nodeData.event === 'add' && dataDefinition?.onAdd)
+                        return dataDefinition.onAdd(nodeData)
+                      return (dataDefinition?.onUpdate ?? (() => undefined))(
+                        nodeData,
+                        toast as (options: unknown) => void
+                      )
+                    }
+                    const result = await runDemoUpdate()
+                    // Reject (false) or silent cancel (null): pass straight
+                    // through, no commit and no post-commit side effect.
+                    if (result === false || result === null) return result
+                    // Object result (error / { value } override): pass through to
+                    // the library. `true` is a plain commit — fall through to the
+                    // side effect like void/undefined.
+                    if (result && result !== true) return result
+                    // Commit (true | void | undefined): run the post-commit demo side effect.
+                    const { newData } = nodeData
+                    if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
+                  }}
                   onError={
                     dataDefinition.onError
                       ? (errorData) => {
@@ -729,7 +752,15 @@ function App() {
                       : undefined
                   }
                   // collapseClickZones={['property', 'header']}
-                  onEditEvent={(e) => setIsEditing(e.event.startsWith('start'))}
+                  onEditEvent={(e) => {
+                    // A session is "editing" from `start*` until it closes with
+                    // `commit*`/`cancel*`. `submit*` happens mid-session (the
+                    // editor may still be open during a `hold()` gate), so it
+                    // mustn't flip the flag; settlement/instant events don't either.
+                    if (e.event.startsWith('start')) setIsEditing(true)
+                    else if (e.event.startsWith('commit') || e.event.startsWith('cancel'))
+                      setIsEditing(false)
+                  }}
                   onCollapse={(input) => {
                     // Showcase the onCollapse callback — only while the External
                     // Control panel is on screen (fires for both handle-driven

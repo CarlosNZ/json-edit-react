@@ -40,20 +40,24 @@ export const useConfirmOnUpdate = <T = JsonData,>(
   )
 
   const onUpdate: UpdateFunction<T> = useCallback(
-    async (input) => {
+    async (input, control) => {
       setPending({ path: toPathString(input.path), event: input.event })
       try {
         const shouldConfirm = Array.isArray(confirmOn)
           ? confirmOn.includes(input.event)
           : confirmOn(input)
         if (shouldConfirm) {
+          // TODO (deferred /utils amendment): call `control.hold()` here so the
+          // editor stays open during the dialog instead of committing
+          // optimistically, then `release()` on confirm — per the v2 editing
+          // model. Tracked alongside the pending-node overlay rework.
           const ok = await confirm({
             title: resolveMessage(title, input),
             message: resolveMessage(message, input),
           })
           if (!ok) return null
         }
-        return inner ? inner(input) : undefined
+        return inner ? inner(input, control) : undefined
       } finally {
         setPending(null)
       }

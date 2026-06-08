@@ -184,7 +184,9 @@ describe('editorRef handle — confirm / cancel', () => {
         error: expect.objectContaining({ code: 'UPDATE_ERROR', message: 'nope' }),
       })
     )
-    expect(setData).not.toHaveBeenCalledWith({ greeting: 'world' })
+    // Optimistic model: the value applies then the veto reverts it — the LAST
+    // write restores the original, so the edit nets out uncommitted.
+    expect(setData).toHaveBeenLastCalledWith({ greeting: 'hello' })
   })
 
   test('confirm() is a no-op with no value-edit control (does not cancel a key rename)', async () => {

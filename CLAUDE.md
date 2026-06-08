@@ -30,6 +30,7 @@ This is a **pnpm workspace** (root, plus `packages/*`). [demo/](demo/) and [cust
 - [scripts/](scripts/) — Python + Node helpers for the publish + build flow (core only — README rewriting, staging, packing, the test step for `prebuild`).
 - [json-schema-tools/](json-schema-tools/) — auxiliary tooling, not part of the package.
 - [build/](build/) — Rollup output for core. The only core artefact shipped to npm. Each sub-package has its own `packages/<name>/build/`.
+- [dev-docs/](dev-docs/) — internal development docs: not shipped, not user-facing. Performance architecture + measurement ([dev-docs/PERF-ARCHITECTURE.md](dev-docs/PERF-ARCHITECTURE.md), [dev-docs/PERF-MEASUREMENT.md](dev-docs/PERF-MEASUREMENT.md)), bundle forensics ([dev-docs/v2-api-bundle-analysis.md](dev-docs/v2-api-bundle-analysis.md)), editing-model design notes ([dev-docs/EditingModel-new.md](dev-docs/EditingModel-new.md) + `-current.md`, temporary — fold into the migration guide and delete when the model lands), and manual-test guides ([dev-docs/MANUAL-TESTING-editing-model.md](dev-docs/MANUAL-TESTING-editing-model.md)). Keep these current as the code evolves.
 
 The workspace boundary is configured in [pnpm-workspace.yaml](pnpm-workspace.yaml). Each sub-package has its own [CLAUDE.md](packages/themes/CLAUDE.md) with package-specific guidance.
 
@@ -85,7 +86,7 @@ The demo and CCL can each resolve `json-edit-react`, `@json-edit-react/themes`, 
 - The recommended pattern is for consumers to own `data` state and pass `setData`. The `onUpdate` family is for side effects / validation / mutation, **not** for state ownership. Don't suggest using `onUpdate` to update external state — the README explicitly steers users away from that.
 
 ### Performance / re-rendering (§16)
-- Before changing the render path — `CollectionNode`, `ValueNodeWrapper`, `useCommon`, the editing store, the `React.memo` comparator ([memoNode.ts](src/utils/memoNode.ts)), or any node prop — read [PERF-ARCHITECTURE.md](PERF-ARCHITECTURE.md). It states the invariants that keep fine-grained re-rendering correct: referential stability of every node prop, per-node primitive editing selectors, and the rule "subscribe for what a node renders; read live for what an event handler does — never from a frozen closure or a memoizable prop." Most regressions here are staleness bugs that break one of those.
+- Before changing the render path — `CollectionNode`, `ValueNodeWrapper`, `useCommon`, the editing store, the `React.memo` comparator ([memoNode.ts](src/utils/memoNode.ts)), or any node prop — read [dev-docs/PERF-ARCHITECTURE.md](dev-docs/PERF-ARCHITECTURE.md). It states the invariants that keep fine-grained re-rendering correct: referential stability of every node prop, per-node primitive editing selectors, and the rule "subscribe for what a node renders; read live for what an event handler does — never from a frozen closure or a memoizable prop." Most regressions here are staleness bugs that break one of those.
 
 ### Themes
 - Pre-built themes ship in [`@json-edit-react/themes`](packages/themes/). Core exports only `defaultTheme` (the implicit baseline) and the `Theme` / `ThemeInput` types.

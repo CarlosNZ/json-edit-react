@@ -382,6 +382,25 @@ The five legacy return shapes collapse into one. The `['value', x]` / `['error',
 
 `true` / `void` / `undefined` (proceed) and `false` (reject with a generic message) are unchanged. **New:** returning **`null`** silently cancels the change — no commit and *no* error message (use it to quietly abort a change that isn't an error; `false` still shows an error).
 
+### Optimistic commits + a second `control` argument
+
+Commits are now **optimistic by default**: on submit the editor closes and the data updates immediately, then `onUpdate` runs in the background; a rejection automatically reverts and surfaces the error. A slow `onUpdate` (e.g. a remote save) no longer blocks the editor, and each in-flight commit is tracked independently so a late failure reverts only its own node. If you relied on the editor staying open until a slow `onUpdate` resolved, opt back in with the new second argument:
+
+```diff
+- onUpdate={async (props) => {
+-   const ok = await confirmDialog(props)   // editor was implicitly held open
+-   return ok ? undefined : false
+- }}
++ onUpdate={async (props, { hold }) => {
++   const release = hold()                  // keep the editor open + block the tree
++   const ok = await confirmDialog(props)
++   if (!ok) return null                    // abort
++   release()                               // commit now
++ }}
+```
+
+`hold()` must be called synchronously (before the first `await`). See [Optimistic updates and gating](README.md#optimistic-updates-and-gating-hold) for the full contract.
+
 ### Flat `NodeData` payloads (`onUpdate` / `onChange`)
 
 Every callback now receives the standard flat [`NodeData`](README.md#filter-functions) plus its extras, so the bespoke field names are gone:
@@ -442,16 +461,19 @@ The observer callbacks move onto the same flat `NodeData` payload as the rest of
 - }}
 + onEditEvent={(e) => {
 +   switch (e.event) {
-+     case 'startEdit': case 'startRename': case 'startAdd': /* a session opened */ break
-+     case 'confirmEdit': case 'confirmRename': case 'confirmAdd': /* committed */ break
-+     case 'cancelEdit': case 'cancelRename': case 'cancelAdd': /* closed, no change */ break
-+     case 'delete': case 'move': /* instant */ break
++     case 'startEdit': case 'startRename': case 'startAdd':    /* a session opened */ break
++     case 'submitEdit': case 'submitRename': case 'submitAdd': /* user committed; a hold() gate may run */ break
++     case 'commitEdit': case 'commitRename': case 'commitAdd': /* applied, editor closed */ break
++     case 'cancelEdit': case 'cancelRename': case 'cancelAdd': /* closed without applying */ break
++     case 'delete': case 'move':                              /* instant */ break
++     case 'updateSuccessful': case 'updateError':             /* background onUpdate settled */ break
 +   }
-+   // e is the node's NodeData + the `event`; 'confirmRename' also has oldKey/newKey
++   // e is the node's NodeData + the `event`; 'commitRename' also has oldKey/newKey,
++   // 'updateError' the error, and the settlement events the `operation`
 + }}
 ```
 
-It now fires for the **complete** lifecycle (start → confirm/cancel) of value-edit, key-rename and add sessions, plus the instant `delete`/`move` — not just edit start/stop. This absorbs the role a dedicated `onRenameProperty` would have played (a rename surfaces as `startRename`/`confirmRename`/`cancelRename`). A no-op confirm (closing with no change) and a rejected/aborted change both report as `cancel*`.
+It now fires for the **complete** lifecycle (`start*` → `submit*` → `commit*`, or `start*` → `cancel*`) of value-edit, key-rename and add sessions, plus the instant `delete`/`move` and the background settlement (`updateSuccessful`/`updateError`) of any committed change whose `onUpdate` ran — not just edit start/stop. This absorbs the role a dedicated `onRenameProperty` would have played (a rename surfaces as `startRename`/`submitRename`/`commitRename`). A no-op confirm (submitting with no change) reports `commitEdit` (the session closed cleanly); an explicit cancel or a `null` returned from `onUpdate` reports `cancel*`.
 
 ### `onError` and `onCollapse` — flat `NodeData`
 

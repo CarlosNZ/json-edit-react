@@ -31,6 +31,10 @@ const makeInput = (
     ...overrides,
   }) as UpdateFunctionProps
 
+// Stub control for direct `onUpdate(input, control)` calls (the confirm hook
+// ignores it for now — the hold() gating is the deferred /utils amendment).
+const CTRL = { hold: () => () => {} }
+
 describe('useJsonEditorConfirm (Layer 1)', () => {
   it('opens the dialog with the supplied request and resolves true on confirm', async () => {
     const { result } = renderHook(() => useJsonEditorConfirm())
@@ -118,7 +122,7 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
 
     let res!: Promise<unknown>
     act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('delete')))
+      res = Promise.resolve(result.current.onUpdate(makeInput('delete'), CTRL))
     })
 
     expect(result.current.dialog.isOpen).toBe(true)
@@ -126,7 +130,11 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
 
     act(() => result.current.dialog.onCancel())
 
-    await expect(res).resolves.toBeNull()
+    // Wrap the settlement: the gated `onUpdate` resumes after its `await confirm`
+    // and clears `pending` in a `finally` — a state update that lands here.
+    await act(async () => {
+      await expect(res).resolves.toBeNull()
+    })
   })
 
   it('runs the inner onUpdate (and returns its result) on confirm', async () => {
@@ -137,12 +145,16 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
 
     let res!: Promise<unknown>
     act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('delete')))
+      res = Promise.resolve(result.current.onUpdate(makeInput('delete'), CTRL))
     })
 
     act(() => result.current.dialog.onConfirm())
 
-    await expect(res).resolves.toEqual({ value: 'committed' })
+    // Wrap the settlement: the gated `onUpdate` resumes after its `await confirm`
+    // and clears `pending` in a `finally` — a state update that lands here.
+    await act(async () => {
+      await expect(res).resolves.toEqual({ value: 'committed' })
+    })
     expect(inner).toHaveBeenCalledTimes(1)
   })
 
@@ -154,7 +166,7 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
 
     let res!: Promise<unknown>
     act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('edit')))
+      res = Promise.resolve(result.current.onUpdate(makeInput('edit'), CTRL))
     })
 
     await expect(res).resolves.toBeUndefined()
@@ -172,14 +184,14 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
     // Non-matching key: no dialog, commits (undefined).
     let skip!: Promise<unknown>
     act(() => {
-      skip = Promise.resolve(result.current.onUpdate(makeInput('delete', { key: 'public' })))
+      skip = Promise.resolve(result.current.onUpdate(makeInput('delete', { key: 'public' }), CTRL))
     })
     await expect(skip).resolves.toBeUndefined()
     expect(result.current.dialog.isOpen).toBe(false)
 
     // Matching key: dialog opens.
     act(() => {
-      void result.current.onUpdate(makeInput('delete', { key: 'secret' }))
+      void result.current.onUpdate(makeInput('delete', { key: 'secret' }), CTRL)
     })
     expect(result.current.dialog.isOpen).toBe(true)
   })
@@ -194,7 +206,7 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
     )
 
     act(() => {
-      void result.current.onUpdate(makeInput('delete', { key: 'widget' }))
+      void result.current.onUpdate(makeInput('delete', { key: 'widget' }), CTRL)
     })
 
     expect(result.current.dialog.title).toBe('Confirm')
@@ -211,7 +223,7 @@ describe('useConfirmOnUpdate — pending lifecycle', () => {
 
     let res!: Promise<unknown>
     act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('delete', { path: ['a', 'b'] })))
+      res = Promise.resolve(result.current.onUpdate(makeInput('delete', { path: ['a', 'b'] }), CTRL))
     })
 
     expect(result.current.dialog.isOpen).toBe(true)
@@ -231,7 +243,7 @@ describe('useConfirmOnUpdate — pending lifecycle', () => {
 
     let res!: Promise<unknown>
     act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('delete')))
+      res = Promise.resolve(result.current.onUpdate(makeInput('delete'), CTRL))
     })
     expect(result.current.pending).not.toBeNull()
 
@@ -247,7 +259,7 @@ describe('useConfirmOnUpdate — pending lifecycle', () => {
 
     let res!: Promise<unknown>
     act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('edit')))
+      res = Promise.resolve(result.current.onUpdate(makeInput('edit'), CTRL))
     })
     await act(async () => {
       await res
@@ -295,7 +307,7 @@ describe('useConfirmOnUpdate — pendingNodeDefinition', () => {
 
     let res!: Promise<unknown>
     act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('delete', { path: ['a'] })))
+      res = Promise.resolve(result.current.onUpdate(makeInput('delete', { path: ['a'] }), CTRL))
     })
 
     // New identity (memo keyed on pending), now matching the in-flight node.

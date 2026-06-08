@@ -18,9 +18,10 @@ import {
   type JsonData,
   type EnumDefinition,
 } from './types'
-import { useTheme, useEditingStore, useCollapse } from './contexts'
+import { useTheme, useEditingStore, useCollapse, type UpdateOutcome } from './contexts'
 import { type CustomNodeData } from './CustomNode'
 import { filterNode } from './utils/filter'
+import { pathsEqual } from './utils/pathTools'
 import { isJsEvent, matchEnumType, NOOP } from './utils/misc'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'
@@ -30,10 +31,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const {
     data,
     parentData,
-    onEdit,
-    onDelete,
     onChange,
-    onMove,
     allowClipboard,
     onCopy,
     canDragOnto,
@@ -56,20 +54,13 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   } = props
   const { getStyles } = useTheme()
   // Actions + a getSnapshot for imperative reads. The editing *state* this node
-  // needs (tabDirection, previouslyEditedElement, previousValue) is only read
+  // needs (active, tabDirection, previouslyEditedElement) is only read
   // inside event handlers / the Tab-redirect effect — never during render — so
   // it's read from the snapshot at use-time rather than subscribed to. The only
   // editing state that drives this node's render (`isEditing`) comes from
   // `useCommon`'s per-node selector.
-  const {
-    startEdit,
-    cancelEdit,
-    closeEdit,
-    recordPreviousEdit,
-    setTabDirection,
-    setPreviousValue,
-    getSnapshot,
-  } = useEditingStore()
+  const { open, cancel, submit, recordPreviousEdit, setTabDirection, getSnapshot } =
+    useEditingStore()
   const { setCollapseState } = useCollapse()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
@@ -86,14 +77,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     error,
     onError,
     derivedValues,
-    handleMutationResult,
     getNextOrPreviousAtPath,
-    revertPreviousValue,
     buildKeyDisplayProps,
   } = useCommon({ props })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
-    { canDrag, canDragOnto, path, nodeData, onMove, onError, translate }
+    { canDrag, canDragOnto, path, nodeData, onError, translate }
   )
 
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
@@ -145,7 +134,10 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   }
 
   useEffect(() => {
-    revertToData()
+    // Buffer ⊥ data while a session is open (the user's in-progress edit owns
+    // it): resync from `data` only when NOT editing — after a commit, an
+    // external `setData`, or a background settlement's revert.
+    if (!derivedValues.isEditing) revertToData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
@@ -207,81 +199,45 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // A forced (imperative `editorRef.startEdit`) edit overrides `allowEdit`,
     // so don't bounce off this node just because it's normally uneditable. A
     // search-filtered-out node (`!isVisible`) still redirects — it can't render.
-    if (isVisible && getSnapshot().currentlyEditingElement?.force) return
+    if (isVisible && getSnapshot().active?.force) return
     const { tabDirection, previouslyEditedElement } = getSnapshot()
     const next = getNextOrPreviousAtPath(tabDirection)
-    if (next) startEdit(next)
-    else if (previouslyEditedElement) startEdit(previouslyEditedElement)
-    else cancelEdit()
-    // The three booleans gate the redirect; `startEdit`/`cancelEdit` are
-    // included for hygiene (they are useCallback-stable over `onEditEvent`
-    // in EditingProvider, so they almost never flip). The remaining reads
-    // (`nodeData.fullData`, `tabDirection`, `previouslyEditedElement`,
-    // `path`, `sort`) are intentionally excluded — they change on every
-    // render or every edit transition and would cause spurious re-fires
-    // when no redirect is needed.
+    if (next) open(next)
+    else if (previouslyEditedElement) open(previouslyEditedElement)
+    else cancel()
+    // The three booleans gate the redirect; `open`/`cancel` are included for
+    // hygiene (store-stable, so they almost never flip). The remaining reads
+    // (`tabDirection`, `previouslyEditedElement`, `path`, `sort`) are
+    // intentionally excluded — they change every render / edit transition and
+    // would cause spurious re-fires when no redirect is needed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, isVisible, canEdit, startEdit, cancelEdit])
+  }, [isEditing, isVisible, canEdit, open, cancel])
 
   if (!isVisible) return null
-
-  // `emitEditEvent` is provided by `useCommon` (lifted to dedup with
-  // `CollectionNode`).
 
   const handleChangeDataType = (type: DataType) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
     setCollapseState(null)
-    // Snapshot the original value before any type-change `onEdit` fires, so
-    // a subsequent cancel can revert. Gated on `previousValue === null` so a
-    // chain of type changes within one edit session still reverts to the
-    // *original* — subsequent changes don't overwrite the first snapshot.
-    if (getSnapshot().previousValue === null) setPreviousValue(value as JsonData)
+
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
-      onEdit(customNode.defaultValue, path).then((result) =>
-        handleMutationResult({
-          result,
-          errorCode: 'UPDATE_ERROR',
-          errorValue: customNode.defaultValue as JsonData,
-          cancelEvent: 'cancelEdit',
-          confirmEvent: 'confirmEdit',
-          onRevert: revertToData,
-        })
+      // To a custom node: a structural change — commit + remount (editor closes).
+      submit({ op: 'edit', path, value: customNode.defaultValue }).then(
+        settleEdit(customNode.defaultValue as JsonData)
       )
-      setDataType(type)
-      setEnumType(null)
-      // Custom nodes will be instantiated expanded and NOT editing
-      closeEdit()
       setCollapseState({ path, collapsed: false, includeChildren: false })
       return
     }
 
-    const enumType = allowedDataTypes.find((dt) => {
-      if (dt instanceof Object) return dt.enum === type
-      return false
-    }) as EnumDefinition | undefined
-    if (enumType) {
-      if (typeof value !== 'string' || !enumType.values.includes(value)) {
-        const attempted = enumType.values[0]
-        onEdit(attempted, path).then((result) =>
-          handleMutationResult({
-            result,
-            errorCode: 'UPDATE_ERROR',
-            // `attempted` rather than `newValue` — `newValue` is declared
-            // further down in this function and is never reached on this
-            // branch (we return at `setEnumType` below), so referencing it
-            // from this callback would throw a TDZ ReferenceError.
-            errorValue: attempted as JsonData,
-            cancelEvent: 'cancelEdit',
-            confirmEvent: 'confirmEdit',
-            onRevert: revertToData,
-            // Extra `closeEdit()` only on the string-error branch (matches
-            // the pre-refactor inline copy; the `false` branch did not).
-            onErrorExtra: closeEdit,
-          })
-        )
-      }
-      setEnumType(enumType)
+    const enumDef = allowedDataTypes.find(
+      (dt) => dt instanceof Object && dt.enum === type
+    ) as EnumDefinition | undefined
+    if (enumDef) {
+      // Enum stays a value node — local only: coerce the buffer to a valid
+      // option and keep the editor open. Committed on the next real submit.
+      if (typeof value !== 'string' || !enumDef.values.includes(value)) setValue(enumDef.values[0])
+      setEnumType(enumDef)
+      setDataType(type)
       return
     }
 
@@ -289,30 +245,45 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       value,
       type,
       translate('DEFAULT_NEW_KEY', nodeData),
-      // If coming *FROM* a custom type, need to change value to something
-      // that won't match the custom node condition any more
+      // If coming *FROM* a custom type, change value to something that no longer
+      // matches the custom node condition.
       customNodeData?.CustomComponent ? translate('DEFAULT_STRING', nodeData) : undefined
     )
-    if (!['string', 'number', 'boolean'].includes(type)) closeEdit()
-    onEdit(newValue, path).then((result) =>
-      handleMutationResult({
-        result,
-        errorCode: 'UPDATE_ERROR',
-        errorValue: newValue as JsonData,
-        cancelEvent: 'cancelEdit',
-        confirmEvent: 'confirmEdit',
-        onRevert: revertToData,
-        onErrorExtra: closeEdit,
-        onConfirmExtra: () => setEnumType(null),
-      })
-    )
+
+    if (type === 'object' || type === 'array') {
+      // To a collection: structural — commit + remount (editor closes).
+      submit({ op: 'edit', path, value: newValue }).then(settleEdit(newValue as JsonData))
+      return
+    }
+
+    // Primitive ↔ primitive: local only — adjust the buffer + type, no commit;
+    // the editor stays open and the single commit happens on the real submit.
+    setValue(newValue as ValueData | CollectionData)
+    setDataType(type)
+    setEnumType(null)
   }
 
-  // Commits the in-progress value edit and fires the matching `onEditEvent`
-  // (`confirmEdit` on commit; `cancelEdit` on no-op/reject).
-  const handleEdit = (inputValue?: unknown) => {
-    closeEdit()
-    setPreviousValue(null)
+  // Settles a value-edit / type-change commit on the NODE side. A rejected
+  // settlement surfaces the error via this node's `onError` (inline + observer);
+  // a rejected OR silently-cancelled (`null`) settlement also reverts the local
+  // buffer — neither changes `data`, so the `[data]` effect won't do it (§9.1).
+  // Skipped when the user has already reopened THIS node: a stale settlement must
+  // not clobber the new in-progress edit (a superseded commit resolves to
+  // `undefined`, so it falls through untouched).
+  const settleEdit = (attempted: JsonData) => (outcome: UpdateOutcome | undefined) => {
+    if (outcome?.status === 'error') onError(outcome.error, attempted)
+    if (outcome?.status === 'error' || outcome?.status === 'cancel') {
+      const active = getSnapshot().active
+      const reopened = active?.phase === 'editing' && pathsEqual(active.path, path)
+      if (!reopened) revertToData()
+    }
+  }
+
+  // Commits the in-progress value edit through the store's commit engine (it
+  // fires `submitEdit` → `commitEdit` and settles). On a rejected settlement,
+  // surface the error via this node's `onError` (inline message + observer).
+  // `onCommit` lets Tab open the next field at the commit moment.
+  const handleEdit = (inputValue?: unknown, onCommit?: () => void) => {
     let newValue: JsonData
     if (inputValue !== undefined && !isJsEvent(inputValue)) newValue = inputValue as JsonData
     else {
@@ -333,54 +304,28 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           newValue = value
       }
     }
-    onEdit(newValue, path).then((result) =>
-      handleMutationResult({
-        result,
-        errorCode: 'UPDATE_ERROR',
-        errorValue: newValue,
-        cancelEvent: 'cancelEdit',
-        confirmEvent: 'confirmEdit',
-        onRevert: revertToData,
-      })
-    )
+    submit({ op: 'edit', path, value: newValue, onCommit }).then(settleEdit(newValue))
   }
 
-  // Per-node UI/data cleanup for any session-ending path that isn't a
-  // confirm: explicit cancel (Esc/✗), node switch (another node steals the
-  // edit), or external cancel (search reset, `editorRef.cancelEdit`).
-  // Registered as the store's `cancelOp` so the store invokes it uniformly;
-  // it does NOT call back into the store. Both steps are idempotent so the
-  // function is safe to run twice in the user-cancel path (once from
-  // `handleCancel` directly, once from the store invoking `cancelOp`).
-  const revertSession = () => {
-    // `revertPreviousValue` returns true when a type-change snapshot was
-    // applied; otherwise we fall back to reverting the local edit buffer.
-    if (!revertPreviousValue()) revertToData()
-  }
+  // Per-node buffer cleanup when a session ends without committing (Esc/✗, node
+  // switch, external cancel). Registered as the store's `cancelOp`; idempotent,
+  // so it's safe to run twice (once from `handleCancel`, once from the store).
+  const revertSession = () => revertToData()
 
   const handleCancel = () => {
-    // Revert locally then drive the store cancel. Driving the store also runs
-    // `cancelOp` (= `revertSession`) for the canonical external-cancel path,
-    // so this looks redundant — but `revertSession` is idempotent, and we
-    // still want the local revert to happen on entry paths that don't
-    // register a `cancelOp` (Tab-arrival, redirect from a filtered node),
-    // where the store has no op to invoke.
+    // Revert the buffer locally, then drive the store cancel (which also runs
+    // `cancelOp` = `revertSession` — idempotent). The local revert covers entry
+    // paths that registered no `cancelOp` (Tab-arrival, redirect).
     revertSession()
-    cancelEdit()
+    cancel()
   }
 
   const handleDelete = () => {
-    // `result === false` is a silent cancel (consumer returned `null`); a string
-    // (including an empty one) is a real error. Neither edits this node's value
-    // buffer.
-    onDelete(value, path).then((result) =>
-      handleMutationResult({
-        result,
-        errorCode: 'DELETE_ERROR',
-        errorValue: value as ValueData,
-        confirmEvent: 'delete',
-      })
-    )
+    // Instant op (no session). The engine fires `delete` and settles; a rejected
+    // settlement reverts (re-adds) and surfaces the error here.
+    submit({ op: 'delete', path, instant: true }).then((outcome) => {
+      if (outcome?.status === 'error') onError(outcome.error, value as ValueData)
+    })
   }
 
   // DERIVED VALUES (this makes the JSX logic less messy)
@@ -397,7 +342,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     setValue: updateValue,
     isEditing,
     canEdit,
-    setIsEditing: canEdit ? () => startEdit(path, { cancelOp: revertSession }) : NOOP,
+    setIsEditing: canEdit ? () => open(path, { cancelOp: revertSession }) : NOOP,
     handleEdit,
     handleCancel,
     path,
@@ -413,19 +358,13 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         setTabDirection('next')
         recordPreviousEdit(path)
         const next = getNextOrPreviousAtPath('next')
-        if (next) {
-          handleEdit()
-          startEdit(next)
-        }
+        if (next) handleEdit(undefined, () => open(next))
       },
       tabBack: () => {
         setTabDirection('prev')
         recordPreviousEdit(path)
         const prev = getNextOrPreviousAtPath('prev')
-        if (prev) {
-          handleEdit()
-          startEdit(prev)
-        }
+        if (prev) handleEdit(undefined, () => open(prev))
       },
     },
   }
@@ -444,7 +383,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
-      setIsEditing={() => startEdit(path, { cancelOp: revertSession })}
+      setIsEditing={() => open(path, { cancelOp: revertSession })}
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, inputProps) : undefined}
       originalNodeKey={
@@ -507,17 +446,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           ) : (
             showEditButtons && (
               <EditButtons
-                startEdit={
-                  canEdit
-                    ? () => {
-                        // Clear any leftover type-change snapshot from a
-                        // previously-abandoned edit session so a cancel
-                        // doesn't unexpectedly revert to a stale value.
-                        setPreviousValue(null)
-                        startEdit(path, { cancelOp: revertSession })
-                      }
-                    : undefined
-                }
+                startEdit={canEdit ? () => open(path, { cancelOp: revertSession }) : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
                 allowClipboard={allowClipboard}
                 onCopy={onCopy}
@@ -586,11 +515,16 @@ const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
 }
 
 const getInputComponent = (data: JsonData, inputProps: InputProps) => {
-  // Need to check for DataType again -- if it's a custom component it could
-  // have a custom type, but if we're rendering this (a standard component),
-  // then it must be set to not show in current condition (editing or view), so
-  // we need interpret it as a simple type, not the Custom type.
-  const rawDataType = getDataType(data)
+  // Pick the input from the in-progress buffer `value`, not the committed
+  // `data`: a local primitive type-change coerces `value` (and the `dataType`
+  // selector) without committing, so keying off `data` would render the input
+  // for the old type. (When not editing, the buffer is synced to `data`, so
+  // they agree.) A function has no editable input — it shows as `invalid`
+  // (the buffer holds a placeholder string, so guard on `data` directly). We
+  // deliberately interpret a custom-typed node as its underlying primitive
+  // here: this branch only renders when the custom component is hidden for the
+  // current view/edit state.
+  const rawDataType = typeof data === 'function' ? 'invalid' : getDataType(inputProps.value)
   const { value } = inputProps
   switch (rawDataType) {
     case 'string':

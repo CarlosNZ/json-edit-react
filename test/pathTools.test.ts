@@ -1,5 +1,4 @@
 import {
-  editingStatesEqual,
   isDescendantOf,
   pathsEqual,
   splitPropertyString,
@@ -186,39 +185,6 @@ describe('isDescendantOf', () => {
     expect(isDescendantOf(['foobar'], ['foo'])).toBe(false)
     expect(isDescendantOf(['foobar', 'name'], ['foo'])).toBe(false)
     expect(isDescendantOf(['foo'], ['foobar'])).toBe(false)
-  })
-})
-
-describe('editingStatesEqual', () => {
-  test('both null', () => {
-    expect(editingStatesEqual(null, null)).toBe(true)
-  })
-
-  test('one null, one non-null', () => {
-    expect(editingStatesEqual(null, { path: ['a'], mode: 'value' })).toBe(false)
-    expect(editingStatesEqual({ path: ['a'], mode: 'value' }, null)).toBe(false)
-  })
-
-  test('same path + same mode', () => {
-    expect(
-      editingStatesEqual({ path: ['a', 'b'], mode: 'value' }, { path: ['a', 'b'], mode: 'value' })
-    ).toBe(true)
-    expect(editingStatesEqual({ path: [], mode: 'key' }, { path: [], mode: 'key' })).toBe(true)
-  })
-
-  test('same path + different mode', () => {
-    expect(
-      editingStatesEqual({ path: ['a'], mode: 'value' }, { path: ['a'], mode: 'key' })
-    ).toBe(false)
-  })
-
-  test('different paths + same mode', () => {
-    expect(
-      editingStatesEqual({ path: ['a'], mode: 'value' }, { path: ['b'], mode: 'value' })
-    ).toBe(false)
-    expect(
-      editingStatesEqual({ path: ['a', 'b'], mode: 'value' }, { path: ['a'], mode: 'value' })
-    ).toBe(false)
   })
 })
 

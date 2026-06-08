@@ -8,7 +8,6 @@ import {
   type CollectionData,
   type JsonEditorError,
   type Position,
-  type InternalMoveFunction,
 } from '../types'
 import { type TranslateFunction } from '../localisation'
 
@@ -17,7 +16,6 @@ interface DnDProps {
   canDragOnto: boolean
   path: CollectionKey[]
   nodeData: NodeData
-  onMove: InternalMoveFunction
   onError: (error: JsonEditorError, errorValue: CollectionData | string) => unknown
   translate: TranslateFunction
 }
@@ -27,7 +25,6 @@ export const useDragNDrop = ({
   canDragOnto,
   path,
   nodeData,
-  onMove,
   onError,
   translate,
 }: DnDProps) => {
@@ -45,7 +42,7 @@ export const useDragNDrop = ({
         // (reading the store imperatively) rather than via a render-time
         // `canDrag` flag, so starting/ending an edit doesn't re-render every
         // draggable node in the tree.
-        if (editingStore.getSnapshot().currentlyEditingElement !== null) {
+        if (editingStore.getSnapshot().active !== null) {
           e.preventDefault()
           e.stopPropagation()
           return
@@ -144,12 +141,12 @@ export const useDragNDrop = ({
     ) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
     } else {
-      onMove(dragSource.path, path, position).then((result) => {
-        if (typeof result === 'string')
-          onError({ code: 'MOVE_ERROR', message: result }, nodeData.value as CollectionData)
-        // `move` onEditEvent fires from the internal `onMove` handler (it owns
-        // the SOURCE node's NodeData) — not here, where only the drop target is.
-      })
+      // Move is an instant op: the engine fires `move` (with the SOURCE node)
+      // and settles. A rejected move reverts and reports via the `updateError`
+      // event (which carries the correct SOURCE identity) — NOT a node-local
+      // `onError` here, since this handler runs on the DESTINATION node, so its
+      // error would show on the wrong place once the node reverts to its origin.
+      editingStore.submit({ op: 'move', path: dragSource.path, to: { path, position }, instant: true })
     }
   }
 

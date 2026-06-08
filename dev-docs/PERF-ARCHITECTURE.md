@@ -5,7 +5,7 @@
 the fine-grained rendering correct, so you don't have to reverse-engineer them from
 the code — and so the next person who wants to *simplify* this has a map.
 
-Related: the staged plan and rationale live in [V2-roadmap.md](V2-roadmap.md) §16. This
+Related: the staged plan and rationale live in [V2-roadmap.md](../V2-roadmap.md) §16. This
 doc is the steady-state contract; the roadmap is the history of how we got here.
 
 ---
@@ -38,7 +38,7 @@ A naive recursive tree re-renders **every** node on **any** change. Two distinct
    on the spine.
 
 The enabling lever for fixing both: **structural sharing** in
-[assign.ts](src/utils/assign.ts). `assignProperty` rebuilds only the **spine** (root →
+[assign.ts](../src/utils/assign.ts). `assignProperty` rebuilds only the **spine** (root →
 edited node) via `{...data}` / `[...data]`; every untouched sibling subtree keeps its
 **identical object reference** across a commit. That stable reference is what lets a
 `React.memo` boundary bail out of re-rendering untouched subtrees.
@@ -53,7 +53,7 @@ edited node) via `{...data}` / `[...data]`; every untouched sibling subtree keep
    best-effort snapshot — see Tradeoffs.)
 
 2. **The memo bails iff `data` is referentially unchanged** (plus the other compared
-   props equal). See `areNodePropsEqual` in [memoNode.ts](src/utils/memoNode.ts).
+   props equal). See `areNodePropsEqual` in [memoNode.ts](../src/utils/memoNode.ts).
    Structural sharing makes this fire for untouched subtrees.
 
 3. **Therefore every prop a node receives must be referentially stable** across renders
@@ -61,14 +61,14 @@ edited node) via `{...data}` / `[...data]`; every untouched sibling subtree keep
    churning prop re-renders the node every commit). This is why:
    - Consumer callbacks (`onEdit`/`onAdd`/`onDelete`/`onMove`, `onChange`/`onError`/
      `onCollapse`/`onEditEvent`) are wrapped **refs-to-latest** in
-     [JsonEditor.tsx](src/JsonEditor.tsx) (`useStableCallback`, `dataRef`, `srcEditRef`,
+     [JsonEditor.tsx](../src/JsonEditor.tsx) (`useStableCallback`, `dataRef`, `srcEditRef`,
      …) so they keep a stable identity yet always invoke the latest implementation.
    - Omitted object/array props default to **module-scoped constants**
      (`EMPTY_TRANSLATIONS`, `DEFAULT_COLLAPSE_CLICK_ZONES`, …), never inline `{}`/`[]`.
    - Derived objects (`otherProps`, `insertAtTopOption`, theme `value`) are `useMemo`'d.
 
 4. **Editing state is subscribed via per-node _primitive_ selectors.** A node calls
-   `useEditingSelector(s => <boolean>)` ([EditingProvider.tsx](src/contexts/EditingProvider.tsx)),
+   `useEditingSelector(s => <boolean>)` ([EditingProvider.tsx](../src/contexts/EditingProvider.tsx)),
    so it re-renders **only when its own boolean flips**. `useCommon` reads `isEditing` /
    `isEditingKey` this way; `CollectionNode` reads `childrenEditing` (is an edit inside my
    subtree) this way. Boolean selector results are `Object.is`-stable for free, which
@@ -79,16 +79,16 @@ edited node) via `{...data}` / `[...data]`; every untouched sibling subtree keep
    and one-shot reads come from the non-subscribing `useEditingStore()` (`startEdit`,
    `cancelEdit`, `getSnapshot`, `areChildrenBeingEdited`). Examples that get this right:
    - Drag gating reads `editingStore.getSnapshot().currentlyEditingElement` at dragstart
-     ([useDragNDrop.tsx](src/hooks/useDragNDrop.tsx)) — so NO node subscribes to a global
+     ([useDragNDrop.tsx](../src/hooks/useDragNDrop.tsx)) — so NO node subscribes to a global
      "is anything editing" boolean, and there is no whole-tree re-render on edit-start.
-   - External triggers read `getSnapshot()` ([useTriggers.ts](src/hooks/useTriggers.ts)).
+   - External triggers read `getSnapshot()` ([useTriggers.ts](../src/hooks/useTriggers.ts)).
    - Collapse-on-edit reads `areChildrenBeingEdited(path)` imperatively in `handleCollapse`.
 
 6. **Anything global/live needed at event time comes from a live source, never a prop or
    closure.** The whole document is read via **`getLatestData()`** (a stable getter over
    `dataRef`, threaded as a prop and on `CustomNodeProps`) — see `onChange`'s `currentData`
    and the `getNextOrPrevious` (Tab) calls in
-   [ValueNodeWrapper.tsx](src/ValueNodeWrapper.tsx) / [CollectionNode.tsx](src/CollectionNode.tsx).
+   [ValueNodeWrapper.tsx](../src/ValueNodeWrapper.tsx) / [CollectionNode.tsx](../src/CollectionNode.tsx).
    Per-node live values that a stable callback needs (`value`/`name`/`path` for `onChange`)
    come from a **ref-to-latest** (`onChangeArgsRef`), because the callback's identity must
    stay stable (it's handed to custom nodes as `setValue`).
@@ -99,13 +99,13 @@ edited node) via `{...data}` / `[...data]`; every untouched sibling subtree keep
 
 | Piece | Where | Role / invariant |
 | --- | --- | --- |
-| **Structural sharing** | [assign.ts](src/utils/assign.ts) | Commit rebuilds only the spine; untouched subtrees keep `data` refs. The lever for invariant 2. |
-| **Memo comparator** | [memoNode.ts](src/utils/memoNode.ts) | `areNodePropsEqual`: `nodeData` compared field-by-field on render-affecting scalars (`key`/`index`/`level`/`size`/`path`); `nodeData`/`customNodeData` in `IGNORED_KEYS`; **everything else (incl. all callbacks) by `===`**. Ignores `fullData`/`parentData`/`value` *identity* (they churn every commit). |
-| **Editing store** | [EditingProvider.tsx](src/contexts/EditingProvider.tsx) | Plain external store (`useRef` state + listener `Set`) behind `useSyncExternalStore`. `useEditingSelector` (subscribe, primitives only), `useEditingStore` (actions, no subscribe), `useEditing` (whole-bundle compat — NOT for the hot path). |
-| **Hot path** | [useCommon.ts](src/hooks/useCommon.ts) | Per-node `isEditing`/`isEditingKey` boolean selectors. The only editing subscription a leaf has. |
-| **Stable callbacks** | [JsonEditor.tsx](src/JsonEditor.tsx) | `dataRef`/`srcEditRef`/… refs-to-latest + `useStableCallback`. Stable identity, latest impl. `getLatestData = useCallback(() => dataRef.current, [])`. |
-| **Lazy JSON buffer** | [CollectionNode.tsx](src/CollectionNode.tsx) | `stringifiedValue: string \| null` — serialized on demand (`editBufferValue` memo), never eagerly. Lifecycle below. |
-| **Leaf edit buffer** | [ValueNodeWrapper.tsx](src/ValueNodeWrapper.tsx) | `value` state, synced from `data` by effect; `onChangeArgsRef` keeps live args for the stable `updateValue`. |
+| **Structural sharing** | [assign.ts](../src/utils/assign.ts) | Commit rebuilds only the spine; untouched subtrees keep `data` refs. The lever for invariant 2. |
+| **Memo comparator** | [memoNode.ts](../src/utils/memoNode.ts) | `areNodePropsEqual`: `nodeData` compared field-by-field on render-affecting scalars (`key`/`index`/`level`/`size`/`path`); `nodeData`/`customNodeData` in `IGNORED_KEYS`; **everything else (incl. all callbacks) by `===`**. Ignores `fullData`/`parentData`/`value` *identity* (they churn every commit). |
+| **Editing store** | [EditingProvider.tsx](../src/contexts/EditingProvider.tsx) | Plain external store (`useRef` state + listener `Set`) behind `useSyncExternalStore`. `useEditingSelector` (subscribe, primitives only), `useEditingStore` (actions, no subscribe), `useEditing` (whole-bundle compat — NOT for the hot path). |
+| **Hot path** | [useCommon.ts](../src/hooks/useCommon.ts) | Per-node `isEditing`/`isEditingKey` boolean selectors. The only editing subscription a leaf has. |
+| **Stable callbacks** | [JsonEditor.tsx](../src/JsonEditor.tsx) | `dataRef`/`srcEditRef`/… refs-to-latest + `useStableCallback`. Stable identity, latest impl. `getLatestData = useCallback(() => dataRef.current, [])`. |
+| **Lazy JSON buffer** | [CollectionNode.tsx](../src/CollectionNode.tsx) | `stringifiedValue: string \| null` — serialized on demand (`editBufferValue` memo), never eagerly. Lifecycle below. |
+| **Leaf edit buffer** | [ValueNodeWrapper.tsx](../src/ValueNodeWrapper.tsx) | `value` state, synced from `data` by effect; `onChangeArgsRef` keeps live args for the stable `updateValue`. |
 
 ---
 
@@ -130,8 +130,8 @@ to introduce a staleness bug — prefer reading an existing live source.**
 Every correctness bug this subsystem has produced is the **same bug wearing a different
 hat**: *a cached copy was read where the live value was needed.* If you hit a "stale X"
 report, suspect this first. Illustrative failure modes (all now guarded by tests in
-[test/renderScope.test.tsx](test/renderScope.test.tsx) and
-[test/memoNode.test.ts](test/memoNode.test.ts)):
+[test/renderScope.test.tsx](../test/renderScope.test.tsx) and
+[test/memoNode.test.ts](../test/memoNode.test.ts)):
 
 - **Stale callback** — the comparator ignored callback identity, so a memoized node kept
   calling a swapped-out `onChange`. Fix: compare callbacks by `===` **and** keep them
@@ -157,7 +157,7 @@ disappears in one pass.
 - **Render-time `fullData` is best-effort.** The comparator ignores `fullData` identity, so
   a custom-node `condition` or filter that keys a *render* decision on **another** subtree's
   data via `fullData` won't re-evaluate while the node's own inputs are unchanged. Documented
-  in [memoNode.ts](src/utils/memoNode.ts). Event-time reads are unaffected (they use
+  in [memoNode.ts](../src/utils/memoNode.ts). Event-time reads are unaffected (they use
   `getLatestData()`). To force it, change the node's own `data`/`parentData`.
 - **The ancestor spine re-renders on commit.** A commit rebuilds refs from root to the edited
   node, so those ancestors re-render. This is O(depth), not O(N) — bounded and expected.
@@ -197,8 +197,8 @@ Start here. In rough order of value-to-risk:
 
 ## Verifying you haven't broken it
 
-- [test/renderScope.test.tsx](test/renderScope.test.tsx) — render-scope (which nodes re-render
+- [test/renderScope.test.tsx](../test/renderScope.test.tsx) — render-scope (which nodes re-render
   on edit/commit) + the staleness regression tests.
-- [test/memoNode.test.ts](test/memoNode.test.ts) — the comparator contract.
+- [test/memoNode.test.ts](../test/memoNode.test.ts) — the comparator contract.
 - Demo: `pnpm dev`, load the very-large dataset, enable React DevTools "Highlight updates" —
   editing one field should flash only that node + its ancestor spine, not the tree.
