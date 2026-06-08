@@ -19,8 +19,8 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `externalTriggers` prop replaced by the `editorRef` imperative handle | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/confirm/cancel` — see §7 |
 | `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction` | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` (`errorMessage` → `error.message`) — see §8 |
 | `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`; return shape unified | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see §9 |
-| Callback payloads for `onUpdate` / `onChange` are now flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`); `JerError` → `JsonEditorError` | Update field names in `onUpdate` / `onChange`; rename the error type — see §9 |
-| `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JsonEditorError` | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see §10 |
+| Callback payloads for `onUpdate` / `onChange` are now flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`); `JerError`'s `code` union gains `RENAME_ERROR` / `MOVE_ERROR` / `CLIPBOARD_ERROR` | Update field names in `onUpdate` / `onChange`; handle the new codes only if you exhaustively `switch` on `error.code` — see §9 |
+| `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JerError` | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see §10 |
 | `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps` | Rename the fields in your definitions and the props type in your components — see §13 |
 
 ---
@@ -422,18 +422,13 @@ Every callback now receives the standard flat [`NodeData`](README.md#filter-func
 + onChange={({ newValue, key }) => (key === 'age' ? clamp(newValue) : newValue)}
 ```
 
-### `JerError` → `JsonEditorError`
+### `JerError` — expanded `code` union
 
-The error type reported to `onError` (and accepted in an `onUpdate` `{ error }` return) is renamed; its shape (`{ code, message }`) is unchanged, and the `code` union gains some forward-looking members. (`onError`'s own payload also moves to flat `NodeData` — see §10.)
-
-```diff
-- import { type JerError } from 'json-edit-react'
-+ import { type JsonEditorError } from 'json-edit-react'
-```
+`JerError` keeps its name and `{ code, message }` shape. What changes is its `code`: it's now the exported `JerErrorCode` union, which gains three forward-looking members — `RENAME_ERROR`, `MOVE_ERROR` and `CLIPBOARD_ERROR` — covering the new rename/move rejection and clipboard-failure paths. The additions are backward-compatible; you only need to act if you exhaustively `switch` on `error.code` and want to handle the new cases. (`onError`'s own payload also moves to flat `NodeData` — see §10.)
 
 ### New localisation keys: `ERROR_RENAME` / `ERROR_MOVE`
 
-Rejected `rename` and `move` operations now show operation-specific messages (`'Rename unsuccessful'` / `'Move unsuccessful'`) instead of the generic `'Update unsuccessful'`, mirroring `ERROR_ADD` / `ERROR_DELETE`. Their `onError` codes are likewise `RENAME_ERROR` / `MOVE_ERROR` (additive members of `JsonEditorErrorCode`).
+Rejected `rename` and `move` operations now show operation-specific messages (`'Rename unsuccessful'` / `'Move unsuccessful'`) instead of the generic `'Update unsuccessful'`, mirroring `ERROR_ADD` / `ERROR_DELETE`. Their `onError` codes are likewise `RENAME_ERROR` / `MOVE_ERROR` (additive members of `JerErrorCode`).
 
 No action is strictly required — a `translations` object doesn't have to be exhaustive, so any key you don't define falls back to the English default. But if you ship a localised `translations` object and want these two messages translated too, add the new keys:
 
@@ -491,7 +486,7 @@ Both now receive the standard flat node data instead of a bespoke object:
 
 (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`, matching §9.) `CollapseState` — the `editorRef.collapse` command **input** — is unchanged.
 
-### `onCopy` — `error` is now a `JsonEditorError`
+### `onCopy` — `error` is now a `JerError`
 
 ```diff
 - onCopy={({ success, error }) => { if (!success) console.error(error?.message) }}

@@ -45,7 +45,7 @@ import {
   type UpdateFunctionProps,
   type JsonData,
   type UpdateControl,
-  type JsonEditorError,
+  type JerError,
 } from '../types'
 import { type AssignOptions } from '../utils/assign'
 import { isDescendantOf, pathsEqual, toPathString } from '../utils/pathTools'
@@ -95,7 +95,7 @@ export type UpdateOutcome =
   | { status: 'commit' }
   | { status: 'override'; value: JsonData }
   | { status: 'cancel' }
-  | { status: 'error'; error: JsonEditorError }
+  | { status: 'error'; error: JerError }
 
 /** What `buildCommit` returns: the `onUpdate` input plus apply/revert thunks. */
 export interface BuiltCommit {

@@ -219,7 +219,7 @@ Every consumer-facing function falls into exactly one of three categories, and e
 // Definitive code list, split by surfacing channel:
 //   Group A (mutation/edit flow) → onError observer + UpdateResult.error
 //   Group B (imperative commands) → CommandResult.error (the return value), NOT onError
-type JsonEditorErrorCode =
+type JerErrorCode =
   // Group A — mutation / edit flow
   | 'UPDATE_ERROR'    // an edit was rejected (onUpdate returned false/error, or internal failure)
   | 'ADD_ERROR'       // an add was rejected
@@ -230,8 +230,8 @@ type JsonEditorErrorCode =
   // Group B — imperative command flow (Category 4)
   | 'PATH_NOT_FOUND'  // a command targeted a path that doesn't exist in the current data
   | 'RESTRICTED'      // a command's action is blocked by an allow* filter (no overrideRestrictions set)
-interface JsonEditorError {
-  code: JsonEditorErrorCode
+interface JerError {
+  code: JerErrorCode
   message: string
 }
 ```
@@ -277,7 +277,7 @@ type UpdateResult<T = JsonData> =
   | null                                 // silent abort — no commit, no error (#117 / #249)
   | {
       value?: T                          // override the committed value
-      error?: string | JsonEditorError   // reject with message
+      error?: string | JerError   // reject with message
     }
   // (or Promise of any of the above)
 
@@ -316,7 +316,7 @@ cancel →                      onEditEvent(cancel*)
 ```ts
 // 1. onError — after any error condition (Group A codes from comment 6).
 type OnErrorFunction<T = JsonData> =
-  (props: NodeData<T> & { error: JsonEditorError; errorValue: JsonData }) => void
+  (props: NodeData<T> & { error: JerError; errorValue: JsonData }) => void
 
 // 2. onEditEvent — the COMPLETE interaction-lifecycle stream. Absorbs onRenameProperty
 // (§12); covers value-edit, key-edit AND add sessions (start/confirm/cancel), plus the
@@ -334,9 +334,9 @@ type OnCollapseFunction<T = JsonData> =
   (props: NodeData<T> & { collapsed: boolean; includeChildren: boolean }) => void
 
 // 4. onCopy — after a copy-to-clipboard. Split out of the old enableClipboard boolean|fn
-// overload; enablement is now the `allowClipboard` boolean (Cat 1). `error` → JsonEditorError.
+// overload; enablement is now the `allowClipboard` boolean (Cat 1). `error` → JerError.
 type OnCopyFunction<T = JsonData> =
-  (props: NodeData<T> & { success: boolean; stringValue: string; type: CopyType; error?: JsonEditorError }) => void
+  (props: NodeData<T> & { success: boolean; stringValue: string; type: CopyType; error?: JerError }) => void
 ```
 
 (All event strings above are tentative — finalised in the end-of-review summary table.)
@@ -356,7 +356,7 @@ type OnCopyFunction<T = JsonData> =
 // command-driven, so there's one source of truth, not a command-only channel.
 type CommandResult =
   | { success: true }
-  | { success: false; error: JsonEditorError }   // standardised on the Error type
+  | { success: false; error: JerError }   // standardised on the Error type
 
 interface JsonEditorHandle<T = JsonData> {
   // --- Session openers: enter an interactive session (open the input) at a node; no value
@@ -419,7 +419,7 @@ Not tied to one operation: `onChange` (Cat 2 transform), `onError` / `onCollapse
 ### Open decisions (for review)
 
 - ✓ **Decided (comment 15)** — intercept signal is `return true` (or any non-void) to take over; `void`/`false` proceeds.
-- ✓ **Decided (comment 17)** — result-producers (`UpdateFunction`) accept a bare `string` error as shorthand (the library wraps it into a `JsonEditorError` with the matching code); *observers* (`onError`) always receive the full `JsonEditorError` object.
+- ✓ **Decided (comment 17)** — result-producers (`UpdateFunction`) accept a bare `string` error as shorthand (the library wraps it into a `JerError` with the matching code); *observers* (`onError`) always receive the full `JerError` object.
 - ✓ **Decided (comments 5 & 20)** — `NodeData` is the universal flat base for *every* callback (settles `key`-not-`name`, `value`/`fullData` for "current"). Sole special case: `add`, where `NodeData` is the new node's position (`path`/`key`) with `value` unset until commit — **matching V1's existing behaviour** ([JsonEditor.tsx:281](src/JsonEditor.tsx#L281), `currentValue: undefined`).
 - ✓ **Decided (comment 21)** — every callback the library *awaits* may be async: `onEventIntercept` and `allow*` become `=> R | Promise<R>` (`UpdateFunction` already is). `await` on a sync return is free, so there's no downside.
 - Event vocabulary final names (`editStart` vs `startEdit`, etc.) — tie into §14 "node not component". **→ finalised in the summary table.**

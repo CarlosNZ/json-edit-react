@@ -21,7 +21,7 @@ import {
   type CollectionKey,
   type UpdateFunctionProps,
   type UpdateControl,
-  type JsonEditorErrorCode,
+  type JerErrorCode,
   type SortFunction,
   type BuildNodeDataFromPath,
   type BuildNodeDataFromPathRef,
@@ -72,7 +72,7 @@ const ERROR_MESSAGE_KEY: Record<UpdateFunctionProps['event'], keyof LocalisedStr
 
 // The `onError` code per event, so a generic (`false`) reject surfaces with the
 // matching code alongside the `ERROR_MESSAGE_KEY` message.
-const ERROR_CODE: Record<UpdateFunctionProps['event'], JsonEditorErrorCode> = {
+const ERROR_CODE: Record<UpdateFunctionProps['event'], JerErrorCode> = {
   edit: 'UPDATE_ERROR',
   add: 'ADD_ERROR',
   delete: 'DELETE_ERROR',

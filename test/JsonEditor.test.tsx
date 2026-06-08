@@ -1365,7 +1365,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.getByText('No can do')).toBeInTheDocument()
   })
 
-  test('onUpdate returning { error: JsonEditorError } surfaces the message', async () => {
+  test('onUpdate returning { error: JerError } surfaces the message', async () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn(() => ({
       error: { code: 'UPDATE_ERROR' as const, message: 'Object-form error' },

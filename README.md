@@ -453,7 +453,7 @@ Normally, the component will display simple error messages whenever an error con
 {
     // ...standard node data (key, path, value, fullData, ...)
     errorValue,   // the erroneous value that failed to update the property
-    error: {      // a JsonEditorError
+    error: {      // a JerError
       code,       // one of 'UPDATE_ERROR' | 'DELETE_ERROR' | 'ADD_ERROR'
                   //   | 'RENAME_ERROR' | 'MOVE_ERROR' | 'INVALID_JSON' | 'KEY_EXISTS'
       message     // the (localised) error message that would be displayed
@@ -474,7 +474,7 @@ The `onCopy` callback runs whenever an item is **copied** to the clipboard. It r
     stringValue  // A nicely stringified version of the copied value
                  // (i.e. what the clipboard actually receives)
     success      // true/false -- whether the clipboard copy action actually succeeded
-    error        // a JsonEditorError `{ code: 'CLIPBOARD_ERROR', message }`
+    error        // a JerError `{ code: 'CLIPBOARD_ERROR', message }`
                  //   present only when `success === false`
 }
 ```
@@ -1279,7 +1279,7 @@ type EditEvent =
   | { event: 'delete' } | { event: 'move' }
   // background settlement (only fired when an onUpdate runs)
   | { event: 'updateSuccessful'; operation: EditOperation }
-  | { event: 'updateError'; operation: EditOperation; error: JsonEditorError }
+  | { event: 'updateError'; operation: EditOperation; error: JerError }
 // ...each spread onto the node's NodeData
 type OnEditEventFunction = (e: EditEvent) => void
 ```
@@ -1417,7 +1417,7 @@ A few helper functions, components and types that might be useful in your own im
 - `JsonEditorProps<T>`: all input props for the Json Editor component. Generic on the data type — see [Typed data](#typed-data).
 - `JsonData`: main `data` object -- any valid JSON structure. Used as the default for `T`.
 - [`UpdateFunction`](#update-functions), [`UpdateResult`](#update-functions), [`OnChangeFunction`](#onchange-function), [`OnErrorFunction`](#onerror-function) [`FilterFunction`](#filter-functions), [`OnCopyFunction`](#copy-function), [`SearchFilterFunction`](#searchfiltering), [`OnEditEventFunction`](#event-callbacks) / [`EditEvent`](#event-callbacks), [`OnCollapseFunction`](#event-callbacks), [`CompareFunction`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort),[`TypeFilterFunction`](#filter-functions), [`NewKeyOptionsFunction`](#new-key-restrictions--default-values), [`DefaultValueFunction`](#new-key-restrictions--default-values)
-- `JsonEditorError` / `JsonEditorErrorCode`: the canonical error shape (`{ code, message }`) reported to [`onError`](#onerror-function) and accepted in an [`UpdateFunction`](#update-functions) `{ error }` return
+- `JerError` / `JerErrorCode`: the canonical error shape (`{ code, message }`) reported to [`onError`](#onerror-function) and accepted in an [`UpdateFunction`](#update-functions) `{ error }` return
 - [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref), [`StartEditOptions`](#imperative-handle-editorref), [`StartEditResult`](#imperative-handle-editorref): input/output types of the respective props
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `LocalisedString`: keys for the [`translations`](#localisation) object

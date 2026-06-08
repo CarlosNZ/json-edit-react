@@ -44,7 +44,7 @@ type UpdateResult =
   | { value: JsonData }                // commit, overriding the committed value
   | null                               // silent cancel — revert (if already applied), no error
   | false                              // reject — revert + default error message
-  | { error: string | JsonEditorError } // reject — revert + this message
+  | { error: string | JerError } // reject — revert + this message
 
 interface UpdateControl {
   /** Keep the editor open ("gate"); blocks the tree. Returns `release`.

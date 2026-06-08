@@ -8,7 +8,7 @@ import { useEditingSelector, useEditingStore } from '../contexts'
 import {
   type CollectionNodeProps,
   type ErrorString,
-  type JsonEditorError,
+  type JerError,
   type ThemeableElement,
   type ValueData,
   type ValueNodeProps,
@@ -85,7 +85,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const nodeDataRef = useRef(nodeData)
   nodeDataRef.current = nodeData
   const onError = useCallback(
-    (error: JsonEditorError, errorValue: JsonData | string) => {
+    (error: JerError, errorValue: JsonData | string) => {
       showError(error.message)
       if (onErrorCallback) {
         onErrorCallback({

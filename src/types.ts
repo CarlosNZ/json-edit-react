@@ -190,7 +190,7 @@ export interface TextEditorProps {
  */
 
 /** The definitive error code list — surfaced via the `onError` observer and `UpdateResult.error`. */
-export type JsonEditorErrorCode =
+export type JerErrorCode =
   | 'UPDATE_ERROR' // an edit was rejected, or an internal failure occurred
   | 'ADD_ERROR' // an add was rejected
   | 'DELETE_ERROR' // a delete was rejected
@@ -201,8 +201,8 @@ export type JsonEditorErrorCode =
   | 'CLIPBOARD_ERROR' // a copy-to-clipboard write failed (onCopy)
 
 /** The one canonical error shape, used everywhere an error is produced or reported. */
-export interface JsonEditorError {
-  code: JsonEditorErrorCode
+export interface JerError {
+  code: JerErrorCode
   message: string
 }
 
@@ -210,7 +210,7 @@ export interface JsonEditorError {
  * The one canonical update result (§17, Category 2). `void`/`undefined`/`true`
  * commit; `false` rejects with a generic error; `null` is a silent abort (no
  * commit, no error); the object form overrides the committed `value` or rejects
- * with a custom `error` (a bare `string` is wrapped into a `JsonEditorError`).
+ * with a custom `error` (a bare `string` is wrapped into a `JerError`).
  */
 export type UpdateResult<T = JsonData> =
   | true
@@ -220,7 +220,7 @@ export type UpdateResult<T = JsonData> =
   | null
   | {
       value?: T
-      error?: string | JsonEditorError
+      error?: string | JerError
     }
 
 /**
@@ -262,7 +262,7 @@ export type OnChangeFunction<T = JsonData> = (
 
 /** Observer (Cat 3): after any error condition (Group A codes). Flat `NodeData`. */
 export type OnErrorFunction<T = JsonData> = (
-  props: NodeData<T> & { error: JsonEditorError; errorValue: JsonData }
+  props: NodeData<T> & { error: JerError; errorValue: JsonData }
 ) => void
 
 export type FilterFunction<T = JsonData> = (input: NodeData<T>) => boolean
@@ -288,7 +288,7 @@ export type OnCopyFunction<T = JsonData> = (
     success: boolean
     stringValue: string
     type: CopyType
-    error?: JsonEditorError
+    error?: JerError
   }
 ) => void
 
@@ -328,7 +328,7 @@ export type EditEvent<T = JsonData> = NodeData<T> &
     | { event: 'delete' }
     | { event: 'move' }
     | { event: 'updateSuccessful'; operation: EditOperation }
-    | { event: 'updateError'; operation: EditOperation; error: JsonEditorError }
+    | { event: 'updateError'; operation: EditOperation; error: JerError }
   )
 
 export type OnEditEventFunction<T = JsonData> = (e: EditEvent<T>) => void
@@ -493,8 +493,10 @@ export interface CustomKeyProps<T = Record<string, unknown>> {
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
 }
 
-export interface CustomComponentProps<T = Record<string, unknown>>
-  extends Omit<BaseNodeProps, 'onError'> {
+export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
+  BaseNodeProps,
+  'onError'
+> {
   value: JsonData
   componentProps?: T
   parentData: CollectionData | null
@@ -510,14 +512,16 @@ export interface CustomComponentProps<T = Record<string, unknown>>
   originalNodeKey?: JSX.Element
   canEdit: boolean
   keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
-  onError: (error: JsonEditorError, errorValue: JsonData | string) => void
+  onError: (error: JerError, errorValue: JsonData | string) => void
 }
 
 // Props received by a `wrapperComponent` — the standard node machinery plus the
 // `wrapperProps` configured on the definition (delivered here, not as
 // `componentProps`).
-export interface CustomWrapperProps<U = Record<string, unknown>>
-  extends Omit<CustomComponentProps, 'componentProps'> {
+export interface CustomWrapperProps<U = Record<string, unknown>> extends Omit<
+  CustomComponentProps,
+  'componentProps'
+> {
   wrapperProps?: U
 }
 

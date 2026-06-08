@@ -6,7 +6,7 @@ import {
   type NodeData,
   type CollectionKey,
   type CollectionData,
-  type JsonEditorError,
+  type JerError,
   type Position,
 } from '../types'
 import { type TranslateFunction } from '../localisation'
@@ -16,7 +16,7 @@ interface DnDProps {
   canDragOnto: boolean
   path: CollectionKey[]
   nodeData: NodeData
-  onError: (error: JsonEditorError, errorValue: CollectionData | string) => unknown
+  onError: (error: JerError, errorValue: CollectionData | string) => unknown
   translate: TranslateFunction
 }
 
