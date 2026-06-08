@@ -32,13 +32,7 @@
  * test); it wakes on every change, so never use it on the per-node hot path.
  */
 
-import React, {
-  createContext,
-  useContext,
-  useMemo,
-  useRef,
-  useSyncExternalStore,
-} from 'react'
+import React, { createContext, useContext, useMemo, useRef, useSyncExternalStore } from 'react'
 import {
   type TabDirection,
   type CollectionKey,
@@ -59,6 +53,13 @@ import { isDescendantOf, pathsEqual, toPathString } from '../utils/pathTools'
 type Token = number
 type PathString = string
 
+// How long an INSTANT op (delete/move/array-add) waits for `onUpdate` before
+// applying optimistically. A faster result (sync or sub-threshold) settles in
+// place, so the node is never removed/relocated and a rejection's inline error
+// renders on it. ~100ms is the "feels instant" perception threshold, so it
+// rarely needs tuning — kept a constant (not a prop) to hold the API flat.
+const OPTIMISTIC_DELAY_MS = 100
+
 export interface EditingStateBundle {
   /** The one open/held operation (null = nothing active). */
   active: EditingState | null
@@ -73,10 +74,20 @@ export type CommitRequest =
   | { op: 'edit'; path: CollectionKey[]; value: unknown }
   // `path` is the COLLECTION being added into (the add session + events live
   // there); `key` is the new child's key/index (the commit targets `[...path, key]`).
-  | { op: 'add'; path: CollectionKey[]; key: CollectionKey; value: unknown; options?: AssignOptions }
+  | {
+      op: 'add'
+      path: CollectionKey[]
+      key: CollectionKey
+      value: unknown
+      options?: AssignOptions
+    }
   | { op: 'delete'; path: CollectionKey[] }
   | { op: 'rename'; path: CollectionKey[]; newKey: CollectionKey }
-  | { op: 'move'; path: CollectionKey[]; to: { path: CollectionKey[]; position: 'above' | 'below' } }
+  | {
+      op: 'move'
+      path: CollectionKey[]
+      to: { path: CollectionKey[]; position: 'above' | 'below' }
+    }
 
 /** The normalised result of a settled commit. `JsonEditor`'s `runUpdate` maps
  *  `onUpdate`'s raw return (incl. localised reject messages) to this. */
@@ -139,18 +150,16 @@ interface OpenOptions {
 }
 
 // Phase-specific event for an operation. `delete`/`move` only ever fire at commit.
-const eventForOp = (
-  op: EditOperation,
-  phase: 'start' | 'submit' | 'commit' | 'cancel'
-): EditEvent['event'] | null => {
-  if (op === 'delete') return phase === 'commit' ? 'delete' : null
-  if (op === 'move') return phase === 'commit' ? 'move' : null
-  const suffix = op === 'rename' ? 'Rename' : op === 'add' ? 'Add' : 'Edit'
-  if (phase === 'start') return `start${suffix}` as EditEvent['event']
-  if (phase === 'submit') return `submit${suffix}` as EditEvent['event']
-  if (phase === 'cancel') return `cancel${suffix}` as EditEvent['event']
-  return `commit${suffix}` as EditEvent['event']
+type Phase = 'start' | 'submit' | 'commit' | 'cancel'
+const EVENT_FOR_OP: Record<EditOperation, Partial<Record<Phase, EditEvent['event']>>> = {
+  edit:   { start: 'startEdit',   submit: 'submitEdit',   cancel: 'cancelEdit',   commit: 'commitEdit' },
+  add:    { start: 'startAdd',    submit: 'submitAdd',    cancel: 'cancelAdd',    commit: 'commitAdd' },
+  rename: { start: 'startRename', submit: 'submitRename', cancel: 'cancelRename', commit: 'commitRename' },
+  delete: { commit: 'delete' },
+  move:   { commit: 'move' },
 }
+const eventForOp = (op: EditOperation, phase: Phase): EditEvent['event'] | null =>
+  EVENT_FOR_OP[op][phase] ?? null
 
 // Two sessions target the "same thing" when path + op match (phase may differ:
 // an `editing` session that becomes `held` is still the same session).
@@ -174,13 +183,6 @@ export interface EditingStore {
   /** Imperative read for event handlers — does not subscribe. */
   areChildrenBeingEdited: (path: CollectionKey[]) => boolean
 }
-
-// How long an INSTANT op (delete/move/array-add) waits for `onUpdate` before
-// applying optimistically. A faster result (sync or sub-threshold) settles in
-// place, so the node is never removed/relocated and a rejection's inline error
-// renders on it. ~100ms is the "feels instant" perception threshold, so it
-// rarely needs tuning — kept a constant (not a prop) to hold the API flat.
-const OPTIMISTIC_DELAY_MS = 100
 
 const initialState: EditingStateBundle = {
   active: null,
@@ -328,12 +330,13 @@ const createEditingStore = (
       if (submitEvent) fireEditEvent(path, submitEvent)
     }
 
-    // No-op edit (unchanged value): close the session, fire commit*, no onUpdate
-    // / settlement / update*. Still runs `onCommit` so a Tab off an untouched
-    // field advances to the next node (the value didn't change, but the session
-    // did close).
+    // No-op edit (unchanged value): close the session, fire commit*, no
+    // onUpdate / settlement / update*. Still runs `onCommit` so a Tab off an
+    // untouched field advances to the next node (the value didn't change, but
+    // the session did close).
     if (!built || built.isNoOp) {
-      if (sameSession(state.active, { path, op, phase: 'editing' })) commit({ ...state, active: null })
+      if (sameSession(state.active, { path, op, phase: 'editing' }))
+        commit({ ...state, active: null })
       cancelOp = null
       const commitEvent = eventForOp(op, 'commit')
       if (commitEvent) {
@@ -355,16 +358,17 @@ const createEditingStore = (
       if (applied) return
       applied = true
       applyDoc()
-      // Close the originating session — `sameSession` is phase-agnostic, so this
-      // matches both an `editing` submit and the release of a `held` op (same
-      // path + op). A Tab/onCommit may reopen the next node after.
+      // Close the originating session — `sameSession` is phase-agnostic, so
+      // this matches both an `editing` submit and the release of a `held` op
+      // (same path + op). A Tab/onCommit may reopen the next node after.
       cancelOp = null
-      if (sameSession(state.active, { path, op, phase: 'editing' })) commit({ ...state, active: null })
+      if (sameSession(state.active, { path, op, phase: 'editing' }))
+        commit({ ...state, active: null })
       if (hasUpdate) addSettling(pathStr, token)
       const commitEvent = eventForOp(op, 'commit')
-      // Frozen snapshot: the live doc has just mutated (delete/rename destroy the
-      // node identity at `path`), so rebuilding from it would describe the wrong
-      // node or throw.
+      // Frozen snapshot: the live doc has just mutated (delete/rename destroy
+      // the node identity at `path`), so rebuilding from it would describe the
+      // wrong node or throw.
       if (commitEvent) emitEvent(nodeData, commitEvent, extra)
       onCommit?.()
     }
@@ -386,13 +390,14 @@ const createEditingStore = (
     }
 
     const promise = prims!.runUpdate!(input, control)
-    // Editor ops (edit/rename/object-add) apply immediately: the node survives a
-    // later revert (so a rejection's inline error still shows) and Tab/close must
-    // feel instant. INSTANT ops (delete/move/array-add) defer the optimistic
-    // apply by OPTIMISTIC_DELAY_MS — if `onUpdate` settles first (sync or fast
-    // validation), the node is never removed/relocated, so a rejection's inline
-    // error renders on it (a V1 behaviour the always-optimistic path lost). A
-    // slow `onUpdate` still applies optimistically once the timer fires.
+    // Editor ops (edit/rename/object-add) apply immediately: the node survives
+    // a later revert (so a rejection's inline error still shows) and Tab/close
+    // must feel instant. INSTANT ops (delete/move/array-add) defer the
+    // optimistic apply by OPTIMISTIC_DELAY_MS — if `onUpdate` settles first
+    // (sync or fast validation), the node is never removed/relocated, so a
+    // rejection's inline error renders on it (a V1 behaviour the
+    // always-optimistic path lost). A slow `onUpdate` still applies
+    // optimistically once the timer fires.
     let optimisticTimer: ReturnType<typeof setTimeout> | undefined
     if (!held) {
       if (instant) optimisticTimer = setTimeout(apply, OPTIMISTIC_DELAY_MS)
@@ -437,15 +442,16 @@ const createEditingStore = (
       apply()
     }
 
-    // Token gate: a newer commit for this path superseded us. Ignore silently AND
-    // report `undefined` so the originating node treats this stale resolve as a
-    // no-op (it must not revert its buffer or show an error — the live commit owns
-    // the node now).
+    // Token gate: a newer commit for this path superseded us. Ignore silently
+    // AND report `undefined` so the originating node treats this stale resolve
+    // as a no-op (it must not revert its buffer or show an error — the live
+    // commit owns the node now).
     if (state.settling[pathStr] !== token) return undefined
     dropSettling(pathStr)
 
-    // Frozen snapshot for settlement events — a revert has just mutated the live
-    // doc (and an add's child path no longer exists), so don't rebuild from it.
+    // Frozen snapshot for settlement events — a revert has just mutated the
+    // live doc (and an add's child path no longer exists), so don't rebuild
+    // from it.
     switch (outcome.status) {
       case 'cancel':
         revert() // silent cancel after an optimistic apply
@@ -455,8 +461,9 @@ const createEditingStore = (
         emitEvent(nodeData, 'updateError', { operation: op, error: outcome.error })
         break
       case 'override':
-        // An override replaces the WHOLE document (`onUpdate` returned a modified
-        // `newData`), not just the edited node — apply it at the root path.
+        // An override replaces the WHOLE document (`onUpdate` returned a
+        // modified `newData`), not just the edited node — apply it at the root
+        // path.
         commitRef.current?.applyValue([], outcome.value)
         emitEvent(nodeData, 'updateSuccessful', { operation: op, ...extra })
         break
@@ -529,7 +536,8 @@ export const EditingProvider = ({
   )
 }
 
-/** Returns the (stable) store. Use for actions and imperative reads — no subscription. */
+/** Returns the (stable) store. Use for actions and imperative reads — no
+ * subscription. */
 export const useEditingStore = (): EditingStore => {
   const store = useContext(EditingProviderContext)
   if (!store) throw new Error('Missing Editing Context Provider')
