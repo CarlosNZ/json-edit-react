@@ -130,7 +130,11 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
 
     act(() => result.current.dialog.onCancel())
 
-    await expect(res).resolves.toBeNull()
+    // Wrap the settlement: the gated `onUpdate` resumes after its `await confirm`
+    // and clears `pending` in a `finally` — a state update that lands here.
+    await act(async () => {
+      await expect(res).resolves.toBeNull()
+    })
   })
 
   it('runs the inner onUpdate (and returns its result) on confirm', async () => {
@@ -146,7 +150,11 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
 
     act(() => result.current.dialog.onConfirm())
 
-    await expect(res).resolves.toEqual({ value: 'committed' })
+    // Wrap the settlement: the gated `onUpdate` resumes after its `await confirm`
+    // and clears `pending` in a `finally` — a state update that lands here.
+    await act(async () => {
+      await expect(res).resolves.toEqual({ value: 'committed' })
+    })
     expect(inner).toHaveBeenCalledTimes(1)
   })
 
