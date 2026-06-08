@@ -250,14 +250,17 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       customNodeData?.CustomComponent ? translate('DEFAULT_STRING', nodeData) : undefined
     )
 
-    if (type === 'object' || type === 'array') {
-      // To a collection: structural — commit + remount (editor closes).
+    if (type === 'object' || type === 'array' || type === 'null') {
+      // Commit immediately and close the editor: a collection is structural (it
+      // remounts), and `null` has no value to edit — so there's nothing to keep
+      // the editor open for.
       submit({ op: 'edit', path, value: newValue }).then(settleEdit(newValue as JsonData))
       return
     }
 
-    // Primitive ↔ primitive: local only — adjust the buffer + type, no commit;
-    // the editor stays open and the single commit happens on the real submit.
+    // Primitive ↔ primitive (string/number/boolean): local only — adjust the
+    // buffer + type, no commit; the editor stays open and the single commit
+    // happens on the real submit.
     setValue(newValue as ValueData | CollectionData)
     setDataType(type)
     setEnumType(null)

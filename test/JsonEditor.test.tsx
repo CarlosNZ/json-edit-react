@@ -698,6 +698,20 @@ describe('JsonEditor — structural mutations', () => {
     expect(container.querySelector('textarea.jer-input-text')).not.toBeNull()
     expect(container.querySelector('input.jer-input-boolean')).toBeNull()
   })
+
+  test('changing the type to null commits immediately and closes the editor', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(<JsonEditor data={{ x: 'hello' }} setData={setData} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    await user.selectOptions(container.querySelector('.jer-select-types select') as HTMLSelectElement, 'null')
+
+    // `null` has no value to edit, so selecting it commits straight away — no
+    // OK/Enter needed — and the editor closes (the type selector disappears).
+    expect(setData).toHaveBeenCalledWith({ x: null })
+    expect(container.querySelector('.jer-select-types')).toBeNull()
+  })
 })
 
 describe('JsonEditor — §17 onUpdate event discriminant', () => {
