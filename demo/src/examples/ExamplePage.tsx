@@ -21,7 +21,7 @@ import { ThemePicker } from './kit/ThemePicker'
 import { ThemeProbe } from './kit/ThemeProbe'
 import { CodeBlock } from './kit/CodeBlock'
 import { stripCutRegions } from './kit/stripCutRegions'
-import { useThemePalette } from './kit/useThemePalette'
+import { useThemePalette, ExamplePaletteContext } from './kit/useThemePalette'
 
 const MAX_WIDTH = 1080
 
@@ -59,11 +59,15 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
     [theme]
   )
 
-  // `lazy` for the static example component; null for live (no separate module).
-  const ExampleComponent = useMemo(() => (def?.kind === 'static' ? lazy(def.load) : null), [def])
+  // `lazy` for static + custom examples (both ship a component); null for live.
+  const ExampleComponent = useMemo(
+    () => (def?.kind === 'static' || def?.kind === 'custom' ? lazy(def.load) : null),
+    [def]
+  )
 
   useEffect(() => {
-    if (!def) return
+    // Custom examples have no source panel — nothing to fetch.
+    if (!def || def.kind === 'custom') return
     let cancelled = false
     setSource(null)
     def.code().then((mod) => {
@@ -153,7 +157,18 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
           )}
         </Box>
 
-        {def.kind === 'static' ? (
+        {def.kind === 'custom' ? (
+          // A bespoke interactive page: full-width, no source panel. Wrapped so
+          // it can spread `useExampleProps()` onto its editor and read the
+          // palette (via `useExamplePalette`) to theme its own chrome.
+          <ExamplePaletteContext.Provider value={palette}>
+            <ExampleEditorProvider value={editorProps}>
+              <Suspense fallback={<Loading />}>
+                {ExampleComponent && <ExampleComponent />}
+              </Suspense>
+            </ExampleEditorProvider>
+          </ExamplePaletteContext.Provider>
+        ) : def.kind === 'static' ? (
           <SimpleGrid {...gridProps}>
             {/* Shadow hugs the editor's own rounded container (like the main demo,
                 which puts `.block-shadow` on the JsonEditor). Applied via `sx`

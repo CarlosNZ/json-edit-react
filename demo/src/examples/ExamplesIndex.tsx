@@ -3,7 +3,8 @@ import { Box, Heading, Image, SimpleGrid, Text } from '@chakra-ui/react'
 import { examples } from './registry'
 
 // shields.io badge per example kind. Green = a static live example; pink (the
-// json-edit-react accent) = an editable react-live playground.
+// json-edit-react accent) = an editable react-live playground; purple = a
+// bespoke interactive page.
 const kindBadge = {
   static: {
     src: 'https://img.shields.io/badge/Live_example-3DA639?style=flat&logo=react&logoColor=white',
@@ -12,6 +13,10 @@ const kindBadge = {
   live: {
     src: 'https://img.shields.io/badge/Editable_playground-EA3788?style=flat&logo=react&logoColor=white',
     alt: 'Editable playground',
+  },
+  custom: {
+    src: 'https://img.shields.io/badge/Interactive-8957E5?style=flat&logo=react&logoColor=white',
+    alt: 'Interactive',
   },
 } as const
 

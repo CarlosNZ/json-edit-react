@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from 'react'
+import { createContext, useContext, useEffect, useState, type RefObject } from 'react'
 import { type Theme } from '@json-edit-react'
 
 interface Background {
@@ -18,6 +18,13 @@ export interface ThemePalette {
 }
 
 const EMPTY: ThemePalette = { headerBg: {}, pageBg: {} }
+
+// The shell publishes its computed palette here so custom examples can theme
+// their own chrome to match the header. The shell owns the only reader of the
+// editor styles; this just shares the result.
+export const ExamplePaletteContext = createContext<ThemePalette>(EMPTY)
+
+export const useExamplePalette = (): ThemePalette => useContext(ExamplePaletteContext)
 
 // Darken an `rgb()/rgba()` colour toward black by scaling each channel. Returns
 // the input unchanged if it can't be parsed.

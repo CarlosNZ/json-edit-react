@@ -19,4 +19,11 @@ export const examples: Record<string, ExampleDef> = {
       'Edit the code on the right — tweak `collapse`, the data, or any prop — and watch the editor update live.',
     code: () => import('./live/collapse-playground/code'),
   },
+  'editing-model': {
+    kind: 'custom',
+    title: 'Editing model & events',
+    blurb:
+      'Exercise the optimistic commit lifecycle, the hold() gate and the full onEditEvent stream. Pick an onUpdate behaviour, then edit / rename / add / delete and watch the event viewer.',
+    load: () => import('./editing-model/Example'),
+  },
 }
