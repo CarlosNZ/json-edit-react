@@ -18,6 +18,7 @@ import { examples } from './registry'
 import { ExampleEditorProvider } from './kit/ExampleEditorProvider'
 import { type ExampleEditorProps } from './kit/exampleProps'
 import { ThemePicker } from './kit/ThemePicker'
+import { ThemeProbe } from './kit/ThemeProbe'
 import { CodeBlock } from './kit/CodeBlock'
 import { stripCutRegions } from './kit/stripCutRegions'
 import { useThemePalette } from './kit/useThemePalette'
@@ -43,11 +44,11 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
 
   const [theme, setTheme] = useState<Theme>(defaultTheme)
   const [source, setSource] = useState<string | null>(null)
-  // Anchored on the always-mounted content wrapper (not the lazy editor) so the
-  // palette's observer is in place before the editor — or the restored theme —
-  // arrives, however late.
-  const contentRef = useRef<HTMLDivElement>(null)
-  const palette = useThemePalette(contentRef, theme)
+  // The palette reads from a hidden, always-expanded probe editor (below) rather
+  // than the visible example, so every theme colour is available regardless of
+  // the example's data or collapse state.
+  const probeRef = useRef<HTMLDivElement>(null)
+  const palette = useThemePalette(probeRef, theme)
 
   // Standard props the shell injects into every static example's editor (spread
   // via `useExampleProps()` on a `// ---cut---` line, so they stay out of the
@@ -97,7 +98,8 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
       transition="background 0.4s ease"
       style={palette.pageBg}
     >
-      <Box maxW={MAX_WIDTH} mx="auto" ref={contentRef}>
+      <Box maxW={MAX_WIDTH} mx="auto">
+        <ThemeProbe ref={probeRef} theme={theme} />
         {/* Header panel adopts the editor's own theme background; its text colours
             are pulled from the editor's key / value / count elements so the chrome
             reads as part of the theme. */}
@@ -111,7 +113,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
           transition="background 0.4s ease"
           style={palette.headerBg}
         >
-          <Flex justify="space-between" align="center" mb={0}>
+          <Flex justify="space-between" align="center" mb={0} h="2.2em">
             <Button
               variant="link"
               leftIcon={<ArrowBackIcon />}
