@@ -10,6 +10,7 @@ import {
 import { EditButtons, InputButtons } from './ButtonPanels'
 import {
   standardDataTypes,
+  valueDataTypes,
   type DataType,
   type ValueNodeProps,
   type InputProps,
@@ -388,7 +389,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       isEditing={isEditing}
       setIsEditing={() => open(path, { cancelOp: revertSession })}
       getStyles={getStyles}
-      originalNode={passOriginalNode ? getInputComponent(data, inputProps) : undefined}
+      originalNode={passOriginalNode ? getInputComponent(data, dataType, inputProps) : undefined}
       originalNodeKey={
         passOriginalNode ? (
           // `originalNodeKey` is contracted to be what would have been rendered
@@ -404,7 +405,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones
     // when fetching a non-custom component
-    getInputComponent(data, inputProps)
+    getInputComponent(data, dataType, inputProps)
   )
 
   return (
@@ -517,17 +518,23 @@ const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
   return 'invalid'
 }
 
-const getInputComponent = (data: JsonData, inputProps: InputProps) => {
-  // Pick the input from the in-progress buffer `value`, not the committed
-  // `data`: a local primitive type-change coerces `value` (and the `dataType`
-  // selector) without committing, so keying off `data` would render the input
-  // for the old type. (When not editing, the buffer is synced to `data`, so
-  // they agree.) A function has no editable input — it shows as `invalid`
-  // (the buffer holds a placeholder string, so guard on `data` directly). We
-  // deliberately interpret a custom-typed node as its underlying primitive
-  // here: this branch only renders when the custom component is hidden for the
-  // current view/edit state.
-  const rawDataType = typeof data === 'function' ? 'invalid' : getDataType(inputProps.value)
+const getInputComponent = (data: JsonData, dataType: DataType | string, inputProps: InputProps) => {
+  // Pick the input from the edit `dataType`, not the buffer `value`'s runtime
+  // type. `dataType` is coerced alongside `value` on a local primitive
+  // type-change and synced to `data` when not editing, so it's the
+  // authoritative editing type — whereas the buffer's runtime type is unstable
+  // mid-edit: a number's buffer is a string ("-", "1.") between keystrokes, so
+  // keying off `getDataType(value)` would flip the editor from `NumberValue` to
+  // `StringValue` on the first character (and the freshly-mounted textarea
+  // re-selects its content on focus, swallowing that character). Fall back to
+  // the buffer's primitive type for a custom-typed node hidden in this view
+  // (`dataType` is the custom name — interpret it as its underlying primitive)
+  // and to `invalid` for a function (no editable input).
+  const rawDataType = (valueDataTypes as readonly string[]).includes(dataType)
+    ? dataType
+    : typeof data === 'function'
+      ? 'invalid'
+      : getDataType(inputProps.value)
   const { value } = inputProps
   switch (rawDataType) {
     case 'string':

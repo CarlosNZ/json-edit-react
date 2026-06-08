@@ -130,7 +130,7 @@ export type JsonViewerProps<T = JsonData> = Omit<
   editorRef?: React.Ref<JsonViewerHandle>
 }
 
-const valueDataTypes = ['string', 'number', 'boolean', 'null'] as const
+export const valueDataTypes = ['string', 'number', 'boolean', 'null'] as const
 const collectionDataTypes = ['object', 'array'] as const
 export const standardDataTypes = [...valueDataTypes, ...collectionDataTypes] as const
 

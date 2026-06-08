@@ -444,6 +444,31 @@ describe('JsonEditor — edit flow', () => {
     expect(screen.queryByRole('textbox')).toBeNull()
   })
 
+  test('typing into a number editor keeps the numeric input (no mid-edit flip to a textarea)', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(<JsonEditor data={{ count: 42 }} setData={setData} />)
+
+    await user.dblClick(screen.getByText('42'))
+    expect(container.querySelector('input.jer-input-number')).not.toBeNull()
+    expect(container.querySelector('textarea.jer-input-text')).toBeNull()
+
+    // A number's edit buffer is a string mid-keystroke ("-", "1."), so the
+    // rendered editor must follow the edit *type*, not the buffer value's
+    // runtime type. If it followed the buffer it would flip to the string
+    // textarea on the first character — and that freshly-mounted textarea
+    // re-selects its content on focus, swallowing the character just typed.
+    const input = container.querySelector('input.jer-input-number') as HTMLInputElement
+    await user.clear(input)
+    await user.type(input, '123')
+    expect(container.querySelector('input.jer-input-number')).not.toBeNull()
+    expect(container.querySelector('textarea.jer-input-text')).toBeNull()
+    expect((container.querySelector('input.jer-input-number') as HTMLInputElement).value).toBe('123')
+
+    await user.keyboard('{Enter}')
+    expect(setData).toHaveBeenCalledWith({ count: 123 })
+  })
+
   test('pressing Escape cancels the edit — setData not called, original value still shown', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
