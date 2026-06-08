@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { JsonEditor } from '@json-edit-react'
-import { useExampleTheme } from '../../kit/exampleThemeContext' // ---cut---
+import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
 const initialData = {
   name: 'Project Phoenix',
@@ -11,18 +11,19 @@ const initialData = {
 
 export default function DelayedSettlement() {
   const [data, setData] = useState(initialData)
-  const theme = useExampleTheme() // ---cut---
 
   return (
     <JsonEditor
       data={data}
       setData={setData}
-      theme={theme} // ---cut---
+      {...useExampleProps()} // ---cut---
       rootName="project"
       onUpdate={async ({ newData }) => {
-        // Simulate persisting the change to a server. The edit is shown
-        // immediately; this promise resolving is what "settles" it. Throwing (or
-        // returning an error string) here would roll the optimistic edit back.
+        // Simulate persisting the change to a server.
+        // The edit is shown immediately; this promise
+        // resolving is what "settles" it. Throwing
+        // (or returning an error string) here would
+        // roll the optimistic edit back.
         await new Promise((resolve) => setTimeout(resolve, 1200))
         console.log('Saved to server:', newData)
       }}

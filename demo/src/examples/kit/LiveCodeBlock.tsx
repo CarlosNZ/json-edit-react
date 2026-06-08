@@ -1,4 +1,3 @@
-import { type RefObject } from 'react'
 import { Box, Flex, SimpleGrid, Text } from '@chakra-ui/react'
 import { LiveProvider, LiveEditor, LivePreview, LiveError } from 'react-live'
 import { type Theme } from '@json-edit-react'
@@ -7,17 +6,16 @@ import { liveScope } from './liveScope'
 interface LiveCodeBlockProps {
   code: string
   theme: Theme
-  // Attached to the preview so the page can read the editor's themed background.
-  outputRef: RefObject<HTMLDivElement | null>
 }
 
 // The editable tier: react-live transpiles the snippet in-browser and renders it.
 // Output on the left (mirrors the static layout), editable code on the right. The
 // selected `theme` is injected into scope so the editable code can reference it.
-export const LiveCodeBlock = ({ code, theme, outputRef }: LiveCodeBlockProps) => (
+export const LiveCodeBlock = ({ code, theme }: LiveCodeBlockProps) => (
   <LiveProvider code={code} scope={{ ...liveScope, theme }} noInline>
     <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} alignItems="start">
-      <Box ref={outputRef}>
+      {/* Same editor-hugging shadow as the static page (see ExamplePage). */}
+      <Box sx={{ '& .jer-editor-container': { boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px' } }}>
         <LivePreview />
       </Box>
       <Box borderRadius="md" overflow="hidden" className="block-shadow" bg="#1e1e1e">

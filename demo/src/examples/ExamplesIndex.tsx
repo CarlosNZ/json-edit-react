@@ -1,6 +1,19 @@
 import { useLocation } from 'wouter'
-import { Box, Heading, SimpleGrid, Text } from '@chakra-ui/react'
+import { Box, Heading, Image, SimpleGrid, Text } from '@chakra-ui/react'
 import { examples } from './registry'
+
+// shields.io badge per example kind. Green = a static live example; pink (the
+// json-edit-react accent) = an editable react-live playground.
+const kindBadge = {
+  static: {
+    src: 'https://img.shields.io/badge/Live_example-3DA639?style=flat&logo=react&logoColor=white',
+    alt: 'Live example',
+  },
+  live: {
+    src: 'https://img.shields.io/badge/Editable_playground-EA3788?style=flat&logo=react&logoColor=white',
+    alt: 'Editable playground',
+  },
+} as const
 
 // Landing page listing every registered example. Data-driven from the registry,
 // so a new entry shows up here automatically.
@@ -9,10 +22,12 @@ export const ExamplesIndex = () => {
 
   return (
     <Box maxW="4xl" mx="auto" px={6} py={10}>
-      <Heading mb={2}>Examples</Heading>
-      <Text mb={6} color="gray.600">
-        Focused, single-concept demos of <strong>json-edit-react</strong> — each shows a live
-        editor and its source.
+      <Heading variant="accent" mb={2}>
+        Examples
+      </Heading>
+      <Text mb={3}>
+        Focused, single-concept demos of <strong>json-edit-react</strong> — each shows a live editor
+        and its source.
       </Text>
       <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
         {Object.entries(examples).map(([slug, def]) => (
@@ -20,25 +35,38 @@ export const ExamplesIndex = () => {
             key={slug}
             as="button"
             textAlign="left"
+            display="flex"
+            flexDirection="column"
+            cursor="pointer"
             onClick={() => navigate(`/examples/${slug}`)}
-            p={5}
-            borderRadius="lg"
-            borderWidth="1px"
-            borderColor="gainsboro"
-            bg="white"
+            p={3}
+            borderRadius={10}
+            backgroundColor="#f6f6f6"
             className="block-shadow"
+            // Borderless at rest (like the Demo/Options panels); the accent border
+            // appears on hover to signal these cards are clickable.
+            border="1px solid transparent"
             transition="border-color 0.15s ease"
             _hover={{ borderColor: 'accent' }}
           >
-            <Heading size="md" mb={1}>
+            <Heading size="md" mb={1} variant="sub">
               {def.title}
             </Heading>
-            <Text fontSize="sm" color="gray.600">
+            <Text fontSize="sm" color="gray.600" mb={4}>
               {def.blurb}
             </Text>
-            <Text fontSize="xs" mt={3} color="gray.400">
-              {def.kind === 'live' ? '▶ Editable playground' : 'Live example'}
-            </Text>
+            {/* `mt="auto"` pushes the badge to the card's bottom so badges line
+                up across the row; `alignSelf` keeps it at its natural width (the
+                column stretches text full-width, but mustn't stretch the badge).
+                The min gap above lives on the blurb's `mb`, not here — padding on a
+                fixed-height image eats into the height under border-box. */}
+            <Image
+              src={kindBadge[def.kind].src}
+              alt={kindBadge[def.kind].alt}
+              mt="auto"
+              alignSelf="flex-start"
+              h="20px"
+            />
           </Box>
         ))}
       </SimpleGrid>

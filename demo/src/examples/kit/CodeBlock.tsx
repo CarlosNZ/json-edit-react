@@ -4,12 +4,39 @@ import { CopyIcon, CheckIcon } from '@chakra-ui/icons'
 import { createHighlighterCore, type HighlighterCore } from 'shiki/core'
 import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
 
-const SHIKI_THEME = 'github-light'
+// JER theme display-name → Shiki bundled theme. Names without a direct Shiki
+// equivalent fall back to a light/dark theme that suits their palette.
+const SHIKI_FOR_JER: Record<string, string> = {
+  'Github Dark': 'github-dark',
+  'Github Light': 'github-light',
+  'White & Black': 'github-light',
+  'Black & White': 'github-dark',
+  'Candy Wrapper': 'github-light',
+  Psychedelic: 'dracula',
+  'Solarized Dark': 'solarized-dark',
+  'Solarized Light': 'solarized-light',
+  Dracula: 'dracula',
+  Monokai: 'monokai',
+  'Tokyo Night': 'tokyo-night',
+}
+const DEFAULT_SHIKI = 'github-light'
 
-// Fine-grained Shiki: load *only* the tsx grammar + one theme + the JS regex
-// engine. This avoids the bundled highlighter, which pulls in every language
-// grammar and the ~600 kB oniguruma WASM. Created once, lazily, and shared.
+// Explicit per-theme imports (not a dynamic template) so only the themes we map
+// to get bundled — each lands in its own small lazy chunk.
+const themeLoaders: Record<string, () => Promise<unknown>> = {
+  'github-light': () => import('@shikijs/themes/github-light'),
+  'github-dark': () => import('@shikijs/themes/github-dark'),
+  dracula: () => import('@shikijs/themes/dracula'),
+  monokai: () => import('@shikijs/themes/monokai'),
+  'solarized-dark': () => import('@shikijs/themes/solarized-dark'),
+  'solarized-light': () => import('@shikijs/themes/solarized-light'),
+  'tokyo-night': () => import('@shikijs/themes/tokyo-night'),
+}
+
+// Fine-grained Shiki: only the tsx grammar + the JS regex engine up front (no
+// bundled-language explosion, no oniguruma WASM). Themes load on demand.
 let highlighterPromise: Promise<HighlighterCore> | null = null
+const loaded = new Set<string>([DEFAULT_SHIKI])
 const getHighlighter = () => {
   if (!highlighterPromise) {
     highlighterPromise = createHighlighterCore({
@@ -21,41 +48,58 @@ const getHighlighter = () => {
   return highlighterPromise
 }
 
+interface Highlighted {
+  html: string
+  bg: string
+  fg: string
+}
+
+const highlight = async (code: string, jerThemeName?: string): Promise<Highlighted> => {
+  const name = (jerThemeName && SHIKI_FOR_JER[jerThemeName]) || DEFAULT_SHIKI
+  const hl = await getHighlighter()
+  if (!loaded.has(name)) {
+    await hl.loadTheme(themeLoaders[name]() as Parameters<typeof hl.loadTheme>[0])
+    loaded.add(name)
+  }
+  const { bg, fg } = hl.getTheme(name)
+  return { html: hl.codeToHtml(code, { lang: 'tsx', theme: name }), bg, fg }
+}
+
 interface CodeBlockProps {
   code: string
   filename?: string
+  // JER theme display name; the panel picks a matching Shiki theme + chrome.
+  themeName?: string
 }
 
 // Read-only source display. Shiki is dynamically imported on first render so its
-// grammar/theme/engine stay in their own lazy chunk (never in the `/` entry).
-// Until it resolves, a plain <pre> stands in so there's no flash of empty space.
-export const CodeBlock = ({ code, filename }: CodeBlockProps) => {
-  const [html, setHtml] = useState('')
+// grammar/theme/engine stay in their own lazy chunk. The header bar adopts the
+// Shiki theme's own bg/fg so the whole block reads as one themed panel.
+export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
+  const [{ html, bg, fg }, setResult] = useState<Highlighted>({ html: '', bg: '#fff', fg: '#000' })
   const { hasCopied, onCopy } = useClipboard(code)
 
   useEffect(() => {
     let cancelled = false
-    getHighlighter().then((highlighter) => {
-      if (cancelled) return
-      setHtml(highlighter.codeToHtml(code, { lang: 'tsx', theme: SHIKI_THEME }))
+    highlight(code, themeName).then((result) => {
+      if (!cancelled) setResult(result)
     })
     return () => {
       cancelled = true
     }
-  }, [code])
+  }, [code, themeName])
 
   return (
-    <Box borderRadius="md" overflow="hidden" className="block-shadow" bg="#fff">
+    <Box borderRadius="md" overflow="hidden" className="block-shadow" bg={bg}>
       <Flex
         align="center"
         justify="space-between"
         px={3}
         py={1.5}
-        bg="#f0f0f0"
         borderBottom="1px solid"
-        borderColor="gainsboro"
+        borderColor="blackAlpha.200"
       >
-        <Text fontSize="xs" fontFamily="mono" color="gray.600">
+        <Text fontSize="xs" fontFamily="mono" color={fg} opacity={0.65}>
           {filename}
         </Text>
         <Tooltip label={hasCopied ? 'Copied!' : 'Copy'} closeOnClick={false}>
@@ -63,6 +107,7 @@ export const CodeBlock = ({ code, filename }: CodeBlockProps) => {
             aria-label="Copy code to clipboard"
             size="xs"
             variant="ghost"
+            color={fg}
             icon={hasCopied ? <CheckIcon /> : <CopyIcon />}
             onClick={onCopy}
           />
@@ -74,7 +119,11 @@ export const CodeBlock = ({ code, filename }: CodeBlockProps) => {
           fontSize="sm"
           overflow="auto"
           maxH="70vh"
-          sx={{ '& pre': { margin: 0, padding: '1em' } }}
+          // Soft-wrap long lines instead of scrolling horizontally. `pre-wrap`
+          // keeps indentation/newlines; `overflow-wrap` handles unbreakable tokens.
+          sx={{
+            '& pre': { margin: 0, padding: '1em', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' },
+          }}
           dangerouslySetInnerHTML={{ __html: html }}
         />
       ) : (

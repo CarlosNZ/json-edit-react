@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect } from 'react'
 import { Select, type SelectProps } from '@chakra-ui/react'
 import { defaultTheme, type Theme } from '@json-edit-react'
 
@@ -17,6 +17,8 @@ const themeNames = [
   'Monokai',
   'Tokyo Night',
 ]
+
+const STORAGE_KEY = 'jer-examples-theme'
 
 // Resolve a display name to its Theme, loading `LazyThemes` on demand (keeps the
 // theme objects out of the initial examples chunk) and caching the result. The
@@ -39,7 +41,16 @@ interface ThemePickerProps extends Omit<SelectProps, 'onChange' | 'value'> {
 }
 
 export const ThemePicker = ({ value, onChange, ...rest }: ThemePickerProps) => {
-  const [name, setName] = useState(value.displayName ?? 'Default')
+  const name = value.displayName ?? 'Default'
+
+  // Restore the persisted choice on mount and report it up, so the selection
+  // survives across example pages and return visits.
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored && stored !== name) loadTheme(stored).then(onChange)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount only
+  }, [])
+
   return (
     <Select
       aria-label="Theme"
@@ -47,7 +58,7 @@ export const ThemePicker = ({ value, onChange, ...rest }: ThemePickerProps) => {
       value={name}
       onChange={async (e) => {
         const next = e.target.value
-        setName(next)
+        localStorage.setItem(STORAGE_KEY, next)
         onChange(await loadTheme(next))
       }}
       {...rest}

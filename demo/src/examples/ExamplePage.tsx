@@ -6,18 +6,23 @@ import {
   Center,
   Flex,
   Heading,
+  Icon,
   SimpleGrid,
   Spinner,
   Text,
 } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
+import { FaGithub, FaNpm } from 'react-icons/fa'
 import { defaultTheme, type Theme } from '@json-edit-react'
 import { examples } from './registry'
-import { ExampleThemeProvider } from './kit/ExampleThemeProvider'
+import { ExampleEditorProvider } from './kit/ExampleEditorProvider'
+import { type ExampleEditorProps } from './kit/exampleProps'
 import { ThemePicker } from './kit/ThemePicker'
 import { CodeBlock } from './kit/CodeBlock'
 import { stripCutRegions } from './kit/stripCutRegions'
-import { useThemeBackground } from './kit/useThemeBackground'
+import { useThemePalette } from './kit/useThemePalette'
+
+const MAX_WIDTH = 1080
 
 // react-live is only pulled in for live examples (its own chunk).
 const LiveCodeBlock = lazy(() =>
@@ -38,14 +43,23 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
 
   const [theme, setTheme] = useState<Theme>(defaultTheme)
   const [source, setSource] = useState<string | null>(null)
-  const outputRef = useRef<HTMLDivElement>(null)
-  const background = useThemeBackground(outputRef, theme)
+  // Anchored on the always-mounted content wrapper (not the lazy editor) so the
+  // palette's observer is in place before the editor — or the restored theme —
+  // arrives, however late.
+  const contentRef = useRef<HTMLDivElement>(null)
+  const palette = useThemePalette(contentRef, theme)
+
+  // Standard props the shell injects into every static example's editor (spread
+  // via `useExampleProps()` on a `// ---cut---` line, so they stay out of the
+  // displayed source). Add shared presentation props here — e.g. className,
+  // showCollectionCount. Memoised so the editor's prop comparison stays stable.
+  const editorProps = useMemo<ExampleEditorProps>(
+    () => ({ theme, maxWidth: '100%', showCollectionCount: 'when-closed' }),
+    [theme]
+  )
 
   // `lazy` for the static example component; null for live (no separate module).
-  const ExampleComponent = useMemo(
-    () => (def?.kind === 'static' ? lazy(def.load) : null),
-    [def]
-  )
+  const ExampleComponent = useMemo(() => (def?.kind === 'static' ? lazy(def.load) : null), [def])
 
   useEffect(() => {
     if (!def) return
@@ -81,62 +95,97 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
       px={{ base: 4, md: 8 }}
       py={6}
       transition="background 0.4s ease"
-      style={{
-        backgroundColor: background.backgroundColor,
-        backgroundImage: background.backgroundImage,
-      }}
+      style={palette.pageBg}
     >
-      {/* Header sits on a translucent panel so the title stays readable over any
-          theme background (incl. dark + gradient themes). */}
-      <Box
-        bg="rgba(255, 255, 255, 0.82)"
-        backdropFilter="blur(6px)"
-        borderRadius="lg"
-        className="block-shadow"
-        p={4}
-        mb={5}
-      >
-        <Flex justify="space-between" align="center" wrap="wrap" gap={3} mb={2}>
-          <Button
-            variant="link"
-            colorScheme="primaryScheme"
-            leftIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/examples')}
-          >
-            All examples
-          </Button>
+      <Box maxW={MAX_WIDTH} mx="auto" ref={contentRef}>
+        {/* Header panel adopts the editor's own theme background; its text colours
+            are pulled from the editor's key / value / count elements so the chrome
+            reads as part of the theme. */}
+        <Box
+          borderRadius="lg"
+          className="block-shadow"
+          px={4}
+          pt={2}
+          pb={4}
+          mb={5}
+          transition="background 0.4s ease"
+          style={palette.headerBg}
+        >
+          <Flex justify="space-between" align="center" mb={0}>
+            <Button
+              variant="link"
+              leftIcon={<ArrowBackIcon />}
+              color={palette.itemCount}
+              onClick={() => navigate('/examples')}
+            >
+              All examples
+            </Button>
+            {/* GitHub + npm links, matching the main demo's icons/sizing. */}
+            <Flex align="center" gap={5}>
+              <a
+                href="https://github.com/CarlosNZ/json-edit-react"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Icon boxSize="2em" as={FaGithub} color={palette.string} />
+              </a>
+              <a
+                href="https://www.npmjs.com/package/json-edit-react"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Icon boxSize="3em" as={FaNpm} color={palette.string} />
+              </a>
+            </Flex>
+          </Flex>
+          <Heading size="lg" color={palette.property}>
+            {def.title}
+          </Heading>
+          <Text color={palette.string} maxW="3xl" mt={1}>
+            {def.blurb}
+          </Text>
           {showPicker && (
-            <ThemePicker value={theme} onChange={setTheme} size="sm" maxW={220} />
+            <Flex justify="flex-end" mt={2}>
+              <ThemePicker value={theme} onChange={setTheme} size="sm" maxW={220} />
+            </Flex>
           )}
-        </Flex>
-        <Heading size="lg">{def.title}</Heading>
-        <Text color="gray.700" maxW="3xl" mt={1}>
-          {def.blurb}
-        </Text>
-      </Box>
+        </Box>
 
-      {def.kind === 'static' ? (
-        <SimpleGrid {...gridProps}>
-          <Box ref={outputRef}>
-            <ExampleThemeProvider theme={theme}>
-              <Suspense fallback={<Loading />}>
-                {ExampleComponent && <ExampleComponent />}
-              </Suspense>
-            </ExampleThemeProvider>
-          </Box>
-          {source !== null ? (
-            <CodeBlock code={source} filename={`${slug}/Example.tsx`} />
-          ) : (
-            <Loading />
-          )}
-        </SimpleGrid>
-      ) : source !== null ? (
-        <Suspense fallback={<Loading />}>
-          <LiveCodeBlock code={source} theme={theme} outputRef={outputRef} />
-        </Suspense>
-      ) : (
-        <Loading />
-      )}
+        {def.kind === 'static' ? (
+          <SimpleGrid {...gridProps}>
+            {/* Shadow hugs the editor's own rounded container (like the main demo,
+                which puts `.block-shadow` on the JsonEditor). Applied via `sx`
+                because the editor lives inside the className-free example component;
+                same value as the `.block-shadow` rule in style.css. */}
+            <Box
+              className="block-shadow"
+              borderRadius="md"
+              // sx={{ '& .jer-editor-container': { boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px' } }}
+            >
+              <ExampleEditorProvider value={editorProps}>
+                <Suspense fallback={<Loading />}>
+                  {ExampleComponent && <ExampleComponent />}
+                </Suspense>
+              </ExampleEditorProvider>
+            </Box>
+            {source !== null ? (
+              <CodeBlock
+                code={source}
+                filename={`${slug}/Example.tsx`}
+                themeName={theme.displayName}
+              />
+            ) : (
+              <Loading />
+            )}
+          </SimpleGrid>
+        ) : source !== null ? (
+          <Suspense fallback={<Loading />}>
+            <LiveCodeBlock code={source} theme={theme} />
+          </Suspense>
+        ) : (
+          <Loading />
+        )}
+      </Box>
     </Box>
   )
 }
