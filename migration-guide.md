@@ -581,17 +581,13 @@ And inside your component, rename the props type and the config prop:
 
 ---
 
-## 14. Theming: groups, partial `ThemeStyles`, and function composition
+## 14. Theming: partial `ThemeStyles` and function composition
 
-The theming engine is unchanged for the common cases — a `theme` prop taking colours, style objects, arrays, and style functions all behave as before. Three things are new or clarified:
-
-### Groups
-
-You can now style a whole category of elements with one key: `value` (covers `string`/`number`/`boolean`/`null`) and `icon` (covers every `icon…` element). A specific element key still wins over a group, and the two merge per property. This is purely additive — existing themes are unaffected. See [Groups](README.md#groups).
+The theming engine is unchanged for the common cases — a `theme` prop taking colours, style objects, arrays, and style functions all behave as before. Two things are new or clarified:
 
 ### `ThemeStyles` is now partial
 
-The exported `ThemeStyles` type is now `Partial<Record<ThemeableElement | ThemeableGroup, …>>` — inherently optional per key, and it accepts group keys. If you imported `ThemeStyles` and relied on it being a *total* record (every element required), it's now optional-per-key. The change is more permissive, so most code needs no edits.
+The exported `ThemeStyles` type is now `Partial<Record<ThemeableElement, …>>` — inherently optional per key. If you imported `ThemeStyles` and relied on it being a *total* record (every element required), it's now optional-per-key. The change is more permissive, so most code needs no edits.
 
 ### Arrays of style functions now compose
 

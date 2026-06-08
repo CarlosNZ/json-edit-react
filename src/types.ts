@@ -609,13 +609,6 @@ export type ThemeableElement =
   | 'iconCancel'
 
 /**
- * Built-in groups. A group key fans its value onto every member element during
- * compile, as a lower-precedence layer than a specific element key:
- * `value` → string | number | boolean | null; `icon` → every `icon*` element.
- */
-export type ThemeableGroup = 'value' | 'icon'
-
-/**
  * A style function: derives CSS from a node's data at render time. May return
  * `null` / `undefined` to contribute nothing — useful as a conditional layer.
  */
@@ -630,9 +623,9 @@ export type ThemeFunction = (nodeData: NodeData) => React.CSSProperties | null |
 export type ThemeValueUnit = string | React.CSSProperties | ThemeFunction
 
 /**
- * The value applied to a single element or group key: one unit, or an array of
- * units merged left → right (specific overlays group per property; functions
- * always apply after statics). e.g. `"smaller"`, `["smaller", { fontWeight: "bold" }]`.
+ * The value applied to a single element: one unit, or an array of units merged
+ * left → right (later wins per property; functions always apply after statics).
+ * e.g. `"smaller"`, `["smaller", { fontWeight: "bold" }]`.
  */
 export type ThemeElementValue = ThemeValueUnit | ThemeValueUnit[]
 
@@ -640,10 +633,10 @@ export type ThemeElementValue = ThemeValueUnit | ThemeValueUnit[]
 export type ThemeFragments = Record<string, string | React.CSSProperties>
 
 /**
- * The styles map. Keys are elements *or* groups; group keys expand onto their
- * members during compile. Inherently partial — supply only what you override.
+ * The styles map — inherently partial, so supply only the elements you want to
+ * override.
  */
-export type ThemeStyles = Partial<Record<ThemeableElement | ThemeableGroup, ThemeElementValue>>
+export type ThemeStyles = Partial<Record<ThemeableElement, ThemeElementValue>>
 
 /** A full theme definition. */
 export interface Theme {

@@ -106,67 +106,11 @@ describe('compileStyles — fragments', () => {
   })
 })
 
-// ─── C — groups ──────────────────────────────────────────────────────────────
-
-describe('compileStyles — groups', () => {
-  it('fans `value` out to string / number / boolean / null only', () => {
-    const c = compileStyles({ value: 'green' })
-    expect(c.string).toEqual({ color: 'green' })
-    expect(c.number).toEqual({ color: 'green' })
-    expect(c.boolean).toEqual({ color: 'green' })
-    expect(c.null).toEqual({ color: 'green', fontVariant: 'small-caps', fontWeight: 'bold' })
-    // non-members untouched
-    expect(c.property).toEqual({ color: '#292929' })
-    expect(c.bracket).toEqual({ color: '#002b36', fontWeight: 'bold' })
-  })
-
-  it('fans `icon` out to every icon element', () => {
-    const c = compileStyles({ icon: 'grey' })
-    expect(c.iconCollection).toEqual({ color: 'grey' })
-    expect(c.iconEdit).toEqual({ color: 'grey' })
-    expect(c.iconDelete).toEqual({ color: 'grey' })
-    expect(c.iconCopy).toEqual({ color: 'grey' })
-    expect(c.iconCancel).toEqual({ color: 'grey' })
-    // a non-icon is untouched
-    expect(c.string).toEqual({ color: '#cb4b16' })
-  })
-
-  it('lets a specific element override a group within the same theme', () => {
-    const c = compileStyles({ value: 'green', string: 'red' })
-    expect(c.string).toEqual({ color: 'red' })
-    expect(c.number).toEqual({ color: 'green' })
-  })
-
-  it('merges group and specific per property', () => {
-    const c = compileStyles({ value: { opacity: 0.5 }, string: { color: 'red' } })
-    expect(c.string).toEqual({ color: 'red', opacity: 0.5 })
-    expect(c.number).toEqual({ color: '#268bd2', opacity: 0.5 })
-  })
-
-  it('never leaks group keys into the compiled output', () => {
-    const c = compileStyles({ value: 'green', icon: 'grey' })
-    expect('value' in c).toBe(false)
-    expect('icon' in c).toBe(false)
-  })
-})
-
-// ─── D — array layering precedence ───────────────────────────────────────────
+// ─── C — array layering precedence ───────────────────────────────────────────
 
 describe('compileStyles — array layering', () => {
   it('lets a later theme win per element', () => {
     expect(compileStyles([{ string: 'red' }, { string: 'blue' }]).string).toEqual({ color: 'blue' })
-  })
-
-  it('lets a later group beat an earlier specific (cross-theme = later wins)', () => {
-    const c = compileStyles([{ iconEdit: 'blue' }, { icon: 'grey' }])
-    expect(c.iconEdit).toEqual({ color: 'grey' })
-    expect(c.iconDelete).toEqual({ color: 'grey' })
-  })
-
-  it('keeps specific-beats-group within a single theme', () => {
-    const c = compileStyles({ icon: 'grey', iconEdit: 'blue' })
-    expect(c.iconEdit).toEqual({ color: 'blue' })
-    expect(c.iconDelete).toEqual({ color: 'grey' })
   })
 
   it('mixes a full Theme with bare styles in one array', () => {
@@ -182,7 +126,7 @@ describe('compileStyles — array layering', () => {
   })
 })
 
-// ─── E — functions: composition ──────────────────────────────────────────────
+// ─── D — functions: composition ──────────────────────────────────────────────
 
 describe('compileStyles — function composition', () => {
   it('compiles a single function element to a closure over the base', () => {
@@ -205,23 +149,6 @@ describe('compileStyles — function composition', () => {
     })
   })
 
-  it('fans a group function out to each member, over that member’s base', () => {
-    const c = compileStyles({ value: () => ({ opacity: 0.5 }) })
-    expect(typeof c.string).toBe('function')
-    expect(getStyles(c, 'string', nodeData)).toEqual({ color: '#cb4b16', opacity: 0.5 })
-    expect(getStyles(c, 'number', nodeData)).toEqual({ color: '#268bd2', opacity: 0.5 })
-  })
-
-  it('composes a group function and a specific function per property', () => {
-    const c = compileStyles({
-      value: () => ({ opacity: 0.5, color: 'green' }),
-      string: () => ({ color: 'red' }),
-    })
-    // specific fn wins on `color`, group fn’s `opacity` survives
-    expect(getStyles(c, 'string', nodeData)).toEqual({ color: 'red', opacity: 0.5 })
-    expect(getStyles(c, 'number', nodeData)).toEqual({ color: 'green', opacity: 0.5 })
-  })
-
   it('composes an array of N functions, later winning per property', () => {
     const c = compileStyles({
       string: [() => ({ color: 'red', fontWeight: 'bold' }), () => ({ color: 'blue' })],
@@ -233,14 +160,9 @@ describe('compileStyles — function composition', () => {
     const c = compileStyles([{ string: () => ({ color: 'red' }) }, { string: { color: 'blue' } }])
     expect(getStyles(c, 'string', nodeData)).toEqual({ color: 'red' })
   })
-
-  it('lets a group function override a specific static (functions last)', () => {
-    const c = compileStyles({ value: () => ({ color: 'green' }), string: { color: 'red' } })
-    expect(getStyles(c, 'string', nodeData)).toEqual({ color: 'green' })
-  })
 })
 
-// ─── F — getStyles ───────────────────────────────────────────────────────────
+// ─── E — getStyles ───────────────────────────────────────────────────────────
 
 describe('getStyles', () => {
   it('returns the same object reference for a static element (stable)', () => {
@@ -275,7 +197,7 @@ describe('getStyles', () => {
   })
 })
 
-// ─── G — writeThemeCssVars ───────────────────────────────────────────────────
+// ─── F — writeThemeCssVars ───────────────────────────────────────────────────
 
 describe('writeThemeCssVars', () => {
   it('writes the highlight and copy-icon custom properties', () => {
@@ -292,7 +214,7 @@ describe('writeThemeCssVars', () => {
   })
 })
 
-// ─── H — fast path (object vs closure) ───────────────────────────────────────
+// ─── G — fast path (object vs closure) ───────────────────────────────────────
 
 describe('compileStyles — fast path', () => {
   it('keeps a function-free element as a plain object', () => {

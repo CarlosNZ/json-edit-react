@@ -919,30 +919,6 @@ So, to summarise, the `theme` prop can take *either*:
 
 You can play round with live editing of the themes in the [Demo app](https://carlosnz.github.io/json-edit-react/) by selecting "Edit this theme!" from the "Demo data" selector (though you won't be able to create functions in JSON).
 
-### Groups
-
-To style several related elements at once — without repeating yourself — use a *group* key in place of an element key. Two groups are built in:
-- `value` applies to `string`, `number`, `boolean` and `null`
-- `icon` applies to every icon element (`iconCollection`, `iconEdit`, `iconDelete`, etc.)
-
-A group takes exactly the same value as an element key (string, object, array or function) and fans it out to every member:
-```js
-styles: {
-  value: { color: 'green', fontWeight: 'bold' }, // all value types
-  icon: 'grey',                                   // all icons
-}
-```
-
-A specific element key always wins over a group *within the same theme*, so you can set a whole category and then override one member:
-```js
-styles: {
-  icon: 'grey',     // all icons grey…
-  iconEdit: 'blue', // …except the "edit" icon
-}
-```
-
-Group and specific values merge *per property* — `{ value: { opacity: 0.5 }, string: { color: 'red' } }` gives string values both `opacity: 0.5` (from the group) and `color: red` (from the element).
-
 ### CSS classes
 
 Another way to style the component is to target the CSS classes directly. Every element in the component has a unique class name, so you should be able to locate them in your browser inspector and override them accordingly. All class names begin with the prefix `jer-`, e.g. `jer-collection-header-row`, `jer-value-string`.
@@ -951,7 +927,7 @@ Note that theme styles are applied *inline*, so for any property the theme sets 
 
 ### Fragments
 
-A `fragments` object lets you define named, reusable style tokens — a colour or a snippet of CSS — and reference them by name from any element or group value. Think of it as a palette: define a value once and reuse it in several unrelated places, so a later tweak only happens in one spot.
+A `fragments` object lets you define named, reusable style tokens — a colour or a snippet of CSS — and reference them by name from any element's value. Think of it as a palette: define a value once and reuse it in several unrelated places, so a later tweak only happens in one spot.
 ```js
 fragments: { accent: '#E63946' },
 styles: {
@@ -967,8 +943,6 @@ styles: {
   iconEdit: ['iconAdjust', { marginLeft: '1em' }],
 }
 ```
-
-To apply one style across a whole *category* of elements (all icons, all value types), reach for a [group](#groups) rather than repeating a fragment on each key.
 
 > [!NOTE]
 > ### About sizing and scaling

@@ -1,7 +1,6 @@
 import { type CSSProperties } from 'react'
 import {
   type ThemeInput,
-  type ThemeStyles,
   type ThemeValueUnit,
   type ThemeFunction,
   type ThemeableElement,
@@ -10,13 +9,6 @@ import {
   type NodeData,
 } from '../../types'
 import { defaultTheme } from './defaultTheme'
-
-// Built-in groups: a group key fans its value onto these element members.
-// `icon` members are derived from the default theme rather than restated.
-const GROUP_MEMBERS: Record<string, ThemeableElement[]> = {
-  value: ['string', 'number', 'boolean', 'null'],
-  icon: Object.keys(defaultTheme.styles).filter((k) => k.startsWith('icon')) as ThemeableElement[],
-}
 
 // Elements whose bare-string shorthand targets a property other than `color`.
 const DEFAULT_PROP: Partial<Record<ThemeableElement, keyof CSSProperties>> = {
@@ -37,26 +29,22 @@ export const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
   const base: Partial<Record<ThemeableElement, CSSProperties>> = {}
   const fns: Partial<Record<ThemeableElement, ThemeFunction[]>> = {}
 
-  // Resolve each theme in array order; within a theme, group keys (pass 1)
-  // before specific keys (pass 0) so specific overlays group. Statics merge into
-  // `base`, functions append to `fns`. Cross-theme: later overlays earlier.
+  // Resolve each theme in array order. Statics merge into `base`, functions
+  // append to `fns`. Cross-theme: later overlays earlier, per element.
   for (const { fragments, styles } of themes)
-    for (const pass of [1, 0])
-      for (const key in styles) {
-        if ((key in GROUP_MEMBERS ? 1 : 0) !== pass) continue
-        const targets = pass ? GROUP_MEMBERS[key] : [key as ThemeableElement]
-        for (const el of targets)
-          for (const layer of ([] as ThemeValueUnit[]).concat(styles[key as keyof ThemeStyles]!)) {
-            if (typeof layer === 'function') (fns[el] ??= []).push(layer)
-            else {
-              const v = typeof layer === 'string' ? (fragments?.[layer] ?? layer) : layer
-              base[el] = {
-                ...base[el],
-                ...(typeof v === 'string' ? { [DEFAULT_PROP[el] ?? 'color']: v } : v),
-              }
-            }
+    for (const key in styles) {
+      const el = key as ThemeableElement
+      for (const layer of ([] as ThemeValueUnit[]).concat(styles[el]!)) {
+        if (typeof layer === 'function') (fns[el] ??= []).push(layer)
+        else {
+          const v = typeof layer === 'string' ? (fragments?.[layer] ?? layer) : layer
+          base[el] = {
+            ...base[el],
+            ...(typeof v === 'string' ? { [DEFAULT_PROP[el] ?? 'color']: v } : v),
           }
+        }
       }
+    }
 
   const compiled = {} as CompiledStyles
   for (const key in base) {
