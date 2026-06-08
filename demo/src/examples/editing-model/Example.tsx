@@ -25,45 +25,93 @@ type Mode =
   | 'gate-confirm'
   | 'gate-no-release'
 
-// Each `onUpdate` behaviour + a one-line description shown under the selector.
+// Each `onUpdate` behaviour, with a fuller description (what it does, what it
+// simulates, what to expect) shown under the selector.
 const MODES: { value: Mode; label: string; desc: string }[] = [
-  { value: 'instant-ok', label: 'Instant OK', desc: 'Commit immediately (fast path).' },
-  { value: 'slow-ok', label: 'Slow OK', desc: 'Optimistic — closes now, succeeds after 3 s.' },
+  {
+    value: 'instant-ok',
+    label: 'Instant OK',
+    desc:
+      'Commits instantly with no async work — the simplest path. Simulates a ' +
+      'save that always succeeds right away. Good for watching the bare event ' +
+      'lifecycle (start → submit → commit → updateSuccessful) with no timing.',
+  },
+  {
+    value: 'slow-ok',
+    label: 'Slow OK',
+    desc:
+      'Optimistic commit with a slow, successful save. Simulates a 3-second ' +
+      'server round-trip: the editor closes and the new value shows ' +
+      'immediately, then updateSuccessful fires ~3 s later. Tabbing between ' +
+      'fields stays instant — a slow save never blocks editing.',
+  },
   {
     value: 'slow-fail',
     label: 'Slow fail',
-    desc: 'Optimistic — closes now, then reverts + errors after 3 s.',
+    desc:
+      'Optimistic commit with a slow failure — the headline behaviour. ' +
+      'Simulates a server save that rejects after 3 s: the value shows ' +
+      'immediately, then automatically reverts and an inline error appears. ' +
+      'You don’t have to do anything to recover it.',
   },
   {
     value: 'slow-mixed',
     label: 'Slow mixed',
-    desc: 'Succeeds, but rejects any value containing the letter “z”.',
+    desc:
+      'Optimistic save with per-value validation: anything containing the ' +
+      'letter “z” is rejected after 3 s, everything else succeeds. Edit two ' +
+      'fields quickly — one with a “z”, one without — and only the “z” one ' +
+      'reverts while the other stays. A late failure reverts only its own node.',
   },
   {
     value: 'override',
     label: 'Override',
-    desc: 'Commits, replacing the document (adds an _editedAt stamp).',
+    desc:
+      'The save returns a replacement document. Simulates a server that ' +
+      'canonicalises your data: after 3 s the whole document is replaced with ' +
+      'your edit plus a fresh top-level _editedAt timestamp — showing how an ' +
+      'onUpdate `{ value }` return rewrites the result.',
   },
   {
     value: 'cancel-null',
     label: 'Silent cancel',
-    desc: 'Optimistic, then silently reverts (no error) after 3 s.',
+    desc:
+      'A silent rejection. Simulates a save that quietly declines (e.g. a ' +
+      'cancelled confirmation elsewhere): the value shows optimistically, ' +
+      'then reverts after 3 s with no error and no toast — and no update event.',
   },
-  { value: 'throw', label: 'Throw', desc: 'Optimistic, then throws after 3 s.' },
+  {
+    value: 'throw',
+    label: 'Throw',
+    desc:
+      'An unexpected exception during save. Simulates onUpdate throwing after ' +
+      '3 s: the edit reverts and the thrown message (“Simulated save failure”) ' +
+      'surfaces as the error, just like a rejected promise would.',
+  },
   {
     value: 'gate-slow-ok',
     label: 'Gate — hold',
-    desc: 'hold(): stays open + blocks the tree for 3 s, then commits.',
+    desc:
+      'Uses hold() to opt out of the optimistic close. Simulates needing the ' +
+      'editor to stay open while a 3 s async step runs: it stays open and the ' +
+      'rest of the tree is blocked (try clicking another node — nothing ' +
+      'happens) until it commits and closes.',
   },
   {
     value: 'gate-confirm',
     label: 'Gate — confirm',
-    desc: 'hold(): stays open, asks window.confirm, commits or discards.',
+    desc:
+      'An interactive gate. Simulates confirming before committing: pressing ' +
+      'Enter opens a window.confirm — OK commits the edit, Cancel discards it ' +
+      '(the value reverts, no error). The editor stays open during the prompt.',
   },
   {
     value: 'gate-no-release',
     label: 'Gate — no release',
-    desc: 'hold() but never release(): resolution decides.',
+    desc:
+      'hold() without ever calling release(). Simulates forgetting to release ' +
+      'the gate: the commit still lands once onUpdate resolves (after 3 s) ' +
+      'rather than hanging — confirming a hold() with no release() is safe.',
   },
 ]
 
@@ -211,7 +259,7 @@ export default function EditingModel() {
             <FormLabel
               htmlFor="mode-select"
               m={0}
-              fontSize="sm"
+              // fontSize="sm"
               whiteSpace="nowrap"
               color={palette.property}
             >
@@ -241,7 +289,7 @@ export default function EditingModel() {
               Reset
             </Button>
           </Flex>
-          <Text fontSize="sm" mt={3} color={palette.string}>
+          <Text fontSize="md" mt={3} color={palette.string}>
             {current.desc}
           </Text>
         </Box>
