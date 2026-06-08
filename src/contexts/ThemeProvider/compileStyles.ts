@@ -46,6 +46,10 @@ export const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
       }
     }
 
+  // A function can target an element no theme styles statically (so it never
+  // seeded `base`); give those an empty base so they're still compiled in.
+  for (const key in fns) base[key as ThemeableElement] ??= {}
+
   const compiled = {} as CompiledStyles
   for (const key in base) {
     const el = key as ThemeableElement
@@ -67,7 +71,7 @@ export const getStyles = (
   nodeData: NodeData
 ) => {
   const value = compiled[element]
-  return typeof value === 'function' ? value(nodeData) : value ?? {}
+  return typeof value === 'function' ? value(nodeData) : (value ?? {})
 }
 
 // Bridge for the two properties that can't be set inline — they feed static
