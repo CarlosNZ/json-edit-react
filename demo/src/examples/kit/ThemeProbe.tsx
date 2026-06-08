@@ -29,7 +29,17 @@ export const ThemeProbe = forwardRef<HTMLDivElement, { theme: Theme }>(function 
       opacity={0}
       pointerEvents="none"
     >
-      <JsonEditor data={PROBE_DATA} setData={noop} theme={theme} collapse={false} showCollectionCount />
+      {/* collapseAnimationTime={0}: the editor transitions the item-count
+          colour over the collapse animation; without this, a theme switch can
+          be sampled mid-transition (a wrong/old colour). */}
+      <JsonEditor
+        data={PROBE_DATA}
+        setData={noop}
+        theme={theme}
+        collapse={false}
+        showCollectionCount
+        collapseAnimationTime={0}
+      />
     </Box>
   )
 })
