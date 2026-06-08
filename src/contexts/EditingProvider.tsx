@@ -59,6 +59,13 @@ import { isDescendantOf, pathsEqual, toPathString } from '../utils/pathTools'
 type Token = number
 type PathString = string
 
+// How long an INSTANT op (delete/move/array-add) waits for `onUpdate` before
+// applying optimistically. A faster result (sync or sub-threshold) settles in
+// place, so the node is never removed/relocated and a rejection's inline error
+// renders on it. ~100ms is the "feels instant" perception threshold, so it
+// rarely needs tuning — kept a constant (not a prop) to hold the API flat.
+const OPTIMISTIC_DELAY_MS = 100
+
 export interface EditingStateBundle {
   /** The one open/held operation (null = nothing active). */
   active: EditingState | null
@@ -139,18 +146,16 @@ interface OpenOptions {
 }
 
 // Phase-specific event for an operation. `delete`/`move` only ever fire at commit.
-const eventForOp = (
-  op: EditOperation,
-  phase: 'start' | 'submit' | 'commit' | 'cancel'
-): EditEvent['event'] | null => {
-  if (op === 'delete') return phase === 'commit' ? 'delete' : null
-  if (op === 'move') return phase === 'commit' ? 'move' : null
-  const suffix = op === 'rename' ? 'Rename' : op === 'add' ? 'Add' : 'Edit'
-  if (phase === 'start') return `start${suffix}` as EditEvent['event']
-  if (phase === 'submit') return `submit${suffix}` as EditEvent['event']
-  if (phase === 'cancel') return `cancel${suffix}` as EditEvent['event']
-  return `commit${suffix}` as EditEvent['event']
+type Phase = 'start' | 'submit' | 'commit' | 'cancel'
+const EVENT_FOR_OP: Record<EditOperation, Partial<Record<Phase, EditEvent['event']>>> = {
+  edit:   { start: 'startEdit',   submit: 'submitEdit',   cancel: 'cancelEdit',   commit: 'commitEdit' },
+  add:    { start: 'startAdd',    submit: 'submitAdd',    cancel: 'cancelAdd',    commit: 'commitAdd' },
+  rename: { start: 'startRename', submit: 'submitRename', cancel: 'cancelRename', commit: 'commitRename' },
+  delete: { commit: 'delete' },
+  move:   { commit: 'move' },
 }
+const eventForOp = (op: EditOperation, phase: Phase): EditEvent['event'] | null =>
+  EVENT_FOR_OP[op][phase] ?? null
 
 // Two sessions target the "same thing" when path + op match (phase may differ:
 // an `editing` session that becomes `held` is still the same session).
@@ -174,13 +179,6 @@ export interface EditingStore {
   /** Imperative read for event handlers — does not subscribe. */
   areChildrenBeingEdited: (path: CollectionKey[]) => boolean
 }
-
-// How long an INSTANT op (delete/move/array-add) waits for `onUpdate` before
-// applying optimistically. A faster result (sync or sub-threshold) settles in
-// place, so the node is never removed/relocated and a rejection's inline error
-// renders on it. ~100ms is the "feels instant" perception threshold, so it
-// rarely needs tuning — kept a constant (not a prop) to hold the API flat.
-const OPTIMISTIC_DELAY_MS = 100
 
 const initialState: EditingStateBundle = {
   active: null,
