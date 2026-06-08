@@ -94,6 +94,11 @@ const themeNames = [
   'Black & White',
   'Candy Wrapper',
   'Psychedelic',
+  'Solarized Dark',
+  'Solarized Light',
+  'Dracula',
+  'Monokai',
+  'Tokyo Night',
 ]
 
 // Only default theme is loaded initially
