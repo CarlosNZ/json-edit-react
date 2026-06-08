@@ -86,7 +86,11 @@ export default function EditingModel() {
   const append = useCallback((entry: Omit<LogEntry, 'id' | 'time'>) => {
     setLog((prev) => [
       ...prev,
-      { ...entry, id: (prev[prev.length - 1]?.id ?? -1) + 1, time: new Date().toLocaleTimeString() },
+      {
+        ...entry,
+        id: (prev[prev.length - 1]?.id ?? -1) + 1,
+        time: new Date().toLocaleTimeString(),
+      },
     ])
   }, [])
 
@@ -140,7 +144,7 @@ export default function EditingModel() {
         case 'gate-confirm': {
           const release = hold()
           // Let React paint the held state before the blocking dialog.
-          await wait(300)
+          await wait(100)
           const ok = window.confirm(
             `Commit ${nodeData.event} at "${nodeData.path.join('.') || 'root'}"?`
           )
