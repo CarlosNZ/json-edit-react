@@ -855,33 +855,28 @@ However, you can pass in your own theme object, or part thereof. The theme struc
 ```js
 {
   displayName: 'Default',
-  fragments: { edit: 'rgb(42, 161, 152)' },
   styles: {
     container: {
       backgroundColor: '#f6f6f6',
       fontFamily: 'monospace',
     },
-    collection: {},
-    collectionInner: {},
-    collectionElement: {},
-    dropZone: {},
     property: '#292929',
-    bracket: { color: 'rgb(0, 43, 54)', fontWeight: 'bold' },
-    itemCount: { color: 'rgba(0, 0, 0, 0.3)', fontStyle: 'italic' },
-    string: 'rgb(203, 75, 22)',
-    number: 'rgb(38, 139, 210)',
+    bracket: { color: '#002b36', fontWeight: 'bold' },
+    itemCount: { color: '#0000004d', fontStyle: 'italic' },
+    string: '#cb4b16',
+    number: '#268bd2',
     boolean: 'green',
-    null: { color: 'rgb(220, 50, 47)', fontVariant: 'small-caps', fontWeight: 'bold' },
-    input: ['#292929', { fontSize: '90%' }],
+    null: { color: '#dc322f', fontVariant: 'small-caps', fontWeight: 'bold' },
+    input: ['#292929'],
     inputHighlight: '#b3d8ff',
     error: { fontSize: '0.8em', color: 'red', fontWeight: 'bold' },
-    iconCollection: 'rgb(0, 43, 54)',
-    iconEdit: 'edit',
-    iconDelete: 'rgb(203, 75, 22)',
-    iconAdd: 'edit',
-    iconCopy: 'rgb(38, 139, 210)',
+    iconCollection: '#002b36',
+    iconEdit: '#2aa198',
+    iconDelete: '#cb4b16',
+    iconAdd: '#2aa198',
+    iconCopy: '#268bd2',
     iconOk: 'green',
-    iconCancel: 'rgb(203, 75, 22)',
+    iconCancel: '#cb4b16',
   },
 }
 
@@ -891,7 +886,9 @@ The `styles` property is the main one to focus on. Each key (`property`, `bracke
 - a `string`, in which case it is interpreted as the colour (or background colour in the case of `container` and `inputHighlight`)
 - a full CSS style object for fine-grained definition. You only need to provide properties you wish to override — all unspecified ones will fallback to either the default theme, or another theme that you specify as the "base".
 - a "Style Function", which is a function that takes the same input as [Filter Functions](#filter-functions), but returns a CSS style object (or `null`). This allows you to *dynamically* change styling of various elements based on content or structure. (An example is in the [Demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) "Custom Nodes" data set, where the character names are styled larger than other string values)
-- an array containing any combination of the above, in which case they are merged together. For example, you could provide a Theme Function with styling for a very specific condition, but then provide "fallback" styles whenever the function returns `null`. (In the array, the *later* items have higher precedence)
+- an array combining any of the above. Static styles merge left → right (later wins per property); a "Style Function" always applies *last*, on top of the merged statics, and multiple functions compose in order. So you can pair static "fallback" styles with a conditional function — when the function returns `null` it contributes nothing, leaving the statics showing through.
+
+`collection`, `collectionInner`, `collectionElement` and `dropZone` aren't styled by the default theme, but can be themed the same way.
 
 For a simple example, if you want to use the "githubDark" theme, but just change a couple of small things, you'd specify something like this:
 
@@ -926,29 +923,25 @@ You can play round with live editing of the themes in the [Demo app](https://car
 
 Another way to style the component is to target the CSS classes directly. Every element in the component has a unique class name, so you should be able to locate them in your browser inspector and override them accordingly. All class names begin with the prefix `jer-`, e.g. `jer-collection-header-row`, `jer-value-string`.
 
+Note that theme styles are applied *inline*, so for any property the theme sets they take precedence over your own CSS rules (short of `!important`). CSS-class overrides are therefore best for structural/layout tweaks the theme doesn't touch (spacing, sizing, borders); colours and fonts are best set through the `theme` prop.
+
 ### Fragments
 
-The `fragments` property above is just a convenience to allow repeated style "fragments" to be defined once and referred to using an alias. For example, if you wanted all your icons to be blue and slightly larger and spaced out, you might define a fragment like so:
+A `fragments` object lets you define named, reusable style tokens — a colour or a snippet of CSS — and reference them by name from any element's value. Think of it as a palette: define a value once and reuse it in several unrelated places, so a later tweak only happens in one spot.
 ```js
-fragments: { iconAdjust: { color: "blue", fontSize: "110%", marginRight: "0.6em" }}
-```
-
-Then in the theme object, just use:
-```js
-{
-    ...,
-    iconEdit: "iconAdjust",
-    iconDelete: "iconAdjust",
-    iconAdd: "iconAdjust",
-    iconCopy: "iconAdjust",
+fragments: { accent: '#E63946' },
+styles: {
+  property: 'accent',
+  iconEdit: 'accent',
 }
 ```
 
-Then, when you want to tweak it later, you only need to update it in one place!
-
-Fragments can also be mixed with additional properties, and even other fragments, like so:
+A fragment can also be a full style object, and can be mixed with extra properties (and other fragments) in an array:
 ```js
-iconEdit: [ "iconAdjust", "anotherFragment", { marginLeft: "1em" } ]
+fragments: { iconAdjust: { fontSize: '110%', marginRight: '0.6em' } },
+styles: {
+  iconEdit: ['iconAdjust', { marginLeft: '1em' }],
+}
 ```
 
 > [!NOTE]

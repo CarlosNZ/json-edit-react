@@ -581,9 +581,9 @@ export interface InputProps {
  * THEMES
  */
 
-// Object passed to main "theme" prop
-export type ThemeInput = Theme | Partial<ThemeStyles> | Array<Theme | Partial<ThemeStyles>>
+// ─── Theme: authored input ───────────────────────────────────────────────────
 
+/** Every individually-themeable part of the UI. */
 export type ThemeableElement =
   | 'container'
   | 'collection'
@@ -608,24 +608,66 @@ export type ThemeableElement =
   | 'iconOk'
   | 'iconCancel'
 
+/**
+ * A style function: derives CSS from a node's data at render time. May return
+ * `null` / `undefined` to contribute nothing — useful as a conditional layer.
+ */
 export type ThemeFunction = (nodeData: NodeData) => React.CSSProperties | null | undefined
 
-export type ThemeValue =
-  | string
-  | React.CSSProperties
-  | Array<string | React.CSSProperties | ThemeFunction>
-  | ThemeFunction
-// e.g. "#FFFFF", {backgroundColor: "grey"}, ["smaller", {fontWeight: "bold"}]
+/**
+ * One unit of a `ThemeElementValue`. A bare string is resolved against the
+ * theme's `fragments` first; otherwise it's a raw CSS value applied to the
+ * element's default property (`color`, or `backgroundColor` / `borderColor` for
+ * a few elements). e.g. `"#FFF"`, `{ fontWeight: "bold" }`, a style function.
+ */
+export type ThemeValueUnit = string | React.CSSProperties | ThemeFunction
 
-export type ThemeStyles = Record<ThemeableElement, ThemeValue>
+/**
+ * The value applied to a single element: one unit, or an array of units merged
+ * left → right (later wins per property; functions always apply after statics).
+ * e.g. `"smaller"`, `["smaller", { fontWeight: "bold" }]`.
+ */
+export type ThemeElementValue = ThemeValueUnit | ThemeValueUnit[]
 
-type Fragments = Record<string, React.CSSProperties | string>
+/** Named, reusable style tokens, referenced by name from any `ThemeElementValue` string. */
+export type ThemeFragments = Record<string, string | React.CSSProperties>
+
+/**
+ * The styles map — inherently partial, so supply only the elements you want to
+ * override.
+ */
+export type ThemeStyles = Partial<Record<ThemeableElement, ThemeElementValue>>
+
+/** A full theme definition. */
 export interface Theme {
   displayName?: string
-  fragments?: Fragments
-  styles: Partial<ThemeStyles>
+  fragments?: ThemeFragments
+  styles: ThemeStyles
 }
 
-// All the fragments and shorthand defined in Theme is compiled into a single
-// CSS "Style" object before being passed to components
-export type CompiledStyles = Record<ThemeableElement, ThemeFunction | React.CSSProperties>
+/**
+ * Object passed to the main `theme` prop: a full `Theme`, just its `styles`, or
+ * an array of either. In an array, later entries layer over earlier ones.
+ */
+export type ThemeInput = Theme | ThemeStyles | Array<Theme | ThemeStyles>
+
+// ─── Theme: compiled output ──────────────────────────────────────────────────
+
+// Per element, after groups are fanned onto members and themes merged in array
+// order: a pre-merged static base plus the ordered functions to apply on top.
+// Compile-time intermediate (`fns` is composed into one closure for CompiledStyles).
+export interface ElementStyle {
+  base: React.CSSProperties
+  fns: ThemeFunction[]
+}
+export type ResolvedStyles = Record<ThemeableElement, ElementStyle>
+
+// A compiled style function. Unlike `ThemeFunction` it never returns null — it
+// always merges the static base with each function's output into a concrete object.
+export type CompiledThemeFunction = (nodeData: NodeData) => React.CSSProperties
+
+// The compiled theme. Partial: an element no theme styles has no entry, so the
+// map carries only what's styled. `getStyles` fills the gap with `{}` at read time.
+export type CompiledStyles = Partial<
+  Record<ThemeableElement, React.CSSProperties | CompiledThemeFunction>
+>

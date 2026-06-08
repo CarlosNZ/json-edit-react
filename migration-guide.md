@@ -581,6 +581,20 @@ And inside your component, rename the props type and the config prop:
 
 ---
 
+## 14. Theming: partial `ThemeStyles` and function composition
+
+The theming engine is unchanged for the common cases — a `theme` prop taking colours, style objects, arrays, and style functions all behave as before. Two things are new or clarified:
+
+### `ThemeStyles` is now partial
+
+The exported `ThemeStyles` type is now `Partial<Record<ThemeableElement, …>>` — inherently optional per key. If you imported `ThemeStyles` and relied on it being a *total* record (every element required), it's now optional-per-key. The change is more permissive, so most code needs no edits.
+
+### Arrays of style functions now compose
+
+When an element's value is an array containing more than one style function, *all* of them now run and merge (later wins per property) — matching what this section always described. Previously only the last function in the array took effect. If you had multiple functions in one array and relied on just the last applying, fold them into a single function. (Functions are still always applied after static styles.)
+
+---
+
 ## Need help?
 
 If you hit something this guide doesn't cover, please [open an issue](https://github.com/CarlosNZ/json-edit-react/issues) — happy to help triage and add to this doc.
