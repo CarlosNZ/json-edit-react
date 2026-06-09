@@ -1,5 +1,5 @@
 import { JsonData, type CustomNodeDefinition } from '@json-edit-react'
-import { testData } from '../../custom-component-library/src/data'
+import { type CustomComponentLibraryData } from './demoData/data'
 
 export const truncate = (string: string, length = 200) =>
   string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
@@ -25,7 +25,7 @@ const jsonStringify = (data: JsonData) =>
 // For the "CustomNodeLibrary" data, returns modified definitions dependent on
 // the data
 export const getConditionalDefinitions = (
-  data: typeof testData,
+  data: CustomComponentLibraryData,
   customNodeDefinitions: CustomNodeDefinition[]
 ) =>
   customNodeDefinitions.map((definition) => {

@@ -1026,7 +1026,7 @@ Your `translations` object doesn't have to be exhaustive — only define the key
 You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) to see it in action. (There is also a custom Date picker that appears when editing ISO strings in the other data sets.)
 
 > [!TIP]
-> A set of pre-built Custom components is published as [`@json-edit-react/components`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components) — drop-in date pickers, color pickers, Markdown rendering, hyperlinks, and more. See examples in the [Demo app](https://carlosnz.github.io/json-edit-react/?data=customComponentLibrary). The [`custom-component-library/`](https://github.com/CarlosNZ/json-edit-react/tree/main/custom-component-library) app in this repo is a working showcase that consumes the package — a useful reference for building your own.  
+> A set of pre-built Custom components is published as [`@json-edit-react/components`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components) — drop-in date pickers, color pickers, Markdown rendering, hyperlinks, and more. See examples in the [Demo app](https://carlosnz.github.io/json-edit-react/?data=customComponentLibrary), and the [package README](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components#building-your-own) for a reference on building your own.  
 > Please contribute your own if you think they'd be useful to others.
 
 Custom nodes are provided in the `customNodeDefinitions` prop, as an array of objects of following structure:
@@ -1471,7 +1471,7 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 - **1.26.1**: Fix bug when submitting with keyboard after switching to `null` type ([#194](https://github.com/CarlosNZ/json-edit-react/pull/194))
 - **1.26.0**:
   - Handle non-standard data types (e.g. `undefined`, `BigInt`) when stringifying/parsing JSON
-  - More custom components (See [library ReadMe](https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md))
+  - More custom components (now published as [`@json-edit-react/components`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components))
 - **1.25.6**:
   - Expose a few more components and props to custom components
   - Start building Custom Component library (separate to main package)

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * Pack all three packages and extract them to `pack-output/` so the demo and
- * CCL can consume them via `VITE_JRE_SOURCE=pack`.
+ * Pack all three packages and extract them to `pack-output/` so the demo can
+ * consume them via `VITE_JRE_SOURCE=pack`.
  *
  * Runs each package's `preview-publish` script (which performs the same
  * build + pack steps that `pnpm publish` would), then untars each `.tgz` into
@@ -79,7 +79,7 @@ for (const target of targets) {
 // pack-output/<destName>/package/) and install its runtime deps so things
 // like `react-datepicker` resolve when vite walks up the node_modules tree
 // from the packed file's location. Peer deps and dev deps are skipped —
-// peers are provided by the consumer (demo/CCL), and dev deps aren't needed
+// peers are provided by the consumer (the demo), and dev deps aren't needed
 // at runtime.
 console.log('')
 for (const target of targets) {
@@ -101,7 +101,7 @@ for (const target of targets) {
   // workspace-internal versions (e.g. `json-edit-react@2.0.0-dev`) that aren't
   // on npm. We only need runtime `dependencies` resolvable so vite can walk
   // the node_modules tree for things like `react-datepicker`. Peers come from
-  // the consumer (demo/CCL); dev deps aren't needed at all at this stage.
+  // the consumer (the demo); dev deps aren't needed at all at this stage.
   let mutated = false
   if (pkg.peerDependencies) { delete pkg.peerDependencies; mutated = true }
   if (pkg.devDependencies) { delete pkg.devDependencies; mutated = true }
@@ -112,7 +112,7 @@ for (const target of targets) {
     //   `react-datepicker` declares `react` as a peer), which would put a
     //   second copy of React inside `pack-output/<name>/package/node_modules/`.
     //   Vite's walk-up resolution would find that copy first, giving the demo
-    //   two React instances and breaking hooks. The consumer (demo/CCL)
+    //   two React instances and breaking hooks. The consumer (the demo)
     //   already provides React, so skip peer installation here.
     execSync(
       'npm install --omit=peer --no-package-lock --no-audit --no-fund --silent',
@@ -126,4 +126,4 @@ if (!existsSync(join(outputDir, 'json-edit-react', 'package', 'package.json'))) 
   throw new Error('pack-all completed but pack-output/json-edit-react/package/package.json is missing')
 }
 
-console.log('\nAll three packages packed and extracted. Run `yarn start:pack` or `yarn build:pack` in demo/CCL.')
+console.log('\nAll three packages packed and extracted. Run `yarn start:pack` or `yarn build:pack` in demo.')

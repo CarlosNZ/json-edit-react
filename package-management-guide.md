@@ -14,9 +14,8 @@ pnpm -r build                # build core + themes + components
 pnpm test                    # tests at the root
 pnpm changeset               # add a changeset before opening a PR
 
-# Demo / CCL (still on yarn 1, independent installs)
+# Demo (still on yarn 1, independent install)
 cd demo && yarn install && yarn start:local
-cd custom-component-library && yarn install && yarn start:local
 
 # Preview-publish — produces a real .tgz you can inspect (no registry contact)
 pnpm preview-publish                                            # core (stages, then packs from build_package/)
@@ -49,12 +48,12 @@ packages:
 
 The `.` includes the repo root (core). `packages/*` matches themes and components.
 
-**[demo/](demo/) and [custom-component-library/](custom-component-library/) are *outside* the workspace.** They're independent yarn 1 projects. This is deliberate:
+**[demo/](demo/) is *outside* the workspace.** It's an independent yarn 1 project. This is deliberate:
 
-- They're test harnesses, not publishable artifacts.
-- Their job is to validate the published packages "from the outside" — same view a real consumer gets from npm.
-- Each has its own `package.json`, `node_modules`, `yarn.lock`, and `packageManager: "yarn@1.22.22"` pin.
-- The `VITE_JRE_SOURCE` env var lets them toggle between consuming local source, a built artifact, or the published npm version.
+- It's a test harness, not a publishable artifact.
+- Its job is to validate the published packages "from the outside" — same view a real consumer gets from npm.
+- It has its own `package.json`, `node_modules`, `yarn.lock`, and `packageManager: "yarn@1.22.22"` pin.
+- The `VITE_JRE_SOURCE` env var lets it toggle between consuming local source, a built artifact, or the published npm version.
 
 ### Why pnpm + Changesets
 
@@ -73,7 +72,7 @@ corepack enable
 
 # Verify
 pnpm --version    # → 10.8.1 (matches root package.json)
-yarn --version    # → 1.22.22 (when run from demo/ or custom-component-library/)
+yarn --version    # → 1.22.22 (when run from demo/)
 ```
 
 ### Per clone
@@ -82,9 +81,8 @@ yarn --version    # → 1.22.22 (when run from demo/ or custom-component-library
 # At repo root — installs core + themes + components together via the workspace.
 pnpm install
 
-# Demo and CCL are independent yarn projects. Install separately when needed:
+# The demo is an independent yarn project. Install separately when needed:
 cd demo && yarn install
-cd custom-component-library && yarn install
 ```
 
 There's also a convenience script `pnpm setup` at the root that runs `pnpm install && cd demo && yarn install`.
@@ -134,7 +132,7 @@ pnpm --filter @json-edit-react/themes compile   # typecheck a specific package
 
 Each sub-package has its own `tsconfig.json` and its own `pnpm compile` script.
 
-### Running the demo / CCL
+### Running the demo
 
 ```sh
 # Demo (port 5175) — three modes via VITE_JRE_SOURCE
@@ -142,15 +140,9 @@ cd demo
 yarn start:local       # uses local source (../src and ../packages/*/src)
 yarn start:build       # uses built artifacts (../build_package and ../packages/*/build)
 yarn start             # uses npm-installed versions
-
-# CCL (port 5176) — same modes
-cd custom-component-library
-yarn start:local
-yarn start:build
-yarn start
 ```
 
-See "Demo and CCL local-source toggle" below for what each mode actually resolves.
+See "Demo local-source toggle" below for what each mode actually resolves.
 
 ## Cross-package dev
 
@@ -158,7 +150,7 @@ When you edit a file in core ([src/](src/)) and themes or components imports it 
 
 You don't need to `pnpm install` after editing core source. Just rebuild the dependent package (`pnpm --filter @json-edit-react/themes build`) and re-run whatever consumes it.
 
-For the demo and CCL, the [vite.config.ts](demo/vite.config.ts) alias system handles cross-package resolution at build time — vite rewrites `@json-edit-react/themes` to a real path on disk based on `VITE_JRE_SOURCE`. This works whether or not the package is workspace-linked.
+For the demo, the [vite.config.ts](demo/vite.config.ts) alias system handles cross-package resolution at build time — vite rewrites `@json-edit-react/themes` to a real path on disk based on `VITE_JRE_SOURCE`. This works whether or not the package is workspace-linked.
 
 ## Mock-publish workflow (replaces `yarn pack`)
 
@@ -205,9 +197,9 @@ The test app now has `@json-edit-react/themes` in its `node_modules` exactly as 
 
 Once you `pnpm publish`, the tarball is on npm forever (you can `unpublish` within 72 hours, but it's a hassle). The dress-rehearsal `.tgz` lets you catch packaging issues — missing files, broken `exports`, type-export quirks — before they're permanent.
 
-## Demo and CCL local-source toggle
+## Demo local-source toggle
 
-Both [demo/vite.config.ts](demo/vite.config.ts) and [custom-component-library/vite.config.ts](custom-component-library/vite.config.ts) have an alias system controlled by the `VITE_JRE_SOURCE` environment variable. The aliases run at vite build time and don't depend on what's installed in node_modules.
+[demo/vite.config.ts](demo/vite.config.ts) has an alias system controlled by the `VITE_JRE_SOURCE` environment variable. The aliases run at vite build time and don't depend on what's installed in node_modules.
 
 | Mode                                                     | What it resolves to                                                                                                                                                      |
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -220,7 +212,7 @@ The `local` mode is what you'll use 90% of the time during dev — edits in core
 
 The `pack` mode is the closest pre-publish dress rehearsal: `pnpm pack-all` builds and packs all three packages exactly as `pnpm publish` would, extracts them into `pack-output/<name>/package/`, and `npm install`s their runtime deps so vite can resolve everything (e.g. `react-datepicker` for components). Then `yarn start:pack` / `yarn build:pack` consumes those extracted dirs. Most packaging issues — missing files from the `files` array, broken `exports` map, wrong `main`/`module`/`types` paths, bad `prepack` output — show up here before they can hit a real consumer. `peerDependencies` are **not** validated in this mode: [scripts/pack-all.mjs](scripts/pack-all.mjs) strips them from the extracted `package.json` before installing, because workspace-internal peers (e.g. `json-edit-react@2.0.0-dev` before publish) would otherwise fail to resolve. Peer-dep correctness has to be reviewed by reading the staged `package.json` directly.
 
-The `npm` mode is for **validating against the published artefact**. After publishing, run `pnpm sync-demos` from the repo root to bump demo and CCL to the just-published versions, then `yarn start` to see exactly what a consumer would see.
+The `npm` mode is for **validating against the published artefact**. After publishing, run `pnpm sync-demos` from the repo root to bump the demo to the just-published versions, then `yarn start` to see exactly what a consumer would see.
 
 ## Versioning with Changesets
 
@@ -323,8 +315,8 @@ pnpm release
 # 7. Push commit + tags
 git push --follow-tags
 
-# 8. Bump demo + CCL to the just-published versions
-#    (polls npm until each new version is visible, then `yarn add` in each consumer)
+# 8. Bump the demo to the just-published versions
+#    (polls npm until each new version is visible, then `yarn add` in the demo)
 pnpm sync-demos
 ```
 
@@ -334,8 +326,8 @@ pnpm sync-demos
 
 **Note:** `changeset publish` does not have a `--dry-run` flag of its own. The intended preflight is `pnpm preview-publish` (per package) as in step 5. To preview the *workspace-wide* bump set without consuming changesets, inspect `pnpm changeset status` or run `pnpm changeset version` on a throwaway branch.
 
-**Note (first v2 publish — one-time action):** Before `@json-edit-react/themes` and `@json-edit-react/components` exist on npm, `demo/package.json` and `custom-component-library/package.json` deliberately don't list them as dependencies — `yarn install` would fail. As a consequence, `yarn build` / `yarn deploy` are broken in default `npm` mode. Use `:local`, `:build`, or `:pack` for iteration; `pnpm dev` is the everyday command and works fine.
-After the **first** publish of those two packages, add them to both consumers once:
+**Note (first v2 publish — one-time action):** Before `@json-edit-react/themes` and `@json-edit-react/components` exist on npm, `demo/package.json` deliberately doesn't list them as dependencies — `yarn install` would fail. As a consequence, `yarn build` / `yarn deploy` are broken in default `npm` mode. Use `:local`, `:build`, or `:pack` for iteration; `pnpm dev` is the everyday command and works fine.
+After the **first** publish of those two packages, add them to the demo once:
 
 ```sh
 THEMES_VER=$(node -p "require('./packages/themes/package.json').version")
@@ -343,11 +335,9 @@ COMPONENTS_VER=$(node -p "require('./packages/components/package.json').version"
 
 cd demo
 yarn add @json-edit-react/themes@$THEMES_VER @json-edit-react/components@$COMPONENTS_VER
-cd ../custom-component-library
-yarn add @json-edit-react/components@$COMPONENTS_VER
 ```
 
-From then on, `pnpm sync-demos` keeps all three bumped after subsequent releases — it only updates packages already in `dependencies`, so it'll start picking them up automatically once they're listed.
+From then on, `pnpm sync-demos` keeps the demo bumped after subsequent releases — it only updates packages already in `dependencies`, so it'll start picking them up automatically once they're listed.
 
 ### Beta / prerelease releases
 
@@ -564,7 +554,7 @@ For a more systematic approach, see the **bundle-size test scaffolding** in [V2-
 ### "This project is configured to use pnpm..." when running yarn
 
 You're in or under a directory where corepack found `packageManager: "pnpm@..."`. Solution:
-- If you're in `demo/` or `custom-component-library/`, that's wrong — those should have their own `packageManager: "yarn@1.22.22"` pin. Check the local `package.json`.
+- If you're in `demo/`, that's wrong — it should have its own `packageManager: "yarn@1.22.22"` pin. Check the local `package.json`.
 - If you're in repo root, you should be using pnpm. Run `pnpm <command>` instead.
 
 ### `pnpm --filter json-edit-react ...` says "No projects matched the filters"
@@ -594,7 +584,7 @@ Then re-run `pnpm install`. The symlink lands at `packages/<name>/node_modules/j
 
 Right — the themes and components packages haven't been published to npm yet. The `npm` mode for those packages only works after the first publish. Use `local` mode (`VITE_JRE_SOURCE=local`) in the meantime; it routes through vite aliases to the in-repo source.
 
-After the first publish, run `pnpm sync-demos` (or update demo/CCL `package.json` deps manually) to install the published versions.
+After the first publish, run `pnpm sync-demos` (or update the demo's `package.json` deps manually) to install the published versions.
 
 ### How do I un-publish a bad release?
 
@@ -613,7 +603,7 @@ Pre-pinned via `pnpm.overrides` in root [package.json](package.json):
 }
 ```
 
-Demo's yarn install picks up specific versions; pnpm at root would otherwise pick the latest within the semver range, causing TS to see two type-identity-different copies via the path mappings. If the demo or CCL ever upgrades their `@types/react` or `react`, update the overrides to match.
+Demo's yarn install picks up specific versions; pnpm at root would otherwise pick the latest within the semver range, causing TS to see two type-identity-different copies via the path mappings. If the demo ever upgrades its `@types/react` or `react`, update the overrides to match.
 
 ### Pre/post script hooks aren't running
 
@@ -626,8 +616,7 @@ Pre/post hooks for arbitrary scripts (`prebuild`, `postbuild`, etc.) are enabled
 rm -rf node_modules packages/*/node_modules build packages/*/build
 pnpm install
 
-# Demo and CCL (independent)
-rm -rf demo/node_modules demo/build custom-component-library/node_modules custom-component-library/dist
+# Demo (independent)
+rm -rf demo/node_modules demo/build
 cd demo && yarn install && cd ..
-cd custom-component-library && yarn install && cd ..
 ```

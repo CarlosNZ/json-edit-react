@@ -104,7 +104,7 @@ Usage is unchanged:
 
 ### What you also get
 
-`@json-edit-react/components` ships 12 components in total — the original `LinkCustomComponent` plus 11 more that previously only existed as a demo in this repo's `custom-component-library/`:
+`@json-edit-react/components` ships 12 components in total — the original `LinkCustomComponent` plus 11 more that previously existed only as demo code, not as an installable package:
 
 | Component | Use case |
 |---|---|

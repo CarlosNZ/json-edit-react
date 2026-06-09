@@ -58,6 +58,24 @@ See [json-edit-react's custom nodes documentation](https://github.com/CarlosNZ/j
 
 This package is ESM with `"sideEffects": false`. Modern bundlers (Webpack 4+, Vite, Rollup, esbuild, Parcel 2+) drop unused components and their imports from the final bundle. Heavy components (`DatePicker`, `Markdown`, `ColorPicker`) additionally use `React.lazy` for their third-party libraries, so even when imported they don't load those libraries until first render.
 
+## Building your own
+
+These components double as a reference if you want to build your own custom node — copy one as a starting point, or follow these guidelines:
+
+- Respect the editor's editing restrictions (`allowEdit`, `allowDelete`, etc.).
+- Prefix any CSS classes with `jer-`.
+- Handle keyboard input where possible:
+  - Double-click to edit (when editing is allowed)
+  - `Tab` / `Shift-Tab` to navigate
+  - `Enter` to submit
+  - `Escape` to cancel
+- Expose customisation options — particularly styles — with sensible defaults.
+- For non-JSON data types (`BigInt`, `NaN`, `Symbol`, `Date`, etc.), supply `stringifyReplacer` / `parseReviver` functions in the definition so the value survives JSON serialisation. See the `BigInt`, `NaN`, and `Symbol` components for examples.
+
+If your component is "string-like", core exports two helpers — `StringDisplay` and `StringEdit` — the same components used to render real string values in the editor. The [`Hyperlink`](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/Hyperlink/component.tsx) component shows how to compose on top of them.
+
+Built something you think others would find useful? [Open a PR](https://github.com/CarlosNZ/json-edit-react/pulls) — contributions are welcome.
+
 ## License
 
 MIT
