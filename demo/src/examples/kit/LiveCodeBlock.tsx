@@ -9,9 +9,10 @@ interface LiveCodeBlockProps {
   theme: Theme
 }
 
-// The editable tier: react-live transpiles the snippet in-browser and renders it.
-// Output on the left (mirrors the static layout), editable code on the right. The
-// selected `theme` is injected into scope so the editable code can reference it.
+// The editable tier: react-live transpiles the snippet in-browser and renders
+// it. Output on the left (mirrors the static layout), editable code on the
+// right. The selected `theme` is injected into scope so the editable code can
+// reference it.
 export const LiveCodeBlock = ({ code, theme }: LiveCodeBlockProps) => (
   <LiveProvider code={code} scope={{ ...liveScope, theme }} noInline>
     <SplitPane
@@ -36,8 +37,8 @@ export const LiveCodeBlock = ({ code, theme }: LiveCodeBlockProps) => (
           >
             <LiveEditor />
           </Box>
-          {/* LiveError renders a <pre> only when the code throws; style it via CSS
-              so we don't depend on it forwarding style props. */}
+          {/* LiveError renders a <pre> only when the code throws; style it
+              via CSS so we don't depend on it forwarding style props. */}
           <Box
             sx={{
               '& pre': {

@@ -1,8 +1,8 @@
 import { type ExampleDef } from './types'
 
-// One entry per targeted example. Adding a new example is one entry here plus one
-// file — the shell handles routing, theming, source display, and (for live) the
-// editable playground. Keys are the URL slug: `/examples/<slug>`.
+// One entry per targeted example. Adding a new example is one entry here plus
+// one file — the shell handles routing, theming, source display, and (for live)
+// the editable playground. Keys are the URL slug: `/examples/<slug>`.
 export const examples: Record<string, ExampleDef> = {
   'delayed-settlement': {
     kind: 'static',

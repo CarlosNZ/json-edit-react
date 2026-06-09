@@ -29,7 +29,8 @@ export const useJsonEditorConfirm = (): UseJsonEditorConfirmResult => {
   const confirm = useCallback(
     (request: ConfirmRequest = {}) =>
       new Promise<boolean>((resolve) => {
-        // Single-dialog model: supersede any still-open prompt by cancelling it.
+        // Single-dialog model: supersede any still-open prompt by cancelling
+        // it.
         pendingRef.current?.(false)
         pendingRef.current = resolve
         setDialog({
@@ -43,7 +44,8 @@ export const useJsonEditorConfirm = (): UseJsonEditorConfirmResult => {
   )
 
   // Unmount safety: resolve a dangling promise as cancelled so an awaiting
-  // `onUpdate` doesn't hang forever. No `setState` here — the component is gone.
+  // `onUpdate` doesn't hang forever. No `setState` here — the component is
+  // gone.
   useEffect(
     () => () => {
       pendingRef.current?.(false)

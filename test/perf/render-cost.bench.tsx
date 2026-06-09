@@ -2,8 +2,8 @@
  * Render-cost benchmark: a tree of REGULAR nodes vs. a tree where every leaf is
  * a CUSTOM node rendering `originalNode` + the `isPending` badge.
  *
- * Run with `pnpm bench` (this file matches the bench jest config, not the normal
- * `*.test` suite). Knobs (env):
+ * Run with `pnpm bench` (this file matches the bench jest config, not the
+ * normal `*.test` suite). Knobs (env):
  *   BENCH_SIZES=120,500,1500   leaf counts to test
  *   BENCH_SAMPLES=8            samples per mount/update measurement
  *   BENCH_ISAMPLES=5           samples per interaction measurement (slower)
@@ -73,7 +73,8 @@ describe('render-cost: regular vs all-custom-node tree', () => {
 
   test('mount + update + interactions', async () => {
     // Warm the shared JsonEditor code paths (both strategies) before any
-    // measurement, so the first-measured variant isn't penalised for cold-start.
+    // measurement, so the first-measured variant isn't penalised for
+    // cold-start.
     const warmData = generateTree(SIZES[Math.floor(SIZES.length / 2)] ?? 100).data
     for (let i = 0; i < 3; i++) {
       measureMount(editorElement('regular', warmData))
@@ -90,10 +91,10 @@ describe('render-cost: regular vs all-custom-node tree', () => {
         )
         const reg = stats(samples.a)
         const cus = stats(samples.b)
-        // Headline delta from the MIN (fastest, least GC-interfered run): custom
-        // strictly does more work per node, so min orders the two reliably,
-        // whereas the median is corrupted when a GC pause lands in one variant's
-        // samples. Median shown too for transparency.
+        // Headline delta from the MIN (fastest, least GC-interfered run):
+        // custom strictly does more work per node, so min orders the two
+        // reliably, whereas the median is corrupted when a GC pause lands in
+        // one variant's samples. Median shown too for transparency.
         const delta = cus.min - reg.min
         return {
           size,

@@ -144,7 +144,8 @@ export const CollapseProvider = ({
         })
     },
     // `buildNodeDataFromPathRef` is a stable ref object (read lazily at call
-    // time), so listing it doesn't churn `setCollapseState` / the context value.
+    // time), so listing it doesn't churn `setCollapseState` / the context
+    // value.
     [buildNodeDataFromPathRef]
   )
 

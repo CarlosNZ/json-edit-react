@@ -33,7 +33,8 @@ describe('CustomNode — slots & matching', () => {
       <JsonEditor data={{ greeting: 'hello', other: 'world' }} setData={noop} customNodeDefinitions={defs} />
     )
     expect(screen.getByTestId('cv')).toBeInTheDocument()
-    // the matched node's standard value is replaced; the unmatched node is untouched
+    // the matched node's standard value is replaced; the unmatched node is
+    // untouched
     expect(screen.queryByText('"hello"')).toBeNull()
     expect(screen.getByText('"world"')).toBeInTheDocument()
   })

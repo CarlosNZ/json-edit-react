@@ -4,7 +4,8 @@
 // reproducible: same seed → byte-identical file.
 //
 // Usage:
-//   node scripts/generate-test-data.mjs [outputPath] [kingdomCount] [provincesPerKingdom]
+//   node scripts/generate-test-data.mjs \
+//     [outputPath] [kingdomCount] [provincesPerKingdom]
 //
 // Without arguments, writes 6 kingdoms to `scripts/massive-test-data.json5`.
 // Kingdoms dominate node count (~27k each), so `kingdomCount` is the coarse

@@ -124,7 +124,8 @@ function App() {
   // const [triggers, setTriggers] = useState<ExternalTriggers>()
 
   const [isSaving, setIsSaving] = useState(false)
-  const previousTheme = useRef<Theme>(null) // Used when resetting after theme editing
+  // Used when resetting after theme editing
+  const previousTheme = useRef<Theme>(null)
   const toast = useToast()
 
   const [isSearchFocused, setIsSearchFocused] = useState(false)

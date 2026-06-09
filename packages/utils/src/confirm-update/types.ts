@@ -33,13 +33,18 @@ export interface UseJsonEditorConfirmResult {
 /** A static string, or a function of the update input → string. */
 export type ConfirmMessage<T = JsonData> = string | ((input: UpdateFunctionProps<T>) => string)
 
-/** When to confirm: a list of event names, or a predicate over the update input. */
+/**
+ * When to confirm: a list of event names, or a predicate over the update input.
+ */
 export type ConfirmOn<T = JsonData> =
   | JsonEditorEventName[]
   | ((input: UpdateFunctionProps<T>) => boolean)
 
 export interface UseConfirmOnUpdateOptions<T = JsonData> {
-  /** Gate which updates require confirmation — required (nothing to gate without it). */
+  /**
+   * Gate which updates require confirmation — required (nothing to gate
+   * without it).
+   */
   confirmOn: ConfirmOn<T>
   /** Modal message (static, or built per-input). */
   message?: ConfirmMessage<T>

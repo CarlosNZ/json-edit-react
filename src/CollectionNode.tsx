@@ -117,7 +117,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // it, and serializing every collection's subtree on every parent re-render
   // was a major cost on large trees (and risked clobbering in-progress edits).
 
-  // Contract #2: prop-change retires broadcast. See CollapseProvider top-of-file doc.
+  // Contract #2: prop-change retires broadcast. See CollapseProvider
+  // top-of-file doc.
   const collapseFilterChanged = useReferenceChanged(collapseFilter)
   useEffect(() => {
     const shouldBeCollapsed = collapseFilter(nodeData) && !isEditing
@@ -153,8 +154,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // Reset the JSON-edit buffer. Used on the exits this node controls — confirm
   // and cancel (below) — and registered as the store `cancelOp`, which fires
   // when the edit moves to another node, on the entries we own (Edit button +
-  // custom `setIsEditing`). Keeps a stale buffer from showing on the next entry,
-  // without a per-node effect.
+  // custom `setIsEditing`). Keeps a stale buffer from showing on the next
+  // entry, without a per-node effect.
   const clearEditBuffer = useCallback(() => setStringifiedValue(null), [])
 
   // The raw-JSON buffer shown in the editor. Gated on `isEditing` so a
@@ -263,9 +264,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // Commits the raw-JSON edit of this collection through the store's commit
   // engine. Parse failure keeps the session open (only the error fires).
   const handleEdit = () => {
-    // Parse exactly the text shown: `editBufferValue` reuses the string the memo
-    // already serialized, so the parsed input and the INVALID_JSON payload match
-    // the textarea. The `?? jsonStringify(data)` is a type guard.
+    // Parse exactly the text shown: `editBufferValue` reuses the string the
+    // memo already serialized, so the parsed input and the INVALID_JSON
+    // payload match the textarea. The `?? jsonStringify(data)` is a type
+    // guard.
     const textToParse = editBufferValue ?? jsonStringify(data)
     let value: CollectionData
     try {
@@ -287,7 +289,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   // Commits an add and fires `commitAdd` (or the error observer).
   const handleAdd = (key: string) => {
-    // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
+    // Contract #3: user-action clears broadcast. See CollapseProvider
+    // top-of-file doc.
     setCollapseState(null)
     animateCollapse(false)
     const newValue = getDefaultNewValue(nodeData, key)
@@ -306,7 +309,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     }
 
     // Object add: a key-entry session is open on this collection. A duplicate
-    // key cancels it; otherwise commit (the engine fires submitAdd → commitAdd).
+    // key cancels it; otherwise commit (the engine fires
+    // submitAdd → commitAdd).
     if (key in data) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
       cancel()
@@ -579,7 +583,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
                 transition: cssTransitionValue,
                 // `allow-discrete` lets the `all` transition animate `display`
                 // too, so the count fades (not pops) as it shows/hides. The
-                // `display` toggle itself lives in `.jer-collection-item-count`.
+                // `display` toggle itself lives in
+                // `.jer-collection-item-count`.
                 transitionBehavior: 'allow-discrete',
               }}
             >

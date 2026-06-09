@@ -64,11 +64,11 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
 
-  // Holds the new-key options list (or `true` for a free-text add). Open/close is
-  // driven by the store (`mode: 'add'`) so the start/cancel events and the
-  // one-session-at-a-time invariant are shared with edit/rename; this just
-  // carries the options *content* (which the primitive-only store selector
-  // can't), synced by the effect below.
+  // Holds the new-key options list (or `true` for a free-text add).
+  // Open/close is driven by the store (`mode: 'add'`) so the start/cancel
+  // events and the one-session-at-a-time invariant are shared with
+  // edit/rename; this just carries the options *content* (which the
+  // primitive-only store selector can't), synced by the effect below.
   const [addingKeyState, setAddingKeyState] = useState<string[] | boolean>(false)
 
   const { path, value: data } = nodeData
@@ -83,9 +83,9 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 
   const hasKeyOptionsList = Array.isArray(addingKeyState)
 
-  // Sync the local options/content state to the store session. On open compute
-  // the available keys; on close reset. `startAdd` / `cancelAdd` are fired by the
-  // store; `commitAdd` by CollectionNode's commit.
+  // Sync the local options/content state to the store session. On open
+  // compute the available keys; on close reset. `startAdd` / `cancelAdd` are
+  // fired by the store; `commitAdd` by CollectionNode's commit.
   useLayoutEffect(() => {
     if (!isAddingHere) {
       setAddingKeyState(false)
@@ -93,15 +93,16 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       return
     }
     // Don't offer keys that already exist. Reads the node's OWN subtree (by
-    // `path`), kept consistent by structural sharing even if `fullData` is stale.
+    // `path`), kept consistent by structural sharing even if `fullData` is
+    // stale.
     const existingKeys = Object.keys(extract(nodeData.fullData, path) as object)
     const options = getNewKeyOptions
       ? getNewKeyOptions(nodeData)?.filter((key) => !existingKeys.includes(key))
       : null
     if (options) setNewKey('')
     setAddingKeyState(options ?? true)
-    // Fire only on the open/close transition; the reads inside are intentionally
-    // captured at that moment, not re-subscribed.
+    // Fire only on the open/close transition; the reads inside are
+    // intentionally captured at that moment, not re-subscribed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAddingHere])
 

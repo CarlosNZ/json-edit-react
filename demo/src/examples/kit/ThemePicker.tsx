@@ -20,10 +20,10 @@ const themeNames = [
 
 const STORAGE_KEY = 'jer-examples-theme'
 
-// Resolve a display name to its Theme, loading `LazyThemes` on demand (keeps the
-// theme objects out of the initial examples chunk) and caching the result. The
-// getter-name convention (`get<Name>Theme`, spaces/ampersands stripped) matches
-// `themeGetters` in LazyThemes.ts.
+// Resolve a display name to its Theme, loading `LazyThemes` on demand (keeps
+// the theme objects out of the initial examples chunk) and caching the result.
+// The getter-name convention (`get<Name>Theme`, spaces/ampersands stripped)
+// matches `themeGetters` in LazyThemes.ts.
 const cache: Record<string, Theme> = { Default: defaultTheme }
 
 const loadTheme = async (name: string): Promise<Theme> => {

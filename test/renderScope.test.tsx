@@ -111,7 +111,8 @@ describe('Stage B — lazy jsonStringify', () => {
 
     expect(spy).toHaveBeenCalledTimes(0)
 
-    // Click the root collection's Edit (JSON) button — first Edit button in DOM.
+    // Click the root collection's Edit (JSON) button — first Edit button in
+    // DOM.
     await user.click(screen.getAllByTitle('Edit')[0])
 
     // The buffer is computed exactly once, on entry, and the textarea opens
@@ -228,7 +229,8 @@ describe('Stage C — selectable editing store', () => {
       <Controlled initial={{ a: 'aval', b: 'bval', c: 'cval' }} definitions={spy.definitions} />
     )
 
-    // Enter edit on `a` first (this fans out from idle — not what we're testing).
+    // Enter edit on `a` first (this fans out from idle — not what we're
+    // testing).
     await user.dblClick(screen.getByText('"aval"'))
     spy.reset()
 
@@ -279,8 +281,8 @@ describe('Stage D — React.memo boundary: entering an edit no longer fans out',
     )
     spy.reset()
 
-    // Edit and commit `outer.x`. assign() rebuilds only the spine (root, outer),
-    // so the `other` subtree keeps its `data` reference and bails out.
+    // Edit and commit `outer.x`. assign() rebuilds only the spine (root,
+    // outer), so the `other` subtree keeps its `data` reference and bails out.
     await user.dblClick(screen.getByText('"xval"'))
     const input = screen.getByRole('textbox')
     await user.clear(input)
@@ -327,8 +329,8 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
 
   // Guards the perf side of the same change: the comparator now compares
   // callbacks, so stabilising them upstream is what keeps a swap from churning
-  // the tree. Without stabilisation a fresh identity each render would re-render
-  // every node — this pins that it doesn't.
+  // the tree. Without stabilisation a fresh identity each render would
+  // re-render every node — this pins that it doesn't.
   test('swapping a consumer callback does not re-render sibling subtrees', () => {
     const spy = makeRenderSpy({ sibling: ['other', 'y'] })
     const Host = ({ onChange }: { onChange: OnChangeFunction }) => {
@@ -346,7 +348,8 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     const { rerender } = render(<Host onChange={(p) => p.newValue} />)
     spy.reset()
 
-    // Fresh onChange identity — JsonEditor stabilises it, so no node re-renders.
+    // Fresh onChange identity — JsonEditor stabilises it, so no node
+    // re-renders.
     rerender(<Host onChange={(p) => p.newValue} />)
     expect(spy.counts.sibling).toBe(0)
   })
@@ -387,7 +390,8 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     const user = userEvent.setup()
     const seen: Array<{ fullData: unknown; value: unknown }> = []
     const onChange: OnChangeFunction = (p) => {
-      // Flat NodeData (§17): `fullData` is the live document, `value` the current value.
+      // Flat NodeData (§17): `fullData` is the live document, `value` the
+      // current value.
       seen.push({ fullData: p.fullData, value: p.value })
       return p.newValue
     }
@@ -419,9 +423,9 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
   })
 
   // Same staleness class for `onError`: `useCommon` builds its `fullData` from
-  // `getLatestData()`, not the `nodeData.fullData` a bailed sibling keeps stale.
-  // Triggering an error in a subtree that bailed on an earlier commit must still
-  // report the live doc.
+  // `getLatestData()`, not the `nodeData.fullData` a bailed sibling keeps
+  // stale. Triggering an error in a subtree that bailed on an earlier commit
+  // must still report the live doc.
   test('onError reports the live document, not a stale snapshot', async () => {
     const user = userEvent.setup()
     let seenFullData: unknown = null
@@ -434,13 +438,15 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     }
     render(<Host />)
 
-    // Commit a -> aval2; `obj`'s subtree bails on the commit (its data ref is unchanged).
+    // Commit a -> aval2; `obj`'s subtree bails on the commit (its data ref is
+    // unchanged).
     await user.dblClick(screen.getByText('"aval"'))
     await user.clear(screen.getByRole('textbox'))
     await user.type(screen.getByRole('textbox'), 'aval2{Enter}')
     await screen.findByText('"aval2"')
 
-    // Open obj's JSON editor (Edit buttons: [root, a, obj]), enter invalid JSON, confirm.
+    // Open obj's JSON editor (Edit buttons: [root, a, obj]), enter invalid
+    // JSON, confirm.
     await user.click(screen.getAllByTitle('Edit')[2])
     const ta = screen.getByRole('textbox') as HTMLTextAreaElement
     fireEvent.change(ta, { target: { value: '{ not json' } })
@@ -465,8 +471,8 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     }
     render(<Host />)
 
-    // Commit a -> aval2; `obj`'s subtree (incl. `x`) bails on the commit, so its
-    // `nodeData.fullData` is now stale.
+    // Commit a -> aval2; `obj`'s subtree (incl. `x`) bails on the commit, so
+    // its `nodeData.fullData` is now stale.
     await user.dblClick(screen.getByText('"aval"'))
     await user.clear(screen.getByRole('textbox'))
     await user.type(screen.getByRole('textbox'), 'aval2{Enter}')

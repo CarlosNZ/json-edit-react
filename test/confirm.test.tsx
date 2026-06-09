@@ -123,7 +123,8 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
       res = Promise.resolve(result.current.onUpdate(makeInput('delete'), control))
     })
 
-    // hold() ran synchronously to open the gate (editor stays open, tree blocked).
+    // hold() ran synchronously to open the gate (editor stays open, tree
+    // blocked).
     expect(hold).toHaveBeenCalledTimes(1)
     expect(result.current.dialog.isOpen).toBe(true)
     expect(result.current.dialog.message).toBe('sure?')
@@ -157,7 +158,8 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
     })
     expect(release).toHaveBeenCalledTimes(1)
     expect(inner).toHaveBeenCalledTimes(1)
-    // The commit (release) lands before the inner runs as a background settlement.
+    // The commit (release) lands before the inner runs as a background
+    // settlement.
     expect(release.mock.invocationCallOrder[0]).toBeLessThan(inner.mock.invocationCallOrder[0])
   })
 

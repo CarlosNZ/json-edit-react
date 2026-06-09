@@ -6,9 +6,10 @@ import App from './App.tsx'
 import { ChakraProvider, Flex, Spinner } from '@chakra-ui/react'
 import theme from './chakra-theme/index.ts'
 
-// The frozen V1 demo is lazy-loaded so V2 users never download it (or the pinned
-// `json-edit-react-v1` package). It self-provides its own ChakraProvider, so the
-// Suspense fallback below must be plain HTML (no Chakra ancestor yet on `/v1`).
+// The frozen V1 demo is lazy-loaded so V2 users never download it (or the
+// pinned `json-edit-react-v1` package). It self-provides its own
+// ChakraProvider, so the Suspense fallback below must be plain HTML (no Chakra
+// ancestor yet on `/v1`).
 const AppV1 = lazy(() => import('./v1/index.tsx'))
 
 // Targeted, single-concept examples. Lazy-loaded so the main demo (`/`) never

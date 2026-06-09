@@ -142,22 +142,25 @@ function App() {
   const [handlePath, setHandlePath] = useState('')
   const [handleIncludeChildren, setHandleIncludeChildren] = useState(true)
   // const [handleOverrideRestrictions, setHandleOverrideRestrictions] = useState(false)
-  // Tracks whether a node is currently being edited (via `onEditEvent`), so the
-  // External Control panel can show Confirm/Cancel only while an edit is active.
+  // Tracks whether a node is currently being edited (via `onEditEvent`), so
+  // the External Control panel can show Confirm/Cancel only while an edit is
+  // active.
   const [isEditing, setIsEditing] = useState(false)
 
   const [isSaving, setIsSaving] = useState(false)
-  const previousTheme = useRef<Theme>(null) // Used when resetting after theme editing
+  // Used when resetting after theme editing
+  const previousTheme = useRef<Theme>(null)
   const toast = useToast()
 
   const [isSearchFocused, setIsSearchFocused] = useState(false)
 
   const { liveData, loading, updateLiveData } = useDatabase()
 
-  // The consumer owns the data state; `useUndo` (controlled) layers undo/redo on
-  // top, recording snapshots and committing through `setRawData`. Switch datasets
-  // with `reset(newData)` (see `handleChangeData`) — never a raw `setRawData` — so
-  // history is cleared rather than left pointing at the previous dataset.
+  // The consumer owns the data state; `useUndo` (controlled) layers undo/redo
+  // on top, recording snapshots and committing through `setRawData`. Switch
+  // datasets with `reset(newData)` (see `handleChangeData`) — never a raw
+  // `setRawData` — so history is cleared rather than left pointing at the
+  // previous dataset.
   const [rawData, setRawData] = useState<JsonData>(
     selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data
   )
@@ -237,9 +240,9 @@ function App() {
     return allowAddEnabled
   })()
 
-  // The "Show External Control" toggle is disabled on the custom-nodes data set,
-  // where path-based editing doesn't map cleanly onto the custom renderers. When
-  // unavailable it stays off and the panel is hidden.
+  // The "Show External Control" toggle is disabled on the custom-nodes data
+  // set, where path-based editing doesn't map cleanly onto the custom
+  // renderers. When unavailable it stays off and the panel is hidden.
   const externalControlEnabled = selectedDataSet !== 'customNodes'
   const showExternalControl = showImperativeHandle && externalControlEnabled
 
@@ -247,7 +250,8 @@ function App() {
   // pre-check that the target is a collection (a leaf has nothing to collapse)
   // and warn instead of firing a no-op — `collapse` itself returns nothing, so
   // the host detects this with the exported `extract` + `isCollection` helpers.
-  // A successful collapse/expand is reported by the `onCollapse` callback below.
+  // A successful collapse/expand is reported by the `onCollapse` callback
+  // below.
   const handleExternalCollapse = (collapsed: boolean) => {
     const path = splitPropertyString(handlePath)
     if (!isCollection(extract(data, path))) {
@@ -316,8 +320,9 @@ function App() {
       collapseLevel: newDataDefinition.collapse ?? state.collapseLevel,
       rootName: newDataDefinition.rootName ?? 'data',
       customTextEditor: false,
-      // Leaving the theme editor: persist the live-edited theme (the `data`) into
-      // `state.theme` so the other datasets are styled with the theme you built.
+      // Leaving the theme editor: persist the live-edited theme (the `data`)
+      // into `state.theme` so the other datasets are styled with the theme
+      // you built.
       // The editTheme view derives its styling from `data`, so this is the one
       // point where that work needs writing back to the standing theme.
       ...(selectedDataSet === 'editTheme' ? { theme: data as Theme } : {}),
@@ -525,11 +530,12 @@ function App() {
                     // Reject (false) or silent cancel (null): pass straight
                     // through, no commit and no post-commit side effect.
                     if (result === false || result === null) return result
-                    // Object result (error / { value } override): pass through to
-                    // the library. `true` is a plain commit — fall through to the
-                    // side effect like void/undefined.
+                    // Object result (error / { value } override): pass
+                    // through to the library. `true` is a plain commit — fall
+                    // through to the side effect like void/undefined.
                     if (result && result !== true) return result
-                    // Commit (true | void | undefined): run the post-commit demo side effect.
+                    // Commit (true | void | undefined): run the post-commit
+                    // demo side effect.
                     const { newData } = nodeData
                     if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
                   }}
@@ -666,15 +672,16 @@ function App() {
                     // A session is "editing" from `start*` until it closes with
                     // `commit*`/`cancel*`. `submit*` happens mid-session (the
                     // editor may still be open during a `hold()` gate), so it
-                    // mustn't flip the flag; settlement/instant events don't either.
+                    // mustn't flip the flag; settlement/instant events don't
+                    // either.
                     if (e.event.startsWith('start')) setIsEditing(true)
                     else if (e.event.startsWith('commit') || e.event.startsWith('cancel'))
                       setIsEditing(false)
                   }}
                   onCollapse={(input) => {
-                    // Showcase the onCollapse callback — only while the External
-                    // Control panel is on screen (fires for both handle-driven
-                    // and user chevron-click collapses).
+                    // Showcase the onCollapse callback — only while the
+                    // External Control panel is on screen (fires for both
+                    // handle-driven and user chevron-click collapses).
                     if (!showExternalControl) return
                     const label = input.path.length > 0 ? input.path.join('.') : 'root'
                     toast({
@@ -693,7 +700,8 @@ function App() {
               </RenderProfiler>
             </Suspense>
           </Box>
-          {/* DEMO: confirm-before-update modal (Intro dataset). Comment out to disable. */}
+          {/* DEMO: confirm-before-update modal (Intro dataset).
+              Comment out to disable. */}
           <VStack w="100%" align="flex-end" gap={4}>
             <HStack w="100%" justify="space-between" mt={4}>
               <Button
@@ -1014,8 +1022,8 @@ function App() {
                           Start edit
                         </Button>
                       </Flex>
-                      {/* Confirm/Cancel only make sense while an edit is active;
-                          `isEditing` is tracked via `onEditEvent`. */}
+                      {/* Confirm/Cancel only make sense while an edit is
+                          active; `isEditing` is tracked via `onEditEvent`. */}
                       {isEditing && (
                         <Flex gap={2}>
                           <Button

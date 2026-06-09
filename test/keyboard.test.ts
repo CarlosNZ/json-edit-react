@@ -55,9 +55,9 @@ describe('insertCharInTextArea', () => {
   })
 
   test('operates on the live value after the field has been edited, not the original content', () => {
-    // A textarea's `.textContent` reflects its original (default) content, while
-    // `.value` tracks live edits — they diverge once the user types. Setting
-    // both here reproduces that post-edit state.
+    // A textarea's `.textContent` reflects its original (default) content,
+    // while `.value` tracks live edits — they diverge once the user types.
+    // Setting both here reproduces that post-edit state.
     const textArea = document.createElement('textarea')
     document.body.appendChild(textArea)
     textArea.textContent = 'original' // stale default content

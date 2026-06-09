@@ -1,3 +1,3 @@
-## Ideas for additionl custom node definitions snd componnents
+## Ideas for additional custom node definitions and components
 
-1. "Loading" indicator -- tempary diplay a node in a pending pr oading state ehile its being validated by omUpdate
+1. "Loading" indicator -- temporary display a node in a pending loading state while its being validated by onUpdate

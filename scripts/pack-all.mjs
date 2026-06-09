@@ -57,7 +57,8 @@ function findStaleTarballs({ srcDir, tarballPrefix }) {
     .map((f) => join(srcDir, f))
 }
 
-// 1. Clean previous output and any stale tarballs so the post-pack scan finds exactly one .tgz per package
+// 1. Clean previous output and any stale tarballs so the post-pack scan finds
+// exactly one .tgz per package
 console.log('Cleaning previous pack-output/ and stale .tgz files...')
 rmSync(outputDir, { recursive: true, force: true })
 mkdirSync(outputDir, { recursive: true })
@@ -74,11 +75,12 @@ for (const target of targets) {
   })
 }
 
-// 3. Extract each tarball into pack-output/<destName>/ (yielding pack-output/<destName>/package/)
-// and install its runtime deps so things like `react-datepicker` resolve when vite
-// walks up the node_modules tree from the packed file's location. Peer deps and dev
-// deps are skipped — peers are provided by the consumer (demo/CCL), and dev deps
-// aren't needed at runtime.
+// 3. Extract each tarball into pack-output/<destName>/ (yielding
+// pack-output/<destName>/package/) and install its runtime deps so things
+// like `react-datepicker` resolve when vite walks up the node_modules tree
+// from the packed file's location. Peer deps and dev deps are skipped —
+// peers are provided by the consumer (demo/CCL), and dev deps aren't needed
+// at runtime.
 console.log('')
 for (const target of targets) {
   const tarballs = findStaleTarballs(target)

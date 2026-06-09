@@ -2,12 +2,12 @@
  * End-to-end tests for the `editorRef` imperative handle.
  *
  * The handle is UI-interactions only: it opens a value-edit SESSION at a node,
- * commits or aborts it, and collapses nodes. It never mutates data directly (the
- * consumer owns `data`/`setData`). These pin the contract:
+ * commits or aborts it, and collapses nodes. It never mutates data directly
+ * (the consumer owns `data`/`setData`). These pin the contract:
  *  - `startEdit` returns `true` if it opened a session, else `'PATH_NOT_FOUND'`
  *    (gone path) or `'RESTRICTED'` (`allowEdit` blocks it, bypassable with
- *    `overrideRestrictions`); it auto-reveals a target collapsed below the mount
- *    frontier.
+ *    `overrideRestrictions`); it auto-reveals a target collapsed below the
+ *    mount frontier.
  *  - `confirm()` commits the open session through `onUpdate` (which may veto);
  *    `cancel()` aborts. `overrideRestrictions` skips ONLY the filter.
  */

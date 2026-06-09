@@ -9,7 +9,8 @@ import {
 } from 'json-edit-react-v1'
 
 // This file contains functions that return theme objects
-// Each function is dynamically imported when needed to reduce initial bundle size
+// Each function is dynamically imported when needed to reduce initial bundle
+// size
 
 export const getGithubDarkTheme = (): Theme => githubDarkTheme
 export const getGithubLightTheme = (): Theme => githubLightTheme

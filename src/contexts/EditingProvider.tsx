@@ -4,17 +4,17 @@
  *
  * - `active`: the one open/held operation (only one node edits at a time).
  * - `settling`: the in-flight optimistic commits, keyed by path-string → token,
- *   so a node can show a "settling" state and a resolving commit can tell whether
- *   it's still the live one (latest-edit-wins).
+ *   so a node can show a "settling" state and a resolving commit can tell
+ *   whether it's still the live one (latest-edit-wins).
  * - Tab-navigation bookkeeping (direction + previously-edited path).
  *
  * The Provider OWNS the commit pipeline: `submit()` runs the consumer's
  * `onUpdate` (optimistic by default; `hold()` gates), `apply()` is the single
  * "apply value + close editor + fire commit*" moment, and `reconcile()` settles
  * the result (token-gated). It fires EVERY `onEditEvent`. The data-owner
- * (`JsonEditor`) supplies the actual document mutation via the `CommitPrimitives`
- * ref — this keeps the store free of `setData`/`updateDataObject` while owning
- * the lifecycle.
+ * (`JsonEditor`) supplies the actual document mutation via the
+ * `CommitPrimitives` ref — this keeps the store free of
+ * `setData`/`updateDataObject` while owning the lifecycle.
  *
  * ## Why an external store (not useState + context value)
  *
@@ -24,9 +24,9 @@
  * a listener `Set`), exposed through `useSyncExternalStore`. The context value
  * is the store object itself — a stable reference — so `useContext` alone never
  * re-renders. Components subscribe to a derived PRIMITIVE *slice* via
- * `useEditingSelector`; a node selecting `isEditing` for its own path re-renders
- * only when that boolean flips. Actions/imperative reads go through the
- * non-subscribing `useEditingStore`.
+ * `useEditingSelector`; a node selecting `isEditing` for its own path
+ * re-renders only when that boolean flips. Actions/imperative reads go
+ * through the non-subscribing `useEditingStore`.
  *
  * `useEditing` remains as a whole-bundle compatibility hook (slice-isolation
  * test); it wakes on every change, so never use it on the per-node hot path.
@@ -73,7 +73,8 @@ export interface EditingStateBundle {
 export type CommitRequest =
   | { op: 'edit'; path: CollectionKey[]; value: unknown }
   // `path` is the COLLECTION being added into (the add session + events live
-  // there); `key` is the new child's key/index (the commit targets `[...path, key]`).
+  // there); `key` is the new child's key/index (the commit targets
+  // `[...path, key]`).
   | {
       op: 'add'
       path: CollectionKey[]
@@ -97,14 +98,17 @@ export type UpdateOutcome =
   | { status: 'cancel' }
   | { status: 'error'; error: JerError }
 
-/** What `buildCommit` returns: the `onUpdate` input plus apply/revert thunks. */
+/**
+ * What `buildCommit` returns: the `onUpdate` input plus apply/revert thunks.
+ */
 export interface BuiltCommit {
   input: UpdateFunctionProps
-  /** Flat `NodeData` snapshot for the `commit*`/`updateSuccessful`/`updateError`
-   *  events, captured at build time per-op (delete/rename describe the PRE-apply
-   *  node, add the child). Frozen so the event fires the committed identity even
-   *  though the live document has since mutated (or been reverted) — re-deriving
-   *  from the live doc would describe the wrong node or throw on a vanished path. */
+  /** Flat `NodeData` snapshot for the
+   *  `commit*`/`updateSuccessful`/`updateError` events, captured at build time
+   *  per-op (delete/rename describe the PRE-apply node, add the child). Frozen
+   *  so the event fires the committed identity even though the live document
+   *  has since mutated (or been reverted) — re-deriving from the live doc
+   *  would describe the wrong node or throw on a vanished path. */
   nodeData: NodeData
   /** True for an unchanged-value edit — skip `onUpdate`/settlement entirely. */
   isNoOp: boolean
@@ -136,7 +140,9 @@ export interface CommitPrimitives {
 
 /** Arguments to `submit()` — the one commit entry point the nodes call. */
 export type SubmitArgs = CommitRequest & {
-  /** Instant ops (delete, array-add, move): no `start*`/`submit*`, no session. */
+  /**
+   * Instant ops (delete, array-add, move): no `start*`/`submit*`, no session.
+   */
   instant?: boolean
   /** Runs inside `apply()`, right after `commit*` (Tab passes `open(next)`). */
   onCommit?: () => void
@@ -145,11 +151,13 @@ export type SubmitArgs = CommitRequest & {
 interface OpenOptions {
   op?: EditOperation
   cancelOp?: () => void
-  // Imperative (handle-driven) edit — overrides `allowEdit`. See `EditingState.force`.
+  // Imperative (handle-driven) edit — overrides `allowEdit`. See
+  // `EditingState.force`.
   force?: boolean
 }
 
-// Phase-specific event for an operation. `delete`/`move` only ever fire at commit.
+// Phase-specific event for an operation. `delete`/`move` only ever fire at
+// commit.
 type Phase = 'start' | 'submit' | 'commit' | 'cancel'
 const EVENT_FOR_OP: Record<EditOperation, Partial<Record<Phase, EditEvent['event']>>> = {
   edit:   { start: 'startEdit',   submit: 'submitEdit',   cancel: 'cancelEdit',   commit: 'commitEdit' },
@@ -176,7 +184,8 @@ export interface EditingStore {
   cancel: () => void
   /** Run the full commit pipeline (optimistic by default; `hold()` gates).
    *  Resolves with the settlement outcome (or `undefined` for a no-op / no
-   *  `onUpdate`) so the calling node can report errors via its own `onError`. */
+   *  `onUpdate`) so the calling node can report errors via its own `onError`.
+   */
   submit: (args: SubmitArgs) => Promise<UpdateOutcome | undefined>
   setTabDirection: (dir: TabDirection) => void
   recordPreviousEdit: (path: CollectionKey[]) => void
@@ -224,7 +233,8 @@ const createEditingStore = (
   }
 
   // Fire an `onEditEvent` from a prebuilt `NodeData` payload. No-op if there's
-  // no consumer. `extra` carries the rename keys / settlement `operation`/`error`.
+  // no consumer. `extra` carries the rename keys / settlement
+  // `operation`/`error`.
   const emitEvent = (
     nodeData: NodeData,
     event: EditEvent['event'],
@@ -233,9 +243,10 @@ const createEditingStore = (
     onEditEventRef.current?.({ ...nodeData, ...extra, event } as EditEvent)
   }
 
-  // Fire an `onEditEvent`, building `NodeData` from the LIVE document at `path`.
-  // For pre-apply events (start*/submit*/cancel*) where the node still exists;
-  // committed ops use the frozen `BuiltCommit.nodeData` via `emitEvent` instead.
+  // Fire an `onEditEvent`, building `NodeData` from the LIVE document at
+  // `path`. For pre-apply events (start*/submit*/cancel*) where the node
+  // still exists; committed ops use the frozen `BuiltCommit.nodeData` via
+  // `emitEvent` instead.
   const fireEditEvent = (
     path: CollectionKey[],
     event: EditEvent['event'],

@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { act, renderHook } from '@testing-library/react'
 import { useUndo } from '../packages/utils/src'
-// Pure transitions are package-internal (not re-exported from the barrel), so the
-// queue-maths unit tests reach for them directly.
+// Pure transitions are package-internal (not re-exported from the barrel), so
+// the queue-maths unit tests reach for them directly.
 import { applyRedo, applyUndo, pushSnapshot } from '../packages/utils/src/undo/transitions'
 
 type Doc = { v: number }
 
-// A harness that owns `data`/`setData` (as a consumer would) so `set`/`undo`/etc.
-// actually drive the present, and `result.current` reflects the committed value.
+// A harness that owns `data`/`setData` (as a consumer would) so
+// `set`/`undo`/etc. actually drive the present, and `result.current` reflects
+// the committed value.
 const renderUndo = (initial: Doc) =>
   renderHook(() => {
     const [data, setData] = useState<Doc>(initial)

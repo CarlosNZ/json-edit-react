@@ -25,8 +25,8 @@ interface TreeStateProps {
   children: React.ReactNode
   onEditEvent?: OnEditEventFunction
   onCollapse?: OnCollapseFunction
-  // Bridges live `NodeData` construction from the inner `Editor` (which owns the
-  // data) into these provider contexts, which only know a node's path.
+  // Bridges live `NodeData` construction from the inner `Editor` (which owns
+  // the data) into these provider contexts, which only know a node's path.
   buildNodeDataFromPathRef: BuildNodeDataFromPathRef
   // The commit primitives the inner `Editor` supplies to the EditingProvider.
   commitRef: React.RefObject<CommitPrimitives | undefined>

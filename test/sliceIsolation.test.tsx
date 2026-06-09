@@ -20,7 +20,8 @@ import {
 // Slice-isolation tests don't fire observer events, so the NodeData accessor is
 // never invoked — a stub ref satisfies the provider prop.
 const stubBuildNodeDataFromPathRef: BuildNodeDataFromPathRef = { current: undefined }
-// Likewise the commit primitives — never invoked by these slice-isolation tests.
+// Likewise the commit primitives — never invoked by these slice-isolation
+// tests.
 const stubCommitRef = { current: undefined }
 
 type DragSourceValue = { path: CollectionKey[] | null }

@@ -202,7 +202,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (isVisible && canEdit) return
     // A forced (imperative `editorRef.startEdit`) edit overrides `allowEdit`,
     // so don't bounce off this node just because it's normally uneditable. A
-    // search-filtered-out node (`!isVisible`) still redirects — it can't render.
+    // search-filtered-out node (`!isVisible`) still redirects — it can't
+    // render.
     if (isVisible && getSnapshot().active?.force) return
     const { tabDirection, previouslyEditedElement } = getSnapshot()
     const next = getNextOrPreviousAtPath(tabDirection)
@@ -220,12 +221,14 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   if (!isVisible) return null
 
   const handleChangeDataType = (type: DataType) => {
-    // Contract #3: user-action clears broadcast. See CollapseProvider top-of-file doc.
+    // Contract #3: user-action clears broadcast. See CollapseProvider
+    // top-of-file doc.
     setCollapseState(null)
 
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
-      // To a custom node: a structural change — commit + remount (editor closes).
+      // To a custom node: a structural change — commit + remount (editor
+      // closes).
       submit({ op: 'edit', path, value: customNode.defaultValue }).then(
         settleEdit(customNode.defaultValue as JsonData)
       )
@@ -249,8 +252,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       value,
       type,
       translate('DEFAULT_NEW_KEY', nodeData),
-      // If coming *FROM* a custom type, change value to something that no longer
-      // matches the custom node condition.
+      // If coming *FROM* a custom type, change value to something that no
+      // longer matches the custom node condition.
       customNodeData?.CustomComponent ? translate('DEFAULT_STRING', nodeData) : undefined
     )
 
@@ -271,12 +274,13 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   }
 
   // Settles a value-edit / type-change commit on the NODE side. A rejected
-  // settlement surfaces the error via this node's `onError` (inline + observer);
-  // a rejected OR silently-cancelled (`null`) settlement also reverts the local
-  // buffer — neither changes `data`, so the `[data]` effect won't do it (§9.1).
-  // Skipped when the user has already reopened THIS node: a stale settlement must
-  // not clobber the new in-progress edit (a superseded commit resolves to
-  // `undefined`, so it falls through untouched).
+  // settlement surfaces the error via this node's `onError` (inline +
+  // observer); a rejected OR silently-cancelled (`null`) settlement also
+  // reverts the local buffer — neither changes `data`, so the `[data]` effect
+  // won't do it (§9.1). Skipped when the user has already reopened THIS node:
+  // a stale settlement must not clobber the new in-progress edit (a
+  // superseded commit resolves to `undefined`, so it falls through
+  // untouched).
   const settleEdit = (attempted: JsonData) => (outcome: UpdateOutcome | undefined) => {
     if (outcome?.status === 'error') onError(outcome.error, attempted)
     if (outcome?.status === 'error' || outcome?.status === 'cancel') {
@@ -295,8 +299,9 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // as-is; otherwise commit the buffer for the current `dataType`. Only
     // `number` needs coercion — its buffer is a transient string ("-", "1.")
     // mid-edit; every other type, including enum / custom-node names, commits
-    // unchanged. (`dataType` is never 'object'/'array' here: a type-change to a
-    // collection commits eagerly and closes the editor in `handleChangeDataType`.)
+    // unchanged. (`dataType` is never 'object'/'array' here: a type-change to
+    // a collection commits eagerly and closes the editor in
+    // `handleChangeDataType`.)
     const newValue: JsonData =
       inputValue !== undefined && !isJsEvent(inputValue)
         ? (inputValue as JsonData)

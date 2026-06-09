@@ -27,13 +27,14 @@ const noop = () => {}
 
 /**
  * Build a *balanced* plain-JSON tree with `leafCount` leaf (value) nodes and a
- * fixed branching factor — so depth grows ~log(N) and any single node sits on a
- * short spine, like real config/document data. (A flat wide-root shape instead
- * makes a per-edit commit re-map the root's many direct children, inflating
- * interaction cost ~O(N) — a measurement artifact, not an editor trait.) Returns
- * the data + exact leaf count. The `BENCH_TARGET` sentinel is the first leaf
- * created, so it sits at a deep path for a representative edit spine. Leaf values
- * cycle through the three primitive types to exercise each value editor.
+ * fixed branching factor — so depth grows ~log(N) and any single node sits on
+ * a short spine, like real config/document data. (A flat wide-root shape
+ * instead makes a per-edit commit re-map the root's many direct children,
+ * inflating interaction cost ~O(N) — a measurement artifact, not an editor
+ * trait.) Returns the data + exact leaf count. The `BENCH_TARGET` sentinel is
+ * the first leaf created, so it sits at a deep path for a representative edit
+ * spine. Leaf values cycle through the three primitive types to exercise each
+ * value editor.
  */
 export const generateTree = (
   leafCount: number,
@@ -114,6 +115,6 @@ export const controlledEditorElement = (
 ): React.ReactElement => <ControlledEditor strategy={strategy} initialData={data} />
 
 /** Deep clone via JSON round-trip (data is plain JSON) — used as the `after`
- *  tree for the update benchmark: every node gets a new `data` reference, so the
- *  reference-based node memo re-renders the whole tree. */
+ *  tree for the update benchmark: every node gets a new `data` reference, so
+ *  the reference-based node memo re-renders the whole tree. */
 export const cloneData = (data: JsonData): JsonData => JSON.parse(JSON.stringify(data))

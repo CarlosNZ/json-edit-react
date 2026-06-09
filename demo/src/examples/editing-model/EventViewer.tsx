@@ -18,8 +18,8 @@ interface EventViewerProps {
 }
 
 // Floating, console-style panel that surfaces the editor's event stream so the
-// scenarios can be exercised without opening devtools. Collapsible; auto-scrolls
-// to the newest entry.
+// scenarios can be exercised without opening devtools. Collapsible;
+// auto-scrolls to the newest entry.
 export const EventViewer = ({ log, onClear }: EventViewerProps) => {
   const [open, setOpen] = useState(true)
   const bottomRef = useRef<HTMLDivElement>(null)

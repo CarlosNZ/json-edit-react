@@ -30,10 +30,11 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const stagingDir = join(repoRoot, 'build_package')
 const buildDir = join(repoRoot, 'build')
 
-// Fields kept in the staged package.json. Anything not in this list is dropped —
-// in particular `scripts`, `devDependencies`, `pnpm`, `packageManager`, and
-// `publishConfig` (the last is mandatory: pnpm double-resolves the path if
-// `publishConfig.directory` is left in the staged copy).
+// Fields kept in the staged package.json. Anything not in this list is
+// dropped — in particular `scripts`, `devDependencies`, `pnpm`,
+// `packageManager`, and `publishConfig` (the last is mandatory: pnpm
+// double-resolves the path if `publishConfig.directory` is left in the staged
+// copy).
 const KEEP_FIELDS = [
   'name',
   'version',

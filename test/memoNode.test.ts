@@ -6,8 +6,9 @@
  *   ref, forcing the node to re-render with fresh parent data).
  * - `nodeData.fullData` / `nodeData.parentData` identity is IGNORED (they churn
  *   on every commit but don't affect this node's own output).
- * - Consumer callbacks are compared by `===` (JsonEditor keeps them stable), so
- *   a changed callback propagates; any other non-ignored prop change re-renders.
+ * - Consumer callbacks are compared by `===` (JsonEditor keeps them stable),
+ *   so a changed callback propagates; any other non-ignored prop change
+ *   re-renders.
  */
 
 import { areNodePropsEqual } from '../src/utils/memoNode'
@@ -65,13 +66,15 @@ describe('areNodePropsEqual', () => {
 
   test('compares top-level data by reference', () => {
     const a = makeProps()
-    const b = makeProps({ parentData: a.parentData, data: { x: 1 } }) // new data ref
+    // new data ref
+    const b = makeProps({ parentData: a.parentData, data: { x: 1 } })
     expect(areNodePropsEqual(a, b)).toBe(false)
   })
 
   test('compares top-level parentData by reference (key-rename safety)', () => {
     const a = makeProps()
-    const b = makeProps({ data: a.data, parentData: { k: { x: 1 } } }) // new parent ref
+    // new parent ref
+    const b = makeProps({ data: a.data, parentData: { k: { x: 1 } } })
     expect(areNodePropsEqual(a, b)).toBe(false)
   })
 

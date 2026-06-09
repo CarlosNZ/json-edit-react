@@ -1,6 +1,7 @@
 // The editable source shown in the react-live playground. `JsonEditor`,
 // `useState`, and the picker-selected `theme` come from the injected scope (see
-// liveScope.ts + ExamplePage). noInline mode, so the snippet ends in `render(...)`.
+// liveScope.ts + ExamplePage). noInline mode, so the snippet ends in
+// `render(...)`.
 export default `const data = {
   user: {
     name: 'Ada Lovelace',

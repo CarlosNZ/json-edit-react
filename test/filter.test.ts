@@ -91,8 +91,9 @@ describe('matchNode', () => {
 })
 
 describe('matchNodeKey', () => {
-  // matchNodeKey is typed as SearchFilterFunction so it expects a full NodeData.
-  // The function only reads `key` and `path` — cast through unknown for brevity.
+  // matchNodeKey is typed as SearchFilterFunction so it expects a full
+  // NodeData. The function only reads `key` and `path` — cast through unknown
+  // for brevity.
   const node = (key: string | number, path: (string | number)[]) =>
     ({ key, path }) as unknown as NodeData
 

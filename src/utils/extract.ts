@@ -16,7 +16,8 @@ type BasicArray = (BasicObject | unknown)[]
 
 type InputObject = BasicObject | BasicArray | unknown
 
-// Returns a specific property or index (e.g. application.name) from a nested Object
+// Returns a specific property or index (e.g. application.name) from a nested
+// Object
 export const extract = (
   inputObj: InputObject,
   properties: string | number | (string | number)[],
@@ -39,7 +40,7 @@ export const extract = (
   if (typeof inputObj !== 'object' || inputObj === null || !(currentProperty in inputObj))
     return fallbackOrError(inputObj, currentProperty, fallback)
 
-  // @ts-expect-error -- narrowing of `currentProperty in inputObj` isn't picked up here
+  // @ts-expect-error -- `currentProperty in inputObj` narrowing isn't picked up
   const newObj = inputObj[currentProperty]
   if (propertyPathArray.length === 1) {
     return newObj

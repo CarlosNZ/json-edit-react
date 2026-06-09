@@ -72,9 +72,9 @@ interface CodeBlockProps {
   themeName?: string
 }
 
-// Read-only source display. Shiki is dynamically imported on first render so its
-// grammar/theme/engine stay in their own lazy chunk. The header bar adopts the
-// Shiki theme's own bg/fg so the whole block reads as one themed panel.
+// Read-only source display. Shiki is dynamically imported on first render so
+// its grammar/theme/engine stay in their own lazy chunk. The header bar adopts
+// the Shiki theme's own bg/fg so the whole block reads as one themed panel.
 export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
   const [{ html, bg, fg }, setResult] = useState<Highlighted>({ html: '', bg: '#fff', fg: '#000' })
   const { hasCopied, onCopy } = useClipboard(code)
@@ -120,7 +120,8 @@ export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
           overflow="auto"
           maxH="70vh"
           // Soft-wrap long lines instead of scrolling horizontally. `pre-wrap`
-          // keeps indentation/newlines; `overflow-wrap` handles unbreakable tokens.
+          // keeps indentation/newlines; `overflow-wrap` handles unbreakable
+          // tokens.
           sx={{
             '& pre': { margin: 0, padding: '1em', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' },
           }}

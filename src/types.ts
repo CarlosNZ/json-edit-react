@@ -104,7 +104,10 @@ export interface JsonEditorHandle {
   startEdit: (options: StartEditOptions) => StartEditResult
   /** Commit the active session (clicks the live confirm control), then exit. */
   confirm: () => void
-  /** Abort the active session without committing (fires the matching `cancel*` event). */
+  /**
+   * Abort the active session without committing (fires the matching `cancel*`
+   * event).
+   */
   cancel: () => void
 }
 
@@ -189,7 +192,10 @@ export interface TextEditorProps {
  * FUNCTIONS
  */
 
-/** The definitive error code list — surfaced via the `onError` observer and `UpdateResult.error`. */
+/**
+ * The definitive error code list — surfaced via the `onError` observer and
+ * `UpdateResult.error`.
+ */
 export type JerErrorCode =
   | 'UPDATE_ERROR' // an edit was rejected, or an internal failure occurred
   | 'ADD_ERROR' // an add was rejected
@@ -200,7 +206,10 @@ export type JerErrorCode =
   | 'INVALID_JSON' // raw JSON typed into the editor failed to parse
   | 'CLIPBOARD_ERROR' // a copy-to-clipboard write failed (onCopy)
 
-/** The one canonical error shape, used everywhere an error is produced or reported. */
+/**
+ * The one canonical error shape, used everywhere an error is produced or
+ * reported.
+ */
 export interface JerError {
   code: JerErrorCode
   message: string
@@ -226,17 +235,20 @@ export type UpdateResult<T = JsonData> =
 /**
  * `NodeData` carries the CURRENT identity/value; the event-specific field
  * carries the NEW bit; `newData` is always the resulting document. `rename` and
- * `move` are first-class events even though both are delete+add under the hood —
- * they arrive via distinct user interactions and carry distinct deltas. For
- * `add`, `NodeData` describes the new node's *position* (`path`/`key`); `value`
- * is unset until commit (matches V1).
+ * `move` are first-class events even though both are delete+add under the
+ * hood — they arrive via distinct user interactions and carry distinct deltas.
+ * For `add`, `NodeData` describes the new node's *position* (`path`/`key`);
+ * `value` is unset until commit (matches V1).
  */
 export type UpdateFunctionProps<T = JsonData> = NodeData<T> & { newData: T } & (
     | { event: 'edit'; newValue: unknown } // value changes (incl. type change)
     | { event: 'add'; newValue: unknown }
     | { event: 'delete' } // `newData` reflects the removal
-    | { event: 'rename'; newKey: string } // `NodeData.key`/`path` = OLD; use `newKey` + `newData`. Only object keys are renameable, so always a string
-    | { event: 'move'; newPath: CollectionKey[] } // `NodeData.path` = source; `newPath` = destination
+    // `NodeData.key`/`path` = OLD; use `newKey` + `newData`. Only object keys
+    // are renameable, so always a string
+    | { event: 'rename'; newKey: string }
+    // `NodeData.path` = source; `newPath` = destination
+    | { event: 'move'; newPath: CollectionKey[] }
   )
 
 /**
@@ -249,7 +261,9 @@ export interface UpdateControl {
   hold: () => () => void
 }
 
-/** One `onUpdate` — branch on `event`. Fires for user- and command-driven alike. */
+/**
+ * One `onUpdate` — branch on `event`. Fires for user- and command-driven alike.
+ */
 export type UpdateFunction<T = JsonData> = (
   props: UpdateFunctionProps<T>,
   control: UpdateControl
@@ -260,7 +274,9 @@ export type OnChangeFunction<T = JsonData> = (
   props: NodeData<T> & { newValue: ValueData }
 ) => ValueData
 
-/** Observer (Cat 3): after any error condition (Group A codes). Flat `NodeData`. */
+/**
+ * Observer (Cat 3): after any error condition (Group A codes). Flat `NodeData`.
+ */
 export type OnErrorFunction<T = JsonData> = (
   props: NodeData<T> & { error: JerError; errorValue: JsonData }
 ) => void
@@ -341,7 +357,9 @@ export interface CollapseState {
   includeChildren: boolean
 }
 
-/** Observer (Cat 3): on collapse/expand (user click or `editorRef.collapse`). */
+/**
+ * Observer (Cat 3): on collapse/expand (user click or `editorRef.collapse`).
+ */
 export type OnCollapseFunction<T = JsonData> = (
   props: NodeData<T> & { collapsed: boolean; includeChildren: boolean }
 ) => void
@@ -505,10 +523,11 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   handleCancel: () => void
   handleKeyPress: (e: React.KeyboardEvent) => void
   isEditing: boolean
-  // True while this node's optimistic commit is in flight — the edited value is
-  // already applied locally, but the consumer's async `onUpdate` hasn't settled
-  // yet. Use it to show a "saving"/pending state. Always `false` when there's no
-  // `onUpdate` (the commit settles synchronously) or for a no-op edit.
+  // True while this node's optimistic commit is in flight — the edited value
+  // is already applied locally, but the consumer's async `onUpdate` hasn't
+  // settled yet. Use it to show a "saving"/pending state. Always `false` when
+  // there's no `onUpdate` (the commit settles synchronously) or for a no-op
+  // edit.
   isPending: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
@@ -545,9 +564,9 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   showOnEdit?: boolean // default false
   showOnView?: boolean // default true
   showEditTools?: boolean // default true
-  // Opt-in (default false) because it makes the editor build the original node's
-  // JSX up-front to pass as `originalNode`/`originalNodeKey` — wasted work for
-  // custom nodes that fully replace the rendering.
+  // Opt-in (default false) because it makes the editor build the original
+  // node's JSX up-front to pass as `originalNode`/`originalNodeKey` — wasted
+  // work for custom nodes that fully replace the rendering.
   passOriginalNode?: boolean // default false
 
   // For collection nodes only:
@@ -639,7 +658,10 @@ export type ThemeValueUnit = string | React.CSSProperties | ThemeFunction
  */
 export type ThemeElementValue = ThemeValueUnit | ThemeValueUnit[]
 
-/** Named, reusable style tokens, referenced by name from any `ThemeElementValue` string. */
+/**
+ * Named, reusable style tokens, referenced by name from any
+ * `ThemeElementValue` string.
+ */
 export type ThemeFragments = Record<string, string | React.CSSProperties>
 
 /**
@@ -665,7 +687,8 @@ export type ThemeInput = Theme | ThemeStyles | Array<Theme | ThemeStyles>
 
 // Per element, after groups are fanned onto members and themes merged in array
 // order: a pre-merged static base plus the ordered functions to apply on top.
-// Compile-time intermediate (`fns` is composed into one closure for CompiledStyles).
+// Compile-time intermediate (`fns` is composed into one closure for
+// CompiledStyles).
 export interface ElementStyle {
   base: React.CSSProperties
   fns: ThemeFunction[]
@@ -673,11 +696,13 @@ export interface ElementStyle {
 export type ResolvedStyles = Record<ThemeableElement, ElementStyle>
 
 // A compiled style function. Unlike `ThemeFunction` it never returns null — it
-// always merges the static base with each function's output into a concrete object.
+// always merges the static base with each function's output into a concrete
+// object.
 export type CompiledThemeFunction = (nodeData: NodeData) => React.CSSProperties
 
 // The compiled theme. Partial: an element no theme styles has no entry, so the
-// map carries only what's styled. `getStyles` fills the gap with `{}` at read time.
+// map carries only what's styled. `getStyles` fills the gap with `{}` at read
+// time.
 export type CompiledStyles = Partial<
   Record<ThemeableElement, React.CSSProperties | CompiledThemeFunction>
 >

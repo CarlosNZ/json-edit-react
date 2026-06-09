@@ -2,8 +2,9 @@ import type { JsonData } from 'json-edit-react'
 
 /**
  * The two snapshot stacks. Internal to {@link useUndo} and these transitions —
- * not part of the public API. Convention: **newest-at-front**, so `past[0]` is the
- * most-recent prior state and `future[0]` is the next state to redo into.
+ * not part of the public API. Convention: **newest-at-front**, so `past[0]`
+ * is the most-recent prior state and `future[0]` is the next state to redo
+ * into.
  */
 export interface UndoQueues<T = JsonData> {
   past: T[]
@@ -26,8 +27,8 @@ export const pushSnapshot = <T,>(queues: UndoQueues<T>, current: T): UndoQueues<
 })
 
 /**
- * `undo`: surface the most-recent past snapshot and push `current` onto the redo
- * stack. `null` when there's nothing to undo (empty `past`).
+ * `undo`: surface the most-recent past snapshot and push `current` onto the
+ * redo stack. `null` when there's nothing to undo (empty `past`).
  */
 export const applyUndo = <T,>(
   queues: UndoQueues<T>,
@@ -38,7 +39,9 @@ export const applyUndo = <T,>(
   return { queues: { past, future: [current, ...queues.future] }, value }
 }
 
-/** `redo`: the mirror of {@link applyUndo}. `null` when there's nothing to redo. */
+/**
+ * `redo`: the mirror of {@link applyUndo}. `null` when there's nothing to redo.
+ */
 export const applyRedo = <T,>(
   queues: UndoQueues<T>,
   current: T

@@ -9,9 +9,9 @@ const noop = () => {}
 
 // A visually-hidden, fully-expanded editor rendered solely so `useThemePalette`
 // can read every theme element colour (key / string / count) regardless of the
-// visible example's data or collapse state — e.g. a `collapse`d example may show
-// no string values at all. Hidden off-screen but still rendered, so its computed
-// styles resolve.
+// visible example's data or collapse state — e.g. a `collapse`d example may
+// show no string values at all. Hidden off-screen but still rendered, so its
+// computed styles resolve.
 export const ThemeProbe = forwardRef<HTMLDivElement, { theme: Theme }>(function ThemeProbe(
   { theme },
   ref

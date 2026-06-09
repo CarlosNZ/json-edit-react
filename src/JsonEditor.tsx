@@ -211,8 +211,8 @@ const Editor: React.FC<
   // Writing `.current` during render is safe here because every read happens in
   // an event handler or async committer (the `useCallback`s below, and the
   // stabilised side-effect callbacks) — never during render to produce output.
-  // With no mid-render read there is nothing to tear. Moving these writes into a
-  // layout effect (the textbook "concurrent-safe" form) would instead open a
+  // With no mid-render read there is nothing to tear. Moving these writes into
+  // a layout effect (the textbook "concurrent-safe" form) would instead open a
   // child-first staleness window, since a child's effects run before this
   // parent's — strictly worse for refs that only ever feed event handlers.
   const dataRef = useRef(data)
@@ -246,20 +246,22 @@ const Editor: React.FC<
   const onEditEventStable = useStableCallback(onEditEvent)
   const onCopyStable = useStableCallback(onCopy)
 
-  // Document-mutation primitives the EditingProvider's commit engine calls. The
-  // Provider owns the lifecycle (when to apply optimistically, gate, settle, and
-  // which events fire); these own `setData`/`updateDataObject`. Read the live
-  // document via refs so their identity stays stable (the memo'd nodes bail).
+  // Document-mutation primitives the EditingProvider's commit engine calls.
+  // The Provider owns the lifecycle (when to apply optimistically, gate,
+  // settle, and which events fire); these own `setData`/`updateDataObject`.
+  // Read the live document via refs so their identity stays stable (the memo'd
+  // nodes bail).
   //
-  // Every document write goes through `commitDocument`, which updates `dataRef`
-  // *synchronously* before calling `setData`. This keeps the latest-data ref
-  // consistent with optimistic writes rather than only with rendered state: a
-  // synchronous `onUpdate` (e.g. `() => false`) resolves its settlement in a
-  // microtask that runs *before* React re-renders, so a revert reading
-  // `dataRef.current` would otherwise see the pre-apply document and either undo
-  // the wrong thing or throw (deleting a not-yet-present added key). The next
-  // render's `dataRef.current = data` (above) reconciles it back to the real
-  // state — identical when `setData` is the recommended controlled setter.
+  // Every document write goes through `commitDocument`, which updates
+  // `dataRef` *synchronously* before calling `setData`. This keeps the
+  // latest-data ref consistent with optimistic writes rather than only with
+  // rendered state: a synchronous `onUpdate` (e.g. `() => false`) resolves its
+  // settlement in a microtask that runs *before* React re-renders, so a revert
+  // reading `dataRef.current` would otherwise see the pre-apply document and
+  // either undo the wrong thing or throw (deleting a not-yet-present added
+  // key). The next render's `dataRef.current = data` (above) reconciles it
+  // back to the real state — identical when `setData` is the recommended
+  // controlled setter.
   const commitDocument = useCallback((d: unknown) => {
     dataRef.current = d as JsonData
     setDataRef.current(d as JsonData)
@@ -329,7 +331,8 @@ const Editor: React.FC<
           'add',
           request.options
         )
-        // Event payload describes the committed child (post-add position/value).
+        // Event payload describes the committed child (post-add
+        // position/value).
         const nodeData = buildNodeData(newData, childPath, rootName, sort)
         return {
           // The new node doesn't exist in `data` yet for the `onUpdate` input —
@@ -428,10 +431,11 @@ const Editor: React.FC<
     }
   }, [commitDocument])
 
-  // Runs the consumer's `onUpdate` and normalises its raw return to the canonical
-  // outcome the commit engine acts on — including the localised, event-specific
-  // reject message (so it matches the `onError` code the node surfaces). This is
-  // the old synchronous result-protocol, minus `setData` (now the engine's job).
+  // Runs the consumer's `onUpdate` and normalises its raw return to the
+  // canonical outcome the commit engine acts on — including the localised,
+  // event-specific reject message (so it matches the `onError` code the node
+  // surfaces). This is the old synchronous result-protocol, minus `setData`
+  // (now the engine's job).
   const runUpdate = useCallback(
     async (input: UpdateFunctionProps, control: UpdateControl): Promise<UpdateOutcome> => {
       const code = ERROR_CODE[input.event]
@@ -465,9 +469,9 @@ const Editor: React.FC<
     []
   )
 
-  // The commit primitives handed to the EditingProvider via `commitRef`. Assigned
-  // every render (same bridge pattern as `buildNodeDataFromPathRef`); the store
-  // reads it only at event time.
+  // The commit primitives handed to the EditingProvider via `commitRef`.
+  // Assigned every render (same bridge pattern as `buildNodeDataFromPathRef`);
+  // the store reads it only at event time.
   const commitPrimitives = useMemo<CommitPrimitives>(
     () => ({
       // `undefined` when the consumer supplied no `onUpdate` (it defaulted to
@@ -549,9 +553,10 @@ const Editor: React.FC<
   sortRef.current = sort
 
   // Populate the bridge the editing/collapse providers read at event time to
-  // build a node's flat `NodeData` from just a path (they're ancestors of this
-  // component, so they can't reach `getLatestData`/`sort` directly). Stable over
-  // `getLatestData`; reads `rootName`/`sort` from refs so the identity holds.
+  // build a node's flat `NodeData` from just a path (they're ancestors of
+  // this component, so they can't reach `getLatestData`/`sort` directly).
+  // Stable over `getLatestData`; reads `rootName`/`sort` from refs so the
+  // identity holds.
   const buildNodeDataFromPath = useCallback<BuildNodeDataFromPath>(
     (path) => buildNodeData(getLatestData(), path, rootNameRef.current, sortRef.current),
     [getLatestData]
@@ -559,24 +564,26 @@ const Editor: React.FC<
   buildNodeDataFromPathRef.current = buildNodeDataFromPath
 
   // Imperative handle (`editorRef` prop). UI-interactions only (§17): open a
-  // value-edit session, commit/cancel it, or collapse nodes — never mutates data
-  // directly (the consumer owns `data`/`setData`). Every method reads the LIVE
-  // tree at call time, never a frozen render closure (per PERF-ARCHITECTURE).
-  // Declared after `sort` because `startEdit`'s restriction pre-check rebuilds
-  // the target's NodeData via it.
+  // value-edit session, commit/cancel it, or collapse nodes — never mutates
+  // data directly (the consumer owns `data`/`setData`). Every method reads
+  // the LIVE tree at call time, never a frozen render closure (per
+  // PERF-ARCHITECTURE). Declared after `sort` because `startEdit`'s
+  // restriction pre-check rebuilds the target's NodeData via it.
   useImperativeHandle(
     editorRef,
     () => {
-      // A sentinel lets us detect a gone path (`extract` returns it instead of
-      // throwing), so a stale target reports `PATH_NOT_FOUND` rather than crashing.
+      // A sentinel lets us detect a gone path (`extract` returns it instead
+      // of throwing), so a stale target reports `PATH_NOT_FOUND` rather than
+      // crashing.
       const SENTINEL = Symbol('path-missing')
       return {
         collapse: (state) => setCollapseState(state),
 
-        // Open a value-edit session, or report why it couldn't: `'PATH_NOT_FOUND'`
-        // if the target is gone, `'RESTRICTED'` if `allowEdit` blocks it
-        // (unless `overrideRestrictions`). `force: true` skips the node's own
-        // re-check and auto-reveals a target collapsed below the mount frontier.
+        // Open a value-edit session, or report why it couldn't:
+        // `'PATH_NOT_FOUND'` if the target is gone, `'RESTRICTED'` if
+        // `allowEdit` blocks it (unless `overrideRestrictions`). `force: true`
+        // skips the node's own re-check and auto-reveals a target collapsed
+        // below the mount frontier.
         startEdit: ({ path, overrideRestrictions = false }) => {
           if (extract(getLatestData(), path, SENTINEL) === SENTINEL) return 'PATH_NOT_FOUND'
           if (
@@ -588,11 +595,12 @@ const Editor: React.FC<
           return true
         },
 
-        // Commit the open session by clicking the live confirm button, then exit.
-        // No-op when there's no live confirm control to click (no session, or a
-        // session whose confirm control isn't mounted/tracked here): the
-        // unconditional `cancelEditSession()` would otherwise tear down a session we
-        // never committed (e.g. silently cancelling a key-rename).
+        // Commit the open session by clicking the live confirm button, then
+        // exit. No-op when there's no live confirm control to click (no
+        // session, or a session whose confirm control isn't mounted/tracked
+        // here): the unconditional `cancelEditSession()` would otherwise tear
+        // down a session we never committed (e.g. silently cancelling a
+        // key-rename).
         confirm: () => {
           if (!editConfirmRef.current) return
           editConfirmRef.current.click()
@@ -692,19 +700,20 @@ const Editor: React.FC<
 export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.ReactElement | null {
   const [docRoot, setDocRoot] = useState<HTMLElement>()
 
-  // Shared bridge (load-bearing, by design — not a leak). The §16 perf work put
-  // the editing store and collapse state in ancestor providers so nodes can
-  // subscribe to slivers via `useSyncExternalStore` without re-rendering the
-  // tree. Those providers fire some observer events imperatively — `onEditEvent`
-  // start/cancel (EditingProvider) and the once-per-command `onCollapse`
-  // broadcast (CollapseProvider) — but they sit ABOVE `Editor`, which owns the
-  // data, so they can't build a node's `NodeData` themselves. `Editor` writes
-  // this ref each render (below); the providers read it at event time to turn a
-  // path into flat `NodeData`. (The node-driven events — confirm*/delete/move,
-  // user-click collapse — fire straight from the node and never touch this.)
+  // Shared bridge (load-bearing, by design — not a leak). The §16 perf work
+  // put the editing store and collapse state in ancestor providers so nodes
+  // can subscribe to slivers via `useSyncExternalStore` without re-rendering
+  // the tree. Those providers fire some observer events imperatively —
+  // `onEditEvent` start/cancel (EditingProvider) and the once-per-command
+  // `onCollapse` broadcast (CollapseProvider) — but they sit ABOVE `Editor`,
+  // which owns the data, so they can't build a node's `NodeData` themselves.
+  // `Editor` writes this ref each render (below); the providers read it at
+  // event time to turn a path into flat `NodeData`. (The node-driven events —
+  // confirm*/delete/move, user-click collapse — fire straight from the node
+  // and never touch this.)
   const buildNodeDataFromPathRef = useRef<BuildNodeDataFromPath | undefined>(undefined)
-  // Same bridge pattern: the inner `Editor` (data owner) populates this with the
-  // commit primitives the EditingProvider's engine calls at event time.
+  // Same bridge pattern: the inner `Editor` (data owner) populates this with
+  // the commit primitives the EditingProvider's engine calls at event time.
   const commitRef = useRef<CommitPrimitives | undefined>(undefined)
 
   // We want access to the global document.documentElement object, but can't

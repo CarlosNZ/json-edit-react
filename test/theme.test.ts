@@ -5,7 +5,8 @@ import {
 } from '../src/contexts/ThemeProvider/compileStyles'
 import { type ThemeFunction, type NodeData } from '../src/types'
 
-// Minimal NodeData fixture — theme functions only read the few fields they need.
+// Minimal NodeData fixture — theme functions only read the few fields they
+// need.
 const makeNodeData = (overrides: Partial<NodeData> = {}): NodeData => ({
   key: 'k',
   path: [],
@@ -33,7 +34,8 @@ describe('compileStyles — shorthand & merge over default', () => {
       fontVariant: 'small-caps',
       fontWeight: 'bold',
     })
-    expect(c.dropZone).toBeUndefined() // unstyled by default → absent from the compiled map
+    // unstyled by default → absent from the compiled map
+    expect(c.dropZone).toBeUndefined()
   })
 
   it('treats a string value as the colour', () => {

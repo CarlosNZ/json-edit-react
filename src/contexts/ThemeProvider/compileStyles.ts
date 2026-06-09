@@ -62,9 +62,9 @@ export const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
   return compiled
 }
 
-// Resolve a compiled element to concrete CSS: call the closure, return the object
-// as-is (a stable reference), or `{}` for an element no theme styles — so the
-// public contract is always a concrete CSSProperties object.
+// Resolve a compiled element to concrete CSS: call the closure, return the
+// object as-is (a stable reference), or `{}` for an element no theme styles —
+// so the public contract is always a concrete CSSProperties object.
 export const getStyles = (
   compiled: CompiledStyles,
   element: ThemeableElement,

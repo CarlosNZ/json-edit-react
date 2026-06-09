@@ -217,7 +217,8 @@ describe('JsonEditor — rootName and initial collapse state', () => {
   })
 
   test('collapse as a level number collapses only at or below that level', () => {
-    // collapse={1} → root (level 0) stays expanded, nested (level 1) starts collapsed
+    // collapse={1} → root (level 0) stays expanded, nested (level 1) starts
+    // collapsed
     const data = { outer: { inner: 'deep' } }
     const { container } = render(<JsonEditor data={data} setData={noop} collapse={1} />)
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
@@ -227,10 +228,10 @@ describe('JsonEditor — rootName and initial collapse state', () => {
   })
 
   test('collapse={true} does not mount descendants of collapsed nodes (initial-load perf)', () => {
-    // Children of a collapsed CollectionNode are gated by `hasBeenOpened.current`
-    // and not rendered at all (not just CSS-hidden). This is what makes initial
-    // load snappy on large data sets — a deeply-nested tree with `collapse=true`
-    // only mounts the root.
+    // Children of a collapsed CollectionNode are gated by
+    // `hasBeenOpened.current` and not rendered at all (not just CSS-hidden).
+    // This is what makes initial load snappy on large data sets — a
+    // deeply-nested tree with `collapse=true` only mounts the root.
     const data = { a: { b: { c: { d: { e: 'deep' } } } } }
     const { container } = render(<JsonEditor data={data} setData={noop} collapse />)
     expect(container.querySelectorAll('.jer-collapse-icon')).toHaveLength(1)
@@ -259,7 +260,7 @@ describe('JsonEditor — rootName and initial collapse state', () => {
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
     // DOM order: root, metadata, bigList, small, deep, l1, l2.
     expect(chevrons).toHaveLength(7)
-    expect(chevrons[0]).not.toHaveClass('jer-rotate-90') // root — level 0, expand
+    expect(chevrons[0]).not.toHaveClass('jer-rotate-90') // root — level 0
     expect(chevrons[1]).toHaveClass('jer-rotate-90') // metadata — key match
     expect(chevrons[2]).toHaveClass('jer-rotate-90') // bigList — array size > 3
     expect(chevrons[3]).not.toHaveClass('jer-rotate-90') // small — size 2
@@ -273,8 +274,9 @@ describe('JsonEditor — rootName and initial collapse state', () => {
     // whose `index` parity matches. Toggle the mode and every node flips —
     // newly-open paths mount fresh children that pick up the current filter,
     // and newly-closed paths unmount theirs (CollectionNode's effect on
-    // `[collapseFilter]` reassigns `hasBeenOpened.current = !shouldBeCollapsed`,
-    // which gates child rendering).
+    // `[collapseFilter]` reassigns
+    // `hasBeenOpened.current = !shouldBeCollapsed`, which gates child
+    // rendering).
     //
     // Data: four levels deep, three children per level on the open branches,
     // so each level exercises indexes 0/1/2 (even, odd, even).
@@ -425,7 +427,8 @@ describe('JsonEditor — edit flow', () => {
     const input = screen.getByRole('textbox') as HTMLTextAreaElement
     expect(input).toBeInTheDocument()
     expect(input).toHaveFocus()
-    // The displayed value carries quotes (`"hello"`); the edit input carries the raw value
+    // The displayed value carries quotes (`"hello"`); the edit input carries
+    // the raw value
     expect(input.value).toBe('hello')
   })
 
@@ -531,7 +534,8 @@ describe('JsonEditor — edit flow', () => {
     // Without confirming, double-click the second value to switch focus
     await user.dblClick(screen.getByText('"two"'))
 
-    // Exactly one input is open, and it's the second value (not a leaked first one)
+    // Exactly one input is open, and it's the second value (not a leaked
+    // first one)
     const inputs = screen.getAllByRole('textbox')
     expect(inputs).toHaveLength(1)
     expect((inputs[0] as HTMLTextAreaElement).value).toBe('two')
@@ -613,10 +617,11 @@ describe('JsonEditor — edit flow', () => {
   })
 
   // Regression: dropping a collection onto a node INSIDE itself fired a `move`
-  // that deleted the source then re-created it under its own key via `createNew`
-  // — nesting the collection inside a copy of itself ({ outer: { outer: … } }).
-  // `onDragEnter` already refused to highlight a self/descendant target, but
-  // `handleDrop` didn't re-check, so a drop still committed the corrupting move.
+  // that deleted the source then re-created it under its own key via
+  // `createNew` — nesting the collection inside a copy of itself ({ outer: {
+  // outer: … } }). `onDragEnter` already refused to highlight a self/descendant
+  // target, but `handleDrop` didn't re-check, so a drop still committed the
+  // corrupting move.
   test('dropping a collection onto its own descendant is a no-op, not a self-nest', () => {
     const setData = jest.fn()
     render(
@@ -644,7 +649,8 @@ describe('JsonEditor — structural mutations', () => {
     const setData = jest.fn()
     render(<JsonEditor data={{ x: 'hi', y: 'bye' }} setData={setData} showIconTooltips />)
 
-    // Scope to the 'x' row to pick the right delete button (multiple rows have one)
+    // Scope to the 'x' row to pick the right delete button (multiple rows have
+    // one)
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
     const deleteBtn = xRow.querySelector('[title="Delete"]') as HTMLElement
     await user.click(deleteBtn)
@@ -658,7 +664,8 @@ describe('JsonEditor — structural mutations', () => {
     const setData = jest.fn()
     render(<JsonEditor data={['a', 'b']} setData={setData} showIconTooltips />)
 
-    // Only one Add button on the page (root array) — arrays don't prompt for a key
+    // Only one Add button on the page (root array) — arrays don't prompt for a
+    // key
     await user.click(screen.getByTitle('Add'))
 
     expect(setData).toHaveBeenCalledTimes(1)
@@ -673,14 +680,16 @@ describe('JsonEditor — structural mutations', () => {
     )
 
     await user.click(screen.getByTitle('Add'))
-    // A new-key input appears; it's pre-populated with a default placeholder key
+    // A new-key input appears; it's pre-populated with a default placeholder
+    // key
     const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
     expect(newKeyInput).toBeInTheDocument()
     await user.clear(newKeyInput)
     await user.type(newKeyInput, 'fresh{Enter}')
 
     expect(setData).toHaveBeenCalledTimes(1)
-    // New property takes the default value (null) — that's the editor's contract for fresh keys
+    // New property takes the default value (null) — that's the editor's
+    // contract for fresh keys
     expect(setData).toHaveBeenCalledWith({ existing: 'value', fresh: null })
   })
 
@@ -712,12 +721,14 @@ describe('JsonEditor — structural mutations', () => {
     const typeSelect = screen.getByRole('combobox') as HTMLSelectElement
     await user.selectOptions(typeSelect, 'number')
 
-    // Primitive ↔ primitive type change is LOCAL — the buffer coerces but nothing
-    // commits until the real submit (a single commit, not one per type toggle).
+    // Primitive ↔ primitive type change is LOCAL — the buffer coerces but
+    // nothing commits until the real submit (a single commit, not one per type
+    // toggle).
     expect(setData).not.toHaveBeenCalled()
 
     // Commit (OK button) writes the converted default. 'hello' → number is NaN,
-    // which the editor falls back to 0. .jer-confirm-buttons holds [OK, Cancel].
+    // which the editor falls back to 0. .jer-confirm-buttons holds [OK,
+    // Cancel].
     await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
     expect(setData).toHaveBeenCalledTimes(1)
     expect(setData).toHaveBeenCalledWith({ x: 0 })
@@ -743,8 +754,9 @@ describe('JsonEditor — structural mutations', () => {
     expect(container.querySelector('input.jer-input-boolean')).not.toBeNull()
     expect(container.querySelector('input.jer-input-number')).toBeNull()
 
-    // → back to string: the textarea returns (regression — it used to stay stuck
-    // on the committed type's input, e.g. a numeric input for a string value).
+    // → back to string: the textarea returns (regression — it used to stay
+    // stuck on the committed type's input, e.g. a numeric input for a string
+    // value).
     await user.selectOptions(typeSelect(), 'string')
     expect(container.querySelector('textarea.jer-input-text')).not.toBeNull()
     expect(container.querySelector('input.jer-input-boolean')).toBeNull()
@@ -767,7 +779,8 @@ describe('JsonEditor — structural mutations', () => {
   test('changing the type to object commits a collection immediately and re-renders as one', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    // Controlled, so `x` actually becomes an object and re-renders as a collection.
+    // Controlled, so `x` actually becomes an object and re-renders as a
+    // collection.
     const Controlled = () => {
       const [data, setLocal] = useState<JsonData>({ x: 'hello' })
       return (
@@ -788,14 +801,15 @@ describe('JsonEditor — structural mutations', () => {
       'object'
     )
 
-    // Like `null`, a to-collection change commits straight away (no OK/Enter) with
-    // the converted default ({ [DEFAULT_NEW_KEY]: value }) and closes the editor —
-    // so `handleEdit` never sees an 'object' dataType.
+    // Like `null`, a to-collection change commits straight away (no OK/Enter)
+    // with the converted default ({ [DEFAULT_NEW_KEY]: value }) and closes the
+    // editor — so `handleEdit` never sees an 'object' dataType.
     expect(setData).toHaveBeenCalledWith({ x: { key: 'hello' } })
     expect(container.querySelector('.jer-select-types')).toBeNull()
 
-    // `x` now renders as a collection: the new child key appears (it had no key as
-    // a string value node), proving the value re-rendered through CollectionNode.
+    // `x` now renders as a collection: the new child key appears (it had no key
+    // as a string value node), proving the value re-rendered through
+    // CollectionNode.
     expect(await screen.findByText('key')).toBeInTheDocument()
   })
 
@@ -822,13 +836,14 @@ describe('JsonEditor — structural mutations', () => {
       'array'
     )
 
-    // To-array wraps the value ([value]) and commits + closes, same as object/null
-    // — `handleEdit` never sees an 'array' dataType.
+    // To-array wraps the value ([value]) and commits + closes, same as
+    // object/null — `handleEdit` never sees an 'array' dataType.
     expect(setData).toHaveBeenCalledWith({ x: ['hello'] })
     expect(container.querySelector('.jer-select-types')).toBeNull()
 
-    // `x` now renders as an array collection: a square open-bracket appears (the
-    // root object only contributes a `{`), proving it re-rendered as a collection.
+    // `x` now renders as an array collection: a square open-bracket appears
+    // (the root object only contributes a `{`), proving it re-rendered as a
+    // collection.
     await waitFor(() => {
       const openBrackets = Array.from(container.querySelectorAll('.jer-bracket-open')).map(
         (el) => el.textContent
@@ -915,7 +930,8 @@ describe('JsonEditor — §17 onUpdate event discriminant', () => {
 })
 
 describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
-  // A session ends in confirm* (committed) or cancel* (closed without a commit).
+  // A session ends in confirm* (committed) or cancel* (closed without a
+  // commit).
   test('value edit: startEdit → confirmEdit on a real change', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
@@ -936,7 +952,8 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     render(<JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} />)
 
     await user.dblClick(screen.getByText('"hello"'))
-    // Confirm without changing anything — a no-op commit (§5): commitEdit, no update*.
+    // Confirm without changing anything — a no-op commit (§5): commitEdit, no
+    // update*.
     await user.type(screen.getByRole('textbox'), '{Enter}')
 
     const seq = onEditEvent.mock.calls.map(([e]) => e.event)
@@ -1056,8 +1073,8 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
 
     // No onUpdate, so the commit applies synchronously: startEdit(a),
     // submitEdit(a), commitEdit(a) → open(b) → startEdit(b). Load-bearing: a
-    // commitEdit fired and there's NO stray cancelEdit (which would mean a stale
-    // revert clobbered the just-committed value).
+    // commitEdit fired and there's NO stray cancelEdit (which would mean a
+    // stale revert clobbered the just-committed value).
     const seq = onEditEvent.mock.calls.map(([e]) => e.event)
     expect(seq).toContain('commitEdit')
     expect(seq.filter((e) => e === 'startEdit')).toHaveLength(2)
@@ -1222,8 +1239,8 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
     await user.clear(screen.getByRole('textbox'))
     await user.type(screen.getByRole('textbox'), 'second')
 
-    // commit-1 now fails. Because the user is actively re-editing 'x', the stale
-    // rejection must NOT revert the open buffer — it stays 'second'.
+    // commit-1 now fails. Because the user is actively re-editing 'x', the
+    // stale rejection must NOT revert the open buffer — it stays 'second'.
     await act(async () => {
       deferred.resolve(false)
     })
@@ -1310,14 +1327,15 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
     const setData = jest.fn()
     const deferred = makeDeferred()
     const onUpdate = jest.fn<ReturnType<UpdateFunction>, Parameters<UpdateFunction>>(
-      () => deferred.promise as ReturnType<UpdateFunction> // pending past the optimistic-apply timer
+      // Pending past the optimistic-apply timer.
+      () => deferred.promise as ReturnType<UpdateFunction>
     )
     render(
       <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} onUpdate={onUpdate} showIconTooltips />
     )
 
-    // Delete the MIDDLE key 'b'. The slow onUpdate hasn't settled, so it applies
-    // optimistically once the timer fires (b removed).
+    // Delete the MIDDLE key 'b'. The slow onUpdate hasn't settled, so it
+    // applies optimistically once the timer fires (b removed).
     const bRow = screen.getByText('2').closest('.jer-component') as HTMLElement
     await user.click(bRow.querySelector('[title="Delete"]') as HTMLElement)
     await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ a: 1, c: 3 }))
@@ -1371,10 +1389,11 @@ describe('JsonEditor — restrictions and callbacks', () => {
 
     // onUpdate ran with the attempted new value
     expect(onUpdate).toHaveBeenCalledTimes(1)
-    // Optimistic model: the edit applies immediately, then the rejection reverts
-    // it — so the LAST write restores the original and external state nets out
-    // unchanged. (The per-commit token ensures a late rejection reverts only its
-    // own node, never clobbering a newer commit that landed while it was settling.)
+    // Optimistic model: the edit applies immediately, then the rejection
+    // reverts it — so the LAST write restores the original and external state
+    // nets out unchanged. (The per-commit token ensures a late rejection
+    // reverts only its own node, never clobbering a newer commit that landed
+    // while it was settling.)
     expect(setData).toHaveBeenLastCalledWith({ x: 'hello' })
     // The node reverts its own display, and the default error shows.
     expect(screen.getByText('"hello"')).toBeInTheDocument()
@@ -1518,9 +1537,9 @@ describe('JsonEditor — restrictions and callbacks', () => {
     await user.clear(input)
     await user.type(input, 'rejected{Enter}')
 
-    // An empty error string is a rejection, not a silent success: the optimistic
-    // apply is reverted (last write restores the original), the display reverts,
-    // and onError fires (with the empty message).
+    // An empty error string is a rejection, not a silent success: the
+    // optimistic apply is reverted (last write restores the original), the
+    // display reverts, and onError fires (with the empty message).
     expect(setData).toHaveBeenLastCalledWith({ x: 'hello' })
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -1564,7 +1583,8 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(setData).toHaveBeenLastCalledWith({ x: 'hello' })
     // ...no error message...
     expect(screen.queryByText('Update unsuccessful')).toBeNull()
-    // ...and the input reverts to the original (not the typed-but-cancelled value)
+    // ...and the input reverts to the original (not the typed-but-cancelled
+    // value)
     expect(screen.getByText('"hello"')).toBeInTheDocument()
     expect(screen.queryByText('"discarded"')).toBeNull()
   })
@@ -1635,9 +1655,9 @@ describe('JsonEditor — restrictions and callbacks', () => {
     await user.clear(input)
     await user.type(input, 'hi{Enter}')
 
-    // Optimistic apply, then the async rejection reverts — the last write restores
-    // the original (the per-commit token prevents a slow rejection from clobbering
-    // a newer commit that landed while it was in flight).
+    // Optimistic apply, then the async rejection reverts — the last write
+    // restores the original (the per-commit token prevents a slow rejection
+    // from clobbering a newer commit that landed while it was in flight).
     await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ x: 'hello' }))
     expect(screen.getByText('"hello"')).toBeInTheDocument()
     expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
@@ -1680,8 +1700,8 @@ describe('JsonEditor — restrictions and callbacks', () => {
     await user.clear(input)
     await user.type(input, 'hi{Enter}')
 
-    // A bare-string rejection is surfaced verbatim (the `typeof err === 'string'`
-    // catch branch), same as a `{ error: string }` resolve.
+    // A bare-string rejection is surfaced verbatim (the `typeof err ===
+    // 'string'` catch branch), same as a `{ error: string }` resolve.
     await waitFor(() => expect(screen.getByText('plain string error')).toBeInTheDocument())
     expect(setData).toHaveBeenLastCalledWith({ x: 'hello' })
     expect(screen.getByText('"hello"')).toBeInTheDocument()
@@ -1692,7 +1712,8 @@ describe('JsonEditor — restrictions and callbacks', () => {
     const setData = jest.fn()
     const onUpdate = jest.fn(async () => {
       // Empty message: skips both the Error-message and string branches, so the
-      // catch falls back to the event-specific localised default (ERROR_UPDATE).
+      // catch falls back to the event-specific localised default
+      // (ERROR_UPDATE).
       throw new Error()
     })
     render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
@@ -1791,7 +1812,8 @@ describe('JsonEditor — search and filter', () => {
       <JsonEditor
         data={{ small: 1, medium: 5, large: 10 }}
         setData={noop}
-        // Pass any non-empty searchText to activate filtering — the function ignores it
+        // Pass any non-empty searchText to activate filtering — the function
+        // ignores it
         searchText="x"
         searchFilter={(nodeData) =>
           typeof nodeData.value === 'number' && nodeData.value >= 5
@@ -1832,7 +1854,8 @@ describe('JsonEditor — search and filter', () => {
   })
 
   test('searchDebounceTime delays the filter — change is invisible until the debounce fires', () => {
-    // Default matcher filters by VALUE, so the strings to query for are the values.
+    // Default matcher filters by VALUE, so the strings to query for are the
+    // values.
     const data = { fruit: 'apple', veg: 'broccoli' }
 
     // Mount under real timers — JsonEditor's outer wrapper sets docRoot in
@@ -1850,7 +1873,8 @@ describe('JsonEditor — search and filter', () => {
         <JsonEditor data={data} setData={noop} searchText="apple" searchDebounceTime={500} />
       )
 
-      // Right after rerender — debounce hasn't fired, 'broccoli' is still rendered
+      // Right after rerender — debounce hasn't fired, 'broccoli' is still
+      // rendered
       expect(screen.getByText('"broccoli"')).toBeInTheDocument()
 
       // Advance partway — still nothing

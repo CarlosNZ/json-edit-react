@@ -62,8 +62,9 @@ export const useDragNDrop = ({
           e.stopPropagation()
           return
         }
-        // Consume immediately — a drag source can unmount mid-drag (a structural
-        // edit remounts it), so `dragend` may never fire to clear it.
+        // Consume immediately — a drag source can unmount mid-drag (a
+        // structural edit remounts it), so `dragend` may never fire to clear
+        // it.
         armed.current = false
         e.stopPropagation()
         setDragSource({ path })
@@ -171,8 +172,9 @@ export const useDragNDrop = ({
       // Move is an instant op: the engine fires `move` (with the SOURCE node)
       // and settles. A rejected move reverts and reports via the `updateError`
       // event (which carries the correct SOURCE identity) — NOT a node-local
-      // `onError` here, since this handler runs on the DESTINATION node, so its
-      // error would show on the wrong place once the node reverts to its origin.
+      // `onError` here, since this handler runs on the DESTINATION node, so
+      // its error would show on the wrong place once the node reverts to its
+      // origin.
       editingStore.submit({
         op: 'move',
         path: dragSource.path,

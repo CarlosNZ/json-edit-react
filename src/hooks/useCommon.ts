@@ -61,9 +61,9 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   })
   // True while this node's optimistic commit is in flight: the value is already
   // applied locally, but the consumer's async `onUpdate` hasn't settled yet.
-  // Primitive slice keyed on this node's own path, so only this node re-renders
-  // when its save starts/finishes. Stays `false` when there's no `onUpdate` (the
-  // commit settles synchronously) or for a no-op edit.
+  // Primitive slice keyed on this node's own path, so only this node
+  // re-renders when its save starts/finishes. Stays `false` when there's no
+  // `onUpdate` (the commit settles synchronously) or for a no-op edit.
   const isPending = useEditingSelector((s) => pathString in s.settling)
 
   const canEdit = allowEditFilter(nodeData)

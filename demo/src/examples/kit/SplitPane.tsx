@@ -28,7 +28,8 @@ interface Bounds {
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi)
 
 // Force a set of boundaries to be ordered, within the track, and each pane at
-// least MIN_PANE_PX wide (used after a resize or when restoring a saved layout).
+// least MIN_PANE_PX wide (used after a resize or when restoring a saved
+// layout).
 const clampBounds = ({ x1, x2, x3 }: Bounds, width: number): Bounds => {
   x1 = clamp(x1, HALF, width)
   x2 = clamp(x2, x1 + MIN_PANE_PX + HANDLE_PX, width)
@@ -234,7 +235,8 @@ export const SplitPane = ({ left, right }: SplitPaneProps) => {
       ref={containerRef}
       display="flex"
       alignItems="flex-start"
-      // Suppress text selection while dragging so a drag doesn't highlight panes.
+      // Suppress text selection while dragging so a drag doesn't highlight
+      // panes.
       userSelect={dragging ? 'none' : undefined}
     >
       <Box flex={`0 0 ${leftMargin}px`} aria-hidden />

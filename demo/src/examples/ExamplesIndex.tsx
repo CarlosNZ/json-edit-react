@@ -49,8 +49,8 @@ export const ExamplesIndex = () => {
             borderRadius={10}
             backgroundColor="#f6f6f6"
             className="block-shadow"
-            // Borderless at rest (like the Demo/Options panels); the accent border
-            // appears on hover to signal these cards are clickable.
+            // Borderless at rest (like the Demo/Options panels); the accent
+            // border appears on hover to signal these cards are clickable.
             border="1px solid transparent"
             transition="border-color 0.15s ease"
             _hover={{ borderColor: 'accent' }}
@@ -61,11 +61,12 @@ export const ExamplesIndex = () => {
             <MarkdownText fontSize="sm" color="gray.600" mb={4}>
               {def.blurb}
             </MarkdownText>
-            {/* `mt="auto"` pushes the badge to the card's bottom so badges line
-                up across the row; `alignSelf` keeps it at its natural width (the
-                column stretches text full-width, but mustn't stretch the badge).
-                The min gap above lives on the blurb's `mb`, not here — padding on a
-                fixed-height image eats into the height under border-box. */}
+            {/* `mt="auto"` pushes the badge to the card's bottom so badges
+                line up across the row; `alignSelf` keeps it at its natural
+                width (the column stretches text full-width, but mustn't
+                stretch the badge). The min gap above lives on the blurb's
+                `mb`, not here — padding on a fixed-height image eats into the
+                height under border-box. */}
             <Image
               src={kindBadge[def.kind].src}
               alt={kindBadge[def.kind].alt}

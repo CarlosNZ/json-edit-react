@@ -4,7 +4,8 @@
  * boolean | CopyFunction` overload.
  *
  *  - `allowClipboard` (default true) shows/hides the copy button.
- *  - `onCopy` fires after a copy with `{ success, stringValue, type, ...NodeData }`.
+ *  - `onCopy` fires after a copy with
+ *    `{ success, stringValue, type, ...NodeData }`.
  */
 
 import { render, screen, waitFor } from '@testing-library/react'

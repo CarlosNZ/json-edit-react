@@ -57,15 +57,16 @@ const same = (a: ThemePalette, b: ThemePalette): boolean =>
 // Lets the example page adopt the selected theme's look. Reads the *computed*
 // styles off the rendered editor: text colours from its own key/value/count
 // elements, plus the container background (used directly for the header, and
-// darkened for the page behind it). Reading resolved styles (rather than parsing
-// the `Theme` object) handles fragment-strings, arrays, functions, and gradients
-// for free — the browser has already resolved them.
+// darkened for the page behind it). Reading resolved styles (rather than
+// parsing the `Theme` object) handles fragment-strings, arrays, functions, and
+// gradients for free — the browser has already resolved them.
 //
-// `containerRef` must point at an element that is *always* mounted (not the lazy
-// editor itself), so the observer below is in place before the editor — or the
-// restored-from-localStorage theme — arrives. A MutationObserver re-reads on any
-// editor mount or style change, so there's no race with async theme/chunk loads
-// (the bug being: a fixed timeout could expire before a cold first paint).
+// `containerRef` must point at an element that is *always* mounted (not the
+// lazy editor itself), so the observer below is in place before the editor — or
+// the restored-from-localStorage theme — arrives. A MutationObserver re-reads
+// on any editor mount or style change, so there's no race with async
+// theme/chunk loads (the bug being: a fixed timeout could expire before a cold
+// first paint).
 export const useThemePalette = (
   containerRef: RefObject<HTMLElement | null>,
   theme: Theme
@@ -98,8 +99,8 @@ export const useThemePalette = (
       setPalette((prev) => (same(prev, next) ? prev : next))
     }
 
-    // Coalesce bursts of mutations (e.g. during editing) into one read per frame
-    // so we don't thrash getComputedStyle.
+    // Coalesce bursts of mutations (e.g. during editing) into one read per
+    // frame so we don't thrash getComputedStyle.
     let scheduled = 0
     const schedule = () => {
       cancelAnimationFrame(scheduled)

@@ -39,11 +39,11 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel }: ConfirmDi
 export default function ConfirmationExample() {
   const [data, setData] = useState<JsonData>(initialData)
 
-  // Ask before committing any change. The hook runs the hold() gate for us — the
-  // edited node stays open and the rest of the tree is blocked while the modal
-  // is up — then commits on Confirm, or reverts on Cancel. `confirmOn` takes the
-  // event names to gate (or a predicate); `message` can be a string or, as here,
-  // a function of the edit.
+  // Ask before committing any change. The hook runs the hold() gate for us —
+  // the edited node stays open and the rest of the tree is blocked while the
+  // modal is up — then commits on Confirm, or reverts on Cancel. `confirmOn`
+  // takes the event names to gate (or a predicate); `message` can be a string
+  // or, as here, a function of the edit.
   const { onUpdate, dialog } = useConfirmOnUpdate({
     confirmOn: ['edit', 'add', 'delete', 'rename'],
     title: 'Confirm change',

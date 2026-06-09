@@ -60,13 +60,13 @@ const Profiled: React.FC<{ acc: Accumulator; children: React.ReactNode }> = ({ a
 // (optional — `pnpm bench` works without it, just slightly noisier).
 const maybeGc = () => (globalThis as { gc?: () => void }).gc?.()
 
-// ── Measurements (one fresh mount per call; always unmounts) ──────────────────
+// ── Measurements (one fresh mount per call; always unmounts) ─────────────────
 
 /** Render-phase ms to get `element` on screen: every commit the first render
- *  triggers, including the immediate effect-driven follow-up commits this editor
- *  fills the tree in with (so it's the real "time to render", not just the first
- *  commit). Noisier than `measureUpdate` for that reason — read `update` as the
- *  cleaner per-node signal. */
+ *  triggers, including the immediate effect-driven follow-up commits this
+ *  editor fills the tree in with (so it's the real "time to render", not just
+ *  the first commit). Noisier than `measureUpdate` for that reason — read
+ *  `update` as the cleaner per-node signal. */
 export const measureMount = (element: React.ReactElement): number => {
   const acc = makeAccumulator()
   const { unmount } = render(<Profiled acc={acc}>{element}</Profiled>)
@@ -75,10 +75,11 @@ export const measureMount = (element: React.ReactElement): number => {
   return total
 }
 
-/** Total render-phase ms for a whole-tree update: mount `before`, then re-render
- *  with `after`. Pass a structurally-fresh `data` (deep clone) as `after` to
- *  bust the per-node memo for every node (see memoNode.ts — `data` is compared
- *  by reference). The mount cost is excluded (reset between the two). */
+/** Total render-phase ms for a whole-tree update: mount `before`, then
+ *  re-render with `after`. Pass a structurally-fresh `data` (deep clone) as
+ *  `after` to bust the per-node memo for every node (see memoNode.ts — `data`
+ *  is compared by reference). The mount cost is excluded (reset between the
+ *  two). */
 export const measureUpdate = (
   before: React.ReactElement,
   after: React.ReactElement
@@ -92,10 +93,10 @@ export const measureUpdate = (
   return total
 }
 
-/** Total render-phase ms for the commits an interaction triggers. `setup` runs
- *  BEFORE the reset (its commits aren't counted — e.g. opening the editor so the
- *  measured action is the commit, not the mount); `action` is the measured
- *  interaction. */
+/** Total render-phase ms for the commits an interaction triggers. `setup`
+ *  runs BEFORE the reset (its commits aren't counted — e.g. opening the
+ *  editor so the measured action is the commit, not the mount); `action` is
+ *  the measured interaction. */
 export const measureInteraction = async (
   element: React.ReactElement,
   action: (user: BenchUser) => Promise<void>,
@@ -112,7 +113,7 @@ export const measureInteraction = async (
   return total
 }
 
-// ── Sampling ──────────────────────────────────────────────────────────────────
+// ── Sampling ─────────────────────────────────────────────────────────────────
 
 export interface SampleOptions {
   warmup: number
@@ -206,7 +207,7 @@ export const runSamplesPairedAsync = async (
   return { a: as, b: bs }
 }
 
-// ── Stats ──────────────────────────────────────────────────────────────────────
+// ── Stats ────────────────────────────────────────────────────────────────────
 
 export interface Stats {
   n: number

@@ -69,7 +69,8 @@ describe('Collapse broadcasts via editorRef handle', () => {
     expect(chevrons).toHaveLength(3)
     expect(isCollapsed(chevrons[0])).toBe(false) // root
     expect(isCollapsed(chevrons[1])).toBe(true) // outer
-    expect(isCollapsed(chevrons[2])).toBe(false) // inner (descendant — not targeted)
+    // inner (descendant — not targeted)
+    expect(isCollapsed(chevrons[2])).toBe(false)
   })
 
   test('4. path-scoped command with includeChildren collapses the subtree', () => {
@@ -86,7 +87,8 @@ describe('Collapse broadcasts via editorRef handle', () => {
     expect(isCollapsed(chevrons[0])).toBe(false) // root — outside the subtree
     expect(isCollapsed(chevrons[1])).toBe(true) // outer — targeted root
     expect(isCollapsed(chevrons[2])).toBe(true) // inner — descendant of outer
-    expect(isCollapsed(chevrons[3])).toBe(false) // sibling — outside the subtree
+    // sibling — outside the subtree
+    expect(isCollapsed(chevrons[3])).toBe(false)
   })
 
   test('5. back-to-back identical commands both fire (version always bumps)', async () => {
@@ -133,7 +135,8 @@ describe('Collapse broadcasts via editorRef handle', () => {
     rerender(<JsonEditor data={dataAfter} setData={noop} editorRef={ref} />)
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(chevrons).toHaveLength(3)
-    expect(isCollapsed(chevrons[2])).toBe(true) // newChild inherits Collapse-All
+    // newChild inherits Collapse-All
+    expect(isCollapsed(chevrons[2])).toBe(true)
   })
 
   test('7. data swap mount inherits the most recent broadcast', () => {
@@ -169,7 +172,8 @@ describe('Collapse broadcasts via editorRef handle', () => {
     act(() => ref.current!.collapse(command))
 
     expect(onCollapse).toHaveBeenCalledTimes(1)
-    // Flat NodeData payload (§17) built from the command's path, plus the flags.
+    // Flat NodeData payload (§17) built from the command's path, plus the
+    // flags.
     expect(onCollapse).toHaveBeenCalledWith(
       expect.objectContaining({ key: 'a', path: ['a'], collapsed: true, includeChildren: false })
     )
@@ -259,8 +263,10 @@ describe('Collapse broadcasts via editorRef handle', () => {
     // setState between calls.
     const data = { outer: { inner: { x: 1 } } }
     const commands: CollapseState[] = [
-      { collapsed: true, path: [], includeChildren: true }, // collapse everything
-      { collapsed: false, path: ['outer'], includeChildren: true }, // ...except the `outer` subtree
+      // collapse everything
+      { collapsed: true, path: [], includeChildren: true },
+      // ...except the `outer` subtree
+      { collapsed: false, path: ['outer'], includeChildren: true },
     ]
     const ref = createRef<JsonEditorHandle>()
     const { container } = render(<JsonEditor data={data} setData={noop} editorRef={ref} />)
@@ -269,8 +275,10 @@ describe('Collapse broadcasts via editorRef handle', () => {
     const chevrons = container.querySelectorAll('.jer-collapse-icon')
     expect(chevrons).toHaveLength(3)
     expect(isCollapsed(chevrons[0])).toBe(true) // root — only matched by cmd 1
-    expect(isCollapsed(chevrons[1])).toBe(false) // outer — last match is cmd 2 (expand)
-    expect(isCollapsed(chevrons[2])).toBe(false) // inner — last match is cmd 2 (subtree of outer)
+    // outer — last match is cmd 2 (expand)
+    expect(isCollapsed(chevrons[1])).toBe(false)
+    // inner — last match is cmd 2 (subtree of outer)
+    expect(isCollapsed(chevrons[2])).toBe(false)
   })
 
   test('12. changing collapse prop retires a pending broadcast for late mounts', () => {

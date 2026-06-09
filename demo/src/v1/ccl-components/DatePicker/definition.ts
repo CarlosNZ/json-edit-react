@@ -27,6 +27,7 @@ export const DatePickerDefinition: CustomNodeDefinition<DatePickerCustomProps> =
   showOnEdit: true,
   name: 'Date (ISO)', // shown in the Type selector menu
   showInTypesSelector: true,
-  defaultValue: new Date().toISOString(), // when instantiated, default to the current date/time
+  // when instantiated, default to the current date/time
+  defaultValue: new Date().toISOString(),
   customNodeProps: { showTime: true },
 }

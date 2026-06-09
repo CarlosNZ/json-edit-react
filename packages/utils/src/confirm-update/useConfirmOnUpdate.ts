@@ -9,12 +9,13 @@ const resolveMessage = <T>(
 ) => (typeof message === 'function' ? message(input) : message)
 
 /**
- * The declarative wrapper (Layer 2), built on {@link useJsonEditorConfirm}. For
- * the common case — "ask before these events" — it pre-writes the gate: it calls
- * `control.hold()` synchronously (so the editor stays open and the tree is
- * blocked while the dialog is up), awaits the consumer's modal, then `release()`s
- * on confirm — or returns `null` (a silent cancel; nothing was applied) on
- * dismiss. The consumer just wires the returned `dialog` to their modal.
+ * The declarative wrapper (Layer 2), built on {@link useJsonEditorConfirm}.
+ * For the common case — "ask before these events" — it pre-writes the gate:
+ * it calls `control.hold()` synchronously (so the editor stays open and the
+ * tree is blocked while the dialog is up), awaits the consumer's modal, then
+ * `release()`s on confirm — or returns `null` (a silent cancel; nothing was
+ * applied) on dismiss. The consumer just wires the returned `dialog` to their
+ * modal.
  *
  * Why this exists: core commits optimistically by default, so gating an edit on
  * a dialog means opting out via `hold()` — which MUST be called synchronously,
@@ -22,9 +23,9 @@ const resolveMessage = <T>(
  * imperative "ask" to a render-driven modal, via {@link useJsonEditorConfirm})
  * is the fiddly part this packages up.
  *
- * The returned `onUpdate`'s identity changes when options are passed inline, but
- * core reads `onUpdate` through a ref, so that churn is harmless — consumers
- * needn't memoize their options.
+ * The returned `onUpdate`'s identity changes when options are passed inline,
+ * but core reads `onUpdate` through a ref, so that churn is harmless —
+ * consumers needn't memoize their options.
  */
 export const useConfirmOnUpdate = <T = JsonData>(
   opts: UseConfirmOnUpdateOptions<T>
@@ -39,9 +40,9 @@ export const useConfirmOnUpdate = <T = JsonData>(
         : confirmOn(input)
 
       // `hold()` opts this commit out of the default optimistic close — the
-      // editor stays open and the rest of the tree is blocked while the dialog
-      // is up. It MUST run in the synchronous prefix (before the first `await`),
-      // so it's the first thing we do when this event is gated.
+      // editor stays open and the rest of the tree is blocked while the
+      // dialog is up. It MUST run in the synchronous prefix (before the first
+      // `await`), so it's the first thing we do when this event is gated.
       const release = shouldConfirm ? control.hold() : undefined
 
       if (release) {
