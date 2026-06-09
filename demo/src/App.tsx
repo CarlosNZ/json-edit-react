@@ -10,14 +10,11 @@ import {
   extract,
   isCollection,
   type JsonEditorHandle,
-  type UpdateFunctionProps,
 } from '@json-edit-react'
 // DEMO (Intro dataset): confirm-before-update via @json-edit-react/utils.
 // Comment out this import + the wiring below to disable. Swap the commented
 // import to demo the Layer-1 primitive instead.
-import { useConfirmOnUpdate, useUndo /*, useJsonEditorConfirm */ } from '@json-edit-react/utils'
-import { ConfirmDialog } from './ConfirmDialog'
-import { PendingCommit } from './PendingCommit'
+import { useUndo } from '@json-edit-react/utils'
 import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'

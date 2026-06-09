@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { JsonEditor, ThemeStyles } from '@json-edit-react'
+import { JsonEditor, ThemeStyles, type Theme } from '@json-edit-react'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
 const initialData = {
@@ -68,7 +68,12 @@ const heatMapTheme: ThemeStyles = {
 export default function HeatMap() {
   const [data, setData] = useState(initialData)
 
-  const { theme, ...props } = useExampleProps() // ---cut---
+  // ---cut-start---
+  // The shell always injects a single Theme; narrow it so it can sit
+  // alongside the style-fn fragment in the array form below.
+  const { theme: selectedTheme, ...props } = useExampleProps()
+  const theme = selectedTheme as Theme
+  // ---cut-end---
 
   return (
     <JsonEditor

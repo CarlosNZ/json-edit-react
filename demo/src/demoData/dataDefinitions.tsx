@@ -30,7 +30,6 @@ import {
   standardDataTypes,
   ThemeStyles,
   TypeFilterFunction,
-  UpdateFunction,
   UpdateResult,
   TypeOptions,
   UpdateFunctionProps,
@@ -73,8 +72,11 @@ export interface DemoData {
     props: UpdateFunctionProps,
     toast: (options: unknown) => void
   ) => UpdateResult | Promise<UpdateResult>
-  onAdd?: UpdateFunction
-  onEdit?: UpdateFunction
+  // `onAdd`/`onEdit` are dispatched *within* the editor's single `onUpdate`
+  // (see App.tsx), never passed as a prop — so they take the node props
+  // only, not core's `control` gate.
+  onAdd?: (props: UpdateFunctionProps) => UpdateResult | Promise<UpdateResult>
+  onEdit?: (props: UpdateFunctionProps) => UpdateResult | Promise<UpdateResult>
   onChange?: OnChangeFunction
   // Demo datasets return an error *string* to display in a toast; core's
   // `OnErrorFunction` returns `void`, so we reuse only its input shape here.
