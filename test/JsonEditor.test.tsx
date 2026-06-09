@@ -611,6 +611,29 @@ describe('JsonEditor — edit flow', () => {
     const leaf = container.querySelector('.jer-value-component') as HTMLElement
     expect(leaf).toHaveAttribute('draggable', 'false')
   })
+
+  // Regression: dropping a collection onto a node INSIDE itself fired a `move`
+  // that deleted the source then re-created it under its own key via `createNew`
+  // — nesting the collection inside a copy of itself ({ outer: { outer: … } }).
+  // `onDragEnter` already refused to highlight a self/descendant target, but
+  // `handleDrop` didn't re-check, so a drop still committed the corrupting move.
+  test('dropping a collection onto its own descendant is a no-op, not a self-nest', () => {
+    const setData = jest.fn()
+    render(
+      <JsonEditor data={{ outer: { inner: 'hello' }, sibling: 1 }} setData={setData} allowDrag />
+    )
+
+    const outerRow = screen.getByText('outer').closest('.jer-component') as HTMLElement
+    const innerRow = screen.getByText('"hello"').closest('.jer-component') as HTMLElement
+
+    // Drag `outer`, then drop it onto its own child `inner`.
+    fireEvent.dragStart(outerRow)
+    fireEvent.drop(innerRow)
+
+    // A node can't be moved inside itself — the drop must be rejected outright,
+    // leaving the document untouched (no self-nesting move committed).
+    expect(setData).not.toHaveBeenCalled()
+  })
 })
 
 describe('JsonEditor — structural mutations', () => {

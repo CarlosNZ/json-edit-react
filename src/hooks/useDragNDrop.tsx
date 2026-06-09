@@ -127,6 +127,14 @@ export const useDragNDrop = ({
 
   const handleDrop = (position: Position) => {
     if (dragSource.path === null) return
+    // A node can't be moved inside itself: bail if the drop target is
+    // the source or any descendant (reflexive, like `onDragEnter`). The
+    // drop fires independently of the drag-over highlight, so this gate
+    // is needed on the move too — otherwise the `move` op deletes the
+    // source then re-creates it under itself (`createNew`), nesting the
+    // collection in a copy of itself. (Firefox fires this drop; Chrome
+    // and Safari suppress it, but the guard fixes it everywhere.)
+    if (isDescendantOf(path, dragSource.path)) return
     const sourceKey = dragSource.path.slice(-1)[0]
     const sourceParent = dragSource.path.slice(0, -1)
     const thisParent = path.slice(0, -1)
@@ -146,7 +154,12 @@ export const useDragNDrop = ({
       // event (which carries the correct SOURCE identity) — NOT a node-local
       // `onError` here, since this handler runs on the DESTINATION node, so its
       // error would show on the wrong place once the node reverts to its origin.
-      editingStore.submit({ op: 'move', path: dragSource.path, to: { path, position }, instant: true })
+      editingStore.submit({
+        op: 'move',
+        path: dragSource.path,
+        to: { path, position },
+        instant: true,
+      })
     }
   }
 
