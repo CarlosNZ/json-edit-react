@@ -25,7 +25,7 @@ pnpm add @json-edit-react/utils
 
 ## Confirm before update
 
-`JsonEditor` `await`s your `onUpdate` before committing a change, and treats a returned `null` as a silent cancel. These hooks build on that: they let you hold an edit open until the user answers a confirmation dialog, then commit or revert based on the answer. **No modal ships with the library** — you bring your own (any modal component, or a plain `<div>`) and drive it from the returned `dialog` object.
+Core commits optimistically by default, so to *gate* an edit on a dialog you call `control.hold()`: it keeps the edited node's editor open and blocks the rest of the tree until you `release()` (commit) or return `null` (silent cancel). `hold()` must run synchronously, before the first `await`. These hooks package that up — they hold the edit open until the user answers a confirmation dialog, then commit or revert based on the answer. **No modal ships with the library** — you bring your own (any modal component, or a plain `<div>`) and drive it from the returned `dialog` object.
 
 ### `useConfirmOnUpdate` — the common case
 
@@ -57,14 +57,16 @@ const MyEditor = () => {
 
 ### `useJsonEditorConfirm` — the primitive
 
-`useConfirmOnUpdate`'s `confirmOn` predicate already covers any _condition_, so reach for this lower-level hook for flows its single, synchronous confirm can't express: confirming based on `await`ed work, more than one confirmation in a single update, or reusing the dialog for actions outside `onUpdate`. You write the `onUpdate` yourself; `confirm()` returns a `Promise<boolean>`:
+`useConfirmOnUpdate`'s `confirmOn` predicate already covers any _condition_, so reach for this lower-level hook for flows its single, synchronous confirm can't express: confirming based on `await`ed work, more than one confirmation in a single update, or reusing the dialog for actions outside `onUpdate`. You write the `onUpdate` yourself — including the `hold()` gate — and `confirm()` returns a `Promise<boolean>`:
 
 ```tsx
 const { confirm, dialog } = useJsonEditorConfirm()
 
 <JsonEditor
-  onUpdate={async (input) => {
+  onUpdate={async (input, { hold }) => {
     if (input.event === 'delete') {
+      // Open the gate FIRST, synchronously, so the editor stays open while we work.
+      const release = hold()
       // The decision to confirm — and the message — come from async work, which
       // `useConfirmOnUpdate`'s synchronous `confirmOn`/`message` can't do.
       const { inUse, usedBy } = await checkReferences(input.path)
@@ -73,34 +75,18 @@ const { confirm, dialog } = useJsonEditorConfirm()
           title: 'Still in use',
           message: `Referenced by ${usedBy.join(', ')}. Delete anyway?`,
         })
-        if (!ok) return null // null = silent cancel; the node reverts
+        if (!ok) return null // null = silent cancel; nothing is applied
       }
+      release() // commit + close now
     }
   }}
 />
 <MyModal {...dialog} />
 ```
 
-### Pending-node overlay (opt-in)
+### Showing a "saving…" state while a slow `onUpdate` settles
 
-Usually unnecessary: for a _delete_-confirm the node already shows the item until you confirm. Reach for this only when you confirm _edits_ (whose node would otherwise look already-applied) or run a slow async `onUpdate`. **The library ships no UI** — supply your own custom-node component as `pendingComponent`, and the hook returns a ready `pendingNodeDefinition`:
-
-```tsx
-const { onUpdate, dialog, pendingNodeDefinition } = useConfirmOnUpdate({
-  confirmOn: ['delete', 'edit'],
-  message,
-  pendingComponent: MyPendingNode,
-})
-
-const customNodeDefinitions = useMemo(
-  () => (pendingNodeDefinition ? [pendingNodeDefinition, ...myDefinitions] : myDefinitions),
-  [pendingNodeDefinition, myDefinitions]
-)
-
-<JsonEditor onUpdate={onUpdate} customNodeDefinitions={customNodeDefinitions} />
-```
-
-Omit `pendingComponent` and behaviour is unchanged. Keep `customNodeDefinitions` referentially stable (see the CustomNodes docs).
+The gate keeps the editor open during the *dialog*; once confirmed, the edit commits optimistically and your `onUpdate` (if any) settles in the *background*. To show that a node's save is still in flight, use core's `isPending` prop on a custom node — it's `true` for exactly that settlement window. Nothing from this package is needed for it; see the editor's CustomNodes docs.
 
 ### Wiring your modal
 

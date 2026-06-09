@@ -14,10 +14,9 @@
 //   - Ready-made `searchFilter` helpers for common search use cases [planned]
 //                                     https://github.com/CarlosNZ/json-edit-react/issues/319
 
-// Cross-utility shared pieces (event-name vocabulary, the in-flight pending-node
-// mechanism). Internal `_common`, surfaced here as public API.
+// Cross-utility shared pieces (the event-name vocabulary). Internal `_common`,
+// surfaced here as public API.
 export * from './_common/events'
-export * from './_common/pendingNode'
 
 export * from './confirm-update'
 export * from './undo'

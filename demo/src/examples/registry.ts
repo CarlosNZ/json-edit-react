@@ -20,6 +20,14 @@ export const examples: Record<string, ExampleDef> = {
     load: () => import('./static/pending-overlay/Example'),
     code: () => import('./static/pending-overlay/Example.tsx?raw'),
   },
+  'confirm-edits': {
+    kind: 'static',
+    title: 'Confirm before commit',
+    blurb:
+      "Gate every change on a confirmation modal with `useConfirmOnUpdate` (from `@json-edit-react/utils`). The hook drives core's `hold()` gate — the editor stays open and the tree is blocked while the modal is up — then commits on confirm or reverts on cancel. The modal is your own component.",
+    load: () => import('./static/confirm-edits/Example'),
+    code: () => import('./static/confirm-edits/Example.tsx?raw'),
+  },
   'collapse-playground': {
     kind: 'live',
     title: 'Collapse playground',

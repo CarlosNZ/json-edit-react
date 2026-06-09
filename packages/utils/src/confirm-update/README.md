@@ -1,14 +1,14 @@
 # confirm-update
 
-Hooks (and an optional UI helper) for gating `json-edit-react` edits on a confirmation dialog — or any async signal — by building on core's async `onUpdate` contract. Exported from `@json-edit-react/utils`.
+Hooks for gating `json-edit-react` edits on a confirmation dialog — or any async signal — by building on core's `onUpdate` contract and its `hold()` gate. Exported from `@json-edit-react/utils`.
 
-`JsonEditor` `await`s `onUpdate` before committing and treats a returned `null` as a silent cancel, so an `onUpdate` that resolves only when the user answers a modal holds the edit open until they do. These helpers package that pattern.
+Core commits optimistically by default, so to *gate* an edit on a dialog you call `control.hold()`: that keeps the edited node's editor open and blocks the rest of the tree until you `release()` (commit) or return `null` (silent cancel). `hold()` must run synchronously, before the first `await`. These hooks package that up and bridge the imperative "ask the user" to a render-driven modal — you declare *when* to confirm and wire up your own modal.
 
 **No modal ships here** — you bring your own (any modal component, or a plain `<div>`) and drive it from the returned `dialog` object.
 
 ## `useConfirmOnUpdate` — the common case
 
-Declare _when_ to confirm and _what_ to say; get back a ready-made `onUpdate` plus the `dialog` state for your modal.
+Declare _when_ to confirm and _what_ to say; get back a ready-made `onUpdate` (it runs the `hold()` / `release()` gate for you) plus the `dialog` state for your modal.
 
 ```tsx
 import { JsonEditor } from 'json-edit-react'
@@ -19,7 +19,7 @@ const { onUpdate, dialog } = useConfirmOnUpdate({
   title: 'Are you sure?',
   message: (input) => `${input.event} "${String(input.key)}"?`,
   // Optional: your own update logic, runs only after the user confirms
-  // onUpdate: async (input) => { /* … */ },
+  // onUpdate: async (input) => { /* persist… */ },
 })
 
 return (
@@ -30,16 +30,21 @@ return (
 )
 ```
 
+While the dialog is up, the edited node stays in its editor and the rest of the tree is blocked. On confirm the edit commits and the editor closes; on cancel it closes with the original value and no error. If you pass your own `onUpdate`, it runs *after* the confirm — return a `Promise` to persist in the background (the commit has already landed optimistically by then).
+
 ## `useJsonEditorConfirm` — the primitive
 
-`useConfirmOnUpdate`'s `confirmOn` predicate already covers any _condition_, so reach for this lower-level hook for flows its single, synchronous confirm can't express: confirming based on `await`ed work, more than one confirmation in a single update, or reusing the dialog for actions outside `onUpdate`. You write the `onUpdate` yourself; `confirm()` returns a `Promise<boolean>`.
+`useConfirmOnUpdate`'s `confirmOn` predicate already covers any _condition_, so reach for this lower-level hook for flows its single, synchronous confirm can't express: confirming based on `await`ed work, more than one confirmation in a single update, or reusing the dialog for actions outside `onUpdate`. You write the `onUpdate` yourself — including the `hold()` gate — and `confirm()` returns a `Promise<boolean>`. It's also the right tool for confirming things that aren't edits at all (a toolbar action, a custom-node button): it's just "ask via a declarative modal, await a boolean".
 
 ```tsx
 const { confirm, dialog } = useJsonEditorConfirm()
 
 <JsonEditor
-  onUpdate={async (input) => {
+  onUpdate={async (input, { hold }) => {
     if (input.event === 'delete') {
+      // Open the gate FIRST, synchronously, so the editor stays open + the tree
+      // blocks while we work.
+      const release = hold()
       // The decision to confirm — and the message — come from async work, which
       // `useConfirmOnUpdate`'s synchronous `confirmOn`/`message` can't do.
       const { inUse, usedBy } = await checkReferences(input.path)
@@ -48,38 +53,18 @@ const { confirm, dialog } = useJsonEditorConfirm()
           title: 'Still in use',
           message: `Referenced by ${usedBy.join(', ')}. Delete anyway?`,
         })
-        if (!ok) return null // null = silent cancel; the node reverts
+        if (!ok) return null // null = silent cancel; nothing is applied
       }
+      release() // commit + close now
     }
   }}
 />
 <MyModal {...dialog} />
 ```
 
-## Pending-node overlay (opt-in)
+## Showing a "saving…" state while a slow `onUpdate` settles
 
-**You usually don't need this.** For the common _delete_-confirm, the node already sits there showing the item until you confirm — nothing misleading to mask. It's only worth it when you confirm _edits_ (whose node would otherwise show the new value as if already applied) or run a slow async `onUpdate`.
-
-When you do want it: **the library ships no UI** — supply your own custom-node component as `pendingComponent`, and the hook hands back a ready `pendingNodeDefinition` to merge into `customNodeDefinitions`.
-
-```tsx
-const { onUpdate, dialog, pendingNodeDefinition } = useConfirmOnUpdate({
-  confirmOn: ['delete', 'edit'],
-  message,
-  pendingComponent: MyPendingNode, // your custom-node component (renders the in-flight node)
-})
-
-// Guard the undefined case, and keep the array referentially stable (see the
-// CustomNodes docs) — that's what lets the editor re-render the right node.
-const customNodeDefinitions = useMemo(
-  () => (pendingNodeDefinition ? [pendingNodeDefinition, ...myDefinitions] : myDefinitions),
-  [pendingNodeDefinition, myDefinitions]
-)
-
-<JsonEditor onUpdate={onUpdate} customNodeDefinitions={customNodeDefinitions} />
-```
-
-Omit `pendingComponent` and `pendingNodeDefinition` is `undefined` — behaviour is unchanged (the node renders as it normally would). For full control, the hook also returns the raw `pending` (`{ path, event } | null`), and `createPendingCommitDefinition(pending, component)` builds the definition directly.
+The gate (above) keeps the editor open during the *dialog*; once confirmed, the edit commits optimistically and your `onUpdate` (if any) settles in the *background*. To show that a node's save is still in flight, use core's `isPending` prop on a custom node — it's `true` for exactly that settlement window. Nothing from this package is needed for it; see the editor's CustomNodes docs (and the demo's "Pending overlay" example).
 
 ## Wiring your modal
 

@@ -1,14 +1,6 @@
 import { act, renderHook } from '@testing-library/react'
-import { toPathString } from '../src'
-import type { CustomNodeDefinition, JsonData, UpdateFunctionProps } from '../src'
-import {
-  createPendingCommitDefinition,
-  useConfirmOnUpdate,
-  useJsonEditorConfirm,
-} from '../packages/utils/src'
-
-// A throwaway custom-node component for definition tests.
-const PendingStub: NonNullable<CustomNodeDefinition['component']> = () => null
+import type { JsonData, UpdateFunctionProps } from '../src'
+import { useConfirmOnUpdate, useJsonEditorConfirm } from '../packages/utils/src'
 
 // Minimal synthetic update input. The discriminated union's per-event extras
 // (newValue / newKey / newPath) are irrelevant to the gating logic, so a cast
@@ -31,9 +23,14 @@ const makeInput = (
     ...overrides,
   }) as UpdateFunctionProps
 
-// Stub control for direct `onUpdate(input, control)` calls (the confirm hook
-// ignores it for now — the hold() gating is the deferred /utils amendment).
-const CTRL = { hold: () => () => {} }
+// A fake `UpdateControl` that tracks the `hold()` → `release()` gate the hook
+// drives. `hold()` returns the spy `release`, so a test can assert the gate was
+// opened (held) and whether it was released (confirm) or not (cancel).
+const makeControl = () => {
+  const release = jest.fn()
+  const hold = jest.fn(() => release)
+  return { control: { hold }, hold, release }
+}
 
 describe('useJsonEditorConfirm (Layer 1)', () => {
   it('opens the dialog with the supplied request and resolves true on confirm', async () => {
@@ -115,62 +112,73 @@ describe('useJsonEditorConfirm (Layer 1)', () => {
 })
 
 describe('useConfirmOnUpdate (Layer 2)', () => {
-  it('returns null when the user cancels a gated event', async () => {
+  it('holds the gate and returns null when the user cancels a gated event', async () => {
     const { result } = renderHook(() =>
       useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'], message: 'sure?' })
     )
+    const { control, hold, release } = makeControl()
 
     let res!: Promise<unknown>
     act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('delete'), CTRL))
+      res = Promise.resolve(result.current.onUpdate(makeInput('delete'), control))
     })
 
+    // hold() ran synchronously to open the gate (editor stays open, tree blocked).
+    expect(hold).toHaveBeenCalledTimes(1)
     expect(result.current.dialog.isOpen).toBe(true)
     expect(result.current.dialog.message).toBe('sure?')
 
     act(() => result.current.dialog.onCancel())
 
-    // Wrap the settlement: the gated `onUpdate` resumes after its `await confirm`
-    // and clears `pending` in a `finally` — a state update that lands here.
     await act(async () => {
       await expect(res).resolves.toBeNull()
     })
+    // Cancelled → the gate was never released, so nothing was applied.
+    expect(release).not.toHaveBeenCalled()
   })
 
-  it('runs the inner onUpdate (and returns its result) on confirm', async () => {
+  it('releases the gate, then runs the inner onUpdate (returning its result) on confirm', async () => {
     const inner = jest.fn(() => ({ value: 'committed' }))
     const { result } = renderHook(() =>
       useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'], onUpdate: inner })
     )
+    const { control, hold, release } = makeControl()
 
     let res!: Promise<unknown>
     act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('delete'), CTRL))
+      res = Promise.resolve(result.current.onUpdate(makeInput('delete'), control))
     })
+    expect(hold).toHaveBeenCalledTimes(1)
 
     act(() => result.current.dialog.onConfirm())
 
-    // Wrap the settlement: the gated `onUpdate` resumes after its `await confirm`
-    // and clears `pending` in a `finally` — a state update that lands here.
     await act(async () => {
       await expect(res).resolves.toEqual({ value: 'committed' })
     })
+    expect(release).toHaveBeenCalledTimes(1)
     expect(inner).toHaveBeenCalledTimes(1)
+    // The commit (release) lands before the inner runs as a background settlement.
+    expect(release.mock.invocationCallOrder[0]).toBeLessThan(inner.mock.invocationCallOrder[0])
   })
 
-  it('skips confirmation and calls inner directly for non-matching events', async () => {
+  it('skips the gate (no hold) and calls inner directly for non-matching events', async () => {
     const inner = jest.fn(() => undefined)
     const { result } = renderHook(() =>
       useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'], onUpdate: inner })
     )
+    const { control, hold } = makeControl()
 
     let res!: Promise<unknown>
     act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('edit'), CTRL))
+      res = Promise.resolve(result.current.onUpdate(makeInput('edit'), control))
     })
 
     await expect(res).resolves.toBeUndefined()
+    expect(hold).not.toHaveBeenCalled()
     expect(inner).toHaveBeenCalledTimes(1)
+    // The live control is passed straight through, so a non-gated inner can
+    // call hold() itself.
+    expect(inner).toHaveBeenCalledWith(makeInput('edit'), control)
     expect(result.current.dialog.isOpen).toBe(false)
   })
 
@@ -181,18 +189,24 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
       })
     )
 
-    // Non-matching key: no dialog, commits (undefined).
+    // Non-matching key: no dialog, no hold, commits (undefined).
+    const a = makeControl()
     let skip!: Promise<unknown>
     act(() => {
-      skip = Promise.resolve(result.current.onUpdate(makeInput('delete', { key: 'public' }), CTRL))
+      skip = Promise.resolve(
+        result.current.onUpdate(makeInput('delete', { key: 'public' }), a.control)
+      )
     })
     await expect(skip).resolves.toBeUndefined()
+    expect(a.hold).not.toHaveBeenCalled()
     expect(result.current.dialog.isOpen).toBe(false)
 
-    // Matching key: dialog opens.
+    // Matching key: the gate opens.
+    const b = makeControl()
     act(() => {
-      void result.current.onUpdate(makeInput('delete', { key: 'secret' }), CTRL)
+      void result.current.onUpdate(makeInput('delete', { key: 'secret' }), b.control)
     })
+    expect(b.hold).toHaveBeenCalledTimes(1)
     expect(result.current.dialog.isOpen).toBe(true)
   })
 
@@ -206,125 +220,10 @@ describe('useConfirmOnUpdate (Layer 2)', () => {
     )
 
     act(() => {
-      void result.current.onUpdate(makeInput('delete', { key: 'widget' }), CTRL)
+      void result.current.onUpdate(makeInput('delete', { key: 'widget' }), makeControl().control)
     })
 
     expect(result.current.dialog.title).toBe('Confirm')
     expect(result.current.dialog.message).toBe('delete "widget"?')
-  })
-})
-
-describe('useConfirmOnUpdate — pending lifecycle', () => {
-  it('exposes the pending node while a gated update awaits, then clears it on confirm', async () => {
-    const { result } = renderHook(() =>
-      useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'], message: 'sure?' })
-    )
-    expect(result.current.pending).toBeNull()
-
-    let res!: Promise<unknown>
-    act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('delete', { path: ['a', 'b'] }), CTRL))
-    })
-
-    expect(result.current.dialog.isOpen).toBe(true)
-    expect(result.current.pending).toEqual({ path: toPathString(['a', 'b']), event: 'delete' })
-
-    act(() => result.current.dialog.onConfirm())
-    await act(async () => {
-      await res
-    })
-    expect(result.current.pending).toBeNull()
-  })
-
-  it('clears pending on cancel', async () => {
-    const { result } = renderHook(() =>
-      useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'], message: 'sure?' })
-    )
-
-    let res!: Promise<unknown>
-    act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('delete'), CTRL))
-    })
-    expect(result.current.pending).not.toBeNull()
-
-    act(() => result.current.dialog.onCancel())
-    await act(async () => {
-      await res
-    })
-    expect(result.current.pending).toBeNull()
-  })
-
-  it('leaves pending null for a non-gated synchronous update', async () => {
-    const { result } = renderHook(() => useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'] }))
-
-    let res!: Promise<unknown>
-    act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('edit'), CTRL))
-    })
-    await act(async () => {
-      await res
-    })
-    expect(result.current.pending).toBeNull()
-  })
-})
-
-describe('createPendingCommitDefinition', () => {
-  it('matches the pending path, carries the event, and locks the node', () => {
-    const def = createPendingCommitDefinition(
-      { path: toPathString(['a', 'b']), event: 'delete' },
-      PendingStub
-    )
-    expect(def.condition(makeInput('delete', { path: ['a', 'b'] }))).toBe(true)
-    expect(def.condition(makeInput('delete', { path: ['a', 'c'] }))).toBe(false)
-    expect(def.component).toBe(PendingStub)
-    expect(def.componentProps).toEqual({ event: 'delete' })
-    expect(def.showOnView).toBe(true)
-    expect(def.showEditTools).toBe(false)
-    expect(def.passOriginalNode).toBe(true)
-  })
-
-  it('never matches when pending is null', () => {
-    const def = createPendingCommitDefinition(null, PendingStub)
-    expect(def.condition(makeInput('delete'))).toBe(false)
-  })
-})
-
-describe('useConfirmOnUpdate — pendingNodeDefinition', () => {
-  it('returns no pendingNodeDefinition without a pendingComponent', () => {
-    const { result } = renderHook(() => useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'] }))
-    expect(result.current.pendingNodeDefinition).toBeUndefined()
-  })
-
-  it('builds a definition that matches the in-flight node once an update starts', async () => {
-    const { result } = renderHook(() =>
-      useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'], pendingComponent: PendingStub })
-    )
-    // Defined, but matches nothing while idle (pending is null).
-    const idle = result.current.pendingNodeDefinition
-    expect(idle).toBeDefined()
-    expect(idle!.condition(makeInput('delete', { path: ['a'] }))).toBe(false)
-    expect(idle!.component).toBe(PendingStub)
-
-    let res!: Promise<unknown>
-    act(() => {
-      res = Promise.resolve(result.current.onUpdate(makeInput('delete', { path: ['a'] }), CTRL))
-    })
-
-    // New identity (memo keyed on pending), now matching the in-flight node.
-    expect(result.current.pendingNodeDefinition).not.toBe(idle)
-    expect(result.current.pendingNodeDefinition!.condition(makeInput('delete', { path: ['a'] }))).toBe(
-      true
-    )
-    expect(result.current.pendingNodeDefinition!.condition(makeInput('delete', { path: ['b'] }))).toBe(
-      false
-    )
-
-    act(() => result.current.dialog.onConfirm())
-    await act(async () => {
-      await res
-    })
-    expect(result.current.pendingNodeDefinition!.condition(makeInput('delete', { path: ['a'] }))).toBe(
-      false
-    )
   })
 })

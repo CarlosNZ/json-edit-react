@@ -1,11 +1,5 @@
-import type {
-  CustomNodeDefinition,
-  JsonData,
-  UpdateFunction,
-  UpdateFunctionProps,
-} from 'json-edit-react'
+import type { JsonData, UpdateFunction, UpdateFunctionProps } from 'json-edit-react'
 import type { JsonEditorEventName } from '../_common/events'
-import type { PendingUpdate } from '../_common/pendingNode'
 
 /**
  * What the consumer passes to `confirm()`. `title`/`message` are conventional
@@ -51,19 +45,14 @@ export interface UseConfirmOnUpdateOptions<T = JsonData> {
   message?: ConfirmMessage<T>
   /** Modal title (static, or built per-input). */
   title?: ConfirmMessage<T>
-  /** Your own update logic — runs only after a confirm (or when `confirmOn` didn't match). */
-  onUpdate?: UpdateFunction<T>
   /**
-   * Optional custom-node component that renders the in-flight node as a "pending"
-   * overlay while a confirm/async `onUpdate` is outstanding. Supply your own — the
-   * library ships no UI. When given, the hook returns a ready `pendingNodeDefinition`.
-   *
-   * You usually only need this when confirming **edits** (whose node would otherwise
-   * show the new value as if already applied) or running a slow async `onUpdate`. For
-   * the common **delete**-confirm case you can omit it: the node already sits there
-   * showing the item until you confirm.
+   * Your own update logic — runs only after a confirm (or when `confirmOn`
+   * didn't match). For a gated event it runs once the user confirms, *after*
+   * the value has been applied and the editor closed, so a `Promise` it returns
+   * just settles in the background. For a non-gated event it runs as the normal
+   * optimistic update with full `control` (it may call `hold()` itself).
    */
-  pendingComponent?: NonNullable<CustomNodeDefinition['component']>
+  onUpdate?: UpdateFunction<T>
 }
 
 export interface UseConfirmOnUpdateResult<T = JsonData> {
@@ -71,23 +60,4 @@ export interface UseConfirmOnUpdateResult<T = JsonData> {
   onUpdate: UpdateFunction<T>
   /** Render-time dialog state for the consumer's modal. */
   dialog: ConfirmDialogState
-  /**
-   * The node whose update is in flight (set while awaiting confirmation or a
-   * slow async `onUpdate`, `null` otherwise). Exposed for custom pending UI; if
-   * you pass `pendingComponent`, prefer the ready-made `pendingNodeDefinition`.
-   */
-  pending: PendingUpdate | null
-  /**
-   * A memoized custom-node definition wiring `pendingComponent` to the in-flight
-   * node, or `undefined` when no `pendingComponent` was supplied. Merge it into
-   * your `customNodeDefinitions` (keeping that array referentially stable):
-   *
-   * ```tsx
-   * const defs = useMemo(
-   *   () => (pendingNodeDefinition ? [pendingNodeDefinition, ...mine] : mine),
-   *   [pendingNodeDefinition, mine]
-   * )
-   * ```
-   */
-  pendingNodeDefinition?: CustomNodeDefinition
 }
