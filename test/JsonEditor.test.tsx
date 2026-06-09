@@ -626,7 +626,9 @@ describe('JsonEditor — edit flow', () => {
     const outerRow = screen.getByText('outer').closest('.jer-component') as HTMLElement
     const innerRow = screen.getByText('"hello"').closest('.jer-component') as HTMLElement
 
-    // Drag `outer`, then drop it onto its own child `inner`.
+    // Grab `outer` (the mousedown arms the drag — a bare dragstart is rejected
+    // as a phantom), then drop it onto its own child `inner`.
+    fireEvent.mouseDown(outerRow)
     fireEvent.dragStart(outerRow)
     fireEvent.drop(innerRow)
 
