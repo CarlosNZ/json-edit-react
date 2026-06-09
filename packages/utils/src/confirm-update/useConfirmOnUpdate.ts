@@ -5,8 +5,10 @@ import { useJsonEditorConfirm } from './useJsonEditorConfirm'
 import { createPendingCommitDefinition, type PendingUpdate } from '../_common/pendingNode'
 import type { ConfirmMessage, UseConfirmOnUpdateOptions, UseConfirmOnUpdateResult } from './types'
 
-const resolveMessage = <T,>(message: ConfirmMessage<T> | undefined, input: UpdateFunctionProps<T>) =>
-  typeof message === 'function' ? message(input) : message
+const resolveMessage = <T>(
+  message: ConfirmMessage<T> | undefined,
+  input: UpdateFunctionProps<T>
+) => (typeof message === 'function' ? message(input) : message)
 
 /**
  * The declarative wrapper (Layer 2), built on {@link useJsonEditorConfirm}. For
@@ -18,7 +20,7 @@ const resolveMessage = <T,>(message: ConfirmMessage<T> | undefined, input: Updat
  * core reads `onUpdate` through a ref, so that churn is harmless — consumers
  * needn't memoize their options.
  */
-export const useConfirmOnUpdate = <T = JsonData,>(
+export const useConfirmOnUpdate = <T = JsonData>(
   opts: UseConfirmOnUpdateOptions<T>
 ): UseConfirmOnUpdateResult<T> => {
   const { confirm, dialog } = useJsonEditorConfirm()
@@ -26,14 +28,14 @@ export const useConfirmOnUpdate = <T = JsonData,>(
 
   // The node whose update is in flight. Set at the start of every update and
   // cleared in `finally`, so it spans both the confirm dialog and a slow inner
-  // `onUpdate`. The synchronous, non-confirmed path sets + clears with no `await`
-  // between, so React batches it to a no-op (no flicker).
+  // `onUpdate`. The synchronous, non-confirmed path sets + clears with no
+  // `await` between, so React batches it to a no-op (no flicker).
   const [pending, setPending] = useState<PendingUpdate | null>(null)
 
   // Build the pending-overlay definition only when the consumer supplies a UI
-  // component (the library ships none). Memoized on `[pending, pendingComponent]`
-  // so its identity changes exactly when `pending` does — the editor's memo
-  // comparator needs that to re-render the affected node.
+  // component (the library ships none). Memoized on `[pending,
+  // pendingComponent]` so its identity changes exactly when `pending` does —
+  // the editor's memo comparator needs that to re-render the affected node.
   const pendingNodeDefinition = useMemo(
     () => (pendingComponent ? createPendingCommitDefinition(pending, pendingComponent) : undefined),
     [pending, pendingComponent]

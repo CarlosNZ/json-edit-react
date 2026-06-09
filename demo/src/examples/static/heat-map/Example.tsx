@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { JsonEditor, Theme, ThemeStyles } from '@json-edit-react'
+import { JsonEditor, ThemeStyles } from '@json-edit-react'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
 const initialData = {
