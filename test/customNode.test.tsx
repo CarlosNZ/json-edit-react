@@ -10,7 +10,8 @@
  * `data-testid` markers so each prop's effect is directly assertable.
  */
 
-import { render, screen, waitFor, within, cleanup, fireEvent } from '@testing-library/react'
+import { useState } from 'react'
+import { act, render, screen, waitFor, within, cleanup, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import {
@@ -18,6 +19,7 @@ import {
   type CustomComponentProps,
   type CustomKeyProps,
   type CustomWrapperProps,
+  type UpdateFunction,
 } from '../src/types'
 
 const noop = () => {}
@@ -363,5 +365,72 @@ describe('CustomNode — JSON serialization hooks', () => {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '{"x":"PLACEHOLDER"}' } })
     await user.click(container.querySelector('.jer-confirm-buttons > div') as HTMLElement)
     await waitFor(() => expect(setData).toHaveBeenCalledWith({ x: 'REVIVED' }))
+  })
+})
+
+// A promise whose resolution the test drives, to control when a background
+// `onUpdate` settlement lands.
+const makeDeferred = <T = unknown,>() => {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((r) => {
+    resolve = r
+  })
+  return { promise, resolve }
+}
+
+describe('CustomNode — isPending (optimistic settlement)', () => {
+  // Renders the value plus a "SAVING" marker while `isPending` is true, so the
+  // optimistic-commit window is directly observable in the DOM.
+  const PendingProbe = ({ value, isPending }: CustomComponentProps) => (
+    <span>
+      {String(value)}
+      {isPending && <span data-testid="pending">SAVING</span>}
+    </span>
+  )
+
+  test('a custom node sees isPending true while an async onUpdate settles, then false', async () => {
+    const user = userEvent.setup()
+    const deferred = makeDeferred()
+    const onUpdate = jest.fn(() => deferred.promise as ReturnType<UpdateFunction>)
+    const defs: CustomNodeDefinition[] = [
+      { condition: ({ key }) => key === 'greeting', component: PendingProbe },
+    ]
+    // Controlled, so the optimistic value is actually applied + re-rendered
+    // (mirrors a real consumer owning `data`).
+    const Controlled = () => {
+      const [data, setLocal] = useState<{ greeting: string }>({ greeting: 'hello' })
+      return (
+        <JsonEditor
+          data={data}
+          setData={(d) => setLocal(d as { greeting: string })}
+          onUpdate={onUpdate}
+          customNodeDefinitions={defs}
+          showIconTooltips
+        />
+      )
+    }
+    render(<Controlled />)
+
+    // Nothing pending at rest.
+    expect(screen.getByText('hello')).toBeInTheDocument()
+    expect(screen.queryByTestId('pending')).toBeNull()
+
+    // Edit greeting → 'world' and submit. The edit applies optimistically and
+    // the (still-unresolved) onUpdate keeps the node in its settling window.
+    const row = screen.getByText('hello').closest('.jer-component') as HTMLElement
+    await user.click(within(row).getByTitle('Edit'))
+    await user.clear(screen.getByRole('textbox'))
+    await user.type(screen.getByRole('textbox'), 'world{Enter}')
+
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+    expect(screen.getByText('world')).toBeInTheDocument()
+    expect(screen.getByTestId('pending')).toBeInTheDocument()
+
+    // Settle the background update → the pending marker clears.
+    await act(async () => {
+      deferred.resolve(true)
+    })
+    await waitFor(() => expect(screen.queryByTestId('pending')).toBeNull())
+    expect(screen.getByText('world')).toBeInTheDocument()
   })
 })

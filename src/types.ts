@@ -505,6 +505,11 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   handleCancel: () => void
   handleKeyPress: (e: React.KeyboardEvent) => void
   isEditing: boolean
+  // True while this node's optimistic commit is in flight — the edited value is
+  // already applied locally, but the consumer's async `onUpdate` hasn't settled
+  // yet. Use it to show a "saving"/pending state. Always `false` when there's no
+  // `onUpdate` (the commit settles synchronously) or for a no-op edit.
+  isPending: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
   children?: JSX.Element | JSX.Element[] | null

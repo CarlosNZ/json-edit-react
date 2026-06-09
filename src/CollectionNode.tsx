@@ -110,7 +110,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   // DERIVED VALUES (this makes the JSX conditional logic easier to follow
   // further down)
-  const { isEditing, isEditingKey, isArray } = derivedValues
+  const { isEditing, isEditingKey, isPending, isArray } = derivedValues
 
   // No eager `jsonStringify(data)` sync here: the edit buffer is computed on
   // demand when the node enters JSON-edit mode. A non-editing node never needs
@@ -456,6 +456,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
+    isPending,
     // Gated on `canEdit`: custom components call `setIsEditing` unconditionally
     // (e.g. on double-click), so a read-only node must hand them a no-op rather
     // than an opener.

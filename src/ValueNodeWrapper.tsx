@@ -180,7 +180,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     matchEnumType(value, allowedDataTypes)
   )
 
-  const { isEditing } = derivedValues
+  const { isEditing, isPending } = derivedValues
 
   // Early return if this node is filtered out
   const isVisible = filterNode('value', nodeData, searchFilter, searchText)
@@ -391,6 +391,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
+      isPending={isPending}
       setIsEditing={setIsEditing}
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, dataType, inputProps) : undefined}

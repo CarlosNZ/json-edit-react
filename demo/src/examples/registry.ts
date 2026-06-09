@@ -12,6 +12,14 @@ export const examples: Record<string, ExampleDef> = {
     load: () => import('./static/delayed-settlement/Example'),
     code: () => import('./static/delayed-settlement/Example.tsx?raw'),
   },
+  'pending-overlay': {
+    kind: 'static',
+    title: 'Pending overlay',
+    blurb:
+      'A custom node that shows a "saving…" badge while a node\'s optimistic edit settles. The `isPending` prop is true for exactly the window the async `onUpdate` is in flight.',
+    load: () => import('./static/pending-overlay/Example'),
+    code: () => import('./static/pending-overlay/Example.tsx?raw'),
+  },
   'collapse-playground': {
     kind: 'live',
     title: 'Collapse playground',
