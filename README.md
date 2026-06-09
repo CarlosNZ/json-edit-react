@@ -41,7 +41,9 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 ----
 
 > [!NOTE]
-> Development of V2 of **json-edit-react** is underway, with significant refactors and improvements. If you've got any particular things you'd like to see, please join the discussion [here](https://github.com/CarlosNZ/json-edit-react/discussions/198).
+> V2 of **json-edit-react** is just around the corner, with significant refactors and performance improvements. If you've got any suggestions, please join the discussion [here](https://github.com/CarlosNZ/json-edit-react/discussions/198).
+>
+> Expect a first beta very soon 😎️
 
 ----
 
