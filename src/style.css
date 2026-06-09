@@ -150,8 +150,26 @@ select:focus + .focus {
   padding-left: 0.5em;
 }
 
-/* .jer-collection-item-count {
-} */
+/* Hidden by `display: none` (not `opacity: 0` alone) so a hidden count
+   collapses its flex gap and leaves no space between the brackets. The
+   `allow-discrete` transition-behavior is set inline alongside the transition
+   (so the `all` transition includes `display`), and `@starting-style` below
+   gives the fade-in a frame to animate from — together they fade the count
+   in/out on collapse instead of popping. `jer-visible`/`jer-hidden` (shared,
+   opacity-only) drive the fade; this class only toggles `display`. */
+.jer-collection-item-count {
+  display: none;
+}
+
+.jer-collection-item-count.jer-visible {
+  display: block;
+}
+
+@starting-style {
+  .jer-collection-item-count.jer-visible {
+    opacity: 0;
+  }
+}
 
 .jer-collapse-icon {
   position: absolute;
@@ -194,13 +212,13 @@ select:focus + .focus {
 /* .jer-collection-element {
 } */
 
-.jer-collection-error-row {
+/* .jer-collection-error-row {
+} */
+
+.jer-collection-error-row-edit {
   position: absolute;
   bottom: 0.5em;
 }
-
-/* .jer-collection-error-row-edit {
-} */
 
 .jer-error-slug {
   margin-left: 1em;

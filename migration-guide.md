@@ -553,6 +553,8 @@ A handful of props were renamed. These are **pure renames** (no behaviour change
 
 > The same `stringTruncate` → `stringTruncateLength` rename applies to the `componentProps` of the `Hyperlink` / `EnhancedLink` components in `@json-edit-react/components`.
 
+One display **default** also changed (not a rename): `showCollectionCount` now defaults to `"when-closed"` (previously `true`), so item counts show only on collapsed collections. To keep the v1 always-visible behaviour, set `showCollectionCount={true}`.
+
 ---
 
 ## 13. `CustomNodeDefinition` field renames

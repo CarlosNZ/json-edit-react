@@ -375,7 +375,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
               data={value}
               parentData={data}
               nodeData={childNodeData}
-              showCollectionCount={showCollectionCount}
               canDragOnto={canEdit}
               customNodeData={childCustomNodeData}
             />
@@ -563,10 +562,17 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
               </span>
             )}
           </div>
-          {!isEditing && showCount && (
+          {showCollectionCount !== false && !isEditing && (
             <div
               className={`jer-collection-item-count${showCount ? ' jer-visible' : ' jer-hidden'}`}
-              style={{ ...getStyles('itemCount', nodeData), transition: cssTransitionValue }}
+              style={{
+                ...getStyles('itemCount', nodeData),
+                transition: cssTransitionValue,
+                // `allow-discrete` lets the `all` transition animate `display`
+                // too, so the count fades (not pops) as it shows/hides. The
+                // `display` toggle itself lives in `.jer-collection-item-count`.
+                transitionBehavior: 'allow-discrete',
+              }}
             >
               {size === 1
                 ? translate('ITEM_SINGLE', { ...nodeData, size: 1 }, 1)
@@ -601,7 +607,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
         ref={contentRef}
       >
         {CollectionContents}
-        <div className={isEditing ? 'jer-collection-error-row' : 'jer-collection-error-row-edit'}>
+        <div className={isEditing ? 'jer-collection-error-row-edit' : 'jer-collection-error-row'}>
           {error && (
             <span className="jer-error-slug" style={getStyles('error', nodeData)}>
               {error}

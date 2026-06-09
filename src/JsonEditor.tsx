@@ -136,7 +136,7 @@ const Editor: React.FC<
   indent = 2,
   collapse = false,
   collapseAnimationTime = 300, // must be equivalent to CSS value
-  showCollectionCount = true,
+  showCollectionCount = 'when-closed',
   allowEdit = true,
   allowDelete = true,
   allowAdd = true,
