@@ -18,14 +18,13 @@ A high-level architectural overview is maintained at https://deepwiki.com/Carlos
 
 ## Repository layout
 
-This is a **pnpm workspace** (root, plus `packages/*`). [demo/](demo/) and [custom-component-library/](custom-component-library/) are intentionally **outside the workspace** as independent yarn-1 installs — they're validation harnesses that consume the published artefacts at arm's length.
+This is a **pnpm workspace** (root, plus `packages/*`). [demo/](demo/) is intentionally **outside the workspace** as an independent yarn-1 install — a validation harness that consumes the published artefacts at arm's length.
 
 - [src/](src/) — the core published library (entry: [src/index.ts](src/index.ts))
 - [packages/themes/](packages/themes/) — `@json-edit-react/themes`
 - [packages/components/](packages/components/) — `@json-edit-react/components`
 - [packages/utils/](packages/utils/) — `@json-edit-react/utils` (nascent; utility hooks + helpers)
-- [demo/](demo/) — Vite app deployed to https://carlosnz.github.io/json-edit-react. Independent yarn project. Doubles as the dev environment for all three packages via the `VITE_JRE_SOURCE` toggle.
-- [custom-component-library/](custom-component-library/) — separate Vite app showcasing how third parties consume `@json-edit-react/components`. Independent yarn project.
+- [demo/](demo/) — Vite app deployed to https://carlosnz.github.io/json-edit-react. Independent yarn project. Doubles as the dev environment for all three packages via the `VITE_JRE_SOURCE` toggle, and showcases how third parties consume `@json-edit-react/components` (the `customComponentLibrary` data set).
 - [test/](test/) — Jest tests for core.
 - [scripts/](scripts/) — Python + Node helpers for the publish + build flow (core only — README rewriting, staging, packing, the test step for `prebuild`).
 - [json-schema-tools/](json-schema-tools/) — auxiliary tooling, not part of the package.
@@ -62,7 +61,7 @@ pnpm setup            # install root + demo (chains pnpm install && cd demo && y
 pnpm dev              # run the demo against local src (VITE_JRE_SOURCE=local)
 pnpm demo             # run the demo against the npm-installed version
 pnpm demo:pack        # pack all three packages and run the demo against the tarballs (VITE_JRE_SOURCE=pack)
-pnpm pack-all         # produce pack-output/<name>/package/ — consumed by demo/CCL :pack scripts
+pnpm pack-all         # produce pack-output/<name>/package/ — consumed by demo :pack scripts
 pnpm test             # jest
 pnpm lint             # eslint
 pnpm compile          # tsc --noEmit && ts-prune (dead-export check)
@@ -73,7 +72,7 @@ pnpm release          # pnpm publish — DON'T run unless explicitly asked
 pnpm changeset        # add a changeset before opening a PR that touches published behaviour
 ```
 
-The demo and CCL can each resolve `json-edit-react`, `@json-edit-react/themes`, and `@json-edit-react/components` from four places via `VITE_JRE_SOURCE` (`local` | `build` | `pack` | `npm`). See [demo/vite.config.ts](demo/vite.config.ts) and [custom-component-library/vite.config.ts](custom-component-library/vite.config.ts), with the full table in [package-management-guide.md](package-management-guide.md). When iterating on library changes, use `VITE_JRE_SOURCE=local` (e.g. `pnpm dev`) so edits in [src/](src/) or `packages/*/src/` are picked up by Vite immediately. Use `pack` (via `pnpm pack-all`) as the pre-publish dress rehearsal.
+The demo can resolve `json-edit-react`, `@json-edit-react/themes`, and `@json-edit-react/components` from four places via `VITE_JRE_SOURCE` (`local` | `build` | `pack` | `npm`). See [demo/vite.config.ts](demo/vite.config.ts), with the full table in [package-management-guide.md](package-management-guide.md). When iterating on library changes, use `VITE_JRE_SOURCE=local` (e.g. `pnpm dev`) so edits in [src/](src/) or `packages/*/src/` are picked up by Vite immediately. Use `pack` (via `pnpm pack-all`) as the pre-publish dress rehearsal.
 
 ## Conventions and gotchas
 
@@ -104,7 +103,7 @@ The demo and CCL can each resolve `json-edit-react`, `@json-edit-react/themes`, 
 - The **core** library has **zero** runtime deps. Don't add any without a strong reason — the "no external UI library" promise is part of the product. UI-rich features (CodeMirror, Chakra, AJV, Firebase) belong in the demo, not in `src/`.
 - `@json-edit-react/themes` also has zero runtime deps (peer-dep on core for types only).
 - `@json-edit-react/components` is the one place third-party deps are allowed. New deps there should be lazy-loadable and used by a specific component.
-- Anything imported only by the demo or CCL must not be reachable from `src/` or `packages/*/src/`.
+- Anything imported only by the demo must not be reachable from `src/` or `packages/*/src/`.
 - `pnpm.overrides` in root [package.json](package.json) pins `csstype` and `@types/react` versions to match what demo's yarn install resolves — otherwise pnpm picks newer minor/patch versions and TS path mappings produce phantom type-identity mismatches.
 
 ### Build
@@ -113,7 +112,7 @@ The demo and CCL can each resolve `json-edit-react`, `@json-edit-react/themes`, 
 - Core's `prebuild` runs `pnpm lint && node scripts/run-prebuild-tests.mjs` — a failing lint OR test halts the build. `SKIP_TESTS=1 pnpm build` skips the test step only (lint stays mandatory). No equivalent skip for lint; if you genuinely need to bypass everything, run `rollup -c && rm -R build/dts` directly.
 
 ### Linting / formatting
-- ESLint flat config at [eslint.config.mjs](eslint.config.mjs) covers core only. The `packages/`, `demo/` and `custom-component-library/` directories are ignored from the root lint and have (or will have) their own configs.
+- ESLint flat config at [eslint.config.mjs](eslint.config.mjs) covers core only. The `packages/` and `demo/` directories are ignored from the root lint and have (or will have) their own configs.
 - Prettier: no semicolons, single quotes, 100 col, `trailingComma: es5`, 2-space indent ([.prettierrc](.prettierrc)).
 
 ### Tests

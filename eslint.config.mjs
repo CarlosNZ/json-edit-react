@@ -16,7 +16,6 @@ export default tseslint.config(
       '.claude',
       'demo',
       '.rollup.cache',
-      'custom-component-library',
       'build_package',
       'pack-output',
       'test/style-mock.js',

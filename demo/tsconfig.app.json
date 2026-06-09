@@ -41,9 +41,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "../custom-component-library/components/DatePicker/DateTimePicker.tsx"
-  ]
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

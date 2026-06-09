@@ -53,7 +53,7 @@ import './style.css'
 import { getConditionalDefinitions, getLineHeight, truncate } from './helpers'
 import { RenderProfiler } from './RenderProfiler'
 import { Loading } from '../../packages/components/src/_common/Loading'
-import { testData } from '../../custom-component-library/src/data'
+import { type CustomComponentLibraryData } from './demoData/data'
 
 const CodeEditor = lazy(() => import('./CodeEditor'))
 const SourceIndicator = lazy(() => import('./SourceIndicator'))
@@ -183,7 +183,7 @@ function App() {
   const customNodeDefinitions =
     selectedDataSet === 'customComponentLibrary'
       ? getConditionalDefinitions(
-          data as typeof testData,
+          data as CustomComponentLibraryData,
           dataDefinition?.customNodeDefinitions ?? []
         )
       : dataDefinition.customNodeDefinitions

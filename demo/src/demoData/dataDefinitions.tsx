@@ -15,7 +15,6 @@ import {
   ImageNodeDefinition,
   ColorPickerNodeDefinition,
 } from '@json-edit-react/components'
-import { testData } from '../../../custom-component-library/src/data'
 import {
   CustomNodeDefinition,
   FilterFunction,
@@ -52,9 +51,6 @@ const codenameGlossary: Record<string, string> = {
   dob: 'date of birth',
   bp: 'blood pressure',
 }
-
-// @ts-expect-error only used in Custom component demo app
-delete testData['Date & Time']['Date']
 
 export interface DemoData {
   name: string
@@ -1054,7 +1050,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         <Text>
           Here are examples of all the custom components available in the{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/README.md"
             isExternal
           >
             Custom Component Library
@@ -1068,17 +1064,17 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         <Text>
           See their implementation in the{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/src/App.tsx"
+            href="https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components/src"
             isExternal
           >
-            example App
+            package source
           </Link>{' '}
           for how to use.
         </Text>
         <Text>
           If you've made a custom component that could be useful to others, please consider{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md#development"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/README.md#building-your-own"
             isExternal
           >
             submitting a PR
@@ -1089,7 +1085,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     ),
     rootName: 'components',
     collapse: 3,
-    data: testData,
+    data: data.customComponentLibrary,
     customNodeDefinitions: [
       // Must keep this one first as we override it by index in App.tsx
       {

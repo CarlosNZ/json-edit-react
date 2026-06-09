@@ -13,7 +13,7 @@ const PACKAGES = [
   { name: '@json-edit-react/components', pkgJsonPath: 'packages/components/package.json' },
 ]
 
-const CONSUMERS = ['demo', 'custom-component-library']
+const CONSUMERS = ['demo']
 
 const POLL_INTERVAL_MS = 5_000
 const POLL_MAX_ATTEMPTS = 24 // 24 * 5s = 2 min
