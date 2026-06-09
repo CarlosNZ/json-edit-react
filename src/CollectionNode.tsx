@@ -437,7 +437,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const isCollapsed = !showCollectionWrapper ? false : collapsed && !childrenEditing
   if (!isCollapsed) hasBeenOpened.current = true
 
-  const customNodeAllProps = {
+  // A getter, not an object, so a plain collection with no custom component or
+  // wrapper never allocates these props — only the two custom-node sites below
+  // call it.
+  const getCustomNodeAllProps = () => ({
     ...props,
     data,
     value: data,
@@ -457,10 +460,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     canEdit,
     keyboardCommon: {},
     onError,
-  }
+  })
 
   const CollectionContents = showCustomNodeContents ? (
-    <CustomComponent componentProps={componentProps} {...customNodeAllProps}>
+    <CustomComponent componentProps={componentProps} {...getCustomNodeAllProps()}>
       {CollectionChildren}
     </CustomComponent>
   ) : (
@@ -631,7 +634,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   )
 
   return CustomWrapperComponent ? (
-    <CustomWrapperComponent wrapperProps={wrapperProps} {...customNodeAllProps}>
+    <CustomWrapperComponent wrapperProps={wrapperProps} {...getCustomNodeAllProps()}>
       {CollectionNodeComponent}
     </CustomWrapperComponent>
   ) : (
