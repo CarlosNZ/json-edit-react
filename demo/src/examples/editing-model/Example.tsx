@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Box, Button, Flex, FormLabel, Select, SimpleGrid, Text } from '@chakra-ui/react'
+import { Box, Button, Flex, FormLabel, Select, Text } from '@chakra-ui/react'
 import {
   JsonEditor,
   type JsonData,
@@ -8,6 +8,7 @@ import {
 } from '@json-edit-react'
 import { useExampleProps } from '../kit/exampleProps'
 import { useExamplePalette } from '../kit/useThemePalette'
+import { SplitPane } from '../kit/SplitPane'
 import { EventViewer, type LogEntry } from './EventViewer'
 
 const DELAY = 3000
@@ -233,67 +234,64 @@ export default function EditingModel() {
 
   return (
     <>
-      <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={4} alignItems="start">
-        <Box className="block-shadow" borderRadius="md">
-          <JsonEditor
-            data={data}
-            setData={setData}
-            {...exampleProps}
-            showErrorMessages
-            allowTypeSelection
-            onUpdate={onUpdate}
-            onEditEvent={onEditEvent}
-          />
-        </Box>
-
-        {/* Mode block sits where the code panel does in other examples, themed
-            like the header (palette background + text colours). */}
-        <Box
-          borderRadius="lg"
-          className="block-shadow"
-          p={4}
-          transition="background 0.4s ease"
-          style={palette.headerBg}
-        >
-          <Flex align="center" gap={3} wrap="wrap">
-            <FormLabel
-              htmlFor="mode-select"
-              m={0}
-              // fontSize="sm"
-              whiteSpace="nowrap"
-              color={palette.property}
-            >
-              onUpdate behaviour
-            </FormLabel>
-            <Select
-              id="mode-select"
-              size="sm"
-              maxW={240}
-              bg="white"
-              value={mode}
-              onChange={(e) => setMode(e.target.value as Mode)}
-            >
-              {MODES.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </Select>
-            <Button
-              size="sm"
-              onClick={() => {
-                setData(initialData)
-                setLog([])
-              }}
-            >
-              Reset
-            </Button>
-          </Flex>
-          <Text fontSize="md" mt={3} color={palette.string}>
-            {current.desc}
-          </Text>
-        </Box>
-      </SimpleGrid>
+      <SplitPane
+        left={
+          <Box className="block-shadow" borderRadius="md">
+            <JsonEditor
+              data={data}
+              setData={setData}
+              {...exampleProps}
+              showErrorMessages
+              allowTypeSelection
+              onUpdate={onUpdate}
+              onEditEvent={onEditEvent}
+            />
+          </Box>
+        }
+        right={
+          // Mode block sits where the code panel does in other examples, themed
+          // like the header (palette background + text colours).
+          <Box
+            borderRadius="lg"
+            className="block-shadow"
+            p={4}
+            transition="background 0.4s ease"
+            style={palette.headerBg}
+          >
+            <Flex align="center" gap={3} wrap="wrap">
+              <FormLabel htmlFor="mode-select" m={0} whiteSpace="nowrap" color={palette.property}>
+                onUpdate behaviour
+              </FormLabel>
+              <Select
+                id="mode-select"
+                size="sm"
+                maxW={240}
+                bg="white"
+                value={mode}
+                onChange={(e) => setMode(e.target.value as Mode)}
+              >
+                {MODES.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </Select>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setData(initialData)
+                  setLog([])
+                }}
+              >
+                Reset
+              </Button>
+            </Flex>
+            <Text fontSize="md" mt={3} color={palette.string}>
+              {current.desc}
+            </Text>
+          </Box>
+        }
+      />
 
       <EventViewer log={log} onClear={() => setLog([])} />
     </>

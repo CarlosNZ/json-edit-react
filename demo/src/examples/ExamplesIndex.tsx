@@ -1,6 +1,7 @@
 import { useLocation } from 'wouter'
 import { Box, Heading, Image, SimpleGrid, Text } from '@chakra-ui/react'
 import { examples } from './registry'
+import { MarkdownText } from './kit/MarkdownText'
 
 // shields.io badge per example kind. Green = a static live example; pink (the
 // json-edit-react accent) = an editable react-live playground; purple = a
@@ -57,9 +58,9 @@ export const ExamplesIndex = () => {
             <Heading size="md" mb={1} variant="sub">
               {def.title}
             </Heading>
-            <Text fontSize="sm" color="gray.600" mb={4}>
+            <MarkdownText fontSize="sm" color="gray.600" mb={4}>
               {def.blurb}
-            </Text>
+            </MarkdownText>
             {/* `mt="auto"` pushes the badge to the card's bottom so badges line
                 up across the row; `alignSelf` keeps it at its natural width (the
                 column stretches text full-width, but mustn't stretch the badge).

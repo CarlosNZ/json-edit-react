@@ -10,6 +10,7 @@ export interface ThemePalette {
   // Text colours pulled from the editor's own elements.
   property?: string // object keys
   string?: string // string values
+  number?: string // number values
   itemCount?: string // collection counts
   // The editor container background, used as-is for the header panel.
   headerBg: Background
@@ -48,6 +49,7 @@ const colorOf = (root: Element, selector: string): string | undefined => {
 const same = (a: ThemePalette, b: ThemePalette): boolean =>
   a.property === b.property &&
   a.string === b.string &&
+  a.number === b.number &&
   a.itemCount === b.itemCount &&
   a.headerBg.backgroundColor === b.headerBg.backgroundColor &&
   a.headerBg.backgroundImage === b.headerBg.backgroundImage
@@ -82,6 +84,7 @@ export const useThemePalette = (
       const next: ThemePalette = {
         property: colorOf(container, '.jer-key-text'),
         string: colorOf(container, '.jer-value-string'),
+        number: colorOf(container, '.jer-value-number'),
         itemCount: colorOf(container, '.jer-collection-item-count'),
         headerBg: { backgroundColor, backgroundImage: image },
         pageBg: {

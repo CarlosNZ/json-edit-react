@@ -3,7 +3,7 @@ import { Box } from '@chakra-ui/react'
 import { JsonEditor, type Theme } from '@json-edit-react'
 
 // Fixed data covering every theme element the palette reads: an object key, a
-// string value, and a (counted) collection.
+// string value, and a (counted) collection holding a number value.
 const PROBE_DATA = { key: 'value', list: [1] }
 const noop = () => {}
 

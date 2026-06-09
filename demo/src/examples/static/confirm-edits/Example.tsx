@@ -2,7 +2,6 @@ import { useState, type CSSProperties } from 'react'
 import { JsonEditor, type JsonData } from '@json-edit-react'
 import { useConfirmOnUpdate, type ConfirmDialogState } from '@json-edit-react/utils'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
-import { px } from 'framer-motion'
 
 const initialData = {
   name: 'Project Phoenix',
@@ -37,7 +36,7 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel }: ConfirmDi
   )
 }
 
-export default function ConfirmEdits() {
+export default function ConfirmationExample() {
   const [data, setData] = useState<JsonData>(initialData)
 
   // Ask before committing any change. The hook runs the hold() gate for us — the
