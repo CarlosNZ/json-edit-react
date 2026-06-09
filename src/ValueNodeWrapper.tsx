@@ -122,7 +122,10 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // `data`. The effect handles `data` changing from ANY source (external
   // `setData`, undo, a parent re-render); reject/cancel call it explicitly
   // (below) since neither changes `data`, so a non-committing edit never leaves
-  // the input showing the typed-but-discarded value.
+  // the input showing the typed-but-discarded value. Also registered as the
+  // store's `cancelOp` (per-node buffer cleanup when a session ends without
+  // committing — Esc/✗, node switch, external cancel); idempotent, so it's safe
+  // to run twice (once from `handleCancel`, once from the store).
   const revertToData = () => {
     setValue(typeof data === 'function' ? INVALID_FUNCTION_STRING : data)
     setDataType(getDataType(data, customNodeData))
@@ -152,15 +155,15 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     passOriginalNode,
   } = customNodeData
 
-  // Include custom node options in dataType list
-  const allDataTypes = [
-    ...standardDataTypes,
-    ...customNodeDefinitions
-      .filter(({ showInTypeSelector = false, name }) => showInTypeSelector && !!name)
-      .map(({ name }) => name as string),
-  ]
-
   const allowedDataTypes = useMemo(() => {
+    // Include custom node options in dataType list
+    const allDataTypes = [
+      ...standardDataTypes,
+      ...customNodeDefinitions
+        .filter(({ showInTypeSelector = false, name }) => showInTypeSelector && !!name)
+        .map(({ name }) => name as string),
+    ]
+
     if (typeof allowTypeSelection === 'boolean') return allowTypeSelection ? allDataTypes : []
 
     if (Array.isArray(allowTypeSelection)) return allowTypeSelection
@@ -170,8 +173,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (typeof result === 'boolean') return result ? allDataTypes : []
 
     return result
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nodeData, allowTypeSelection])
+  }, [nodeData, allowTypeSelection, customNodeDefinitions])
 
   const [enumType, setEnumType] = useState<EnumDefinition | null>(
     matchEnumType(value, allowedDataTypes)
@@ -230,9 +232,9 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       return
     }
 
-    const enumDef = allowedDataTypes.find(
-      (dt) => dt instanceof Object && dt.enum === type
-    ) as EnumDefinition | undefined
+    const enumDef = allowedDataTypes.find((dt) => dt instanceof Object && dt.enum === type) as
+      | EnumDefinition
+      | undefined
     if (enumDef) {
       // Enum stays a value node — local only: coerce the buffer to a valid
       // option and keep the editor open. Committed on the next real submit.
@@ -311,22 +313,17 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     submit({ op: 'edit', path, value: newValue, onCommit }).then(settleEdit(newValue))
   }
 
-  // Per-node buffer cleanup when a session ends without committing (Esc/✗, node
-  // switch, external cancel). Registered as the store's `cancelOp`; idempotent,
-  // so it's safe to run twice (once from `handleCancel`, once from the store).
-  const revertSession = () => revertToData()
-
   const handleCancel = () => {
     // Revert the buffer locally, then drive the store cancel (which also runs
-    // `cancelOp` = `revertSession` — idempotent). The local revert covers entry
+    // `cancelOp` = `revertToData` — idempotent). The local revert covers entry
     // paths that registered no `cancelOp` (Tab-arrival, redirect).
-    revertSession()
+    revertToData()
     cancel()
   }
 
   const handleDelete = () => {
-    // Instant op (no session). The engine fires `delete` and settles; a rejected
-    // settlement reverts (re-adds) and surfaces the error here.
+    // Instant op (no session). The engine fires `delete` and settles; a
+    // rejected settlement reverts (re-adds) and surfaces the error here.
     submit({ op: 'delete', path, instant: true }).then((outcome) => {
       if (outcome?.status === 'error') onError(outcome.error, value as ValueData)
     })
@@ -338,7 +335,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const showTypeSelector = isEditing && allowedDataTypes.length > 1
   const showEditButtons = (dataType !== 'invalid' || CustomComponent) && !error && showEditTools
   const shouldShowKey = showLabel && showKey
-  const showCustomNode = CustomComponent && ((isEditing && showOnEdit) || (!isEditing && showOnView))
+  const showCustomNode =
+    CustomComponent && ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
   const inputProps = {
     value,
@@ -346,7 +344,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     setValue: updateValue,
     isEditing,
     canEdit,
-    setIsEditing: canEdit ? () => open(path, { cancelOp: revertSession }) : NOOP,
+    setIsEditing: canEdit ? () => open(path, { cancelOp: revertToData }) : NOOP,
     handleEdit,
     handleCancel,
     path,
@@ -387,14 +385,14 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
-      setIsEditing={() => open(path, { cancelOp: revertSession })}
+      setIsEditing={() => console.log('EDIT')}
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, dataType, inputProps) : undefined}
       originalNodeKey={
         passOriginalNode ? (
           // `originalNodeKey` is contracted to be what would have been rendered
-          // if it wasn't intercepted, so suppress any matching `keyComponent` here
-          // and let the default renderer run.
+          // if it wasn't intercepted, so suppress any matching `keyComponent`
+          // here and let the default renderer run.
           <KeyDisplay {...keyDisplayProps} customNodeData={undefined} />
         ) : undefined
       }
@@ -450,7 +448,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           ) : (
             showEditButtons && (
               <EditButtons
-                startEdit={canEdit ? () => open(path, { cancelOp: revertSession }) : undefined}
+                startEdit={canEdit ? () => open(path, { cancelOp: revertToData }) : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
                 allowClipboard={allowClipboard}
                 onCopy={onCopy}
@@ -508,7 +506,11 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 export const ValueNodeWrapper = React.memo(ValueNodeWrapperBase, areNodePropsEqual)
 
 const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
-  if (customNodeData?.CustomComponent && customNodeData?.name && customNodeData.showInTypeSelector) {
+  if (
+    customNodeData?.CustomComponent &&
+    customNodeData?.name &&
+    customNodeData.showInTypeSelector
+  ) {
     return customNodeData.name
   }
   if (typeof value === 'string') return 'string'
