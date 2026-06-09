@@ -59,7 +59,7 @@ const heatMapTheme: ThemeStyles = {
   number: ({ value }) => {
     return { color: tempToColor(value as number), fontWeight: 'bold', fontSize: '115%' }
   },
-  property: ({ level, key, value }) => {
+  property: ({ level, value }) => {
     if (level === 1)
       return { color: tempToColor(average(value as Record<string, number>)), fontWeight: 'bold' }
   },

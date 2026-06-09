@@ -9,6 +9,7 @@ import {
   type JsonViewerHandle,
   type EditEvent,
   type UpdateFunction,
+  type JsonData,
 } from '../src/types'
 
 const noop = () => {}
@@ -736,6 +737,79 @@ describe('JsonEditor — structural mutations', () => {
     // OK/Enter needed — and the editor closes (the type selector disappears).
     expect(setData).toHaveBeenCalledWith({ x: null })
     expect(container.querySelector('.jer-select-types')).toBeNull()
+  })
+
+  test('changing the type to object commits a collection immediately and re-renders as one', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    // Controlled, so `x` actually becomes an object and re-renders as a collection.
+    const Controlled = () => {
+      const [data, setLocal] = useState<JsonData>({ x: 'hello' })
+      return (
+        <JsonEditor
+          data={data}
+          setData={(d) => {
+            setData(d)
+            setLocal(d)
+          }}
+        />
+      )
+    }
+    const { container } = render(<Controlled />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    await user.selectOptions(
+      container.querySelector('.jer-select-types select') as HTMLSelectElement,
+      'object'
+    )
+
+    // Like `null`, a to-collection change commits straight away (no OK/Enter) with
+    // the converted default ({ [DEFAULT_NEW_KEY]: value }) and closes the editor —
+    // so `handleEdit` never sees an 'object' dataType.
+    expect(setData).toHaveBeenCalledWith({ x: { key: 'hello' } })
+    expect(container.querySelector('.jer-select-types')).toBeNull()
+
+    // `x` now renders as a collection: the new child key appears (it had no key as
+    // a string value node), proving the value re-rendered through CollectionNode.
+    expect(await screen.findByText('key')).toBeInTheDocument()
+  })
+
+  test('changing the type to array commits a collection immediately and re-renders as one', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const Controlled = () => {
+      const [data, setLocal] = useState<JsonData>({ x: 'hello' })
+      return (
+        <JsonEditor
+          data={data}
+          setData={(d) => {
+            setData(d)
+            setLocal(d)
+          }}
+        />
+      )
+    }
+    const { container } = render(<Controlled />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    await user.selectOptions(
+      container.querySelector('.jer-select-types select') as HTMLSelectElement,
+      'array'
+    )
+
+    // To-array wraps the value ([value]) and commits + closes, same as object/null
+    // — `handleEdit` never sees an 'array' dataType.
+    expect(setData).toHaveBeenCalledWith({ x: ['hello'] })
+    expect(container.querySelector('.jer-select-types')).toBeNull()
+
+    // `x` now renders as an array collection: a square open-bracket appears (the
+    // root object only contributes a `{`), proving it re-rendered as a collection.
+    await waitFor(() => {
+      const openBrackets = Array.from(container.querySelectorAll('.jer-bracket-open')).map(
+        (el) => el.textContent
+      )
+      expect(openBrackets).toContain('[')
+    })
   })
 })
 

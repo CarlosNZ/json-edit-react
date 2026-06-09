@@ -11,7 +11,7 @@ import {
 import { Icon } from './Icons'
 import { filterNode } from './utils/filter'
 import { getModifier, insertCharInTextArea } from './utils/keyboard'
-import { isCollection } from './utils/misc'
+import { isCollection, NOOP } from './utils/misc'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { KeyDisplay } from './KeyDisplay'
 import {
@@ -449,7 +449,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     handleCancel,
     handleKeyPress: handleKeyPressEdit,
     isEditing,
-    setIsEditing: () => open(path, { cancelOp: clearEditBuffer }),
+    // Gated on `canEdit`: custom components call `setIsEditing` unconditionally
+    // (e.g. on double-click), so a read-only node must hand them a no-op rather
+    // than an opener.
+    setIsEditing: canEdit ? () => open(path, { cancelOp: clearEditBuffer }) : NOOP,
     getStyles,
     canDragOnto: canEdit,
     canEdit,

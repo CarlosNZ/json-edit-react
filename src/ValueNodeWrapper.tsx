@@ -18,6 +18,7 @@ import {
   type ValueData,
   type JsonData,
   type EnumDefinition,
+  type TabDirection,
 } from './types'
 import { useTheme, useEditingStore, useCollapse, type UpdateOutcome } from './contexts'
 import { type CustomNodeData } from './CustomNode'
@@ -290,26 +291,18 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // surface the error via this node's `onError` (inline message + observer).
   // `onCommit` lets Tab open the next field at the commit moment.
   const handleEdit = (inputValue?: unknown, onCommit?: () => void) => {
-    let newValue: JsonData
-    if (inputValue !== undefined && !isJsEvent(inputValue)) newValue = inputValue as JsonData
-    else {
-      switch (dataType) {
-        case 'object':
-          newValue = { [translate('DEFAULT_NEW_KEY', nodeData)]: value }
-          break
-        case 'array':
-          newValue = value ?? []
-          break
-        case 'number': {
-          const n = Number(value)
-          if (isNaN(n)) newValue = 0
-          else newValue = n
-          break
-        }
-        default:
-          newValue = value
-      }
-    }
+    // An explicitly-passed value (e.g. a custom node supplying its own) commits
+    // as-is; otherwise commit the buffer for the current `dataType`. Only
+    // `number` needs coercion — its buffer is a transient string ("-", "1.")
+    // mid-edit; every other type, including enum / custom-node names, commits
+    // unchanged. (`dataType` is never 'object'/'array' here: a type-change to a
+    // collection commits eagerly and closes the editor in `handleChangeDataType`.)
+    const newValue: JsonData =
+      inputValue !== undefined && !isJsEvent(inputValue)
+        ? (inputValue as JsonData)
+        : dataType === 'number'
+          ? toNumberOrZero(value)
+          : (value as JsonData)
     submit({ op: 'edit', path, value: newValue, onCommit }).then(settleEdit(newValue))
   }
 
@@ -338,13 +331,36 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const showCustomNode =
     CustomComponent && ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
+  // Open this node's edit session, reverting the buffer if it's cancelled.
+  // `setIsEditing` is the `canEdit`-gated callable handed to value inputs and
+  // custom components — the latter call it unconditionally, so the gate has to
+  // live here, not in the component. The pencil's `startEdit` prop (below)
+  // reuses the same opener but gates to `undefined` when `!canEdit`, to hide
+  // the icon rather than render a dead one. A forced/imperative edit takes a
+  // separate path (`editorRef.startEdit` → `open(..., { force: true })`).
+  const startEdit = () => open(path, { cancelOp: revertToData })
+  const setIsEditing = canEdit ? startEdit : NOOP
+
+  // Commit this field's edit, then open the next/previous node in the given Tab
+  // direction. Not pure — it orchestrates store actions (`setTabDirection`,
+  // `recordPreviousEdit`, `open`) with this node's `handleEdit`/`path`, so it
+  // stays local rather than moving to keyboard utils (cf. the pure
+  // `getNextOrPrevious`). `handleEdit`'s `onCommit` defers `open` to the commit
+  // moment, so Tab advances only once this field's edit has landed.
+  const tabTo = (dir: TabDirection) => () => {
+    setTabDirection(dir)
+    recordPreviousEdit(path)
+    const target = getNextOrPreviousAtPath(dir)
+    if (target) handleEdit(undefined, () => open(target))
+  }
+
   const inputProps = {
     value,
     parentData,
     setValue: updateValue,
     isEditing,
     canEdit,
-    setIsEditing: canEdit ? () => open(path, { cancelOp: revertToData }) : NOOP,
+    setIsEditing,
     handleEdit,
     handleCancel,
     path,
@@ -356,18 +372,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     handleKeyboard,
     keyboardCommon: {
       cancel: handleCancel,
-      tabForward: () => {
-        setTabDirection('next')
-        recordPreviousEdit(path)
-        const next = getNextOrPreviousAtPath('next')
-        if (next) handleEdit(undefined, () => open(next))
-      },
-      tabBack: () => {
-        setTabDirection('prev')
-        recordPreviousEdit(path)
-        const prev = getNextOrPreviousAtPath('prev')
-        if (prev) handleEdit(undefined, () => open(prev))
-      },
+      tabForward: tabTo('next'),
+      tabBack: tabTo('prev'),
     },
   }
 
@@ -385,7 +391,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
-      setIsEditing={() => console.log('EDIT')}
+      setIsEditing={setIsEditing}
       getStyles={getStyles}
       originalNode={passOriginalNode ? getInputComponent(data, dataType, inputProps) : undefined}
       originalNodeKey={
@@ -448,7 +454,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           ) : (
             showEditButtons && (
               <EditButtons
-                startEdit={canEdit ? () => open(path, { cancelOp: revertToData }) : undefined}
+                startEdit={canEdit ? startEdit : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
                 allowClipboard={allowClipboard}
                 onCopy={onCopy}
@@ -552,6 +558,14 @@ const getInputComponent = (data: JsonData, dataType: DataType | string, inputPro
   }
 }
 
+// Coerce a buffer to a number, falling back to 0 for non-numeric / partial
+// input ("-", "", "1.2.3"). Shared by `handleEdit`'s commit path and the
+// to-number case of `convertValue`.
+const toNumberOrZero = (value: unknown): number => {
+  const n = Number(value)
+  return isNaN(n) ? 0 : n
+}
+
 const convertValue = (
   value: unknown,
   type: DataType,
@@ -561,10 +575,8 @@ const convertValue = (
   switch (type) {
     case 'string':
       return defaultString ?? String(value)
-    case 'number': {
-      const n = Number(value)
-      return isNaN(n) ? 0 : n
-    }
+    case 'number':
+      return toNumberOrZero(value)
     case 'boolean':
       return !!value
     case 'null':
