@@ -40,6 +40,7 @@ export {
   type CustomComponentProps,
   type CustomWrapperProps,
   type CustomNodeDefinition,
+  type CustomButtonDefinition,
   type CustomKeyProps,
   type CustomTextDefinitions,
   type CustomTextFunction,

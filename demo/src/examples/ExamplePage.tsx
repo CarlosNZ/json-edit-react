@@ -177,6 +177,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
             // band out into the margins (e.g. widen the code). Stacks below
             // `lg`.
             <SplitPane
+              storageId={slug}
               left={
                 // Shadow hugs the editor's own rounded container (like the main
                 // demo, which puts `.block-shadow` on the JsonEditor).
@@ -205,7 +206,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
           {def.kind === 'live' &&
             (source !== null ? (
               <Suspense fallback={<Loading />}>
-                <LiveCodeBlock code={source} theme={theme} />
+                <LiveCodeBlock code={source} theme={theme} storageId={slug} />
               </Suspense>
             ) : (
               <Loading />

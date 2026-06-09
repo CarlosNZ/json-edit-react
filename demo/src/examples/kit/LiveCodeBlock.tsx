@@ -7,15 +7,17 @@ import { SplitPane } from './SplitPane'
 interface LiveCodeBlockProps {
   code: string
   theme: Theme
+  storageId: string
 }
 
 // The editable tier: react-live transpiles the snippet in-browser and renders
 // it. Output on the left (mirrors the static layout), editable code on the
 // right. The selected `theme` is injected into scope so the editable code can
 // reference it.
-export const LiveCodeBlock = ({ code, theme }: LiveCodeBlockProps) => (
+export const LiveCodeBlock = ({ code, theme, storageId }: LiveCodeBlockProps) => (
   <LiveProvider code={code} scope={{ ...liveScope, theme }} noInline>
     <SplitPane
+      storageId={storageId}
       left={
         // Same editor-hugging shadow as the static page (see ExamplePage).
         <Box sx={{ '& .jer-editor-container': { boxShadow: 'rgba(0, 0, 0, 0.24) 0px 3px 8px' } }}>

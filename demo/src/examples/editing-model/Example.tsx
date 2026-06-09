@@ -235,6 +235,7 @@ export default function EditingModel() {
   return (
     <>
       <SplitPane
+        storageId="editing-model"
         left={
           <Box className="block-shadow" borderRadius="md">
             <JsonEditor

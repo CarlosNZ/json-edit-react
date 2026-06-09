@@ -7,9 +7,10 @@ const MIN_PANE_PX = 280 // minimum width of the editor or code pane
 const HANDLE_PX = 16 // width of each drag-handle column
 const HALF = HANDLE_PX / 2
 const KEY_STEP_PX = 24 // arrow-key nudge per press
-// Shared across every example page (and persisted), so the layout the user
-// settles on follows them as they browse and on their next visit.
-const STORAGE_KEY = 'jer-examples-split'
+// Per-page localStorage key — each example remembers its own layout, so a
+// layout that suits a wide-key example doesn't carry over to a narrow one.
+const STORAGE_KEY_PREFIX = 'jer-examples-split'
+const storageKeyFor = (id: string) => `${STORAGE_KEY_PREFIX}:${id}`
 
 type Edge = 'x1' | 'x2' | 'x3'
 
@@ -50,9 +51,9 @@ const defaultBounds = (width: number): Bounds => {
 // correctly at any window size or on any page (all share PANE_MAX_WIDTH).
 type Fractions = [number, number, number]
 
-const loadFractions = (): Fractions | null => {
+const loadFractions = (key: string): Fractions | null => {
   try {
-    const f = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null')
+    const f = JSON.parse(localStorage.getItem(key) ?? 'null')
     if (
       Array.isArray(f) &&
       f.length === 3 &&
@@ -67,10 +68,10 @@ const loadFractions = (): Fractions | null => {
   return null
 }
 
-const saveFractions = ({ x1, x2, x3 }: Bounds, width: number) => {
+const saveFractions = (key: string, { x1, x2, x3 }: Bounds, width: number) => {
   if (!width) return
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([x1 / width, x2 / width, x3 / width]))
+    localStorage.setItem(key, JSON.stringify([x1 / width, x2 / width, x3 / width]))
   } catch {
     // Storage unavailable (private mode, quota) — persistence is best-effort.
   }
@@ -79,6 +80,9 @@ const saveFractions = ({ x1, x2, x3 }: Bounds, width: number) => {
 interface SplitPaneProps {
   left: ReactNode
   right: ReactNode
+  // Identifies the page so each example persists its own layout (usually the
+  // example slug). Required — different examples have different ideal splits.
+  storageId: string
 }
 
 // Two resizable panes inside a wider track. By default the band is centred at
@@ -88,9 +92,10 @@ interface SplitPaneProps {
 // code to reduce wrapping). The chosen layout persists across pages and visits.
 // Below `lg` the panes stack and the handles disappear (no room to split). The
 // grip colour is read from the example palette so it reads on any theme.
-export const SplitPane = ({ left, right }: SplitPaneProps) => {
+export const SplitPane = ({ left, right, storageId }: SplitPaneProps) => {
   const palette = useExamplePalette()
   const color = palette.itemCount ?? 'gray.400'
+  const storageKey = storageKeyFor(storageId)
 
   // `ssr: false` reads matchMedia on mount (client-only Vite app), so wide
   // screens don't flash the stacked layout before flipping to side-by-side.
@@ -110,7 +115,7 @@ export const SplitPane = ({ left, right }: SplitPaneProps) => {
     if (!horizontal || !el || bounds) return
     const w = el.clientWidth
     widthRef.current = w
-    const saved = loadFractions()
+    const saved = loadFractions(storageKey)
     if (saved) {
       touched.current = true
       setBounds(clampBounds({ x1: saved[0] * w, x2: saved[1] * w, x3: saved[2] * w }, w))
@@ -141,8 +146,9 @@ export const SplitPane = ({ left, right }: SplitPaneProps) => {
 
   // Persist the layout once the user has set one (skip mid-drag writes).
   useEffect(() => {
-    if (bounds && !dragging && touched.current) saveFractions(bounds, widthRef.current)
-  }, [bounds, dragging])
+    if (bounds && !dragging && touched.current)
+      saveFractions(storageKey, bounds, widthRef.current)
+  }, [storageKey, bounds, dragging])
 
   const setEdge = useCallback((edge: Edge, value: number | ((cur: number) => number)) => {
     touched.current = true

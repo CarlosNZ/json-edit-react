@@ -5,6 +5,7 @@
 | Editing model          | ✅️     |                    | Tighten example set, might not be shown from README, only for dev testing |
 | Delayed settlement     | ✅️     |                    | Make it clearer what's going on                                           |
 | Heat map               | ✅️     |                    | Figure out why Collection style function not working                      |
+| Custom buttons         | ✅️     |                    | "Open link" + "Duplicate" buttons; conditional render + `assign` insert   |
 | Custom Keys            |       |                    | Remove from main demo once done                                           |
 | Types & Enums          |       |                    | Bunch of different types, including Custom Components                     |
 | Event signals          |       |                    | Use toasts for events                                                     |

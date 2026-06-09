@@ -49,4 +49,12 @@ export const examples: Record<string, ExampleDef> = {
     load: () => import('./static/heat-map/Example'),
     code: () => import('./static/heat-map/Example.tsx?raw'),
   },
+  'custom-buttons': {
+    kind: 'static',
+    title: 'Custom buttons',
+    blurb:
+      "Add your own action buttons alongside the built-in Copy / Edit / Delete. Each button's `Element` receives the node's `nodeData` and can render conditionally, while `onClick` runs any handler — here, an \"open link\" button on URLs and a \"duplicate\" button on array items.",
+    load: () => import('./static/custom-buttons/Example'),
+    code: () => import('./static/custom-buttons/Example.tsx?raw'),
+  },
 }
