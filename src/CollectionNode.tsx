@@ -340,6 +340,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const showCustomNodeContents =
     CustomComponent && ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
+  // Deliberately NOT memoized: the early `return null` above (filtered-out
+  // nodes) means a `useMemo` here would break the Rules of Hooks, and hoisting
+  // it above that return would force filtered-out nodes to pay for this
+  // entries-map + sort they currently skip. Cheap enough to recompute for the
+  // nodes that actually render.
   const keyValueArray = Object.entries(data).map(
     ([key, value]) =>
       [collectionType === 'array' ? Number(key) : key, value] as [string | number, ValueData]
