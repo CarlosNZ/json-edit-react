@@ -47,6 +47,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     translate,
     customNodeDefinitions,
     customNodeData,
+    CustomSelect,
     handleKeyboard,
     keyboardControls,
     editConfirmRef,
@@ -380,6 +381,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       tabForward: tabTo('next'),
       tabBack: tabTo('prev'),
     },
+    CustomSelect,
   }
 
   const keyDisplayProps = buildKeyDisplayProps({ handleCancel, getStyles })
@@ -472,34 +474,19 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
                 editConfirmRef={editConfirmRef}
                 jsonStringify={jsonStringify}
                 showIconTooltips={showIconTooltips}
+                CustomSelect={CustomSelect}
               />
             )
           )}
           {showTypeSelector && (
-            <div className="jer-select jer-select-types">
-              <select
-                name={`${name}-type-select`}
-                className="jer-select-inner"
-                onChange={(e) => handleChangeDataType(e.target.value as DataType)}
-                value={enumType ? enumType.enum : dataType}
-              >
-                {allowedDataTypes.map((type) => {
-                  if (type instanceof Object && 'enum' in type) {
-                    return (
-                      <option value={type.enum} key={type.enum}>
-                        {type.enum}
-                      </option>
-                    )
-                  }
-                  return (
-                    <option value={type} key={type}>
-                      {type}
-                    </option>
-                  )
-                })}
-              </select>
-              <span className="focus"></span>
-            </div>
+            <CustomSelect
+              name={`${name}-type-select`}
+              value={enumType ? enumType.enum : dataType}
+              onChange={(value) => handleChangeDataType(value as DataType)}
+              options={allowedDataTypes.map((type) =>
+                type instanceof Object && 'enum' in type ? type.enum : type
+              )}
+            />
           )}
           {showErrorString && (
             <span className="jer-error-slug" style={getStyles('error', nodeData)}>

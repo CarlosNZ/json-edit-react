@@ -154,34 +154,24 @@ export const StringValue: React.FC<InputProps & { value: string; enumType?: Enum
 
   const pathString = toPathString(path)
 
-  const { value, setValue, nodeData, handleEdit, handleKeyboard, keyboardCommon } = props
+  const { value, setValue, nodeData, handleEdit, handleKeyboard, keyboardCommon, CustomSelect } =
+    props
 
   if (isEditing && enumType) {
     return (
-      <div className="jer-select jer-select-enums">
-        <select
-          name={`${pathString}-value-select`}
-          className="jer-select-inner"
-          onChange={(e) => setValue(e.target.value)}
-          value={value}
-          autoFocus
-          onKeyDown={(e: React.KeyboardEvent) => {
-            handleKeyboard(e, {
-              stringConfirm: handleEdit,
-              ...keyboardCommon,
-            })
-          }}
-        >
-          {enumType.values.map((val) => {
-            return (
-              <option value={val} key={val}>
-                {val}
-              </option>
-            )
-          })}
-        </select>
-        <span className="focus"></span>
-      </div>
+      <CustomSelect
+        name={`${pathString}-value-select`}
+        value={value}
+        onChange={setValue}
+        options={enumType.values}
+        autoFocus
+        onKeyDown={(e) =>
+          handleKeyboard(e, {
+            stringConfirm: handleEdit,
+            ...keyboardCommon,
+          })
+        }
+      />
     )
   }
 
