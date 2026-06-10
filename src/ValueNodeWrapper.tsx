@@ -249,14 +249,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       return
     }
 
-    const newValue = convertValue(
-      value,
-      type,
-      translate('DEFAULT_NEW_KEY', nodeData),
-      // If coming *FROM* a custom type, change value to something that no
-      // longer matches the custom node condition.
-      customNodeData?.CustomComponent ? translate('DEFAULT_STRING', nodeData) : undefined
-    )
+    const newValue = convertValue(value, type, translate('DEFAULT_NEW_KEY', nodeData))
 
     if (type === 'object' || type === 'array' || type === 'null') {
       // Commit immediately and close the editor: a collection is structural (it
@@ -334,8 +327,18 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const showTypeSelector = isEditing && allowedDataTypes.length > 1
   const showEditButtons = (dataType !== 'invalid' || CustomComponent) && !error && showEditTools
   const shouldShowKey = showLabel && showKey
+  // A local (deferred) type-switch is in progress when the editing `dataType`
+  // has moved away from what the committed data reports — `revertToData`
+  // resyncs them whenever a session ends, so mid-session divergence can only
+  // come from the type selector. The custom-component match (`customNodeData`)
+  // is keyed off committed data, so it still claims this node mid-switch; the
+  // switched-to type's standard editor must win until the edit commits or
+  // cancels.
+  const typeSwitchedAway = isEditing && dataType !== getDataType(data, customNodeData)
   const showCustomNode =
-    CustomComponent && ((isEditing && showOnEdit) || (!isEditing && showOnView))
+    CustomComponent &&
+    !typeSwitchedAway &&
+    ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
   // Open this node's edit session, reverting the buffer if it's cancelled.
   // `setIsEditing` is the `canEdit`-gated callable handed to value inputs and
@@ -555,19 +558,21 @@ const getInputComponent = (data: JsonData, dataType: DataType | string, inputPro
 // input ("-", "", "1.2.3"). Shared by `handleEdit`'s commit path and the
 // to-number case of `convertValue`.
 const toNumberOrZero = (value: unknown): number => {
+  // Number(symbol) throws rather than returning NaN
+  if (typeof value === 'symbol') return 0
   const n = Number(value)
   return isNaN(n) ? 0 : n
 }
 
-const convertValue = (
-  value: unknown,
-  type: DataType,
-  defaultNewKey: string,
-  defaultString?: string
-) => {
+const convertValue = (value: unknown, type: DataType, defaultNewKey: string) => {
   switch (type) {
     case 'string':
-      return defaultString ?? String(value)
+      // Non-JSON sources need care: null/undefined have no string
+      // representation worth editing (empty buffer beats the literal "null"),
+      // and a symbol's editable text is its description, not String(symbol)
+      if (value == null) return ''
+      if (typeof value === 'symbol') return value.description ?? ''
+      return String(value)
     case 'number':
       return toNumberOrZero(value)
     case 'boolean':

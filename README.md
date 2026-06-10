@@ -776,7 +776,7 @@ defaultValue = (_, newKey) => { // Ignoring normal first parameter in this case
 > [!NOTE]
 > The `newKeyOptions` and `defaultValue` functions needn't return anything -- if they don't, they'll just use:
 > - `newKeyOptions`: normal text input for new key
-> - `defaultValue`: an internal default (the `DEFAULT_STRING` value defined in [Localisation](#localisation))
+> - `defaultValue`: `null`
 </details>
 
 
@@ -1008,7 +1008,6 @@ Localise your implementation (or just customise the default messages) by passing
   ERROR_ADD: 'Adding node unsuccessful',
   ERROR_RENAME: 'Rename unsuccessful',
   ERROR_MOVE: 'Move unsuccessful',
-  DEFAULT_STRING: 'New data!',
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
   EMPTY_STRING: '<empty string>' // Displayed when property key is ""

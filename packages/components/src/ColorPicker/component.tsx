@@ -116,6 +116,10 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
             }
             handleEdit={() => {
               if (keepAsColor && !colord(text).isValid()) {
+                // Reset the buffer too — committing the unchanged fallback
+                // doesn't alter `data`, so nothing else clears the invalid
+                // text
+                setValue(lastValidColor.current)
                 handleEdit(lastValidColor.current)
                 onError({ code: 'UPDATE_ERROR', message: invalidColorError }, text)
                 return

@@ -3,6 +3,7 @@ import { StringDisplay, toPathString, StringEdit, type CustomComponentProps } fr
 
 export interface DateObjectProps {
   showTime?: boolean
+  invalidDateError?: string
 }
 
 export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObjectProps>> = (props) => {
@@ -19,7 +20,7 @@ export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObject
   } = props
   const lastValidDate = useRef(value)
 
-  const { showTime = true } = componentProps
+  const { showTime = true, invalidDateError = 'Invalid Date' } = componentProps
 
   if (value instanceof Date) lastValidDate.current = value
 
@@ -47,8 +48,11 @@ export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObject
           newDate.toISOString()
           handleEdit(newDate)
         } catch {
+          // Reset the buffer too — committing the unchanged fallback
+          // doesn't alter `data`, so nothing else clears the invalid text
+          ;(setValue as (v: unknown) => void)(lastValidDate.current)
           handleEdit(lastValidDate.current)
-          onError({ code: 'UPDATE_ERROR', message: 'Invalid Date' }, value)
+          onError({ code: 'UPDATE_ERROR', message: invalidDateError }, value)
         }
       }}
     />

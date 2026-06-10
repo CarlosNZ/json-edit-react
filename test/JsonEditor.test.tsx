@@ -737,7 +737,7 @@ describe('JsonEditor — structural mutations', () => {
   test('switching the value type renders the matching input, not the committed type', async () => {
     const user = userEvent.setup()
     const { container } = render(<JsonEditor data={{ x: 'hello' }} setData={noop} />)
-    const typeSelect = () => container.querySelector('.jer-select-types select') as HTMLSelectElement
+    const typeSelect = () => container.querySelector('select[name="x-type-select"]') as HTMLSelectElement
 
     await user.dblClick(screen.getByText('"hello"'))
     // String value → the string textarea editor.
@@ -762,18 +762,36 @@ describe('JsonEditor — structural mutations', () => {
     expect(container.querySelector('input.jer-input-boolean')).toBeNull()
   })
 
+  test('changing type null → string pre-fills an empty editor, not the literal "null"', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(<JsonEditor data={{ x: null }} setData={setData} />)
+
+    await user.dblClick(screen.getByText('null'))
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+
+    // A null source has no string representation worth editing — the buffer
+    // must be empty, not String(null).
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('')
+
+    await user.type(input, 'typed{Enter}')
+    expect(setData).toHaveBeenCalledWith({ x: 'typed' })
+  })
+
   test('changing the type to null commits immediately and closes the editor', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const { container } = render(<JsonEditor data={{ x: 'hello' }} setData={setData} />)
 
     await user.dblClick(screen.getByText('"hello"'))
-    await user.selectOptions(container.querySelector('.jer-select-types select') as HTMLSelectElement, 'null')
+    await user.selectOptions(container.querySelector('select[name="x-type-select"]') as HTMLSelectElement, 'null')
 
     // `null` has no value to edit, so selecting it commits straight away — no
     // OK/Enter needed — and the editor closes (the type selector disappears).
     expect(setData).toHaveBeenCalledWith({ x: null })
-    expect(container.querySelector('.jer-select-types')).toBeNull()
+    expect(container.querySelector('select[name="x-type-select"]')).toBeNull()
   })
 
   test('changing the type to object commits a collection immediately and re-renders as one', async () => {
@@ -797,7 +815,7 @@ describe('JsonEditor — structural mutations', () => {
 
     await user.dblClick(screen.getByText('"hello"'))
     await user.selectOptions(
-      container.querySelector('.jer-select-types select') as HTMLSelectElement,
+      container.querySelector('select[name="x-type-select"]') as HTMLSelectElement,
       'object'
     )
 
@@ -805,7 +823,7 @@ describe('JsonEditor — structural mutations', () => {
     // with the converted default ({ [DEFAULT_NEW_KEY]: value }) and closes the
     // editor — so `handleEdit` never sees an 'object' dataType.
     expect(setData).toHaveBeenCalledWith({ x: { key: 'hello' } })
-    expect(container.querySelector('.jer-select-types')).toBeNull()
+    expect(container.querySelector('select[name="x-type-select"]')).toBeNull()
 
     // `x` now renders as a collection: the new child key appears (it had no key
     // as a string value node), proving the value re-rendered through
@@ -832,14 +850,14 @@ describe('JsonEditor — structural mutations', () => {
 
     await user.dblClick(screen.getByText('"hello"'))
     await user.selectOptions(
-      container.querySelector('.jer-select-types select') as HTMLSelectElement,
+      container.querySelector('select[name="x-type-select"]') as HTMLSelectElement,
       'array'
     )
 
     // To-array wraps the value ([value]) and commits + closes, same as
     // object/null — `handleEdit` never sees an 'array' dataType.
     expect(setData).toHaveBeenCalledWith({ x: ['hello'] })
-    expect(container.querySelector('.jer-select-types')).toBeNull()
+    expect(container.querySelector('select[name="x-type-select"]')).toBeNull()
 
     // `x` now renders as an array collection: a square open-bracket appears
     // (the root object only contributes a `{`), proving it re-rendered as a
@@ -1468,7 +1486,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
         allowTypeSelection={['string', { enum: 'Color', values: ['red', 'green', 'blue'] }]}
       />
     )
-    const typeSelect = () => container.querySelector('.jer-select-types select') as HTMLSelectElement
+    const typeSelect = () => container.querySelector('select[name="x-type-select"]') as HTMLSelectElement
 
     // Enter edit mode on the value — the type <select> appears
     await user.dblClick(screen.getByText('"hello"'))
@@ -1486,7 +1504,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(onUpdate).toHaveBeenCalled()
 
     // The rejection reverts the value and closes the edit session.
-    await waitFor(() => expect(container.querySelector('.jer-select-types')).toBeNull())
+    await waitFor(() => expect(container.querySelector('select[name="x-type-select"]')).toBeNull())
     expect(screen.getByText('"hello"')).toBeInTheDocument()
 
     // Re-open editing: the type selector must reflect the reverted value
