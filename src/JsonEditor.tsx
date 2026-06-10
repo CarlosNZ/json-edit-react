@@ -9,6 +9,7 @@ import React, {
 import { assign, type AssignOptions, type AssignInput } from './utils/assign'
 import { extract } from './utils/extract'
 import { CollectionNode } from './CollectionNode'
+import { NativeSelect } from './NativeSelect'
 import { getFullKeyboardControlMap, handleKeyPress } from './utils/keyboard'
 import { matchNode, matchNodeKey } from './utils/filter'
 import { isCollection, NOOP, restoreUndefined, UNDEFINED } from './utils/misc'
@@ -165,6 +166,7 @@ const Editor: React.FC<
   jsonParse = JSON.parse,
   jsonStringify = defaultJsonStringify,
   TextEditor,
+  CustomSelect: Select = NativeSelect,
   errorDisplayTime = 2500,
   keyboardControls = EMPTY_KEYBOARD_CONTROLS,
   editorRef,
@@ -664,6 +666,7 @@ const Editor: React.FC<
     jsonParse: jsonParseReplacement,
     jsonStringify: jsonStringifyReplacement,
     TextEditor,
+    Select,
     errorDisplayTime,
     handleKeyboard: handleKeyboardCallback,
     keyboardControls: fullKeyboardControls,

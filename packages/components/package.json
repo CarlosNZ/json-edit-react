@@ -38,10 +38,20 @@
     "react": ">=18.0.0"
   },
   "dependencies": {
+    "@codemirror/lang-json": "^6.0.1",
+    "@uiw/codemirror-theme-console": "^4.23.13",
+    "@uiw/codemirror-theme-dracula": "^4.23.13",
+    "@uiw/codemirror-theme-github": "^4.23.13",
+    "@uiw/codemirror-theme-monokai": "^4.23.13",
+    "@uiw/codemirror-theme-quietlight": "^4.23.13",
+    "@uiw/codemirror-theme-solarized": "^4.23.13",
+    "@uiw/codemirror-theme-tokyo-night": "^4.23.13",
+    "@uiw/react-codemirror": "^4.23.13",
     "colord": "^2.9.3",
     "react-colorful": "^5.6.1",
     "react-datepicker": "^7.5.0",
     "react-markdown": "^10.1.0",
+    "react-select": "^5.10.0",
     "use-debounce": "^10.0.5"
   },
   "devDependencies": {

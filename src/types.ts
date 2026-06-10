@@ -1,6 +1,7 @@
 import { type JSX } from 'react'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { CustomNodeData } from './CustomNode'
+import { type CustomSelectProps } from './NativeSelect'
 
 export type JsonData = Record<string, unknown> | Array<unknown> | unknown
 
@@ -50,6 +51,7 @@ export interface JsonEditorProps<T = JsonData> {
   jsonParse?: (input: string, reviver?: (key: string, value: string) => unknown) => JsonData
   jsonStringify?: (input: JsonData, replacer?: (key: string, value: unknown) => unknown) => string
   TextEditor?: React.FC<TextEditorProps>
+  CustomSelect?: React.ComponentType<CustomSelectProps>
   errorDisplayTime?: number // ms
   keyboardControls?: KeyboardControls
   insertAtTop?: boolean | 'array' | 'object'
@@ -453,6 +455,7 @@ interface BaseNodeProps {
   customNodeDefinitions: CustomNodeDefinition[]
   customNodeData: CustomNodeData
   customButtons: CustomButtonDefinition[]
+  Select: React.ComponentType<CustomSelectProps>
   errorDisplayTime: number
   keyboardControls: KeyboardControlsFull
   handleKeyboard: (
@@ -604,6 +607,7 @@ export interface InputProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
+  Select: React.ComponentType<CustomSelectProps>
 }
 
 /**

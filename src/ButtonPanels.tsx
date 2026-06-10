@@ -12,6 +12,7 @@ import {
   type OnCopyFunction,
   JsonData,
 } from './types'
+import { type CustomSelectProps } from './NativeSelect'
 import { getModifier } from './utils/keyboard'
 import { pathsEqual, stringifyPath } from './utils/pathTools'
 
@@ -38,6 +39,7 @@ interface EditButtonProps {
     replacer?: (this: any, key: string, value: unknown) => string
   ) => string
   showIconTooltips: boolean
+  Select: React.ComponentType<CustomSelectProps>
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
@@ -56,6 +58,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   getNewKeyOptions,
   jsonStringify,
   showIconTooltips,
+  Select,
 }) => {
   const { getStyles } = useTheme()
   // Actions only (no subscription beyond the `isAddingHere` selector below).
@@ -225,33 +228,20 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       {isAddingHere && handleAdd && type === 'object' && (
         <>
           {hasKeyOptionsList ? (
-            <div className="jer-select jer-select-keys">
-              <select
-                name="new-key-select"
-                className="jer-select-inner"
-                onChange={(e) => {
-                  // The chosen option IS the key — commit it directly.
-                  handleAdd(e.target.value)
-                }}
-                defaultValue=""
-                autoFocus
-                onKeyDown={(e: React.KeyboardEvent) => {
-                  handleKeyboard(e, { cancel: () => cancel() })
-                }}
-              >
-                <option value="" disabled>
-                  {addingKeyState.length > 0
-                    ? translate('KEY_SELECT', nodeData)
-                    : translate('NO_KEY_OPTIONS', nodeData)}
-                </option>
-                {addingKeyState.map((val) => (
-                  <option value={val} key={val}>
-                    {val}
-                  </option>
-                ))}
-              </select>
-              <span className="focus"></span>
-            </div>
+            <Select
+              name="new-key-select"
+              // The chosen option IS the key — commit it directly.
+              onChange={handleAdd}
+              defaultValue=""
+              autoFocus
+              onKeyDown={(e) => handleKeyboard(e, { cancel: () => cancel() })}
+              placeholder={
+                addingKeyState.length > 0
+                  ? translate('KEY_SELECT', nodeData)
+                  : translate('NO_KEY_OPTIONS', nodeData)
+              }
+              options={addingKeyState}
+            />
           ) : (
             <input
               className="jer-input-new-key"

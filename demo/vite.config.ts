@@ -153,6 +153,9 @@ export default defineConfig({
             '@uiw/codemirror-theme-console',
             '@uiw/codemirror-theme-quietlight',
             '@uiw/codemirror-theme-monokai',
+            '@uiw/codemirror-theme-dracula',
+            '@uiw/codemirror-theme-solarized',
+            '@uiw/codemirror-theme-tokyo-night',
           ],
           // Icons library
           icons: ['react-icons/fa', 'react-icons/bi', 'react-icons/ai'],
