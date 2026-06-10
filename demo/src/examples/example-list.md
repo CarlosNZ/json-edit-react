@@ -9,9 +9,9 @@
 | Custom Keys            |       |                    | Remove from main demo once done                                           |
 | Types & Enums          |       |                    | Bunch of different types, including Custom Components                     |
 | Event signals          |       |                    | Use toasts for events                                                     |
-| Massive data set       |       |                    | Make sure it lazy-loads                                                   |
+| Massive data set       | ✅️     |                    | ~19k nodes, dynamic `import()` → own chunk; opens collapsed past level 1  |
 | All main demo examples |       |                    | So users can inspect the code -- link from main demo pages                |
-| Confirmation modal     |       |                    | To demonstrate "confirm" hooks                                            |
+| Confirmation modal     | ✅️     |                    | To demonstrate "confirm" hooks                                            |
 | Undo/Redo              |       |                    | To demonstrate useUndo hook                                               |
 | External control       |       |                    |
 | Custom components      |       |                    | One that demonstrates all the types and props                             |

@@ -57,4 +57,12 @@ export const examples: Record<string, ExampleDef> = {
     load: () => import('./static/custom-buttons/Example'),
     code: () => import('./static/custom-buttons/Example.tsx?raw'),
   },
+  'massive-data': {
+    kind: 'static',
+    title: 'Massive data set',
+    blurb:
+      "A ~19,000-node document (~900 KB) that's lazy-loaded with a dynamic `import()`, so it sits in its own chunk and never weighs down the initial bundle. It opens collapsed past the top level to keep the first render fast — expand into any branch to explore.",
+    load: () => import('./static/massive-data/Example'),
+    code: () => import('./static/massive-data/Example.tsx?raw'),
+  },
 }

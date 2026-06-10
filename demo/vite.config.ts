@@ -1,7 +1,25 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import fs from 'fs-extra'
+import JSON5 from 'json5'
+
+// Parse `.json5` imports to a plain object at build time, mirroring Vite's
+// built-in `.json` handling — consumers get a ready-made object with no runtime
+// parse and no `json5` in their bundle. Bare imports only; `?raw` imports keep
+// their text (Vite handles those itself).
+const json5Plugin = (): Plugin => ({
+  name: 'json5',
+  transform(code, id) {
+    if (!id.endsWith('.json5')) return null
+    const data = JSON5.parse(code)
+    // `JSON.parse('…')` evaluates faster than a large inline object literal.
+    return {
+      code: `export default JSON.parse(${JSON.stringify(JSON.stringify(data))})`,
+      map: null,
+    }
+  },
+})
 
 type PackageOption = 'npm' | 'local' | 'build' | 'pack'
 
@@ -78,7 +96,7 @@ const v1IndexHtmlPlugin = {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), v1IndexHtmlPlugin],
+  plugins: [react(), json5Plugin(), v1IndexHtmlPlugin],
   base: '/json-edit-react/',
   resolve: {
     // Order matters: more specific scoped aliases must come before the bare
@@ -91,6 +109,10 @@ export default defineConfig({
     // can't find core. In `npm` mode the replacement is just `'json-edit-react'`,
     // which makes the alias a no-op (vite re-resolves through node_modules).
     alias: [
+      // The repo-root `data/` dir of generated test fixtures (outside the demo),
+      // so examples can import a big data set by a clean name rather than a deep
+      // `../../../../../data/...` relative path.
+      { find: /^@test-data\//, replacement: path.resolve(__dirname, '../data') + '/' },
       { find: /^@json-edit-react\/themes$/, replacement: themesSrcMap[provider] },
       { find: /^@json-edit-react\/components$/, replacement: componentsSrcMap[provider] },
       { find: /^@json-edit-react\/utils$/, replacement: utilsSrcMap[provider] },
