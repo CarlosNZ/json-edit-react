@@ -441,6 +441,10 @@ No action is strictly required — a `translations` object doesn't have to be ex
   }}
 ```
 
+### Removed localisation key: `DEFAULT_STRING`
+
+The `DEFAULT_STRING` key (`'New data!'`) is gone — if your `translations` object defines it, remove it (TypeScript rejects unknown keys). It was the placeholder substituted into the edit buffer when switching a custom node's type to `string`; type-switching now converts the node's actual value instead (e.g. a `null`/`undefined` source becomes an empty string), so the placeholder no longer exists.
+
 ---
 ## 10. Observers reshaped: `onEditEvent` lifecycle stream; flat `onError` / `onCollapse`; `onCopy` error
 

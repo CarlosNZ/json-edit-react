@@ -13,7 +13,6 @@ const localisedStrings = {
   ERROR_ADD: 'Adding node unsuccessful',
   ERROR_RENAME: 'Rename unsuccessful',
   ERROR_MOVE: 'Move unsuccessful',
-  DEFAULT_STRING: 'New data!',
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
   EMPTY_STRING: '<empty string>',

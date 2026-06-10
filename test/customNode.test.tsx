@@ -271,6 +271,147 @@ describe('CustomNode — type selector & defaultValue', () => {
   })
 })
 
+describe('CustomNode — switching type away mid-edit', () => {
+  // Mirrors the shipped non-JSON components (`undefined`, `NaN`, `Symbol`):
+  // value-keyed condition, shown while editing, listed in the type selector.
+  // A type-switch away is deferred (local buffer only) like any primitive
+  // type change, so the custom component must yield to the target type's
+  // standard editor immediately — even though the committed data still
+  // matches the condition until the edit is confirmed.
+  const nonJsonDef = (
+    condition: CustomNodeDefinition['condition'],
+    name: string,
+    defaultValue: unknown
+  ): CustomNodeDefinition => ({
+    condition,
+    component: () => <span data-testid="custom">CUSTOM</span>,
+    showOnEdit: true,
+    name,
+    showInTypeSelector: true,
+    defaultValue,
+  })
+
+  const undefinedDef = nonJsonDef(({ value }) => value === undefined, 'undefined', undefined)
+  const nanDef = nonJsonDef(({ value }) => Number.isNaN(value), 'NaN', NaN)
+  const symbolDef = nonJsonDef(({ value }) => typeof value === 'symbol', 'Symbol', Symbol('new'))
+
+  const startEdit = async (user: ReturnType<typeof userEvent.setup>) => {
+    const row = screen.getByTestId('custom').closest('.jer-component') as HTMLElement
+    await user.click(within(row).getByTitle('Edit'))
+  }
+
+  test('undefined → string: the standard string editor appears, empty, and commits typed text', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor
+        data={{ x: undefined }}
+        setData={setData}
+        customNodeDefinitions={[undefinedDef]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('undefined')
+
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+
+    // The custom component yields to the string editor, whose buffer is empty
+    // (not the DEFAULT_STRING localisation text).
+    expect(screen.queryByTestId('custom')).toBeNull()
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('')
+
+    await user.type(input, 'hello')
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setData).toHaveBeenCalledWith({ x: 'hello' })
+  })
+
+  test('NaN → number: the numeric editor appears with 0 and commits', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor
+        data={{ x: NaN }}
+        setData={setData}
+        customNodeDefinitions={[nanDef]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'number')
+
+    expect(screen.queryByTestId('custom')).toBeNull()
+    const input = container.querySelector('input.jer-input-number') as HTMLInputElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('0')
+
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setData).toHaveBeenCalledWith({ x: 0 })
+  })
+
+  test('Symbol → string: the string editor pre-fills the symbol description', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <JsonEditor
+        data={{ x: Symbol('my description') }}
+        setData={noop}
+        customNodeDefinitions={[symbolDef]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+
+    expect(screen.queryByTestId('custom')).toBeNull()
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('my description')
+  })
+
+  test('Symbol → number: coerces to 0 instead of throwing (Number(symbol) throws)', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <JsonEditor
+        data={{ x: Symbol('sym') }}
+        setData={noop}
+        customNodeDefinitions={[symbolDef]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'number')
+
+    expect(screen.queryByTestId('custom')).toBeNull()
+    const input = container.querySelector('input.jer-input-number') as HTMLInputElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('0')
+  })
+
+  test('cancelling after a switch-away restores the custom node, nothing committed', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor
+        data={{ x: undefined }}
+        setData={setData}
+        customNodeDefinitions={[undefinedDef]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    await user.type(input, 'discard-me{Escape}')
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.getByTestId('custom')).toBeInTheDocument()
+    expect(container.querySelector('textarea.jer-input-text')).toBeNull()
+  })
+})
+
 describe('CustomNode — passOriginalNode', () => {
   test('passOriginalNode true → the original node is provided for re-rendering', () => {
     const defs: CustomNodeDefinition[] = [
