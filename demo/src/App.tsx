@@ -719,10 +719,17 @@ function App() {
               </Button>
             </HStack>
             <HStack justify="space-between" w="100%">
-              <Text maxW={400} fontSize="md">
-                Undo/Redo functionality can be incorporated by using an additional hook, such as{' '}
-                <Link href="https://github.com/homerchen19/use-undo" isExternal>
-                  use-undo
+              <Text maxW={600} fontSize="md">
+                Undo/Redo functionality can be incorporated by using the{' '}
+                <Link
+                  href="https://github.com/CarlosNZ/json-edit-react/blob/main/packages/utils/src/undo/README.md"
+                  isExternal
+                >
+                  <span className="code">useUndo</span> hook
+                </Link>
+                , from the{' '}
+                <Link href="https://www.npmjs.com/package/@json-edit-react/utils" isExternal>
+                  <span className="code">@json-edit-react/utils</span> package
                 </Link>
               </Text>
               <Button
