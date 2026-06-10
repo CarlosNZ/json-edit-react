@@ -4,6 +4,7 @@ import { toPathString, StringEdit, type CustomComponentProps } from 'json-edit-r
 export interface BigIntProps {
   style?: React.CSSProperties
   descriptionStyle?: React.CSSProperties
+  invalidBigIntError?: string
 }
 
 export const BigIntComponent: React.FC<CustomComponentProps<BigIntProps>> = (props) => {
@@ -20,7 +21,8 @@ export const BigIntComponent: React.FC<CustomComponentProps<BigIntProps>> = (pro
     ...rest
   } = props
   const { path } = nodeData
-  const { style = { color: '#006291', fontSize: '90%' } } = componentProps
+  const { style = { color: '#006291', fontSize: '90%' }, invalidBigIntError = 'Invalid BigInt' } =
+    componentProps
   const lastValidValue = useRef(value)
 
   if (typeof value === 'bigint') lastValidValue.current = value
@@ -43,7 +45,7 @@ export const BigIntComponent: React.FC<CustomComponentProps<BigIntProps>> = (pro
           // doesn't alter `data`, so nothing else clears the invalid text
           ;(setValue as (v: unknown) => void)(lastValidValue.current)
           handleEdit(lastValidValue.current)
-          onError({ code: 'UPDATE_ERROR', message: 'Invalid BigInt' }, value)
+          onError({ code: 'UPDATE_ERROR', message: invalidBigIntError }, value)
         }
       }}
     />
