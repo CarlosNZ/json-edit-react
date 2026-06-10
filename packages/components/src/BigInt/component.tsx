@@ -39,6 +39,9 @@ export const BigIntComponent: React.FC<CustomComponentProps<BigIntProps>> = (pro
           // BigInt() throws on anything non-integer ("1.5", "abc", "1e3")
           handleEdit(BigInt(editDisplayValue))
         } catch {
+          // Reset the buffer too — committing the unchanged fallback
+          // doesn't alter `data`, so nothing else clears the invalid text
+          ;(setValue as (v: unknown) => void)(lastValidValue.current)
           handleEdit(lastValidValue.current)
           onError({ code: 'UPDATE_ERROR', message: 'Invalid BigInt' }, value)
         }

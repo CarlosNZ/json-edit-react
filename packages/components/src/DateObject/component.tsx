@@ -47,6 +47,9 @@ export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObject
           newDate.toISOString()
           handleEdit(newDate)
         } catch {
+          // Reset the buffer too — committing the unchanged fallback
+          // doesn't alter `data`, so nothing else clears the invalid text
+          ;(setValue as (v: unknown) => void)(lastValidDate.current)
           handleEdit(lastValidDate.current)
           onError({ code: 'UPDATE_ERROR', message: 'Invalid Date' }, value)
         }
