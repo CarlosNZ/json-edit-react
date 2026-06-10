@@ -256,6 +256,9 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       // remounts), and `null` has no value to edit — so there's nothing to keep
       // the editor open for.
       submit({ op: 'edit', path, value: newValue }).then(settleEdit(newValue as JsonData))
+      // Launch the new collection expanded (#217) — a level-based `collapse`
+      // setting would otherwise hide the just-created contents.
+      if (type !== 'null') setCollapseState({ path, collapsed: false, includeChildren: false })
       return
     }
 

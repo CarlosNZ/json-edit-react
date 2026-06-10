@@ -869,6 +869,23 @@ describe('JsonEditor — structural mutations', () => {
       expect(openBrackets).toContain('[')
     })
   })
+
+  test('changing the type to object launches the new collection expanded, overriding a collapse level (#217)', async () => {
+    const user = userEvent.setup()
+    const Controlled = () => {
+      const [data, setLocal] = useState<JsonData>({ x: 'hello' })
+      return <JsonEditor data={data} setData={(d) => setLocal(d)} collapse={1} />
+    }
+    render(<Controlled />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    await user.selectOptions(screen.getByRole('combobox'), 'object')
+
+    // The committed { key: 'hello' } collection at depth 1 would mount
+    // collapsed under collapse={1}; the type-change broadcast expands it so
+    // the just-created contents are immediately visible.
+    expect(await screen.findByText('key')).toBeInTheDocument()
+  })
 })
 
 describe('JsonEditor — §17 onUpdate event discriminant', () => {
