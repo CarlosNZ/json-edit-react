@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { toPathString, StringEdit, type CustomComponentProps } from 'json-edit-react'
 
 export interface BigIntProps {
@@ -16,10 +16,14 @@ export const BigIntComponent: React.FC<CustomComponentProps<BigIntProps>> = (pro
     componentProps = {},
     value,
     handleEdit,
+    onError,
     ...rest
   } = props
   const { path } = nodeData
   const { style = { color: '#006291', fontSize: '90%' } } = componentProps
+  const lastValidValue = useRef(value)
+
+  if (typeof value === 'bigint') lastValidValue.current = value
 
   const editDisplayValue = typeof value === 'bigint' ? String(value) : (value as string)
 
@@ -31,7 +35,13 @@ export const BigIntComponent: React.FC<CustomComponentProps<BigIntProps>> = (pro
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       {...rest}
       handleEdit={() => {
-        handleEdit(BigInt(nodeData.value as string))
+        try {
+          // BigInt() throws on anything non-integer ("1.5", "abc", "1e3")
+          handleEdit(BigInt(editDisplayValue))
+        } catch {
+          handleEdit(lastValidValue.current)
+          onError({ code: 'UPDATE_ERROR', message: 'Invalid BigInt' }, value)
+        }
       }}
     />
   ) : (
