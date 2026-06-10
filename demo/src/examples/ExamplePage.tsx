@@ -28,6 +28,8 @@ const LiveCodeBlock = lazy(() =>
   import('./kit/LiveCodeBlock').then((m) => ({ default: m.LiveCodeBlock }))
 )
 
+const SourceIndicator = lazy(() => import('../SourceIndicator'))
+
 const Loading = () => (
   <Center minH={200}>
     <Spinner />
@@ -104,6 +106,9 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
       style={palette.pageBg}
     >
       <ThemeProbe ref={probeRef} theme={theme} />
+      <Suspense fallback={null}>
+        <SourceIndicator />
+      </Suspense>
       {/* The header stays at the header width; the example content below breaks
           out wider so its split panes can be dragged out into the margins. */}
       <Box maxW={HEADER_MAX_WIDTH} mx="auto">
