@@ -42,6 +42,14 @@ export const examples: Record<string, ExampleDef> = {
       'Exercise the optimistic commit lifecycle, the hold() gate and the full onEditEvent stream. Pick an onUpdate behaviour, then edit / rename / add / delete and watch the event viewer.',
     load: () => import('./editing-model/Example'),
   },
+  'event-signals': {
+    kind: 'static',
+    title: 'Event signals',
+    blurb:
+      "Surface the full `onEditEvent` lifecycle as toast notifications — pass in your own notifier and fire it on every event, colour-coded by category: in-progress (blue), applied / save confirmed (green), discarded or removed (orange), save rejected (red). Saves settle after a random delay and fail one in four, so the stream mixes `updateSuccessful` and `updateError`. Edit, rename, add, move or delete a node and watch it stream.",
+    load: () => import('./static/event-signals/Example'),
+    code: () => import('./static/event-signals/Example.tsx?raw'),
+  },
   'heat-map': {
     kind: 'static',
     title: 'Heat map',

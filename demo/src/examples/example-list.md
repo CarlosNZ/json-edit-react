@@ -8,7 +8,7 @@
 | Custom buttons         | ✅️     |                    | "Open link" + "Duplicate" buttons; conditional render + `assign` insert   |
 | Custom Keys            |       |                    | Remove from main demo once done                                           |
 | Types & Enums          |       |                    | Bunch of different types, including Custom Components                     |
-| Event signals          |       |                    | Use toasts for events                                                     |
+| Event signals          | ✅️     |                    | Use toasts for events                                                     |
 | Massive data set       | ✅️     |                    | ~19k nodes, dynamic `import()` → own chunk; opens collapsed past level 1  |
 | All main demo examples |       |                    | So users can inspect the code -- link from main demo pages                |
 | Confirmation modal     | ✅️     |                    | To demonstrate "confirm" hooks                                            |

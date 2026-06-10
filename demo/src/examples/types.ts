@@ -1,4 +1,14 @@
 import { type ComponentType } from 'react'
+import { type CreateToastFnReturn } from '@chakra-ui/react'
+
+// Props the shell injects into a rendered example component. `toast` is Chakra's
+// toast fn (from the shell's `useToast`), so an example can surface its event /
+// notification stream without wiring up its own toast styling. The shell always
+// provides it; examples that don't need it (a plain prop-less component) stay
+// assignable, so this is required rather than optional.
+export interface ExampleComponentProps {
+  toast: CreateToastFnReturn
+}
 
 interface ExampleBase {
   title: string
@@ -16,7 +26,7 @@ type SourceImport = () => Promise<{ default: string }>
 // (minus any `// ---cut---` scaffolding), so it can't drift from what runs.
 export interface StaticExample extends ExampleBase {
   kind: 'static'
-  load: () => Promise<{ default: ComponentType }>
+  load: () => Promise<{ default: ComponentType<ExampleComponentProps> }>
   code: SourceImport
 }
 
@@ -30,7 +40,7 @@ export interface LiveExample extends ExampleBase {
 // things that aren't copy-paste snippets, e.g. a testing harness.
 export interface CustomExample extends ExampleBase {
   kind: 'custom'
-  load: () => Promise<{ default: ComponentType }>
+  load: () => Promise<{ default: ComponentType<ExampleComponentProps> }>
 }
 
 export type ExampleDef = StaticExample | LiveExample | CustomExample

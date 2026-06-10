@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
-import { Box, Button, Center, Flex, Heading, Icon, Spinner } from '@chakra-ui/react'
+import { Box, Button, Center, Flex, Heading, Icon, Spinner, useToast } from '@chakra-ui/react'
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import { FaGithub, FaNpm } from 'react-icons/fa'
 import { defaultTheme, type Theme } from '@json-edit-react'
@@ -12,7 +12,7 @@ import { ThemeProbe } from './kit/ThemeProbe'
 import { CodeBlock } from './kit/CodeBlock'
 import { MarkdownText } from './kit/MarkdownText'
 import { SplitPane } from './kit/SplitPane'
-import { stripCutRegions } from './kit/stripCutRegions'
+import { prepareExampleSource } from './kit/prepareExampleSource'
 import { useThemePalette, ExamplePaletteContext } from './kit/useThemePalette'
 
 // The header and any non-split content stay at this width, centred.
@@ -37,6 +37,11 @@ const Loading = () => (
 export const ExamplePage = ({ slug }: { slug: string }) => {
   const navigate = useLocation()[1]
   const def = examples[slug]
+
+  // Injected into every rendered example (see ExampleComponentProps) so an
+  // example can surface its event stream as notifications — the shell owns the
+  // toast styling, the example just fires it.
+  const toast = useToast()
 
   const [theme, setTheme] = useState<Theme>(defaultTheme)
   const [source, setSource] = useState<string | null>(null)
@@ -70,7 +75,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
       if (cancelled) return
       // Static: strip demo-only scaffolding for a clean snippet. Live: the code
       // is the editable starting point, shown verbatim.
-      setSource(def.kind === 'static' ? stripCutRegions(mod.default) : mod.default)
+      setSource(def.kind === 'static' ? prepareExampleSource(mod.default) : mod.default)
     })
     return () => {
       cancelled = true
@@ -167,7 +172,9 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
             // lets it spread `useExampleProps()`; it reads the palette (via
             // `useExamplePalette`) to theme its own chrome.
             <ExampleEditorProvider value={editorProps}>
-              <Suspense fallback={<Loading />}>{ExampleComponent && <ExampleComponent />}</Suspense>
+              <Suspense fallback={<Loading />}>
+                {ExampleComponent && <ExampleComponent toast={toast} />}
+              </Suspense>
             </ExampleEditorProvider>
           )}
 
@@ -184,7 +191,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
                 <Box className="block-shadow" borderRadius="md">
                   <ExampleEditorProvider value={editorProps}>
                     <Suspense fallback={<Loading />}>
-                      {ExampleComponent && <ExampleComponent />}
+                      {ExampleComponent && <ExampleComponent toast={toast} />}
                     </Suspense>
                   </ExampleEditorProvider>
                 </Box>
