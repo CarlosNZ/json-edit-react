@@ -39,7 +39,7 @@ interface EditButtonProps {
     replacer?: (this: any, key: string, value: unknown) => string
   ) => string
   showIconTooltips: boolean
-  CustomSelect: React.ComponentType<CustomSelectProps>
+  Select: React.ComponentType<CustomSelectProps>
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
@@ -58,7 +58,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   getNewKeyOptions,
   jsonStringify,
   showIconTooltips,
-  CustomSelect,
+  Select,
 }) => {
   const { getStyles } = useTheme()
   // Actions only (no subscription beyond the `isAddingHere` selector below).
@@ -228,7 +228,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       {isAddingHere && handleAdd && type === 'object' && (
         <>
           {hasKeyOptionsList ? (
-            <CustomSelect
+            <Select
               name="new-key-select"
               // The chosen option IS the key — commit it directly.
               onChange={handleAdd}

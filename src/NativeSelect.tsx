@@ -1,3 +1,15 @@
+/**
+ * The default dropdown used everywhere `JsonEditor` shows a `<select>` (type
+ * selector, enum value picker, new-key picker). A thin wrapper around the
+ * native HTML `<select>` element that satisfies `CustomSelectProps` — the
+ * same contract a consumer's `CustomSelect` component implements. Sharing the
+ * contract is what lets the three call sites render the consumer's component
+ * (if provided) or this one (the default), interchangeably.
+ *
+ * `CustomSelectProps` is exported as the public type a consumer writes their
+ * own dropdown against.
+ */
+
 import React from 'react'
 
 export interface CustomSelectProps {
@@ -23,7 +35,7 @@ export interface CustomSelectProps {
   className?: string
 }
 
-export const NativeSelect: React.FC<CustomSelectProps> = ({
+export const NativeSelect = ({
   options,
   value,
   defaultValue,
@@ -33,7 +45,7 @@ export const NativeSelect: React.FC<CustomSelectProps> = ({
   // Remaining props (name, onKeyDown, autoFocus) are spread onto
   // the <select> unchanged.
   ...passthrough
-}) => {
+}: CustomSelectProps) => {
   // React warns if both `value` and `defaultValue` are passed —
   // only spread whichever the caller supplied.
   const valueProps =

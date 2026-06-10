@@ -47,7 +47,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     translate,
     customNodeDefinitions,
     customNodeData,
-    CustomSelect,
+    Select,
     handleKeyboard,
     keyboardControls,
     editConfirmRef,
@@ -381,7 +381,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       tabForward: tabTo('next'),
       tabBack: tabTo('prev'),
     },
-    CustomSelect,
+    Select,
   }
 
   const keyDisplayProps = buildKeyDisplayProps({ handleCancel, getStyles })
@@ -474,12 +474,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
                 editConfirmRef={editConfirmRef}
                 jsonStringify={jsonStringify}
                 showIconTooltips={showIconTooltips}
-                CustomSelect={CustomSelect}
+                Select={Select}
               />
             )
           )}
           {showTypeSelector && (
-            <CustomSelect
+            <Select
               name={`${name}-type-select`}
               value={enumType ? enumType.enum : dataType}
               onChange={(value) => handleChangeDataType(value as DataType)}

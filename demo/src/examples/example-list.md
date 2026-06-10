@@ -10,6 +10,7 @@
 | Types & Enums          |       |                    | Bunch of different types, including Custom Components                     |
 | Event signals          | ✅️     |                    | Use toasts for events                                                     |
 | Massive data set       | ✅️     |                    | ~19k nodes, dynamic `import()` → own chunk; opens collapsed past level 1  |
+| Swap the built-ins     | ✅️     |                    | `CustomSelect`=ReactSelect + `TextEditor`=CodeEditor from components pkg  |
 | All main demo examples |       |                    | So users can inspect the code -- link from main demo pages                |
 | Confirmation modal     | ✅️     |                    | To demonstrate "confirm" hooks                                            |
 | Undo/Redo              |       |                    | To demonstrate useUndo hook                                               |

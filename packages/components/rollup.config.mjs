@@ -31,7 +31,10 @@ export default [
       id === 'react-colorful' ||
       id === 'colord' ||
       id.startsWith('colord/') ||
-      id === 'use-debounce',
+      id === 'use-debounce' ||
+      id === 'react-select' ||
+      id.startsWith('@codemirror/') ||
+      id.startsWith('@uiw/'),
     plugins: [
       peerDepsExternal({ includeDependencies: true }),
       nodeResolve(),

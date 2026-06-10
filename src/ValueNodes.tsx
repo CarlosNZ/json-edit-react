@@ -154,12 +154,11 @@ export const StringValue: React.FC<InputProps & { value: string; enumType?: Enum
 
   const pathString = toPathString(path)
 
-  const { value, setValue, nodeData, handleEdit, handleKeyboard, keyboardCommon, CustomSelect } =
-    props
+  const { value, setValue, nodeData, handleEdit, handleKeyboard, keyboardCommon, Select } = props
 
   if (isEditing && enumType) {
     return (
-      <CustomSelect
+      <Select
         name={`${pathString}-value-select`}
         value={value}
         onChange={setValue}

@@ -455,7 +455,7 @@ interface BaseNodeProps {
   customNodeDefinitions: CustomNodeDefinition[]
   customNodeData: CustomNodeData
   customButtons: CustomButtonDefinition[]
-  CustomSelect: React.ComponentType<CustomSelectProps>
+  Select: React.ComponentType<CustomSelectProps>
   errorDisplayTime: number
   keyboardControls: KeyboardControlsFull
   handleKeyboard: (
@@ -607,7 +607,7 @@ export interface InputProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
-  CustomSelect: React.ComponentType<CustomSelectProps>
+  Select: React.ComponentType<CustomSelectProps>
 }
 
 /**

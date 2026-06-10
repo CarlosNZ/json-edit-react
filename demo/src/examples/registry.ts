@@ -73,4 +73,12 @@ export const examples: Record<string, ExampleDef> = {
     load: () => import('./static/massive-data/Example'),
     code: () => import('./static/massive-data/Example.tsx?raw'),
   },
+  'swap-the-built-ins': {
+    kind: 'static',
+    title: 'Swap the built-ins',
+    blurb:
+      "Replace JsonEditor's native dropdown and raw-JSON textarea with the `ReactSelect` (`react-select` wrapper) and `CodeEditor` (CodeMirror) components from `@json-edit-react/components`. Try the type selector, add a new key on the `task` object, edit the enum-typed `status` / `priority` values, or open \"Edit as JSON\" on any collection.",
+    load: () => import('./static/swap-the-built-ins/Example'),
+    code: () => import('./static/swap-the-built-ins/Example.tsx?raw'),
+  },
 }

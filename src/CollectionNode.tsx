@@ -57,7 +57,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     jsonParse,
     jsonStringify,
     TextEditor,
-    CustomSelect,
+    Select,
     keyboardControls,
     handleKeyboard,
     insertAtTop,
@@ -505,7 +505,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       editConfirmRef={editConfirmRef}
       jsonStringify={jsonStringify}
       showIconTooltips={showIconTooltips}
-      CustomSelect={CustomSelect}
+      Select={Select}
     />
   )
 

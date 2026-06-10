@@ -33,6 +33,15 @@ Each component ships a React component plus a `CustomNodeDefinition` ready to dr
 | `Symbol` | `Symbol` value display |
 | `Undefined` | `undefined` value display |
 
+### Editor slot components
+
+Standalone components that plug into JsonEditor's `CustomSelect` and `TextEditor` props (not into `customNodeDefinitions`).
+
+| Component | Use case |
+|---|---|
+| `ReactSelect` | Drop-in replacement for the built-in `<select>`, wrapping [`react-select`](https://react-select.com). Pass to `JsonEditor`'s `CustomSelect` prop. |
+| `CodeEditor` | CodeMirror-based editor with JSON syntax highlighting. Pass to `JsonEditor`'s `TextEditor` prop to upgrade the raw-JSON text editor. Accepts an optional `theme` prop matching the built-in theme names. |
+
 ## Usage
 
 ```tsx
@@ -56,7 +65,7 @@ See [json-edit-react's custom nodes documentation](https://github.com/CarlosNZ/j
 
 ## Tree-shaking
 
-This package is ESM with `"sideEffects": false`. Modern bundlers (Webpack 4+, Vite, Rollup, esbuild, Parcel 2+) drop unused components and their imports from the final bundle. Heavy components (`DatePicker`, `Markdown`, `ColorPicker`) additionally use `React.lazy` for their third-party libraries, so even when imported they don't load those libraries until first render.
+This package is ESM with `"sideEffects": false`. Modern bundlers (Webpack 4+, Vite, Rollup, esbuild, Parcel 2+) drop unused components and their imports from the final bundle. Heavy components (`DatePicker`, `Markdown`, `ColorPicker`, `ReactSelect`, `CodeEditor`) additionally use `React.lazy` for their third-party libraries, so even when imported they don't load those libraries until first render.
 
 ## Building your own
 
