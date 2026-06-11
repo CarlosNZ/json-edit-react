@@ -564,6 +564,12 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   showKey?: boolean // default true
   defaultValue?: unknown
   showInTypeSelector?: boolean // default false
+  // Switching TO this type in the type selector opens the node for editing —
+  // the buffer is seeded with `defaultValue`, this definition's component
+  // renders in edit state, a single commit happens on confirm, and Esc
+  // cancels — instead of committing `defaultValue` instantly. Requires
+  // `component` + `showOnEdit`.
+  editOnTypeSwitch?: boolean // default false
   // `showOnView`/`showOnEdit` default to rendering the custom node in view mode
   // and the standard editor while editing — the common case. Set `showOnEdit`
   // for nodes that need a custom editor too (e.g. a date picker).

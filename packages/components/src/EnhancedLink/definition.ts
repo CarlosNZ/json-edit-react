@@ -9,6 +9,7 @@ export const EnhancedLinkCustomNodeDefinition: CustomNodeDefinition<EnhancedLink
   component: EnhancedLinkCustomComponent,
   name: 'Enhanced Link', // shown in the Type selector menu
   showInTypeSelector: true,
+  editOnTypeSwitch: true,
   defaultValue: {
     [TEXT_FIELD]: 'This is the text that is displayed',
     [URL_FIELD]: 'https://link.goes.here',

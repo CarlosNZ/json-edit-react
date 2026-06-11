@@ -11,6 +11,7 @@ import { EditButtons, InputButtons } from './ButtonPanels'
 import {
   standardDataTypes,
   valueDataTypes,
+  type CustomNodeDefinition,
   type DataType,
   type ValueNodeProps,
   type InputProps,
@@ -21,7 +22,7 @@ import {
   type TabDirection,
 } from './types'
 import { useTheme, useEditingStore, useCollapse, type UpdateOutcome } from './contexts'
-import { type CustomNodeData } from './CustomNode'
+import { buildCustomNodeData, type CustomNodeData } from './CustomNode'
 import { filterNode } from './utils/filter'
 import { pathsEqual } from './utils/pathTools'
 import { isJsEvent, matchEnumType, NOOP } from './utils/misc'
@@ -151,16 +152,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
 
-  const {
-    CustomComponent,
-    componentProps,
-    showKey = true,
-    showEditTools = true,
-    showOnEdit,
-    showOnView,
-    passOriginalNode,
-  } = customNodeData
-
   const allowedDataTypes = useMemo(() => {
     // Include custom node options in dataType list
     const allDataTypes = [
@@ -233,10 +224,35 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // switched-to type's standard editor must win until the edit commits or
   // cancels.
   const typeSwitchedAway = isEditing && dataType !== getDataType(data, customNodeData)
+
+  // A deferred to-custom switch (`editOnTypeSwitch`) hands the session to the
+  // TARGET definition: it shaped the buffer (the `defaultValue` seed), so its
+  // component, props and hooks apply until the edit commits or cancels. Picked
+  // by name from the local `dataType` — the committed-data condition match
+  // (`customNodeData`) can't see it. Derived from stable/local state only, so
+  // the per-render rebuild is memo-safe (§16: `customNodeData` identity is
+  // already ignored by the node comparator).
+  const switchedToDefinition = typeSwitchedAway
+    ? customNodeDefinitions.find((def) => def.name === dataType && canDeferSwitch(def))
+    : undefined
+  const effectiveCustomNodeData = switchedToDefinition
+    ? buildCustomNodeData(switchedToDefinition)
+    : customNodeData
+
+  const {
+    CustomComponent,
+    componentProps,
+    showKey = true,
+    showEditTools = true,
+    showOnEdit,
+    showOnView,
+    passOriginalNode,
+  } = effectiveCustomNodeData
+
   const showCustomNode =
     CustomComponent &&
-    !typeSwitchedAway &&
-    ((isEditing && showOnEdit) || (!isEditing && showOnView))
+    (switchedToDefinition !== undefined ||
+      (!typeSwitchedAway && ((isEditing && showOnEdit) || (!isEditing && showOnView))))
 
   const handleChangeDataType = (type: DataType) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider
@@ -245,6 +261,16 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
+      if (canDeferSwitch(customNode)) {
+        // Deferred (`editOnTypeSwitch`): a local switch like any primitive
+        // type change — reseed the buffer with the target's `defaultValue`
+        // and keep the session open. The target definition's component edits
+        // it; a single commit happens on confirm, and Esc cancels.
+        setValue(customNode.defaultValue as ValueData | CollectionData)
+        setDataType(type)
+        setEnumType(null)
+        return
+      }
       // To a custom node: a structural change — commit + remount (editor
       // closes).
       submit({ op: 'edit', path, value: customNode.defaultValue }).then(
@@ -267,13 +293,16 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     }
 
     // A definition's `toStandardValue` demotes its custom value to a primitive
-    // seed before the generic coercion — only while the buffer still holds the
-    // custom-shaped value (a previous in-session switch has already converted
-    // it, so re-applying the hook would mangle the buffer).
-    const source =
-      !typeSwitchedAway && customNodeData.toStandardValue
-        ? customNodeData.toStandardValue(value)
-        : value
+    // seed before the generic coercion. The hook of whichever definition
+    // shaped the current buffer applies: the committed match when un-switched,
+    // the deferred-switch target when switched to a custom type, and none when
+    // an earlier in-session switch already converted the buffer to a standard
+    // value (re-applying a hook then would mangle it).
+    const bufferDefinition =
+      typeSwitchedAway && !switchedToDefinition ? undefined : effectiveCustomNodeData
+    const source = bufferDefinition?.toStandardValue
+      ? bufferDefinition.toStandardValue(value)
+      : value
     const newValue = convertValue(source, type, translate('DEFAULT_NEW_KEY', nodeData))
 
     if (type === 'object' || type === 'array' || type === 'null') {
@@ -327,16 +356,16 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     const explicit = inputValue !== undefined && !isJsEvent(inputValue)
     let newValue: JsonData
     if (explicit) newValue = inputValue as JsonData
-    else if (showCustomNode && customNodeData.fromEditBuffer) {
+    else if (showCustomNode && effectiveCustomNodeData.fromEditBuffer) {
       // The custom editor shaped the buffer, so its definition's
       // `fromEditBuffer` produces the committable value. A throw REJECTS the
       // confirm: nothing submits, no `onCommit`, and the session stays open
       // with the error inline — the collection invalid-JSON pattern.
       try {
-        newValue = customNodeData.fromEditBuffer(
+        newValue = effectiveCustomNodeData.fromEditBuffer(
           value,
           nodeData,
-          customNodeData.componentProps
+          effectiveCustomNodeData.componentProps
         ) as JsonData
       } catch (err) {
         onError(
@@ -347,6 +376,9 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       }
     } else newValue = dataType === 'number' ? toNumberOrZero(value) : (value as JsonData)
     setError(null)
+    // A deferred to-custom switch commits here: launch the (possibly
+    // collection-valued) result expanded, matching the instant-commit branch.
+    if (switchedToDefinition) setCollapseState({ path, collapsed: false, includeChildren: false })
     submit({ op: 'edit', path, value: newValue, onCommit }).then(settleEdit(newValue))
   }
 
@@ -423,7 +455,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     Select,
   }
 
-  const keyDisplayProps = buildKeyDisplayProps({ handleCancel, getStyles })
+  // The key slot follows the effective definition too, so a deferred-switch
+  // target's `keyComponent` (or lack of one) renders during the switch.
+  const keyDisplayProps = {
+    ...buildKeyDisplayProps({ handleCancel, getStyles }),
+    customNodeData: effectiveCustomNodeData,
+  }
 
   const ValueComponent = showCustomNode ? (
     <CustomComponent
@@ -542,6 +579,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 // Memoized boundary: a value node whose own `data` and render-affecting props
 // are unchanged bails out when its parent re-renders. See areNodePropsEqual.
 export const ValueNodeWrapper = React.memo(ValueNodeWrapperBase, areNodePropsEqual)
+
+// A to-custom type switch can defer (stay local, single commit on confirm)
+// only when the target definition opts in AND can actually render an editor
+// for the seeded buffer; otherwise the switch instant-commits `defaultValue`.
+const canDeferSwitch = (def: CustomNodeDefinition) =>
+  !!def.editOnTypeSwitch && !!def.component && !!def.showOnEdit
 
 const getDataType = (value: unknown, customNodeData?: CustomNodeData) => {
   if (

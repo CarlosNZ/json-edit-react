@@ -10,6 +10,7 @@ export const BigIntDefinition: CustomNodeDefinition<BigIntProps> = {
   showOnEdit: true,
   name: 'BigInt', // shown in the Type selector menu
   showInTypeSelector: true,
+  editOnTypeSwitch: true,
   defaultValue: BigInt(9007199254740992),
   // A digit string coerces correctly to both string and number targets
   toStandardValue: (value) => String(value),

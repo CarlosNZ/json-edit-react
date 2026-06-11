@@ -1047,6 +1047,8 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   showEditTools         // boolean, default true
   name                  // string (appears in Type selector)
   showInTypeSelector    // boolean (optional), default false
+  editOnTypeSwitch      // boolean (optional), default false -- switching to this type opens
+                        // it for editing instead of committing defaultValue instantly
   passOriginalNode      // boolean (optional), default false -- if `true`, makes the original
                         // node available for rendering within the custom node
   
@@ -1124,6 +1126,8 @@ The same definition can use **both** `keyComponent` and `component` to customize
 Also, by default, your component will be treated as a "display" component, i.e. it will appear in the JSON viewer, but when editing, it will revert to the standard editing interface. This can be changed, however, with the `showOnEdit`, `showOnView` and `showEditTools` props. For example, a Date picker might only be required when *editing* and left as-is for display. The `showEditTools` prop refers to the editing icons (copy, add, edit, delete) that appear to the right of each value on hover. If you choose to disable these but you still want to your component to have an "edit" mode, you'll have to provide your own UI mechanism to toggle editing.
 
 You can allow users to create new instances of your special nodes by selecting them as a "Type" in the Type selector when editing/adding values. Set `showInTypeSelector: true` to enable this. However, if this is enabled you need to *also* provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
+
+By default, selecting your type commits `defaultValue` immediately and closes the editor. For nodes the user will almost always want to edit right away (a date picker, a colour, a BigInt), set `editOnTypeSwitch: true` (requires `component` and `showOnEdit`): the switch then stays local — the edit buffer is seeded with `defaultValue`, your component renders in its edit state, a single commit happens when the user confirms, and <kbd>Esc</kbd> cancels the whole switch.
 
 ### Active hyperlinks
 
