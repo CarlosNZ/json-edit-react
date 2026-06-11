@@ -1103,11 +1103,13 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       ColorPickerNodeDefinition,
       {
         ...MarkdownNodeDefinition,
-        condition: ({ key }) => key === 'Markdown',
+        // Value-type check so a node switched to another type (e.g. number)
+        // renders natively rather than as markdown text
+        condition: ({ key, value }) => key === 'Markdown' && typeof value === 'string',
       },
       {
         ...MarkdownNodeDefinition,
-        condition: ({ key }) => key === 'Intro',
+        condition: ({ key, value }) => key === 'Intro' && typeof value === 'string',
         showKey: false,
         componentProps: {
           components: {

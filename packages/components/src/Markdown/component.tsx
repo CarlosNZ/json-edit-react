@@ -16,8 +16,14 @@ export interface MarkdownCustomProps extends Options {
 }
 
 export const MarkdownComponent: React.FC<CustomComponentProps<MarkdownCustomProps>> = (props) => {
-  const { setIsEditing, getStyles, nodeData, componentProps } = props
+  const { setIsEditing, getStyles, nodeData, componentProps, value } = props
   const styles = getStyles('string', nodeData)
+
+  // react-markdown THROWS on non-string children, which would crash the whole
+  // editor tree. A consumer condition (e.g. key-based) can leave this
+  // component matched against a non-string value — say, after a type-switch
+  // to number — so coerce anything else to its string representation.
+  const markdownText = String(value ?? '')
 
   return (
     <div
@@ -29,7 +35,7 @@ export const MarkdownComponent: React.FC<CustomComponentProps<MarkdownCustomProp
       className="jer-markdown-block"
     >
       <Suspense fallback={<Loading text={componentProps?.loadingText ?? 'Loading Markdown'} />}>
-        <Markdown {...props.componentProps}>{nodeData.value as string}</Markdown>
+        <Markdown {...props.componentProps}>{markdownText}</Markdown>
       </Suspense>
     </div>
   )
