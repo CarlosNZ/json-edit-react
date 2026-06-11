@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { toPathString, StringEdit, type CustomComponentProps } from 'json-edit-react'
 
 export interface BigIntProps {
@@ -17,18 +17,16 @@ export const BigIntComponent: React.FC<CustomComponentProps<BigIntProps>> = (pro
     componentProps = {},
     value,
     handleEdit,
-    onError,
     ...rest
   } = props
   const { path } = nodeData
-  const { style = { color: '#006291', fontSize: '90%' }, invalidBigIntError = 'Invalid BigInt' } =
-    componentProps
-  const lastValidValue = useRef(value)
-
-  if (typeof value === 'bigint') lastValidValue.current = value
+  const { style = { color: '#006291', fontSize: '90%' } } = componentProps
 
   const editDisplayValue = typeof value === 'bigint' ? String(value) : (value as string)
 
+  // Every confirm path (Enter, ✓, Tab, editorRef) funnels through core's
+  // no-arg `handleEdit`; the definition's `fromEditBuffer` converts the
+  // buffer string to a bigint (or rejects).
   return isEditing ? (
     <StringEdit
       pathString={toPathString(path)}
@@ -36,18 +34,7 @@ export const BigIntComponent: React.FC<CustomComponentProps<BigIntProps>> = (pro
       value={editDisplayValue}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
       {...rest}
-      handleEdit={() => {
-        try {
-          // BigInt() throws on anything non-integer ("1.5", "abc", "1e3")
-          handleEdit(BigInt(editDisplayValue))
-        } catch {
-          // Reset the buffer too — committing the unchanged fallback
-          // doesn't alter `data`, so nothing else clears the invalid text
-          ;(setValue as (v: unknown) => void)(lastValidValue.current)
-          handleEdit(lastValidValue.current)
-          onError({ code: 'UPDATE_ERROR', message: invalidBigIntError }, value)
-        }
-      }}
+      handleEdit={handleEdit}
     />
   ) : (
     <span onDoubleClick={() => setIsEditing(true)} style={style}>

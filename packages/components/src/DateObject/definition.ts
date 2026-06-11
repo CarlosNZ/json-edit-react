@@ -11,6 +11,12 @@ export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   defaultValue: new Date(),
   renderCollectionAsValue: true,
   toStandardValue: (value) => (value instanceof Date ? value.toISOString() : String(value)),
+  fromEditBuffer: (buffer, _, componentProps) => {
+    if (buffer instanceof Date) return buffer
+    const date = new Date(String(buffer))
+    if (isNaN(date.getTime())) throw new Error(componentProps?.invalidDateError ?? 'Invalid Date')
+    return date
+  },
   // IMPORTANT: This component can't be used in conjunction with a ISO string
   // matcher (such as the DatePicker in this repo) -- because JSON.stringify
   // automatically serializes Date objects to ISO Strings, there's no way to

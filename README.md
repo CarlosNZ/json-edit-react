@@ -1063,6 +1063,10 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   // For type switching
   toStandardValue      // function to convert the custom value to a primitive when the
                        // Type selector switches this node to a standard type
+
+  // For editing
+  fromEditBuffer       // function to convert the edit buffer into the value to commit
+                       // when the user confirms an edit (see below)
 }
 ```
 
@@ -1081,6 +1085,8 @@ The `condition` is just a [Filter function](#filter-functions), with the same in
 The component will receive *all* the same props as a standard node component plus some additional ones — see [BaseNodeProps](https://github.com/CarlosNZ/json-edit-react/blob/b085f6391dabf574809f1040b11401c13344923d/src/types.ts#L219-L265) (common to all nodes) and [CustomComponentProps](https://github.com/CarlosNZ/json-edit-react/blob/b085f6391dabf574809f1040b11401c13344923d/src/types.ts#L275-L287) type definitions. Specifically, if you want to update the data structure from your custom node, you'll need to call the `setValue` method on your node's data value. And if you enable `passOriginalNode` above, you'll also have access to `originalNode` and `originalNodeKey` in order to render the standard content (i.e. what would have been rendered if it wasn't intercepted by this custom node) -- this can be helpful if you want your custom node to just be the default content with a little extra decoration. (*Note:* you may need a little custom CSS to render these original node components identically to the default display.)
 
 If your component needs to reflect an in-flight save — for example a spinner or overlay while an async `onUpdate` completes — read the `isPending` prop: it's `true` while this node's optimistic edit is settling (i.e. the value is already applied locally but the async `onUpdate` hasn't resolved yet), and `false` otherwise.
+
+If your component provides its own editing UI (`showOnEdit: true`) and its underlying value isn't the raw edit buffer — say the buffer holds a digit string but the node's value is a `BigInt` — define `fromEditBuffer: (buffer, nodeData, componentProps) => value` on the definition. It runs on every confirm path (the ✓ button, <kbd>Enter</kbd>, <kbd>Tab</kbd>, `editorRef.confirm()`) and returns the value to commit. Make it pass already-correct values through unchanged (the buffer still holds the node's committed value until the editor's first keystroke). To *reject* invalid input, throw — nothing is committed, the edit stays open with the user's text intact, and the thrown message displays inline and fires `onError` (the same behaviour as confirming invalid JSON on a collection edit).
 
 You can pass additional props specific to your component, if required, through the `componentProps` object. A thorough example of a custom **Date Picker** is used in the demo (along with a couple of other more basic presentational ones), which you can inspect to see how to utilise the standard props and a couple of custom props. View the source code [here](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/DatePicker/component.tsx).
 

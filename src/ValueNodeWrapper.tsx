@@ -79,6 +79,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     canDrag,
     error,
     onError,
+    setError,
     derivedValues,
     getNextOrPreviousAtPath,
     buildKeyDisplayProps,
@@ -102,9 +103,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const nodeDataRef = useRef(nodeData)
   nodeDataRef.current = nodeData
   const updateValue = useCallback(
-    (newValue: ValueData) => {
+    // `JsonData` (not just `ValueData`) so `renderCollectionAsValue` custom
+    // components can buffer object values; the `onChange` payload keeps its
+    // public primitive typing.
+    (newValue: JsonData) => {
       if (!onChange) {
-        setValue(newValue)
+        setValue(newValue as ValueData | CollectionData)
         return
       }
       // Flat `NodeData` payload (§17): `value` is the current (pre-keystroke)
@@ -113,7 +117,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         ...nodeDataRef.current,
         value: onChangeValueRef.current as ValueData,
         fullData: getLatestData(),
-        newValue,
+        newValue: newValue as ValueData,
       })
       setValue(modifiedValue)
     },
@@ -229,6 +233,10 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // switched-to type's standard editor must win until the edit commits or
   // cancels.
   const typeSwitchedAway = isEditing && dataType !== getDataType(data, customNodeData)
+  const showCustomNode =
+    CustomComponent &&
+    !typeSwitchedAway &&
+    ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
   const handleChangeDataType = (type: DataType) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider
@@ -316,12 +324,29 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // unchanged. (`dataType` is never 'object'/'array' here: a type-change to
     // a collection commits eagerly and closes the editor in
     // `handleChangeDataType`.)
-    const newValue: JsonData =
-      inputValue !== undefined && !isJsEvent(inputValue)
-        ? (inputValue as JsonData)
-        : dataType === 'number'
-          ? toNumberOrZero(value)
-          : (value as JsonData)
+    const explicit = inputValue !== undefined && !isJsEvent(inputValue)
+    let newValue: JsonData
+    if (explicit) newValue = inputValue as JsonData
+    else if (showCustomNode && customNodeData.fromEditBuffer) {
+      // The custom editor shaped the buffer, so its definition's
+      // `fromEditBuffer` produces the committable value. A throw REJECTS the
+      // confirm: nothing submits, no `onCommit`, and the session stays open
+      // with the error inline — the collection invalid-JSON pattern.
+      try {
+        newValue = customNodeData.fromEditBuffer(
+          value,
+          nodeData,
+          customNodeData.componentProps
+        ) as JsonData
+      } catch (err) {
+        onError(
+          { code: 'UPDATE_ERROR', message: err instanceof Error ? err.message : String(err) },
+          value as ValueData
+        )
+        return
+      }
+    } else newValue = dataType === 'number' ? toNumberOrZero(value) : (value as JsonData)
+    setError(null)
     submit({ op: 'edit', path, value: newValue, onCommit }).then(settleEdit(newValue))
   }
 
@@ -329,6 +354,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // Revert the buffer locally, then drive the store cancel (which also runs
     // `cancelOp` = `revertToData` — idempotent). The local revert covers entry
     // paths that registered no `cancelOp` (Tab-arrival, redirect).
+    setError(null)
     revertToData()
     cancel()
   }
@@ -343,14 +369,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   // DERIVED VALUES (this makes the JSX logic less messy)
   const { isEditingKey } = derivedValues
-  const showErrorString = !isEditing && error
+  // Shown while editing too — a rejected confirm (throwing `fromEditBuffer`)
+  // keeps the session open with its error inline, like collection JSON edits.
+  const showErrorString = !!error
   const showTypeSelector = isEditing && allowedDataTypes.length > 1
   const showEditButtons = (dataType !== 'invalid' || CustomComponent) && !error && showEditTools
   const shouldShowKey = showLabel && showKey
-  const showCustomNode =
-    CustomComponent &&
-    !typeSwitchedAway &&
-    ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
   // Open this node's edit session, reverting the buffer if it's cancelled.
   // `setIsEditing` is the `canEdit`-gated callable handed to value inputs and

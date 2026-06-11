@@ -24,6 +24,11 @@ export interface CustomNodeData {
   passOriginalNode?: boolean
   renderCollectionAsValue?: boolean
   toStandardValue?: (value: unknown) => ValueData
+  fromEditBuffer?: (
+    buffer: unknown,
+    nodeData: NodeData,
+    componentProps?: Record<string, unknown>
+  ) => unknown
 }
 
 // Fetches matching custom nodes (based on condition filter) from custom node
