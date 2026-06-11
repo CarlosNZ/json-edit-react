@@ -295,10 +295,10 @@ describe('CustomNode — switching type away mid-edit', () => {
   const nanDef = nonJsonDef(({ value }) => Number.isNaN(value), 'NaN', NaN)
   const symbolDef = nonJsonDef(({ value }) => typeof value === 'symbol', 'Symbol', Symbol('new'))
   // Mirrors the shipped Symbol definition: the editable text of a symbol is
-  // its description, supplied via `toStandardValue`.
+  // its description, supplied via `toStandardType`.
   const symbolDefWithHook: CustomNodeDefinition = {
     ...symbolDef,
-    toStandardValue: (value) =>
+    toStandardType: (value) =>
       typeof value === 'symbol' ? value.description ?? '' : String(value),
   }
 
@@ -358,7 +358,7 @@ describe('CustomNode — switching type away mid-edit', () => {
     expect(setData).toHaveBeenCalledWith({ x: 0 })
   })
 
-  test('Symbol → string: toStandardValue pre-fills the symbol description', async () => {
+  test('Symbol → string: toStandardType pre-fills the symbol description', async () => {
     const user = userEvent.setup()
     const { container } = render(
       <JsonEditor
@@ -419,14 +419,14 @@ describe('CustomNode — switching type away mid-edit', () => {
   })
 })
 
-describe('CustomNode — toStandardValue seeds the type-switch buffer', () => {
-  // `toStandardValue` demotes a definition's custom value to a single
+describe('CustomNode — toStandardType seeds the type-switch buffer', () => {
+  // `toStandardType` demotes a definition's custom value to a single
   // primitive seed when the type selector switches the node to a standard
   // type; core's generic coercion handles the rest per target type.
   const hookDef = (
     condition: CustomNodeDefinition['condition'],
     name: string,
-    toStandardValue: CustomNodeDefinition['toStandardValue'],
+    toStandardType: CustomNodeDefinition['toStandardType'],
     overrides: Partial<CustomNodeDefinition> = {}
   ): CustomNodeDefinition => ({
     condition,
@@ -434,7 +434,7 @@ describe('CustomNode — toStandardValue seeds the type-switch buffer', () => {
     showOnEdit: true,
     name,
     showInTypeSelector: true,
-    toStandardValue,
+    toStandardType,
     ...overrides,
   })
 
@@ -443,7 +443,7 @@ describe('CustomNode — toStandardValue seeds the type-switch buffer', () => {
     await user.click(within(row).getByTitle('Edit'))
   }
 
-  test('switching to string seeds the buffer from toStandardValue, not the raw value', async () => {
+  test('switching to string seeds the buffer from toStandardType, not the raw value', async () => {
     const user = userEvent.setup()
     const def = hookDef(({ value }) => typeof value === 'symbol', 'Symbol', () => 'SEED')
     const { container } = render(
@@ -536,7 +536,7 @@ describe('CustomNode — toStandardValue seeds the type-switch buffer', () => {
     expect(input.value).toBe('42')
   })
 
-  test('without toStandardValue, a symbol → string switch seeds the generic String(value)', async () => {
+  test('without toStandardType, a symbol → string switch seeds the generic String(value)', async () => {
     const user = userEvent.setup()
     const def = hookDef(({ value }) => typeof value === 'symbol', 'Symbol', undefined)
     const { container } = render(

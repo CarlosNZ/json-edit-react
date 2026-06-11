@@ -594,7 +594,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // Demotes the custom value to a primitive seed when the type selector
   // switches this node to a standard type; core's generic coercion takes it
   // from there per target type.
-  toStandardValue?: (value: unknown) => ValueData
+  toStandardType?: (value: unknown) => ValueData
   // Transforms the edit buffer into the value to commit when a confirm fires
   // with no explicit value (the ✓ button, Enter, Tab, `editorRef.confirm()`).
   // Must pass already-correct values through unchanged — the buffer holds the

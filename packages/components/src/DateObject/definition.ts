@@ -11,7 +11,7 @@ export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   editOnTypeSwitch: true,
   defaultValue: new Date(),
   renderCollectionAsValue: true,
-  toStandardValue: (value) => (value instanceof Date ? value.toISOString() : String(value)),
+  toStandardType: (value) => (value instanceof Date ? value.toISOString() : String(value)),
   fromEditBuffer: (buffer, _, componentProps) => {
     if (buffer instanceof Date) return buffer
     const date = new Date(String(buffer))

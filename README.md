@@ -1063,7 +1063,7 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   parseReviver?:       // function for parsing as JSON (if non-JSON data type)
 
   // For type switching
-  toStandardValue      // function to convert the custom value to a primitive when the
+  toStandardType      // function to convert the custom value to a primitive when the
                        // Type selector switches this node to a standard type
 
   // For editing

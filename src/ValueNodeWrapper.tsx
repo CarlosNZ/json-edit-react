@@ -292,7 +292,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       return
     }
 
-    // A definition's `toStandardValue` demotes its custom value to a primitive
+    // A definition's `toStandardType` demotes its custom value to a primitive
     // seed before the generic coercion. The hook of whichever definition
     // shaped the current buffer applies: the committed match when un-switched,
     // the deferred-switch target when switched to a custom type, and none when
@@ -300,8 +300,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // value (re-applying a hook then would mangle it).
     const bufferDefinition =
       typeSwitchedAway && !switchedToDefinition ? undefined : effectiveCustomNodeData
-    const source = bufferDefinition?.toStandardValue
-      ? bufferDefinition.toStandardValue(value)
+    const source = bufferDefinition?.toStandardType
+      ? bufferDefinition.toStandardType(value)
       : value
     const newValue = convertValue(source, type, translate('DEFAULT_NEW_KEY', nodeData))
 
@@ -648,7 +648,7 @@ const convertValue = (value: unknown, type: DataType, defaultNewKey: string) => 
     case 'string':
       // null/undefined have no string representation worth editing (an empty
       // buffer beats the literal "null"); anything more exotic is a custom
-      // node's job via `toStandardValue`.
+      // node's job via `toStandardType`.
       if (value == null) return ''
       return String(value)
     case 'number':

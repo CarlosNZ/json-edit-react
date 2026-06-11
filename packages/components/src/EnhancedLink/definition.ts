@@ -18,6 +18,6 @@ export const EnhancedLinkCustomNodeDefinition: CustomNodeDefinition<EnhancedLink
   showOnEdit: true,
   renderCollectionAsValue: true,
   // The url is the most useful primitive form of the link object
-  toStandardValue: (value) =>
+  toStandardType: (value) =>
     isCollection(value) && URL_FIELD in value ? String(value[URL_FIELD]) : String(value),
 }
