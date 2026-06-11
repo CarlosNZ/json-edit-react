@@ -23,7 +23,7 @@ export interface CustomNodeData {
   showCollectionWrapper?: boolean
   passOriginalNode?: boolean
   renderCollectionAsValue?: boolean
-  toStandardValue?: (value: unknown) => ValueData
+  toStandardType?: (value: unknown) => ValueData
 }
 
 // Fetches matching custom nodes (based on condition filter) from custom node

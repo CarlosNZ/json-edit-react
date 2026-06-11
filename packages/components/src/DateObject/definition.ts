@@ -10,7 +10,7 @@ export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   showInTypeSelector: true,
   defaultValue: new Date(),
   renderCollectionAsValue: true,
-  toStandardValue: (value) => (value instanceof Date ? value.toISOString() : String(value)),
+  toStandardType: (value) => (value instanceof Date ? value.toISOString() : String(value)),
   // IMPORTANT: This component can't be used in conjunction with a ISO string
   // matcher (such as the DatePicker in this repo) -- because JSON.stringify
   // automatically serializes Date objects to ISO Strings, there's no way to

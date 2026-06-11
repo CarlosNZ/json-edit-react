@@ -585,7 +585,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // Demotes the custom value to a primitive seed when the type selector
   // switches this node to a standard type; core's generic coercion takes it
   // from there per target type.
-  toStandardValue?: (value: unknown) => ValueData
+  toStandardType?: (value: unknown) => ValueData
 }
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>

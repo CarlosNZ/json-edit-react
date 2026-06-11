@@ -12,7 +12,7 @@ export const BigIntDefinition: CustomNodeDefinition<BigIntProps> = {
   showInTypeSelector: true,
   defaultValue: BigInt(9007199254740992),
   // A digit string coerces correctly to both string and number targets
-  toStandardValue: (value) => String(value),
+  toStandardType: (value) => String(value),
   stringifyReplacer: (value) =>
     typeof value === 'bigint' ? { __type: 'bigint', value: String(value) } : value,
   parseReviver: (value) =>
