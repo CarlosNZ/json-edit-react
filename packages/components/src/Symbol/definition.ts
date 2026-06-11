@@ -14,7 +14,7 @@ export const SymbolDefinition: CustomNodeDefinition<SymbolProps> = {
   defaultValue: Symbol('New symbol'),
   // The editable text of a symbol is its description
   toStandardType: (value) =>
-    typeof value === 'symbol' ? value.description ?? '' : String(value),
+    typeof value === 'symbol' ? (value.description ?? '') : String(value),
   fromEditBuffer: (buffer) => (typeof buffer === 'symbol' ? buffer : Symbol(String(buffer))),
   stringifyReplacer: (value) =>
     typeof value === 'symbol' ? { __type: 'Symbol', value: value.description ?? '' } : value,
