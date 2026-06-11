@@ -822,7 +822,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     editOnTypeSwitch: true,
     defaultValue: BigInt(99),
     fromEditBuffer: (buffer) => (typeof buffer === 'bigint' ? buffer : BigInt(String(buffer))),
-    toStandardValue: (value) => String(value),
+    toStandardType: (value) => String(value),
     ...overrides,
   })
 
@@ -905,7 +905,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     await waitFor(() => expect(setData).toHaveBeenCalledWith({ x: 'INST' }))
   })
 
-  test('a second switch to a standard type seeds via the TARGET definition’s toStandardValue', async () => {
+  test('a second switch to a standard type seeds via the TARGET definition’s toStandardType', async () => {
     const user = userEvent.setup()
     const { container } = render(
       <JsonEditor data={{ x: 'hello' }} setData={noop} customNodeDefinitions={[bigintTarget()]} />
@@ -915,7 +915,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     await switchTo(user, 'string')
 
     // The buffer holds the target's custom value (99n), so the target's
-    // `toStandardValue` (String) seeds the standard editor.
+    // `toStandardType` (String) seeds the standard editor.
     const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
     expect(input).not.toBeNull()
     expect(input.value).toBe('99')
