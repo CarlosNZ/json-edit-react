@@ -10,6 +10,7 @@ export const SymbolDefinition: CustomNodeDefinition<SymbolProps> = {
   showOnEdit: true,
   name: 'Symbol', // shown in the Type selector menu
   showInTypeSelector: true,
+  editOnTypeSwitch: true,
   defaultValue: Symbol('New symbol'),
   // The editable text of a symbol is its description
   toStandardType: (value) =>

@@ -17,6 +17,7 @@ export interface CustomNodeData {
   showKey?: boolean
   defaultValue?: unknown
   showInTypeSelector?: boolean
+  editOnTypeSwitch?: boolean
   showOnEdit?: boolean
   showOnView?: boolean
   showEditTools?: boolean
@@ -31,16 +32,11 @@ export interface CustomNodeData {
   ) => unknown
 }
 
-// Fetches matching custom nodes (based on condition filter) from custom node
-// definitions and return the component and its props
-export const getCustomNode = (
-  customNodeDefinitions: CustomNodeDefinition[] = [],
-  nodeData: NodeData
-): CustomNodeData => {
-  const matchingDefinition = customNodeDefinitions.find(({ condition }) => condition(nodeData))
-  if (!matchingDefinition) return {}
-
-  // Only take the first one that matches
+// Maps a definition to the renderable CustomNodeData shape, applying the
+// field defaults. Used for the committed-data condition match below, and for
+// the "effective" data of an in-session `editOnTypeSwitch` target (where the
+// definition is picked by name, not condition).
+export const buildCustomNodeData = (definition: CustomNodeDefinition): CustomNodeData => {
   const {
     component,
     wrapperComponent,
@@ -51,7 +47,7 @@ export const getCustomNode = (
     showOnView = true,
     showCollectionWrapper = true,
     ...rest
-  } = matchingDefinition
+  } = definition
 
   return {
     CustomComponent: component,
@@ -64,4 +60,15 @@ export const getCustomNode = (
     showCollectionWrapper,
     ...rest,
   }
+}
+
+// Fetches matching custom nodes (based on condition filter) from custom node
+// definitions and return the component and its props
+export const getCustomNode = (
+  customNodeDefinitions: CustomNodeDefinition[] = [],
+  nodeData: NodeData
+): CustomNodeData => {
+  // Only take the first one that matches
+  const matchingDefinition = customNodeDefinitions.find(({ condition }) => condition(nodeData))
+  return matchingDefinition ? buildCustomNodeData(matchingDefinition) : {}
 }

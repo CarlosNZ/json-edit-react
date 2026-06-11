@@ -8,6 +8,7 @@ export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   showOnEdit: true,
   name: 'Date Object', // shown in the Type selector menu
   showInTypeSelector: true,
+  editOnTypeSwitch: true,
   defaultValue: new Date(),
   renderCollectionAsValue: true,
   toStandardType: (value) => (value instanceof Date ? value.toISOString() : String(value)),
