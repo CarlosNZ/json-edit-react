@@ -23,7 +23,7 @@ export interface CustomNodeData {
   showCollectionWrapper?: boolean
   passOriginalNode?: boolean
   renderCollectionAsValue?: boolean
-  toStandardValue?: (value: unknown) => ValueData
+  toStandardType?: (value: unknown) => ValueData
   fromEditBuffer?: (
     buffer: unknown,
     nodeData: NodeData,
