@@ -3,7 +3,7 @@
  * but is displayed as a clickable string
  */
 
-import React, { useState } from 'react'
+import React from 'react'
 import { toPathString, StringDisplay, StringEdit, type CustomComponentProps } from 'json-edit-react'
 
 export interface EnhancedLinkProps {
@@ -22,7 +22,8 @@ type EnhancedLink = {
 export const EnhancedLinkCustomComponent: React.FC<CustomComponentProps<EnhancedLinkProps>> = (
   props
 ) => {
-  const { setIsEditing, getStyles, nodeData, componentProps = {}, isEditing, handleEdit } = props
+  const { setIsEditing, getStyles, nodeData, componentProps = {}, isEditing, value, setValue } =
+    props
   const {
     linkStyles = { fontWeight: 'bold', textDecoration: 'underline' },
     propertyStyles = {},
@@ -30,8 +31,12 @@ export const EnhancedLinkCustomComponent: React.FC<CustomComponentProps<Enhanced
     fieldNames: { text: textField, url: urlField } = { text: 'text', url: 'url' },
     stringTruncateLength = 120,
   } = componentProps
-  const [text, setText] = useState((nodeData.value as EnhancedLink)[textField])
-  const [url, setUrl] = useState((nodeData.value as EnhancedLink)[urlField])
+  // Both fields read from and write to the core edit buffer (the whole
+  // {text, url} object), so every confirm path — Enter in either field, the
+  // ✓ button, `editorRef.confirm()` — commits the same in-progress object.
+  const linkData = (value ?? {}) as EnhancedLink
+  const text = linkData[textField]
+  const url = linkData[urlField]
 
   const styles = getStyles('string', nodeData)
 
@@ -51,7 +56,12 @@ export const EnhancedLinkCustomComponent: React.FC<CustomComponentProps<Enhanced
               pathString={toPathString(nodeData.path)}
               {...props}
               value={text}
-              setValue={(val) => setText(val)}
+              setValue={
+                ((val: string) =>
+                  setValue({ ...linkData, [textField]: val })) as React.Dispatch<
+                  React.SetStateAction<string>
+                >
+              }
             />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5em' }}>
@@ -61,10 +71,12 @@ export const EnhancedLinkCustomComponent: React.FC<CustomComponentProps<Enhanced
               pathString={toPathString(nodeData.path)}
               {...props}
               value={url}
-              setValue={(val) => setUrl(val)}
-              handleEdit={() => {
-                handleEdit({ [textField]: text, [urlField]: url })
-              }}
+              setValue={
+                ((val: string) =>
+                  setValue({ ...linkData, [urlField]: val })) as React.Dispatch<
+                  React.SetStateAction<string>
+                >
+              }
             />
           </div>
         </div>

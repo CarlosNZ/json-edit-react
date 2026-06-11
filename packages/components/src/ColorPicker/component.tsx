@@ -50,24 +50,16 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
   nodeData,
   originalNode,
   componentProps = {},
-  onError,
   handleEdit,
   ...props
 }) => {
-  const {
-    loadingText,
-    swatchStyles,
-    alpha = false,
-    keepAsColor = true,
-    invalidColorError = 'Invalid Color',
-  } = componentProps
+  const { loadingText, swatchStyles, alpha = false } = componentProps
 
   const text = value as string
 
   // The current internal state of the color picker
   const [hsvValue, setHsvValue] = React.useState(colord(text).toHsv())
 
-  const lastValidColor = useRef(text)
   const isUpdatingFromPicker = useRef(false)
 
   // Debounced setValue to avoid excessive updates while dragging the picker
@@ -114,20 +106,10 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
                 setValue(value)
               }) as React.Dispatch<React.SetStateAction<string>>
             }
-            handleEdit={() => {
-              if (keepAsColor && !colord(text).isValid()) {
-                // Reset the buffer too — committing the unchanged fallback
-                // doesn't alter `data`, so nothing else clears the invalid
-                // text
-                setValue(lastValidColor.current)
-                handleEdit(lastValidColor.current)
-                onError({ code: 'UPDATE_ERROR', message: invalidColorError }, text)
-                return
-              }
-              lastValidColor.current = text
-              setHsvValue(colord(text).toHsv())
-              handleEdit(text)
-            }}
+            // Every confirm path funnels through core's no-arg `handleEdit`;
+            // the definition's `fromEditBuffer` enforces `keepAsColor` (or
+            // rejects, keeping the session open with the invalid text).
+            handleEdit={handleEdit}
           />
           <PickerComponent
             style={{

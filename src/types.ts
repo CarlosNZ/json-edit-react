@@ -521,7 +521,10 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   value: JsonData
   componentProps?: T
   parentData: CollectionData | null
-  setValue: (value: ValueData) => void
+  // Writes into the node's edit buffer. Accepts any `JsonData` so
+  // `renderCollectionAsValue` components can buffer object values; primitive
+  // editors just pass strings/numbers/booleans.
+  setValue: (value: JsonData) => void
   handleEdit: (value?: unknown) => void
   handleCancel: () => void
   handleKeyPress: (e: React.KeyboardEvent) => void
@@ -586,6 +589,13 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // switches this node to a standard type; core's generic coercion takes it
   // from there per target type.
   toStandardType?: (value: unknown) => ValueData
+  // Transforms the edit buffer into the value to commit when a confirm fires
+  // with no explicit value (the ✓ button, Enter, Tab, `editorRef.confirm()`).
+  // Must pass already-correct values through unchanged — the buffer holds the
+  // raw committed value until the editor's first keystroke. THROW to reject:
+  // nothing commits, the session stays open, and the thrown message surfaces
+  // via `onError` (inline error + observer callback).
+  fromEditBuffer?: (buffer: unknown, nodeData: NodeData, componentProps?: T) => unknown
 }
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>

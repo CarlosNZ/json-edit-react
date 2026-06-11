@@ -13,10 +13,15 @@
  */
 
 import { createRef } from 'react'
-import { act, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
-import { type JsonEditorHandle, type UpdateFunction } from '../src/types'
+import {
+  type CustomComponentProps,
+  type CustomNodeDefinition,
+  type JsonEditorHandle,
+  type UpdateFunction,
+} from '../src/types'
 
 const noop = () => {}
 
@@ -245,5 +250,113 @@ describe('editorRef handle — confirm / cancel', () => {
 
     expect(onUpdate).toHaveBeenCalled()
     expect(onError).toHaveBeenCalled()
+  })
+})
+
+describe('editorRef handle — confirm with custom-node fromEditBuffer', () => {
+  const CustomEditor = (props: CustomComponentProps) => {
+    const { value, setValue, isEditing, setIsEditing } = props
+    return isEditing ? (
+      <input
+        data-testid="custom-input"
+        value={String(value)}
+        onChange={(e) => setValue(e.target.value)}
+      />
+    ) : (
+      <span data-testid="custom" onDoubleClick={() => setIsEditing(true)}>
+        {String(value)}
+      </span>
+    )
+  }
+  const bigintDef: CustomNodeDefinition = {
+    condition: ({ value }) => typeof value === 'bigint',
+    component: CustomEditor,
+    showOnEdit: true,
+    fromEditBuffer: (buffer) => {
+      if (typeof buffer === 'bigint') return buffer
+      if (!/^\d+$/.test(String(buffer))) throw new Error('Invalid BigInt')
+      return BigInt(String(buffer))
+    },
+  }
+
+  test('confirm() commits through the definition transform', async () => {
+    const setData = jest.fn()
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor
+        data={{ x: BigInt(5) }}
+        setData={setData}
+        customNodeDefinitions={[bigintDef]}
+        editorRef={ref}
+      />
+    )
+    act(() => ref.current!.startEdit({ path: ['x'] }))
+    fireEvent.change(screen.getByTestId('custom-input'), { target: { value: '123' } })
+
+    await act(async () => {
+      ref.current!.confirm()
+    })
+
+    expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
+    expect(screen.queryByTestId('custom-input')).toBeNull()
+  })
+
+  test('confirm() on an invalid buffer rejects and the session stays open; cancel() still closes it', async () => {
+    const setData = jest.fn()
+    const onError = jest.fn()
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor
+        data={{ x: BigInt(5) }}
+        setData={setData}
+        onError={onError}
+        customNodeDefinitions={[bigintDef]}
+        editorRef={ref}
+      />
+    )
+    act(() => ref.current!.startEdit({ path: ['x'] }))
+    fireEvent.change(screen.getByTestId('custom-input'), { target: { value: 'abc' } })
+
+    await act(async () => {
+      ref.current!.confirm()
+    })
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(onError).toHaveBeenCalled()
+    expect(screen.getByTestId('custom-input')).toBeInTheDocument()
+
+    act(() => ref.current!.cancel())
+    expect(screen.queryByTestId('custom-input')).toBeNull()
+    expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('confirm() on a collection JSON edit with invalid JSON keeps the session open', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const ref = createRef<JsonEditorHandle>()
+    render(
+      <JsonEditor
+        data={{ obj: { a: 1 } }}
+        setData={setData}
+        editorRef={ref}
+        showIconTooltips
+      />
+    )
+    const row = screen.getByText('obj').closest('.jer-component') as HTMLElement
+    await user.click(within(row).getAllByTitle('Edit')[0])
+    const textarea = screen.getByRole('textbox')
+    fireEvent.change(textarea, { target: { value: '{ not json' } })
+
+    await act(async () => {
+      ref.current!.confirm()
+    })
+
+    // The parse failure rejects the commit — the session must survive the
+    // imperative confirm rather than being torn down by its trailing cancel.
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+    expect(setData).not.toHaveBeenCalled()
+
+    act(() => ref.current!.cancel())
+    expect(screen.queryByRole('textbox')).toBeNull()
   })
 })

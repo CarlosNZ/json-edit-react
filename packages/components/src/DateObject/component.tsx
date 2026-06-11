@@ -1,4 +1,4 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { StringDisplay, toPathString, StringEdit, type CustomComponentProps } from 'json-edit-react'
 
 export interface DateObjectProps {
@@ -7,22 +7,9 @@ export interface DateObjectProps {
 }
 
 export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObjectProps>> = (props) => {
-  const {
-    nodeData,
-    isEditing,
-    setValue,
-    getStyles,
-    canEdit,
-    value,
-    handleEdit,
-    onError,
-    componentProps = {},
-  } = props
-  const lastValidDate = useRef(value)
+  const { nodeData, isEditing, setValue, getStyles, canEdit, value, componentProps = {} } = props
 
-  const { showTime = true, invalidDateError = 'Invalid Date' } = componentProps
-
-  if (value instanceof Date) lastValidDate.current = value
+  const { showTime = true } = componentProps
 
   const editDisplayValue =
     value instanceof Date
@@ -34,6 +21,9 @@ export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObject
     ? (nodeData.value as Date).toLocaleString()
     : (nodeData.value as Date).toLocaleDateString()
 
+  // Every confirm path funnels through core's no-arg `handleEdit` (passed via
+  // the props spread); the definition's `fromEditBuffer` parses and validates
+  // the buffer string as a Date (or rejects).
   return isEditing ? (
     <StringEdit
       styles={getStyles('input', nodeData)}
@@ -41,20 +31,6 @@ export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObject
       {...props}
       value={editDisplayValue}
       setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
-      handleEdit={() => {
-        const newDate = new Date(value as string)
-        try {
-          // Check if date is valid by trying to convert to ISO
-          newDate.toISOString()
-          handleEdit(newDate)
-        } catch {
-          // Reset the buffer too — committing the unchanged fallback
-          // doesn't alter `data`, so nothing else clears the invalid text
-          ;(setValue as (v: unknown) => void)(lastValidDate.current)
-          handleEdit(lastValidDate.current)
-          onError({ code: 'UPDATE_ERROR', message: invalidDateError }, value)
-        }
-      }}
     />
   ) : (
     <StringDisplay
