@@ -581,6 +581,11 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // For JSON stringify/parse
   stringifyReplacer?: (value: unknown) => unknown
   parseReviver?: (stringified: string) => unknown
+
+  // Demotes the custom value to a primitive seed when the type selector
+  // switches this node to a standard type; core's generic coercion takes it
+  // from there per target type.
+  toStandardType?: (value: unknown) => ValueData
 }
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>

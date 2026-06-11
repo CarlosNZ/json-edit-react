@@ -1059,6 +1059,10 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   // For JSON conversion -- only needed if editing as JSON text
   stringifyReplacer    // function for stringifying to JSON (if non-JSON data type)
   parseReviver?:       // function for parsing as JSON (if non-JSON data type)
+
+  // For type switching
+  toStandardType      // function to convert the custom value to a primitive when the
+                       // Type selector switches this node to a standard type
 }
 ```
 

@@ -16,4 +16,11 @@ export const EnhancedLinkCustomNodeDefinition: CustomNodeDefinition<EnhancedLink
   componentProps: { fieldNames: { text: TEXT_FIELD, url: URL_FIELD } },
   showOnEdit: true,
   renderCollectionAsValue: true,
+  // The primitive form preserves both fields: "<url> (<text>)"
+  toStandardType: (value) => {
+    if (!(isCollection(value) && URL_FIELD in value)) return String(value)
+    const url = String(value[URL_FIELD])
+    const text = TEXT_FIELD in value ? String(value[TEXT_FIELD]) : ''
+    return text ? `${url} (${text})` : url
+  },
 }
