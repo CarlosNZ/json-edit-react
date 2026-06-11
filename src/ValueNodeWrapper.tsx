@@ -221,6 +221,15 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   if (!isVisible) return null
 
+  // A local (deferred) type-switch is in progress when the editing `dataType`
+  // has moved away from what the committed data reports — `revertToData`
+  // resyncs them whenever a session ends, so mid-session divergence can only
+  // come from the type selector. The custom-component match (`customNodeData`)
+  // is keyed off committed data, so it still claims this node mid-switch; the
+  // switched-to type's standard editor must win until the edit commits or
+  // cancels.
+  const typeSwitchedAway = isEditing && dataType !== getDataType(data, customNodeData)
+
   const handleChangeDataType = (type: DataType) => {
     // Contract #3: user-action clears broadcast. See CollapseProvider
     // top-of-file doc.
@@ -249,7 +258,15 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       return
     }
 
-    const newValue = convertValue(value, type, translate('DEFAULT_NEW_KEY', nodeData))
+    // A definition's `toStandardValue` demotes its custom value to a primitive
+    // seed before the generic coercion — only while the buffer still holds the
+    // custom-shaped value (a previous in-session switch has already converted
+    // it, so re-applying the hook would mangle the buffer).
+    const source =
+      !typeSwitchedAway && customNodeData.toStandardValue
+        ? customNodeData.toStandardValue(value)
+        : value
+    const newValue = convertValue(source, type, translate('DEFAULT_NEW_KEY', nodeData))
 
     if (type === 'object' || type === 'array' || type === 'null') {
       // Commit immediately and close the editor: a collection is structural (it
@@ -330,14 +347,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const showTypeSelector = isEditing && allowedDataTypes.length > 1
   const showEditButtons = (dataType !== 'invalid' || CustomComponent) && !error && showEditTools
   const shouldShowKey = showLabel && showKey
-  // A local (deferred) type-switch is in progress when the editing `dataType`
-  // has moved away from what the committed data reports — `revertToData`
-  // resyncs them whenever a session ends, so mid-session divergence can only
-  // come from the type selector. The custom-component match (`customNodeData`)
-  // is keyed off committed data, so it still claims this node mid-switch; the
-  // switched-to type's standard editor must win until the edit commits or
-  // cancels.
-  const typeSwitchedAway = isEditing && dataType !== getDataType(data, customNodeData)
   const showCustomNode =
     CustomComponent &&
     !typeSwitchedAway &&
@@ -570,11 +579,10 @@ const toNumberOrZero = (value: unknown): number => {
 const convertValue = (value: unknown, type: DataType, defaultNewKey: string) => {
   switch (type) {
     case 'string':
-      // Non-JSON sources need care: null/undefined have no string
-      // representation worth editing (empty buffer beats the literal "null"),
-      // and a symbol's editable text is its description, not String(symbol)
+      // null/undefined have no string representation worth editing (an empty
+      // buffer beats the literal "null"); anything more exotic is a custom
+      // node's job via `toStandardValue`.
       if (value == null) return ''
-      if (typeof value === 'symbol') return value.description ?? ''
       return String(value)
     case 'number':
       return toNumberOrZero(value)

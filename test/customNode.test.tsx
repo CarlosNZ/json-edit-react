@@ -294,6 +294,13 @@ describe('CustomNode — switching type away mid-edit', () => {
   const undefinedDef = nonJsonDef(({ value }) => value === undefined, 'undefined', undefined)
   const nanDef = nonJsonDef(({ value }) => Number.isNaN(value), 'NaN', NaN)
   const symbolDef = nonJsonDef(({ value }) => typeof value === 'symbol', 'Symbol', Symbol('new'))
+  // Mirrors the shipped Symbol definition: the editable text of a symbol is
+  // its description, supplied via `toStandardValue`.
+  const symbolDefWithHook: CustomNodeDefinition = {
+    ...symbolDef,
+    toStandardValue: (value) =>
+      typeof value === 'symbol' ? value.description ?? '' : String(value),
+  }
 
   const startEdit = async (user: ReturnType<typeof userEvent.setup>) => {
     const row = screen.getByTestId('custom').closest('.jer-component') as HTMLElement
@@ -351,13 +358,13 @@ describe('CustomNode — switching type away mid-edit', () => {
     expect(setData).toHaveBeenCalledWith({ x: 0 })
   })
 
-  test('Symbol → string: the string editor pre-fills the symbol description', async () => {
+  test('Symbol → string: toStandardValue pre-fills the symbol description', async () => {
     const user = userEvent.setup()
     const { container } = render(
       <JsonEditor
         data={{ x: Symbol('my description') }}
         setData={noop}
-        customNodeDefinitions={[symbolDef]}
+        customNodeDefinitions={[symbolDefWithHook]}
         showIconTooltips
       />
     )
@@ -409,6 +416,143 @@ describe('CustomNode — switching type away mid-edit', () => {
     expect(setData).not.toHaveBeenCalled()
     expect(screen.getByTestId('custom')).toBeInTheDocument()
     expect(container.querySelector('textarea.jer-input-text')).toBeNull()
+  })
+})
+
+describe('CustomNode — toStandardValue seeds the type-switch buffer', () => {
+  // `toStandardValue` demotes a definition's custom value to a single
+  // primitive seed when the type selector switches the node to a standard
+  // type; core's generic coercion handles the rest per target type.
+  const hookDef = (
+    condition: CustomNodeDefinition['condition'],
+    name: string,
+    toStandardValue: CustomNodeDefinition['toStandardValue'],
+    overrides: Partial<CustomNodeDefinition> = {}
+  ): CustomNodeDefinition => ({
+    condition,
+    component: () => <span data-testid="custom">CUSTOM</span>,
+    showOnEdit: true,
+    name,
+    showInTypeSelector: true,
+    toStandardValue,
+    ...overrides,
+  })
+
+  const startEdit = async (user: ReturnType<typeof userEvent.setup>) => {
+    const row = screen.getByTestId('custom').closest('.jer-component') as HTMLElement
+    await user.click(within(row).getByTitle('Edit'))
+  }
+
+  test('switching to string seeds the buffer from toStandardValue, not the raw value', async () => {
+    const user = userEvent.setup()
+    const def = hookDef(({ value }) => typeof value === 'symbol', 'Symbol', () => 'SEED')
+    const { container } = render(
+      <JsonEditor
+        data={{ x: Symbol('my description') }}
+        setData={noop}
+        customNodeDefinitions={[def]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('SEED')
+  })
+
+  test('object-valued custom node → string seeds the hook output, not "[object Object]"', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const def = hookDef(
+      ({ value }) =>
+        value instanceof Object && 'text' in value && 'url' in value,
+      'Link',
+      (value) => (value as { url: string }).url,
+      { renderCollectionAsValue: true }
+    )
+    const { container } = render(
+      <JsonEditor
+        data={{ x: { text: 'Click here', url: 'https://example.com' } }}
+        setData={setData}
+        customNodeDefinitions={[def]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('https://example.com')
+
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setData).toHaveBeenCalledWith({ x: 'https://example.com' })
+  })
+
+  test('the hook seed coerces per target type (number)', async () => {
+    const user = userEvent.setup()
+    const def = hookDef(({ value }) => typeof value === 'bigint', 'BigInt', (value) =>
+      typeof value === 'bigint' ? '456' : ''
+    )
+    const { container } = render(
+      <JsonEditor
+        data={{ x: BigInt(123) }}
+        setData={noop}
+        customNodeDefinitions={[def]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'number')
+
+    const input = container.querySelector('input.jer-input-number') as HTMLInputElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('456')
+  })
+
+  test('the hook applies only while the buffer holds the custom value (not on a second in-session switch)', async () => {
+    const user = userEvent.setup()
+    const def = hookDef(({ value }) => typeof value === 'symbol', 'Symbol', (value) =>
+      typeof value === 'symbol' ? '42' : 'WRONG'
+    )
+    const { container } = render(
+      <JsonEditor
+        data={{ x: Symbol('sym') }}
+        setData={noop}
+        customNodeDefinitions={[def]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+    // The buffer now holds the converted seed; a second switch coerces that
+    // buffer generically rather than re-applying the hook to it.
+    await user.selectOptions(screen.getByRole('combobox'), 'number')
+
+    const input = container.querySelector('input.jer-input-number') as HTMLInputElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('42')
+  })
+
+  test('without toStandardValue, a symbol → string switch seeds the generic String(value)', async () => {
+    const user = userEvent.setup()
+    const def = hookDef(({ value }) => typeof value === 'symbol', 'Symbol', undefined)
+    const { container } = render(
+      <JsonEditor
+        data={{ x: Symbol('my description') }}
+        setData={noop}
+        customNodeDefinitions={[def]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('Symbol(my description)')
   })
 })
 

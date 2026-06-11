@@ -4,6 +4,7 @@ import {
   type CustomNodeDefinition,
   type CustomWrapperProps,
   type NodeData,
+  type ValueData,
 } from './types'
 
 export interface CustomNodeData {
@@ -22,6 +23,7 @@ export interface CustomNodeData {
   showCollectionWrapper?: boolean
   passOriginalNode?: boolean
   renderCollectionAsValue?: boolean
+  toStandardValue?: (value: unknown) => ValueData
 }
 
 // Fetches matching custom nodes (based on condition filter) from custom node
