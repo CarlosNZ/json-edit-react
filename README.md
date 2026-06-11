@@ -1063,8 +1063,10 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   parseReviver?:       // function for parsing as JSON (if non-JSON data type)
 
   // For type switching
-  toStandardType      // function to convert the custom value to a primitive when the
+  toStandardType       // function to convert the custom value to a primitive when the
                        // Type selector switches this node to a standard type
+  fromStandardType     // function to convert the current value into this type's seed when
+                       // an `editOnTypeSwitch` switch opens it for editing
 
   // For editing
   fromEditBuffer       // function to convert the edit buffer into the value to commit
@@ -1128,6 +1130,8 @@ Also, by default, your component will be treated as a "display" component, i.e. 
 You can allow users to create new instances of your special nodes by selecting them as a "Type" in the Type selector when editing/adding values. Set `showInTypeSelector: true` to enable this. However, if this is enabled you need to *also* provide a `name` (which is what the user will see in the selector) and a `defaultValue` which is the data that is inserted when the user selects this "type". (The `defaultValue` must return `true` if passed through the `condition` function in order for it to be immediately displayed using your custom component.)
 
 By default, selecting your type commits `defaultValue` immediately and closes the editor. For nodes the user will almost always want to edit right away (a date picker, a colour, a BigInt), set `editOnTypeSwitch: true` (requires `component` and `showOnEdit`): the switch then stays local — the edit buffer is seeded with `defaultValue`, your component renders in its edit state, a single commit happens when the user confirms, and <kbd>Esc</kbd> cancels the whole switch.
+
+To carry the node's *existing* value into the switch instead of starting from `defaultValue`, provide `fromStandardType: (value) => seed` — e.g. switching a string to a Symbol seeds the symbol's description with the string rather than discarding it. It receives whatever the edit buffer holds at switch time (usually a standard primitive, but a custom value when switching directly between custom types), and the seed it returns is what your component opens with.
 
 ### Active hyperlinks
 

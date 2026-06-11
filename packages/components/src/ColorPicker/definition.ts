@@ -13,6 +13,9 @@ export const ColorPickerNodeDefinition: CustomNodeDefinition<ColorPickerProps> =
   editOnTypeSwitch: true,
   defaultValue: '#ff69B4', // Hot Pink!
   passOriginalNode: true,
+  // Invalid colour text still seeds the input for the user to fix —
+  // `fromEditBuffer` enforces `keepAsColor` at commit
+  fromStandardType: (value) => String(value ?? ''),
   fromEditBuffer: (buffer, _, componentProps) => {
     const { keepAsColor = true, invalidColorError = 'Invalid Color' } = componentProps ?? {}
     if (keepAsColor && !colord(String(buffer)).isValid()) throw new Error(invalidColorError)

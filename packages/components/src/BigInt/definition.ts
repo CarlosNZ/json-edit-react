@@ -14,6 +14,15 @@ export const BigIntDefinition: CustomNodeDefinition<BigIntProps> = {
   defaultValue: BigInt(9007199254740992),
   // A digit string coerces correctly to both string and number targets
   toStandardType: (value) => String(value),
+  // Unconvertible values seed as raw text for the user to fix —
+  // `fromEditBuffer` rejects the commit until it parses
+  fromStandardType: (value) => {
+    try {
+      return BigInt(String(value))
+    } catch {
+      return String(value)
+    }
+  },
   fromEditBuffer: (buffer, _, componentProps) => {
     if (typeof buffer === 'bigint') return buffer
     try {

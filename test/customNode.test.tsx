@@ -1022,6 +1022,63 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     expect(screen.getByTestId('symbol-view')).toBeInTheDocument()
     expect(setData).not.toHaveBeenCalled()
   })
+
+  test('fromStandardType seeds the switch buffer from the current value, and ✓ commits through fromEditBuffer', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const def = bigintTarget({
+      // The current value, not defaultValue, seeds the editor
+      fromStandardType: (value) => `${value}${value}`,
+      fromEditBuffer: (buffer) => BigInt(String(buffer)),
+    })
+    const { container } = render(
+      <JsonEditor data={{ x: 42 }} setData={setData} customNodeDefinitions={[def]} />
+    )
+    await user.dblClick(screen.getByText('42'))
+    await switchTo(user, 'BigInt')
+
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('4242')
+    expect(setData).not.toHaveBeenCalled()
+
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setData).toHaveBeenCalledWith({ x: BigInt(4242) })
+  })
+
+  test('without fromStandardType the buffer still seeds with defaultValue', async () => {
+    const user = userEvent.setup()
+    render(
+      <JsonEditor data={{ x: 'hello' }} setData={noop} customNodeDefinitions={[bigintTarget()]} />
+    )
+    await user.dblClick(screen.getByText('"hello"'))
+    await switchTo(user, 'BigInt')
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('99')
+  })
+
+  test('a custom → custom switch hands the first target’s buffer value to the second’s fromStandardType', async () => {
+    const user = userEvent.setup()
+    const markerDef: CustomNodeDefinition = {
+      condition: ({ value }) => value === 'NEVER',
+      component: CustomEditor,
+      showOnEdit: true,
+      name: 'Marker',
+      showInTypeSelector: true,
+      editOnTypeSwitch: true,
+      defaultValue: 'MARK',
+      fromStandardType: (value) => `GOT:${typeof value}`,
+    }
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        customNodeDefinitions={[bigintTarget(), markerDef]}
+      />
+    )
+    await user.dblClick(screen.getByText('"hello"'))
+    await switchTo(user, 'BigInt')
+    await switchTo(user, 'Marker')
+
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('GOT:bigint')
+  })
 })
 
 describe('CustomNode — passOriginalNode', () => {

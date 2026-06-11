@@ -12,6 +12,12 @@ export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   defaultValue: new Date(),
   renderCollectionAsValue: true,
   toStandardType: (value) => (value instanceof Date ? value.toISOString() : String(value)),
+  // Unparseable values seed as raw text for the user to fix —
+  // `fromEditBuffer` rejects the commit until it parses
+  fromStandardType: (value) => {
+    const date = new Date(String(value))
+    return isNaN(date.getTime()) ? String(value) : date
+  },
   fromEditBuffer: (buffer, _, componentProps) => {
     if (buffer instanceof Date) return buffer
     const date = new Date(String(buffer))

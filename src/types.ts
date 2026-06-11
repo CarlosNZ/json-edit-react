@@ -595,6 +595,12 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // switches this node to a standard type; core's generic coercion takes it
   // from there per target type.
   toStandardType?: (value: unknown) => ValueData
+  // Converts the node's current value into the seed for this type when an
+  // `editOnTypeSwitch` switch opens it for editing; without it the buffer
+  // seeds with `defaultValue`. Receives whatever the edit buffer holds at
+  // switch time — usually a standard primitive, but a custom value when
+  // switching directly between custom types.
+  fromStandardType?: (value: unknown) => unknown
   // Transforms the edit buffer into the value to commit when a confirm fires
   // with no explicit value (the ✓ button, Enter, Tab, `editorRef.confirm()`).
   // Must pass already-correct values through unchanged — the buffer holds the

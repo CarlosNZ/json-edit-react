@@ -263,10 +263,15 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (customNode) {
       if (canDeferSwitch(customNode)) {
         // Deferred (`editOnTypeSwitch`): a local switch like any primitive
-        // type change — reseed the buffer with the target's `defaultValue`
-        // and keep the session open. The target definition's component edits
-        // it; a single commit happens on confirm, and Esc cancels.
-        setValue(customNode.defaultValue as ValueData | CollectionData)
+        // type change — reseed the buffer and keep the session open. The
+        // target's `fromStandardType` derives the seed from the current
+        // value (falling back to `defaultValue`), its component edits it, a
+        // single commit happens on confirm, and Esc cancels.
+        setValue(
+          (customNode.fromStandardType
+            ? customNode.fromStandardType(value)
+            : customNode.defaultValue) as ValueData | CollectionData
+        )
         setDataType(type)
         setEnumType(null)
         return

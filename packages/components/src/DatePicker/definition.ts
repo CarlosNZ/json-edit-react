@@ -30,5 +30,11 @@ export const DatePickerDefinition: CustomNodeDefinition<DatePickerCustomProps> =
   editOnTypeSwitch: true,
   // when instantiated, default to the current date/time
   defaultValue: new Date().toISOString(),
+  // The picker can't display arbitrary text, so unparseable values fall back
+  // to the current date/time
+  fromStandardType: (value) => {
+    const date = new Date(String(value))
+    return (isNaN(date.getTime()) ? new Date() : date).toISOString()
+  },
   componentProps: { showTime: true },
 }
