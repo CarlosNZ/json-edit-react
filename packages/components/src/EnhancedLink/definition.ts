@@ -19,12 +19,20 @@ export const EnhancedLinkCustomNodeDefinition: CustomNodeDefinition<EnhancedLink
   componentProps: { fieldNames: { text: TEXT_FIELD, url: URL_FIELD } },
   showOnEdit: true,
   renderCollectionAsValue: true,
-  // The url is the most useful primitive form of the link object
-  toStandardType: (value) =>
-    isCollection(value) && URL_FIELD in value ? String(value[URL_FIELD]) : String(value),
-  // A URL-looking value seeds the url field; anything else seeds the text
+  // The primitive form preserves both fields: "<url> (<text>)"
+  toStandardType: (value) => {
+    if (!(isCollection(value) && URL_FIELD in value)) return String(value)
+    const url = String(value[URL_FIELD])
+    const text = TEXT_FIELD in value ? String(value[TEXT_FIELD]) : ''
+    return text ? `${url} (${text})` : url
+  },
+  // Reverses toStandardType's "<url> (<text>)" form, so a switch away and
+  // back round-trips losslessly; otherwise a URL-looking value seeds the url
+  // field and anything else seeds the text
   fromStandardType: (value) => {
     const text = String(value ?? '')
+    const combined = /^(https?:\/\/\S+) \((.*)\)$/.exec(text)
+    if (combined) return { [TEXT_FIELD]: combined[2], [URL_FIELD]: combined[1] }
     return /^https?:\/\//.test(text)
       ? { ...DEFAULT_LINK, [URL_FIELD]: text }
       : { ...DEFAULT_LINK, [TEXT_FIELD]: text }
