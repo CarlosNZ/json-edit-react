@@ -1132,8 +1132,11 @@ You can allow users to create new instances of your special nodes by selecting t
 
 By default, selecting your type commits `defaultValue` immediately and closes the editor. For nodes the user will almost always want to edit right away (a date picker, a colour, a BigInt), set `editOnTypeSwitch: true` (requires `component` and `showOnEdit`): the switch then stays local — the edit buffer is seeded with `defaultValue`, your component renders in its edit state, a single commit happens when the user confirms, and <kbd>Esc</kbd> cancels the whole switch.
 
+<<<<<<< HEAD
 To carry the node's *existing* value into the switch instead of starting from `defaultValue`, provide `fromStandardType: (value) => seed` — e.g. switching a string to a Symbol seeds the symbol's description with the string rather than discarding it. It receives whatever the edit buffer holds at switch time (usually a standard primitive, but a custom value when switching directly between custom types), and the seed it returns is what your component opens with.
 
+=======
+>>>>>>> origin/v2.0-dev
 ### Active hyperlinks
 
 A drop-in custom component to turn url strings into clickable links is available from the [`@json-edit-react/components`](#optional-companion-packages) companion package:
