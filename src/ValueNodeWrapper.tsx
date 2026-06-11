@@ -305,9 +305,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // value (re-applying a hook then would mangle it).
     const bufferDefinition =
       typeSwitchedAway && !switchedToDefinition ? undefined : effectiveCustomNodeData
-    const source = bufferDefinition?.toStandardType
-      ? bufferDefinition.toStandardType(value)
-      : value
+    const source = bufferDefinition?.toStandardType ? bufferDefinition.toStandardType(value) : value
     const newValue = convertValue(source, type, translate('DEFAULT_NEW_KEY', nodeData))
 
     if (type === 'object' || type === 'array' || type === 'null') {
