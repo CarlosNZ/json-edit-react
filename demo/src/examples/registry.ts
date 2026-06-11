@@ -3,7 +3,7 @@ import { type ExampleDef } from './types'
 // One entry per targeted example. Adding a new example is one entry here plus
 // one file — the shell handles routing, theming, source display, and (for live)
 // the editable playground. Keys are the URL slug: `/examples/<slug>`.
-export const examples: Record<string, ExampleDef> = {
+const allExamples: Record<string, ExampleDef> = {
   'delayed-settlement': {
     kind: 'static',
     title: 'Delayed settlement',
@@ -81,4 +81,20 @@ export const examples: Record<string, ExampleDef> = {
     load: () => import('./static/swap-the-built-ins/Example'),
     code: () => import('./static/swap-the-built-ins/Example.tsx?raw'),
   },
+  'validation-staleness': {
+    kind: 'static',
+    title: 'Validation staleness (dev)',
+    blurb:
+      "Scratchpad: why validating inside a style function breaks under fine-grained re-rendering. The schema links `payment.method` to `card.number` (`minLength: 16` applies only while method is `card`), so editing `method` changes the validity of a node on another branch — which never re-renders. The banner above the editor recomputes every commit and tells the truth; the node styling lags. Collapse/re-expand `card` to force a re-render and watch it correct itself.",
+    load: () => import('./static/validation-staleness/Example'),
+    code: () => import('./static/validation-staleness/Example.tsx?raw'),
+    devOnly: true,
+  },
 }
+
+// `devOnly` entries are private scratchpads: present on the dev server,
+// stripped from production builds so they neither list in the index nor
+// resolve as routes on the deployed demo.
+export const examples: Record<string, ExampleDef> = import.meta.env.DEV
+  ? allExamples
+  : Object.fromEntries(Object.entries(allExamples).filter(([, def]) => !def.devOnly))

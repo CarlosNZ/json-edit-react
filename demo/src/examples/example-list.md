@@ -19,6 +19,7 @@
 | Custom components      |       |                    | One that demonstrates all the types and props                             |
 | Search utilities       |       |                    | Demonstrate "Search" utils                                                |
 | JsonViewer             |       |                    |                                                                           |
+| Validation staleness   | ✅️     |                    | `devOnly` scratchpad — naive style-fn validation under fine-grained re-rendering |
 
 
 

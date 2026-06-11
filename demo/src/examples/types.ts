@@ -16,6 +16,10 @@ interface ExampleBase {
   // Set `false` to hide the theme picker — for concepts where an injected
   // theme doesn't apply (e.g. editing a theme object itself).
   theme?: false
+  // Dev-server scratchpads: `true` strips the entry from the registry in
+  // production builds (see registry.ts), so it neither appears in the index
+  // nor resolves as a route on the deployed demo.
+  devOnly?: boolean
 }
 
 // A source string to display, resolving to `{ default: string }`. Static
