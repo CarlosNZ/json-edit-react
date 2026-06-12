@@ -1,0 +1,5 @@
+---
+'json-edit-react': minor
+---
+
+Add a `fromStandardType` field to `CustomNodeDefinition` — the inverse of `toStandardType`, converting a standard-typed value into the custom type's value. It runs on every confirm of a custom edit (the ✓ button, Enter, Tab, `editorRef.confirm()` — all paths run this single transform, so ✓ no longer commits the raw edit buffer), where throwing rejects the confirm: nothing commits, the edit session stays open with the user's input intact, and the thrown message surfaces via `onError` and the inline error display (the same contract as confirming invalid JSON on a collection edit). The same hook seeds the editor when an `editOnTypeSwitch` switch opens the type for editing — the node's current value carries into the switch instead of being replaced by `defaultValue` (a throw there seeds the value's string form for the user to fix). Value nodes now show their inline error while editing, `editorRef.confirm()` no longer tears down a session whose confirm was rejected, and custom components' `setValue` accepts any `JsonData` so `renderCollectionAsValue` components can buffer object values.

@@ -521,7 +521,10 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   value: JsonData
   componentProps?: T
   parentData: CollectionData | null
-  setValue: (value: ValueData) => void
+  // Writes into the node's edit buffer. Accepts any `JsonData` so
+  // `renderCollectionAsValue` components can buffer object values; primitive
+  // editors just pass strings/numbers/booleans.
+  setValue: (value: JsonData) => void
   handleEdit: (value?: unknown) => void
   handleCancel: () => void
   handleKeyPress: (e: React.KeyboardEvent) => void
@@ -566,6 +569,12 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // for nodes that need a custom editor too (e.g. a date picker).
   showOnEdit?: boolean // default false
   showOnView?: boolean // default true
+  // Switching TO this type in the type selector opens the node for editing —
+  // the buffer is seeded with `defaultValue`, this definition's component
+  // renders in edit state, a single commit happens on confirm, and Esc
+  // cancels — instead of committing `defaultValue` instantly. Requires
+  // `component` + `showOnEdit`.
+  editOnTypeSwitch?: boolean // default false
   showEditTools?: boolean // default true
   // Opt-in (default false) because it makes the editor build the original
   // node's JSX up-front to pass as `originalNode`/`originalNodeKey` — wasted
@@ -581,6 +590,23 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // For JSON stringify/parse
   stringifyReplacer?: (value: unknown) => unknown
   parseReviver?: (stringified: string) => unknown
+
+  // Demotes the custom value to a primitive seed when the type selector
+  // switches this node to a standard type; core's generic coercion takes it
+  // from there per target type.
+  toStandardType?: (value: unknown) => ValueData
+  // The inverse: converts a standard-typed value into this type's value. Runs
+  // at every confirm of a custom edit (the ✓ button, Enter, Tab,
+  // `editorRef.confirm()`) to turn the edit buffer — usually the editor's
+  // string — into the value to commit; THROW to reject the confirm: nothing
+  // commits, the session stays open, and the thrown message surfaces via
+  // `onError` (inline error + observer callback). Also runs on an
+  // `editOnTypeSwitch` switch to seed the editor from the node's current
+  // value (a throw there seeds the value's string form for the user to fix;
+  // without the hook the buffer seeds with `defaultValue`). Must pass
+  // already-correct values through unchanged — the buffer holds the raw
+  // committed value until the editor's first keystroke.
+  fromStandardType?: (value: unknown, nodeData: NodeData, componentProps?: T) => unknown
 }
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>

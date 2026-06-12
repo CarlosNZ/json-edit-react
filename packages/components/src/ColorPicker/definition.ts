@@ -10,6 +10,14 @@ export const ColorPickerNodeDefinition: CustomNodeDefinition<ColorPickerProps> =
   showOnView: true,
   showOnEdit: true,
   showInTypeSelector: true,
+  editOnTypeSwitch: true,
   defaultValue: '#ff69B4', // Hot Pink!
   passOriginalNode: true,
+  fromStandardType: (value, _, componentProps) => {
+    const { keepAsColor = true, invalidColorError = 'Invalid Color' } = componentProps ?? {}
+    if (keepAsColor && !colord(String(value)).isValid())
+      // Rejects the confirm; at switch time core seeds defaultValue instead
+      throw new Error(invalidColorError)
+    return String(value ?? '')
+  },
 }

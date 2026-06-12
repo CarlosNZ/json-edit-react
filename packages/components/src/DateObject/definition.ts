@@ -8,8 +8,18 @@ export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   showOnEdit: true,
   name: 'Date Object', // shown in the Type selector menu
   showInTypeSelector: true,
+  editOnTypeSwitch: true,
   defaultValue: new Date(),
   renderCollectionAsValue: true,
+  toStandardType: (value) => (value instanceof Date ? value.toISOString() : String(value)),
+  fromStandardType: (value, _, componentProps) => {
+    if (value instanceof Date) return value
+    const date = new Date(String(value))
+    if (isNaN(date.getTime()))
+      // Rejects the confirm; at switch time core seeds defaultValue instead
+      throw new Error(componentProps?.invalidDateError ?? 'Invalid Date')
+    return date
+  },
   // IMPORTANT: This component can't be used in conjunction with a ISO string
   // matcher (such as the DatePicker in this repo) -- because JSON.stringify
   // automatically serializes Date objects to ISO Strings, there's no way to

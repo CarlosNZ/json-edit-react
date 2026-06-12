@@ -16,18 +16,28 @@ import 'react-datepicker/dist/react-datepicker.css'
 // For better matching with Chakra-UI
 import './style.css'
 
+const ISO_STRING_REGEX = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)?$/
+
 // Definition for custom node behaviour
 export const DatePickerDefinition: CustomNodeDefinition<DatePickerCustomProps> = {
   // Condition is a regex to match ISO strings
-  condition: ({ value }) =>
-    typeof value === 'string' &&
-    /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)?$/.test(value),
+  condition: ({ value }) => typeof value === 'string' && ISO_STRING_REGEX.test(value),
   component: DateTimePicker,
   showOnView: true,
   showOnEdit: true,
   name: 'Date (ISO)', // shown in the Type selector menu
   showInTypeSelector: true,
+  editOnTypeSwitch: true,
   // when instantiated, default to the current date/time
   defaultValue: new Date().toISOString(),
+  // ISO strings pass through unchanged (a confirm's buffer is always one, and
+  // normalizing would alter date-only values); other parseable values convert,
+  // and unparseable input falls back to the current date/time — the picker
+  // can't display arbitrary text
+  fromStandardType: (value) => {
+    if (typeof value === 'string' && ISO_STRING_REGEX.test(value)) return value
+    const date = new Date(String(value))
+    return (isNaN(date.getTime()) ? new Date() : date).toISOString()
+  },
   componentProps: { showTime: true },
 }

@@ -294,6 +294,13 @@ describe('CustomNode — switching type away mid-edit', () => {
   const undefinedDef = nonJsonDef(({ value }) => value === undefined, 'undefined', undefined)
   const nanDef = nonJsonDef(({ value }) => Number.isNaN(value), 'NaN', NaN)
   const symbolDef = nonJsonDef(({ value }) => typeof value === 'symbol', 'Symbol', Symbol('new'))
+  // Mirrors the shipped Symbol definition: the editable text of a symbol is
+  // its description, supplied via `toStandardType`.
+  const symbolDefWithHook: CustomNodeDefinition = {
+    ...symbolDef,
+    toStandardType: (value) =>
+      typeof value === 'symbol' ? value.description ?? '' : String(value),
+  }
 
   const startEdit = async (user: ReturnType<typeof userEvent.setup>) => {
     const row = screen.getByTestId('custom').closest('.jer-component') as HTMLElement
@@ -351,13 +358,13 @@ describe('CustomNode — switching type away mid-edit', () => {
     expect(setData).toHaveBeenCalledWith({ x: 0 })
   })
 
-  test('Symbol → string: the string editor pre-fills the symbol description', async () => {
+  test('Symbol → string: toStandardType pre-fills the symbol description', async () => {
     const user = userEvent.setup()
     const { container } = render(
       <JsonEditor
         data={{ x: Symbol('my description') }}
         setData={noop}
-        customNodeDefinitions={[symbolDef]}
+        customNodeDefinitions={[symbolDefWithHook]}
         showIconTooltips
       />
     )
@@ -409,6 +416,719 @@ describe('CustomNode — switching type away mid-edit', () => {
     expect(setData).not.toHaveBeenCalled()
     expect(screen.getByTestId('custom')).toBeInTheDocument()
     expect(container.querySelector('textarea.jer-input-text')).toBeNull()
+  })
+})
+
+describe('CustomNode — toStandardType seeds the type-switch buffer', () => {
+  // `toStandardType` demotes a definition's custom value to a single
+  // primitive seed when the type selector switches the node to a standard
+  // type; core's generic coercion handles the rest per target type.
+  const hookDef = (
+    condition: CustomNodeDefinition['condition'],
+    name: string,
+    toStandardType: CustomNodeDefinition['toStandardType'],
+    overrides: Partial<CustomNodeDefinition> = {}
+  ): CustomNodeDefinition => ({
+    condition,
+    component: () => <span data-testid="custom">CUSTOM</span>,
+    showOnEdit: true,
+    name,
+    showInTypeSelector: true,
+    toStandardType,
+    ...overrides,
+  })
+
+  const startEdit = async (user: ReturnType<typeof userEvent.setup>) => {
+    const row = screen.getByTestId('custom').closest('.jer-component') as HTMLElement
+    await user.click(within(row).getByTitle('Edit'))
+  }
+
+  test('switching to string seeds the buffer from toStandardType, not the raw value', async () => {
+    const user = userEvent.setup()
+    const def = hookDef(({ value }) => typeof value === 'symbol', 'Symbol', () => 'SEED')
+    const { container } = render(
+      <JsonEditor
+        data={{ x: Symbol('my description') }}
+        setData={noop}
+        customNodeDefinitions={[def]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('SEED')
+  })
+
+  test('object-valued custom node → string seeds the hook output, not "[object Object]"', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const def = hookDef(
+      ({ value }) =>
+        value instanceof Object && 'text' in value && 'url' in value,
+      'Link',
+      (value) => (value as { url: string }).url,
+      { renderCollectionAsValue: true }
+    )
+    const { container } = render(
+      <JsonEditor
+        data={{ x: { text: 'Click here', url: 'https://example.com' } }}
+        setData={setData}
+        customNodeDefinitions={[def]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('https://example.com')
+
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setData).toHaveBeenCalledWith({ x: 'https://example.com' })
+  })
+
+  test('the hook seed coerces per target type (number)', async () => {
+    const user = userEvent.setup()
+    const def = hookDef(({ value }) => typeof value === 'bigint', 'BigInt', (value) =>
+      typeof value === 'bigint' ? '456' : ''
+    )
+    const { container } = render(
+      <JsonEditor
+        data={{ x: BigInt(123) }}
+        setData={noop}
+        customNodeDefinitions={[def]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'number')
+
+    const input = container.querySelector('input.jer-input-number') as HTMLInputElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('456')
+  })
+
+  test('the hook applies only while the buffer holds the custom value (not on a second in-session switch)', async () => {
+    const user = userEvent.setup()
+    const def = hookDef(({ value }) => typeof value === 'symbol', 'Symbol', (value) =>
+      typeof value === 'symbol' ? '42' : 'WRONG'
+    )
+    const { container } = render(
+      <JsonEditor
+        data={{ x: Symbol('sym') }}
+        setData={noop}
+        customNodeDefinitions={[def]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+    // The buffer now holds the converted seed; a second switch coerces that
+    // buffer generically rather than re-applying the hook to it.
+    await user.selectOptions(screen.getByRole('combobox'), 'number')
+
+    const input = container.querySelector('input.jer-input-number') as HTMLInputElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('42')
+  })
+
+  test('without toStandardType, a symbol → string switch seeds the generic String(value)', async () => {
+    const user = userEvent.setup()
+    const def = hookDef(({ value }) => typeof value === 'symbol', 'Symbol', undefined)
+    const { container } = render(
+      <JsonEditor
+        data={{ x: Symbol('my description') }}
+        setData={noop}
+        customNodeDefinitions={[def]}
+        showIconTooltips
+      />
+    )
+    await startEdit(user)
+    await user.selectOptions(screen.getByRole('combobox'), 'string')
+
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('Symbol(my description)')
+  })
+})
+
+describe('CustomNode — fromStandardType commit transform', () => {
+  // A minimal custom editor in the shipped-components shape: it writes the
+  // display string straight into the core buffer and passes every confirm
+  // through core's no-arg `handleEdit`, so the definition's `fromStandardType`
+  // is the single transform for ✓, Enter and Tab alike.
+  const CustomEditor = (props: CustomComponentProps) => {
+    const { value, setValue, isEditing, setIsEditing, handleKeyPress } = props
+    return isEditing ? (
+      <input
+        data-testid="custom-input"
+        value={String(value)}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyPress}
+      />
+    ) : (
+      <span data-testid="custom" onDoubleClick={() => setIsEditing(true)}>
+        {String(value)}
+      </span>
+    )
+  }
+
+  const bigintDef = (overrides: Partial<CustomNodeDefinition> = {}): CustomNodeDefinition => ({
+    condition: ({ value }) => typeof value === 'bigint',
+    component: CustomEditor,
+    showOnEdit: true,
+    name: 'BigInt',
+    showInTypeSelector: true,
+    fromStandardType: (buffer) => {
+      if (typeof buffer === 'bigint') return buffer
+      if (!/^\d+$/.test(String(buffer))) throw new Error('Invalid BigInt')
+      return BigInt(String(buffer))
+    },
+    ...overrides,
+  })
+
+  const startEdit = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.dblClick(screen.getByTestId('custom'))
+    return screen.getByTestId('custom-input') as HTMLInputElement
+  }
+
+  const setBuffer = (input: HTMLInputElement, text: string) =>
+    fireEvent.change(input, { target: { value: text } })
+
+  test('✓ commits the fromStandardType-transformed value, not the raw buffer', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor data={{ x: BigInt(5) }} setData={setData} customNodeDefinitions={[bigintDef()]} />
+    )
+    const input = await startEdit(user)
+    setBuffer(input, '123')
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
+  })
+
+  test('Enter commits identically to ✓', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    render(
+      <JsonEditor data={{ x: BigInt(5) }} setData={setData} customNodeDefinitions={[bigintDef()]} />
+    )
+    const input = await startEdit(user)
+    setBuffer(input, '123')
+    await user.type(input, '{Enter}')
+    expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
+  })
+
+  test('a throwing hook rejects: session stays open, error shows, nothing commits — then a fix commits', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onErrorCallback = jest.fn()
+    const { container } = render(
+      <JsonEditor
+        data={{ x: BigInt(5) }}
+        setData={setData}
+        onError={onErrorCallback}
+        customNodeDefinitions={[bigintDef()]}
+      />
+    )
+    const input = await startEdit(user)
+    setBuffer(input, 'abc')
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.getByTestId('custom-input')).toBeInTheDocument()
+    expect(onErrorCallback).toHaveBeenCalledWith(
+      expect.objectContaining({ error: expect.objectContaining({ message: 'Invalid BigInt' }) })
+    )
+    expect(container.querySelector('.jer-error-slug')).toHaveTextContent('Invalid BigInt')
+
+    setBuffer(input, '42')
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setData).toHaveBeenCalledWith({ x: BigInt(42) })
+    expect(container.querySelector('.jer-error-slug')).toBeNull()
+  })
+
+  test('Esc still cancels a rejected session', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor data={{ x: BigInt(5) }} setData={setData} customNodeDefinitions={[bigintDef()]} />
+    )
+    const input = await startEdit(user)
+    setBuffer(input, 'abc')
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    fireEvent.keyDown(screen.getByTestId('custom-input'), { key: 'Escape' })
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.queryByTestId('custom-input')).toBeNull()
+    expect(screen.getByTestId('custom')).toBeInTheDocument()
+  })
+
+  test('confirming the unchanged buffer is a no-op (tolerant pass-through)', async () => {
+    const user = userEvent.setup()
+    const onUpdate = jest.fn() as jest.MockedFunction<UpdateFunction>
+    const { container } = render(
+      <JsonEditor
+        data={{ x: BigInt(5) }}
+        setData={noop}
+        onUpdate={onUpdate}
+        customNodeDefinitions={[bigintDef()]}
+      />
+    )
+    await startEdit(user)
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(onUpdate).not.toHaveBeenCalled()
+    expect(screen.queryByTestId('custom-input')).toBeNull()
+  })
+
+  test('an explicit handleEdit(value) bypasses the hook', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const ExplicitEditor = (props: CustomComponentProps) => {
+      const { isEditing, setIsEditing, handleEdit } = props
+      return isEditing ? (
+        <button data-testid="commit-explicit" onClick={() => handleEdit('EXPLICIT')}>
+          go
+        </button>
+      ) : (
+        <span data-testid="custom" onDoubleClick={() => setIsEditing(true)}>
+          C
+        </span>
+      )
+    }
+    render(
+      <JsonEditor
+        data={{ x: BigInt(5) }}
+        setData={setData}
+        customNodeDefinitions={[bigintDef({ component: ExplicitEditor })]}
+      />
+    )
+    await user.dblClick(screen.getByTestId('custom'))
+    await user.click(screen.getByTestId('commit-explicit'))
+    expect(setData).toHaveBeenCalledWith({ x: 'EXPLICIT' })
+  })
+
+  test('Tab on an invalid buffer rejects: no commit, same node stays editing', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const TabbingEditor = (props: CustomComponentProps) => {
+      const { value, setValue, isEditing, setIsEditing, handleEdit, handleKeyboard, keyboardCommon } =
+        props
+      return isEditing ? (
+        <input
+          data-testid="custom-input"
+          value={String(value)}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => handleKeyboard(e, { stringConfirm: handleEdit, ...keyboardCommon })}
+        />
+      ) : (
+        <span data-testid="custom" onDoubleClick={() => setIsEditing(true)}>
+          {String(value)}
+        </span>
+      )
+    }
+    render(
+      <JsonEditor
+        data={{ x: BigInt(5), y: 'after' }}
+        setData={setData}
+        customNodeDefinitions={[bigintDef({ component: TabbingEditor })]}
+      />
+    )
+    const input = await startEdit(user)
+    setBuffer(input, 'abc')
+    fireEvent.keyDown(input, { key: 'Tab' })
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.getByTestId('custom-input')).toBeInTheDocument()
+  })
+
+  test('a two-field buffer-backed object component commits both edited fields via ✓', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const LinkEditor = (props: CustomComponentProps) => {
+      const { value, setValue, isEditing, setIsEditing } = props
+      const link = (value ?? {}) as { text: string; url: string }
+      return isEditing ? (
+        <div>
+          <input
+            data-testid="field-text"
+            value={link.text}
+            onChange={(e) => setValue({ ...link, text: e.target.value })}
+          />
+          <input
+            data-testid="field-url"
+            value={link.url}
+            onChange={(e) => setValue({ ...link, url: e.target.value })}
+          />
+        </div>
+      ) : (
+        <span data-testid="custom" onDoubleClick={() => setIsEditing(true)}>
+          {link.text}
+        </span>
+      )
+    }
+    const linkDef: CustomNodeDefinition = {
+      condition: ({ value }) => value instanceof Object && 'text' in value && 'url' in value,
+      component: LinkEditor,
+      showOnEdit: true,
+      renderCollectionAsValue: true,
+    }
+    const { container } = render(
+      <JsonEditor
+        data={{ x: { text: 'old text', url: 'old url' } }}
+        setData={setData}
+        customNodeDefinitions={[linkDef]}
+      />
+    )
+    await user.dblClick(screen.getByTestId('custom'))
+    fireEvent.change(screen.getByTestId('field-text'), { target: { value: 'new text' } })
+    fireEvent.change(screen.getByTestId('field-url'), { target: { value: 'new url' } })
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setData).toHaveBeenCalledWith({ x: { text: 'new text', url: 'new url' } })
+  })
+})
+
+describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
+  // With `editOnTypeSwitch`, switching TO the custom type is a local switch
+  // like any primitive type change: the TARGET definition's component renders
+  // in edit state on a buffer seeded through its `fromStandardType` (throw or
+  // no hook → `defaultValue`), a single commit happens on ✓ (through the same
+  // hook), and Esc cancels.
+  const CustomEditor = (props: CustomComponentProps) => {
+    const { value, setValue, isEditing, setIsEditing, handleKeyPress } = props
+    return isEditing ? (
+      <input
+        data-testid="custom-input"
+        value={String(value)}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKeyPress}
+      />
+    ) : (
+      <span data-testid="custom" onDoubleClick={() => setIsEditing(true)}>
+        {String(value)}
+      </span>
+    )
+  }
+
+  const bigintTarget = (overrides: Partial<CustomNodeDefinition> = {}): CustomNodeDefinition => ({
+    condition: ({ value }) => typeof value === 'bigint',
+    component: CustomEditor,
+    showOnEdit: true,
+    name: 'BigInt',
+    showInTypeSelector: true,
+    editOnTypeSwitch: true,
+    defaultValue: BigInt(99),
+    fromStandardType: (buffer) => (typeof buffer === 'bigint' ? buffer : BigInt(String(buffer))),
+    toStandardType: (value) => String(value),
+    ...overrides,
+  })
+
+  const switchTo = async (user: ReturnType<typeof userEvent.setup>, type: string) =>
+    user.selectOptions(screen.getByRole('combobox'), type)
+
+  test('switching to the flagged type opens its component in edit state, seeded from the current value — no commit', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn() as jest.MockedFunction<UpdateFunction>
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        customNodeDefinitions={[bigintTarget()]}
+      />
+    )
+    await user.dblClick(screen.getByText('"hello"'))
+    await switchTo(user, 'BigInt')
+
+    // The hook can't convert 'hello' (it throws), so the switch falls back to
+    // the defaultValue seed — the same as switching with no hook
+    const input = screen.getByTestId('custom-input') as HTMLInputElement
+    expect(input.value).toBe('99')
+    expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('BigInt')
+    expect(setData).not.toHaveBeenCalled()
+    expect(onUpdate).not.toHaveBeenCalled()
+  })
+
+  test('✓ commits once, through the target definition’s fromStandardType', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn() as jest.MockedFunction<UpdateFunction>
+    const { container } = render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        customNodeDefinitions={[bigintTarget()]}
+      />
+    )
+    await user.dblClick(screen.getByText('"hello"'))
+    await switchTo(user, 'BigInt')
+    fireEvent.change(screen.getByTestId('custom-input'), { target: { value: '123' } })
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+
+    expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+    expect(screen.queryByTestId('custom-input')).toBeNull()
+  })
+
+  test('Esc cancels the switch: original value and rendering restored, nothing committed', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    render(
+      <JsonEditor data={{ x: 'hello' }} setData={setData} customNodeDefinitions={[bigintTarget()]} />
+    )
+    await user.dblClick(screen.getByText('"hello"'))
+    await switchTo(user, 'BigInt')
+    fireEvent.keyDown(screen.getByTestId('custom-input'), { key: 'Escape' })
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.queryByTestId('custom-input')).toBeNull()
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+  })
+
+  test('editOnTypeSwitch without showOnEdit falls back to the instant commit', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const instDef: CustomNodeDefinition = {
+      condition: ({ value }) => value === 'INST',
+      component: () => <span data-testid="inst">I</span>,
+      name: 'Inst',
+      showInTypeSelector: true,
+      editOnTypeSwitch: true,
+      defaultValue: 'INST',
+    }
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} customNodeDefinitions={[instDef]} />)
+    await user.dblClick(screen.getByText('"hello"'))
+    await switchTo(user, 'Inst')
+    await waitFor(() => expect(setData).toHaveBeenCalledWith({ x: 'INST' }))
+  })
+
+  test('a second switch to a standard type seeds via the TARGET definition’s toStandardType', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <JsonEditor
+        data={{ x: 42 }}
+        setData={noop}
+        customNodeDefinitions={[bigintTarget({ toStandardType: (value) => `T:${String(value)}` })]}
+      />
+    )
+    await user.dblClick(screen.getByText('42'))
+    await switchTo(user, 'BigInt')
+    await switchTo(user, 'string')
+
+    // The buffer holds the target's custom value (42n from the seed), so the
+    // target's `toStandardType` seeds the standard editor.
+    const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
+    expect(input).not.toBeNull()
+    expect(input.value).toBe('T:42')
+  })
+
+  test('a deferred custom → custom switch reseeds the buffer with the second defaultValue', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const markerDef: CustomNodeDefinition = {
+      condition: ({ value }) => value === 'MARK',
+      component: CustomEditor,
+      showOnEdit: true,
+      name: 'Marker',
+      showInTypeSelector: true,
+      editOnTypeSwitch: true,
+      defaultValue: 'MARK',
+    }
+    const { container } = render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={setData}
+        customNodeDefinitions={[bigintTarget(), markerDef]}
+      />
+    )
+    await user.dblClick(screen.getByText('"hello"'))
+    await switchTo(user, 'BigInt')
+    await switchTo(user, 'Marker')
+
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('MARK')
+    expect(setData).not.toHaveBeenCalled()
+
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setData).toHaveBeenCalledWith({ x: 'MARK' })
+  })
+
+  test('a collection defaultValue commits on ✓ and the new collection mounts expanded', async () => {
+    const user = userEvent.setup()
+    const setDataSpy = jest.fn()
+    const objDef: CustomNodeDefinition = {
+      condition: ({ value }) => value === 'NEVER',
+      component: CustomEditor,
+      showOnEdit: true,
+      name: 'Obj',
+      showInTypeSelector: true,
+      editOnTypeSwitch: true,
+      defaultValue: { a: 1, b: 2 },
+    }
+    // Stateful harness: the committed object has to re-enter via the `data`
+    // prop for the node to re-route to a CollectionNode.
+    const Harness = () => {
+      const [data, setData] = useState<object>({ x: 'hello' })
+      return (
+        <JsonEditor
+          data={data}
+          setData={(d) => {
+            setDataSpy(d)
+            setData(d as object)
+          }}
+          collapse={1}
+          customNodeDefinitions={[objDef]}
+        />
+      )
+    }
+    const { container } = render(<Harness />)
+    await user.dblClick(screen.getByText('"hello"'))
+    await switchTo(user, 'Obj')
+    expect(setDataSpy).not.toHaveBeenCalled()
+
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setDataSpy).toHaveBeenCalledWith({ x: { a: 1, b: 2 } })
+    // `collapse={1}` would normally hide the new collection's contents — the
+    // switch-commit launches it expanded, matching the instant-commit path.
+    await waitFor(() => expect(screen.getByText('a')).toBeInTheDocument())
+    expect(screen.getByText('1')).toBeInTheDocument()
+  })
+
+  test('a deferred switch on a committed-custom node renders the TARGET component; Esc restores the original', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const symbolDef: CustomNodeDefinition = {
+      condition: ({ value }) => typeof value === 'symbol',
+      component: () => <span data-testid="symbol-view">SYM</span>,
+      showOnEdit: true,
+      name: 'Symbol',
+      showInTypeSelector: true,
+    }
+    render(
+      <JsonEditor
+        data={{ x: Symbol('s') }}
+        setData={setData}
+        customNodeDefinitions={[symbolDef, bigintTarget()]}
+        showIconTooltips
+      />
+    )
+    const row = screen.getByTestId('symbol-view').closest('.jer-component') as HTMLElement
+    await user.click(within(row).getByTitle('Edit'))
+    await switchTo(user, 'BigInt')
+
+    expect(screen.queryByTestId('symbol-view')).toBeNull()
+    // The hook can't convert a symbol (BigInt(String(symbol)) throws), so the
+    // switch falls back to the defaultValue seed — never the raw symbol,
+    // which a text editor can't render
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('99')
+    expect(setData).not.toHaveBeenCalled()
+
+    fireEvent.keyDown(screen.getByTestId('custom-input'), { key: 'Escape' })
+    expect(screen.getByTestId('symbol-view')).toBeInTheDocument()
+    expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('the hook seeds the switch from a convertible current value, and ✓ commits through the same hook', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor data={{ x: 42 }} setData={setData} customNodeDefinitions={[bigintTarget()]} />
+    )
+    await user.dblClick(screen.getByText('42'))
+    await switchTo(user, 'BigInt')
+
+    // The current value (42), not defaultValue (99), seeds the editor
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('42')
+    expect(setData).not.toHaveBeenCalled()
+
+    fireEvent.change(screen.getByTestId('custom-input'), { target: { value: '123' } })
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
+  })
+
+  test('without fromStandardType the buffer seeds with defaultValue', async () => {
+    const user = userEvent.setup()
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        customNodeDefinitions={[bigintTarget({ fromStandardType: undefined })]}
+      />
+    )
+    await user.dblClick(screen.getByText('"hello"'))
+    await switchTo(user, 'BigInt')
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('99')
+  })
+
+  test('a custom → custom switch demotes via the source’s toStandardType before the second’s fromStandardType', async () => {
+    const user = userEvent.setup()
+    const markerDef: CustomNodeDefinition = {
+      condition: ({ value }) => value === 'NEVER',
+      component: CustomEditor,
+      showOnEdit: true,
+      name: 'Marker',
+      showInTypeSelector: true,
+      editOnTypeSwitch: true,
+      defaultValue: 'MARK',
+      fromStandardType: (value) => `GOT:${typeof value}:${String(value)}`,
+    }
+    render(
+      <JsonEditor
+        data={{ x: 42 }}
+        setData={noop}
+        customNodeDefinitions={[bigintTarget(), markerDef]}
+      />
+    )
+    await user.dblClick(screen.getByText('42'))
+    await switchTo(user, 'BigInt')
+    await switchTo(user, 'Marker')
+
+    // The BigInt switch seeded the buffer with 42n; the second switch first
+    // demotes it through BigInt's `toStandardType` (String), so the target's
+    // hook receives the primitive form, not the raw custom value
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('GOT:string:42')
+  })
+
+  test('an object-valued custom source seeds the target from its toStandardType form, not "[object Object]"', async () => {
+    const user = userEvent.setup()
+    const linkSource: CustomNodeDefinition = {
+      condition: ({ value }) => value instanceof Object && 'url' in value,
+      component: CustomEditor,
+      showOnEdit: true,
+      name: 'Link',
+      showInTypeSelector: true,
+      editOnTypeSwitch: true,
+      renderCollectionAsValue: true,
+      defaultValue: { url: 'https://default' },
+      toStandardType: (value) => String((value as { url: string }).url),
+    }
+    const sinkTarget = bigintTarget({
+      name: 'Sink',
+      fromStandardType: (value) => `S:${String(value)}`,
+    })
+    const { container } = render(
+      <JsonEditor
+        data={{ x: { url: 'https://example.com' } }}
+        setData={noop}
+        customNodeDefinitions={[linkSource, sinkTarget]}
+        showIconTooltips
+      />
+    )
+    const row = screen.getByTestId('custom').closest('.jer-component') as HTMLElement
+    await user.click(within(row).getByTitle('Edit'))
+    await switchTo(user, 'Sink')
+
+    // The target's hook receives the source's demoted primitive (the url),
+    // never the raw object's "[object Object]"
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe(
+      'S:https://example.com'
+    )
+    expect(container.textContent).not.toContain('[object Object]')
   })
 })
 

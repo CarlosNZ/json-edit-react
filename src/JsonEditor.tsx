@@ -178,7 +178,11 @@ const Editor: React.FC<
   // Root must not subscribe to editing state — that would re-render the whole
   // tree on every edit transition. Read the actions from the stable store
   // (used by the cancel-on-unmount cleanup and the `editorRef` handle below).
-  const { open: openEditSession, cancel: cancelEditSession } = useEditingStore()
+  const {
+    open: openEditSession,
+    cancel: cancelEditSession,
+    getSnapshot: getEditingSnapshot,
+  } = useEditingStore()
   const collapseFilter = useMemo(() => getFilterFunction(collapse), [collapse])
   const translate = useMemo(
     () => getTranslateFunction(translations, customText),
@@ -606,13 +610,29 @@ const Editor: React.FC<
         confirm: () => {
           if (!editConfirmRef.current) return
           editConfirmRef.current.click()
+          // A rejected confirm (invalid JSON on a collection, a throwing
+          // `fromStandardType` on a custom node) leaves its session in 'editing'
+          // phase with an inline error — keep it open rather than tearing it
+          // down. A committed session leaves no active entry, and a held one
+          // is inert against cancel, so the trailing cancel only ever
+          // affected rejected sessions.
+          if (getEditingSnapshot().active?.phase === 'editing') return
           cancelEditSession()
         },
 
         cancel: () => cancelEditSession(),
       }
     },
-    [setCollapseState, openEditSession, cancelEditSession, allowEditFilter, getLatestData, rootName, sort]
+    [
+      setCollapseState,
+      openEditSession,
+      cancelEditSession,
+      getEditingSnapshot,
+      allowEditFilter,
+      getLatestData,
+      rootName,
+      sort,
+    ]
   )
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
