@@ -31,9 +31,6 @@ export const EnhancedLinkCustomComponent: React.FC<CustomComponentProps<Enhanced
     fieldNames: { text: textField, url: urlField } = { text: 'text', url: 'url' },
     stringTruncateLength = 120,
   } = componentProps
-  // Both fields read from and write to the core edit buffer (the whole
-  // {text, url} object), so every confirm path — Enter in either field, the
-  // ✓ button, `editorRef.confirm()` — commits the same in-progress object.
   const linkData = (value ?? {}) as EnhancedLink
   const text = linkData[textField]
   const url = linkData[urlField]
