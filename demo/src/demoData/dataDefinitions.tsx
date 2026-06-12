@@ -2,7 +2,7 @@ import React from 'react'
 import { data } from './data'
 import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'
 import {
-  DatePickerDefinition,
+  datePickerDefinition,
   LinkCustomNodeDefinition,
   DateObjectDefinition,
   UndefinedDefinition,
@@ -10,7 +10,7 @@ import {
   NanDefinition,
   SymbolDefinition,
   BigIntDefinition,
-  MarkdownNodeDefinition,
+  markdownDefinition,
   EnhancedLinkCustomNodeDefinition,
   ImageNodeDefinition,
   ColorPickerNodeDefinition,
@@ -120,7 +120,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'data',
     collapse: 2,
     data: data.intro,
-    customNodeDefinitions: [DatePickerDefinition],
+    customNodeDefinitions: [datePickerDefinition()],
     // allowEdit: ({ key }) => key !== 'number',
     customTextEditorAvailable: true,
     allowTypeSelection: ({ key }) => {
@@ -247,7 +247,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return false
     },
     collapse: 1,
-    customNodeDefinitions: [DatePickerDefinition, LinkCustomNodeDefinition],
+    customNodeDefinitions: [datePickerDefinition(), LinkCustomNodeDefinition],
     data: data.starWars,
   },
   jsonPlaceholder: {
@@ -565,7 +565,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     searchPlaceholder: 'Search guestbook',
     customNodeDefinitions: [
       {
-        condition: DatePickerDefinition.condition,
+        // Borrow the pre-built definition's ISO-date condition; the component
+        // here is a custom read-only display, not the date picker
+        condition: datePickerDefinition().condition,
         component: ({ data, getStyles, nodeData }) => {
           return (
             <p style={getStyles('string', nodeData)}>{new Date(data as string).toLocaleString()}</p>
@@ -733,12 +735,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         },
         showKey: false,
       },
-      {
-        ...DatePickerDefinition,
-        showOnView: true,
-        showInTypeSelector: true,
+      datePickerDefinition({
         componentProps: { showTime: false, dateFormat: 'MMM d, yyyy' },
-      },
+      }),
       // Uncomment to test a custom Collection node
       // {
       //   condition: ({ key }) => key === 'portrayedBy',
@@ -1101,15 +1100,12 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       SymbolDefinition,
       BigIntDefinition,
       ColorPickerNodeDefinition,
-      {
-        ...MarkdownNodeDefinition,
-        // Value-type check so a node switched to another type (e.g. number)
-        // renders natively rather than as markdown text
-        condition: ({ key, value }) => key === 'Markdown' && typeof value === 'string',
-      },
-      {
-        ...MarkdownNodeDefinition,
-        condition: ({ key, value }) => key === 'Intro' && typeof value === 'string',
+      // The factory ANDs these conditions with the built-in string guard, so
+      // a node switched to another type (e.g. number) renders natively
+      // rather than as markdown text
+      markdownDefinition({ condition: ({ key }) => key === 'Markdown' }),
+      markdownDefinition({
+        condition: ({ key }) => key === 'Intro',
         showKey: false,
         componentProps: {
           components: {
@@ -1117,7 +1113,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
             a: ({ _, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
           },
         },
-      },
+      }),
     ],
     customTextEditorAvailable: true,
   },

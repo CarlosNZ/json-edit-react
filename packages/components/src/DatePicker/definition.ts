@@ -1,14 +1,11 @@
 /**
- * An example Custom Component:
- * https://github.com/CarlosNZ/json-edit-react#custom-nodes
- *
- * A date/time picker which can be configure to show (using the
- * CustomNodeDefinitions at the bottom of this file) when an ISO date/time
- * string is present in the JSON data, and present a Date picker interface
- * rather than requiring the user to edit the ISO string directly.
+ * A date/time picker which shows when an ISO date/time string is present in
+ * the JSON data, presenting a calendar interface rather than requiring the
+ * user to edit the ISO string directly.
  */
 
-import { CustomNodeDefinition } from 'json-edit-react'
+import { type CustomNodeDefinition } from 'json-edit-react'
+import { createDefinitionFactory } from '../_common/createDefinitionFactory'
 import { DatePickerCustomProps, DateTimePicker } from './component'
 
 // Styles
@@ -18,9 +15,12 @@ import './style.css'
 
 const ISO_STRING_REGEX = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)?$/
 
-// Definition for custom node behaviour
-export const DatePickerDefinition: CustomNodeDefinition<DatePickerCustomProps> = {
-  // Condition is a regex to match ISO strings
+// The condition doubles as the guard: it keeps the date parser away from
+// anything but ISO strings. Consumer `condition` overrides are targeting,
+// ANDed with this by the factory; a non-ISO date format needs the explicit
+// `guard` override (realistically along with `fromStandardType` and
+// `defaultValue`).
+const DatePickerDefinition: CustomNodeDefinition<DatePickerCustomProps> = {
   condition: ({ value }) => typeof value === 'string' && ISO_STRING_REGEX.test(value),
   component: DateTimePicker,
   showOnView: true,
@@ -41,3 +41,5 @@ export const DatePickerDefinition: CustomNodeDefinition<DatePickerCustomProps> =
   },
   componentProps: { showTime: true },
 }
+
+export const datePickerDefinition = createDefinitionFactory(DatePickerDefinition)
