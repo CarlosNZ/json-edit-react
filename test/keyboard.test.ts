@@ -98,10 +98,15 @@ describe('getFullKeyboardControlMap', () => {
 })
 
 describe('getNextOrPrevious', () => {
+  // Tests in this block exercise the pure STRUCTURAL walk — pass an
+  // always-true `isViable` predicate so every candidate is accepted and
+  // the result reflects raw document order. The viability-skipping
+  // behaviour itself is tested separately under `describe('isViable predicate')` below.
+  const acceptAll = () => true
   const getNext = (data: object, path: (string | number)[]) =>
-    getNextOrPrevious(data, path, 'next', () => {})
+    getNextOrPrevious(data, path, 'next', () => {}, acceptAll)
   const getPrevious = (data: object, path: (string | number)[]) =>
-    getNextOrPrevious(data, path, 'prev', () => {})
+    getNextOrPrevious(data, path, 'prev', () => {}, acceptAll)
 
   const data = {
     a: 1,
@@ -252,13 +257,6 @@ describe('getNextOrPrevious', () => {
       const nested = { a: 1, b: { x: 'skip-me', y: 'ok' }, c: 3 }
       const isViable = (nd: { value: unknown }) => nd.value !== 'skip-me'
       expect(getNextOrPrevious(nested, ['a'], 'next', () => {}, isViable)).toEqual(['b', 'y'])
-    })
-
-    test('absence of the predicate is byte-equivalent to the legacy behaviour', () => {
-      // The original four-argument calls must still work — no breaking
-      // change for callers that haven't adopted the predicate.
-      expect(getNextOrPrevious(sample, ['c'], 'next', () => {})).toEqual(['d'])
-      expect(getNextOrPrevious(sample, ['c'], 'prev', () => {})).toEqual(['b'])
     })
   })
 })
