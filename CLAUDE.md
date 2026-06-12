@@ -10,7 +10,7 @@ Three companion packages ship optional extras:
 
 - `@json-edit-react/themes` — pre-built themes (peer-deps on core, no runtime deps)
 - `@json-edit-react/components` — pre-built custom node components (peer-deps on core, regular deps on lazy-loaded third-party libs like `react-datepicker`)
-- `@json-edit-react/utils` — utility hooks and helpers (peer-deps on core, default zero runtime deps). **Nascent** — scaffolded ahead of its first helper; see [packages/utils/CLAUDE.md](packages/utils/CLAUDE.md) and issues #307 / #285 / #319.
+- `@json-edit-react/utils` — utility hooks and helpers (peer-deps on core, default zero runtime deps). Ships `useConfirmOnUpdate` and `useUndo`; more helpers planned for the v2 release. See [packages/utils/CLAUDE.md](packages/utils/CLAUDE.md) and issues #307 / #285 / #319.
 
 All publish independently to npm with their own versions.
 
@@ -23,7 +23,7 @@ This is a **pnpm workspace** (root, plus `packages/*`). [demo/](demo/) is intent
 - [src/](src/) — the core published library (entry: [src/index.ts](src/index.ts))
 - [packages/themes/](packages/themes/) — `@json-edit-react/themes`
 - [packages/components/](packages/components/) — `@json-edit-react/components`
-- [packages/utils/](packages/utils/) — `@json-edit-react/utils` (nascent; utility hooks + helpers)
+- [packages/utils/](packages/utils/) — `@json-edit-react/utils` (utility hooks + helpers; ships `useConfirmOnUpdate` + `useUndo`, more landing for v2)
 - [demo/](demo/) — Vite app deployed to https://carlosnz.github.io/json-edit-react. Independent yarn project. Doubles as the dev environment for all three packages via the `VITE_JRE_SOURCE` toggle, and showcases how third parties consume `@json-edit-react/components` (the `customComponentLibrary` data set).
 - [test/](test/) — Jest tests for core.
 - [scripts/](scripts/) — Python + Node helpers for the publish + build flow (core only — README rewriting, staging, packing, the test step for `prebuild`).
