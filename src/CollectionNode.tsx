@@ -9,7 +9,6 @@ import {
   type ValueData,
 } from './types'
 import { Icon } from './Icons'
-import { filterNode } from './utils/filter'
 import { getModifier, insertCharInTextArea } from './utils/keyboard'
 import { isCollection, NOOP } from './utils/misc'
 import { AutogrowTextArea } from './AutogrowTextArea'
@@ -21,6 +20,7 @@ import {
   useCollapse,
   useAppliedBroadcast,
   useReferenceChanged,
+  useNodeVisible,
 } from './contexts'
 import { isDescendantOf } from './utils/pathTools'
 import { areNodePropsEqual } from './utils/memoNode'
@@ -44,8 +44,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     allowClipboard,
     onCopy,
     showIconTooltips,
-    searchFilter,
-    searchText,
     indent,
     sort,
     showArrayIndexes,
@@ -210,10 +208,16 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // For when children are accessed via Tab
   if (childrenEditing && collapsed) animateCollapse(false)
 
-  // Early return if this node is filtered out
-  const isVisible =
-    filterNode('collection', nodeData, searchFilter, searchText) || nodeData.level === 0
+  // Early return if this node is filtered out. Root (level 0) is always kept
+  // — the editor's outer container still needs to render even when nothing
+  // matches, so the user sees an "empty" tree rather than nothing at all.
+  const isVisible = useNodeVisible(path) || nodeData.level === 0
   if (!isVisible && !childrenEditing) return null
+
+  // `visibleSize` is a number on tracked collections while a filter is
+  // active; `null` on leaves under a filter; `undefined` otherwise. Use
+  // `!= null` to check "has a real count". Drives the n-of-m display.
+  const { visibleSize } = nodeData
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
@@ -339,7 +343,17 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const showLabel = showArrayIndexes || !isArray
-  const showCount = showCollectionCount === 'when-closed' ? collapsed : showCollectionCount
+  // `'when-closed-or-filtered'` surfaces the count whenever the filter is
+  // currently subsetting this collection's children — useCommon sets
+  // `visibleSize` to a number on tracked collections while a filter is
+  // active (and `null` on leaves), so `!= null` catches "filter active
+  // AND we have a real count for this node".
+  const showCount =
+    showCollectionCount === 'when-closed'
+      ? collapsed
+      : showCollectionCount === 'when-closed-or-filtered'
+        ? collapsed || visibleSize != null
+        : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
   const shouldShowKey = showLabel && showKey && name !== undefined
   const showCustomNodeContents =
@@ -590,9 +604,14 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
                 transitionBehavior: 'allow-discrete',
               }}
             >
-              {size === 1
-                ? translate('ITEM_SINGLE', { ...nodeData, size: 1 }, 1)
-                : translate('ITEMS_MULTIPLE', nodeData, size as number)}
+              {visibleSize != null && visibleSize !== (size as number)
+                ? translate('ITEMS_FILTERED', nodeData, {
+                    visible: visibleSize,
+                    total: size as number,
+                  })
+                : size === 1
+                  ? translate('ITEM_SINGLE', { ...nodeData, size: 1 }, 1)
+                  : translate('ITEMS_MULTIPLE', nodeData, size as number)}
             </div>
           )}
           <div

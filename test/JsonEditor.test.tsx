@@ -1928,6 +1928,153 @@ describe('JsonEditor — search and filter', () => {
       jest.useRealTimers()
     }
   })
+
+  test('showCollectionCount: renders "n of m" when search filters out some children', () => {
+    // 5 items in the array, but only 2 contain 'apple'. Force the count to
+    // be visible regardless of collapse state with showCollectionCount={true}.
+    render(
+      <JsonEditor
+        data={{ items: ['apple-1', 'banana', 'apple-pie', 'cherry', 'plum'] }}
+        setData={noop}
+        searchText="apple"
+        showCollectionCount
+      />
+    )
+    expect(screen.getByText('2 of 5 items')).toBeInTheDocument()
+  })
+
+  test('customText.ITEMS_FILTERED can suppress the n-of-m form entirely', () => {
+    // The documented escape hatch for "always show the total under search":
+    // override ITEMS_FILTERED to return the same form ITEMS_MULTIPLE would.
+    render(
+      <JsonEditor
+        data={{ items: ['apple-1', 'banana', 'apple-pie', 'cherry', 'plum'] }}
+        setData={noop}
+        searchText="apple"
+        showCollectionCount
+        customText={{
+          ITEMS_FILTERED: ({ size }) => `${size} items`,
+        }}
+      />
+    )
+    expect(screen.getByText('5 items')).toBeInTheDocument()
+    expect(screen.queryByText('2 of 5 items')).toBeNull()
+  })
+
+  test('"when-closed-or-filtered" surfaces the count on an open node under search', () => {
+    // The default behaviour: even on an open collection (where the count
+    // would normally hide), search activates the count display so n-of-m
+    // is visible without forcing the user to collapse. The count element
+    // is always in the DOM (for CSS fade transitions); visibility is the
+    // .jer-visible / .jer-hidden class.
+    render(
+      <JsonEditor
+        data={{ items: ['apple-1', 'banana', 'apple-pie', 'cherry', 'plum'] }}
+        setData={noop}
+        searchText="apple"
+        // showCollectionCount left at default ('when-closed-or-filtered')
+        collapse={false}
+      />
+    )
+    const countEl = screen.getByText('2 of 5 items')
+    expect(countEl).toHaveClass('jer-visible')
+    expect(countEl).not.toHaveClass('jer-hidden')
+  })
+
+  test('"when-closed" suppresses the count on an open node, even under search', () => {
+    // Opt-out of the filtered-aware default — counts only appear when the
+    // collection is collapsed, regardless of search state.
+    render(
+      <JsonEditor
+        data={{ items: ['apple-1', 'banana', 'apple-pie', 'cherry', 'plum'] }}
+        setData={noop}
+        searchText="apple"
+        showCollectionCount="when-closed"
+        collapse={false}
+      />
+    )
+    const countEl = screen.getByText('2 of 5 items')
+    expect(countEl).toHaveClass('jer-hidden')
+    expect(countEl).not.toHaveClass('jer-visible')
+  })
+
+  test('"n of m" reverts to the simple total when search matches all children', () => {
+    // Every child contains 'a' → visible === total → no "of" form.
+    render(
+      <JsonEditor
+        data={{ items: ['apple', 'banana', 'avocado'] }}
+        setData={noop}
+        searchText="a"
+        showCollectionCount
+      />
+    )
+    expect(screen.getByText('3 items')).toBeInTheDocument()
+    expect(screen.queryByText(/3 of 3 items/)).toBeNull()
+  })
+
+  test('"n of m" customText override receives both `size` and `visibleSize`', () => {
+    render(
+      <JsonEditor
+        data={{ items: ['apple-1', 'banana', 'apple-pie', 'cherry', 'plum'] }}
+        setData={noop}
+        searchText="apple"
+        showCollectionCount
+        customText={{
+          ITEMS_FILTERED: ({ size, visibleSize }) =>
+            `[${visibleSize}/${size}] match`,
+        }}
+      />
+    )
+    expect(screen.getByText('[2/5] match')).toBeInTheDocument()
+  })
+
+  test('`visibleSize` reaches render-path callbacks: number on tracked collections, `null` on visible leaves', () => {
+    // Locks in the D11 universal-exposure contract for callbacks that run
+    // AFTER the visibility walk (allowEdit, theme functions, customText,
+    // custom-node conditions, etc.). They see the `useCommon`-augmented
+    // NodeData with `visibleSize` set.
+    const seen = new Map<string, number | null | undefined>()
+    render(
+      <JsonEditor
+        data={{ outer: { inner: ['apple-1', 'banana'] } }}
+        setData={noop}
+        searchText="apple"
+        allowEdit={(nodeData) => {
+          seen.set(nodeData.path.join('/') || 'ROOT', nodeData.visibleSize)
+          return true
+        }}
+      />
+    )
+    // Tracked collections under an active filter: `visibleSize` is a number.
+    expect(typeof seen.get('ROOT')).toBe('number')
+    expect(typeof seen.get('outer')).toBe('number')
+    expect(typeof seen.get('outer/inner')).toBe('number')
+    // Leaf paths aren't in `visibleChildCounts`, so they get `null` —
+    // even the filtered-out 'banana', whose useCommon (and so its
+    // allowEdit invocation) still runs before the visibility early-return.
+    expect(seen.get('outer/inner/0')).toBeNull() // 'apple-1', matches
+    expect(seen.get('outer/inner/1')).toBeNull() // 'banana', doesn't match
+  })
+
+  test('`visibleSize` is `null` on render-path NodeData when no filter is active', () => {
+    // Outside a filter, the FilterStateProvider's value is `null`, the
+    // hook returns `null`, and useCommon spreads `visibleSize: null` onto
+    // every render-path NodeData. (`undefined` would mean "NodeData built
+    // outside the render path", which doesn't apply here.)
+    const seen: (number | null | undefined)[] = []
+    render(
+      <JsonEditor
+        data={{ outer: { inner: 'leaf' } }}
+        setData={noop}
+        allowEdit={(nodeData) => {
+          seen.push(nodeData.visibleSize)
+          return true
+        }}
+      />
+    )
+    expect(seen.length).toBeGreaterThan(0)
+    seen.forEach((v) => expect(v).toBeNull())
+  })
 })
 
 describe('JsonEditor — textarea character insertion via keyboard', () => {

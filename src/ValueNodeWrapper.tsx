@@ -21,9 +21,14 @@ import {
   type EnumDefinition,
   type TabDirection,
 } from './types'
-import { useTheme, useEditingStore, useCollapse, type UpdateOutcome } from './contexts'
+import {
+  useTheme,
+  useEditingStore,
+  useCollapse,
+  useNodeVisible,
+  type UpdateOutcome,
+} from './contexts'
 import { buildCustomNodeData, type CustomNodeData } from './CustomNode'
-import { filterNode } from './utils/filter'
 import { pathsEqual } from './utils/pathTools'
 import { isJsEvent, matchEnumType, NOOP } from './utils/misc'
 import { useCommon, useDragNDrop } from './hooks'
@@ -39,8 +44,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     onCopy,
     canDragOnto,
     allowTypeSelection,
-    searchFilter,
-    searchText,
     showLabel,
     stringTruncateLength,
     showStringQuotes,
@@ -179,7 +182,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const { isEditing, isPending } = derivedValues
 
   // Early return if this node is filtered out
-  const isVisible = filterNode('value', nodeData, searchFilter, searchText)
+  const isVisible = useNodeVisible(path)
 
   // Skip hidden or uneditable nodes that Tab navigation has landed on by
   // advancing the editing target to the next viable node.

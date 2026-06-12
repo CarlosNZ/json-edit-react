@@ -21,7 +21,7 @@ export interface JsonEditorProps<T = JsonData> {
   indent?: number
   collapse?: boolean | number | FilterFunction<T>
   collapseAnimationTime?: number // ms
-  showCollectionCount?: boolean | 'when-closed'
+  showCollectionCount?: boolean | 'when-closed' | 'when-closed-or-filtered'
   allowEdit?: boolean | FilterFunction<T>
   allowDelete?: boolean | FilterFunction<T>
   allowAdd?: boolean | FilterFunction<T>
@@ -291,10 +291,6 @@ export type SearchFilterFunction<T = JsonData> = (
   inputData: NodeData<T>,
   searchText: string
 ) => boolean
-export type SearchFilterInputFunction<T = JsonData> = (
-  inputData: Partial<NodeData<T>>,
-  searchText: string
-) => boolean
 export type NewKeyOptionsFunction<T = JsonData> = (input: NodeData<T>) => string[] | null | void
 
 export type CopyType = 'path' | 'value'
@@ -420,6 +416,15 @@ export interface NodeData<T = JsonData> {
   index: number
   value: JsonData
   size: number | null
+  // Visible direct-child count under the current search filter. `number` on
+  // tracked collections while a filter is active; `null` on render-path
+  // NodeData when either no filter is active or this isn't a tracked
+  // collection (e.g. a leaf). `undefined` only when the NodeData wasn't
+  // built by the render path — i.e. the `searchFilter` callback (which the
+  // visibility walk invokes before counts are known) or NodeData built via
+  // `buildNodeData` for the editorRef handle / onCollapse / onEditEvent
+  // bridges. Consumers can use `!= null` to gate on "has a real count".
+  visibleSize?: number | null
   parentData: object | null
   fullData: T
   collapsed?: boolean
@@ -444,8 +449,6 @@ interface BaseNodeProps {
   allowAddFilter: FilterFunction
   allowDragFilter: FilterFunction
   canDragOnto: boolean
-  searchFilter?: SearchFilterFunction
-  searchText?: string
   allowTypeSelection: boolean | TypeOptions | TypeFilterFunction
   stringTruncateLength: number
   indent: number
@@ -476,7 +479,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   collapseFilter: FilterFunction
   collapseAnimationTime: number
   showArrayIndexes: boolean
-  showCollectionCount: boolean | 'when-closed'
+  showCollectionCount: boolean | 'when-closed' | 'when-closed-or-filtered'
   showStringQuotes: boolean
   defaultValue: unknown
   newKeyOptions?: string[] | NewKeyOptionsFunction

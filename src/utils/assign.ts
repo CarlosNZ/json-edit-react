@@ -7,6 +7,7 @@
 // values (JSON, functions, etc.), and `unknown` would force callers to
 // narrow before passing.
 
+import { isObject } from './misc'
 import { splitPropertyString, stringifyPath, type Path } from './pathTools'
 
 type BasicType = string | number | boolean | undefined | null | ((...args: unknown[]) => unknown)
@@ -46,9 +47,6 @@ const maybeThrow = (
     )
   return
 }
-
-const isObject = (input: unknown): input is InputObject =>
-  typeof input === 'object' && input !== null && !Array.isArray(input)
 
 const isArray = (input: unknown): input is Array<Value> => Array.isArray(input)
 
