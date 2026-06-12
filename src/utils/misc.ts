@@ -14,6 +14,9 @@ export const NOOP = () => {}
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
   value !== null && typeof value === 'object'
 
+export const isObject = (input: unknown): input is Record<string, unknown> =>
+  typeof input === 'object' && input !== null && !Array.isArray(input)
+
 export const isJsEvent = (value: unknown) => {
   return (
     value &&

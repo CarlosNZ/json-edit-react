@@ -562,6 +562,10 @@ These each take a `boolean` value, or a `FilterFunction` callback, with the foll
     value,      // value of the property
     size ,      // if a collection (object, array), the number of items
                 //   (null for non-collections)
+    visibleSize, // if a collection AND a search filter is active, the
+                //   number of direct children currently visible
+                //   (undefined otherwise — i.e. on leaves, or when no
+                //   filter is active)
     parentData, // parent object containing the current node
     fullData    // the full (overall) data object
     collapsed   // whether or not the current node is in a
@@ -999,7 +1003,7 @@ Localise your implementation (or just customise the default messages) by passing
 {
   ITEM_SINGLE: '{{count}} item',
   ITEMS_MULTIPLE: '{{count}} items',
-  ITEMS_FILTERED: '{{visible}} of {{total}} items', // Shown when a search filter is active and the visible count differs from the total. Both `{{visible}}` and `{{total}}` are substituted.
+  ITEMS_FILTERED: '{{visible}} of {{total}} items',
   KEY_NEW: 'Enter new key',
   KEY_SELECT: 'Select key',
   NO_KEY_OPTIONS: 'No key options',
@@ -1214,7 +1218,7 @@ customText = {
 }
 ```
 
-When a search filter is active, the count switches to `ITEMS_FILTERED` (e.g. `"3 of 20 items"`). A `customText` callback for that key receives the same `NodeData` input plus an additional `visibleSize` field carrying the count of visible direct children — so both numbers are available to the override (`size` is the total, `visibleSize` is the visible count).
+When a search filter is active, the count switches to `ITEMS_FILTERED` (e.g. `"3 of 20 items"`). The override receives the standard `NodeData`, with `size` as the total and `visibleSize` (set on every collection node while a filter is active — see [Filter functions](#filter-functions)) as the visible count.
 
 ## Custom Buttons
 

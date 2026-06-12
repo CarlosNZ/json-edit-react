@@ -1,20 +1,13 @@
 /**
- * Regression guards for the search/filter bug originally documented in
- * dev-docs/search_analysis.md §10 (and v2-filtered-collection-count.md):
+ * Prevents a possible bug where an intermediate collection whose key
+ * matches the search filter but whose body has no path-aware-matched
+ * descendants (e.g. an empty `{}`, or any subtree under a custom
+ * `searchFilter` that doesn't consult `path`) drops out of the visible
+ * set and drags its ancestors with it.
  *
- *   The old filterCollection recursed into a child collection *without*
- *   first testing the child's own matcher. So an intermediate collection
- *   whose key matched but whose body was empty (or whose descendants
- *   weren't path-aware-matched) dropped out and dragged its ancestors
- *   with it.
- *
- * Concrete repro: { rootContainer: { interestingThing: {} } } +
- * searchFilter 'key' + searchText 'interestingThing'. Before the fix,
- * the user typed a literal key from the data and saw nothing.
- *
- * The single-pass walk in `computeFilterState` (src/utils/filter.ts)
- * tests every node, including intermediate collections, so this case
- * stays visible.
+ * Concrete repro: `{ rootContainer: { interestingThing: {} } }` +
+ * `searchFilter: 'key'` + `searchText: 'interestingThing'`. The user
+ * types a literal key from the data; the matching key must be reachable.
  */
 
 import { render, screen } from '@testing-library/react'

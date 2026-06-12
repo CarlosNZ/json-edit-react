@@ -21,7 +21,6 @@ import {
   useAppliedBroadcast,
   useReferenceChanged,
   useNodeVisible,
-  useVisibleChildCount,
 } from './contexts'
 import { isDescendantOf } from './utils/pathTools'
 import { areNodePropsEqual } from './utils/memoNode'
@@ -213,10 +212,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // — the editor's outer container still needs to render even when nothing
   // matches, so the user sees an "empty" tree rather than nothing at all.
   const isVisible = useNodeVisible(path) || nodeData.level === 0
-  // Visible direct-child count when search is active; `null` otherwise.
-  // Powers the "n of m" filtered-count display below.
-  const visibleSize = useVisibleChildCount(path)
   if (!isVisible && !childrenEditing) return null
+
+  // `visibleSize` is set by useCommon when a filter is active; undefined
+  // otherwise. Drives the "n of m" filtered-count display below.
+  const { visibleSize } = nodeData
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
   const brackets =
@@ -343,13 +343,13 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   const showLabel = showArrayIndexes || !isArray
   // `'when-closed-or-filtered'` surfaces the count whenever the filter is
-  // currently subsetting this collection's children — `visibleSize !== null`
-  // means search is active (the FilterStateProvider returns null otherwise).
+  // currently subsetting this collection's children — useCommon sets
+  // `visibleSize` only while a filter is active.
   const showCount =
     showCollectionCount === 'when-closed'
       ? collapsed
       : showCollectionCount === 'when-closed-or-filtered'
-        ? collapsed || visibleSize !== null
+        ? collapsed || visibleSize !== undefined
         : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
   const shouldShowKey = showLabel && showKey && name !== undefined
@@ -601,13 +601,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
                 transitionBehavior: 'allow-discrete',
               }}
             >
-              {visibleSize !== null && visibleSize !== (size as number)
-                ? translate(
-                    'ITEMS_FILTERED',
-                    { ...nodeData, visibleSize },
-                    size as number,
-                    { visible: visibleSize, total: size as number }
-                  )
+              {visibleSize !== undefined && visibleSize !== (size as number)
+                ? translate('ITEMS_FILTERED', nodeData, {
+                    visible: visibleSize,
+                    total: size as number,
+                  })
                 : size === 1
                   ? translate('ITEM_SINGLE', { ...nodeData, size: 1 }, 1)
                   : translate('ITEMS_MULTIPLE', nodeData, size as number)}

@@ -4,7 +4,7 @@
  */
 
 import React, { useCallback, useRef, useState } from 'react'
-import { useEditingSelector, useEditingStore } from '../contexts'
+import { useEditingSelector, useEditingStore, useVisibleChildCount } from '../contexts'
 import {
   type CollectionNodeProps,
   type ErrorString,
@@ -43,7 +43,12 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const { submit, cancel } = useEditingStore()
   const [error, setError] = useState<string | null>(null)
 
-  const nodeData = { ...incomingNodeData, collapsed }
+  const visibleSize = useVisibleChildCount(incomingNodeData.path)
+  const nodeData = {
+    ...incomingNodeData,
+    collapsed,
+    ...(visibleSize !== null && { visibleSize }),
+  }
   const { path, key: name, size } = nodeData
 
   const pathString = toPathString(path)

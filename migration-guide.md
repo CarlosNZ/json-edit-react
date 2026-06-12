@@ -557,7 +557,19 @@ A handful of props were renamed. These are **pure renames** (no behaviour change
 
 > The same `stringTruncate` → `stringTruncateLength` rename applies to the `componentProps` of the `Hyperlink` / `EnhancedLink` components in `@json-edit-react/components`.
 
-One display **default** also changed (not a rename): `showCollectionCount` now defaults to `"when-closed"` (previously `true`), so item counts show only on collapsed collections. To keep the v1 always-visible behaviour, set `showCollectionCount={true}`.
+One display **default** also changed (not a rename): `showCollectionCount` now defaults to `"when-closed-or-filtered"` (previously `true`). Counts appear when a collection is collapsed *or* when a search filter is narrowing its children — in the latter case rendered as `"n of m items"`. To keep the v1 always-visible behaviour, set `showCollectionCount={true}`; for collapse-only, set `"when-closed"`.
+
+The filtered-count form is driven by a new localisation key, `ITEMS_FILTERED`. If you ship a complete `translations` object, add it (otherwise the English default `"{{visible}} of {{total}} items"` will appear alongside your translated UI whenever a search filter is active):
+
+```diff
+  translations={{
+    // ...existing keys
+    ITEMS_MULTIPLE: '…',
++   ITEMS_FILTERED: '… {{visible}} … {{total}} …',
+  }}
+```
+
+Both `{{visible}}` and `{{total}}` placeholders are substituted at render time.
 
 ---
 

@@ -24,21 +24,8 @@ export interface FilterState {
 /**
  * Single post-order DFS that decides which nodes stay visible under the
  * current search, and counts the visible direct children of every
- * collection along the way. Returns `null` when no filter is active — the
- * caller fast-paths to "everything visible, use raw `size`".
- *
- * Replaces the old per-CollectionNode `filterNode`/`filterCollection`
- * pair, which independently re-walked every visible collection's subtree.
- * That cost ~O(n × depth); this is O(n). The redundancy multiplier the
- * previous approach paid grew with depth — measured ~4× on balanced
- * trees, ~11× on deep trees in the filter bench.
- *
- * Also fixes a real correctness bug in the old approach:
- * `filterCollection` recursed into child collections without first
- * testing the child's own matcher, so an intermediate collection whose
- * key matched but whose body was empty (or whose descendants weren't
- * path-aware-matched) would drop out and drag its ancestors with it. The
- * walk here tests every node, including intermediate collections.
+ * collection along the way. Returns `null` when no filter is active —
+ * the caller fast-paths to "everything visible, use raw `size`".
  */
 export const computeFilterState = (
   rootNodeData: NodeData,
@@ -60,7 +47,7 @@ export const computeFilterState = (
     if (isCollection(nd.value)) {
       let visibleChildren = 0
       const isArr = Array.isArray(nd.value)
-      const entries = Object.entries(nd.value as object)
+      const entries = Object.entries(nd.value)
       for (const [key, value] of entries) {
         const childKey = isArr ? Number(key) : key
         const childPath = [...nd.path, childKey]
@@ -70,8 +57,8 @@ export const computeFilterState = (
           level: nd.level + 1,
           index: visibleChildren,
           value,
-          size: isCollection(value) ? Object.keys(value as object).length : null,
-          parentData: nd.value as object,
+          size: isCollection(value) ? Object.keys(value).length : null,
+          parentData: nd.value,
           fullData: nd.fullData,
         }
         if (walk(childNd)) {

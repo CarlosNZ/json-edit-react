@@ -65,5 +65,8 @@ export const useNodeVisible = (path: CollectionKey[]): boolean => {
 export const useVisibleChildCount = (path: CollectionKey[]): number | null => {
   const fs = useFilterStateContext()
   if (fs === null) return null
-  return fs.visibleChildCounts.get(toPathString(path)) ?? 0
+  // `null` when this path has no entry — e.g. a leaf path, or a collection
+  // that wasn't walked. (A collection with zero matches has an entry of 0,
+  // which is meaningfully different.)
+  return fs.visibleChildCounts.get(toPathString(path)) ?? null
 }

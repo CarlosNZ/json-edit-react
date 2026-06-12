@@ -65,7 +65,7 @@ interface AppState {
   indent: number
   collapseLevel: number | FilterFunction
   collapseTime: number
-  showCount: 'Yes' | 'No' | 'When closed'
+  showCount: 'Yes' | 'No' | 'When closed' | 'When closed or filtered'
   theme: Theme
   allowEdit: boolean
   allowDelete: boolean
@@ -115,7 +115,7 @@ function App() {
     indent: 2,
     collapseLevel: dataDefinition.collapse ?? 2,
     collapseTime: 300,
-    showCount: 'When closed',
+    showCount: 'When closed or filtered',
     theme: defaultTheme,
     allowEdit: true,
     allowDelete: true,
@@ -553,7 +553,13 @@ function App() {
                   collapse={collapseLevel}
                   collapseAnimationTime={collapseTime}
                   showCollectionCount={
-                    showCount === 'Yes' ? true : showCount === 'When closed' ? 'when-closed' : false
+                    showCount === 'Yes'
+                      ? true
+                      : showCount === 'When closed'
+                        ? 'when-closed'
+                        : showCount === 'When closed or filtered'
+                          ? 'when-closed-or-filtered'
+                          : false
                   }
                   allowClipboard={allowCopy}
                   onCopy={onCopy}
@@ -857,7 +863,13 @@ function App() {
                     <Select
                       id="showCountSelect"
                       onChange={(e) =>
-                        updateState({ showCount: e.target.value as 'Yes' | 'No' | 'When closed' })
+                        updateState({
+                          showCount: e.target.value as
+                            | 'Yes'
+                            | 'No'
+                            | 'When closed'
+                            | 'When closed or filtered',
+                        })
                       }
                       value={showCount}
                     >
@@ -869,6 +881,9 @@ function App() {
                       </option>
                       <option value="When closed" key={2}>
                         When closed
+                      </option>
+                      <option value="When closed or filtered" key={3}>
+                        When closed or filtered
                       </option>
                     </Select>
                   </div>

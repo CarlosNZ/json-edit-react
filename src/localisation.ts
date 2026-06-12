@@ -1,4 +1,5 @@
 import { type CustomTextDefinitions, type NodeData } from './types'
+import { isObject } from './utils/misc'
 
 const localisedStrings = {
   ITEM_SINGLE: '{{count}} item',
@@ -27,8 +28,7 @@ export type LocalisedStrings = typeof localisedStrings
 export type TranslateFunction = (
   key: keyof LocalisedStrings,
   customData: NodeData,
-  count?: number,
-  tokens?: Record<string, string | number>
+  counts?: number | Record<string, string | number>
 ) => string
 
 const translate = (
@@ -36,8 +36,7 @@ const translate = (
   customText: CustomTextDefinitions,
   customTextData: NodeData,
   key: keyof LocalisedStrings,
-  count?: number,
-  tokens?: Record<string, string | number>
+  counts?: number | Record<string, string | number>
 ): string => {
   if (customText[key]) {
     const output = customText[key](customTextData)
@@ -45,8 +44,8 @@ const translate = (
   }
 
   let string = key in translations ? (translations[key] as string) : localisedStrings[key]
-  if (count !== undefined) string = string?.replace('{{count}}', String(count))
-  if (tokens) {
+  if (counts !== undefined) {
+    const tokens = isObject(counts) ? counts : { count: counts }
     for (const [token, value] of Object.entries(tokens)) {
       string = string?.replace(`{{${token}}}`, String(value))
     }
@@ -61,7 +60,6 @@ export const getTranslateFunction = (
   return (
     key: keyof LocalisedStrings,
     customTextData: NodeData,
-    count?: number,
-    tokens?: Record<string, string | number>
-  ) => translate(translations, customText, customTextData, key, count, tokens)
+    counts?: number | Record<string, string | number>
+  ) => translate(translations, customText, customTextData, key, counts)
 }
