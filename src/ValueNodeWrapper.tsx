@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState, useMemo, useCallback, useRef } from 'react'
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import {
   StringValue,
   NumberValue,
@@ -60,14 +60,11 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     getLatestData,
   } = props
   const { getStyles } = useTheme()
-  // Actions + a getSnapshot for imperative reads. The editing *state* this node
-  // needs (active, tabDirection, previouslyEditedElement) is only read
-  // inside event handlers / the Tab-redirect effect — never during render — so
-  // it's read from the snapshot at use-time rather than subscribed to. The only
-  // editing state that drives this node's render (`isEditing`) comes from
-  // `useCommon`'s per-node selector.
-  const { open, cancel, submit, recordPreviousEdit, setTabDirection, getSnapshot } =
-    useEditingStore()
+  // Actions + a getSnapshot for imperative reads. The editing `active` state
+  // this node reads (via `getSnapshot`) is only consulted inside event
+  // handlers, never during render. The only editing state that drives this
+  // node's render (`isEditing`) comes from `useCommon`'s per-node selector.
+  const { open, cancel, submit, getSnapshot } = useEditingStore()
   const { setCollapseState } = useCollapse()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
@@ -183,39 +180,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   // Early return if this node is filtered out
   const isVisible = useNodeVisible(path)
-
-  // Skip hidden or uneditable nodes that Tab navigation has landed on by
-  // advancing the editing target to the next viable node.
-  //
-  // `useLayoutEffect` (not `useEffect`) is load-bearing: it fires synchronously
-  // before the browser paints, so the redirect state update batches into the
-  // same paint as the commit that flagged this node as `isEditing`. With plain
-  // `useEffect` the user would see a flicker — the current node briefly
-  // closes its editor (commit 1 with the filtered-out target "editing"),
-  // then reopens (commit 2 after the redirect). See V2-roadmap §16 for the
-  // followup: hoisting filter-awareness into `getNextOrPrevious` so the Tab
-  // handler can pick a viable target up front, eliminating the redirect
-  // entirely and dropping the setState-after-render pattern.
-  useLayoutEffect(() => {
-    if (!isEditing) return
-    if (isVisible && canEdit) return
-    // A forced (imperative `editorRef.startEdit`) edit overrides `allowEdit`,
-    // so don't bounce off this node just because it's normally uneditable. A
-    // search-filtered-out node (`!isVisible`) still redirects — it can't
-    // render.
-    if (isVisible && getSnapshot().active?.force) return
-    const { tabDirection, previouslyEditedElement } = getSnapshot()
-    const next = getNextOrPreviousAtPath(tabDirection)
-    if (next) open(next)
-    else if (previouslyEditedElement) open(previouslyEditedElement)
-    else cancel()
-    // The three booleans gate the redirect; `open`/`cancel` are included for
-    // hygiene (store-stable, so they almost never flip). The remaining reads
-    // (`tabDirection`, `previouslyEditedElement`, `path`, `sort`) are
-    // intentionally excluded — they change every render / edit transition and
-    // would cause spurious re-fires when no redirect is needed.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, isVisible, canEdit, open, cancel])
 
   if (!isVisible) return null
 
@@ -436,14 +400,13 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   const setIsEditing = canEdit ? startEdit : NOOP
 
   // Commit this field's edit, then open the next/previous node in the given Tab
-  // direction. Not pure — it orchestrates store actions (`setTabDirection`,
-  // `recordPreviousEdit`, `open`) with this node's `handleEdit`/`path`, so it
-  // stays local rather than moving to keyboard utils (cf. the pure
-  // `getNextOrPrevious`). `handleEdit`'s `onCommit` defers `open` to the commit
-  // moment, so Tab advances only once this field's edit has landed.
+  // direction. Not pure — it orchestrates store actions (`open`) with this
+  // node's `handleEdit`/`path`, so it stays local rather than moving to
+  // keyboard utils (cf. the pure `getNextOrPrevious`). `handleEdit`'s
+  // `onCommit` defers `open` to the commit moment, so Tab advances only once
+  // this field's edit has landed. `getNextOrPreviousAtPath` already skips
+  // non-viable targets (the viability predicate lives in `useCommon`).
   const tabTo = (dir: TabDirection) => () => {
-    setTabDirection(dir)
-    recordPreviousEdit(path)
     const target = getNextOrPreviousAtPath(dir)
     if (target) handleEdit(undefined, () => open(target))
   }

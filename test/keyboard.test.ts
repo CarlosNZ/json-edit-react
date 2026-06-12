@@ -98,10 +98,15 @@ describe('getFullKeyboardControlMap', () => {
 })
 
 describe('getNextOrPrevious', () => {
+  // Tests in this block exercise the pure STRUCTURAL walk — pass an
+  // always-true `isViable` predicate so every candidate is accepted and
+  // the result reflects raw document order. The viability-skipping
+  // behaviour itself is tested separately under `describe('isViable predicate')` below.
+  const acceptAll = () => true
   const getNext = (data: object, path: (string | number)[]) =>
-    getNextOrPrevious(data, path, 'next', () => {})
+    getNextOrPrevious(data, path, 'next', () => {}, acceptAll)
   const getPrevious = (data: object, path: (string | number)[]) =>
-    getNextOrPrevious(data, path, 'prev', () => {})
+    getNextOrPrevious(data, path, 'prev', () => {}, acceptAll)
 
   const data = {
     a: 1,
@@ -196,5 +201,62 @@ describe('getNextOrPrevious', () => {
     }
     expect(getNext(d, ['styles', 'container', 'fontFamily'])).toEqual(['styles', 'lastOne'])
     expect(getNext(d, ['styles', 'lastOne'])).toEqual(null)
+  })
+
+  describe('isViable predicate', () => {
+    // The predicate receives a synthesized NodeData per candidate leaf and
+    // returns true to accept that leaf, false to skip onward. This is how
+    // Tab navigation now skips filtered-out / non-editable nodes up front,
+    // replacing the redirect useLayoutEffect that previously bounced edits
+    // reactively in ValueNodeWrapper.
+    const sample = { a: 1, b: 2, c: 3, d: 4, e: 5 }
+
+    test('skips a single non-viable leaf forward and back', () => {
+      // Skip `c` going forward and back.
+      const isViable = (nd: { key: string | number }) => nd.key !== 'c'
+      expect(getNextOrPrevious(sample, ['b'], 'next', () => {}, isViable)).toEqual(['d'])
+      expect(getNextOrPrevious(sample, ['d'], 'prev', () => {}, isViable)).toEqual(['b'])
+    })
+
+    test('skips a contiguous run of non-viable leaves', () => {
+      // Skip b, c, d going forward; should land on e.
+      const isViable = (nd: { key: string | number }) =>
+        !(['b', 'c', 'd'] as Array<string | number>).includes(nd.key)
+      expect(getNextOrPrevious(sample, ['a'], 'next', () => {}, isViable)).toEqual(['e'])
+      // And reverse: from e back, skip d, c, b — land on a.
+      expect(getNextOrPrevious(sample, ['e'], 'prev', () => {}, isViable)).toEqual(['a'])
+    })
+
+    test('returns null when nothing viable remains in the search direction', () => {
+      const isViable = (nd: { key: string | number }) => nd.key === 'a'
+      // From `a`, no more `a` siblings forward → null.
+      expect(getNextOrPrevious(sample, ['a'], 'next', () => {}, isViable)).toEqual(null)
+      // From `a`, no `a` siblings before either → null.
+      expect(getNextOrPrevious(sample, ['a'], 'prev', () => {}, isViable)).toEqual(null)
+    })
+
+    test('viability check sees the candidate NodeData shape, not the source', () => {
+      // The predicate inspects the CANDIDATE leaf (the proposed Tab
+      // destination), not the source. Asserts the synthesized shape
+      // carries path, level, value, parentData, fullData so custom
+      // searchFilter / allowEdit functions get what they expect.
+      const seen: Array<{ key: unknown; path: unknown; level: unknown; value: unknown }> = []
+      const isViable = (nd: { key: unknown; path: unknown; level: unknown; value: unknown }) => {
+        seen.push({ key: nd.key, path: nd.path, level: nd.level, value: nd.value })
+        return true
+      }
+      getNextOrPrevious(sample, ['a'], 'next', () => {}, isViable)
+      // First candidate from ['a'] going next is ['b'] (a leaf, value 2).
+      expect(seen[0]).toEqual({ key: 'b', path: ['b'], level: 1, value: 2 })
+    })
+
+    test('descends into a collection and skips a non-viable first leaf', () => {
+      // Tab from a leaf into a nested collection — viability is checked on
+      // the deepest first leaf reached by getChildRecursive, and skipped
+      // onward if non-viable.
+      const nested = { a: 1, b: { x: 'skip-me', y: 'ok' }, c: 3 }
+      const isViable = (nd: { value: unknown }) => nd.value !== 'skip-me'
+      expect(getNextOrPrevious(nested, ['a'], 'next', () => {}, isViable)).toEqual(['b', 'y'])
+    })
   })
 })

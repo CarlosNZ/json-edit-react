@@ -4,11 +4,17 @@
  */
 
 import React, { useCallback, useRef, useState } from 'react'
-import { useEditingSelector, useEditingStore, useVisibleChildCount } from '../contexts'
+import {
+  useEditingSelector,
+  useEditingStore,
+  useRawFilterState,
+  useVisibleChildCount,
+} from '../contexts'
 import {
   type CollectionNodeProps,
   type ErrorString,
   type JerError,
+  type NodeData,
   type ThemeableElement,
   type ValueData,
   type ValueNodeProps,
@@ -113,11 +119,35 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     [onErrorCallback, showErrorMessages, getLatestData, errorDisplayTime]
   )
 
+  // Tab-viability predicate: a candidate leaf is a valid Tab target only
+  // if it would be visible AND editable. Visibility comes from the
+  // precomputed `filterState.visiblePaths` Set; editability is the
+  // existing `allowEditFilter(nodeData)`. Closures over the live filter
+  // state, so a search keystroke that re-builds the state implicitly
+  // re-builds the predicate (via useCallback identity), but only when
+  // those inputs actually change — the §16 memo invariants hold.
+  //
+  // Hooks-rules note: we read the WHOLE filter state via
+  // `useRawFilterState` (not per-path `useNodeVisible`) because the
+  // predicate is invoked for many candidate paths during a single Tab,
+  // and we can't call hooks inside a loop.
+  const filterState = useRawFilterState()
+  const isViableTarget = useCallback(
+    (candidate: NodeData) => {
+      const visible =
+        filterState === null || filterState.visiblePaths.has(toPathString(candidate.path))
+      return visible && allowEditFilter(candidate)
+    },
+    [filterState, allowEditFilter]
+  )
+
   // Stable wrapper around `getNextOrPrevious` against the LIVE document for
   // this node's `path`, so callers (`KeyDisplay`, value-node `tabForward` /
   // `tabBack`) don't need to re-thread `getLatestData` / `path` / `sort`.
+  // Threads `isViableTarget` so Tab skips filtered-out / non-editable
+  // leaves up front instead of landing on them and bouncing.
   const getNextOrPreviousAtPath = (type: 'next' | 'prev') =>
-    getNextOrPrevious(getLatestData(), path, type, sort)
+    getNextOrPrevious(getLatestData(), path, type, sort, isViableTarget)
 
   // Commits a key rename through the store's commit engine. The no-op /
   // duplicate-key checks stay client-side and close the session as a cancel.

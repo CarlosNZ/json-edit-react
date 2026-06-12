@@ -34,7 +34,6 @@
 
 import React, { createContext, useContext, useMemo, useRef, useSyncExternalStore } from 'react'
 import {
-  type TabDirection,
   type CollectionKey,
   type OnEditEventFunction,
   type EditEvent,
@@ -65,8 +64,6 @@ export interface EditingStateBundle {
   active: EditingState | null
   /** In-flight optimistic commits: path-string → the commit's token. */
   settling: Record<PathString, Token>
-  previouslyEditedElement: CollectionKey[] | null
-  tabDirection: TabDirection
 }
 
 /** A commit to perform, discriminated by `op`. `path` is the target/source. */
@@ -187,8 +184,6 @@ export interface EditingStore {
    *  `onUpdate`) so the calling node can report errors via its own `onError`.
    */
   submit: (args: SubmitArgs) => Promise<UpdateOutcome | undefined>
-  setTabDirection: (dir: TabDirection) => void
-  recordPreviousEdit: (path: CollectionKey[]) => void
   /** Imperative read for event handlers — does not subscribe. */
   areChildrenBeingEdited: (path: CollectionKey[]) => boolean
 }
@@ -196,8 +191,6 @@ export interface EditingStore {
 const initialState: EditingStateBundle = {
   active: null,
   settling: {},
-  previouslyEditedElement: null,
-  tabDirection: 'next',
 }
 
 const createEditingStore = (
@@ -485,17 +478,6 @@ const createEditingStore = (
     return outcome
   }
 
-  const setTabDirection = (dir: TabDirection) => {
-    if (state.tabDirection !== dir) commit({ ...state, tabDirection: dir })
-  }
-
-  const recordPreviousEdit = (path: CollectionKey[]) => {
-    const prev = state.previouslyEditedElement
-    if (prev === null || !pathsEqual(prev, path)) {
-      commit({ ...state, previouslyEditedElement: path })
-    }
-  }
-
   return {
     subscribe: (onChange) => {
       listeners.add(onChange)
@@ -506,8 +488,6 @@ const createEditingStore = (
     open,
     cancel,
     submit,
-    setTabDirection,
-    recordPreviousEdit,
     areChildrenBeingEdited: (path) =>
       state.active !== null && isDescendantOf(state.active.path, path),
   }
@@ -591,8 +571,6 @@ export const useEditing = () => {
       open: store.open,
       cancel: store.cancel,
       submit: store.submit,
-      setTabDirection: store.setTabDirection,
-      recordPreviousEdit: store.recordPreviousEdit,
       areChildrenBeingEdited: store.areChildrenBeingEdited,
     }),
     [bundle, store]

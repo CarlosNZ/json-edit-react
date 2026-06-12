@@ -5,9 +5,11 @@ import {
   type KeyboardControls,
   type KeyboardControlsFull,
   type KeyEvent,
+  type NodeData,
   type SortFunction,
   type TabDirection,
 } from '../types'
+import { buildNodeData } from './buildNodeData'
 import { extract } from './extract'
 import { isCollection } from './misc'
 
@@ -153,7 +155,16 @@ export const getNextOrPrevious = (
   fullData: JsonData,
   path: CollectionKey[],
   nextOrPrev: TabDirection = 'next',
-  sort: SortFunction
+  sort: SortFunction,
+  // Viability predicate. Candidate leaves whose synthesized `NodeData`
+  // fails the predicate are skipped: the function recurses with the
+  // failed candidate as the new starting point, continuing in the same
+  // direction until a viable leaf or `null` is reached. Lets Tab
+  // navigation skip filtered-out or non-editable nodes up front instead
+  // of relying on a downstream redirect to bounce them. Pass `() => true`
+  // for a pure structural walk (tests; never in production — the editor
+  // always supplies a real predicate via `useCommon`).
+  isViable: (nodeData: NodeData) => boolean
 ): CollectionKey[] | null => {
   const parentPath = path.slice(0, path.length - 1)
   const thisKey = path.slice(-1)[0]
@@ -173,15 +184,24 @@ export const getNextOrPrevious = (
 
   if (!destination) {
     if (parentPath.length === 0) return null
-    return getNextOrPrevious(fullData, parentPath, nextOrPrev, sort)
+    return getNextOrPrevious(fullData, parentPath, nextOrPrev, sort, isViable)
   }
 
+  let candidate: CollectionKey[] | null
   if (isCollection(destination.value)) {
     if (Object.keys(destination.value).length === 0) {
-      return getNextOrPrevious(fullData, [...parentPath, destination.key], nextOrPrev, sort)
+      return getNextOrPrevious(fullData, [...parentPath, destination.key], nextOrPrev, sort, isViable)
     }
-    return getChildRecursive(fullData, [...parentPath, destination.key], nextOrPrev, sort)
-  } else return [...parentPath, destination.key]
+    candidate = getChildRecursive(fullData, [...parentPath, destination.key], nextOrPrev, sort)
+  } else {
+    candidate = [...parentPath, destination.key]
+  }
+  if (!candidate) return null
+
+  if (!isViable(buildNodeData(fullData, candidate, '', sort))) {
+    return getNextOrPrevious(fullData, candidate, nextOrPrev, sort, isViable)
+  }
+  return candidate
 }
 
 // If the node at "path" is a collection, tries the first/last child of that
