@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useState, useMemo, useCallback, useRef } from 'react'
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react'
 import {
   StringValue,
   NumberValue,
@@ -183,39 +183,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   // Early return if this node is filtered out
   const isVisible = useNodeVisible(path)
-
-  // Skip hidden or uneditable nodes that Tab navigation has landed on by
-  // advancing the editing target to the next viable node.
-  //
-  // `useLayoutEffect` (not `useEffect`) is load-bearing: it fires synchronously
-  // before the browser paints, so the redirect state update batches into the
-  // same paint as the commit that flagged this node as `isEditing`. With plain
-  // `useEffect` the user would see a flicker — the current node briefly
-  // closes its editor (commit 1 with the filtered-out target "editing"),
-  // then reopens (commit 2 after the redirect). See V2-roadmap §16 for the
-  // followup: hoisting filter-awareness into `getNextOrPrevious` so the Tab
-  // handler can pick a viable target up front, eliminating the redirect
-  // entirely and dropping the setState-after-render pattern.
-  useLayoutEffect(() => {
-    if (!isEditing) return
-    if (isVisible && canEdit) return
-    // A forced (imperative `editorRef.startEdit`) edit overrides `allowEdit`,
-    // so don't bounce off this node just because it's normally uneditable. A
-    // search-filtered-out node (`!isVisible`) still redirects — it can't
-    // render.
-    if (isVisible && getSnapshot().active?.force) return
-    const { tabDirection, previouslyEditedElement } = getSnapshot()
-    const next = getNextOrPreviousAtPath(tabDirection)
-    if (next) open(next)
-    else if (previouslyEditedElement) open(previouslyEditedElement)
-    else cancel()
-    // The three booleans gate the redirect; `open`/`cancel` are included for
-    // hygiene (store-stable, so they almost never flip). The remaining reads
-    // (`tabDirection`, `previouslyEditedElement`, `path`, `sort`) are
-    // intentionally excluded — they change every render / edit transition and
-    // would cause spurious re-fires when no redirect is needed.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditing, isVisible, canEdit, open, cancel])
 
   if (!isVisible) return null
 

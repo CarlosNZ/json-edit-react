@@ -5,6 +5,7 @@ import {
   type KeyboardControls,
   type KeyboardControlsFull,
   type KeyEvent,
+  type NodeData,
   type SortFunction,
   type TabDirection,
 } from '../types'
@@ -153,7 +154,14 @@ export const getNextOrPrevious = (
   fullData: JsonData,
   path: CollectionKey[],
   nextOrPrev: TabDirection = 'next',
-  sort: SortFunction
+  sort: SortFunction,
+  // Optional viability predicate. When supplied, candidate leaves whose
+  // synthesized `NodeData` fails the predicate are skipped: the function
+  // recurses with the failed candidate as the new starting point,
+  // continuing in the same direction until a viable leaf or `null` is
+  // reached. Lets Tab navigation skip filtered-out or non-editable nodes
+  // up front instead of relying on a downstream redirect to bounce them.
+  isViable?: (nodeData: NodeData) => boolean
 ): CollectionKey[] | null => {
   const parentPath = path.slice(0, path.length - 1)
   const thisKey = path.slice(-1)[0]
@@ -173,15 +181,59 @@ export const getNextOrPrevious = (
 
   if (!destination) {
     if (parentPath.length === 0) return null
-    return getNextOrPrevious(fullData, parentPath, nextOrPrev, sort)
+    return getNextOrPrevious(fullData, parentPath, nextOrPrev, sort, isViable)
   }
 
+  let candidate: CollectionKey[] | null
   if (isCollection(destination.value)) {
     if (Object.keys(destination.value).length === 0) {
-      return getNextOrPrevious(fullData, [...parentPath, destination.key], nextOrPrev, sort)
+      return getNextOrPrevious(fullData, [...parentPath, destination.key], nextOrPrev, sort, isViable)
     }
-    return getChildRecursive(fullData, [...parentPath, destination.key], nextOrPrev, sort)
-  } else return [...parentPath, destination.key]
+    candidate = getChildRecursive(fullData, [...parentPath, destination.key], nextOrPrev, sort)
+  } else {
+    candidate = [...parentPath, destination.key]
+  }
+  if (!candidate) return null
+
+  if (isViable && !isViable(buildLeafNodeData(fullData, candidate, sort))) {
+    return getNextOrPrevious(fullData, candidate, nextOrPrev, sort, isViable)
+  }
+  return candidate
+}
+
+// Synthesizes the `NodeData` shape for an arbitrary leaf path — used to
+// feed the `isViable` predicate above. Mirrors `buildNodeData` in
+// `JsonEditor.tsx` (kept inline to keep this util free of cross-file
+// dependencies on the editor). `index` derivation matches the renderer's
+// sort-aware semantics so a custom `searchFilter` / `allowEdit` sees the
+// same `index` it would during render.
+const buildLeafNodeData = (
+  fullData: JsonData,
+  path: CollectionKey[],
+  sort: SortFunction
+): NodeData => {
+  const parentPath = path.slice(0, -1)
+  const parentData = (extract(fullData, parentPath) ?? null) as object | null
+  const key = path[path.length - 1]
+  const value = extract(fullData, path) as JsonData
+  let index = 0
+  if (Array.isArray(parentData)) {
+    index = typeof key === 'number' ? key : Number(key)
+  } else if (parentData) {
+    const entries = Object.entries(parentData) as Array<[string | number, unknown]>
+    sort(entries, (entry) => entry)
+    index = entries.findIndex(([k]) => k === key)
+  }
+  return {
+    key,
+    path,
+    level: path.length,
+    index,
+    value,
+    size: isCollection(value) ? Object.keys(value as object).length : null,
+    parentData,
+    fullData,
+  }
 }
 
 // If the node at "path" is a collection, tries the first/last child of that

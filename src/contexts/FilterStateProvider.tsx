@@ -4,7 +4,7 @@
  * visibility/count is an O(1) Set/Map lookup instead of the per-node
  * subtree walk the old `filterNode` did.
  *
- * Three consumer hooks:
+ * Four consumer hooks:
  *
  *   useFilterActive()           — boolean: "is search active right now?"
  *                                 Drives the n-of-m branch (no point
@@ -19,6 +19,14 @@
  *                                 of this collection. `null` when no
  *                                 filter is active (caller falls back to
  *                                 `nodeData.size`).
+ *
+ *   useRawFilterState()         — FilterState | null: the whole pre-
+ *                                 computed bundle. For callers that need
+ *                                 to check many candidate paths from a
+ *                                 closure (e.g. the Tab-viability
+ *                                 predicate in ValueNodeWrapper, where
+ *                                 hooks-per-candidate would violate the
+ *                                 rules of hooks).
  *
  * Pattern note: this is a dumb provider — `JsonEditor` owns the
  * `useMemo` that builds the state, and passes it as a `value` prop.
@@ -55,6 +63,8 @@ const useFilterStateContext = (): FilterState | null => {
 }
 
 export const useFilterActive = (): boolean => useFilterStateContext() !== null
+
+export const useRawFilterState = (): FilterState | null => useFilterStateContext()
 
 export const useNodeVisible = (path: CollectionKey[]): boolean => {
   const fs = useFilterStateContext()

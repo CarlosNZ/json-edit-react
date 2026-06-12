@@ -2075,6 +2075,71 @@ describe('JsonEditor — search and filter', () => {
     expect(seen.length).toBeGreaterThan(0)
     seen.forEach((v) => expect(v).toBeNull())
   })
+
+  test('Tab past a non-editable node fires NO transient startEdit/cancelEdit pair', async () => {
+    // With the redirect useLayoutEffect retired (#334), Tab calls now
+    // skip non-viable nodes inside `getNextOrPrevious` instead of opening
+    // them and bouncing reactively. So the event stream for a Tab from
+    // `a` past a non-editable `b` to `c` should be:
+    //   startEdit(a) → submitEdit(a) → commitEdit(a) → startEdit(c)
+    // — no startEdit(b) or cancelEdit(b) sneaking in.
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(
+      <JsonEditor
+        data={{ a: 'one', b: 'two', c: 'three' }}
+        setData={noop}
+        onEditEvent={onEditEvent}
+        // `b` is not editable; should be skipped during Tab navigation.
+        allowEdit={({ key }) => key !== 'b'}
+      />
+    )
+
+    await user.dblClick(screen.getByText('"one"'))
+    await user.keyboard('{Tab}')
+
+    const seq = onEditEvent.mock.calls.map(([e]) => ({ event: e.event, key: e.key }))
+    // No event ever references `b` — Tab walked past it without opening it.
+    expect(seq.some((e) => e.key === 'b')).toBe(false)
+    // The transition lands directly on `c`.
+    expect(seq.map((e) => e.event)).toEqual([
+      'startEdit',
+      'submitEdit',
+      'commitEdit',
+      'startEdit',
+    ])
+    expect(seq[seq.length - 1].key).toBe('c')
+  })
+
+  test('Live search hiding the actively-edited node unmounts the input without error', async () => {
+    // The redirect's secondary role (cancel-when-active-becomes-invisible)
+    // is intentionally dropped — see plan §"Reactive cancel deliberately
+    // omitted". A search keystroke that filters out the currently-editing
+    // node leaves the editing record in the store; the node simply
+    // returns null from its render (its `!isVisible` early-return path),
+    // so the input unmounts cleanly with no errors.
+    const user = userEvent.setup()
+    const data = { apple: 'red-fruit', banana: 'yellow-fruit' }
+    // `searchDebounceTime={0}` so the rerender's filter applies immediately.
+    const { rerender } = render(
+      <JsonEditor data={data} setData={noop} searchDebounceTime={0} />
+    )
+    // Open an edit on `apple`.
+    await user.dblClick(screen.getByText('"red-fruit"'))
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('red-fruit')
+    // Apply a search that matches only `banana` — `apple` becomes hidden.
+    // The debounced setSearchText still uses a setTimeout(0), so let the
+    // microtask flush via `waitFor`.
+    expect(() => {
+      rerender(
+        <JsonEditor data={data} setData={noop} searchText="yellow" searchDebounceTime={0} />
+      )
+    }).not.toThrow()
+    await waitFor(() => expect(screen.queryByText('"red-fruit"')).toBeNull())
+    // No input is rendered, and the matching sibling is still on screen.
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(screen.getByText('"yellow-fruit"')).toBeInTheDocument()
+  })
 })
 
 describe('JsonEditor — textarea character insertion via keyboard', () => {

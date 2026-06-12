@@ -8,4 +8,5 @@ export {
   useFilterActive,
   useNodeVisible,
   useVisibleChildCount,
+  useRawFilterState,
 } from './FilterStateProvider'
