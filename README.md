@@ -1150,18 +1150,18 @@ npm i @json-edit-react/components
 
 ```js
 import { JsonEditor } from 'json-edit-react'
-import { LinkCustomNodeDefinition } from '@json-edit-react/components'
+import { hyperlinkDefinition } from '@json-edit-react/components'
 
 // ...Other stuff
 return (
   <JsonEditor
     {...otherProps}
-    customNodeDefinitions={[LinkCustomNodeDefinition, ...otherCustomDefinitions]}
+    customNodeDefinitions={[hyperlinkDefinition(), ...otherCustomDefinitions]}
   />
   )
 ```
 
-For object-shaped link data (e.g. `{ text, url }` pairs displayed as a clickable string), use `EnhancedLinkCustomNodeDefinition` from the same package.
+For object-shaped link data (e.g. `{ text, url }` pairs displayed as a clickable string), use `enhancedLinkDefinition` from the same package.
 
 ### Handling JSON
 

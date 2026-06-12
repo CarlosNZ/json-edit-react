@@ -3,17 +3,17 @@ import { data } from './data'
 import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'
 import {
   datePickerDefinition,
-  LinkCustomNodeDefinition,
-  DateObjectDefinition,
-  UndefinedDefinition,
-  BooleanToggleDefinition,
-  NanDefinition,
-  SymbolDefinition,
-  BigIntDefinition,
+  hyperlinkDefinition,
+  dateObjectDefinition,
+  undefinedDefinition,
+  booleanToggleDefinition,
+  nanDefinition,
+  symbolDefinition,
+  bigIntDefinition,
   markdownDefinition,
-  EnhancedLinkCustomNodeDefinition,
-  ImageNodeDefinition,
-  ColorPickerNodeDefinition,
+  enhancedLinkDefinition,
+  imageDefinition,
+  colorPickerDefinition,
 } from '@json-edit-react/components'
 import {
   CustomNodeDefinition,
@@ -247,7 +247,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return false
     },
     collapse: 1,
-    customNodeDefinitions: [datePickerDefinition(), LinkCustomNodeDefinition],
+    customNodeDefinitions: [datePickerDefinition(), hyperlinkDefinition()],
     data: data.starWars,
   },
   jsonPlaceholder: {
@@ -1086,20 +1086,16 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     collapse: 3,
     data: data.customComponentLibrary,
     customNodeDefinitions: [
-      // Must keep this one first as we override it by index in App.tsx
-      {
-        ...DateObjectDefinition,
-        componentProps: { showTime: false },
-      },
-      ImageNodeDefinition,
-      LinkCustomNodeDefinition,
-      EnhancedLinkCustomNodeDefinition,
-      UndefinedDefinition,
-      BooleanToggleDefinition,
-      NanDefinition,
-      SymbolDefinition,
-      BigIntDefinition,
-      ColorPickerNodeDefinition,
+      dateObjectDefinition({ componentProps: { showTime: false } }),
+      imageDefinition(),
+      hyperlinkDefinition(),
+      enhancedLinkDefinition(),
+      undefinedDefinition(),
+      booleanToggleDefinition(),
+      nanDefinition(),
+      symbolDefinition(),
+      bigIntDefinition(),
+      colorPickerDefinition(),
       // The factory ANDs these conditions with the built-in string guard, so
       // a node switched to another type (e.g. number) renders natively
       // rather than as markdown text

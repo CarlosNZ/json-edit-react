@@ -11,7 +11,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | What changed | Migration |
 |---|---|
 | Pre-built themes split into a separate package | `npm i @json-edit-react/themes` and update theme imports |
-| `LinkCustomComponent` / `LinkCustomNodeDefinition` moved | `npm i @json-edit-react/components` and update those imports |
+| `LinkCustomComponent` / `LinkCustomNodeDefinition` moved | `npm i @json-edit-react/components`; the definition is now the `hyperlinkDefinition()` factory — see §2 |
 | Several internal helpers are now part of the public API | No action needed — purely additive |
 | `JsonEditor` is now generic on the data type (`JsonEditor<T>`) | No action needed — defaults to `JsonData`, source-compatible. Opt in by writing `<JsonEditor<MyShape> ... />` |
 | `setData` is now required; `viewOnly` removed; new `JsonViewer` export | Switch read-only usage to `<JsonViewer>`; replace `viewOnly={cond}` with the relevant `allow*` toggles, including `allowDrag` if drag was enabled — see §6 |
@@ -89,17 +89,23 @@ Update imports:
 ```diff
 - import { JsonEditor, LinkCustomNodeDefinition } from 'json-edit-react'
 + import { JsonEditor } from 'json-edit-react'
-+ import { LinkCustomNodeDefinition } from '@json-edit-react/components'
++ import { hyperlinkDefinition } from '@json-edit-react/components'
 ```
 
-Usage is unchanged:
+The definition is now a **factory** — call it (with no arguments for the v1 behaviour) rather than passing the object directly:
 
 ```jsx
 <JsonEditor
   data={data}
   setData={setData}
-  customNodeDefinitions={[LinkCustomNodeDefinition]}
+  customNodeDefinitions={[hyperlinkDefinition()]}
 />
+```
+
+If you previously spread `LinkCustomNodeDefinition` to customize it, pass the overrides to the factory instead. A `condition` override is combined (AND) with the built-in URL check rather than replacing it, and `componentProps` overrides shallow-merge with the defaults:
+
+```jsx
+customNodeDefinitions={[hyperlinkDefinition({ condition: ({ key }) => key === 'homepage' })]}
 ```
 
 ### What you also get
@@ -118,7 +124,7 @@ Usage is unchanged:
 | `BooleanToggle` | Booleans rendered as a toggle switch |
 | `BigInt`, `NaN`, `Symbol`, `Undefined` | Non-JSON-native value displays |
 
-Each component ships with a matching `*CustomNodeDefinition` ready to drop into the `customNodeDefinitions` prop.
+Each component ships with a matching definition factory (`datePickerDefinition()`, `markdownDefinition()`, …) ready to drop into the `customNodeDefinitions` prop.
 
 ### Bundle impact
 

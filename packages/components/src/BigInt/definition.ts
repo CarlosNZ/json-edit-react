@@ -1,10 +1,13 @@
 import { isCollection, type CustomNodeDefinition } from 'json-edit-react'
+import { createDefinitionFactory } from '../_common/createDefinitionFactory'
 import { BigIntComponent, BigIntProps } from './component'
 
-export const BigIntDefinition: CustomNodeDefinition<BigIntProps> = {
+// The condition doubles as the guard: consumer `condition` overrides are
+// targeting, ANDed with this by the factory; replacing it requires the
+// explicit `guard` override.
+const BigIntDefinition: CustomNodeDefinition<BigIntProps> = {
   condition: ({ value }) => typeof value === 'bigint',
   component: BigIntComponent,
-  // componentProps: {},
   showOnView: true,
   showEditTools: true,
   showOnEdit: true,
@@ -31,3 +34,5 @@ export const BigIntDefinition: CustomNodeDefinition<BigIntProps> = {
       ? BigInt(value.value as string)
       : value,
 }
+
+export const bigIntDefinition = createDefinitionFactory(BigIntDefinition)
