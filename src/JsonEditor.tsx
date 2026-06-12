@@ -11,7 +11,7 @@ import { extract } from './utils/extract'
 import { CollectionNode } from './CollectionNode'
 import { NativeSelect } from './NativeSelect'
 import { getFullKeyboardControlMap, handleKeyPress } from './utils/keyboard'
-import { matchNode, matchNodeKey } from './utils/filter'
+import { computeFilterState, matchNode, matchNodeKey } from './utils/filter'
 import { isCollection, NOOP, restoreUndefined, UNDEFINED } from './utils/misc'
 import {
   type CollectionData,
@@ -38,6 +38,7 @@ import {
   defaultTheme,
   useEditingStore,
   useCollapse,
+  FilterStateProvider,
 } from './contexts'
 import {
   type CommitPrimitives,
@@ -137,7 +138,7 @@ const Editor: React.FC<
   indent = 2,
   collapse = false,
   collapseAnimationTime = 300, // must be equivalent to CSS value
-  showCollectionCount = 'when-closed',
+  showCollectionCount = 'when-closed-or-filtered',
   allowEdit = true,
   allowDelete = true,
   allowAdd = true,
@@ -496,6 +497,19 @@ const Editor: React.FC<
   const allowDragFilter = useMemo(() => getFilterFunction(allowDrag), [allowDrag])
   const searchFilter = useMemo(() => getSearchFilter(searchFilterInput), [searchFilterInput])
 
+  // Whole-tree visibility + per-collection visible-child counts, computed
+  // once per (data, debouncedSearchText, searchFilter) change. Surfaced to
+  // nodes via FilterStateProvider — see src/contexts/FilterStateProvider.tsx.
+  // `null` when no filter is active (the consumer hooks fast-path).
+  const filterState = useMemo(
+    () => computeFilterState(nodeData, searchFilter, debouncedSearchText),
+    // `nodeData` is rebuilt every render from `data`/`rootName`, but the walk
+    // only depends on the underlying `data` reference. Listing `nodeData`
+    // would recompute on every render; we want it tied to actual inputs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data, debouncedSearchText, searchFilter, rootName]
+  )
+
   const fullKeyboardControls = useMemo(
     () => getFullKeyboardControlMap(keyboardControls),
     [keyboardControls]
@@ -664,8 +678,6 @@ const Editor: React.FC<
     allowTypeSelection,
     allowDragFilter,
     canDragOnto: false, // can't drag onto outermost container
-    searchFilter,
-    searchText: debouncedSearchText,
     allowClipboard,
     onCopy: onCopyStable,
     sortKeys,
@@ -711,11 +723,13 @@ const Editor: React.FC<
       className={`jer-editor-container ${className ?? ''}`}
       style={mainContainerStyles}
     >
-      {isCollection(data) && !customNodeData.renderCollectionAsValue ? (
-        <CollectionNode data={data} {...otherProps} />
-      ) : (
-        <ValueNodeWrapper data={data as ValueData} showLabel {...otherProps} />
-      )}
+      <FilterStateProvider value={filterState}>
+        {isCollection(data) && !customNodeData.renderCollectionAsValue ? (
+          <CollectionNode data={data} {...otherProps} />
+        ) : (
+          <ValueNodeWrapper data={data as ValueData} showLabel {...otherProps} />
+        )}
+      </FilterStateProvider>
     </div>
   )
 }

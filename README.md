@@ -229,7 +229,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | `showArrayIndexes`      | `boolean`                                 | `true`               | Whether or not to display the index (as a property key) for array elements.                                                                                                                                                                                                                                                                                                                               |
 | `arrayIndexStart`       | `0 \| 1`                                  | `0`                  | The number the *first* array element's index label starts from. `0` (default) gives `0, 1, 2…`; `1` gives `1, 2, 3…`.                                                                                                                                                                                                                                                                                     |
 | `showStringQuotes`      | `boolean`                                 | `true`               | Whether or not to display string values in "quotes".                                                                                                                                                                                                                                                                                                                                                      |
-| `showCollectionCount`   | `boolean\|"when-closed"`                  | `"when-closed"`      | Whether or not to display the number of items in each collection (object or array). `"when-closed"` shows the count only on collapsed collections.                                                                                                                                                                                                                                                        |
+| `showCollectionCount`   | `boolean\|"when-closed"\|"when-closed-or-filtered"` | `"when-closed-or-filtered"` | Whether or not to display the number of items in each collection (object or array). `"when-closed"` shows the count only on collapsed collections; `"when-closed-or-filtered"` (the default) additionally shows it whenever a search filter is active, so the `n of m` count is visible without having to close the node. When the count is shown and a search filter has narrowed the visible children, it renders as `"n of m items"` (using the [`ITEMS_FILTERED`](#localisation) string). |
 | `stringTruncateLength`  | `number`                                  | `250`                | String values longer than this many characters will be displayed truncated (with `...`). The full string will always be visible when editing.                                                                                                                                                                                                                                                             |
 | `sortKeys`              | `boolean\|CompareFunction`                | `false`              | If `true`, object keys will be ordered (using default JS `.sort()`). A [compare function](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort) can also be provided to define sorting behaviour, except the input type should be a tuple of the key and the value of a node i.e. `(a: [string \| number, ValueData], b: [string \| number, ValueData]) => number` |
 | `minWidth`              | `number\|string` (CSS value)              | `250`                | Minimum width for the editor container.                                                                                                                                                                                                                                                                                                                                                                   |
@@ -999,6 +999,7 @@ Localise your implementation (or just customise the default messages) by passing
 {
   ITEM_SINGLE: '{{count}} item',
   ITEMS_MULTIPLE: '{{count}} items',
+  ITEMS_FILTERED: '{{visible}} of {{total}} items', // Shown when a search filter is active and the visible count differs from the total. Both `{{visible}}` and `{{total}}` are substituted.
   KEY_NEW: 'Enter new key',
   KEY_SELECT: 'Select key',
   NO_KEY_OPTIONS: 'No key options',
@@ -1212,6 +1213,8 @@ customText = {
   ITEMS_MULTIPLE: itemCountReplacement,
 }
 ```
+
+When a search filter is active, the count switches to `ITEMS_FILTERED` (e.g. `"3 of 20 items"`). A `customText` callback for that key receives the same `NodeData` input plus an additional `visibleSize` field carrying the count of visible direct children — so both numbers are available to the override (`size` is the total, `visibleSize` is the visible count).
 
 ## Custom Buttons
 

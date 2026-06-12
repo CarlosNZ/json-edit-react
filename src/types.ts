@@ -21,7 +21,7 @@ export interface JsonEditorProps<T = JsonData> {
   indent?: number
   collapse?: boolean | number | FilterFunction<T>
   collapseAnimationTime?: number // ms
-  showCollectionCount?: boolean | 'when-closed'
+  showCollectionCount?: boolean | 'when-closed' | 'when-closed-or-filtered'
   allowEdit?: boolean | FilterFunction<T>
   allowDelete?: boolean | FilterFunction<T>
   allowAdd?: boolean | FilterFunction<T>
@@ -291,10 +291,6 @@ export type SearchFilterFunction<T = JsonData> = (
   inputData: NodeData<T>,
   searchText: string
 ) => boolean
-export type SearchFilterInputFunction<T = JsonData> = (
-  inputData: Partial<NodeData<T>>,
-  searchText: string
-) => boolean
 export type NewKeyOptionsFunction<T = JsonData> = (input: NodeData<T>) => string[] | null | void
 
 export type CopyType = 'path' | 'value'
@@ -420,6 +416,11 @@ export interface NodeData<T = JsonData> {
   index: number
   value: JsonData
   size: number | null
+  // Visible direct-child count under the current search filter — only set
+  // on collection nodes whose count is being displayed as "n of m". Picked
+  // up by `customText.ITEMS_FILTERED` overrides that want the filtered
+  // count alongside the total (`size`).
+  visibleSize?: number
   parentData: object | null
   fullData: T
   collapsed?: boolean
@@ -444,8 +445,6 @@ interface BaseNodeProps {
   allowAddFilter: FilterFunction
   allowDragFilter: FilterFunction
   canDragOnto: boolean
-  searchFilter?: SearchFilterFunction
-  searchText?: string
   allowTypeSelection: boolean | TypeOptions | TypeFilterFunction
   stringTruncateLength: number
   indent: number
@@ -476,7 +475,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   collapseFilter: FilterFunction
   collapseAnimationTime: number
   showArrayIndexes: boolean
-  showCollectionCount: boolean | 'when-closed'
+  showCollectionCount: boolean | 'when-closed' | 'when-closed-or-filtered'
   showStringQuotes: boolean
   defaultValue: unknown
   newKeyOptions?: string[] | NewKeyOptionsFunction
