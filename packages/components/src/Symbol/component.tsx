@@ -25,7 +25,7 @@ export const SymbolComponent: React.FC<CustomComponentProps<SymbolProps>> = (pro
   const editDisplayValue = typeof value === 'symbol' ? value.description ?? '' : (value as string)
 
   // Every confirm path funnels through core's no-arg `handleEdit`; the
-  // definition's `fromEditBuffer` converts the buffer string to a Symbol.
+  // definition's `fromStandardType` converts the buffer string to a Symbol.
   return isEditing ? (
     <StringEdit
       pathString={toPathString(path)}

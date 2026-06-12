@@ -25,7 +25,7 @@ export const BigIntComponent: React.FC<CustomComponentProps<BigIntProps>> = (pro
   const editDisplayValue = typeof value === 'bigint' ? String(value) : (value as string)
 
   // Every confirm path (Enter, ✓, Tab, editorRef) funnels through core's
-  // no-arg `handleEdit`; the definition's `fromEditBuffer` converts the
+  // no-arg `handleEdit`; the definition's `fromStandardType` converts the
   // buffer string to a bigint (or rejects).
   return isEditing ? (
     <StringEdit

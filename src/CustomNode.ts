@@ -25,9 +25,8 @@ export interface CustomNodeData {
   passOriginalNode?: boolean
   renderCollectionAsValue?: boolean
   toStandardType?: (value: unknown) => ValueData
-  fromStandardType?: (value: unknown) => unknown
-  fromEditBuffer?: (
-    buffer: unknown,
+  fromStandardType?: (
+    value: unknown,
     nodeData: NodeData,
     componentProps?: Record<string, unknown>
   ) => unknown

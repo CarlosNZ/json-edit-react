@@ -1063,15 +1063,12 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   stringifyReplacer    // function for stringifying to JSON (if non-JSON data type)
   parseReviver?:       // function for parsing as JSON (if non-JSON data type)
 
-  // For type switching
+  // For type switching & editing
   toStandardType       // function to convert the custom value to a primitive when the
                        // Type selector switches this node to a standard type
-  fromStandardType     // function to convert the current value into this type's seed when
-                       // an `editOnTypeSwitch` switch opens it for editing
-
-  // For editing
-  fromEditBuffer       // function to convert the edit buffer into the value to commit
-                       // when the user confirms an edit (see below)
+  fromStandardType     // the inverse: function to convert a standard-typed value into this
+                       // type's value — runs when the user confirms an edit, and to seed
+                       // the editor on an `editOnTypeSwitch` switch (see below)
 }
 ```
 
@@ -1091,7 +1088,7 @@ The component will receive *all* the same props as a standard node component plu
 
 If your component needs to reflect an in-flight save — for example a spinner or overlay while an async `onUpdate` completes — read the `isPending` prop: it's `true` while this node's optimistic edit is settling (i.e. the value is already applied locally but the async `onUpdate` hasn't resolved yet), and `false` otherwise.
 
-If your component provides its own editing UI (`showOnEdit: true`) and its underlying value isn't the raw edit buffer — say the buffer holds a digit string but the node's value is a `BigInt` — define `fromEditBuffer: (buffer, nodeData, componentProps) => value` on the definition. It runs on every confirm path (the ✓ button, <kbd>Enter</kbd>, <kbd>Tab</kbd>, `editorRef.confirm()`) and returns the value to commit. Make it pass already-correct values through unchanged (the buffer still holds the node's committed value until the editor's first keystroke). To *reject* invalid input, throw — nothing is committed, the edit stays open with the user's text intact, and the thrown message displays inline and fires `onError` (the same behaviour as confirming invalid JSON on a collection edit).
+If your component provides its own editing UI (`showOnEdit: true`) and its underlying value isn't the raw edit buffer — say the buffer holds a digit string but the node's value is a `BigInt` — define `fromStandardType: (value, nodeData, componentProps) => value` on the definition. It runs on every confirm path (the ✓ button, <kbd>Enter</kbd>, <kbd>Tab</kbd>, `editorRef.confirm()`) and returns the value to commit. Make it pass already-correct values through unchanged (the buffer still holds the node's committed value until the editor's first keystroke). To *reject* invalid input, throw — nothing is committed, the edit stays open with the user's text intact, and the thrown message displays inline and fires `onError` (the same behaviour as confirming invalid JSON on a collection edit).
 
 You can pass additional props specific to your component, if required, through the `componentProps` object. A thorough example of a custom **Date Picker** is used in the demo (along with a couple of other more basic presentational ones), which you can inspect to see how to utilise the standard props and a couple of custom props. View the source code [here](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/DatePicker/component.tsx).
 
@@ -1133,7 +1130,7 @@ You can allow users to create new instances of your special nodes by selecting t
 By default, selecting your type commits `defaultValue` immediately and closes the editor. For nodes the user will almost always want to edit right away (a date picker, a colour, a BigInt), set `editOnTypeSwitch: true` (requires `component` and `showOnEdit`): the switch then stays local — the edit buffer is seeded with `defaultValue`, your component renders in its edit state, a single commit happens when the user confirms, and <kbd>Esc</kbd> cancels the whole switch.
 
 <<<<<<< HEAD
-To carry the node's *existing* value into the switch instead of starting from `defaultValue`, provide `fromStandardType: (value) => seed` — e.g. switching a string to a Symbol seeds the symbol's description with the string rather than discarding it. It receives whatever the edit buffer holds at switch time (usually a standard primitive, but a custom value when switching directly between custom types), and the seed it returns is what your component opens with.
+The same `fromStandardType` hook also seeds the switch: it receives the node's *current* value (usually a standard primitive, but a custom value when switching directly between custom types) and what it returns is what your component opens with — e.g. switching a string to a Symbol seeds the symbol's description with the string rather than discarding it. A throw at switch time isn't a rejection: the switch seeds the value's string form for the user to fix (with the commit then rejected until the hook accepts it). Without the hook, the buffer seeds with `defaultValue`.
 
 =======
 >>>>>>> origin/v2.0-dev

@@ -265,13 +265,18 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         // Deferred (`editOnTypeSwitch`): a local switch like any primitive
         // type change — reseed the buffer and keep the session open. The
         // target's `fromStandardType` derives the seed from the current
-        // value (falling back to `defaultValue`), its component edits it, a
-        // single commit happens on confirm, and Esc cancels.
-        setValue(
-          (customNode.fromStandardType
-            ? customNode.fromStandardType(value)
-            : customNode.defaultValue) as ValueData | CollectionData
-        )
+        // value (falling back to `defaultValue` without the hook); the same
+        // hook converts the buffer at confirm, so a throw HERE isn't a
+        // reject — it seeds the value's string form for the user to fix.
+        let seed: unknown = customNode.defaultValue
+        if (customNode.fromStandardType) {
+          try {
+            seed = customNode.fromStandardType(value, nodeData, customNode.componentProps)
+          } catch {
+            seed = String(value)
+          }
+        }
+        setValue(seed as ValueData | CollectionData)
         setDataType(type)
         setEnumType(null)
         return
@@ -359,13 +364,13 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     const explicit = inputValue !== undefined && !isJsEvent(inputValue)
     let newValue: JsonData
     if (explicit) newValue = inputValue as JsonData
-    else if (showCustomNode && effectiveCustomNodeData.fromEditBuffer) {
+    else if (showCustomNode && effectiveCustomNodeData.fromStandardType) {
       // The custom editor shaped the buffer, so its definition's
-      // `fromEditBuffer` produces the committable value. A throw REJECTS the
-      // confirm: nothing submits, no `onCommit`, and the session stays open
-      // with the error inline — the collection invalid-JSON pattern.
+      // `fromStandardType` produces the committable value. A throw REJECTS
+      // the confirm: nothing submits, no `onCommit`, and the session stays
+      // open with the error inline — the collection invalid-JSON pattern.
       try {
-        newValue = effectiveCustomNodeData.fromEditBuffer(
+        newValue = effectiveCustomNodeData.fromStandardType(
           value,
           nodeData,
           effectiveCustomNodeData.componentProps
@@ -404,7 +409,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
   // DERIVED VALUES (this makes the JSX logic less messy)
   const { isEditingKey } = derivedValues
-  // Shown while editing too — a rejected confirm (throwing `fromEditBuffer`)
+  // Shown while editing too — a rejected confirm (throwing `fromStandardType`)
   // keeps the session open with its error inline, like collection JSON edits.
   const showErrorString = !!error
   const showTypeSelector = isEditing && allowedDataTypes.length > 1

@@ -611,7 +611,7 @@ const Editor: React.FC<
           if (!editConfirmRef.current) return
           editConfirmRef.current.click()
           // A rejected confirm (invalid JSON on a collection, a throwing
-          // `fromEditBuffer` on a custom node) leaves its session in 'editing'
+          // `fromStandardType` on a custom node) leaves its session in 'editing'
           // phase with an inline error — keep it open rather than tearing it
           // down. A committed session leaves no active entry, and a held one
           // is inert against cancel, so the trailing cancel only ever

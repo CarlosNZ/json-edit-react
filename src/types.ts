@@ -595,19 +595,18 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // switches this node to a standard type; core's generic coercion takes it
   // from there per target type.
   toStandardType?: (value: unknown) => ValueData
-  // Converts the node's current value into the seed for this type when an
-  // `editOnTypeSwitch` switch opens it for editing; without it the buffer
-  // seeds with `defaultValue`. Receives whatever the edit buffer holds at
-  // switch time — usually a standard primitive, but a custom value when
-  // switching directly between custom types.
-  fromStandardType?: (value: unknown) => unknown
-  // Transforms the edit buffer into the value to commit when a confirm fires
-  // with no explicit value (the ✓ button, Enter, Tab, `editorRef.confirm()`).
-  // Must pass already-correct values through unchanged — the buffer holds the
-  // raw committed value until the editor's first keystroke. THROW to reject:
-  // nothing commits, the session stays open, and the thrown message surfaces
-  // via `onError` (inline error + observer callback).
-  fromEditBuffer?: (buffer: unknown, nodeData: NodeData, componentProps?: T) => unknown
+  // The inverse: converts a standard-typed value into this type's value. Runs
+  // at every confirm of a custom edit (the ✓ button, Enter, Tab,
+  // `editorRef.confirm()`) to turn the edit buffer — usually the editor's
+  // string — into the value to commit; THROW to reject the confirm: nothing
+  // commits, the session stays open, and the thrown message surfaces via
+  // `onError` (inline error + observer callback). Also runs on an
+  // `editOnTypeSwitch` switch to seed the editor from the node's current
+  // value (a throw there seeds the value's string form for the user to fix;
+  // without the hook the buffer seeds with `defaultValue`). Must pass
+  // already-correct values through unchanged — the buffer holds the raw
+  // committed value until the editor's first keystroke.
+  fromStandardType?: (value: unknown, nodeData: NodeData, componentProps?: T) => unknown
 }
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>

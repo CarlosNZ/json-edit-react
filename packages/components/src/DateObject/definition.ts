@@ -12,16 +12,12 @@ export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   defaultValue: new Date(),
   renderCollectionAsValue: true,
   toStandardType: (value) => (value instanceof Date ? value.toISOString() : String(value)),
-  // Unparseable values seed as raw text for the user to fix —
-  // `fromEditBuffer` rejects the commit until it parses
-  fromStandardType: (value) => {
+  fromStandardType: (value, _, componentProps) => {
+    if (value instanceof Date) return value
     const date = new Date(String(value))
-    return isNaN(date.getTime()) ? String(value) : date
-  },
-  fromEditBuffer: (buffer, _, componentProps) => {
-    if (buffer instanceof Date) return buffer
-    const date = new Date(String(buffer))
-    if (isNaN(date.getTime())) throw new Error(componentProps?.invalidDateError ?? 'Invalid Date')
+    if (isNaN(date.getTime()))
+      // Rejects the confirm; at switch time core seeds the raw text instead
+      throw new Error(componentProps?.invalidDateError ?? 'Invalid Date')
     return date
   },
   // IMPORTANT: This component can't be used in conjunction with a ISO string

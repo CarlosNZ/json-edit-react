@@ -556,10 +556,10 @@ describe('CustomNode — toStandardType seeds the type-switch buffer', () => {
   })
 })
 
-describe('CustomNode — fromEditBuffer commit transform', () => {
+describe('CustomNode — fromStandardType commit transform', () => {
   // A minimal custom editor in the shipped-components shape: it writes the
   // display string straight into the core buffer and passes every confirm
-  // through core's no-arg `handleEdit`, so the definition's `fromEditBuffer`
+  // through core's no-arg `handleEdit`, so the definition's `fromStandardType`
   // is the single transform for ✓, Enter and Tab alike.
   const CustomEditor = (props: CustomComponentProps) => {
     const { value, setValue, isEditing, setIsEditing, handleKeyPress } = props
@@ -583,7 +583,7 @@ describe('CustomNode — fromEditBuffer commit transform', () => {
     showOnEdit: true,
     name: 'BigInt',
     showInTypeSelector: true,
-    fromEditBuffer: (buffer) => {
+    fromStandardType: (buffer) => {
       if (typeof buffer === 'bigint') return buffer
       if (!/^\d+$/.test(String(buffer))) throw new Error('Invalid BigInt')
       return BigInt(String(buffer))
@@ -599,7 +599,7 @@ describe('CustomNode — fromEditBuffer commit transform', () => {
   const setBuffer = (input: HTMLInputElement, text: string) =>
     fireEvent.change(input, { target: { value: text } })
 
-  test('✓ commits the fromEditBuffer-transformed value, not the raw buffer', async () => {
+  test('✓ commits the fromStandardType-transformed value, not the raw buffer', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const { container } = render(
@@ -794,9 +794,10 @@ describe('CustomNode — fromEditBuffer commit transform', () => {
 
 describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
   // With `editOnTypeSwitch`, switching TO the custom type is a local switch
-  // like any primitive type change: the buffer is seeded with `defaultValue`,
-  // the TARGET definition's component renders in edit state, a single commit
-  // happens on ✓ (through the target's `fromEditBuffer`), and Esc cancels.
+  // like any primitive type change: the TARGET definition's component renders
+  // in edit state on a buffer seeded through its `fromStandardType` (throw →
+  // the value's string form; no hook → `defaultValue`), a single commit
+  // happens on ✓ (through the same hook), and Esc cancels.
   const CustomEditor = (props: CustomComponentProps) => {
     const { value, setValue, isEditing, setIsEditing, handleKeyPress } = props
     return isEditing ? (
@@ -821,7 +822,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     showInTypeSelector: true,
     editOnTypeSwitch: true,
     defaultValue: BigInt(99),
-    fromEditBuffer: (buffer) => (typeof buffer === 'bigint' ? buffer : BigInt(String(buffer))),
+    fromStandardType: (buffer) => (typeof buffer === 'bigint' ? buffer : BigInt(String(buffer))),
     toStandardType: (value) => String(value),
     ...overrides,
   })
@@ -829,7 +830,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
   const switchTo = async (user: ReturnType<typeof userEvent.setup>, type: string) =>
     user.selectOptions(screen.getByRole('combobox'), type)
 
-  test('switching to the flagged type opens its component in edit state with defaultValue — no commit', async () => {
+  test('switching to the flagged type opens its component in edit state, seeded from the current value — no commit', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const onUpdate = jest.fn() as jest.MockedFunction<UpdateFunction>
@@ -844,14 +845,16 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     await user.dblClick(screen.getByText('"hello"'))
     await switchTo(user, 'BigInt')
 
+    // The hook can't convert 'hello' (it throws), so the switch seeds the raw
+    // text for the user to fix rather than rejecting
     const input = screen.getByTestId('custom-input') as HTMLInputElement
-    expect(input.value).toBe('99')
+    expect(input.value).toBe('hello')
     expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('BigInt')
     expect(setData).not.toHaveBeenCalled()
     expect(onUpdate).not.toHaveBeenCalled()
   })
 
-  test('✓ commits once, through the target definition’s fromEditBuffer', async () => {
+  test('✓ commits once, through the target definition’s fromStandardType', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const onUpdate = jest.fn() as jest.MockedFunction<UpdateFunction>
@@ -908,17 +911,21 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
   test('a second switch to a standard type seeds via the TARGET definition’s toStandardType', async () => {
     const user = userEvent.setup()
     const { container } = render(
-      <JsonEditor data={{ x: 'hello' }} setData={noop} customNodeDefinitions={[bigintTarget()]} />
+      <JsonEditor
+        data={{ x: 42 }}
+        setData={noop}
+        customNodeDefinitions={[bigintTarget({ toStandardType: (value) => `T:${String(value)}` })]}
+      />
     )
-    await user.dblClick(screen.getByText('"hello"'))
+    await user.dblClick(screen.getByText('42'))
     await switchTo(user, 'BigInt')
     await switchTo(user, 'string')
 
-    // The buffer holds the target's custom value (99n), so the target's
-    // `toStandardType` (String) seeds the standard editor.
+    // The buffer holds the target's custom value (42n from the seed), so the
+    // target's `toStandardType` seeds the standard editor.
     const input = container.querySelector('textarea.jer-input-text') as HTMLTextAreaElement
     expect(input).not.toBeNull()
-    expect(input.value).toBe('99')
+    expect(input.value).toBe('T:42')
   })
 
   test('a deferred custom → custom switch reseeds the buffer with the second defaultValue', async () => {
@@ -1015,7 +1022,10 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     await switchTo(user, 'BigInt')
 
     expect(screen.queryByTestId('symbol-view')).toBeNull()
-    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('99')
+    // The hook can't convert a symbol (BigInt(String(symbol)) throws), so the
+    // switch seeds its string form — never the raw symbol, which a text
+    // editor can't render
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('Symbol(s)')
     expect(setData).not.toHaveBeenCalled()
 
     fireEvent.keyDown(screen.getByTestId('custom-input'), { key: 'Escape' })
@@ -1023,31 +1033,32 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     expect(setData).not.toHaveBeenCalled()
   })
 
-  test('fromStandardType seeds the switch buffer from the current value, and ✓ commits through fromEditBuffer', async () => {
+  test('the hook seeds the switch from a convertible current value, and ✓ commits through the same hook', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    const def = bigintTarget({
-      // The current value, not defaultValue, seeds the editor
-      fromStandardType: (value) => `${value}${value}`,
-      fromEditBuffer: (buffer) => BigInt(String(buffer)),
-    })
     const { container } = render(
-      <JsonEditor data={{ x: 42 }} setData={setData} customNodeDefinitions={[def]} />
+      <JsonEditor data={{ x: 42 }} setData={setData} customNodeDefinitions={[bigintTarget()]} />
     )
     await user.dblClick(screen.getByText('42'))
     await switchTo(user, 'BigInt')
 
-    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('4242')
+    // The current value (42), not defaultValue (99), seeds the editor
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('42')
     expect(setData).not.toHaveBeenCalled()
 
+    fireEvent.change(screen.getByTestId('custom-input'), { target: { value: '123' } })
     await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
-    expect(setData).toHaveBeenCalledWith({ x: BigInt(4242) })
+    expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
   })
 
-  test('without fromStandardType the buffer still seeds with defaultValue', async () => {
+  test('without fromStandardType the buffer seeds with defaultValue', async () => {
     const user = userEvent.setup()
     render(
-      <JsonEditor data={{ x: 'hello' }} setData={noop} customNodeDefinitions={[bigintTarget()]} />
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        customNodeDefinitions={[bigintTarget({ fromStandardType: undefined })]}
+      />
     )
     await user.dblClick(screen.getByText('"hello"'))
     await switchTo(user, 'BigInt')
@@ -1068,15 +1079,17 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     }
     render(
       <JsonEditor
-        data={{ x: 'hello' }}
+        data={{ x: 42 }}
         setData={noop}
         customNodeDefinitions={[bigintTarget(), markerDef]}
       />
     )
-    await user.dblClick(screen.getByText('"hello"'))
+    await user.dblClick(screen.getByText('42'))
     await switchTo(user, 'BigInt')
     await switchTo(user, 'Marker')
 
+    // The BigInt switch seeded the buffer with 42n, so the second target's
+    // hook receives the first target's custom value
     expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('GOT:bigint')
   })
 })

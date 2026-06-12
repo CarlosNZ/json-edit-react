@@ -22,7 +22,7 @@ export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObject
     : (nodeData.value as Date).toLocaleDateString()
 
   // Every confirm path funnels through core's no-arg `handleEdit` (passed via
-  // the props spread); the definition's `fromEditBuffer` parses and validates
+  // the props spread); the definition's `fromStandardType` parses and validates
   // the buffer string as a Date (or rejects).
   return isEditing ? (
     <StringEdit

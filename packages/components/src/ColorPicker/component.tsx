@@ -107,7 +107,7 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
               }) as React.Dispatch<React.SetStateAction<string>>
             }
             // Every confirm path funnels through core's no-arg `handleEdit`;
-            // the definition's `fromEditBuffer` enforces `keepAsColor` (or
+            // the definition's `fromStandardType` enforces `keepAsColor` (or
             // rejects, keeping the session open with the invalid text).
             handleEdit={handleEdit}
           />

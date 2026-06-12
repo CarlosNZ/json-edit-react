@@ -253,7 +253,7 @@ describe('editorRef handle — confirm / cancel', () => {
   })
 })
 
-describe('editorRef handle — confirm with custom-node fromEditBuffer', () => {
+describe('editorRef handle — confirm with custom-node fromStandardType', () => {
   const CustomEditor = (props: CustomComponentProps) => {
     const { value, setValue, isEditing, setIsEditing } = props
     return isEditing ? (
@@ -272,7 +272,7 @@ describe('editorRef handle — confirm with custom-node fromEditBuffer', () => {
     condition: ({ value }) => typeof value === 'bigint',
     component: CustomEditor,
     showOnEdit: true,
-    fromEditBuffer: (buffer) => {
+    fromStandardType: (buffer) => {
       if (typeof buffer === 'bigint') return buffer
       if (!/^\d+$/.test(String(buffer))) throw new Error('Invalid BigInt')
       return BigInt(String(buffer))
