@@ -30,8 +30,10 @@ export const EnhancedLinkCustomNodeDefinition: CustomNodeDefinition<EnhancedLink
   // back round-trips losslessly; otherwise a URL-looking value seeds the url
   // field and anything else seeds the text
   fromStandardType: (value) => {
-    // A confirm's buffer already holds the link object — pass it through
-    if (isCollection(value)) return value
+    // A confirm's buffer already holds the link object — pass it through.
+    // Shape-checked (not just isCollection) so a foreign object — e.g. a raw
+    // Date arriving from a custom → custom type switch — converts instead.
+    if (isCollection(value) && TEXT_FIELD in value && URL_FIELD in value) return value
     const text = String(value ?? '')
     const combined = /^(https?:\/\/\S+) \((.*)\)$/.exec(text)
     if (combined) return { [TEXT_FIELD]: combined[2], [URL_FIELD]: combined[1] }

@@ -259,21 +259,35 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // top-of-file doc.
     setCollapseState(null)
 
+    // A definition's `toStandardType` demotes the buffer's custom value to a
+    // primitive before ANY conversion — for standard targets it feeds the
+    // generic coercion below; for deferred custom targets it feeds the
+    // target's `fromStandardType` (demote, then convert — a raw custom value
+    // would otherwise reach the target's hook as e.g. "[object Object]").
+    // The hook of whichever definition shaped the current buffer applies:
+    // the committed match when un-switched, the deferred-switch target when
+    // switched to a custom type, and none when an earlier in-session switch
+    // already converted the buffer to a standard value (re-applying a hook
+    // then would mangle it).
+    const bufferDefinition =
+      typeSwitchedAway && !switchedToDefinition ? undefined : effectiveCustomNodeData
+    const source = bufferDefinition?.toStandardType ? bufferDefinition.toStandardType(value) : value
+
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
       if (canDeferSwitch(customNode)) {
         // Deferred (`editOnTypeSwitch`): a local switch like any primitive
         // type change — reseed the buffer and keep the session open. The
-        // target's `fromStandardType` derives the seed from the current
-        // value (falling back to `defaultValue` without the hook); the same
-        // hook converts the buffer at confirm, so a throw HERE isn't a
-        // reject — it seeds the value's string form for the user to fix.
+        // target's `fromStandardType` derives the seed from the demoted
+        // current value (falling back to `defaultValue` without the hook);
+        // the same hook converts the buffer at confirm, so a throw HERE
+        // isn't a reject — it seeds the value's string form to fix.
         let seed: unknown = customNode.defaultValue
         if (customNode.fromStandardType) {
           try {
-            seed = customNode.fromStandardType(value, nodeData, customNode.componentProps)
+            seed = customNode.fromStandardType(source, nodeData, customNode.componentProps)
           } catch {
-            seed = String(value)
+            seed = String(source)
           }
         }
         setValue(seed as ValueData | CollectionData)
@@ -302,15 +316,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       return
     }
 
-    // A definition's `toStandardType` demotes its custom value to a primitive
-    // seed before the generic coercion. The hook of whichever definition
-    // shaped the current buffer applies: the committed match when un-switched,
-    // the deferred-switch target when switched to a custom type, and none when
-    // an earlier in-session switch already converted the buffer to a standard
-    // value (re-applying a hook then would mangle it).
-    const bufferDefinition =
-      typeSwitchedAway && !switchedToDefinition ? undefined : effectiveCustomNodeData
-    const source = bufferDefinition?.toStandardType ? bufferDefinition.toStandardType(value) : value
     const newValue = convertValue(source, type, translate('DEFAULT_NEW_KEY', nodeData))
 
     if (type === 'object' || type === 'array' || type === 'null') {

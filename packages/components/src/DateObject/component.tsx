@@ -17,9 +17,14 @@ export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObject
         ? value.toISOString()
         : value.toDateString()
       : (value as string)
-  const displayValue = showTime
-    ? (nodeData.value as Date).toLocaleString()
-    : (nodeData.value as Date).toLocaleDateString()
+  // During a deferred type-switch the committed value can be anything (even
+  // undefined), so don't assume a Date outside the matched-condition case
+  const displayValue =
+    nodeData.value instanceof Date
+      ? showTime
+        ? nodeData.value.toLocaleString()
+        : nodeData.value.toLocaleDateString()
+      : String(nodeData.value)
 
   // Every confirm path funnels through core's no-arg `handleEdit` (passed via
   // the props spread); the definition's `fromStandardType` parses and validates

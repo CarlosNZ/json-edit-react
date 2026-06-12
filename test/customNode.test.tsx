@@ -1065,7 +1065,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('99')
   })
 
-  test('a custom → custom switch hands the first target’s buffer value to the second’s fromStandardType', async () => {
+  test('a custom → custom switch demotes via the source’s toStandardType before the second’s fromStandardType', async () => {
     const user = userEvent.setup()
     const markerDef: CustomNodeDefinition = {
       condition: ({ value }) => value === 'NEVER',
@@ -1075,7 +1075,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
       showInTypeSelector: true,
       editOnTypeSwitch: true,
       defaultValue: 'MARK',
-      fromStandardType: (value) => `GOT:${typeof value}`,
+      fromStandardType: (value) => `GOT:${typeof value}:${String(value)}`,
     }
     render(
       <JsonEditor
@@ -1088,9 +1088,43 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     await switchTo(user, 'BigInt')
     await switchTo(user, 'Marker')
 
-    // The BigInt switch seeded the buffer with 42n, so the second target's
-    // hook receives the first target's custom value
-    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('GOT:bigint')
+    // The BigInt switch seeded the buffer with 42n; the second switch first
+    // demotes it through BigInt's `toStandardType` (String), so the target's
+    // hook receives the primitive form, not the raw custom value
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('GOT:string:42')
+  })
+
+  test('an object-valued custom source seeds the target from its toStandardType form, not "[object Object]"', async () => {
+    const user = userEvent.setup()
+    const linkSource: CustomNodeDefinition = {
+      condition: ({ value }) => value instanceof Object && 'url' in value,
+      component: CustomEditor,
+      showOnEdit: true,
+      name: 'Link',
+      showInTypeSelector: true,
+      editOnTypeSwitch: true,
+      renderCollectionAsValue: true,
+      defaultValue: { url: 'https://default' },
+      toStandardType: (value) => String((value as { url: string }).url),
+    }
+    const { container } = render(
+      <JsonEditor
+        data={{ x: { url: 'https://example.com' } }}
+        setData={noop}
+        customNodeDefinitions={[linkSource, bigintTarget()]}
+        showIconTooltips
+      />
+    )
+    const row = screen.getByTestId('custom').closest('.jer-component') as HTMLElement
+    await user.click(within(row).getByTitle('Edit'))
+    await switchTo(user, 'BigInt')
+
+    // BigInt's hook can't parse the demoted url, so core seeds its string
+    // form — the demoted primitive, never the raw object's "[object Object]"
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe(
+      'https://example.com'
+    )
+    expect(container.textContent).not.toContain('[object Object]')
   })
 })
 
