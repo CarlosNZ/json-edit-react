@@ -20,7 +20,7 @@ export const BigIntDefinition: CustomNodeDefinition<BigIntProps> = {
       // BigInt() throws on anything non-integer ("1.5", "abc", "1e3")
       return BigInt(String(value))
     } catch {
-      // Rejects the confirm; at switch time core seeds the raw text instead
+      // Rejects the confirm; at switch time core seeds defaultValue instead
       throw new Error(componentProps?.invalidBigIntError ?? 'Invalid BigInt')
     }
   },

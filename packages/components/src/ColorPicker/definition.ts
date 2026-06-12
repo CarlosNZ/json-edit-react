@@ -16,7 +16,7 @@ export const ColorPickerNodeDefinition: CustomNodeDefinition<ColorPickerProps> =
   fromStandardType: (value, _, componentProps) => {
     const { keepAsColor = true, invalidColorError = 'Invalid Color' } = componentProps ?? {}
     if (keepAsColor && !colord(String(value)).isValid())
-      // Rejects the confirm; at switch time core seeds the raw text instead
+      // Rejects the confirm; at switch time core seeds defaultValue instead
       throw new Error(invalidColorError)
     return String(value ?? '')
   },

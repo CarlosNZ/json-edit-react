@@ -16,7 +16,7 @@ export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
     if (value instanceof Date) return value
     const date = new Date(String(value))
     if (isNaN(date.getTime()))
-      // Rejects the confirm; at switch time core seeds the raw text instead
+      // Rejects the confirm; at switch time core seeds defaultValue instead
       throw new Error(componentProps?.invalidDateError ?? 'Invalid Date')
     return date
   },

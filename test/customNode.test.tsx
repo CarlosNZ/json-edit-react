@@ -795,9 +795,9 @@ describe('CustomNode — fromStandardType commit transform', () => {
 describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
   // With `editOnTypeSwitch`, switching TO the custom type is a local switch
   // like any primitive type change: the TARGET definition's component renders
-  // in edit state on a buffer seeded through its `fromStandardType` (throw →
-  // the value's string form; no hook → `defaultValue`), a single commit
-  // happens on ✓ (through the same hook), and Esc cancels.
+  // in edit state on a buffer seeded through its `fromStandardType` (throw or
+  // no hook → `defaultValue`), a single commit happens on ✓ (through the same
+  // hook), and Esc cancels.
   const CustomEditor = (props: CustomComponentProps) => {
     const { value, setValue, isEditing, setIsEditing, handleKeyPress } = props
     return isEditing ? (
@@ -845,10 +845,10 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     await user.dblClick(screen.getByText('"hello"'))
     await switchTo(user, 'BigInt')
 
-    // The hook can't convert 'hello' (it throws), so the switch seeds the raw
-    // text for the user to fix rather than rejecting
+    // The hook can't convert 'hello' (it throws), so the switch falls back to
+    // the defaultValue seed — the same as switching with no hook
     const input = screen.getByTestId('custom-input') as HTMLInputElement
-    expect(input.value).toBe('hello')
+    expect(input.value).toBe('99')
     expect((screen.getByRole('combobox') as HTMLSelectElement).value).toBe('BigInt')
     expect(setData).not.toHaveBeenCalled()
     expect(onUpdate).not.toHaveBeenCalled()
@@ -1023,9 +1023,9 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
 
     expect(screen.queryByTestId('symbol-view')).toBeNull()
     // The hook can't convert a symbol (BigInt(String(symbol)) throws), so the
-    // switch seeds its string form — never the raw symbol, which a text
-    // editor can't render
-    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('Symbol(s)')
+    // switch falls back to the defaultValue seed — never the raw symbol,
+    // which a text editor can't render
+    expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('99')
     expect(setData).not.toHaveBeenCalled()
 
     fireEvent.keyDown(screen.getByTestId('custom-input'), { key: 'Escape' })
@@ -1107,22 +1107,26 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
       defaultValue: { url: 'https://default' },
       toStandardType: (value) => String((value as { url: string }).url),
     }
+    const sinkTarget = bigintTarget({
+      name: 'Sink',
+      fromStandardType: (value) => `S:${String(value)}`,
+    })
     const { container } = render(
       <JsonEditor
         data={{ x: { url: 'https://example.com' } }}
         setData={noop}
-        customNodeDefinitions={[linkSource, bigintTarget()]}
+        customNodeDefinitions={[linkSource, sinkTarget]}
         showIconTooltips
       />
     )
     const row = screen.getByTestId('custom').closest('.jer-component') as HTMLElement
     await user.click(within(row).getByTitle('Edit'))
-    await switchTo(user, 'BigInt')
+    await switchTo(user, 'Sink')
 
-    // BigInt's hook can't parse the demoted url, so core seeds its string
-    // form — the demoted primitive, never the raw object's "[object Object]"
+    // The target's hook receives the source's demoted primitive (the url),
+    // never the raw object's "[object Object]"
     expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe(
-      'https://example.com'
+      'S:https://example.com'
     )
     expect(container.textContent).not.toContain('[object Object]')
   })

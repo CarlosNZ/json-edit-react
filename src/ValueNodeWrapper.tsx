@@ -279,15 +279,16 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         // Deferred (`editOnTypeSwitch`): a local switch like any primitive
         // type change — reseed the buffer and keep the session open. The
         // target's `fromStandardType` derives the seed from the demoted
-        // current value (falling back to `defaultValue` without the hook);
-        // the same hook converts the buffer at confirm, so a throw HERE
-        // isn't a reject — it seeds the value's string form to fix.
+        // current value; the same hook converts the buffer at confirm, so a
+        // throw HERE isn't a reject — an unconvertible value falls back to
+        // the `defaultValue` seed, the same as switching with no hook. (The
+        // original value stays recoverable via Esc.)
         let seed: unknown = customNode.defaultValue
         if (customNode.fromStandardType) {
           try {
             seed = customNode.fromStandardType(source, nodeData, customNode.componentProps)
           } catch {
-            seed = String(source)
+            // Keep the defaultValue seed
           }
         }
         setValue(seed as ValueData | CollectionData)
