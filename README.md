@@ -562,10 +562,15 @@ These each take a `boolean` value, or a `FilterFunction` callback, with the foll
     value,      // value of the property
     size ,      // if a collection (object, array), the number of items
                 //   (null for non-collections)
-    visibleSize, // if a collection AND a search filter is active, the
-                //   number of direct children currently visible
-                //   (undefined otherwise — i.e. on leaves, or when no
-                //   filter is active)
+    visibleSize, // direct-child count under the current search filter.
+                //   `number` on collections under an active filter;
+                //   `null` on render-path nodes when no filter is active
+                //   or this isn't a tracked collection (e.g. a leaf).
+                //   `undefined` only inside the `searchFilter` callback
+                //   itself (the walk hasn't computed counts yet) or when
+                //   NodeData reaches you via an imperative bridge
+                //   (onCollapse / onEditEvent / the editorRef handle).
+                //   Use `!= null` to gate on "has a real count".
     parentData, // parent object containing the current node
     fullData    // the full (overall) data object
     collapsed   // whether or not the current node is in a

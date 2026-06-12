@@ -214,8 +214,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const isVisible = useNodeVisible(path) || nodeData.level === 0
   if (!isVisible && !childrenEditing) return null
 
-  // `visibleSize` is set by useCommon when a filter is active; undefined
-  // otherwise. Drives the "n of m" filtered-count display below.
+  // `visibleSize` is a number on tracked collections while a filter is
+  // active; `null` on leaves under a filter; `undefined` otherwise. Use
+  // `!= null` to check "has a real count". Drives the n-of-m display.
   const { visibleSize } = nodeData
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
@@ -344,12 +345,14 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const showLabel = showArrayIndexes || !isArray
   // `'when-closed-or-filtered'` surfaces the count whenever the filter is
   // currently subsetting this collection's children — useCommon sets
-  // `visibleSize` only while a filter is active.
+  // `visibleSize` to a number on tracked collections while a filter is
+  // active (and `null` on leaves), so `!= null` catches "filter active
+  // AND we have a real count for this node".
   const showCount =
     showCollectionCount === 'when-closed'
       ? collapsed
       : showCollectionCount === 'when-closed-or-filtered'
-        ? collapsed || visibleSize !== undefined
+        ? collapsed || visibleSize != null
         : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
   const shouldShowKey = showLabel && showKey && name !== undefined
@@ -601,7 +604,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
                 transitionBehavior: 'allow-discrete',
               }}
             >
-              {visibleSize !== undefined && visibleSize !== (size as number)
+              {visibleSize != null && visibleSize !== (size as number)
                 ? translate('ITEMS_FILTERED', nodeData, {
                     visible: visibleSize,
                     total: size as number,

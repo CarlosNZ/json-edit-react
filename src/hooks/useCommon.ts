@@ -43,11 +43,10 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const { submit, cancel } = useEditingStore()
   const [error, setError] = useState<string | null>(null)
 
-  const visibleSize = useVisibleChildCount(incomingNodeData.path)
   const nodeData = {
     ...incomingNodeData,
     collapsed,
-    ...(visibleSize !== null && { visibleSize }),
+    visibleSize: useVisibleChildCount(incomingNodeData.path),
   }
   const { path, key: name, size } = nodeData
 

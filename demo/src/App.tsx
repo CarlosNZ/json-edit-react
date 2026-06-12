@@ -491,7 +491,7 @@ function App() {
                 borderColor="gainsboro"
                 borderRadius={50}
                 size="sm"
-                w={20}
+                w={'8rem'}
                 value={searchText}
                 onChange={(e) => updateState({ searchText: e.target.value })}
                 position="absolute"
@@ -872,6 +872,7 @@ function App() {
                         })
                       }
                       value={showCount}
+                      fontSize="sm"
                     >
                       <option value="Yes" key={0}>
                         Yes

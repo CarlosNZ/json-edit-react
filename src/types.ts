@@ -416,11 +416,15 @@ export interface NodeData<T = JsonData> {
   index: number
   value: JsonData
   size: number | null
-  // Visible direct-child count under the current search filter — only set
-  // on collection nodes whose count is being displayed as "n of m". Picked
-  // up by `customText.ITEMS_FILTERED` overrides that want the filtered
-  // count alongside the total (`size`).
-  visibleSize?: number
+  // Visible direct-child count under the current search filter. `number` on
+  // tracked collections while a filter is active; `null` on render-path
+  // NodeData when either no filter is active or this isn't a tracked
+  // collection (e.g. a leaf). `undefined` only when the NodeData wasn't
+  // built by the render path — i.e. the `searchFilter` callback (which the
+  // visibility walk invokes before counts are known) or NodeData built via
+  // `buildNodeData` for the editorRef handle / onCollapse / onEditEvent
+  // bridges. Consumers can use `!= null` to gate on "has a real count".
+  visibleSize?: number | null
   parentData: object | null
   fullData: T
   collapsed?: boolean

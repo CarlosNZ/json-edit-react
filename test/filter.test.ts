@@ -218,5 +218,21 @@ describe('computeFilterState', () => {
     expect(fs.visibleChildCounts.get(toPathString(['a']))).toBe(1)
     expect(fs.visibleChildCounts.get(toPathString([]))).toBe(1)
   })
+
+  test('visibleChildCounts has no entry for leaf paths', () => {
+    // The `useVisibleChildCount` hook relies on this to distinguish "tracked
+    // collection with 0 matches" (entry present, value 0) from "leaf or
+    // untracked path" (no entry — hook returns null, not 0). Without this
+    // distinction, every leaf during filter-active would get a spurious
+    // `visibleSize: 0` on its NodeData.
+    const data = { fruits: ['apple', 'banana'], note: 'plain' }
+    const fs = computeFilterState(root(data), undefined, 'apple')!
+    // The leaf `note` matched nothing — but it's a leaf, so no entry.
+    expect(fs.visibleChildCounts.has(toPathString(['note']))).toBe(false)
+    // The leaf `fruits[0]` (which DID match) — still no entry, it's a leaf.
+    expect(fs.visibleChildCounts.has(toPathString(['fruits', 0]))).toBe(false)
+    // The collection `fruits` (one match out of two) — entry present.
+    expect(fs.visibleChildCounts.get(toPathString(['fruits']))).toBe(1)
+  })
 })
 

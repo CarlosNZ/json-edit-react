@@ -2027,6 +2027,54 @@ describe('JsonEditor — search and filter', () => {
     )
     expect(screen.getByText('[2/5] match')).toBeInTheDocument()
   })
+
+  test('`visibleSize` reaches render-path callbacks: number on tracked collections, `null` on visible leaves', () => {
+    // Locks in the D11 universal-exposure contract for callbacks that run
+    // AFTER the visibility walk (allowEdit, theme functions, customText,
+    // custom-node conditions, etc.). They see the `useCommon`-augmented
+    // NodeData with `visibleSize` set.
+    const seen = new Map<string, number | null | undefined>()
+    render(
+      <JsonEditor
+        data={{ outer: { inner: ['apple-1', 'banana'] } }}
+        setData={noop}
+        searchText="apple"
+        allowEdit={(nodeData) => {
+          seen.set(nodeData.path.join('/') || 'ROOT', nodeData.visibleSize)
+          return true
+        }}
+      />
+    )
+    // Tracked collections under an active filter: `visibleSize` is a number.
+    expect(typeof seen.get('ROOT')).toBe('number')
+    expect(typeof seen.get('outer')).toBe('number')
+    expect(typeof seen.get('outer/inner')).toBe('number')
+    // Leaf paths aren't in `visibleChildCounts`, so they get `null` —
+    // even the filtered-out 'banana', whose useCommon (and so its
+    // allowEdit invocation) still runs before the visibility early-return.
+    expect(seen.get('outer/inner/0')).toBeNull() // 'apple-1', matches
+    expect(seen.get('outer/inner/1')).toBeNull() // 'banana', doesn't match
+  })
+
+  test('`visibleSize` is `null` on render-path NodeData when no filter is active', () => {
+    // Outside a filter, the FilterStateProvider's value is `null`, the
+    // hook returns `null`, and useCommon spreads `visibleSize: null` onto
+    // every render-path NodeData. (`undefined` would mean "NodeData built
+    // outside the render path", which doesn't apply here.)
+    const seen: (number | null | undefined)[] = []
+    render(
+      <JsonEditor
+        data={{ outer: { inner: 'leaf' } }}
+        setData={noop}
+        allowEdit={(nodeData) => {
+          seen.push(nodeData.visibleSize)
+          return true
+        }}
+      />
+    )
+    expect(seen.length).toBeGreaterThan(0)
+    seen.forEach((v) => expect(v).toBeNull())
+  })
 })
 
 describe('JsonEditor — textarea character insertion via keyboard', () => {
