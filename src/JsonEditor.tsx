@@ -7,6 +7,7 @@ import React, {
   useState,
 } from 'react'
 import { assign, type AssignOptions, type AssignInput } from './utils/assign'
+import { buildNodeData } from './utils/buildNodeData'
 import { extract } from './utils/extract'
 import { CollectionNode } from './CollectionNode'
 import { NativeSelect } from './NativeSelect'
@@ -822,57 +823,6 @@ const updateDataObject = (
     newData,
     currentValue,
     newValue: action !== 'delete' ? newValue : undefined,
-  }
-}
-
-// Canonical `NodeData` builder: construct the data for any node from the live
-// tree given its path. Used for the root node and by the `editorRef` handle to
-// run a node's `allowEdit` filter at call time (the filter takes the full
-// NodeData, not just a path). `index`/`size` mirror the child construction in
-// CollectionNode so a filter keying off them sees the same input the rendered
-// node would; `sort` (the `sortKeys` comparator) is only needed to resolve the
-// `index` of an object child, so it's optional.
-const buildNodeData = (
-  fullData: JsonData,
-  path: CollectionKey[],
-  rootName: string,
-  sort?: <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
-): NodeData => {
-  if (path.length === 0) {
-    return {
-      key: rootName,
-      path: [],
-      level: 0,
-      index: 0,
-      value: fullData,
-      size: isCollection(fullData) ? Object.keys(fullData).length : 1,
-      parentData: null,
-      fullData,
-    }
-  }
-
-  const key = path[path.length - 1]
-  const value = extract(fullData, path) as JsonData
-  const parentData = (extract(fullData, path.slice(0, -1)) ?? null) as object | null
-
-  let index = 0
-  if (Array.isArray(parentData)) {
-    index = typeof key === 'number' ? key : Number(key)
-  } else if (parentData && typeof parentData === 'object') {
-    const entries = Object.entries(parentData) as Array<[string | number, unknown]>
-    sort?.(entries, (entry) => entry)
-    index = entries.findIndex(([k]) => k === key)
-  }
-
-  return {
-    key,
-    path,
-    level: path.length,
-    index,
-    value,
-    size: isCollection(value) ? Object.keys(value as object).length : null,
-    parentData,
-    fullData,
   }
 }
 
