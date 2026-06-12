@@ -15,7 +15,7 @@ export default [
     plugins: [
       typescript({
         module: 'ESNext',
-        target: 'es6',
+        target: 'es2020',
         declaration: true,
         declarationDir: 'build/dts',
       }),
