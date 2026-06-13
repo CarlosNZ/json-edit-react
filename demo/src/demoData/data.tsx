@@ -135,7 +135,7 @@ export const data: Record<string, object> = {
           starships: null,
           created: '2014-12-10T15:10:51.357000Z',
           edited: '2014-12-20T21:17:50.309000Z',
-          url: 'https://swapi.dev/api/people/2/',
+          url: 'https://swapi.info/api/people/2/',
         },
         {
           name: 'Darth Vader',
@@ -158,7 +158,7 @@ export const data: Record<string, object> = {
           starships: ['TIE Advanced x1'],
           created: '2014-12-10T15:18:20.704000Z',
           edited: '2014-12-20T21:17:50.313000Z',
-          url: 'https://swapi.dev/api/people/4/',
+          url: 'https://swapi.info/api/people/4/',
         },
         {
           name: 'Owen Lars',
@@ -176,7 +176,7 @@ export const data: Record<string, object> = {
           starships: null,
           created: '2014-12-10T15:52:14.024000Z',
           edited: '2014-12-20T21:17:50.317000Z',
-          url: 'https://swapi.dev/api/people/6/',
+          url: 'https://swapi.info/api/people/6/',
         },
         {
           name: 'Beru Whitesun lars',
@@ -194,7 +194,7 @@ export const data: Record<string, object> = {
           starships: null,
           created: '2014-12-10T15:53:41.121000Z',
           edited: '2014-12-20T21:17:50.319000Z',
-          url: 'https://swapi.dev/api/people/7/',
+          url: 'https://swapi.info/api/people/7/',
         },
         {
           name: 'R5-D4',
@@ -212,7 +212,7 @@ export const data: Record<string, object> = {
           starships: null,
           created: '2014-12-10T15:57:50.959000Z',
           edited: '2014-12-20T21:17:50.321000Z',
-          url: 'https://swapi.dev/api/people/8/',
+          url: 'https://swapi.info/api/people/8/',
         },
         {
           name: 'Biggs Darklighter',
@@ -230,7 +230,7 @@ export const data: Record<string, object> = {
           starships: ['X-wing'],
           created: '2014-12-10T15:59:50.509000Z',
           edited: '2014-12-20T21:17:50.323000Z',
-          url: 'https://swapi.dev/api/people/9/',
+          url: 'https://swapi.info/api/people/9/',
         },
         {
           name: 'Anakin Skywalker',
@@ -248,7 +248,7 @@ export const data: Record<string, object> = {
           starships: ['Naboo fighter', 'Trade Federation cruiser', 'Jedi Interceptor'],
           created: '2014-12-10T16:20:44.310000Z',
           edited: '2014-12-20T21:17:50.327000Z',
-          url: 'https://swapi.dev/api/people/11/',
+          url: 'https://swapi.info/api/people/11/',
         },
         {
           name: 'Shmi Skywalker',
@@ -266,7 +266,7 @@ export const data: Record<string, object> = {
           starships: null,
           created: '2014-12-19T17:57:41.191000Z',
           edited: '2014-12-20T21:17:50.401000Z',
-          url: 'https://swapi.dev/api/people/43/',
+          url: 'https://swapi.info/api/people/43/',
         },
         {
           name: 'Cliegg Lars',
@@ -284,7 +284,7 @@ export const data: Record<string, object> = {
           starships: null,
           created: '2014-12-20T15:59:03.958000Z',
           edited: '2014-12-20T21:17:50.451000Z',
-          url: 'https://swapi.dev/api/people/62/',
+          url: 'https://swapi.info/api/people/62/',
         },
       ],
       films: [
@@ -331,7 +331,7 @@ export const data: Record<string, object> = {
           species: ['Human', 'Droid', 'Wookie', 'Rodian', 'Hutt'],
           created: '2014-12-10T14:23:31.880000Z',
           edited: '2014-12-20T19:49:45.256000Z',
-          url: 'https://swapi.dev/api/films/1/',
+          url: 'https://swapi.info/api/films/1/',
         },
         {
           title: 'Return of the Jedi',
@@ -401,7 +401,7 @@ export const data: Record<string, object> = {
           ],
           created: '2014-12-18T10:39:33.255000Z',
           edited: '2014-12-20T09:48:37.462000Z',
-          url: 'https://swapi.dev/api/films/3/',
+          url: 'https://swapi.info/api/films/3/',
         },
         {
           title: 'The Phantom Menace',
@@ -488,7 +488,7 @@ export const data: Record<string, object> = {
           ],
           created: '2014-12-19T16:52:55.740000Z',
           edited: '2014-12-20T10:54:07.216000Z',
-          url: 'https://swapi.dev/api/films/4/',
+          url: 'https://swapi.info/api/films/4/',
         },
         {
           title: 'Attack of the Clones',
@@ -583,7 +583,7 @@ export const data: Record<string, object> = {
           ],
           created: '2014-12-20T10:57:57.886000Z',
           edited: '2014-12-20T20:18:48.516000Z',
-          url: 'https://swapi.dev/api/films/5/',
+          url: 'https://swapi.info/api/films/5/',
         },
         {
           title: 'Revenge of the Sith',
@@ -697,12 +697,12 @@ export const data: Record<string, object> = {
           ],
           created: '2014-12-20T18:49:38.403000Z',
           edited: '2014-12-20T20:47:52.073000Z',
-          url: 'https://swapi.dev/api/films/6/',
+          url: 'https://swapi.info/api/films/6/',
         },
       ],
       created: '2014-12-09T13:50:49.641000Z',
       edited: '2014-12-20T20:58:18.411000Z',
-      url: 'https://swapi.dev/api/planets/1/',
+      url: 'https://swapi.info/api/planets/1/',
     },
     films: [
       'A New Hope',
@@ -740,7 +740,7 @@ export const data: Record<string, object> = {
             starships: null,
             created: '2014-12-10T15:11:50.376000Z',
             edited: '2014-12-20T21:17:50.311000Z',
-            url: 'https://swapi.dev/api/people/3/',
+            url: 'https://swapi.info/api/people/3/',
           },
           'Darth Vader',
           {
@@ -764,7 +764,7 @@ export const data: Record<string, object> = {
             starships: null,
             created: '2014-12-10T15:20:09.791000Z',
             edited: '2014-12-20T21:17:50.315000Z',
-            url: 'https://swapi.dev/api/people/5/',
+            url: 'https://swapi.info/api/people/5/',
           },
           {
             name: 'Obi-Wan Kenobi',
@@ -795,7 +795,7 @@ export const data: Record<string, object> = {
             ],
             created: '2014-12-10T16:16:29.192000Z',
             edited: '2014-12-20T21:17:50.325000Z',
-            url: 'https://swapi.dev/api/people/10/',
+            url: 'https://swapi.info/api/people/10/',
           },
           {
             name: 'Chewbacca',
@@ -818,7 +818,7 @@ export const data: Record<string, object> = {
             starships: ['Millennium Falcon', 'Imperial shuttle'],
             created: '2014-12-10T16:42:45.066000Z',
             edited: '2014-12-20T21:17:50.332000Z',
-            url: 'https://swapi.dev/api/people/13/',
+            url: 'https://swapi.info/api/people/13/',
           },
           {
             name: 'Han Solo',
@@ -836,7 +836,7 @@ export const data: Record<string, object> = {
             starships: ['Millennium Falcon', 'Imperial shuttle'],
             created: '2014-12-10T16:49:14.582000Z',
             edited: '2014-12-20T21:17:50.334000Z',
-            url: 'https://swapi.dev/api/people/14/',
+            url: 'https://swapi.info/api/people/14/',
           },
           {
             name: 'Wedge Antilles',
@@ -854,7 +854,7 @@ export const data: Record<string, object> = {
             starships: ['X-wing'],
             created: '2014-12-12T11:08:06.469000Z',
             edited: '2014-12-20T21:17:50.341000Z',
-            url: 'https://swapi.dev/api/people/18/',
+            url: 'https://swapi.info/api/people/18/',
           },
           {
             name: 'Yoda',
@@ -878,7 +878,7 @@ export const data: Record<string, object> = {
             starships: null,
             created: '2014-12-15T12:26:01.042000Z',
             edited: '2014-12-20T21:17:50.345000Z',
-            url: 'https://swapi.dev/api/people/20/',
+            url: 'https://swapi.info/api/people/20/',
           },
           {
             name: 'Palpatine',
@@ -902,7 +902,7 @@ export const data: Record<string, object> = {
             starships: null,
             created: '2014-12-15T12:48:05.971000Z',
             edited: '2014-12-20T21:17:50.347000Z',
-            url: 'https://swapi.dev/api/people/21/',
+            url: 'https://swapi.info/api/people/21/',
           },
           {
             name: 'Boba Fett',
@@ -920,7 +920,7 @@ export const data: Record<string, object> = {
             starships: ['Slave 1'],
             created: '2014-12-15T12:49:32.457000Z',
             edited: '2014-12-20T21:17:50.349000Z',
-            url: 'https://swapi.dev/api/people/22/',
+            url: 'https://swapi.info/api/people/22/',
           },
           {
             name: 'IG-88',
@@ -938,7 +938,7 @@ export const data: Record<string, object> = {
             starships: null,
             created: '2014-12-15T12:51:10.076000Z',
             edited: '2014-12-20T21:17:50.351000Z',
-            url: 'https://swapi.dev/api/people/23/',
+            url: 'https://swapi.info/api/people/23/',
           },
           {
             name: 'Bossk',
@@ -956,7 +956,7 @@ export const data: Record<string, object> = {
             starships: null,
             created: '2014-12-15T12:53:49.297000Z',
             edited: '2014-12-20T21:17:50.355000Z',
-            url: 'https://swapi.dev/api/people/24/',
+            url: 'https://swapi.info/api/people/24/',
           },
           {
             name: 'Lando Calrissian',
@@ -974,7 +974,7 @@ export const data: Record<string, object> = {
             starships: ['Millennium Falcon'],
             created: '2014-12-15T12:56:32.683000Z',
             edited: '2014-12-20T21:17:50.357000Z',
-            url: 'https://swapi.dev/api/people/25/',
+            url: 'https://swapi.info/api/people/25/',
           },
           {
             name: 'Lobot',
@@ -992,7 +992,7 @@ export const data: Record<string, object> = {
             starships: null,
             created: '2014-12-15T13:01:57.178000Z',
             edited: '2014-12-20T21:17:50.359000Z',
-            url: 'https://swapi.dev/api/people/26/',
+            url: 'https://swapi.info/api/people/26/',
           },
         ],
         planets: [
@@ -1010,7 +1010,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back'],
             created: '2014-12-10T11:39:13.934000Z',
             edited: '2014-12-20T20:58:18.423000Z',
-            url: 'https://swapi.dev/api/planets/4/',
+            url: 'https://swapi.info/api/planets/4/',
           },
           {
             name: 'Dagobah',
@@ -1026,7 +1026,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back', 'Return of the Jedi', 'Revenge of the Sith'],
             created: '2014-12-10T11:42:22.590000Z',
             edited: '2014-12-20T20:58:18.425000Z',
-            url: 'https://swapi.dev/api/planets/5/',
+            url: 'https://swapi.info/api/planets/5/',
           },
           {
             name: 'Bespin',
@@ -1042,7 +1042,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back'],
             created: '2014-12-10T11:43:55.240000Z',
             edited: '2014-12-20T20:58:18.427000Z',
-            url: 'https://swapi.dev/api/planets/6/',
+            url: 'https://swapi.info/api/planets/6/',
           },
           {
             name: 'Ord Mantell',
@@ -1058,7 +1058,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back'],
             created: '2014-12-15T12:23:41.661000Z',
             edited: '2014-12-20T20:58:18.464000Z',
-            url: 'https://swapi.dev/api/planets/27/',
+            url: 'https://swapi.info/api/planets/27/',
           },
         ],
         starships: [
@@ -1080,7 +1080,7 @@ export const data: Record<string, object> = {
             films: ['A New Hope', 'The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-10T15:08:19.848000Z',
             edited: '2014-12-20T21:23:49.870000Z',
-            url: 'https://swapi.dev/api/starships/3/',
+            url: 'https://swapi.info/api/starships/3/',
           },
           {
             name: 'Millennium Falcon',
@@ -1100,7 +1100,7 @@ export const data: Record<string, object> = {
             films: ['A New Hope', 'The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-10T16:59:45.094000Z',
             edited: '2014-12-20T21:23:49.880000Z',
-            url: 'https://swapi.dev/api/starships/10/',
+            url: 'https://swapi.info/api/starships/10/',
           },
           {
             name: 'Y-wing',
@@ -1120,7 +1120,7 @@ export const data: Record<string, object> = {
             films: ['A New Hope', 'The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-12T11:00:39.817000Z',
             edited: '2014-12-20T21:23:49.883000Z',
-            url: 'https://swapi.dev/api/starships/11/',
+            url: 'https://swapi.info/api/starships/11/',
           },
           {
             name: 'X-wing',
@@ -1140,7 +1140,7 @@ export const data: Record<string, object> = {
             films: ['A New Hope', 'The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-12T11:19:05.340000Z',
             edited: '2014-12-20T21:23:49.886000Z',
-            url: 'https://swapi.dev/api/starships/12/',
+            url: 'https://swapi.info/api/starships/12/',
           },
           {
             name: 'Executor',
@@ -1160,7 +1160,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-15T12:31:42.547000Z',
             edited: '2014-12-20T21:23:49.893000Z',
-            url: 'https://swapi.dev/api/starships/15/',
+            url: 'https://swapi.info/api/starships/15/',
           },
           {
             name: 'Rebel transport',
@@ -1180,7 +1180,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-15T12:34:52.264000Z',
             edited: '2014-12-20T21:23:49.895000Z',
-            url: 'https://swapi.dev/api/starships/17/',
+            url: 'https://swapi.info/api/starships/17/',
           },
           {
             name: 'Slave 1',
@@ -1200,7 +1200,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back', 'Attack of the Clones'],
             created: '2014-12-15T13:00:56.332000Z',
             edited: '2014-12-20T21:23:49.897000Z',
-            url: 'https://swapi.dev/api/starships/21/',
+            url: 'https://swapi.info/api/starships/21/',
           },
           {
             name: 'Imperial shuttle',
@@ -1220,7 +1220,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-15T13:04:47.235000Z',
             edited: '2014-12-20T21:23:49.900000Z',
-            url: 'https://swapi.dev/api/starships/22/',
+            url: 'https://swapi.info/api/starships/22/',
           },
           {
             name: 'EF76 Nebulon-B escort frigate',
@@ -1240,7 +1240,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-15T13:06:30.813000Z',
             edited: '2014-12-20T21:23:49.902000Z',
-            url: 'https://swapi.dev/api/starships/23/',
+            url: 'https://swapi.info/api/starships/23/',
           },
         ],
         vehicles: [
@@ -1260,7 +1260,7 @@ export const data: Record<string, object> = {
             films: ['A New Hope', 'The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-10T16:33:52.860000Z',
             edited: '2014-12-20T21:30:21.670000Z',
-            url: 'https://swapi.dev/api/vehicles/8/',
+            url: 'https://swapi.info/api/vehicles/8/',
           },
           {
             name: 'Snowspeeder',
@@ -1278,7 +1278,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back'],
             created: '2014-12-15T12:22:12Z',
             edited: '2014-12-20T21:30:21.672000Z',
-            url: 'https://swapi.dev/api/vehicles/14/',
+            url: 'https://swapi.info/api/vehicles/14/',
           },
           {
             name: 'TIE bomber',
@@ -1296,7 +1296,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-15T12:33:15.838000Z',
             edited: '2014-12-20T21:30:21.675000Z',
-            url: 'https://swapi.dev/api/vehicles/16/',
+            url: 'https://swapi.info/api/vehicles/16/',
           },
           {
             name: 'AT-AT',
@@ -1314,7 +1314,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-15T12:38:25.937000Z',
             edited: '2014-12-20T21:30:21.677000Z',
-            url: 'https://swapi.dev/api/vehicles/18/',
+            url: 'https://swapi.info/api/vehicles/18/',
           },
           {
             name: 'AT-ST',
@@ -1332,7 +1332,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back', 'Return of the Jedi'],
             created: '2014-12-15T12:46:42.384000Z',
             edited: '2014-12-20T21:30:21.679000Z',
-            url: 'https://swapi.dev/api/vehicles/19/',
+            url: 'https://swapi.info/api/vehicles/19/',
           },
           {
             name: 'Storm IV Twin-Pod cloud car',
@@ -1350,7 +1350,7 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back'],
             created: '2014-12-15T12:58:50.530000Z',
             edited: '2014-12-20T21:30:21.681000Z',
-            url: 'https://swapi.dev/api/vehicles/20/',
+            url: 'https://swapi.info/api/vehicles/20/',
           },
         ],
         species: [
@@ -1376,7 +1376,7 @@ export const data: Record<string, object> = {
             ],
             created: '2014-12-10T13:52:11.567000Z',
             edited: '2014-12-20T21:36:42.136000Z',
-            url: 'https://swapi.dev/api/species/1/',
+            url: 'https://swapi.info/api/species/1/',
           },
           {
             name: 'Droid',
@@ -1400,7 +1400,7 @@ export const data: Record<string, object> = {
             ],
             created: '2014-12-10T15:16:16.259000Z',
             edited: '2014-12-20T21:36:42.139000Z',
-            url: 'https://swapi.dev/api/species/2/',
+            url: 'https://swapi.info/api/species/2/',
           },
           {
             name: 'Wookie',
@@ -1422,7 +1422,7 @@ export const data: Record<string, object> = {
             ],
             created: '2014-12-10T16:44:31.486000Z',
             edited: '2014-12-20T21:36:42.142000Z',
-            url: 'https://swapi.dev/api/species/3/',
+            url: 'https://swapi.info/api/species/3/',
           },
           {
             name: "Yoda's species",
@@ -1445,7 +1445,7 @@ export const data: Record<string, object> = {
             ],
             created: '2014-12-15T12:27:22.877000Z',
             edited: '2014-12-20T21:36:42.148000Z',
-            url: 'https://swapi.dev/api/species/6/',
+            url: 'https://swapi.info/api/species/6/',
           },
           {
             name: 'Trandoshan',
@@ -1462,12 +1462,12 @@ export const data: Record<string, object> = {
             films: ['The Empire Strikes Back'],
             created: '2014-12-15T13:07:47.704000Z',
             edited: '2014-12-20T21:36:42.151000Z',
-            url: 'https://swapi.dev/api/species/7/',
+            url: 'https://swapi.info/api/species/7/',
           },
         ],
         created: '2014-12-12T11:26:24.656000Z',
         edited: '2014-12-15T13:07:53.386000Z',
-        url: 'https://swapi.dev/api/films/2/',
+        url: 'https://swapi.info/api/films/2/',
       },
       'Return of the Jedi',
       'Revenge of the Sith',
@@ -1491,13 +1491,13 @@ export const data: Record<string, object> = {
         films: ['Return of the Jedi'],
         created: '2014-12-18T11:20:04.625000Z',
         edited: '2014-12-20T21:30:21.693000Z',
-        url: 'https://swapi.dev/api/vehicles/30/',
+        url: 'https://swapi.info/api/vehicles/30/',
       },
     ],
     starships: ['X-wing', 'Imperial shuttle'],
     created: '2014-12-09T13:50:51.644000Z',
     edited: '2014-12-20T21:17:56.891000Z',
-    url: 'https://swapi.dev/api/people/1/',
+    url: 'https://swapi.info/api/people/1/',
   },
   jsonPlaceholder: [
     {

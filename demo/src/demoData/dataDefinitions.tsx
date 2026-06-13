@@ -148,7 +148,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       <Flex flexDir="column" gap={2}>
         <Text>
           A massive chunk of <em>Star Wars</em> data scraped from{' '}
-          <Link href="https://swapi.dev/" isExternal>
+          <Link href="https://swapi.info/" isExternal>
             <strong>The Star Wars API</strong>
           </Link>
         </Text>
