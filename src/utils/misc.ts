@@ -56,15 +56,16 @@ export const matchEnumType = (
 // post-process the parsed data here to replace these with actual `undefined`
 // values
 export const restoreUndefined = (val: unknown): unknown => {
-  if (val === UNDEFINED) {
-    return undefined
-  } else if (Array.isArray(val)) {
-    return val.map((item) => restoreUndefined(item))
-  } else if (val && typeof val === 'object') {
+  if (val === UNDEFINED) return undefined
+  if (val && typeof val === 'object') {
+    // Arrays and objects both: mutate in place. The input is always
+    // freshly produced by jsonParse, so there's no shared reference to
+    // corrupt. The change guard means an undefined-free tree does zero
+    // writes — only a genuine sentinel triggers a mutation.
     for (const key in val) {
-      ;(val as Record<string, unknown>)[key] = restoreUndefined(
-        (val as Record<string, unknown>)[key]
-      )
+      const original = (val as Record<string, unknown>)[key]
+      const restored = restoreUndefined(original)
+      if (restored !== original) (val as Record<string, unknown>)[key] = restored
     }
   }
   return val
