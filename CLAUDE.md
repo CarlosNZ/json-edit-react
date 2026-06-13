@@ -97,7 +97,7 @@ The demo can resolve `json-edit-react`, `@json-edit-react/themes`, and `@json-ed
 - Single ESM entry with `sideEffects: false` (Option B+). Sub-path exports are documented as the escape hatch if legacy CJS consumers report bundle bloat — see [packages/components/CLAUDE.md](packages/components/CLAUDE.md).
 
 ### React compatibility
-- Peer dep is `react >=18.0.0`. The ESLint config enforces `react/react-in-jsx-scope: error` — keep `import React from 'react'` (or the JSX namespace) available where needed rather than relying on the automatic JSX runtime.
+- Peer dep is `react >=18.0.0`, and the codebase targets the automatic JSX runtime (tsconfig `jsx: react-jsx`). JSX does **not** need `import React` in scope — the `react/react-in-jsx-scope` and `react/jsx-uses-react` rules are off. Only import React (or named members) where a file actually references the `React.*` namespace (`React.CSSProperties`, `React.KeyboardEvent`, `React.FC`, etc.) or a React value (`React.memo`).
 
 ### Dependencies
 - The **core** library has **zero** runtime deps. Don't add any without a strong reason — the "no external UI library" promise is part of the product. UI-rich features (CodeMirror, Chakra, AJV, Firebase) belong in the demo, not in `src/`.

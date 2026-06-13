@@ -31,7 +31,6 @@ export default tseslint.config(
       ecmaVersion: 2020,
       globals: {
         ...globals.browser,
-        React: 'readonly',
       },
     },
     plugins: {
@@ -42,8 +41,11 @@ export default tseslint.config(
       ...reactPlugin.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       'react/prop-types': 'off',
-      // Keep React in JSX scope for React 16 compatibility
-      'react/react-in-jsx-scope': 'error',
+      // Automatic JSX runtime (tsconfig `jsx: react-jsx`): JSX compiles to
+      // `react/jsx-runtime` calls, so React no longer needs to be in scope.
+      // Both classic-runtime rules are therefore off.
+      'react/react-in-jsx-scope': 'off',
+      'react/jsx-uses-react': 'off',
       // Lint dependency arrays of our custom effect wrapper as well as the
       // built-in effect hooks.
       'react-hooks/exhaustive-deps': ['warn', { additionalHooks: '(useIsomorphicLayoutEffect)' }],
@@ -62,7 +64,6 @@ export default tseslint.config(
       ecmaVersion: 2020,
       globals: {
         ...globals.browser,
-        React: 'readonly',
       },
     },
     plugins: {
@@ -73,8 +74,11 @@ export default tseslint.config(
       ...reactPlugin.configs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
       'react/prop-types': 'off',
-      // Keep React in JSX scope for React 16 compatibility
-      'react/react-in-jsx-scope': 'error',
+      // Automatic JSX runtime (tsconfig `jsx: react-jsx`): JSX compiles to
+      // `react/jsx-runtime` calls, so React no longer needs to be in scope.
+      // Both classic-runtime rules are therefore off.
+      'react/react-in-jsx-scope': 'off',
+      'react/jsx-uses-react': 'off',
       // Lint dependency arrays of our custom effect wrapper as well as the
       // built-in effect hooks.
       'react-hooks/exhaustive-deps': ['warn', { additionalHooks: '(useIsomorphicLayoutEffect)' }],
