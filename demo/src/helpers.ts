@@ -1,5 +1,4 @@
-import { JsonData, type CustomNodeDefinition } from '@json-edit-react'
-import { type CustomComponentLibraryData } from './demoData/data'
+import { JsonData } from '@json-edit-react'
 
 export const truncate = (string: string, length = 200) =>
   string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
@@ -21,30 +20,3 @@ const jsonStringify = (data: JsonData) =>
     },
     2
   )
-
-// For the "CustomNodeLibrary" data, returns modified definitions dependent on
-// the data
-export const getConditionalDefinitions = (
-  data: CustomComponentLibraryData,
-  customNodeDefinitions: CustomNodeDefinition[]
-) =>
-  customNodeDefinitions.map((definition) => {
-    if (definition?.name === 'Image')
-      return {
-        ...definition,
-        componentProps: {
-          imageStyles: {
-            maxHeight: data?.Images?.['Image properties']?.maxHeight,
-            maxWidth: data?.Images?.['Image properties']?.maxWidth,
-          },
-        },
-      }
-
-    if (definition?.name === 'Date Object')
-      return {
-        ...definition,
-        componentProps: { showTime: data?.['Date & Time']?.['Show Time in Date?'] ?? false },
-      }
-
-    return definition
-  })

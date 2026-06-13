@@ -1,7 +1,11 @@
 import { DateObjectCustomComponent, DateObjectProps } from './component'
 import { type CustomNodeDefinition } from 'json-edit-react'
+import { createDefinitionFactory } from '../_common/createDefinitionFactory'
 
-export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
+// The condition doubles as the guard: consumer `condition` overrides are
+// targeting, ANDed with this by the factory; replacing it requires the
+// explicit `guard` override.
+const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   condition: (nodeData) => nodeData.value instanceof Date,
   component: DateObjectCustomComponent,
   showEditTools: true,
@@ -32,3 +36,5 @@ export const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
       ? new Date(value)
       : value,
 }
+
+export const dateObjectDefinition = createDefinitionFactory(DateObjectDefinition)

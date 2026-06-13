@@ -1,4 +1,5 @@
 import { isCollection, type CustomNodeDefinition } from 'json-edit-react'
+import { createDefinitionFactory } from '../_common/createDefinitionFactory'
 import { EnhancedLinkCustomComponent, EnhancedLinkProps } from './component'
 
 const TEXT_FIELD = 'text'
@@ -9,7 +10,10 @@ const DEFAULT_LINK = {
   [URL_FIELD]: 'https://link.goes.here',
 }
 
-export const EnhancedLinkCustomNodeDefinition: CustomNodeDefinition<EnhancedLinkProps> = {
+// The condition doubles as the guard: consumer `condition` overrides are
+// targeting, ANDed with this by the factory; replacing it requires the
+// explicit `guard` override.
+const EnhancedLinkCustomNodeDefinition: CustomNodeDefinition<EnhancedLinkProps> = {
   condition: ({ value }) => isCollection(value) && TEXT_FIELD in value && URL_FIELD in value,
   component: EnhancedLinkCustomComponent,
   name: 'Enhanced Link', // shown in the Type selector menu
@@ -42,3 +46,5 @@ export const EnhancedLinkCustomNodeDefinition: CustomNodeDefinition<EnhancedLink
       : { ...DEFAULT_LINK, [TEXT_FIELD]: text }
   },
 }
+
+export const enhancedLinkDefinition = createDefinitionFactory(EnhancedLinkCustomNodeDefinition)

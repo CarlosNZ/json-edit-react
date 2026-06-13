@@ -1,10 +1,13 @@
 import { isCollection, type CustomNodeDefinition } from 'json-edit-react'
+import { createDefinitionFactory } from '../_common/createDefinitionFactory'
 import { SymbolComponent, SymbolProps } from './component'
 
-export const SymbolDefinition: CustomNodeDefinition<SymbolProps> = {
+// The condition doubles as the guard: consumer `condition` overrides are
+// targeting, ANDed with this by the factory; replacing it requires the
+// explicit `guard` override.
+const SymbolDefinition: CustomNodeDefinition<SymbolProps> = {
   condition: ({ value }) => typeof value === 'symbol',
   component: SymbolComponent,
-  // componentProps: {},
   showOnView: true,
   showEditTools: true,
   showOnEdit: true,
@@ -23,3 +26,5 @@ export const SymbolDefinition: CustomNodeDefinition<SymbolProps> = {
       ? Symbol((value.value as string) ?? null)
       : value,
 }
+
+export const symbolDefinition = createDefinitionFactory(SymbolDefinition)

@@ -16,7 +16,7 @@ pnpm add @json-edit-react/components
 
 ## Available components
 
-Each component ships a React component plus a `CustomNodeDefinition` ready to drop into `customNodeDefinitions`.
+Each component ships a React component plus a definition factory that produces a `CustomNodeDefinition` ready to drop into `customNodeDefinitions`.
 
 | Component | Use case |
 |---|---|
@@ -46,18 +46,12 @@ Standalone components that plug into JsonEditor's `CustomSelect` and `TextEditor
 
 ```tsx
 import { JsonEditor } from 'json-edit-react'
-import {
-  LinkCustomNodeDefinition,
-  DateTimePickerDefinition,
-} from '@json-edit-react/components'
+import { hyperlinkDefinition, datePickerDefinition } from '@json-edit-react/components'
 
 <JsonEditor
   data={data}
   setData={setData}
-  customNodeDefinitions={[
-    LinkCustomNodeDefinition,
-    DateTimePickerDefinition,
-  ]}
+  customNodeDefinitions={[hyperlinkDefinition(), datePickerDefinition()]}
 />
 ```
 

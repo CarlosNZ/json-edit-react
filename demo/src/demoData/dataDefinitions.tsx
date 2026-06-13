@@ -1,22 +1,23 @@
 import React from 'react'
-import { data } from './data'
+import { data, type CustomComponentLibraryData } from './data'
 import { Flex, Box, Link, Text, UnorderedList, ListItem } from '@chakra-ui/react'
 import {
-  DatePickerDefinition,
-  LinkCustomNodeDefinition,
-  DateObjectDefinition,
-  UndefinedDefinition,
-  BooleanToggleDefinition,
-  NanDefinition,
-  SymbolDefinition,
-  BigIntDefinition,
-  MarkdownNodeDefinition,
-  EnhancedLinkCustomNodeDefinition,
-  ImageNodeDefinition,
-  ColorPickerNodeDefinition,
+  datePickerDefinition,
+  hyperlinkDefinition,
+  dateObjectDefinition,
+  undefinedDefinition,
+  booleanToggleDefinition,
+  nanDefinition,
+  symbolDefinition,
+  bigIntDefinition,
+  markdownDefinition,
+  enhancedLinkDefinition,
+  imageDefinition,
+  colorPickerDefinition,
 } from '@json-edit-react/components'
 import {
   CustomNodeDefinition,
+  JsonData,
   FilterFunction,
   CustomTextDefinitions,
   assign,
@@ -52,6 +53,9 @@ const codenameGlossary: Record<string, string> = {
   bp: 'blood pressure',
 }
 
+// eslint-disable-next-line -- any is correct here
+type DemoNodeDefinitions = CustomNodeDefinition<Record<string, any>>[]
+
 export interface DemoData {
   name: string
   description: React.JSX.Element
@@ -80,8 +84,9 @@ export interface DemoData {
   showErrorMessages?: boolean
   defaultValue?: DefaultValueFunction
   newKeyOptions?: string[] | NewKeyOptionsFunction
-  // eslint-disable-next-line -- any is correct here
-  customNodeDefinitions?: CustomNodeDefinition<Record<string, any>>[]
+  // Either a static list, or — for data sets whose definitions are
+  // configured by values in the data itself — a function of the current data
+  customNodeDefinitions?: DemoNodeDefinitions | ((data: JsonData) => DemoNodeDefinitions)
   customTextDefinitions?: CustomTextDefinitions
   styles?: Partial<ThemeStyles>
   customTextEditorAvailable?: boolean
@@ -120,7 +125,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'data',
     collapse: 2,
     data: data.intro,
-    customNodeDefinitions: [DatePickerDefinition],
+    customNodeDefinitions: [datePickerDefinition()],
     // allowEdit: ({ key }) => key !== 'number',
     customTextEditorAvailable: true,
     allowTypeSelection: ({ key }) => {
@@ -247,7 +252,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return false
     },
     collapse: 1,
-    customNodeDefinitions: [DatePickerDefinition, LinkCustomNodeDefinition],
+    customNodeDefinitions: [datePickerDefinition(), hyperlinkDefinition()],
     data: data.starWars,
   },
   jsonPlaceholder: {
@@ -565,7 +570,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     searchPlaceholder: 'Search guestbook',
     customNodeDefinitions: [
       {
-        condition: DatePickerDefinition.condition,
+        // Borrow the pre-built definition's ISO-date condition; the component
+        // here is a custom read-only display, not the date picker
+        condition: datePickerDefinition().condition,
         component: ({ data, getStyles, nodeData }) => {
           return (
             <p style={getStyles('string', nodeData)}>{new Date(data as string).toLocaleString()}</p>
@@ -733,12 +740,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         },
         showKey: false,
       },
-      {
-        ...DatePickerDefinition,
-        showOnView: true,
-        showInTypeSelector: true,
+      datePickerDefinition({
         componentProps: { showTime: false, dateFormat: 'MMM d, yyyy' },
-      },
+      }),
       // Uncomment to test a custom Collection node
       // {
       //   condition: ({ key }) => key === 'portrayedBy',
@@ -1059,7 +1063,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
             Custom Node definitions & components
           </Link>{' '}
-          for common (yet non-JSON) data types or useful data structures.
+          for common data types or useful data structures.
         </Text>
         <Text>
           See their implementation in the{' '}
@@ -1086,39 +1090,54 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'components',
     collapse: 3,
     data: data.customComponentLibrary,
-    customNodeDefinitions: [
-      // Must keep this one first as we override it by index in App.tsx
-      {
-        ...DateObjectDefinition,
-        componentProps: { showTime: false },
-      },
-      ImageNodeDefinition,
-      LinkCustomNodeDefinition,
-      EnhancedLinkCustomNodeDefinition,
-      UndefinedDefinition,
-      BooleanToggleDefinition,
-      NanDefinition,
-      SymbolDefinition,
-      BigIntDefinition,
-      ColorPickerNodeDefinition,
-      {
-        ...MarkdownNodeDefinition,
-        // Value-type check so a node switched to another type (e.g. number)
-        // renders natively rather than as markdown text
-        condition: ({ key, value }) => key === 'Markdown' && typeof value === 'string',
-      },
-      {
-        ...MarkdownNodeDefinition,
-        condition: ({ key, value }) => key === 'Intro' && typeof value === 'string',
-        showKey: false,
-        componentProps: {
-          components: {
-            // @ts-expect-error Ignore _ var
-            a: ({ _, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+    // Some of these definitions are configured by values in the data set
+    // itself (the "Image properties" and "Show Time in Date?" nodes), so the
+    // list is a function of the current data, rebuilt as it's edited
+    customNodeDefinitions: (currentData) => {
+      const libraryData = currentData as CustomComponentLibraryData
+      return [
+        dateObjectDefinition({
+          componentProps: {
+            showTime: libraryData?.['Date & Time']?.['Show Time in Date?'] ?? false,
           },
-        },
-      },
-    ],
+        }),
+        datePickerDefinition({
+          componentProps: {
+            showTime: libraryData?.['Date & Time']?.['Show Time in Date?'] ?? false,
+          },
+        }),
+        imageDefinition({
+          componentProps: {
+            imageStyles: {
+              maxHeight: libraryData?.Images?.['Image properties']?.maxHeight,
+              maxWidth: libraryData?.Images?.['Image properties']?.maxWidth,
+            },
+          },
+        }),
+        hyperlinkDefinition(),
+        enhancedLinkDefinition(),
+        undefinedDefinition(),
+        booleanToggleDefinition(),
+        nanDefinition(),
+        symbolDefinition(),
+        bigIntDefinition(),
+        colorPickerDefinition(),
+        // The factory ANDs these conditions with the built-in string guard,
+        // so a node switched to another type (e.g. number) renders natively
+        // rather than as markdown text
+        markdownDefinition({ condition: ({ key }) => key === 'Markdown' }),
+        markdownDefinition({
+          condition: ({ key }) => key === 'Intro',
+          showKey: false,
+          componentProps: {
+            components: {
+              // @ts-expect-error Ignore _ var
+              a: ({ _, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+            },
+          },
+        }),
+      ]
+    },
     customTextEditorAvailable: true,
   },
 }

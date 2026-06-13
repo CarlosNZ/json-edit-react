@@ -1,3 +1,7 @@
+// Data for Demo page -- imported by dataDefinitions.tsx
+
+// Custom Component Library Data defined separately so we can infer a type for
+// it, which is required in App.tsx
 const customComponentLibraryData = {
   Intro: `# json-edit-react
   
@@ -30,7 +34,7 @@ const customComponentLibraryData = {
   },
   'Simple boolean toggle': false,
   'Date & Time': {
-    'Date ISO String': new Date().toISOString(),
+    'Date Picker': new Date().toISOString(),
     'Date Object': new Date(),
     'Show Time in Date?': true,
     // info: 'Inserted in App.tsx',
