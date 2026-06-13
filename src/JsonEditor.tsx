@@ -735,9 +735,7 @@ const Editor: React.FC<
   )
 }
 
-export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.ReactElement | null {
-  const [docRoot, setDocRoot] = useState<HTMLElement>()
-
+export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.ReactElement {
   // Shared bridge (load-bearing, by design — not a leak). The §16 perf work
   // put the editing store and collapse state in ancestor providers so nodes
   // can subscribe to slivers via `useSyncExternalStore` without re-rendering
@@ -754,23 +752,12 @@ export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.React
   // the commit primitives the EditingProvider's engine calls at event time.
   const commitRef = useRef<CommitPrimitives | undefined>(undefined)
 
-  // We want access to the global document.documentElement object, but can't
-  // access it directly when used with SSR. So we set it inside a `useEffect`,
-  // which won't run server-side (it'll just be undefined) until client
-  // hydration
-  useEffect(() => {
-    const root = document.documentElement
-    setDocRoot(root)
-  }, [])
-
-  if (!docRoot) return null
-
   // Cast at the boundary — the internal Editor and tree operate on `JsonData`,
   // generics only flow to the public surface for consumer typing.
   const innerProps = props as unknown as JsonEditorProps<JsonData>
 
   return (
-    <ThemeProvider theme={innerProps.theme ?? defaultTheme} icons={innerProps.icons} docRoot={docRoot}>
+    <ThemeProvider theme={innerProps.theme ?? defaultTheme} icons={innerProps.icons}>
       <TreeStateProvider
         onEditEvent={innerProps.onEditEvent}
         onCollapse={innerProps.onCollapse}

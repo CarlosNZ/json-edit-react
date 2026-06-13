@@ -1,7 +1,8 @@
-import React, { useLayoutEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { extract } from './utils/extract'
 import { Icon } from './Icons'
 import { useTheme, useEditingStore, useEditingSelector } from './contexts'
+import { useIsomorphicLayoutEffect } from './hooks/useIsomorphicLayoutEffect'
 import { type TranslateFunction } from './localisation'
 import {
   type CollectionDataType,
@@ -89,7 +90,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   // Sync the local options/content state to the store session. On open
   // compute the available keys; on close reset. `startAdd` / `cancelAdd` are
   // fired by the store; `commitAdd` by CollectionNode's commit.
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!isAddingHere) {
       setAddingKeyState(false)
       setNewKey(NEW_KEY_PROMPT)

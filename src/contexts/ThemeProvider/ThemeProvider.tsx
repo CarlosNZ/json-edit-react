@@ -1,10 +1,11 @@
-import React, { createContext, useCallback, useContext, useLayoutEffect, useMemo } from 'react'
+import React, { createContext, useCallback, useContext, useMemo } from 'react'
 import {
   type ThemeableElement,
   type ThemeInput,
   type NodeData,
   type IconReplacements,
 } from '../../types'
+import { useIsomorphicLayoutEffect } from '../../hooks/useIsomorphicLayoutEffect'
 import { compileStyles, getStyles as resolveStyles, writeThemeCssVars } from './compileStyles'
 import { defaultTheme } from './defaultTheme'
 
@@ -25,12 +26,10 @@ const EMPTY_ICONS: IconReplacements = {}
 export const ThemeProvider = ({
   theme = defaultTheme,
   icons = EMPTY_ICONS,
-  docRoot,
   children,
 }: {
   theme?: ThemeInput
   icons?: IconReplacements
-  docRoot: HTMLElement
   children: React.ReactNode
 }) => {
   // Memoize so the context value is referentially stable across unrelated
@@ -43,8 +42,11 @@ export const ThemeProvider = ({
   const styles = useMemo(() => compileStyles(theme), [theme])
 
   // The two non-inlineable colours feed static rules in style.css, so they're
-  // written to the root as CSS custom properties whenever the theme changes.
-  useLayoutEffect(() => writeThemeCssVars(styles, docRoot), [styles, docRoot])
+  // written to the document root as CSS custom properties whenever the theme
+  // changes. Sourcing `document` inside this browser-only effect (rather than
+  // receiving it as a prop) lets the editor render its real content during
+  // SSR; the two colours then apply once hydrated.
+  useIsomorphicLayoutEffect(() => writeThemeCssVars(styles, document.documentElement), [styles])
 
   const getStyles = useCallback(
     (element: ThemeableElement, nodeData: NodeData) => resolveStyles(styles, element, nodeData),

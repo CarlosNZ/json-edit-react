@@ -44,6 +44,9 @@ export default tseslint.config(
       'react/prop-types': 'off',
       // Keep React in JSX scope for React 16 compatibility
       'react/react-in-jsx-scope': 'error',
+      // Lint dependency arrays of our custom effect wrapper as well as the
+      // built-in effect hooks.
+      'react-hooks/exhaustive-deps': ['warn', { additionalHooks: '(useIsomorphicLayoutEffect)' }],
     },
     settings: {
       react: {
@@ -72,6 +75,9 @@ export default tseslint.config(
       'react/prop-types': 'off',
       // Keep React in JSX scope for React 16 compatibility
       'react/react-in-jsx-scope': 'error',
+      // Lint dependency arrays of our custom effect wrapper as well as the
+      // built-in effect hooks.
+      'react-hooks/exhaustive-deps': ['warn', { additionalHooks: '(useIsomorphicLayoutEffect)' }],
     },
     settings: {
       react: {
