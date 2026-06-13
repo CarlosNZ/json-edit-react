@@ -50,11 +50,10 @@ import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
-import { getConditionalDefinitions, getLineHeight, truncate } from './helpers'
+import { getLineHeight, truncate } from './helpers'
 import { RenderProfiler } from './RenderProfiler'
 import { Loading } from '../../packages/components/src/_common/Loading'
 import { CodeEditor } from '@json-edit-react/components'
-import { type CustomComponentLibraryData } from './demoData/data'
 const SourceIndicator = lazy(() => import('./SourceIndicator'))
 const JsonEditor = lazy(() =>
   import('@json-edit-react').then((m) => ({ default: m.JsonEditor }))
@@ -179,13 +178,16 @@ function App() {
   //   }
   // }, [])
 
-  const customNodeDefinitions =
-    selectedDataSet === 'customComponentLibrary'
-      ? getConditionalDefinitions(
-          data as CustomComponentLibraryData,
-          dataDefinition?.customNodeDefinitions ?? []
-        )
-      : dataDefinition.customNodeDefinitions
+  // Data sets whose definitions are configured by the data itself declare
+  // them as a function; rebuild when the data changes. Static lists pass
+  // through with their module-scope identity intact.
+  const customNodeDefinitions = useMemo(
+    () =>
+      typeof dataDefinition.customNodeDefinitions === 'function'
+        ? dataDefinition.customNodeDefinitions(data)
+        : dataDefinition.customNodeDefinitions,
+    [dataDefinition, data]
+  )
 
   const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
 
