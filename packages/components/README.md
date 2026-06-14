@@ -32,6 +32,7 @@ Each component ships a React component plus a definition factory that produces a
 | `NaN` | `NaN` value display |
 | `Symbol` | `Symbol` value display |
 | `Undefined` | `undefined` value display |
+| `ErrorIndicator` | Wraps a node with a glyph (default ⚠️) to flag the nodes you target via `condition` — e.g. validation errors |
 
 ### Editor slot components
 
@@ -56,6 +57,28 @@ import { hyperlinkDefinition, datePickerDefinition } from '@json-edit-react/comp
 ```
 
 See [json-edit-react's custom nodes documentation](https://github.com/CarlosNZ/json-edit-react#custom-nodes) for the definition shape and configuration options.
+
+### `ErrorIndicator` — flag nodes with a glyph
+
+Unlike the other components, `ErrorIndicator` has no intrinsic value type: it wraps a value (leaf) node and adds a glyph beside whichever nodes you point it at via `condition`. It pairs naturally with `useValidationState` from `@json-edit-react/utils` to mark invalid nodes.
+
+```tsx
+import { useMemo } from 'react'
+import { JsonEditor } from 'json-edit-react'
+import { useValidationState, ajvAdapter } from '@json-edit-react/utils'
+import { errorIndicatorDefinition } from '@json-edit-react/components'
+
+const validation = useValidationState(data, ajvAdapter(compiledValidate))
+const customNodeDefinitions = useMemo(
+  () => [errorIndicatorDefinition({ condition: (nd) => validation.hasErrorAt(nd.path) })],
+  [validation]
+)
+// <JsonEditor data={data} setData={setData} customNodeDefinitions={customNodeDefinitions} />
+```
+
+Memoizing on `validation` re-renders the tree exactly when validity changes, so the marker appears/clears correctly even when an edit on one node flips the validity of a node on another branch. Options, via `componentProps`: `errorGlyph` (any `ReactNode`, default `⚠️`) and `position` (`'before' | 'after'`, default `'after'`). With no `condition` it flags nothing (its default targeting is a deliberate no-op).
+
+It guards to value (leaf) nodes, so a `condition` that also matches a collection (e.g. an AJV `if`/`then` error reported at a parent object's path) never decorates that collection — only the leaf where the value is wrong. For collection-level marking, tint the subtree with `validationStyles({ within })` from `@json-edit-react/utils` instead.
 
 ## Tree-shaking
 

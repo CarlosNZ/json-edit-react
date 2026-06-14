@@ -1,0 +1,8 @@
+/* Lay the glyph out inline with the value (originalNode is a block-level node)
+   and vertically centred; `gap` spaces it from the value without per-side
+   margins. A class (not inline styles) so consumers can override it. */
+.jer-error-indicator-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
