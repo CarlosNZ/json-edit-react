@@ -1961,7 +1961,7 @@ describe('JsonEditor — search and filter', () => {
     expect(screen.queryByText('2 of 5 items')).toBeNull()
   })
 
-  test('"when-closed-or-filtered" surfaces the count on an open node under search', () => {
+  test('"when-collapsed-or-filtered" surfaces the count on an open node under search', () => {
     // The default behaviour: even on an open collection (where the count
     // would normally hide), search activates the count display so n-of-m
     // is visible without forcing the user to collapse. The count element
@@ -1972,7 +1972,7 @@ describe('JsonEditor — search and filter', () => {
         data={{ items: ['apple-1', 'banana', 'apple-pie', 'cherry', 'plum'] }}
         setData={noop}
         searchText="apple"
-        // showCollectionCount left at default ('when-closed-or-filtered')
+        // showCollectionCount left at default ('when-collapsed-or-filtered')
         collapse={false}
       />
     )
@@ -1981,7 +1981,7 @@ describe('JsonEditor — search and filter', () => {
     expect(countEl).not.toHaveClass('jer-hidden')
   })
 
-  test('"when-closed" suppresses the count on an open node, even under search', () => {
+  test('"when-collapsed" suppresses the count on an open node, even under search', () => {
     // Opt-out of the filtered-aware default — counts only appear when the
     // collection is collapsed, regardless of search state.
     render(
@@ -1989,7 +1989,7 @@ describe('JsonEditor — search and filter', () => {
         data={{ items: ['apple-1', 'banana', 'apple-pie', 'cherry', 'plum'] }}
         setData={noop}
         searchText="apple"
-        showCollectionCount="when-closed"
+        showCollectionCount="when-collapsed"
         collapse={false}
       />
     )

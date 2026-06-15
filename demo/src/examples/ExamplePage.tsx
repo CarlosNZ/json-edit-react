@@ -58,7 +58,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
   // displayed source). Add shared presentation props here — e.g. className,
   // showCollectionCount. Memoised so the editor's prop comparison stays stable.
   const editorProps = useMemo<ExampleEditorProps>(
-    () => ({ theme, maxWidth: '100%', showCollectionCount: 'when-closed' }),
+    () => ({ theme, maxWidth: '100%', showCollectionCount: 'when-collapsed' }),
     [theme]
   )
 

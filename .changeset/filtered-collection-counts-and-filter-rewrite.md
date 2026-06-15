@@ -2,7 +2,7 @@
 'json-edit-react': minor
 ---
 
-Collection counts now reflect the active search filter, displayed as "n of m" (e.g. `"3 of 20 items"`) whenever search is narrowing the visible children. `showCollectionCount` gains a new `'when-closed-or-filtered'` literal that surfaces the count on a collection whenever it's collapsed *or* a search filter is active — this is the new default, so the n-of-m form is visible without users having to close the node. Pass `'when-closed'` for the previous behaviour, or override `customText.ITEMS_FILTERED` (e.g. returning `${size} items`) to suppress the n-of-m form entirely.
+Collection counts now reflect the active search filter, displayed as "n of m" (e.g. `"3 of 20 items"`) whenever search is narrowing the visible children. `showCollectionCount` gains a new `'when-collapsed-or-filtered'` literal that surfaces the count on a collection whenever it's collapsed *or* a search filter is active — this is the new default, so the n-of-m form is visible without users having to collapse the node. Pass `'when-collapsed'` for the previous behaviour, or override `customText.ITEMS_FILTERED` (e.g. returning `${size} items`) to suppress the n-of-m form entirely.
 
 Internally, the per-node `filterNode` cascade is replaced with a single post-order walk at the editor level (`computeFilterState`) that produces both whole-tree visibility and per-collection visible-child counts in one pass. The new walk is also surfaced to nodes via a new `FilterStateProvider` context slice — `searchText`/`searchFilter` are no longer threaded as per-node props, which strengthens the §16 node memoization.
 

@@ -21,7 +21,7 @@ export interface JsonEditorProps<T = JsonData> {
   indent?: number
   collapse?: boolean | number | FilterFunction<T>
   collapseAnimationTime?: number // ms
-  showCollectionCount?: boolean | 'when-closed' | 'when-closed-or-filtered'
+  showCollectionCount?: boolean | 'when-collapsed' | 'when-collapsed-or-filtered'
   allowEdit?: boolean | FilterFunction<T>
   allowDelete?: boolean | FilterFunction<T>
   allowAdd?: boolean | FilterFunction<T>
@@ -479,7 +479,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   collapseFilter: FilterFunction
   collapseAnimationTime: number
   showArrayIndexes: boolean
-  showCollectionCount: boolean | 'when-closed' | 'when-closed-or-filtered'
+  showCollectionCount: boolean | 'when-collapsed' | 'when-collapsed-or-filtered'
   showStringQuotes: boolean
   defaultValue: unknown
   newKeyOptions?: string[] | NewKeyOptionsFunction

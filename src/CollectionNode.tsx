@@ -343,15 +343,15 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const showLabel = showArrayIndexes || !isArray
-  // `'when-closed-or-filtered'` surfaces the count whenever the filter is
+  // `'when-collapsed-or-filtered'` surfaces the count whenever the filter is
   // currently subsetting this collection's children — useCommon sets
   // `visibleSize` to a number on tracked collections while a filter is
   // active (and `null` on leaves), so `!= null` catches "filter active
   // AND we have a real count for this node".
   const showCount =
-    showCollectionCount === 'when-closed'
+    showCollectionCount === 'when-collapsed'
       ? collapsed
-      : showCollectionCount === 'when-closed-or-filtered'
+      : showCollectionCount === 'when-collapsed-or-filtered'
         ? collapsed || visibleSize != null
         : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
