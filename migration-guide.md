@@ -708,6 +708,10 @@ The only thing to act on is **custom CSS that targets these controls by tag name
 
 Selectors that target the wrapper classes (`.jer-confirm-buttons`, `.jer-edit-buttons`) or the icons themselves are unaffected. Consumer-supplied custom buttons (`customButtons`) remain wrapped in a `<div>`, so their markup is unchanged.
 
+### Closing-bracket alignment
+
+The closing bracket of an expanded object/array now aligns with the key (the start of the opening line) at every depth, rather than carrying a depth-dependent offset toward the collapse chevron. The only thing to act on is **custom CSS that positioned the outside closing bracket** via `.jer-bracket-outside`: that class no longer sets `padding-left`, so if you added a rule to compensate for the old offset, remove it.
+
 ---
 
 ## Need help?
