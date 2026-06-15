@@ -1,27 +1,27 @@
 # Migration Guide: v1 → v2
 
-This guide collects the breaking changes between `json-edit-react` v1 and v2, with concrete before/after snippets for each. It will grow as more v2 work lands — new entries get appended here rather than into the README so that the README always describes the current state.
-
-> **v2 status:** in development on the `v2.0-dev` branch. Not yet released to npm. This guide tracks the changes in flight; references to "v2" describe what consumers will see when v2.0.0 ships.
+**json-edit-react version 2** is a substantial refactor, focusing on performance, completeness (of existing functionality) and consistency (of behaviour and API surface). Consequently, unless you're using a very basic configuration for V1, you will encounter breaking changes. Fortunately it shouldn't be too much effort to manually migrate if you follow this guide.
 
 ## Quick overview
 
 If you only have a few minutes, these are the changes most likely to affect existing code:
 
-| What changed | Migration |
-|---|---|
-| Pre-built themes split into a separate package | `npm i @json-edit-react/themes` and update theme imports |
-| `LinkCustomComponent` / `LinkCustomNodeDefinition` moved | `npm i @json-edit-react/components`; the definition is now the `hyperlinkDefinition()` factory — see §2 |
-| Several internal helpers are now part of the public API | No action needed — purely additive |
-| `JsonEditor` is now generic on the data type (`JsonEditor<T>`) | No action needed — defaults to `JsonData`, source-compatible. Opt in by writing `<JsonEditor<MyShape> ... />` |
-| `setData` is now required; `viewOnly` removed; new `JsonViewer` export | Switch read-only usage to `<JsonViewer>`; replace `viewOnly={cond}` with the relevant `allow*` toggles, including `allowDrag` if drag was enabled — see §6 |
-| `restrict*` props renamed to `allow*` (polarity inverted); plus several display-prop renames | Rename `restrictEdit`→`allowEdit` etc. and **invert** booleans / filter results; rename `keySort`→`sortKeys`, `rootFontSize`→`baseFontSize`, `errorMessageTimeout`→`errorDisplayTime`, `stringTruncate`→`stringTruncateLength`, `showArrayIndices`→`showArrayIndexes`, `arrayIndexFromOne`→`arrayIndexStart` — see §11 |
-| `externalTriggers` prop replaced by the `editorRef` imperative handle | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/confirm/cancel` — see §7 |
-| `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction` | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` (`errorMessage` → `error.message`) — see §8 |
-| `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`; return shape unified | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see §9 |
-| Callback payloads for `onUpdate` / `onChange` are now flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`); `JerError`'s `code` union gains `RENAME_ERROR` / `MOVE_ERROR` / `CLIPBOARD_ERROR` | Update field names in `onUpdate` / `onChange`; handle the new codes only if you exhaustively `switch` on `error.code` — see §9 |
-| `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JerError` | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see §10 |
-| `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps` | Rename the fields in your definitions and the props type in your components — see §13 |
+| What changed                                                                                                                                                                                                                                             | Migration                                                                                                                                                                                                                                  |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Pre-built themes split into a separate package                                                                                                                                                                                                           | `npm i @json-edit-react/themes` and update theme imports                                                                                                                                                                                   |
+| `LinkCustomComponent` / `LinkCustomNodeDefinition` moved                                                                                                                                                                                                 | `npm i @json-edit-react/components`; the definition is now the `hyperlinkDefinition()` factory — see [Custom components](#2-custom-components-moved-to-json-edit-reactcomponents)                                                          |
+| `JsonEditor` is now generic on the data type (`JsonEditor<T>`)                                                                                                                                                                                           | No action needed — defaults to `JsonData`. Opt in with<br> `<JsonEditor<MyShape> ... />`                                                                                                                                                   |
+| `setData` is now required; `viewOnly` removed; new `JsonViewer` export                                                                                                                                                                                   | For read-only, use `<JsonViewer>`, which is a wrapper around the editor with appropriate props for view-only — see [`setData` is required](#4-setdata-is-required-viewonly-removed-jsonviewer-added)                                       |
+| `restrict*` props renamed to `allow*` (polarity inverted)                                                                                                                                                                                                | Rename `restrictEdit`→`allowEdit` etc. and **invert** booleans / filter results — see [`restrict*` → `allow*`](#5-restrict-props-renamed-to-allow-semantics-inverted)                                                                      |
+| `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction`                                                                                                                                         | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` — see [`enableClipboard` split](#6-enableclipboard-split-into-allowclipboard--oncopy)                                                                           |
+| Several display / config props renamed                                                                                                                                                                                                                   | Rename `keySort`, `rootFontSize`, `errorMessageTimeout`, `stringTruncate`, `showArrayIndices`, `arrayIndexFromOne` — see [Display / config prop renames](#7-display--config-prop-renames)                                                  |
+| Callback payloads are now a single flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`)                                                                                                                                      | Rename those fields in `onUpdate` / `onChange` / `onError` / `onCollapse` / `onCopy` — see [Flat `NodeData` payloads](#8-flat-nodedata-payloads)                                                                                           |
+| `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`, return shape unified                                                                                                                                                                         | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads) |
+| `JerError`'s `code` union gains `RENAME_ERROR` / `MOVE_ERROR` / `CLIPBOARD_ERROR`                                                                                                                                                                        | Handle the new codes only if you exhaustively `switch` on `error.code` — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads)                                                                                 |
+| `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JerError`                                                                                              | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error)                           |
+| `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps` | Rename the fields in your definitions and the props type in your components — see [`CustomNodeDefinition` field renames](#11-customnodedefinition-field-renames)                                                                           |
+| `externalTriggers` prop replaced by an [imperative handle](https://react.dev/reference/react/useImperativeHandle)                                                                                                                                        | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/confirm/cancel` — see [the `editorRef` handle](#12-externaltriggers-prop-replaced-by-the-editorref-imperative-handle)                                      |
+| Fine-grained re-rendering: object / array / function props must be referentially stable to benefit                                                                                                                                                       | Keep `customNodeDefinitions`, filter functions, `translations`, etc. stable (module scope or `useMemo`); callbacks are stabilised for you — see [stable props](#13-keep-object-and-function-props-referentially-stable)                    |
 
 ---
 
@@ -110,19 +110,20 @@ customNodeDefinitions={[hyperlinkDefinition({ condition: ({ key }) => key === 'h
 
 ### What you also get
 
-`@json-edit-react/components` ships 12 components in total — the original `LinkCustomComponent` plus 11 more that previously existed only as demo code, not as an installable package:
+`@json-edit-react/components` ships 13 components in total: the original `LinkCustomComponent`, 11 more that previously existed only as demo code rather than an installable package, and the new `ErrorIndicator`:
 
-| Component | Use case |
-|---|---|
-| `LinkCustomComponent` | URL strings → clickable links (functionally a superset of the v1 version, with configurable `componentProps`) |
-| `EnhancedLinkCustomComponent` | Object-shaped data `{ text, url }` → clickable string |
-| `DateTimePicker` | ISO date strings, edited via `react-datepicker` |
-| `DateObject` | JavaScript `Date` objects |
-| `ColorPicker` | Hex/RGB/HSL color strings, edited via `react-colorful` |
-| `Markdown` | Markdown-formatted strings, rendered via `react-markdown` |
-| `Image` | Image URLs displayed inline |
-| `BooleanToggle` | Booleans rendered as a toggle switch |
-| `BigInt`, `NaN`, `Symbol`, `Undefined` | Non-JSON-native value displays |
+| Component                              | Use case                                                                                                      |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `LinkCustomComponent`                  | URL strings → clickable links (functionally a superset of the v1 version, with configurable `componentProps`) |
+| `EnhancedLinkCustomComponent`          | Object-shaped data `{ text, url }` → clickable string                                                         |
+| `DateTimePicker`                       | ISO date strings, edited via `react-datepicker`                                                               |
+| `DateObject`                           | JavaScript `Date` objects                                                                                     |
+| `ColorPicker`                          | Hex/RGB/HSL color strings, edited via `react-colorful`                                                        |
+| `Markdown`                             | Markdown-formatted strings, rendered via `react-markdown`                                                     |
+| `Image`                                | Image URLs displayed inline                                                                                   |
+| `BooleanToggle`                        | Booleans rendered as a toggle switch                                                                          |
+| `BigInt`, `NaN`, `Symbol`, `Undefined` | Non-JSON-native value displays                                                                                |
+| `ErrorIndicator`                       | Adds a glyph (default ⚠️) beside the nodes you target via `condition` — e.g. validation errors                 |
 
 Each component ships with a matching definition factory (`datePickerDefinition()`, `markdownDefinition()`, …) ready to drop into the `customNodeDefinitions` prop.
 
@@ -155,13 +156,13 @@ Callbacks then receive your shape:
 <JsonEditor<User>
   data={user}
   setData={setUser}
-  onUpdate={({ newData, currentData }) => {
-    // newData and currentData are typed as User
+  onUpdate={({ newData, fullData }) => {
+    // newData and fullData are typed as User
   }}
 />
 ```
 
-The generic flows to root-level slots only: `data`, `setData`, the `newData` / `currentData` fields on `UpdateFunctionProps`, `currentData` on `OnChangeFunction` / `OnErrorFunction`, and `fullData` on `NodeData` (used by `FilterFunction`, `SearchFilterFunction`, etc.). Per-node `value` and `parentData` slots stay `unknown` — they are arbitrary-depth slices that no static type can describe.
+The generic flows to root-level slots only: `data`, `setData`, `newData` on `UpdateFunctionProps`, and `fullData` on `NodeData` — the payload type that `UpdateFunctionProps`, `OnChangeFunction`, `OnErrorFunction`, `FilterFunction`, `SearchFilterFunction`, etc. all build on. Per-node `value` and `parentData` slots stay `unknown` — they are arbitrary-depth slices that no static type can describe.
 
 > [!NOTE]
 > Same mental model as `useState<T>`: `T` describes the data you provided, not a runtime invariant. If structural edits are unrestricted, post-edit values may not conform to `T` — pair with `allowAdd` / `allowDelete` / `allowTypeSelection`, or validate in `onUpdate`, if you depend on the shape.
@@ -170,40 +171,7 @@ The generic flows to root-level slots only: `data`, `setData`, the `newData` / `
 
 ---
 
-## 4. New public export in core: `AutogrowTextArea`
-
-`AutogrowTextArea` — the auto-resizing textarea primitive that powers `StringEdit` and the built-in string editor — is now exported from `json-edit-react`. This is purely additive; nothing about your existing code changes.
-
-```js
-import { AutogrowTextArea } from 'json-edit-react'
-```
-
-It joins the existing rendering primitives — `StringDisplay`, `StringEdit`, `toPathString` — that make it possible to compose custom components on top of the editor's built-in string handling. The new `@json-edit-react/components` package leans on these primitives internally; they're equally available to consumers writing their own components.
-
----
-
-## 5. `toPathString` encoding changed
-
-`toPathString` now joins keys with `/` (URL-encoded) instead of `.`, so the encoding is unambiguous even when keys themselves contain `.` or `/`.
-
-```js
-// Before (v1)
-toPathString(['data', 0, 'name'])          // 'data.0.name'
-toPathString(['foo.bar', 'baz'])           // 'foo.bar.baz' — collides with ['foo','bar','baz']
-
-// After (v2)
-toPathString(['data', 0, 'name'])          // 'data/0/name'
-toPathString(['foo.bar', 'baz'])           // 'foo.bar/baz' — now distinguishable
-toPathString(['has/slash', 'x'])           // 'has%2Fslash/x'
-```
-
-The second `key?: 'key_'` parameter has been removed — it was an internal encoding trick that's no longer needed.
-
-If you used `toPathString`'s output as an HTML `name` or `id` attribute (e.g. inside a custom component), nothing about how you use it changes; the string just looks different. If you parsed the returned string back into a path, you'll need to switch to `decodeURIComponent` per segment after splitting on `/`.
-
----
-
-## 6. `setData` is required; `viewOnly` removed; `JsonViewer` added
+## 4. `setData` is required; `viewOnly` removed; `JsonViewer` added
 
 `JsonEditor` is now strictly controlled — `setData` is a required prop. The old "uncontrolled" mode (omit `setData`, edits managed internally) is gone, along with the `viewOnly` shorthand. In its place is a sibling export, `JsonViewer`, which is the canonical read-only entry point.
 
@@ -225,7 +193,7 @@ import { JsonViewer } from 'json-edit-react'
 <JsonViewer data={data} />
 ```
 
-`JsonViewer` accepts all the display, theming, keyboard, search, collapse, custom-node, and localisation props of `JsonEditor`, but drops `setData`, the update callbacks (`onUpdate` / `onChange`), and the edit-permission props (`allowEdit` / `allowAdd` / `allowDelete` / `allowDrag` / `allowTypeSelection`) — none are meaningful in a read-only context. It does accept `editorRef`, but its handle is collapse-only (see §7). If you were passing any of the dropped props alongside `viewOnly={true}`, you can drop them when moving to `JsonViewer`.
+`JsonViewer` accepts all the display, theming, keyboard, search, collapse, custom-node, and localisation props of `JsonEditor`, but drops `setData`, the update callbacks (`onUpdate` / `onChange`), and the edit-permission props (`allowEdit` / `allowAdd` / `allowDelete` / `allowDrag` / `allowTypeSelection`) — none are meaningful in a read-only context. It does accept `editorRef`, but its handle is collapse-only (see [the `editorRef` handle](#12-externaltriggers-prop-replaced-by-the-editorref-imperative-handle)). If you were passing any of the dropped props alongside `viewOnly={true}`, you can drop them when moving to `JsonViewer`.
 
 ### If you used `viewOnly={cond}` to toggle editing dynamically
 
@@ -246,7 +214,7 @@ Replace with the `allow*` props on `JsonEditor`. Note the inverted polarity — 
 />
 ```
 
-This keeps the same component mounted across the toggle, so internal state (collapse, search, currently-editing element) is preserved. `allowDrag` defaults to `false` (drag off), so you only need to thread the toggle through it if you'd previously opted in to drag-and-drop. See [§11](#11-restrict-props-renamed-to-allow-semantics-inverted) for the full `restrict*` → `allow*` mapping.
+This keeps the same component mounted across the toggle, so internal state (collapse, search, currently-editing element) is preserved. `allowDrag` defaults to `false` (drag off), so you only need to thread the toggle through it if you'd previously opted in to drag-and-drop. See [`restrict*` → `allow*`](#5-restrict-props-renamed-to-allow-semantics-inverted) for the full mapping.
 
 ### If you relied on the uncontrolled "fire-and-forget" mode
 
@@ -263,48 +231,44 @@ const [data, setData] = useState(initialData)
 
 ---
 
-## 7. `externalTriggers` prop replaced by the `editorRef` imperative handle
+## 5. `restrict*` props renamed to `allow*` (semantics inverted)
 
-The `externalTriggers` prop — a state-as-RPC object you mutated to trigger collapse/edit actions — is removed. Imperative control now goes through a ref handle passed via the new `editorRef` prop. The `ExternalTriggers` and `EditState` types are removed; `JsonEditorHandle` (and `JsonViewerHandle`) are added.
+The five `restrict*` props are renamed to `allow*`. This is **not just a rename** — the polarity flips, so the meaning of every value inverts: a `boolean` flips, and a `FilterFunction`'s return value flips (a `restrict*` filter returned `true` to **block** a node; an `allow*` filter returns `true` to **permit** it).
 
-**Why:** props aren't commands. The old pattern required carefully memoising the trigger object to avoid infinite effect loops, and gave no autocomplete for the available actions. A ref handle is idiomatic React, fully typed, and removes that footgun. (`editorRef` is a *plain ref-valued prop*, not the `ref` attribute, so `JsonEditor<T>` stays a generic component with full type inference.)
+| v1 (`restrict*`)        | v2 (`allow*`)        | Default (v1 → v2)                            |
+| ----------------------- | -------------------- | -------------------------------------------- |
+| `restrictEdit`          | `allowEdit`          | `false` → `true`                             |
+| `restrictDelete`        | `allowDelete`        | `false` → `true`                             |
+| `restrictAdd`           | `allowAdd`           | `false` → `true`                             |
+| `restrictTypeSelection` | `allowTypeSelection` | `false` → `true`                             |
+| `restrictDrag`          | `allowDrag`          | `true` → `false` (drag still off by default) |
 
-### Migration
+### Booleans flip
 
 ```diff
-- import { JsonEditor, type ExternalTriggers } from 'json-edit-react'
-+ import { useRef } from 'react'
-+ import { JsonEditor, type JsonEditorHandle } from 'json-edit-react'
+- restrictEdit={true}      // editing fully blocked
++ allowEdit={false}        // editing fully blocked
 
-- const [triggers, setTriggers] = useState<ExternalTriggers>()
-+ const editorRef = useRef<JsonEditorHandle>(null)
-
-- <JsonEditor data={data} setData={setData} externalTriggers={triggers} />
-+ <JsonEditor data={data} setData={setData} editorRef={editorRef} />
+- restrictDrag={false}     // drag enabled
++ allowDrag={true}         // drag enabled
 ```
 
-Action mapping:
+### Filter functions flip their return value
 
-| v1 `externalTriggers` | v2 `editorRef` handle |
-|---|---|
-| `{ collapse: state }` | `editorRef.current.collapse(state)` |
-| `{ edit: { path } }` | `editorRef.current.startEdit({ path })` |
-| `{ edit: { action: 'accept' } }` | `editorRef.current.confirm()` |
-| `{ edit: { action: 'cancel' } }` | `editorRef.current.cancel()` |
+```diff
+- restrictEdit={({ key }) => key === 'id'}        // block editing of `id`
++ allowEdit={({ key }) => key !== 'id'}           // permit editing of everything except `id`
+```
 
-The handle is **UI-interactions only** — it opens/commits/cancels a value-edit session or collapses nodes; it has no data mutators (you own `data`/`setData`, so mutating data is just `setData(newData)`).
+Negate the whole predicate. For guard-style functions with early returns, flip every `return true`/`return false`.
 
-Notes:
+### `allowTypeSelection` — the array and function forms
 
-- **`startEdit` returns `true`** if it opened the session, or the reason it didn't — `'PATH_NOT_FOUND'` or `'RESTRICTED'` — so you can give your own feedback. It **respects `allowEdit` by default**; pass `{ path, overrideRestrictions: true }` to bypass it (e.g. lock the tree with `allowEdit={false}` and imperatively open one node). `overrideRestrictions` skips **only** the filter — your `onUpdate` still runs at `confirm()`.
-- **`confirm()`** commits the open session through `onUpdate` (the same path as clicking the editor's confirm button); **`cancel()`** discards it.
-- `startEdit` **auto-reveals** a target collapsed below the current view: collapsed ancestors expand so the node becomes editable.
-
-`JsonViewer` also accepts `editorRef`, but its `JsonViewerHandle` exposes only `collapse` — editing actions would bypass the read-only contract, so they aren't surfaced.
+The **array** form (a whitelist of available types) is unchanged — it always meant "these types are available". Only the **boolean** form (and a function *returning* a boolean) flips: under `allowTypeSelection`, `true` means "all types available", `false` means "no type change". So a function that returned `false` to mean "no restriction" should now return `true`, and one that returned `true` to lock the type should now return `false`.
 
 ---
 
-## 8. `enableClipboard` split into `allowClipboard` + `onCopy`
+## 6. `enableClipboard` split into `allowClipboard` + `onCopy`
 
 The dual-purpose `enableClipboard?: boolean | CopyFunction` prop is split into two single-purpose props: `allowClipboard?: boolean` (default `true`) controls whether the copy button shows, and the new `onCopy?: OnCopyFunction` observer runs after a copy. The `CopyFunction` type is removed in favour of `OnCopyFunction`.
 
@@ -335,7 +299,68 @@ If you passed a callback (it both enabled the button *and* observed copies):
 + <JsonEditor data={data} setData={setData} onCopy={handleCopy} />
 ```
 
-Payload changes on the callback object: the explicit `key` / `path` / `value` fields are now part of the spread `NodeData` (so `key`, `path`, `value`, `fullData`, … are all still available); `errorMessage: string | null` becomes `error?: { message: string }` (present only when `success` is `false`).
+Payload changes on the callback object: the explicit `key` / `path` / `value` fields are now part of the spread [`NodeData`](#8-flat-nodedata-payloads) (so `key`, `path`, `value`, `fullData`, … are all still available); `errorMessage: string | null` becomes `error?: JerError` — a `{ code: 'CLIPBOARD_ERROR', message }`, present only when `success` is `false`.
+
+---
+
+## 7. Display / config prop renames
+
+A handful of props were renamed. These are **pure renames** (no behaviour change) except `arrayIndexStart`, whose type changed from `boolean` to `number`:
+
+| v1                    | v2                     | Notes                                                                                        |
+| --------------------- | ---------------------- | -------------------------------------------------------------------------------------------- |
+| `keySort`             | `sortKeys`             |                                                                                              |
+| `rootFontSize`        | `baseFontSize`         |                                                                                              |
+| `errorMessageTimeout` | `errorDisplayTime`     |                                                                                              |
+| `stringTruncate`      | `stringTruncateLength` |                                                                                              |
+| `showArrayIndices`    | `showArrayIndexes`     |                                                                                              |
+| `arrayIndexFromOne`   | `arrayIndexStart`      | `boolean` → `number`: `arrayIndexFromOne={true}` becomes `arrayIndexStart={1}` (default `0`) |
+
+```diff
+- arrayIndexFromOne={true}
++ arrayIndexStart={1}
+```
+
+> The same `stringTruncate` → `stringTruncateLength` rename applies to the `componentProps` of the `Hyperlink` / `EnhancedLink` components in `@json-edit-react/components`.
+
+One display **default** also changed (not a rename): `showCollectionCount` now defaults to `"when-closed-or-filtered"` (previously `true`). Counts appear when a collection is collapsed *or* when a search filter is narrowing its children — in the latter case rendered as `"n of m items"`. To keep the v1 always-visible behaviour, set `showCollectionCount={true}`; for collapse-only, set `"when-closed"`.
+
+The filtered-count form is driven by a new localisation key, `ITEMS_FILTERED`. If you ship a complete `translations` object, add it (otherwise the English default `"{{visible}} of {{total}} items"` will appear alongside your translated UI whenever a search filter is active):
+
+```diff
+  translations={{
+    // ...existing keys
+    ITEMS_MULTIPLE: '…',
++   ITEMS_FILTERED: '… {{visible}} … {{total}} …',
+  }}
+```
+
+Both `{{visible}}` and `{{total}}` placeholders are substituted at render time.
+
+---
+
+## 8. Flat `NodeData` payloads
+
+In v1, several callbacks each received a bespoke payload object. In v2 they all receive the **same flat [`NodeData`](README.md#filter-functions)** — the shape already passed to the filter functions — with their callback-specific extras spread on top. Three fields are renamed in the move:
+
+| v1 (bespoke payload) | v2 (`NodeData`) |
+| -------------------- | --------------- |
+| `currentData`        | `fullData`      |
+| `currentValue`       | `value`         |
+| `name`               | `key`           |
+
+```diff
+- ({ currentData, currentValue, name }) => { /* ... */ }
++ ({ fullData, value, key }) => { /* ... */ }
+```
+
+The rename applies to every callback that used the old shape:
+
+- **`onUpdate`** (which absorbs the v1 `onEdit` / `onAdd` / `onDelete`) and **`onChange`** — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads).
+- **`onError`** and **`onCollapse`** — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error).
+- **`onCopy`** — see [`enableClipboard` split](#6-enableclipboard-split-into-allowclipboard--oncopy).
+
+The filter, search, and type functions (`FilterFunction`, `SearchFilterFunction`, `TypeFilterFunction`, etc.) already received `NodeData` in v1, so their field names are unchanged.
 
 ---
 
@@ -409,19 +434,7 @@ Commits are now **optimistic by default**: on submit the editor closes and the d
 
 ### Flat `NodeData` payloads (`onUpdate` / `onChange`)
 
-Every callback now receives the standard flat [`NodeData`](README.md#filter-functions) plus its extras, so the bespoke field names are gone:
-
-```diff
-  onUpdate={({
--   currentData,   // → fullData
--   currentValue,  // → value
--   name,          // → key
-    newData,
-    newValue,
-  }) => { /* ... */ }}
-```
-
-`onChange` changes the same way (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`):
+Both receive the standard flat `NodeData` — `currentData` / `currentValue` / `name` are now `fullData` / `value` / `key` (see [Flat `NodeData` payloads](#8-flat-nodedata-payloads)). In a return-transforming `onChange`, read `key` rather than `name`:
 
 ```diff
 - onChange={({ newValue, name }) => (name === 'age' ? clamp(newValue) : newValue)}
@@ -430,7 +443,7 @@ Every callback now receives the standard flat [`NodeData`](README.md#filter-func
 
 ### `JerError` — expanded `code` union
 
-`JerError` keeps its name and `{ code, message }` shape. What changes is its `code`: it's now the exported `JerErrorCode` union, which gains three forward-looking members — `RENAME_ERROR`, `MOVE_ERROR` and `CLIPBOARD_ERROR` — covering the new rename/move rejection and clipboard-failure paths. The additions are backward-compatible; you only need to act if you exhaustively `switch` on `error.code` and want to handle the new cases. (`onError`'s own payload also moves to flat `NodeData` — see §10.)
+`JerError` keeps its name and `{ code, message }` shape. What changes is its `code`: it's now the exported `JerErrorCode` union, which gains three forward-looking members — `RENAME_ERROR`, `MOVE_ERROR` and `CLIPBOARD_ERROR` — covering the new rename/move rejection and clipboard-failure paths. The additions are backward-compatible; you only need to act if you exhaustively `switch` on `error.code` and want to handle the new cases. (`onError`'s own payload also moves to flat `NodeData` — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error).)
 
 ### New localisation keys: `ERROR_RENAME` / `ERROR_MOVE`
 
@@ -452,6 +465,7 @@ No action is strictly required — a `translations` object doesn't have to be ex
 The `DEFAULT_STRING` key (`'New data!'`) is gone — if your `translations` object defines it, remove it (TypeScript rejects unknown keys). It was the placeholder substituted into the edit buffer when switching a custom node's type to `string`; type-switching now converts the node's actual value instead (e.g. a `null`/`undefined` source becomes an empty string), so the placeholder no longer exists.
 
 ---
+
 ## 10. Observers reshaped: `onEditEvent` lifecycle stream; flat `onError` / `onCollapse`; `onCopy` error
 
 The observer callbacks move onto the same flat `NodeData` payload as the rest of the API, and `onEditEvent` becomes a full lifecycle stream.
@@ -494,7 +508,7 @@ Both now receive the standard flat node data instead of a bespoke object:
   onCollapse={({ path, collapsed, includeChildren }) => ...} // still works
 ```
 
-(`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`, matching §9.) `CollapseState` — the `editorRef.collapse` command **input** — is unchanged.
+(These renames are detailed under [Flat `NodeData` payloads](#8-flat-nodedata-payloads).) `CollapseState` — the `editorRef.collapse` command **input** — is unchanged.
 
 ### `onCopy` — `error` is now a `JerError`
 
@@ -508,89 +522,18 @@ Both now receive the standard flat node data instead of a bespoke object:
 
 ---
 
-## 11. `restrict*` props renamed to `allow*` (semantics inverted)
-
-The five `restrict*` props are renamed to `allow*`. This is **not just a rename** — the polarity flips, so the meaning of every value inverts: a `boolean` flips, and a `FilterFunction`'s return value flips (a `restrict*` filter returned `true` to **block** a node; an `allow*` filter returns `true` to **permit** it).
-
-| v1 (`restrict*`) | v2 (`allow*`) | Default (v1 → v2) |
-| --- | --- | --- |
-| `restrictEdit` | `allowEdit` | `false` → `true` |
-| `restrictDelete` | `allowDelete` | `false` → `true` |
-| `restrictAdd` | `allowAdd` | `false` → `true` |
-| `restrictTypeSelection` | `allowTypeSelection` | `false` → `true` |
-| `restrictDrag` | `allowDrag` | `true` → `false` (drag still off by default) |
-
-### Booleans flip
-
-```diff
-- restrictEdit={true}      // editing fully blocked
-+ allowEdit={false}        // editing fully blocked
-
-- restrictDrag={false}     // drag enabled
-+ allowDrag={true}         // drag enabled
-```
-
-### Filter functions flip their return value
-
-```diff
-- restrictEdit={({ key }) => key === 'id'}        // block editing of `id`
-+ allowEdit={({ key }) => key !== 'id'}           // permit editing of everything except `id`
-```
-
-Negate the whole predicate. For guard-style functions with early returns, flip every `return true`/`return false`.
-
-### `allowTypeSelection` — the array and function forms
-
-The **array** form (a whitelist of available types) is unchanged — it always meant "these types are available". Only the **boolean** form (and a function *returning* a boolean) flips: under `allowTypeSelection`, `true` means "all types available", `false` means "no type change". So a function that returned `false` to mean "no restriction" should now return `true`, and one that returned `true` to lock the type should now return `false`.
-
-## 12. Display / config prop renames
-
-A handful of props were renamed. These are **pure renames** (no behaviour change) except `arrayIndexStart`, whose type changed from `boolean` to `number`:
-
-| v1 | v2 | Notes |
-| --- | --- | --- |
-| `keySort` | `sortKeys` | |
-| `rootFontSize` | `baseFontSize` | |
-| `errorMessageTimeout` | `errorDisplayTime` | |
-| `stringTruncate` | `stringTruncateLength` | |
-| `showArrayIndices` | `showArrayIndexes` | |
-| `arrayIndexFromOne` | `arrayIndexStart` | `boolean` → `number`: `arrayIndexFromOne={true}` becomes `arrayIndexStart={1}` (default `0`) |
-
-```diff
-- arrayIndexFromOne={true}
-+ arrayIndexStart={1}
-```
-
-> The same `stringTruncate` → `stringTruncateLength` rename applies to the `componentProps` of the `Hyperlink` / `EnhancedLink` components in `@json-edit-react/components`.
-
-One display **default** also changed (not a rename): `showCollectionCount` now defaults to `"when-closed-or-filtered"` (previously `true`). Counts appear when a collection is collapsed *or* when a search filter is narrowing its children — in the latter case rendered as `"n of m items"`. To keep the v1 always-visible behaviour, set `showCollectionCount={true}`; for collapse-only, set `"when-closed"`.
-
-The filtered-count form is driven by a new localisation key, `ITEMS_FILTERED`. If you ship a complete `translations` object, add it (otherwise the English default `"{{visible}} of {{total}} items"` will appear alongside your translated UI whenever a search filter is active):
-
-```diff
-  translations={{
-    // ...existing keys
-    ITEMS_MULTIPLE: '…',
-+   ITEMS_FILTERED: '… {{visible}} … {{total}} …',
-  }}
-```
-
-Both `{{visible}}` and `{{total}}` placeholders are substituted at render time.
-
----
-
-## 13. `CustomNodeDefinition` field renames
+## 11. `CustomNodeDefinition` field renames
 
 The custom-node API was aligned around one distinction: a **node** is a position in the data tree; a **component** is the React function that renders it. The render-slot fields now say `component` (they hold React components, not "elements"), the visibility flags are all positive `show*`, and the props type is named for what it is.
 
-| v1 | v2 | Notes |
-| --- | --- | --- |
-| `element` | `component` | The value / contents render slot |
-| `customKey` | `keyComponent` | The key render slot |
-| `wrapperElement` | `wrapperComponent` | The collection wrapper slot |
-| `customNodeProps` | `componentProps` | Config passed to `component` + `keyComponent` |
-| `hideKey: true` | `showKey: false` | **Polarity inverted** — `showKey` defaults to `true` |
-| `showInTypesSelector` | `showInTypeSelector` | Matches the "Type" selector label |
+| v1                     | v2                     | Notes                                                                                                          |
+| ---------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `element`              | `component`            | The value / contents render slot                                                                               |
+| `customKey`            | `keyComponent`         | The key render slot                                                                                            |
+| `wrapperElement`       | `wrapperComponent`     | The collection wrapper slot                                                                                    |
+| `customNodeProps`      | `componentProps`       | Config passed to `component` + `keyComponent`                                                                  |
+| `hideKey: true`        | `showKey: false`       | **Polarity inverted** — `showKey` defaults to `true`                                                           |
+| `showInTypesSelector`  | `showInTypeSelector`   | Matches the "Type" selector label                                                                              |
 | type `CustomNodeProps` | `CustomComponentProps` | The props your component receives; also resolves the old `CustomNodeProps` / `CustomNodeDefinition` name clash |
 
 `wrapperProps` keeps its name, but is now delivered to your `wrapperComponent` as `wrapperProps` (previously it arrived as `customNodeProps`); the wrapper's props type is the new `CustomWrapperProps`. `CustomNodeDefinition` and `CustomKeyProps` are unchanged.
@@ -622,7 +565,105 @@ And inside your component, rename the props type and the config prop:
 
 ---
 
-## 14. Theming: partial `ThemeStyles` and function composition
+## 12. `externalTriggers` prop replaced by the `editorRef` imperative handle
+
+The `externalTriggers` prop — a state-as-RPC object you mutated to trigger collapse/edit actions — is removed. Imperative control now goes through a ref handle passed via the new `editorRef` prop. The `ExternalTriggers` and `EditState` types are removed; `JsonEditorHandle` (and `JsonViewerHandle`) are added.
+
+**Why:** props aren't commands. The old pattern required carefully memoising the trigger object to avoid infinite effect loops, and gave no autocomplete for the available actions. A ref handle is idiomatic React, fully typed, and removes that footgun. (`editorRef` is a *plain ref-valued prop*, not the `ref` attribute, so `JsonEditor<T>` stays a generic component with full type inference.)
+
+### Migration
+
+```diff
+- import { JsonEditor, type ExternalTriggers } from 'json-edit-react'
++ import { useRef } from 'react'
++ import { JsonEditor, type JsonEditorHandle } from 'json-edit-react'
+
+- const [triggers, setTriggers] = useState<ExternalTriggers>()
++ const editorRef = useRef<JsonEditorHandle>(null)
+
+- <JsonEditor data={data} setData={setData} externalTriggers={triggers} />
++ <JsonEditor data={data} setData={setData} editorRef={editorRef} />
+```
+
+Action mapping:
+
+| v1 `externalTriggers`            | v2 `editorRef` handle                   |
+| -------------------------------- | --------------------------------------- |
+| `{ collapse: state }`            | `editorRef.current.collapse(state)`     |
+| `{ edit: { path } }`             | `editorRef.current.startEdit({ path })` |
+| `{ edit: { action: 'accept' } }` | `editorRef.current.confirm()`           |
+| `{ edit: { action: 'cancel' } }` | `editorRef.current.cancel()`            |
+
+The handle is **UI-interactions only** — it opens/commits/cancels a value-edit session or collapses nodes; it has no data mutators (you own `data`/`setData`, so mutating data is just `setData(newData)`).
+
+Notes:
+
+- **`startEdit` returns `true`** if it opened the session, or the reason it didn't — `'PATH_NOT_FOUND'` or `'RESTRICTED'` — so you can give your own feedback. It **respects `allowEdit` by default**; pass `{ path, overrideRestrictions: true }` to bypass it (e.g. lock the tree with `allowEdit={false}` and imperatively open one node). `overrideRestrictions` skips **only** the filter — your `onUpdate` still runs at `confirm()`.
+- **`confirm()`** commits the open session through `onUpdate` (the same path as clicking the editor's confirm button); **`cancel()`** discards it.
+- `startEdit` **auto-reveals** a target collapsed below the current view: collapsed ancestors expand so the node becomes editable.
+
+`JsonViewer` also accepts `editorRef`, but its `JsonViewerHandle` exposes only `collapse` — editing actions would bypass the read-only contract, so they aren't surfaced.
+
+---
+
+## 13. Keep object and function props referentially stable
+
+v2 introduces **fine-grained re-rendering**: on each commit only the nodes whose own data actually changed re-render, rather than the whole tree. On a large document this is the headline performance gain over v1 — but the editor can only skip a node when the props it receives are **referentially stable** across renders. A prop that's a brand-new object, array, or function on every render reads as "changed" at that node's memo boundary and forces it (and often the whole tree) to re-render on every commit. Nothing breaks; it just runs at v1 speed, so the gain never appears.
+
+**You do _not_ need to memoise the callbacks.** `onUpdate`, `onChange`, `onError`, `onCollapse`, and `onEditEvent` are wrapped in stable, refs-to-latest identities internally, so passing them inline is fine.
+
+Do keep these referentially stable — define them at module scope, or wrap them in `useMemo` / `useCallback`:
+
+- `customNodeDefinitions` (and each definition's `condition` / `component`)
+- function- or array-valued `allow*` props (`allowEdit={fn}`, `allowTypeSelection={[…]}`, …)
+- a `translations` object, and any other object / array / function prop you'd otherwise build inline
+
+```diff
+- // new array identity every render → every node re-renders on every commit
+- <JsonEditor data={data} setData={setData} customNodeDefinitions={[hyperlinkDefinition()]} />
++ // stable identity → untouched nodes bail out of re-rendering
++ const definitions = useMemo(() => [hyperlinkDefinition()], [])
++ <JsonEditor data={data} setData={setData} customNodeDefinitions={definitions} />
+```
+
+This is standard React `memo` hygiene rather than new API, but v2's per-node memoisation is what makes it pay off: on a large document it's the difference between only the touched nodes updating and the whole tree re-rendering on every commit.
+
+---
+
+## 14. New public export in core: `AutogrowTextArea`
+
+`AutogrowTextArea` — the auto-resizing textarea primitive that powers `StringEdit` and the built-in string editor — is now exported from `json-edit-react`. This is purely additive; nothing about your existing code changes.
+
+```js
+import { AutogrowTextArea } from 'json-edit-react'
+```
+
+It joins the existing rendering primitives — `StringDisplay`, `StringEdit`, `toPathString` — that make it possible to compose custom components on top of the editor's built-in string handling. The new `@json-edit-react/components` package leans on these primitives internally; they're equally available to consumers writing their own components.
+
+---
+
+## 15. `toPathString` encoding changed
+
+`toPathString` now joins keys with `/` (URL-encoded) instead of `.`, so the encoding is unambiguous even when keys themselves contain `.` or `/`.
+
+```js
+// Before (v1)
+toPathString(['data', 0, 'name'])          // 'data.0.name'
+toPathString(['foo.bar', 'baz'])           // 'foo.bar.baz' — collides with ['foo','bar','baz']
+
+// After (v2)
+toPathString(['data', 0, 'name'])          // 'data/0/name'
+toPathString(['foo.bar', 'baz'])           // 'foo.bar/baz' — now distinguishable
+toPathString(['has/slash', 'x'])           // 'has%2Fslash/x'
+```
+
+The second `key?: 'key_'` parameter has been removed — it was an internal encoding trick that's no longer needed.
+
+If you used `toPathString`'s output as an HTML `name` or `id` attribute (e.g. inside a custom component), nothing about how you use it changes; the string just looks different. If you parsed the returned string back into a path, you'll need to switch to `decodeURIComponent` per segment after splitting on `/`.
+
+---
+
+## 16. Theming: partial `ThemeStyles` and function composition
 
 The theming engine is unchanged for the common cases — a `theme` prop taking colours, style objects, arrays, and style functions all behave as before. Two things are new or clarified:
 
