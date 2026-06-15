@@ -134,7 +134,7 @@ const Editor: React.FC<
   onError,
   onEditEvent,
   showErrorMessages = true,
-  allowClipboard = true,
+  showClipboardButton = true,
   onCopy,
   indent = 2,
   collapse = false,
@@ -679,7 +679,7 @@ const Editor: React.FC<
     allowTypeSelection,
     allowDragFilter,
     canDragOnto: false, // can't drag onto outermost container
-    allowClipboard,
+    showClipboardButton,
     onCopy: onCopyStable,
     sortKeys,
     sort,

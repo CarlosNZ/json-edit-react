@@ -563,7 +563,7 @@ function App() {
                           ? 'when-closed-or-filtered'
                           : false
                   }
-                  allowClipboard={allowCopy}
+                  showClipboardButton={allowCopy}
                   onCopy={onCopy}
                   allowEdit={allowEdit}
                   // allowEdit={(nodeData) => typeof nodeData.value === 'string'}

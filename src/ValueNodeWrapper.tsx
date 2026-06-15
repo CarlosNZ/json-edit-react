@@ -40,7 +40,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     data,
     parentData,
     onChange,
-    allowClipboard,
+    showClipboardButton,
     onCopy,
     canDragOnto,
     allowTypeSelection,
@@ -520,7 +520,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
               <EditButtons
                 startEdit={canEdit ? startEdit : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
-                allowClipboard={allowClipboard}
+                showClipboardButton={showClipboardButton}
                 onCopy={onCopy}
                 translate={translate}
                 customButtons={props.customButtons}

@@ -109,6 +109,36 @@ describe('CustomNode — props pass-through', () => {
     render(<JsonEditor data={{ obj: { a: 1 } }} setData={noop} customNodeDefinitions={defs} />)
     expect(screen.getByTestId('wtag')).toHaveTextContent('WTAG')
   })
+
+  // Type-level guard: the `U` generic on `CustomNodeDefinition` exists to keep
+  // `wrapperComponent` and `wrapperProps` consistent. It must bind BOTH — not
+  // just the component. (Runtime is identical either way, so this can only be
+  // asserted at compile time; ts-jest fails the file on an unused
+  // `@ts-expect-error`, which is the regression signal here.)
+  test('wrapperProps is type-bound to the definition U generic', () => {
+    interface WProps {
+      tag: string
+    }
+    // A correctly-shaped `wrapperProps` satisfies U, and the matching
+    // `wrapperComponent` sees it typed (not `Record<string, unknown>`).
+    const ok: CustomNodeDefinition<Record<string, unknown>, WProps> = {
+      condition: () => true,
+      wrapperComponent: ({ wrapperProps, children }) => (
+        <div data-tag={wrapperProps?.tag}>{children}</div>
+      ),
+      wrapperProps: { tag: 'ok' },
+    }
+    const wrong: { other: number } = { other: 1 }
+    const bad: CustomNodeDefinition<Record<string, unknown>, WProps> = {
+      condition: () => true,
+      // @ts-expect-error — `wrapperProps` must satisfy U (WProps). Before the
+      // fix it was typed `Record<string, unknown>`, so this assignment
+      // compiled and the directive went unused (TS2578).
+      wrapperProps: wrong,
+    }
+    expect(ok).toBeDefined()
+    expect(bad).toBeDefined()
+  })
 })
 
 describe('CustomNode — view/edit visibility', () => {

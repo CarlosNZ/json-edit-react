@@ -41,7 +41,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     canDragOnto,
     collapseFilter,
     collapseAnimationTime,
-    allowClipboard,
+    showClipboardButton,
     onCopy,
     showIconTooltips,
     indent,
@@ -507,7 +507,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       }
       handleAdd={canAdd ? handleAdd : undefined}
       handleDelete={canDelete ? handleDelete : undefined}
-      allowClipboard={allowClipboard}
+      showClipboardButton={showClipboardButton}
       onCopy={onCopy}
       type={collectionType}
       nodeData={nodeData}

@@ -13,7 +13,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `JsonEditor` is now generic on the data type (`JsonEditor<T>`)                                                                                                                                                                                           | No action needed — defaults to `JsonData`. Opt in with<br> `<JsonEditor<MyShape> ... />`                                                                                                                                                   |
 | `setData` is now required; `viewOnly` removed; new `JsonViewer` export                                                                                                                                                                                   | For read-only, use `<JsonViewer>`, which is a wrapper around the editor with appropriate props for view-only — see [`setData` is required](#4-setdata-is-required-viewonly-removed-jsonviewer-added)                                       |
 | `restrict*` props renamed to `allow*` (polarity inverted)                                                                                                                                                                                                | Rename `restrictEdit`→`allowEdit` etc. and **invert** booleans / filter results — see [`restrict*` → `allow*`](#5-restrict-props-renamed-to-allow-semantics-inverted)                                                                      |
-| `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction`                                                                                                                                         | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` — see [`enableClipboard` split](#6-enableclipboard-split-into-allowclipboard--oncopy)                                                                           |
+| `enableClipboard` split into `showClipboardButton` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction`                                                                                                                                    | Rename the boolean to `showClipboardButton`; move any copy callback to `onCopy` — see [`enableClipboard` split](#6-enableclipboard-split-into-showclipboardbutton--oncopy)                                                                 |
 | Several display / config props renamed                                                                                                                                                                                                                   | Rename `keySort`, `rootFontSize`, `errorMessageTimeout`, `stringTruncate`, `showArrayIndices`, `arrayIndexFromOne` — see [Display / config prop renames](#7-display--config-prop-renames)                                                  |
 | Callback payloads are now a single flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`)                                                                                                                                      | Rename those fields in `onUpdate` / `onChange` / `onError` / `onCollapse` / `onCopy` — see [Flat `NodeData` payloads](#8-flat-nodedata-payloads)                                                                                           |
 | `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`, return shape unified                                                                                                                                                                         | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads) |
@@ -269,9 +269,9 @@ The **array** form (a whitelist of available types) is unchanged — it always m
 
 ---
 
-## 6. `enableClipboard` split into `allowClipboard` + `onCopy`
+## 6. `enableClipboard` split into `showClipboardButton` + `onCopy`
 
-The dual-purpose `enableClipboard?: boolean | CopyFunction` prop is split into two single-purpose props: `allowClipboard?: boolean` (default `true`) controls whether the copy button shows, and the new `onCopy?: OnCopyFunction` observer runs after a copy. The `CopyFunction` type is removed in favour of `OnCopyFunction`.
+The dual-purpose `enableClipboard?: boolean | CopyFunction` prop is split into two single-purpose props: `showClipboardButton?: boolean` (default `true`) controls whether the copy button shows, and the new `onCopy?: OnCopyFunction` observer runs after a copy. The `CopyFunction` type is removed in favour of `OnCopyFunction`.
 
 **Why:** one prop doing two unrelated jobs (a boolean toggle *and* a callback) was awkward to type and document. The split is single-purpose, and `onCopy` now receives the same flat [`NodeData`](https://carlosnz.github.io/json-edit-react/) payload every other callback gets.
 
@@ -281,7 +281,7 @@ If you only enabled/disabled the button:
 
 ```diff
 - <JsonEditor data={data} setData={setData} enableClipboard={false} />
-+ <JsonEditor data={data} setData={setData} allowClipboard={false} />
++ <JsonEditor data={data} setData={setData} showClipboardButton={false} />
 ```
 
 If you passed a callback (it both enabled the button *and* observed copies):
@@ -359,7 +359,7 @@ The rename applies to every callback that used the old shape:
 
 - **`onUpdate`** (which absorbs the v1 `onEdit` / `onAdd` / `onDelete`) and **`onChange`** — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads).
 - **`onError`** and **`onCollapse`** — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error).
-- **`onCopy`** — see [`enableClipboard` split](#6-enableclipboard-split-into-allowclipboard--oncopy).
+- **`onCopy`** — see [`enableClipboard` split](#6-enableclipboard-split-into-showclipboardbutton--oncopy).
 
 The filter, search, and type functions (`FilterFunction`, `SearchFilterFunction`, `TypeFilterFunction`, etc.) already received `NodeData` in v1, so their field names are unchanged.
 

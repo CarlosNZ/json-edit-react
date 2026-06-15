@@ -40,7 +40,7 @@
  * (`data`, `parentData`, the `restrict*` filters, display options,
  * `searchText`, `translate`, `customNodeDefinitions`) must likewise be
  * referentially stable for a clean bail-out — standard React guidance; an
- * inline `allowClipboard` etc. reduces the memo's effectiveness without
+ * inline `showClipboardButton` etc. reduces the memo's effectiveness without
  * breaking correctness.
  */
 

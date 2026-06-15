@@ -13,7 +13,7 @@ export interface JsonEditorProps<T = JsonData> {
   onChange?: OnChangeFunction<T>
   onError?: OnErrorFunction<T>
   showErrorMessages?: boolean
-  allowClipboard?: boolean
+  showClipboardButton?: boolean
   theme?: ThemeInput
   icons?: IconReplacements
   className?: string
@@ -296,7 +296,7 @@ export type NewKeyOptionsFunction<T = JsonData> = (input: NodeData<T>) => string
 export type CopyType = 'path' | 'value'
 
 // Observer (Cat 3): fires after a copy-to-clipboard. Enablement is the
-// `allowClipboard` boolean (Cat 1). A failed copy carries a `CLIPBOARD_ERROR`.
+// `showClipboardButton` boolean (Cat 1). A failed copy carries a `CLIPBOARD_ERROR`.
 export type OnCopyFunction<T = JsonData> = (
   props: NodeData<T> & {
     success: boolean
@@ -441,7 +441,7 @@ interface BaseNodeProps {
   onError?: OnErrorFunction
   showErrorMessages: boolean
   showIconTooltips: boolean
-  allowClipboard: boolean
+  showClipboardButton: boolean
   onCopy?: OnCopyFunction
   onEditEvent?: OnEditEventFunction
   allowEditFilter: FilterFunction
@@ -587,7 +587,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // For collection nodes only:
   showCollectionWrapper?: boolean // default true
   wrapperComponent?: React.FC<CustomWrapperProps<U>>
-  wrapperProps?: Record<string, unknown>
+  wrapperProps?: U
   renderCollectionAsValue?: boolean
 
   // For JSON stringify/parse
