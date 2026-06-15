@@ -539,7 +539,7 @@ const Editor: React.FC<
     }
   }, [customNodeDefinitions, jsonParse])
 
-  const editConfirmRef = useRef<HTMLDivElement>(null)
+  const editConfirmRef = useRef<HTMLButtonElement>(null)
   const { setCollapseState } = useCollapse()
 
   // Common "sort" method for ordering nodes, based on the `sortKeys` prop

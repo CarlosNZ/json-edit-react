@@ -22,6 +22,8 @@ const localisedStrings = {
   TOOLTIP_EDIT: 'Edit',
   TOOLTIP_DELETE: 'Delete',
   TOOLTIP_ADD: 'Add',
+  TOOLTIP_OK: 'OK',
+  TOOLTIP_CANCEL: 'Cancel',
 }
 
 export type LocalisedStrings = typeof localisedStrings

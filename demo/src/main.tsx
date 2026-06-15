@@ -21,6 +21,13 @@ const ExamplesIndex = lazy(() =>
   import('./examples/ExamplesIndex').then((m) => ({ default: m.ExamplesIndex }))
 )
 
+// A bare editor rendered with no ChakraProvider / UI-framework reset, as a
+// reference for how the library looks for a plain-HTML consumer. Lazy-loaded so
+// it stays out of the main entry chunk.
+const RawHtmlPage = lazy(() =>
+  import('./RawHtmlPage').then((m) => ({ default: m.RawHtmlPage }))
+)
+
 const exampleFallback = (
   <Flex h="100vh" justify="center" align="center">
     <Spinner />
@@ -51,6 +58,12 @@ createRoot(document.getElementById('root')!).render(
               <ExamplesIndex />
             </Suspense>
           </ChakraProvider>
+        </Route>
+        <Route path="/raw-html">
+          {/* Intentionally NOT wrapped in ChakraProvider — see RawHtmlPage. */}
+          <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading…</div>}>
+            <RawHtmlPage />
+          </Suspense>
         </Route>
         <Route>
           <ChakraProvider theme={theme}>

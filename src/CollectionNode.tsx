@@ -446,6 +446,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           onOk={handleEdit}
           onCancel={handleCancel}
           nodeData={nodeData}
+          translate={translate}
+          showIconTooltips={showIconTooltips}
           editConfirmRef={editConfirmRef}
         />
       </div>

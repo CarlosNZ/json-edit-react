@@ -517,6 +517,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
               onOk={handleEdit}
               onCancel={handleCancel}
               nodeData={nodeData}
+              translate={translate}
+              showIconTooltips={showIconTooltips}
               editConfirmRef={editConfirmRef}
             />
           ) : (

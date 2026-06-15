@@ -1024,11 +1024,15 @@ Localise your implementation (or just customise the default messages) by passing
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
   EMPTY_STRING: '<empty string>' // Displayed when property key is ""
-  // Tooltips only appear if `showIconTooltips` prop is enabled
+  // These label the icon controls (which are <button>s) for assistive tech via
+  // `aria-label`, and also show as visible tooltips when the `showIconTooltips`
+  // prop is enabled.
   TOOLTIP_COPY: 'Copy to clipboard',
   TOOLTIP_EDIT: 'Edit',
   TOOLTIP_DELETE: 'Delete',
   TOOLTIP_ADD: 'Add',
+  TOOLTIP_OK: 'OK',
+  TOOLTIP_CANCEL: 'Cancel',
 }
 ```
 

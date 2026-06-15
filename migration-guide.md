@@ -446,20 +446,24 @@ Both receive the standard flat `NodeData` — `currentData` / `currentValue` / `
 
 `JerError` keeps its name and `{ code, message }` shape. What changes is its `code`: it's now the exported `JerErrorCode` union, which gains three forward-looking members — `RENAME_ERROR`, `MOVE_ERROR` and `CLIPBOARD_ERROR` — covering the new rename/move rejection and clipboard-failure paths. The additions are backward-compatible; you only need to act if you exhaustively `switch` on `error.code` and want to handle the new cases. (`onError`'s own payload also moves to flat `NodeData` — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error).)
 
-### New localisation keys: `ERROR_RENAME` / `ERROR_MOVE`
+### New localisation keys
 
-Rejected `rename` and `move` operations now show operation-specific messages (`'Rename unsuccessful'` / `'Move unsuccessful'`) instead of the generic `'Update unsuccessful'`, mirroring `ERROR_ADD` / `ERROR_DELETE`. Their `onError` codes are likewise `RENAME_ERROR` / `MOVE_ERROR` (additive members of `JerErrorCode`).
+v2 adds several localisation keys. None require action — a `translations` object doesn't have to be exhaustive, so any key you don't define falls back to its English default. But if you ship a localised `translations` object and want full coverage, add them:
 
-No action is strictly required — a `translations` object doesn't have to be exhaustive, so any key you don't define falls back to the English default. But if you ship a localised `translations` object and want these two messages translated too, add the new keys:
+- `ERROR_RENAME` / `ERROR_MOVE` — rejected `rename` and `move` operations now show operation-specific messages (`'Rename unsuccessful'` / `'Move unsuccessful'`) instead of the generic `'Update unsuccessful'`, mirroring `ERROR_ADD` / `ERROR_DELETE`. (Their `onError` codes are likewise `RENAME_ERROR` / `MOVE_ERROR` — additive members of `JerErrorCode`.)
+- `TOOLTIP_OK` / `TOOLTIP_CANCEL` — labels for the ✓ / ✗ confirm and cancel controls, now that those are real `<button>`s. Always applied as `aria-label`s, and shown as visible tooltips when `showIconTooltips` is enabled.
 
 ```diff
   translations={{
     // ...existing keys
-    ERROR_UPDATE: '…',
 +   ERROR_RENAME: '…',
 +   ERROR_MOVE: '…',
++   TOOLTIP_OK: '…',
++   TOOLTIP_CANCEL: '…',
   }}
 ```
+
+One further new key, `ITEMS_FILTERED`, is covered alongside the `showCollectionCount` default change — see [Display / config prop renames](#7-display--config-prop-renames).
 
 ### Removed localisation key: `DEFAULT_STRING`
 
@@ -687,6 +691,22 @@ If you used `toPathString`'s output as an HTML `name` or `id` attribute (e.g. in
 ### `ThemeStyles` is now a partial type
 
 The exported `ThemeStyles` type is now `Partial<Record<ThemeableElement, …>>` (every key optional). If you imported it and relied on it being a *total* record, it's now optional-per-key — more permissive, so most code needs no change. See [Themes & Styles](README.md#themes--styles) in the README.
+
+### Icon controls are now `<button>` elements
+
+The clickable icon controls — the ✓ / ✗ confirm/cancel pair and the edit/copy/delete/add icons — are now real `<button>` elements instead of `<div>`s, so assistive tech announces them as actionable and reads their `aria-label`. Their appearance is unchanged (the default button chrome is reset in the bundled CSS), and they carry `tabIndex={-1}` so the editor's existing field-to-field Tab navigation is unaffected.
+
+The only thing to act on is **custom CSS that targets these controls by tag name**. If you styled them via a `div` selector, switch it to `button`:
+
+```css
+/* Before (v1) */
+.jer-confirm-buttons > div { … }
+
+/* After (v2) */
+.jer-confirm-buttons > button { … }
+```
+
+Selectors that target the wrapper classes (`.jer-confirm-buttons`, `.jer-edit-buttons`) or the icons themselves are unaffected. Consumer-supplied custom buttons (`customButtons`) remain wrapped in a `<div>`, so their markup is unchanged.
 
 ---
 

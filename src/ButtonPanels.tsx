@@ -33,7 +33,7 @@ interface EditButtonProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   getNewKeyOptions?: (nodeDate: NodeData) => string[] | null | void
-  editConfirmRef: React.RefObject<HTMLDivElement | null>
+  editConfirmRef: React.RefObject<HTMLButtonElement | null>
   jsonStringify: (
     data: JsonData,
     // eslint-disable-next-line
@@ -184,44 +184,64 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       onClick={(e) => e.stopPropagation()}
     >
       {showClipboardButton && (
-        <div
+        // tabIndex={-1} keeps the control out of the editor's field-to-field
+        // Tab flow (owned by `keyboardControls`) while keeping the native
+        // button role + the aria-label for assistive tech. `aria-label` is
+        // unconditional; `title` (the visible tooltip) stays gated on
+        // `showIconTooltips`.
+        <button
+          type="button"
+          tabIndex={-1}
           onClick={handleCopy}
           className="jer-copy-pulse"
+          aria-label={translate('TOOLTIP_COPY', nodeData)}
           title={showIconTooltips ? translate('TOOLTIP_COPY', nodeData) : ''}
         >
           <Icon name="copy" nodeData={nodeData} />
-        </div>
+        </button>
       )}
       {startEdit && (
-        <div
+        <button
+          type="button"
+          tabIndex={-1}
           onClick={startEdit}
+          aria-label={translate('TOOLTIP_EDIT', nodeData)}
           title={showIconTooltips ? translate('TOOLTIP_EDIT', nodeData) : ''}
         >
           <Icon name="edit" nodeData={nodeData} />
-        </div>
+        </button>
       )}
       {handleDelete && (
-        <div
+        <button
+          type="button"
+          tabIndex={-1}
           onClick={handleDelete}
+          aria-label={translate('TOOLTIP_DELETE', nodeData)}
           title={showIconTooltips ? translate('TOOLTIP_DELETE', nodeData) : ''}
         >
           <Icon name="delete" nodeData={nodeData} />
-        </div>
+        </button>
       )}
       {handleAdd && (
-        <div
+        <button
+          type="button"
+          tabIndex={-1}
           onClick={() => {
             // Objects open a key-entry session; arrays add a default value
             // immediately (no key to fill — a one-shot, as before).
             if (type === 'object') openAdd()
             else handleAdd('')
           }}
+          aria-label={translate('TOOLTIP_ADD', nodeData)}
           title={showIconTooltips ? translate('TOOLTIP_ADD', nodeData) : ''}
         >
           <Icon name="add" nodeData={nodeData} />
-        </div>
+        </button>
       )}
       {customButtons?.map(({ Element, onClick }, i) => (
+        // Custom buttons stay <div>s: the inner `Element` is consumer-owned and
+        // may itself be interactive, so wrapping it in a <button> risks nested
+        // interactive content.
         <div key={i} onClick={(e) => onClick && onClick(nodeData, e)}>
           <Element nodeData={nodeData} />
         </div>
@@ -260,6 +280,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             onOk={() => commitAdd()}
             onCancel={() => cancel()}
             nodeData={nodeData}
+            translate={translate}
+            showIconTooltips={showIconTooltips}
             editConfirmRef={editConfirmRef}
             hideOk={hasKeyOptionsList}
           />
@@ -273,20 +295,47 @@ export const InputButtons: React.FC<{
   onOk: () => void
   onCancel: () => void
   nodeData: NodeData
-  editConfirmRef: React.RefObject<HTMLDivElement | null>
+  translate: TranslateFunction
+  showIconTooltips: boolean
+  editConfirmRef: React.RefObject<HTMLButtonElement | null>
   hideOk?: boolean
-}> = ({ onOk, onCancel, nodeData, editConfirmRef, hideOk = false }) => {
+}> = ({
+  onOk,
+  onCancel,
+  nodeData,
+  translate,
+  showIconTooltips,
+  editConfirmRef,
+  hideOk = false,
+}) => {
+  // tabIndex={-1}: the field itself commits/cancels via Enter/Escape
+  // (`keyboardControls`), so these are pointer affordances — kept out of the
+  // Tab order, but real <button>s for screen-reader semantics. `aria-label` is
+  // unconditional; `title` (the visible tooltip) stays gated on
+  // `showIconTooltips`, matching the edit icons.
   return (
     <div className="jer-confirm-buttons">
       {!hideOk && (
-        // Pass an anonymous function to prevent passing event to onOk
-        <div onClick={onOk} ref={editConfirmRef as React.RefObject<HTMLDivElement>}>
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={onOk}
+          aria-label={translate('TOOLTIP_OK', nodeData)}
+          title={showIconTooltips ? translate('TOOLTIP_OK', nodeData) : ''}
+          ref={editConfirmRef as React.RefObject<HTMLButtonElement>}
+        >
           <Icon name="ok" nodeData={nodeData} />
-        </div>
+        </button>
       )}
-      <div onClick={onCancel}>
+      <button
+        type="button"
+        tabIndex={-1}
+        onClick={onCancel}
+        aria-label={translate('TOOLTIP_CANCEL', nodeData)}
+        title={showIconTooltips ? translate('TOOLTIP_CANCEL', nodeData) : ''}
+      >
         <Icon name="cancel" nodeData={nodeData} />
-      </div>
+      </button>
     </div>
   )
 }
