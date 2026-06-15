@@ -41,7 +41,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     canDragOnto,
     collapseFilter,
     collapseAnimationTime,
-    allowClipboard,
+    showClipboardButton,
     onCopy,
     showIconTooltips,
     indent,
@@ -223,7 +223,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
-  const handleKeyPressEdit = (e: React.KeyboardEvent) => {
+  const onKeyDownEdit = (e: React.KeyboardEvent) => {
     // Normal "Tab" key functionality in TextArea
     // Defined here explicitly rather than in handleKeyboard as we *don't* want
     // to override the normal Tab key with the custom "Tab" key value
@@ -343,15 +343,15 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   }
 
   const showLabel = showArrayIndexes || !isArray
-  // `'when-closed-or-filtered'` surfaces the count whenever the filter is
+  // `'when-collapsed-or-filtered'` surfaces the count whenever the filter is
   // currently subsetting this collection's children — useCommon sets
   // `visibleSize` to a number on tracked collections while a filter is
   // active (and `null` on leaves), so `!= null` catches "filter active
   // AND we have a real count for this node".
   const showCount =
-    showCollectionCount === 'when-closed'
+    showCollectionCount === 'when-collapsed'
       ? collapsed
-      : showCollectionCount === 'when-closed-or-filtered'
+      : showCollectionCount === 'when-collapsed-or-filtered'
         ? collapsed || visibleSize != null
         : showCollectionCount
   const showEditButtons = !isEditing && showEditTools
@@ -437,7 +437,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           name={pathString}
           value={editBufferValue ?? ''}
           setValue={setEditBuffer}
-          handleKeyPress={handleKeyPressEdit}
+          onKeyDown={onKeyDownEdit}
           styles={getStyles('input', nodeData)}
         />
       )}
@@ -464,6 +464,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // A getter, not an object, so a plain collection with no custom component or
   // wrapper never allocates these props — only the two custom-node sites below
   // call it.
+  // The flat consumer `onError` rides along in `...props` — harmless, since it's
+  // omitted from `CustomComponentProps` (type-hidden) and this function-result
+  // spread isn't excess-checked. A custom component reports errors by throwing
+  // from `fromStandardType`, not via a prop.
   const getCustomNodeAllProps = () => ({
     ...props,
     data,
@@ -473,7 +477,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     setValue: (val: unknown) => submit({ op: 'edit', path, value: val }),
     handleEdit,
     handleCancel,
-    handleKeyPress: handleKeyPressEdit,
+    onKeyDown: onKeyDownEdit,
     isEditing,
     isPending,
     // Gated on `canEdit`: custom components call `setIsEditing` unconditionally
@@ -484,7 +488,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     canDragOnto: canEdit,
     canEdit,
     keyboardCommon: {},
-    onError,
   })
 
   const CollectionContents = showCustomNodeContents ? (
@@ -507,7 +510,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       }
       handleAdd={canAdd ? handleAdd : undefined}
       handleDelete={canDelete ? handleDelete : undefined}
-      allowClipboard={allowClipboard}
+      showClipboardButton={showClipboardButton}
       onCopy={onCopy}
       type={collectionType}
       nodeData={nodeData}

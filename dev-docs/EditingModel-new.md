@@ -11,7 +11,7 @@ The agreed API and behaviour for the reworked editing/commit lifecycle. Companio
 Layers are kept distinct by name; `editorRef.*` methods are always written in full form.
 
 - **Provider transitions** (store methods the nodes call): `open` · `submit` · `cancel` (+ bookkeeping `setTabDirection`, `recordPreviouslyEdited`). Plain verbs — never the same string as an event.
-- **Events** (`onEditEvent` strings — pure outputs): `startEdit`/`submitEdit`/`commitEdit`/`cancelEdit` (+ `…Rename`/`…Add` families) · `delete` · `move` · `updateSuccessful` · `updateError`.
+- **Events** (`onEditEvent` strings — pure outputs): `startEdit`/`submitEdit`/`commitEdit`/`cancelEdit` (+ `…Rename`/`…Add` families) · `delete` · `move` · `updateSuccess` · `updateError`.
 - **`editorRef` methods** (consumer, imperative): always written in full — `editorRef.startEdit` / `editorRef.cancel` / `editorRef.confirm` / `editorRef.collapse`.
 - **Consumer callbacks** (passed into `onUpdate`): `hold()` → returns `release()`.
 - **Provider internals** (never called by nodes): `apply` (apply value + close + register `settling` + fire `commit*`) · `reconcile` (token-gated settlement) · `buildInput` · `emit`/`fire`.
@@ -119,30 +119,30 @@ This is cleaner than today: the `previousValue` snapshot machinery (which exists
 | array add | `commitAdd` |
 | move (drag) | `move` |
 
-Instant ops have **no** `start*`/`submit*`/`cancel*` — they emit their one event **at the commit moment** (at click if no hold, at `release()` if held), then `updateSuccessful`/`updateError`. A gated-then-**cancelled** instant op (`onUpdate → null`) fires **nothing** (nothing committed; no `start*` to balance). Its held/pending state is observable via a **selector**, not an event (where the pending-overlay reattaches).
+Instant ops have **no** `start*`/`submit*`/`cancel*` — they emit their one event **at the commit moment** (at click if no hold, at `release()` if held), then `updateSuccess`/`updateError`. A gated-then-**cancelled** instant op (`onUpdate → null`) fires **nothing** (nothing committed; no `start*` to balance). Its held/pending state is observable via a **selector**, not an event (where the pending-overlay reattaches).
 
 ### Shared settlement (fires after any committed op whose `onUpdate` was called)
 
-- `updateSuccessful`
+- `updateSuccess`
 - `updateError` (carries the error)
 
 ### State machine (per session operation)
 
 ```
-startX ──▶ [submitX] ──▶ commitX ──▶ [ updateSuccessful | updateError ]
+startX ──▶ [submitX] ──▶ commitX ──▶ [ updateSuccess | updateError ]
        └────────────────▶ cancelX
 ```
 
 - Every `startX` is terminated by **exactly one** of `cancelX` / `commitX`.
 - `cancelX` *before* `submitX` = bailed before committing (Esc/✗). `cancelX` *after* `submitX` = the gate returned `null`.
 - `commitX` fires **at submit** when there's no hold (`submitX`→`commitX` adjacent) and **at `release()`** when held. The `submitX`→`commitX` gap *is* the gate/pending window.
-- `commitX` → then optionally `updateSuccessful` / `updateError` when `onUpdate` resolves. `updateError` can follow `commitX` (the optimistic "closed, then the save failed, value reverted" path).
+- `commitX` → then optionally `updateSuccess` / `updateError` when `onUpdate` resolves. `updateError` can follow `commitX` (the optimistic "closed, then the save failed, value reverted" path).
 
 ### Return value → events
 
 | `onUpdate` returns | events after `commitX` |
 |---|---|
-| `void`/`true`/`{ value }` | `updateSuccessful` |
+| `void`/`true`/`{ value }` | `updateSuccess` |
 | `false`/`{ error }`/throws | `updateError` (+ revert) |
 | `null` | none — a **cancel**: fires `cancelX` instead of `commitX` (when held); a `null` *after* an optimistic commit reverts silently |
 
@@ -152,7 +152,7 @@ startX ──▶ [submitX] ──▶ commitX ──▶ [ updateSuccessful | upda
 - `path` is **always present** (never `null`, unlike v1's close events).
 - `updateError` adds the `error`.
 - `commitRename` / its settlement add `{ oldKey, newKey }`.
-- `updateSuccessful` / `updateError` identify which commit they settle (`path` + originating operation / commit id) so a consumer can correlate **interleaved** background settlements.
+- `updateSuccess` / `updateError` identify which commit they settle (`path` + originating operation / commit id) so a consumer can correlate **interleaved** background settlements.
 
 ### Edge cases (decided)
 
@@ -285,8 +285,8 @@ reconcile({ path, token, op, result, apply, getPrev }):
   delete settling[path]                            // (new bundle → emit; isSettling off)
 
   match result:
-    void | true   → fire('updateSuccessful')
-    { value }     → applyValue(path, value) ; fire('updateSuccessful')
+    void | true   → fire('updateSuccess')
+    { value }     → applyValue(path, value) ; fire('updateSuccess')
     false|{error} → applyValue(path, getPrev()) ; fire('updateError', {error})   // buffer untouched (§9.1)
     null          → applyValue(path, getPrev())                                   // silent revert
 ```

@@ -245,7 +245,7 @@ The list is definitive. Type-change failures fold into `UPDATE_ERROR`; non-error
 // (e.g. a server permission check) — the library awaits, and awaiting a sync return is free.
 type FilterFunction<T = JsonData> = (node: NodeData<T>) => boolean | Promise<boolean>
 // allowEdit / allowDelete / allowAdd / allowDrag / allowTypeSelection?: boolean | FilterFunction<T>
-// allowClipboard?: boolean (default true) — renamed from `enableClipboard`; BOOLEAN ONLY (a per-node
+// showClipboardButton?: boolean (default true) — renamed from `enableClipboard`; BOOLEAN ONLY (a per-node
 //   copy filter is security theatre — select + Cmd-C defeats it). The copy handler is `onCopy` (Cat 3).
 
 // Soft gate: intercept a user-initiated action. true (or non-void) = "I'll take it over".
@@ -334,7 +334,7 @@ type OnCollapseFunction<T = JsonData> =
   (props: NodeData<T> & { collapsed: boolean; includeChildren: boolean }) => void
 
 // 4. onCopy — after a copy-to-clipboard. Split out of the old enableClipboard boolean|fn
-// overload; enablement is now the `allowClipboard` boolean (Cat 1). `error` → JerError.
+// overload; enablement is now the `showClipboardButton` boolean (Cat 1). `error` → JerError.
 type OnCopyFunction<T = JsonData> =
   (props: NodeData<T> & { success: boolean; stringValue: string; type: CopyType; error?: JerError }) => void
 ```
@@ -414,7 +414,7 @@ Per operation, across the four surfaces. `onUpdate` names the *operation*; `onEv
 
 \* `confirmRename` carries `{ oldKey, newKey }`. Shared session commands `confirm()` / `cancel()` act on whichever session is open.
 
-Not tied to one operation: `onChange` (Cat 2 transform), `onError` / `onCollapse` / `onCopy` (Cat 3 observers), `allowEdit` / `allowDelete` / `allowAdd` / `allowDrag` / `allowTypeSelection` (Cat 1 gates — `boolean | fn`, async-capable), `allowClipboard` (Cat 1 gate — `boolean` only).
+Not tied to one operation: `onChange` (Cat 2 transform), `onError` / `onCollapse` / `onCopy` (Cat 3 observers), `allowEdit` / `allowDelete` / `allowAdd` / `allowDrag` / `allowTypeSelection` (Cat 1 gates — `boolean | fn`, async-capable), `showClipboardButton` (Cat 1 gate — `boolean` only).
 
 ### Open decisions (for review)
 

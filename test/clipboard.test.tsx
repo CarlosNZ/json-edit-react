@@ -1,9 +1,8 @@
 /**
- * Clipboard split (§17 Phase 1): `allowClipboard` (Cat-1 boolean gate) +
- * `onCopy` (Cat-3 observer). Replaces the legacy `enableClipboard:
- * boolean | CopyFunction` overload.
+ * Clipboard props: `showClipboardButton` (Cat-1 boolean toggle) + `onCopy`
+ * (Cat-3 observer).
  *
- *  - `allowClipboard` (default true) shows/hides the copy button.
+ *  - `showClipboardButton` (default true) shows/hides the copy button.
  *  - `onCopy` fires after a copy with
  *    `{ success, stringValue, type, ...NodeData }`.
  */
@@ -14,15 +13,15 @@ import { JsonEditor } from '../src/JsonEditor'
 
 const noop = () => {}
 
-describe('allowClipboard', () => {
+describe('showClipboardButton', () => {
   test('the copy button is shown by default', () => {
     render(<JsonEditor data={{ x: 'hello' }} setData={noop} showIconTooltips />)
     expect(screen.getAllByTitle('Copy to clipboard').length).toBeGreaterThan(0)
   })
 
-  test('allowClipboard={false} hides the copy button', () => {
+  test('showClipboardButton={false} hides the copy button', () => {
     render(
-      <JsonEditor data={{ x: 'hello' }} setData={noop} allowClipboard={false} showIconTooltips />
+      <JsonEditor data={{ x: 'hello' }} setData={noop} showClipboardButton={false} showIconTooltips />
     )
     expect(screen.queryByTitle('Copy to clipboard')).toBeNull()
   })

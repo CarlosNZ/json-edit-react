@@ -13,13 +13,13 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `JsonEditor` is now generic on the data type (`JsonEditor<T>`)                                                                                                                                                                                           | No action needed — defaults to `JsonData`. Opt in with<br> `<JsonEditor<MyShape> ... />`                                                                                                                                                   |
 | `setData` is now required; `viewOnly` removed; new `JsonViewer` export                                                                                                                                                                                   | For read-only, use `<JsonViewer>`, which is a wrapper around the editor with appropriate props for view-only — see [`setData` is required](#4-setdata-is-required-viewonly-removed-jsonviewer-added)                                       |
 | `restrict*` props renamed to `allow*` (polarity inverted)                                                                                                                                                                                                | Rename `restrictEdit`→`allowEdit` etc. and **invert** booleans / filter results — see [`restrict*` → `allow*`](#5-restrict-props-renamed-to-allow-semantics-inverted)                                                                      |
-| `enableClipboard` split into `allowClipboard` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction`                                                                                                                                         | Rename the boolean to `allowClipboard`; move any copy callback to `onCopy` — see [`enableClipboard` split](#6-enableclipboard-split-into-allowclipboard--oncopy)                                                                           |
+| `enableClipboard` split into `showClipboardButton` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction`                                                                                                                                    | Rename the boolean to `showClipboardButton`; move any copy callback to `onCopy` — see [`enableClipboard` split](#6-enableclipboard-split-into-showclipboardbutton--oncopy)                                                                 |
 | Several display / config props renamed                                                                                                                                                                                                                   | Rename `keySort`, `rootFontSize`, `errorMessageTimeout`, `stringTruncate`, `showArrayIndices`, `arrayIndexFromOne` — see [Display / config prop renames](#7-display--config-prop-renames)                                                  |
 | Callback payloads are now a single flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`)                                                                                                                                      | Rename those fields in `onUpdate` / `onChange` / `onError` / `onCollapse` / `onCopy` — see [Flat `NodeData` payloads](#8-flat-nodedata-payloads)                                                                                           |
 | `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`, return shape unified                                                                                                                                                                         | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads) |
 | `JerError`'s `code` union gains `RENAME_ERROR` / `MOVE_ERROR` / `CLIPBOARD_ERROR`                                                                                                                                                                        | Handle the new codes only if you exhaustively `switch` on `error.code` — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads)                                                                                 |
 | `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JerError`                                                                                              | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error)                           |
-| `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps` | Rename the fields in your definitions and the props type in your components — see [`CustomNodeDefinition` field renames](#11-customnodedefinition-field-renames)                                                                           |
+| `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps`; the component's `onError` reporter is removed | Rename the fields in your definitions and the props type in your components; replace any component `onError` call with a `throw`ing `fromStandardType` — see [`CustomNodeDefinition` field renames](#11-customnodedefinition-field-renames)                                                                           |
 | `externalTriggers` prop replaced by an [imperative handle](https://react.dev/reference/react/useImperativeHandle)                                                                                                                                        | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/confirm/cancel` — see [the `editorRef` handle](#12-externaltriggers-prop-replaced-by-the-editorref-imperative-handle)                                      |
 | Fine-grained re-rendering: object / array / function props must be referentially stable to benefit                                                                                                                                                       | Keep `customNodeDefinitions`, filter functions, `translations`, etc. stable (module scope or `useMemo`); callbacks are stabilised for you — see [stable props](#13-keep-object-and-function-props-referentially-stable)                    |
 | Misc public-export changes — new `AutogrowTextArea`; `toPathString` is now `/`-encoded; `ThemeStyles` is `Partial`                                                                                                                                       | Mostly additive; act only if you parse `toPathString` output or typed against a total `ThemeStyles` — see [Misc changes to public exports](#14-misc-changes-to-public-exports)                                                             |
@@ -269,9 +269,9 @@ The **array** form (a whitelist of available types) is unchanged — it always m
 
 ---
 
-## 6. `enableClipboard` split into `allowClipboard` + `onCopy`
+## 6. `enableClipboard` split into `showClipboardButton` + `onCopy`
 
-The dual-purpose `enableClipboard?: boolean | CopyFunction` prop is split into two single-purpose props: `allowClipboard?: boolean` (default `true`) controls whether the copy button shows, and the new `onCopy?: OnCopyFunction` observer runs after a copy. The `CopyFunction` type is removed in favour of `OnCopyFunction`.
+The dual-purpose `enableClipboard?: boolean | CopyFunction` prop is split into two single-purpose props: `showClipboardButton?: boolean` (default `true`) controls whether the copy button shows, and the new `onCopy?: OnCopyFunction` observer runs after a copy. The `CopyFunction` type is removed in favour of `OnCopyFunction`.
 
 **Why:** one prop doing two unrelated jobs (a boolean toggle *and* a callback) was awkward to type and document. The split is single-purpose, and `onCopy` now receives the same flat [`NodeData`](https://carlosnz.github.io/json-edit-react/) payload every other callback gets.
 
@@ -281,7 +281,7 @@ If you only enabled/disabled the button:
 
 ```diff
 - <JsonEditor data={data} setData={setData} enableClipboard={false} />
-+ <JsonEditor data={data} setData={setData} allowClipboard={false} />
++ <JsonEditor data={data} setData={setData} showClipboardButton={false} />
 ```
 
 If you passed a callback (it both enabled the button *and* observed copies):
@@ -324,7 +324,7 @@ A handful of props were renamed. These are **pure renames** (no behaviour change
 
 > The same `stringTruncate` → `stringTruncateLength` rename applies to the `componentProps` of the `Hyperlink` / `EnhancedLink` components in `@json-edit-react/components`.
 
-One display **default** also changed (not a rename): `showCollectionCount` now defaults to `"when-closed-or-filtered"` (previously `true`). Counts appear when a collection is collapsed *or* when a search filter is narrowing its children — in the latter case rendered as `"n of m items"`. To keep the v1 always-visible behaviour, set `showCollectionCount={true}`; for collapse-only, set `"when-closed"`.
+One display **default** also changed (not a rename): `showCollectionCount` now defaults to `"when-collapsed-or-filtered"` (previously `true`). Counts appear when a collection is collapsed *or* when a search filter is narrowing its children — in the latter case rendered as `"n of m items"`. To keep the v1 always-visible behaviour, set `showCollectionCount={true}`; for collapse-only, set `"when-collapsed"`.
 
 The filtered-count form is driven by a new localisation key, `ITEMS_FILTERED`. If you ship a complete `translations` object, add it (otherwise the English default `"{{visible}} of {{total}} items"` will appear alongside your translated UI whenever a search filter is active):
 
@@ -359,7 +359,7 @@ The rename applies to every callback that used the old shape:
 
 - **`onUpdate`** (which absorbs the v1 `onEdit` / `onAdd` / `onDelete`) and **`onChange`** — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads).
 - **`onError`** and **`onCollapse`** — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error).
-- **`onCopy`** — see [`enableClipboard` split](#6-enableclipboard-split-into-allowclipboard--oncopy).
+- **`onCopy`** — see [`enableClipboard` split](#6-enableclipboard-split-into-showclipboardbutton--oncopy).
 
 The filter, search, and type functions (`FilterFunction`, `SearchFilterFunction`, `TypeFilterFunction`, etc.) already received `NodeData` in v1, so their field names are unchanged.
 
@@ -486,14 +486,14 @@ The observer callbacks move onto the same flat `NodeData` payload as the rest of
 +     case 'commitEdit': case 'commitRename': case 'commitAdd': /* applied, editor closed */ break
 +     case 'cancelEdit': case 'cancelRename': case 'cancelAdd': /* closed without applying */ break
 +     case 'delete': case 'move':                              /* instant */ break
-+     case 'updateSuccessful': case 'updateError':             /* background onUpdate settled */ break
++     case 'updateSuccess': case 'updateError':             /* background onUpdate settled */ break
 +   }
 +   // e is the node's NodeData + the `event`; 'commitRename' also has oldKey/newKey,
 +   // 'updateError' the error, and the settlement events the `operation`
 + }}
 ```
 
-It now fires for the **complete** lifecycle (`start*` → `submit*` → `commit*`, or `start*` → `cancel*`) of value-edit, key-rename and add sessions, plus the instant `delete`/`move` and the background settlement (`updateSuccessful`/`updateError`) of any committed change whose `onUpdate` ran — not just edit start/stop. This absorbs the role a dedicated `onRenameProperty` would have played (a rename surfaces as `startRename`/`submitRename`/`commitRename`). A no-op confirm (submitting with no change) reports `commitEdit` (the session closed cleanly); an explicit cancel or a `null` returned from `onUpdate` reports `cancel*`.
+It now fires for the **complete** lifecycle (`start*` → `submit*` → `commit*`, or `start*` → `cancel*`) of value-edit, key-rename and add sessions, plus the instant `delete`/`move` and the background settlement (`updateSuccess`/`updateError`) of any committed change whose `onUpdate` ran — not just edit start/stop. This absorbs the role a dedicated `onRenameProperty` would have played (a rename surfaces as `startRename`/`submitRename`/`commitRename`). A no-op confirm (submitting with no change) reports `commitEdit` (the session closed cleanly); an explicit cancel or a `null` returned from `onUpdate` reports `cancel*`.
 
 ### `onError` and `onCollapse` — flat `NodeData`
 
@@ -536,8 +536,12 @@ The custom-node API was aligned around one distinction: a **node** is a position
 | `hideKey: true`        | `showKey: false`       | **Polarity inverted** — `showKey` defaults to `true`                                                           |
 | `showInTypesSelector`  | `showInTypeSelector`   | Matches the "Type" selector label                                                                              |
 | type `CustomNodeProps` | `CustomComponentProps` | The props your component receives; also resolves the old `CustomNodeProps` / `CustomNodeDefinition` name clash |
+| `onError` (received)   | **removed**            | Custom components no longer receive an error-reporter prop — reject invalid input by `throw`ing from the definition's `fromStandardType` instead |
+| `setIsEditingKey`      | `startEditingKey`      | A key component's "enter key-edit mode" trigger — it's a zero-arg command, not a React `Dispatch`, so the `setIs*` name misled |
+| `handleKeyPress` (received) | `onKeyDown`       | The key-down handler your component attaches to its input — renamed off React's deprecated "keyPress" name, and consistent with `TextEditorProps.onKeyDown` |
+| `data` (received)      | `value` / `nodeData.value` | `CustomComponentProps` no longer carries the redundant `data` field — read the live value via `value`, or the committed value via `nodeData.value` |
 
-`wrapperProps` keeps its name, but is now delivered to your `wrapperComponent` as `wrapperProps` (previously it arrived as `customNodeProps`); the wrapper's props type is the new `CustomWrapperProps`. `CustomNodeDefinition` and `CustomKeyProps` are unchanged.
+`wrapperProps` keeps its name, but is now delivered to your `wrapperComponent` as `wrapperProps` (previously it arrived as `customNodeProps`); the wrapper's props type is the new `CustomWrapperProps`. `CustomNodeDefinition` is unchanged; `CustomKeyProps` keeps its name but renames `setIsEditingKey` → `startEditingKey` (above).
 
 In your definitions:
 
@@ -562,6 +566,22 @@ And inside your component, rename the props type and the config prop:
 ```diff
 - const AvatarComponent: React.FC<CustomNodeProps> = ({ value, customNodeProps }) => {
 + const AvatarComponent: React.FC<CustomComponentProps> = ({ value, componentProps }) => {
+```
+
+If your v1 component **called** the error reporter to reject invalid input, that reporter is **gone** — move the validation into a `throw`ing `fromStandardType` on the definition. The editor then rejects the commit, keeps the editor open, shows the message inline, and fires the consumer's `onError` — the same outcome, without the manual revert:
+
+```diff
+- // (in the component, at commit)
+- if (!isValid(value)) {
+-   handleEdit(lastValid.current)          // manual revert
+-   onError({ code: 'UPDATE_ERROR', message }, value)
+-   return
+- }
++ // (on the definition — the editor handles reject + revert + inline message)
++ fromStandardType: (value) => {
++   if (!isValid(value)) throw new Error(message)
++   return value
++ }
 ```
 
 ---

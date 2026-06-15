@@ -15,7 +15,7 @@ interface TextAreaProps {
   name: string
   value: string
   setValue: React.Dispatch<React.SetStateAction<string>>
-  handleKeyPress: (e: React.KeyboardEvent) => void
+  onKeyDown: (e: React.KeyboardEvent) => void
   styles: React.CSSProperties
   textAreaRef?: React.MutableRefObject<HTMLTextAreaElement | null>
 }
@@ -25,7 +25,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   name,
   value,
   setValue,
-  handleKeyPress,
+  onKeyDown,
   styles,
   textAreaRef,
 }) => {
@@ -56,7 +56,7 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
         onFocus={(e) => {
           if (value.length < 40) e.target.select()
         }}
-        onKeyDown={handleKeyPress}
+        onKeyDown={onKeyDown}
       />
       {/* The "dummy" replica which causes the *actual* textarea to resize: */}
       <span

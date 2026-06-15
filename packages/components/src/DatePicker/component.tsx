@@ -31,7 +31,7 @@ export const DateTimePicker: React.FC<CustomComponentProps<DatePickerCustomProps
   setValue,
   handleEdit,
   handleCancel,
-  handleKeyPress,
+  onKeyDown,
   isEditing,
   setIsEditing,
   getStyles,
@@ -74,7 +74,7 @@ export const DateTimePicker: React.FC<CustomComponentProps<DatePickerCustomProps
         dateFormat={showTime ? dateTimeFormat : dateFormat}
         onChange={(date: Date | null) => date && setValue(date.toISOString())}
         open={true}
-        onKeyDown={handleKeyPress}
+        onKeyDown={onKeyDown}
       >
         <div style={{ display: 'inline-flex', gap: 10 }}>
           {/* These buttons are not really necessary -- you can either use the

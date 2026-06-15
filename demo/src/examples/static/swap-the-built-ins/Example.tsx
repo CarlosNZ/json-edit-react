@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   JsonEditor,
   standardDataTypes,
-  type CustomSelectProps,
+  type SelectProps,
   type TypeOptions,
 } from '@json-edit-react'
 import { CodeEditor, ReactSelect } from '@json-edit-react/components'
@@ -22,20 +22,20 @@ const initialData = {
 }
 
 // Suggestions shown when adding a new key on the `task` object. Drives the
-// "new-key" dropdown — one of the three places `CustomSelect` renders.
+// "new-key" dropdown — one of the three places `Select` renders.
 const newKeyOptions = ['dueDate', 'tags', 'estimate', 'reviewer']
 
 // Standard data types plus two enums. Existing values like 'in-progress' and
 // 'high' are auto-matched to their enum type by content (`matchPriority`); the
 // type selector also lets you switch any value to a different enum or back to
-// a primitive — exercising the other two `CustomSelect` call sites.
+// a primitive — exercising the other two `Select` call sites.
 const allowTypeSelection: TypeOptions = [
   ...standardDataTypes,
   { enum: 'Status', values: ['todo', 'in-progress', 'review', 'done'], matchPriority: 1 },
   { enum: 'Priority', values: ['low', 'medium', 'high', 'urgent'], matchPriority: 1 },
 ]
 
-const StyledReactSelect = (props: CustomSelectProps) => {
+const StyledReactSelect = (props: SelectProps) => {
   const palette = useExamplePalette()
   const styles = useMemo(() => buildSelectStyles(palette), [palette])
   return <ReactSelect {...props} reactSelectProps={{ styles }} />
@@ -53,7 +53,7 @@ export default function SwapTheBuiltIns() {
       rootName="project"
       newKeyOptions={newKeyOptions}
       allowTypeSelection={allowTypeSelection}
-      CustomSelect={StyledReactSelect}
+      Select={StyledReactSelect}
       TextEditor={(props) => <CodeEditor {...props} theme={themeName} />}
     />
   )

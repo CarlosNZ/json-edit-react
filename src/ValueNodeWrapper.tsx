@@ -40,7 +40,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     data,
     parentData,
     onChange,
-    allowClipboard,
+    showClipboardButton,
     onCopy,
     canDragOnto,
     allowTypeSelection,
@@ -442,15 +442,20 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     customNodeData: effectiveCustomNodeData,
   }
 
+  // The cast drops props omitted from `CustomComponentProps`: the flat consumer
+  // `onError` observer (a component reports errors by throwing from
+  // `fromStandardType`) and the committed `data` (read the value via `value` /
+  // `nodeData.value`). Type-only (erased) — no runtime cost; both just ride
+  // along on the spread.
   const ValueComponent = showCustomNode ? (
     <CustomComponent
-      {...props}
+      {...(props as Omit<typeof props, 'onError' | 'data'>)}
       value={value}
       componentProps={componentProps}
       setValue={updateValue}
       handleEdit={handleEdit}
       handleCancel={handleCancel}
-      handleKeyPress={(e: React.KeyboardEvent) =>
+      onKeyDown={(e: React.KeyboardEvent) =>
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}
@@ -468,7 +473,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       }
       canEdit={canEdit}
       keyboardCommon={inputProps.keyboardCommon}
-      onError={onError}
     />
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones
@@ -520,7 +524,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
               <EditButtons
                 startEdit={canEdit ? startEdit : undefined}
                 handleDelete={canDelete ? handleDelete : undefined}
-                allowClipboard={allowClipboard}
+                showClipboardButton={showClipboardButton}
                 onCopy={onCopy}
                 translate={translate}
                 customButtons={props.customButtons}

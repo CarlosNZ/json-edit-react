@@ -13,14 +13,14 @@ import {
   type OnCopyFunction,
   JsonData,
 } from './types'
-import { type CustomSelectProps } from './NativeSelect'
+import { type SelectProps } from './NativeSelect'
 import { getModifier } from './utils/keyboard'
 import { pathsEqual, stringifyPath } from './utils/pathTools'
 
 interface EditButtonProps {
   startEdit?: () => void
   handleDelete?: () => void
-  allowClipboard: boolean
+  showClipboardButton: boolean
   onCopy?: OnCopyFunction
   handleAdd?: (newKey: string) => void
   type?: CollectionDataType
@@ -40,14 +40,14 @@ interface EditButtonProps {
     replacer?: (this: any, key: string, value: unknown) => string
   ) => string
   showIconTooltips: boolean
-  Select: React.ComponentType<CustomSelectProps>
+  Select: React.ComponentType<SelectProps>
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
   startEdit,
   handleDelete,
   handleAdd,
-  allowClipboard,
+  showClipboardButton,
   onCopy,
   type,
   customButtons,
@@ -136,7 +136,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     let stringValue = ''
     let success: boolean
     let errorMessage: string | null = null
-    if (allowClipboard) {
+    if (showClipboardButton) {
       const modifier = getModifier(e)
       if (modifier && keyboardControls.clipboardModifier.includes(modifier)) {
         value = stringifyPath(path)
@@ -183,7 +183,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       style={{ opacity: isAddingHere ? 1 : undefined }}
       onClick={(e) => e.stopPropagation()}
     >
-      {allowClipboard && (
+      {showClipboardButton && (
         <div
           onClick={handleCopy}
           className="jer-copy-pulse"

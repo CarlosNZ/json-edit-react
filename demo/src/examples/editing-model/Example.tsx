@@ -35,7 +35,7 @@ const MODES: { value: Mode; label: string; desc: string }[] = [
     desc:
       'Commits instantly with no async work — the simplest path. Simulates a ' +
       'save that always succeeds right away. Good for watching the bare event ' +
-      'lifecycle (start → submit → commit → updateSuccessful) with no timing.',
+      'lifecycle (start → submit → commit → updateSuccess) with no timing.',
   },
   {
     value: 'slow-ok',
@@ -43,7 +43,7 @@ const MODES: { value: Mode; label: string; desc: string }[] = [
     desc:
       'Optimistic commit with a slow, successful save. Simulates a 3-second ' +
       'server round-trip: the editor closes and the new value shows ' +
-      'immediately, then updateSuccessful fires ~3 s later. Tabbing between ' +
+      'immediately, then updateSuccess fires ~3 s later. Tabbing between ' +
       'fields stays instant — a slow save never blocks editing.',
   },
   {

@@ -64,7 +64,7 @@ interface AppState {
   indent: number
   collapseLevel: number | FilterFunction
   collapseTime: number
-  showCount: 'Yes' | 'No' | 'When closed' | 'When closed or filtered'
+  showCount: 'Yes' | 'No' | 'When collapsed' | 'When collapsed or filtered'
   theme: Theme
   allowEdit: boolean
   allowDelete: boolean
@@ -114,7 +114,7 @@ function App() {
     indent: 2,
     collapseLevel: dataDefinition.collapse ?? 2,
     collapseTime: 300,
-    showCount: 'When closed or filtered',
+    showCount: 'When collapsed or filtered',
     theme: defaultTheme,
     allowEdit: true,
     allowDelete: true,
@@ -557,13 +557,13 @@ function App() {
                   showCollectionCount={
                     showCount === 'Yes'
                       ? true
-                      : showCount === 'When closed'
-                        ? 'when-closed'
-                        : showCount === 'When closed or filtered'
-                          ? 'when-closed-or-filtered'
+                      : showCount === 'When collapsed'
+                        ? 'when-collapsed'
+                        : showCount === 'When collapsed or filtered'
+                          ? 'when-collapsed-or-filtered'
                           : false
                   }
-                  allowClipboard={allowCopy}
+                  showClipboardButton={allowCopy}
                   onCopy={onCopy}
                   allowEdit={allowEdit}
                   // allowEdit={(nodeData) => typeof nodeData.value === 'string'}
@@ -861,7 +861,7 @@ function App() {
                   <FormLabel className="labelWidth" textAlign="right">
                     Show counts
                   </FormLabel>
-                  <div className="inputWidth" style={{ flexGrow: 1 }}>
+                  <div className="inputWidth" style={{ flexGrow: 1, maxWidth: 'max-content' }}>
                     <Select
                       id="showCountSelect"
                       onChange={(e) =>
@@ -869,8 +869,8 @@ function App() {
                           showCount: e.target.value as
                             | 'Yes'
                             | 'No'
-                            | 'When closed'
-                            | 'When closed or filtered',
+                            | 'When collapsed'
+                            | 'When collapsed or filtered',
                         })
                       }
                       value={showCount}
@@ -882,11 +882,11 @@ function App() {
                       <option value="No" key={1}>
                         No
                       </option>
-                      <option value="When closed" key={2}>
-                        When closed
+                      <option value="When collapsed" key={2}>
+                        When collapsed
                       </option>
-                      <option value="When closed or filtered" key={3}>
-                        When closed or filtered
+                      <option value="When collapsed or filtered" key={3}>
+                        When collapsed or filtered
                       </option>
                     </Select>
                   </div>

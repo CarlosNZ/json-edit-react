@@ -81,7 +81,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
           handleEditKey={(newKey) => {
             if (canEditKey) handleEditKey(newKey)
           }}
-          setIsEditingKey={() => {
+          startEditingKey={() => {
             if (canEditKey) open(path, { op: 'rename' })
           }}
           handleClick={handleClick}

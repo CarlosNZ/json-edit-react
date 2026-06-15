@@ -1208,7 +1208,7 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
     expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('changed')
 
     // Releasing applies + closes (commitEdit); the background settlement then
-    // resolves successfully (updateSuccessful).
+    // resolves successfully (updateSuccess).
     act(() => release?.())
     await waitFor(() => expect(screen.queryByRole('textbox')).toBeNull())
     await act(async () => {
@@ -1218,7 +1218,7 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
       'startEdit',
       'submitEdit',
       'commitEdit',
-      'updateSuccessful',
+      'updateSuccess',
     ])
   })
 
@@ -1321,7 +1321,7 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
     await act(async () => {
       deferred.resolve(true)
     })
-    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['delete', 'updateSuccessful'])
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['delete', 'updateSuccess'])
   })
 
   test('a synchronously rejected delete shows the error in place and never touches external state', async () => {
@@ -1961,7 +1961,7 @@ describe('JsonEditor — search and filter', () => {
     expect(screen.queryByText('2 of 5 items')).toBeNull()
   })
 
-  test('"when-closed-or-filtered" surfaces the count on an open node under search', () => {
+  test('"when-collapsed-or-filtered" surfaces the count on an open node under search', () => {
     // The default behaviour: even on an open collection (where the count
     // would normally hide), search activates the count display so n-of-m
     // is visible without forcing the user to collapse. The count element
@@ -1972,7 +1972,7 @@ describe('JsonEditor — search and filter', () => {
         data={{ items: ['apple-1', 'banana', 'apple-pie', 'cherry', 'plum'] }}
         setData={noop}
         searchText="apple"
-        // showCollectionCount left at default ('when-closed-or-filtered')
+        // showCollectionCount left at default ('when-collapsed-or-filtered')
         collapse={false}
       />
     )
@@ -1981,7 +1981,7 @@ describe('JsonEditor — search and filter', () => {
     expect(countEl).not.toHaveClass('jer-hidden')
   })
 
-  test('"when-closed" suppresses the count on an open node, even under search', () => {
+  test('"when-collapsed" suppresses the count on an open node, even under search', () => {
     // Opt-out of the filtered-aware default — counts only appear when the
     // collection is collapsed, regardless of search state.
     render(
@@ -1989,7 +1989,7 @@ describe('JsonEditor — search and filter', () => {
         data={{ items: ['apple-1', 'banana', 'apple-pie', 'cherry', 'plum'] }}
         setData={noop}
         searchText="apple"
-        showCollectionCount="when-closed"
+        showCollectionCount="when-collapsed"
         collapse={false}
       />
     )

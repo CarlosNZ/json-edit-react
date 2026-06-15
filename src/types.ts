@@ -1,7 +1,7 @@
 import { type JSX } from 'react'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { CustomNodeData } from './CustomNode'
-import { type CustomSelectProps } from './NativeSelect'
+import { type SelectProps } from './NativeSelect'
 
 export type JsonData = Record<string, unknown> | Array<unknown> | unknown
 
@@ -13,7 +13,7 @@ export interface JsonEditorProps<T = JsonData> {
   onChange?: OnChangeFunction<T>
   onError?: OnErrorFunction<T>
   showErrorMessages?: boolean
-  allowClipboard?: boolean
+  showClipboardButton?: boolean
   theme?: ThemeInput
   icons?: IconReplacements
   className?: string
@@ -21,7 +21,7 @@ export interface JsonEditorProps<T = JsonData> {
   indent?: number
   collapse?: boolean | number | FilterFunction<T>
   collapseAnimationTime?: number // ms
-  showCollectionCount?: boolean | 'when-closed' | 'when-closed-or-filtered'
+  showCollectionCount?: boolean | 'when-collapsed' | 'when-collapsed-or-filtered'
   allowEdit?: boolean | FilterFunction<T>
   allowDelete?: boolean | FilterFunction<T>
   allowAdd?: boolean | FilterFunction<T>
@@ -51,7 +51,7 @@ export interface JsonEditorProps<T = JsonData> {
   jsonParse?: (input: string, reviver?: (key: string, value: string) => unknown) => JsonData
   jsonStringify?: (input: JsonData, replacer?: (key: string, value: unknown) => unknown) => string
   TextEditor?: React.FC<TextEditorProps>
-  CustomSelect?: React.ComponentType<CustomSelectProps>
+  Select?: React.ComponentType<SelectProps>
   errorDisplayTime?: number // ms
   keyboardControls?: KeyboardControls
   insertAtTop?: boolean | 'array' | 'object'
@@ -296,7 +296,7 @@ export type NewKeyOptionsFunction<T = JsonData> = (input: NodeData<T>) => string
 export type CopyType = 'path' | 'value'
 
 // Observer (Cat 3): fires after a copy-to-clipboard. Enablement is the
-// `allowClipboard` boolean (Cat 1). A failed copy carries a `CLIPBOARD_ERROR`.
+// `showClipboardButton` boolean (Cat 1). A failed copy carries a `CLIPBOARD_ERROR`.
 export type OnCopyFunction<T = JsonData> = (
   props: NodeData<T> & {
     success: boolean
@@ -319,7 +319,7 @@ export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number
  * committed; a `hold()` gate may run), then terminate with `commit*` (applied —
  * editor closed) or `cancel*` (closed without applying — Esc/✗, or a `null`
  * gate). `delete`/`move` are instant (one event at commit). When `onUpdate`
- * runs, the background settlement reports `updateSuccessful` / `updateError`
+ * runs, the background settlement reports `updateSuccess` / `updateError`
  * after the `commit*`/`delete`/`move`. `commitRename` carries `{ oldKey, newKey
  * }`; `updateError` carries the `error`. Both settlement events carry the
  * `operation` so interleaved background settlements can be correlated. Absorbs
@@ -341,7 +341,7 @@ export type EditEvent<T = JsonData> = NodeData<T> &
     | { event: 'cancelAdd' }
     | { event: 'delete' }
     | { event: 'move' }
-    | { event: 'updateSuccessful'; operation: EditOperation }
+    | { event: 'updateSuccess'; operation: EditOperation }
     | { event: 'updateError'; operation: EditOperation; error: JerError }
   )
 
@@ -441,7 +441,7 @@ interface BaseNodeProps {
   onError?: OnErrorFunction
   showErrorMessages: boolean
   showIconTooltips: boolean
-  allowClipboard: boolean
+  showClipboardButton: boolean
   onCopy?: OnCopyFunction
   onEditEvent?: OnEditEventFunction
   allowEditFilter: FilterFunction
@@ -458,7 +458,7 @@ interface BaseNodeProps {
   customNodeDefinitions: CustomNodeDefinition[]
   customNodeData: CustomNodeData
   customButtons: CustomButtonDefinition[]
-  Select: React.ComponentType<CustomSelectProps>
+  Select: React.ComponentType<SelectProps>
   errorDisplayTime: number
   keyboardControls: KeyboardControlsFull
   handleKeyboard: (
@@ -479,7 +479,7 @@ export interface CollectionNodeProps extends BaseNodeProps {
   collapseFilter: FilterFunction
   collapseAnimationTime: number
   showArrayIndexes: boolean
-  showCollectionCount: boolean | 'when-closed' | 'when-closed-or-filtered'
+  showCollectionCount: boolean | 'when-collapsed' | 'when-collapsed-or-filtered'
   showStringQuotes: boolean
   defaultValue: unknown
   newKeyOptions?: string[] | NewKeyOptionsFunction
@@ -510,7 +510,7 @@ export interface CustomKeyProps<T = Record<string, unknown>> {
   path: CollectionKey[]
   canEditKey: boolean
   handleEditKey: (newKey: string) => void
-  setIsEditingKey: () => void
+  startEditingKey: () => void
   handleClick?: (e: React.MouseEvent) => void
   styles: React.CSSProperties
   componentProps?: T
@@ -519,8 +519,13 @@ export interface CustomKeyProps<T = Record<string, unknown>> {
 
 export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   BaseNodeProps,
-  'onError'
+  // `data` is omitted: it duplicated `value` (and `nodeData.value`). Read the
+  // node's value via `value` — see its doc below.
+  'onError' | 'data'
 > {
+  // The node's current value: the live edit buffer while this node is being
+  // edited, so your component renders what the user is typing. The committed
+  // value (what's in `data`/`setData`) is always on `nodeData.value`.
   value: JsonData
   componentProps?: T
   parentData: CollectionData | null
@@ -530,7 +535,7 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   setValue: (value: JsonData) => void
   handleEdit: (value?: unknown) => void
   handleCancel: () => void
-  handleKeyPress: (e: React.KeyboardEvent) => void
+  onKeyDown: (e: React.KeyboardEvent) => void
   isEditing: boolean
   // True while this node's optimistic commit is in flight — the edited value
   // is already applied locally, but the consumer's async `onUpdate` hasn't
@@ -545,7 +550,11 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   originalNodeKey?: JSX.Element
   canEdit: boolean
   keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
-  onError: (error: JerError, errorValue: JsonData | string) => void
+  // No error-reporter prop: a custom component rejects invalid input by
+  // throwing from its definition's `fromStandardType`, which the editor catches
+  // (rejects the commit, keeps the editor open, shows the message inline, and
+  // fires the consumer's `onError`). The consumer's flat `onError` observer is
+  // omitted above so it isn't mistaken for a per-component reporter.
 }
 
 // Props received by a `wrapperComponent` — the standard node machinery plus the
@@ -587,7 +596,7 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // For collection nodes only:
   showCollectionWrapper?: boolean // default true
   wrapperComponent?: React.FC<CustomWrapperProps<U>>
-  wrapperProps?: Record<string, unknown>
+  wrapperProps?: U
   renderCollectionAsValue?: boolean
 
   // For JSON stringify/parse
@@ -636,7 +645,7 @@ export interface InputProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
-  Select: React.ComponentType<CustomSelectProps>
+  Select: React.ComponentType<SelectProps>
 }
 
 /**

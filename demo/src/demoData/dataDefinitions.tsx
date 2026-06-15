@@ -876,14 +876,14 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       // ordering this first is cleaner).
       {
         condition: ({ key }) => typeof key === 'string' && key.startsWith('REDACTED_'),
-        keyComponent: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => {
+        keyComponent: ({ name, canEditKey, styles, handleClick, startEditingKey }) => {
           const display = String(name)
           return (
             <span
               className="jer-key-text"
               style={{ ...styles, cursor: 'help' }}
               onClick={handleClick}
-              onDoubleClick={() => canEditKey && setIsEditingKey()}
+              onDoubleClick={() => canEditKey && startEditingKey()}
               title={`Encrypted key — double-click to reveal: ${display}`}
             >
               <span
@@ -909,12 +909,12 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       // collection-key case.
       {
         condition: ({ key }) => typeof key === 'string' && key.startsWith('_'),
-        keyComponent: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => (
+        keyComponent: ({ name, canEditKey, styles, handleClick, startEditingKey }) => (
           <span
             className="jer-key-text"
             style={{ ...styles, fontStyle: 'italic', opacity: 0.85 }}
             onClick={handleClick}
-            onDoubleClick={() => canEditKey && setIsEditingKey()}
+            onDoubleClick={() => canEditKey && startEditingKey()}
           >
             <span style={{ marginRight: '0.25em' }} aria-hidden="true">
               🔒
@@ -937,7 +937,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           canEditKey,
           styles,
           handleClick,
-          setIsEditingKey,
+          startEditingKey,
           componentProps,
         }) => {
           const glossary = (componentProps as { glossary: Record<string, string> } | undefined)
@@ -952,7 +952,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
                 gap: '0.35em',
               }}
               onClick={handleClick}
-              onDoubleClick={() => canEditKey && setIsEditingKey()}
+              onDoubleClick={() => canEditKey && startEditingKey()}
             >
               <span>{String(name)}</span>
               {glossary?.[String(name)] && (
@@ -976,14 +976,14 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       // can differ from the stored key (we strip the trailing "!").
       {
         condition: ({ key }) => typeof key === 'string' && key.endsWith('!'),
-        keyComponent: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => {
+        keyComponent: ({ name, canEditKey, styles, handleClick, startEditingKey }) => {
           const display = String(name).slice(0, -1)
           return (
             <span
               className="jer-key-text"
               style={{ ...styles, color: '#c0392b', fontWeight: 'bold' }}
               onClick={handleClick}
-              onDoubleClick={() => canEditKey && setIsEditingKey()}
+              onDoubleClick={() => canEditKey && startEditingKey()}
             >
               <span style={{ marginRight: '0.25em' }} aria-hidden="true">
                 ⚠️
@@ -1003,12 +1003,12 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           typeof value === 'string' &&
           /^https?:\/\/.+\..+$/.test(value) &&
           path.includes('Field Reports'),
-        keyComponent: ({ name, canEditKey, styles, handleClick, setIsEditingKey }) => (
+        keyComponent: ({ name, canEditKey, styles, handleClick, startEditingKey }) => (
           <span
             className="jer-key-text"
             style={{ ...styles }}
             onClick={handleClick}
-            onDoubleClick={() => canEditKey && setIsEditingKey()}
+            onDoubleClick={() => canEditKey && startEditingKey()}
           >
             <span style={{ marginRight: '0.25em' }} aria-hidden="true">
               🔗
