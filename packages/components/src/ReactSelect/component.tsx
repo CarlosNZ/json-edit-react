@@ -1,7 +1,7 @@
 /**
  * A reference wrapper around `react-select` that satisfies the
- * `CustomSelectProps` contract, so it can be passed to JsonEditor's
- * `CustomSelect` prop to replace the built-in native <select>.
+ * `SelectProps` contract, so it can be passed to JsonEditor's
+ * `Select` prop to replace the built-in native <select>.
  *
  * Adapts the contract's `string[]` options + value-based onChange to
  * react-select's `{value, label}` option objects + option-based onChange.
@@ -10,7 +10,7 @@
  */
 
 import React, { lazy, Suspense } from 'react'
-import { type CustomSelectProps } from 'json-edit-react'
+import { type SelectProps } from 'json-edit-react'
 import { type Props as ReactSelectProps } from 'react-select'
 import { Loading } from '../_common/Loading'
 
@@ -43,7 +43,7 @@ export const ReactSelect = ({
   name,
   className,
   reactSelectProps,
-}: CustomSelectProps & ReactSelectExtraProps) => {
+}: SelectProps & ReactSelectExtraProps) => {
   const optionObjects: Option[] = options.map((v) => ({ value: v, label: v }))
   const findOption = (v: string | undefined): Option | null =>
     v === undefined ? null : (optionObjects.find((o) => o.value === v) ?? null)

@@ -13,7 +13,7 @@ import {
   type OnCopyFunction,
   JsonData,
 } from './types'
-import { type CustomSelectProps } from './NativeSelect'
+import { type SelectProps } from './NativeSelect'
 import { getModifier } from './utils/keyboard'
 import { pathsEqual, stringifyPath } from './utils/pathTools'
 
@@ -40,7 +40,7 @@ interface EditButtonProps {
     replacer?: (this: any, key: string, value: unknown) => string
   ) => string
   showIconTooltips: boolean
-  Select: React.ComponentType<CustomSelectProps>
+  Select: React.ComponentType<SelectProps>
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({

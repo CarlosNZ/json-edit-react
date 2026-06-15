@@ -36,11 +36,11 @@ Each component ships a React component plus a definition factory that produces a
 
 ### Editor slot components
 
-Standalone components that plug into JsonEditor's `CustomSelect` and `TextEditor` props (not into `customNodeDefinitions`).
+Standalone components that plug into JsonEditor's `Select` and `TextEditor` props (not into `customNodeDefinitions`).
 
 | Component | Use case |
 |---|---|
-| `ReactSelect` | Drop-in replacement for the built-in `<select>`, wrapping [`react-select`](https://react-select.com). Pass to `JsonEditor`'s `CustomSelect` prop. |
+| `ReactSelect` | Drop-in replacement for the built-in `<select>`, wrapping [`react-select`](https://react-select.com). Pass to `JsonEditor`'s `Select` prop. |
 | `CodeEditor` | CodeMirror-based editor with JSON syntax highlighting. Pass to `JsonEditor`'s `TextEditor` prop to upgrade the raw-JSON text editor. Accepts an optional `theme` prop matching the built-in theme names. |
 
 ## Usage

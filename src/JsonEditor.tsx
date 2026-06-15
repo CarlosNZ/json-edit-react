@@ -168,7 +168,7 @@ const Editor: React.FC<
   jsonParse = JSON.parse,
   jsonStringify = defaultJsonStringify,
   TextEditor,
-  CustomSelect: Select = NativeSelect,
+  Select = NativeSelect,
   errorDisplayTime = 2500,
   keyboardControls = EMPTY_KEYBOARD_CONTROLS,
   editorRef,
