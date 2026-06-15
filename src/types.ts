@@ -530,7 +530,7 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   setValue: (value: JsonData) => void
   handleEdit: (value?: unknown) => void
   handleCancel: () => void
-  handleKeyPress: (e: React.KeyboardEvent) => void
+  onKeyDown: (e: React.KeyboardEvent) => void
   isEditing: boolean
   // True while this node's optimistic commit is in flight — the edited value
   // is already applied locally, but the consumer's async `onUpdate` hasn't

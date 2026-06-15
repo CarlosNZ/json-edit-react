@@ -592,13 +592,13 @@ describe('CustomNode — fromStandardType commit transform', () => {
   // through core's no-arg `handleEdit`, so the definition's `fromStandardType`
   // is the single transform for ✓, Enter and Tab alike.
   const CustomEditor = (props: CustomComponentProps) => {
-    const { value, setValue, isEditing, setIsEditing, handleKeyPress } = props
+    const { value, setValue, isEditing, setIsEditing, onKeyDown } = props
     return isEditing ? (
       <input
         data-testid="custom-input"
         value={String(value)}
         onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKeyPress}
+        onKeyDown={onKeyDown}
       />
     ) : (
       <span data-testid="custom" onDoubleClick={() => setIsEditing(true)}>
@@ -829,13 +829,13 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
   // no hook → `defaultValue`), a single commit happens on ✓ (through the same
   // hook), and Esc cancels.
   const CustomEditor = (props: CustomComponentProps) => {
-    const { value, setValue, isEditing, setIsEditing, handleKeyPress } = props
+    const { value, setValue, isEditing, setIsEditing, onKeyDown } = props
     return isEditing ? (
       <input
         data-testid="custom-input"
         value={String(value)}
         onChange={(e) => setValue(e.target.value)}
-        onKeyDown={handleKeyPress}
+        onKeyDown={onKeyDown}
       />
     ) : (
       <span data-testid="custom" onDoubleClick={() => setIsEditing(true)}>

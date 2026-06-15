@@ -123,7 +123,7 @@ export const StringEdit: React.FC<StringEditProps> = ({
       name={pathString}
       value={value}
       setValue={setValue}
-      handleKeyPress={(e) => {
+      onKeyDown={(e) => {
         handleKeyboard(e, {
           stringConfirm: handleEdit,
           stringLineBreak: () => {

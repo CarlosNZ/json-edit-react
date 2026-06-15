@@ -454,7 +454,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       setValue={updateValue}
       handleEdit={handleEdit}
       handleCancel={handleCancel}
-      handleKeyPress={(e: React.KeyboardEvent) =>
+      onKeyDown={(e: React.KeyboardEvent) =>
         handleKeyboard(e, { stringConfirm: handleEdit, cancel: handleCancel })
       }
       isEditing={isEditing}

@@ -43,7 +43,7 @@ export interface ColorPickerProps {
 export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProps>> = ({
   isEditing,
   setIsEditing,
-  handleKeyPress,
+  onKeyDown,
   value,
   setValue,
   getStyles,
@@ -124,7 +124,7 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
               setHsvValue(colord(newColor).toHsv())
               debouncedSetValue(getFormattedColorText(newColor, text))
             }}
-            onKeyDown={handleKeyPress}
+            onKeyDown={onKeyDown}
           />
         </div>
       ) : (

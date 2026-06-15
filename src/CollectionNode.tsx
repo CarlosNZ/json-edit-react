@@ -223,7 +223,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const brackets =
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
-  const handleKeyPressEdit = (e: React.KeyboardEvent) => {
+  const onKeyDownEdit = (e: React.KeyboardEvent) => {
     // Normal "Tab" key functionality in TextArea
     // Defined here explicitly rather than in handleKeyboard as we *don't* want
     // to override the normal Tab key with the custom "Tab" key value
@@ -437,7 +437,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           name={pathString}
           value={editBufferValue ?? ''}
           setValue={setEditBuffer}
-          handleKeyPress={handleKeyPressEdit}
+          onKeyDown={onKeyDownEdit}
           styles={getStyles('input', nodeData)}
         />
       )}
@@ -477,7 +477,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     setValue: (val: unknown) => submit({ op: 'edit', path, value: val }),
     handleEdit,
     handleCancel,
-    handleKeyPress: handleKeyPressEdit,
+    onKeyDown: onKeyDownEdit,
     isEditing,
     isPending,
     // Gated on `canEdit`: custom components call `setIsEditing` unconditionally
