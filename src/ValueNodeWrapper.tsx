@@ -442,9 +442,13 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     customNodeData: effectiveCustomNodeData,
   }
 
+  // A custom component has no error-reporter prop (it rejects invalid input by
+  // throwing from `fromStandardType`), so the cast drops the flat consumer
+  // `onError` observer — omitted from `CustomComponentProps` — from the spread.
+  // It's type-only (erased), so no runtime cost; `onError` just rides along.
   const ValueComponent = showCustomNode ? (
     <CustomComponent
-      {...props}
+      {...(props as Omit<typeof props, 'onError'>)}
       value={value}
       componentProps={componentProps}
       setValue={updateValue}
@@ -468,7 +472,6 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       }
       canEdit={canEdit}
       keyboardCommon={inputProps.keyboardCommon}
-      onError={onError}
     />
   ) : (
     // Need to re-fetch data type to make sure it's one of the "core" ones

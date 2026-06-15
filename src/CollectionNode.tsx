@@ -464,6 +464,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // A getter, not an object, so a plain collection with no custom component or
   // wrapper never allocates these props — only the two custom-node sites below
   // call it.
+  // The flat consumer `onError` rides along in `...props` — harmless, since it's
+  // omitted from `CustomComponentProps` (type-hidden) and this function-result
+  // spread isn't excess-checked. A custom component reports errors by throwing
+  // from `fromStandardType`, not via a prop.
   const getCustomNodeAllProps = () => ({
     ...props,
     data,
@@ -484,7 +488,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     canDragOnto: canEdit,
     canEdit,
     keyboardCommon: {},
-    onError,
   })
 
   const CollectionContents = showCustomNodeContents ? (

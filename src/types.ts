@@ -545,7 +545,11 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   originalNodeKey?: JSX.Element
   canEdit: boolean
   keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
-  onError: (error: JerError, errorValue: JsonData | string) => void
+  // No error-reporter prop: a custom component rejects invalid input by
+  // throwing from its definition's `fromStandardType`, which the editor catches
+  // (rejects the commit, keeps the editor open, shows the message inline, and
+  // fires the consumer's `onError`). The consumer's flat `onError` observer is
+  // omitted above so it isn't mistaken for a per-component reporter.
 }
 
 // Props received by a `wrapperComponent` — the standard node machinery plus the

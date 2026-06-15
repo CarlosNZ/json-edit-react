@@ -19,7 +19,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`, return shape unified                                                                                                                                                                         | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads) |
 | `JerError`'s `code` union gains `RENAME_ERROR` / `MOVE_ERROR` / `CLIPBOARD_ERROR`                                                                                                                                                                        | Handle the new codes only if you exhaustively `switch` on `error.code` — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads)                                                                                 |
 | `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JerError`                                                                                              | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error)                           |
-| `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps` | Rename the fields in your definitions and the props type in your components — see [`CustomNodeDefinition` field renames](#11-customnodedefinition-field-renames)                                                                           |
+| `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps`; the component's `onError` reporter is removed | Rename the fields in your definitions and the props type in your components; replace any component `onError` call with a `throw`ing `fromStandardType` — see [`CustomNodeDefinition` field renames](#11-customnodedefinition-field-renames)                                                                           |
 | `externalTriggers` prop replaced by an [imperative handle](https://react.dev/reference/react/useImperativeHandle)                                                                                                                                        | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/confirm/cancel` — see [the `editorRef` handle](#12-externaltriggers-prop-replaced-by-the-editorref-imperative-handle)                                      |
 | Fine-grained re-rendering: object / array / function props must be referentially stable to benefit                                                                                                                                                       | Keep `customNodeDefinitions`, filter functions, `translations`, etc. stable (module scope or `useMemo`); callbacks are stabilised for you — see [stable props](#13-keep-object-and-function-props-referentially-stable)                    |
 | Misc public-export changes — new `AutogrowTextArea`; `toPathString` is now `/`-encoded; `ThemeStyles` is `Partial`                                                                                                                                       | Mostly additive; act only if you parse `toPathString` output or typed against a total `ThemeStyles` — see [Misc changes to public exports](#14-misc-changes-to-public-exports)                                                             |
@@ -536,6 +536,7 @@ The custom-node API was aligned around one distinction: a **node** is a position
 | `hideKey: true`        | `showKey: false`       | **Polarity inverted** — `showKey` defaults to `true`                                                           |
 | `showInTypesSelector`  | `showInTypeSelector`   | Matches the "Type" selector label                                                                              |
 | type `CustomNodeProps` | `CustomComponentProps` | The props your component receives; also resolves the old `CustomNodeProps` / `CustomNodeDefinition` name clash |
+| `onError` (received)   | **removed**            | Custom components no longer receive an error-reporter prop — reject invalid input by `throw`ing from the definition's `fromStandardType` instead |
 
 `wrapperProps` keeps its name, but is now delivered to your `wrapperComponent` as `wrapperProps` (previously it arrived as `customNodeProps`); the wrapper's props type is the new `CustomWrapperProps`. `CustomNodeDefinition` and `CustomKeyProps` are unchanged.
 
@@ -562,6 +563,22 @@ And inside your component, rename the props type and the config prop:
 ```diff
 - const AvatarComponent: React.FC<CustomNodeProps> = ({ value, customNodeProps }) => {
 + const AvatarComponent: React.FC<CustomComponentProps> = ({ value, componentProps }) => {
+```
+
+If your v1 component **called** the error reporter to reject invalid input, that reporter is **gone** — move the validation into a `throw`ing `fromStandardType` on the definition. The editor then rejects the commit, keeps the editor open, shows the message inline, and fires the consumer's `onError` — the same outcome, without the manual revert:
+
+```diff
+- // (in the component, at commit)
+- if (!isValid(value)) {
+-   handleEdit(lastValid.current)          // manual revert
+-   onError({ code: 'UPDATE_ERROR', message }, value)
+-   return
+- }
++ // (on the definition — the editor handles reject + revert + inline message)
++ fromStandardType: (value) => {
++   if (!isValid(value)) throw new Error(message)
++   return value
++ }
 ```
 
 ---
