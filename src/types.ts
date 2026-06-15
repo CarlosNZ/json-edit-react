@@ -319,7 +319,7 @@ export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number
  * committed; a `hold()` gate may run), then terminate with `commit*` (applied —
  * editor closed) or `cancel*` (closed without applying — Esc/✗, or a `null`
  * gate). `delete`/`move` are instant (one event at commit). When `onUpdate`
- * runs, the background settlement reports `updateSuccessful` / `updateError`
+ * runs, the background settlement reports `updateSuccess` / `updateError`
  * after the `commit*`/`delete`/`move`. `commitRename` carries `{ oldKey, newKey
  * }`; `updateError` carries the `error`. Both settlement events carry the
  * `operation` so interleaved background settlements can be correlated. Absorbs
@@ -341,7 +341,7 @@ export type EditEvent<T = JsonData> = NodeData<T> &
     | { event: 'cancelAdd' }
     | { event: 'delete' }
     | { event: 'move' }
-    | { event: 'updateSuccessful'; operation: EditOperation }
+    | { event: 'updateSuccess'; operation: EditOperation }
     | { event: 'updateError'; operation: EditOperation; error: JerError }
   )
 

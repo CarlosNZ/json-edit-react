@@ -1208,7 +1208,7 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
     expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('changed')
 
     // Releasing applies + closes (commitEdit); the background settlement then
-    // resolves successfully (updateSuccessful).
+    // resolves successfully (updateSuccess).
     act(() => release?.())
     await waitFor(() => expect(screen.queryByRole('textbox')).toBeNull())
     await act(async () => {
@@ -1218,7 +1218,7 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
       'startEdit',
       'submitEdit',
       'commitEdit',
-      'updateSuccessful',
+      'updateSuccess',
     ])
   })
 
@@ -1321,7 +1321,7 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
     await act(async () => {
       deferred.resolve(true)
     })
-    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['delete', 'updateSuccessful'])
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['delete', 'updateSuccess'])
   })
 
   test('a synchronously rejected delete shows the error in place and never touches external state', async () => {

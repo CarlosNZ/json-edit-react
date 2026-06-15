@@ -101,7 +101,7 @@ export type UpdateOutcome =
 export interface BuiltCommit {
   input: UpdateFunctionProps
   /** Flat `NodeData` snapshot for the
-   *  `commit*`/`updateSuccessful`/`updateError` events, captured at build time
+   *  `commit*`/`updateSuccess`/`updateError` events, captured at build time
    *  per-op (delete/rename describe the PRE-apply node, add the child). Frozen
    *  so the event fires the committed identity even though the live document
    *  has since mutated (or been reverted) — re-deriving from the live doc
@@ -469,10 +469,10 @@ const createEditingStore = (
         // modified `newData`), not just the edited node — apply it at the root
         // path.
         commitRef.current?.applyValue([], outcome.value)
-        emitEvent(nodeData, 'updateSuccessful', { operation: op, ...extra })
+        emitEvent(nodeData, 'updateSuccess', { operation: op, ...extra })
         break
       case 'commit':
-        emitEvent(nodeData, 'updateSuccessful', { operation: op, ...extra })
+        emitEvent(nodeData, 'updateSuccess', { operation: op, ...extra })
         break
     }
     return outcome

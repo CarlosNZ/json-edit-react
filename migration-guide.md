@@ -486,14 +486,14 @@ The observer callbacks move onto the same flat `NodeData` payload as the rest of
 +     case 'commitEdit': case 'commitRename': case 'commitAdd': /* applied, editor closed */ break
 +     case 'cancelEdit': case 'cancelRename': case 'cancelAdd': /* closed without applying */ break
 +     case 'delete': case 'move':                              /* instant */ break
-+     case 'updateSuccessful': case 'updateError':             /* background onUpdate settled */ break
++     case 'updateSuccess': case 'updateError':             /* background onUpdate settled */ break
 +   }
 +   // e is the node's NodeData + the `event`; 'commitRename' also has oldKey/newKey,
 +   // 'updateError' the error, and the settlement events the `operation`
 + }}
 ```
 
-It now fires for the **complete** lifecycle (`start*` → `submit*` → `commit*`, or `start*` → `cancel*`) of value-edit, key-rename and add sessions, plus the instant `delete`/`move` and the background settlement (`updateSuccessful`/`updateError`) of any committed change whose `onUpdate` ran — not just edit start/stop. This absorbs the role a dedicated `onRenameProperty` would have played (a rename surfaces as `startRename`/`submitRename`/`commitRename`). A no-op confirm (submitting with no change) reports `commitEdit` (the session closed cleanly); an explicit cancel or a `null` returned from `onUpdate` reports `cancel*`.
+It now fires for the **complete** lifecycle (`start*` → `submit*` → `commit*`, or `start*` → `cancel*`) of value-edit, key-rename and add sessions, plus the instant `delete`/`move` and the background settlement (`updateSuccess`/`updateError`) of any committed change whose `onUpdate` ran — not just edit start/stop. This absorbs the role a dedicated `onRenameProperty` would have played (a rename surfaces as `startRename`/`submitRename`/`commitRename`). A no-op confirm (submitting with no change) reports `commitEdit` (the session closed cleanly); an explicit cancel or a `null` returned from `onUpdate` reports `cancel*`.
 
 ### `onError` and `onCollapse` — flat `NodeData`
 

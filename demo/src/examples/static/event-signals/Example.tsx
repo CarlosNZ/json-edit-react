@@ -32,7 +32,7 @@ type Toast = (options: {
 const statusForEvent = (event: EditEvent['event']): ToastStatus => {
   if (event === 'updateError') return 'error'
   if (event.startsWith('cancel') || event === 'delete') return 'warning'
-  if (event.startsWith('commit') || event === 'updateSuccessful' || event === 'move')
+  if (event.startsWith('commit') || event === 'updateSuccess' || event === 'move')
     return 'success'
   return 'info' // start* / submit*
 }
@@ -46,7 +46,7 @@ const describeEvent = (e: EditEvent): string => {
       return `${where}  "${e.oldKey}" → "${e.newKey}"`
     case 'updateError':
       return `${where}  ${e.error.message}`
-    case 'updateSuccessful':
+    case 'updateSuccess':
       return `${where}  (${e.operation})`
     default:
       return where
@@ -67,7 +67,7 @@ export default function EventSignals({ toast }: { toast: Toast }) {
 
   // Turn every lifecycle event into a toast. With the optimistic `onUpdate`
   // below, a single edit reads as a stream: startEdit → submitEdit → commitEdit,
-  // then updateSuccessful (or updateError) once the async save settles.
+  // then updateSuccess (or updateError) once the async save settles.
   const onEditEvent = useCallback<OnEditEventFunction>(
     (e) => {
       toast({
@@ -84,7 +84,7 @@ export default function EventSignals({ toast }: { toast: Toast }) {
   )
 
   // Settle after a random 0.5–3 s, then fail 1 in 4 saves — so the stream mixes
-  // updateSuccessful (green) and updateError (red) at unpredictable delays.
+  // updateSuccess (green) and updateError (red) at unpredictable delays.
   const onUpdate = useCallback<UpdateFunction>(async () => {
     await wait(500 + Math.random() * 2500)
     if (Math.random() < 0.25) return { error: 'Random save failure (1 in 4)' }

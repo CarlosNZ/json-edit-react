@@ -1294,7 +1294,7 @@ You can interact with the component externally, with event callbacks and trigger
 
 Pass in a function to the props `onEditEvent` and `onCollapse` if you want your app to be able to respond to these events.
 
-The `onEditEvent` callback streams the complete **interaction lifecycle** — start/submit/commit/cancel for value-edit, key-rename and add sessions, the instant `delete`/`move`, and the background settlement (`updateSuccessful`/`updateError`) of any committed change whose `onUpdate` ran. It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, …) with an `event` discriminant spread on top:
+The `onEditEvent` callback streams the complete **interaction lifecycle** — start/submit/commit/cancel for value-edit, key-rename and add sessions, the instant `delete`/`move`, and the background settlement (`updateSuccess`/`updateError`) of any committed change whose `onUpdate` ran. It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, …) with an `event` discriminant spread on top:
 
 ```ts
 type EditEvent =
@@ -1309,13 +1309,13 @@ type EditEvent =
   // instant (no session)
   | { event: 'delete' } | { event: 'move' }
   // background settlement (only fired when an onUpdate runs)
-  | { event: 'updateSuccessful'; operation: EditOperation }
+  | { event: 'updateSuccess'; operation: EditOperation }
   | { event: 'updateError'; operation: EditOperation; error: JerError }
 // ...each spread onto the node's NodeData
 type OnEditEventFunction = (e: EditEvent) => void
 ```
 
-A session opens with a `start*`, then `submit*` (the user committed — a [`hold()` gate](#optimistic-updates-and-gating-hold) may run in this window), then terminates with **exactly one** of `commit*` (the change was applied and the editor closed) or `cancel*` (the session closed *without* applying — an explicit cancel, or a `null` returned from `onUpdate`). `delete` and `move` fire a single event on commit. When `onUpdate` runs, its background result then arrives as `updateSuccessful` or `updateError` (carrying the `operation` and, on error, the `error`).
+A session opens with a `start*`, then `submit*` (the user committed — a [`hold()` gate](#optimistic-updates-and-gating-hold) may run in this window), then terminates with **exactly one** of `commit*` (the change was applied and the editor closed) or `cancel*` (the session closed *without* applying — an explicit cancel, or a `null` returned from `onUpdate`). `delete` and `move` fire a single event on commit. When `onUpdate` runs, its background result then arrives as `updateSuccess` or `updateError` (carrying the `operation` and, on error, the `error`).
 
 A few things worth knowing:
 - **Add events describe the parent collection** (the node you're adding *into*); `commitAdd` is where the add lands.

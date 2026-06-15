@@ -142,20 +142,20 @@ This group is about the **event stream** (watch the 🔔 log), not timing.
 
 | # | Action | Expected 🔔 stream | Notes |
 |---|---|---|---|
-| A1 | Double-click a string, change it, **Enter** | `startEdit` → `submitEdit` → `commitEdit` → `updateSuccessful` | value updates; one ⏳ onUpdate |
-| A2 | Double-click a string, **Enter without changing** | `startEdit` → `submitEdit` → `commitEdit` | **no** `updateSuccessful`, and **no** ⏳ — a no-op skips `onUpdate` entirely |
+| A1 | Double-click a string, change it, **Enter** | `startEdit` → `submitEdit` → `commitEdit` → `updateSuccess` | value updates; one ⏳ onUpdate |
+| A2 | Double-click a string, **Enter without changing** | `startEdit` → `submitEdit` → `commitEdit` | **no** `updateSuccess`, and **no** ⏳ — a no-op skips `onUpdate` entirely |
 | A3 | Double-click a string, type, **Esc** | `startEdit` → `cancelEdit` | value unchanged; no ⏳ |
-| A4 | Double-click a **key**, rename it, **Enter** | `startRename` → `submitRename` → `commitRename` → `updateSuccessful` | `commitRename` logs `oldKey`/`newKey` if you expand it |
-| A5 | Click **＋** on an object, type a key, **Enter** | `startAdd` → `submitAdd` → `commitAdd` → `updateSuccessful` | events fire at the **parent collection** path |
-| A6 | Click **＋** on an **array** | `commitAdd` → `updateSuccessful` | array adds are **instant** — no `startAdd`/`submitAdd` |
-| A7 | Click the **🗑 delete** icon on a node | `delete` → `updateSuccessful` | instant — single lifecycle event |
+| A4 | Double-click a **key**, rename it, **Enter** | `startRename` → `submitRename` → `commitRename` → `updateSuccess` | `commitRename` logs `oldKey`/`newKey` if you expand it |
+| A5 | Click **＋** on an object, type a key, **Enter** | `startAdd` → `submitAdd` → `commitAdd` → `updateSuccess` | events fire at the **parent collection** path |
+| A6 | Click **＋** on an **array** | `commitAdd` → `updateSuccess` | array adds are **instant** — no `startAdd`/`submitAdd` |
+| A7 | Click the **🗑 delete** icon on a node | `delete` → `updateSuccess` | instant — single lifecycle event |
 | A8 | Double-click value A, then (without confirming) double-click value B | `startEdit`(A) → `cancelEdit`(A) → `startEdit`(B) | the displaced session cancels cleanly |
-| A9 | Double-click value A, change it, **Tab** | `startEdit`(A) → `submitEdit`(A) → `commitEdit`(A) → `startEdit`(B) … then `updateSuccessful`(A) | the next field opens **synchronously**; the settlement event for A arrives just after (it's async — interleaving is normal) |
+| A9 | Double-click value A, change it, **Tab** | `startEdit`(A) → `submitEdit`(A) → `commitEdit`(A) → `startEdit`(B) … then `updateSuccess`(A) | the next field opens **synchronously**; the settlement event for A arrives just after (it's async — interleaving is normal) |
 
 ### Group B — Optimistic slow settle (set `TEST_MODE = 'slow-ok'`)
 
 - **B1** Double-click a value, change it, **Enter**.
-  - **Expected:** the editor **closes immediately** and the new value shows **immediately** — it does *not* wait for the 3 s. Console: `commitEdit` now, then `⏳ onUpdate` resolving, then `updateSuccessful` ~3 s later.
+  - **Expected:** the editor **closes immediately** and the new value shows **immediately** — it does *not* wait for the 3 s. Console: `commitEdit` now, then `⏳ onUpdate` resolving, then `updateSuccess` ~3 s later.
 - **B2** Edit a value, change it, **Tab**, change the next, **Tab** again — quickly.
   - **Expected:** Tab advances **instantly** each time (no 3 s stall), even though each commit is still settling in the background. This is the "slow save never blocks the editor" property.
 
@@ -172,7 +172,7 @@ This group is about the **event stream** (watch the 🔔 log), not timing.
 This proves a late failure reverts **only its own node** and never clobbers a concurrent success.
 
 - **D1** Edit value A → `hello` (no "z" → will succeed), **Tab** to B → `buzz` (has "z" → will fail), **Enter**.
-  - **Expected:** both A and B change **immediately** (optimistic). ~3 s later: **A stays `hello`**, **B reverts** with an error. The revert of B must not touch A. Console: two `commitEdit`s, then `updateSuccessful`(A) + `updateError`(B).
+  - **Expected:** both A and B change **immediately** (optimistic). ~3 s later: **A stays `hello`**, **B reverts** with an error. The revert of B must not touch A. Console: two `commitEdit`s, then `updateSuccess`(A) + `updateError`(B).
 - **D2** Reverse it: edit A → `buzz` (fail), Tab to B → `hello` (succeed). Same result — only the `z` node reverts, regardless of order.
 
 ### Group E — Re-edit during settlement (set `TEST_MODE = 'slow-fail'`)
@@ -193,14 +193,14 @@ Proves a stale failure can't clobber a node you've reopened.
 ### Group G — The gate, interactive (set `TEST_MODE = 'gate-confirm'`)
 
 - **G1** Edit a value, **Enter** → a `window.confirm` appears. Click **OK**.
-  - **Expected:** the edit commits (editor closes, value updates). Console: `submitEdit` → `commitEdit` → `updateSuccessful`.
+  - **Expected:** the edit commits (editor closes, value updates). Console: `submitEdit` → `commitEdit` → `updateSuccess`.
 - **G2** Edit a value, **Enter** → confirm dialog → click **Cancel**.
   - **Expected:** the edit is **discarded** — value reverts, no error. Console: `submitEdit` → `cancelEdit` (no `commitEdit`, no `update*`).
 - **G3** (optional) `gate-no-release`: same as F1 but the code never calls `release()` — the commit still lands when `onUpdate` resolves after the delay (held-until-resolve). Confirms a `hold()` with no `release()` is safe.
 
 ### Group H — Override / silent cancel / throw
 
-- **H1 — Override** (`TEST_MODE = 'override'`): edit a value, **Enter**. After 3 s, the doc gains/updates a top-level **`_editedAt`** field (and your typed value is kept too) — the `{ value }` return replaced the whole document. Console: `commitEdit` → `updateSuccessful`.
+- **H1 — Override** (`TEST_MODE = 'override'`): edit a value, **Enter**. After 3 s, the doc gains/updates a top-level **`_editedAt`** field (and your typed value is kept too) — the `{ value }` return replaced the whole document. Console: `commitEdit` → `updateSuccess`.
 - **H2 — Silent cancel** (`TEST_MODE = 'cancel-null'`): edit a value, **Enter**. Value shows optimistically, then ~3 s later **reverts with NO error** (no red message, no toast). Console: `commitEdit` … (3 s) … *(no `update*` event)*.
 - **H3 — Throw** (`TEST_MODE = 'throw'`): edit a value, **Enter**. After 3 s it reverts and surfaces **"Simulated save failure"** (the thrown message). Console: `commitEdit` → `updateError`.
 
@@ -211,7 +211,7 @@ The type selector appears while editing a value (needs `allowTypeSelection` — 
 - **I1 — Primitive → primitive** (e.g. `string` → `number`): double-click a string, change the **type** dropdown to `number`.
   - **Expected:** this is **local** — the value coerces in the still-open editor, **no ⏳ onUpdate fires, no event**. Only when you press **Enter/OK** does a single `edit` commit run.
 - **I2 — → object / array / custom**: change the type to `object`.
-  - **Expected:** **structural** — it commits immediately (the editor closes/remounts). Console: `commitEdit` → `updateSuccessful` (or revert under `slow-fail`).
+  - **Expected:** **structural** — it commits immediately (the editor closes/remounts). Console: `commitEdit` → `updateSuccess` (or revert under `slow-fail`).
 - **I3 — rejected to-enum** (if the data set has an enum type, `slow-fail`): selecting an enum coerces locally; pressing Enter commits and, on rejection, reverts — the type selector must return to the original type, not stay stuck on the enum.
 
 ### Group J — Per-operation under a slow reject (set `TEST_MODE = 'slow-fail'`)
@@ -233,20 +233,20 @@ Confirm every op reverts cleanly when the background save fails:
 
 ```
 value edit / key rename / object add (a session):
-  startX → submitX → commitX        (committed)         + updateSuccessful | updateError
+  startX → submitX → commitX        (committed)         + updateSuccess | updateError
   startX → cancelX                  (Esc / null gate)   (no update*)
   startX → submitX → commitX        (no-op: value unchanged — NO update*, onUpdate not run)
 
 instant ops (no session):
-  delete                            + updateSuccessful | updateError
-  move                              + updateSuccessful | updateError
-  array add  →  commitAdd           + updateSuccessful | updateError
+  delete                            + updateSuccess | updateError
+  move                              + updateSuccess | updateError
+  array add  →  commitAdd           + updateSuccess | updateError
 
 gate (hold):  submitX … (held, editor open, tree blocked) … commitX   [release() or resolve]
 ```
 
 - `commit*` fires when the change is **applied** (editor closes). With no gate that's at submit time (optimistic); with `hold()` it's at `release()`.
-- `updateSuccessful` / `updateError` are the **background settlement** — they only fire when an `onUpdate` actually ran, and they can arrive *after* the next node's `startEdit` (they're async).
+- `updateSuccess` / `updateError` are the **background settlement** — they only fire when an `onUpdate` actually ran, and they can arrive *after* the next node's `startEdit` (they're async).
 - `commitRename` carries `oldKey`/`newKey`; `updateError` carries `error`; both settlement events carry `operation`.
 
 ---
