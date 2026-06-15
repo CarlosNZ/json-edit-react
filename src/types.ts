@@ -519,8 +519,13 @@ export interface CustomKeyProps<T = Record<string, unknown>> {
 
 export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   BaseNodeProps,
-  'onError'
+  // `data` is omitted: it duplicated `value` (and `nodeData.value`). Read the
+  // node's value via `value` — see its doc below.
+  'onError' | 'data'
 > {
+  // The node's current value: the live edit buffer while this node is being
+  // edited, so your component renders what the user is typing. The committed
+  // value (what's in `data`/`setData`) is always on `nodeData.value`.
   value: JsonData
   componentProps?: T
   parentData: CollectionData | null

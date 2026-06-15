@@ -539,6 +539,7 @@ The custom-node API was aligned around one distinction: a **node** is a position
 | `onError` (received)   | **removed**            | Custom components no longer receive an error-reporter prop — reject invalid input by `throw`ing from the definition's `fromStandardType` instead |
 | `setIsEditingKey`      | `startEditingKey`      | A key component's "enter key-edit mode" trigger — it's a zero-arg command, not a React `Dispatch`, so the `setIs*` name misled |
 | `handleKeyPress` (received) | `onKeyDown`       | The key-down handler your component attaches to its input — renamed off React's deprecated "keyPress" name, and consistent with `TextEditorProps.onKeyDown` |
+| `data` (received)      | `value` / `nodeData.value` | `CustomComponentProps` no longer carries the redundant `data` field — read the live value via `value`, or the committed value via `nodeData.value` |
 
 `wrapperProps` keeps its name, but is now delivered to your `wrapperComponent` as `wrapperProps` (previously it arrived as `customNodeProps`); the wrapper's props type is the new `CustomWrapperProps`. `CustomNodeDefinition` is unchanged; `CustomKeyProps` keeps its name but renames `setIsEditingKey` → `startEditingKey` (above).
 
