@@ -545,15 +545,15 @@ describe('JsonEditor — edit flow', () => {
   test('clicking the OK icon confirms the edit (same as pressing Enter)', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    const { container } = render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} />)
+    render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} />)
 
     await user.dblClick(screen.getByText('"hello"'))
     const input = screen.getByRole('textbox')
     await user.clear(input)
     await user.type(input, 'hi')
 
-    // .jer-confirm-buttons holds [OK, Cancel] in DOM order
-    const okBtn = container.querySelectorAll('.jer-confirm-buttons > button')[0]
+    // The controls are real buttons now, so query by accessible role + name
+    const okBtn = screen.getByRole('button', { name: 'OK' })
     await user.click(okBtn)
 
     expect(setData).toHaveBeenCalledTimes(1)
@@ -564,14 +564,14 @@ describe('JsonEditor — edit flow', () => {
   test('clicking the Cancel icon discards the edit (same as pressing Escape)', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    const { container } = render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} />)
+    render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} />)
 
     await user.dblClick(screen.getByText('"hello"'))
     const input = screen.getByRole('textbox')
     await user.clear(input)
     await user.type(input, 'discard-me')
 
-    const cancelBtn = container.querySelectorAll('.jer-confirm-buttons > button')[1]
+    const cancelBtn = screen.getByRole('button', { name: 'Cancel' })
     await user.click(cancelBtn)
 
     expect(setData).not.toHaveBeenCalled()
