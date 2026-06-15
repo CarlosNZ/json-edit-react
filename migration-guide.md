@@ -537,8 +537,9 @@ The custom-node API was aligned around one distinction: a **node** is a position
 | `showInTypesSelector`  | `showInTypeSelector`   | Matches the "Type" selector label                                                                              |
 | type `CustomNodeProps` | `CustomComponentProps` | The props your component receives; also resolves the old `CustomNodeProps` / `CustomNodeDefinition` name clash |
 | `onError` (received)   | **removed**            | Custom components no longer receive an error-reporter prop — reject invalid input by `throw`ing from the definition's `fromStandardType` instead |
+| `setIsEditingKey`      | `startEditingKey`      | A key component's "enter key-edit mode" trigger — it's a zero-arg command, not a React `Dispatch`, so the `setIs*` name misled |
 
-`wrapperProps` keeps its name, but is now delivered to your `wrapperComponent` as `wrapperProps` (previously it arrived as `customNodeProps`); the wrapper's props type is the new `CustomWrapperProps`. `CustomNodeDefinition` and `CustomKeyProps` are unchanged.
+`wrapperProps` keeps its name, but is now delivered to your `wrapperComponent` as `wrapperProps` (previously it arrived as `customNodeProps`); the wrapper's props type is the new `CustomWrapperProps`. `CustomNodeDefinition` is unchanged; `CustomKeyProps` keeps its name but renames `setIsEditingKey` → `startEditingKey` (above).
 
 In your definitions:
 

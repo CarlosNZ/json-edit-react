@@ -510,7 +510,7 @@ export interface CustomKeyProps<T = Record<string, unknown>> {
   path: CollectionKey[]
   canEditKey: boolean
   handleEditKey: (newKey: string) => void
-  setIsEditingKey: () => void
+  startEditingKey: () => void
   handleClick?: (e: React.MouseEvent) => void
   styles: React.CSSProperties
   componentProps?: T

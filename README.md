@@ -1119,7 +1119,7 @@ A `keyComponent` component is rendered in place of the default property label, i
 - `name` — the key as **displayed** (always `string`; for array indices already offset by `arrayIndexStart`, and for empty-string keys already substituted with the `emptyStringKey` placeholder when one is configured). For the raw key, use `nodeData.key`.
 - `path` — the full path to this node
 - `canEditKey` — whether key editing is permitted for this node
-- `setIsEditingKey()` — call to enter key-edit mode (replaces your custom render with the standard input). No-ops if `canEditKey` is false.
+- `startEditingKey()` — call to enter key-edit mode (replaces your custom render with the standard input). No-ops if `canEditKey` is false.
 - `handleEditKey(newKey)` — commit a new key value programmatically. No-ops if `canEditKey` is false.
 - `handleClick(e)` — the parent's click handler; forward this if you want default click behaviour (e.g. collapse on header click for collection nodes)
 - `styles` — theme-resolved styles for the property text, plus the same `minWidth`/`flexShrink` layout values the default key renderer uses (so spreading `...styles` keeps column alignment consistent). Override individual values to opt out.
