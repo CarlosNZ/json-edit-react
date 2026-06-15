@@ -146,8 +146,13 @@ select:focus + .focus {
 /* .jer-brackets {
 } */
 
+/* The closing bracket sits at the same column as the opening line (the key),
+   matching how JSON pretty-printers align a close bracket under the start of
+   the line that opened it. Its container shares the header row's left edge, so
+   no offset is needed — and the alignment is deliberately independent of
+   `indent`. */
 .jer-bracket-outside {
-  padding-left: 0.5em;
+  padding-left: 0;
 }
 
 /* Hidden by `display: none` (not `opacity: 0` alone) so a hidden count
