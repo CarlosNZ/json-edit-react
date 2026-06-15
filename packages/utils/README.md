@@ -20,6 +20,7 @@ pnpm add @json-edit-react/utils
 
 - **Confirm-before-update hooks** — gate edits/deletes on a confirmation dialog without hand-rolling the deferred-promise dance. _Available now._ ([#307](https://github.com/CarlosNZ/json-edit-react/issues/307))
 - **Undo / redo** — wrap a consumer-owned `data`/`setData` pair with undo/redo (snapshot stacks plus `canUndo` / `canRedo`), zero-dep. _Available now._
+- **Reactive validation** — `useValidationState` runs your validator over the whole document and exposes an O(1), identity-stable error index, so styles / filters / conditions reflect validity correctly even for cross-branch effects. Ships `validationStyles` (theme sugar), `ajvAdapter`, and the `useStableValue` primitive it's built on. Zero-dep (you bring your own validator). _Available now._ ([#357](https://github.com/CarlosNZ/json-edit-react/issues/357))
 - **JSON Schema → Filter Functions** — generate `allowEdit` / `allowDelete` / `allowAdd` (etc.) functions from a JSON Schema so the editor UI can't produce invalid data in the first place. _Planned._ ([#285](https://github.com/CarlosNZ/json-edit-react/issues/285))
 - **Search helpers** — ready-made `searchFilter` functions for common search patterns. _Planned._ ([#319](https://github.com/CarlosNZ/json-edit-react/issues/319))
 
@@ -135,6 +136,29 @@ const MyEditor = () => {
 `set` records a snapshot then commits; `undo` / `redo` step through history (no-ops at the ends); `replace` commits without a snapshot; `reset` commits a new baseline and clears history; `canUndo` / `canRedo` drive your buttons.
 
 **Loading a new dataset:** call `reset(newData)`, not `setData` — the hook only sees changes that go through its own API, so `reset` is how you swap the document and clear stale history in one step. See [src/undo/README.md](src/undo/README.md) for the full rationale.
+
+## Reactive validation
+
+`useValidationState` runs a validator over the whole document and returns a queryable, identity-stable error index (`isValid`, `errors`, `hasErrorAt`, `errorsAt`, `hasErrorWithin`). It's designed for json-edit-react's fine-grained re-rendering: validating inline in a style function goes stale when an edit on one node changes the validity of a node on *another* branch (which doesn't re-render). This hook ties the result's identity to the error set, so memoizing a `theme` / `customNodeDefinitions` / `allow*` value on it re-renders the tree exactly when validity changes — and never on a valid→valid commit.
+
+```tsx
+import { useMemo, useState } from 'react'
+import { JsonEditor } from 'json-edit-react'
+import { useValidationState, validationStyles, ajvAdapter } from '@json-edit-react/utils'
+import Ajv from 'ajv'
+
+const validate = ajvAdapter(new Ajv({ allErrors: true }).compile(schema))
+
+const MyEditor = () => {
+  const [data, setData] = useState(initialData)
+  const validation = useValidationState(data, validate)
+  const theme = useMemo(() => [myTheme, validationStyles(validation)], [validation])
+
+  return <JsonEditor data={data} setData={setData} theme={theme} />
+}
+```
+
+You bring your own validator (`ajvAdapter` wraps a compiled AJV function; or pass any `(data) => ValidationIssue[]`), so the package stays zero-dependency. See [src/validation/README.md](src/validation/README.md) for the consumption recipes (styles, a glyph via a custom node, `allow*` gating) and [src/stable-value/README.md](src/stable-value/README.md) for `useStableValue`, the identity-stabilizer it's built on.
 
 ## License
 

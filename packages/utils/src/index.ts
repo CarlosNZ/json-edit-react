@@ -9,6 +9,9 @@
 //   - Confirm-before-update hooks   — useJsonEditorConfirm / useConfirmOnUpdate
 //     https://github.com/CarlosNZ/json-edit-react/issues/307
 //   - Undo / redo hook              — useUndo
+//   - Reactive validation           — useValidationState / validationStyles /
+//     ajvAdapter, plus the useStableValue primitive they build on
+//     https://github.com/CarlosNZ/json-edit-react/issues/357
 //   - JSON Schema → Filter Functions generator [planned]
 //     https://github.com/CarlosNZ/json-edit-react/issues/285
 //   - Ready-made `searchFilter` helpers for common search use cases [planned]
@@ -20,3 +23,5 @@ export * from './_common/events'
 
 export * from './confirm-update'
 export * from './undo'
+export * from './stable-value'
+export * from './validation'

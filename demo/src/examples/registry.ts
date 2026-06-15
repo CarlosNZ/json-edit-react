@@ -81,6 +81,15 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/swap-the-built-ins/Example'),
     code: () => import('./static/swap-the-built-ins/Example.tsx?raw'),
   },
+  'validation-flagging': {
+    kind: 'static',
+    title: 'Validation flagging (dev)',
+    blurb:
+      "Reactive validation with `useValidationState` (from `@json-edit-react/utils`). An AJV schema links `payment.method` to `card.number` (`minLength: 16` only while method is `card`), so editing `method` flips the validity of a node on another branch. The hook runs the validator once per change, and `validationStyles` flags invalid nodes — restyling cross-branch correctly because the hook's identity changes exactly when validity does. This is the fix for the sibling “Validation staleness” gotcha.",
+    load: () => import('./static/validation-flagging/Example'),
+    code: () => import('./static/validation-flagging/Example.tsx?raw'),
+    devOnly: true,
+  },
   'validation-staleness': {
     kind: 'static',
     title: 'Validation staleness (dev)',
