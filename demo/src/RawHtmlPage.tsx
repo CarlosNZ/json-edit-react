@@ -19,7 +19,7 @@ export const RawHtmlPage = () => {
         it shows how <code>JsonEditor</code> looks with only its own bundled styles — the
         bare-consumer experience.
       </p>
-      <JsonEditor data={jsonData} setData={setJsonData} collapse={2} />
+      <JsonEditor data={jsonData} setData={setJsonData} collapse={2} showIconTooltips />
     </div>
   )
 }
