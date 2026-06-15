@@ -190,6 +190,12 @@ select:focus + .focus {
 }
 
 .jer-collection-text-area {
+  /* `box-sizing` and `line-height` are pinned (not just inherited) so the
+     AutogrowTextArea's real <textarea> and its hidden measuring <span> can't
+     drift apart when a host rule targets `textarea`/`input` or applies a global
+     `* { box-sizing: border-box }` reset. content-box is the model the sizing
+     was designed against, so consumers without a reset see no change. */
+  box-sizing: content-box;
   resize: both;
   padding-top: 0.2em;
   padding-left: 0.5em;
@@ -197,6 +203,7 @@ select:focus + .focus {
   padding-bottom: 0;
   overflow: hidden;
   max-height: 40em;
+  line-height: 1.25em;
   font-family: inherit;
   font-size: 0.85em;
 }
@@ -266,6 +273,9 @@ select:focus + .focus {
 }
 
 .jer-input-text {
+  /* See `.jer-collection-text-area` — pinned so the autogrow <textarea> and its
+     measuring <span> stay in sync under a host CSS reset. */
+  box-sizing: content-box;
   resize: none;
   margin: 0;
   height: 1.4em;
