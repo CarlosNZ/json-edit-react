@@ -446,20 +446,24 @@ Both receive the standard flat `NodeData` — `currentData` / `currentValue` / `
 
 `JerError` keeps its name and `{ code, message }` shape. What changes is its `code`: it's now the exported `JerErrorCode` union, which gains three forward-looking members — `RENAME_ERROR`, `MOVE_ERROR` and `CLIPBOARD_ERROR` — covering the new rename/move rejection and clipboard-failure paths. The additions are backward-compatible; you only need to act if you exhaustively `switch` on `error.code` and want to handle the new cases. (`onError`'s own payload also moves to flat `NodeData` — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error).)
 
-### New localisation keys: `ERROR_RENAME` / `ERROR_MOVE`
+### New localisation keys
 
-Rejected `rename` and `move` operations now show operation-specific messages (`'Rename unsuccessful'` / `'Move unsuccessful'`) instead of the generic `'Update unsuccessful'`, mirroring `ERROR_ADD` / `ERROR_DELETE`. Their `onError` codes are likewise `RENAME_ERROR` / `MOVE_ERROR` (additive members of `JerErrorCode`).
+v2 adds several localisation keys. None require action — a `translations` object doesn't have to be exhaustive, so any key you don't define falls back to its English default. But if you ship a localised `translations` object and want full coverage, add them:
 
-No action is strictly required — a `translations` object doesn't have to be exhaustive, so any key you don't define falls back to the English default. But if you ship a localised `translations` object and want these two messages translated too, add the new keys:
+- `ERROR_RENAME` / `ERROR_MOVE` — rejected `rename` and `move` operations now show operation-specific messages (`'Rename unsuccessful'` / `'Move unsuccessful'`) instead of the generic `'Update unsuccessful'`, mirroring `ERROR_ADD` / `ERROR_DELETE`. (Their `onError` codes are likewise `RENAME_ERROR` / `MOVE_ERROR` — additive members of `JerErrorCode`.)
+- `TOOLTIP_OK` / `TOOLTIP_CANCEL` — labels for the ✓ / ✗ confirm and cancel controls, now that those are real `<button>`s. Always applied as `aria-label`s, and shown as visible tooltips when `showIconTooltips` is enabled.
 
 ```diff
   translations={{
     // ...existing keys
-    ERROR_UPDATE: '…',
 +   ERROR_RENAME: '…',
 +   ERROR_MOVE: '…',
++   TOOLTIP_OK: '…',
++   TOOLTIP_CANCEL: '…',
   }}
 ```
+
+One further new key, `ITEMS_FILTERED`, is covered alongside the `showCollectionCount` default change — see [Display / config prop renames](#7-display--config-prop-renames).
 
 ### Removed localisation key: `DEFAULT_STRING`
 
