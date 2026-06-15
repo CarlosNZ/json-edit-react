@@ -334,6 +334,25 @@ select:focus + .focus {
   height: 1em;
 }
 
+/* The icon controls are real <button>s for accessibility. This neutralises the
+   user-agent button chrome so they render identically to surrounding elements.
+   Only properties a <button> won't otherwise take from context are listed:
+   background/border/margin/padding/appearance don't inherit, and form controls
+   are UA-special-cased so `font`/`color` must be re-asserted (`font: inherit`
+   is load-bearing — the icons are sized in `em`). `cursor` inherits from the
+   wrapper rule above, whose flexbox also centres the button, so neither is
+   needed here. Scoped with `>` so it never leaks into custom-button content. */
+.jer-edit-buttons > button,
+.jer-confirm-buttons > button {
+  appearance: none;
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+
 .jer-input-buttons {
   gap: 0.4em;
 }

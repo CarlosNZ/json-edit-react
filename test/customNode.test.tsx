@@ -361,7 +361,7 @@ describe('CustomNode — switching type away mid-edit', () => {
     expect(input.value).toBe('')
 
     await user.type(input, 'hello')
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(setData).toHaveBeenCalledWith({ x: 'hello' })
   })
 
@@ -384,7 +384,7 @@ describe('CustomNode — switching type away mid-edit', () => {
     expect(input).not.toBeNull()
     expect(input.value).toBe('0')
 
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(setData).toHaveBeenCalledWith({ x: 0 })
   })
 
@@ -517,7 +517,7 @@ describe('CustomNode — toStandardType seeds the type-switch buffer', () => {
     expect(input).not.toBeNull()
     expect(input.value).toBe('https://example.com')
 
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(setData).toHaveBeenCalledWith({ x: 'https://example.com' })
   })
 
@@ -637,7 +637,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
     )
     const input = await startEdit(user)
     setBuffer(input, '123')
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
   })
 
@@ -667,7 +667,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
     )
     const input = await startEdit(user)
     setBuffer(input, 'abc')
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
 
     expect(setData).not.toHaveBeenCalled()
     expect(screen.getByTestId('custom-input')).toBeInTheDocument()
@@ -677,7 +677,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
     expect(container.querySelector('.jer-error-slug')).toHaveTextContent('Invalid BigInt')
 
     setBuffer(input, '42')
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(setData).toHaveBeenCalledWith({ x: BigInt(42) })
     expect(container.querySelector('.jer-error-slug')).toBeNull()
   })
@@ -690,7 +690,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
     )
     const input = await startEdit(user)
     setBuffer(input, 'abc')
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     fireEvent.keyDown(screen.getByTestId('custom-input'), { key: 'Escape' })
 
     expect(setData).not.toHaveBeenCalled()
@@ -710,7 +710,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
       />
     )
     await startEdit(user)
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(onUpdate).not.toHaveBeenCalled()
     expect(screen.queryByTestId('custom-input')).toBeNull()
   })
@@ -817,7 +817,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
     await user.dblClick(screen.getByTestId('custom'))
     fireEvent.change(screen.getByTestId('field-text'), { target: { value: 'new text' } })
     fireEvent.change(screen.getByTestId('field-url'), { target: { value: 'new url' } })
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(setData).toHaveBeenCalledWith({ x: { text: 'new text', url: 'new url' } })
   })
 })
@@ -899,7 +899,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     await user.dblClick(screen.getByText('"hello"'))
     await switchTo(user, 'BigInt')
     fireEvent.change(screen.getByTestId('custom-input'), { target: { value: '123' } })
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
 
     expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
     expect(onUpdate).toHaveBeenCalledTimes(1)
@@ -984,7 +984,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('MARK')
     expect(setData).not.toHaveBeenCalled()
 
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(setData).toHaveBeenCalledWith({ x: 'MARK' })
   })
 
@@ -1021,7 +1021,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     await switchTo(user, 'Obj')
     expect(setDataSpy).not.toHaveBeenCalled()
 
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(setDataSpy).toHaveBeenCalledWith({ x: { a: 1, b: 2 } })
     // `collapse={1}` would normally hide the new collection's contents — the
     // switch-commit launches it expanded, matching the instant-commit path.
@@ -1077,7 +1077,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     expect(setData).not.toHaveBeenCalled()
 
     fireEvent.change(screen.getByTestId('custom-input'), { target: { value: '123' } })
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
   })
 
@@ -1255,7 +1255,7 @@ describe('CustomNode — JSON serialization hooks', () => {
     // edit the root object as raw JSON text
     await user.click(screen.getAllByTitle('Edit')[0])
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '{"x":"PLACEHOLDER"}' } })
-    await user.click(container.querySelector('.jer-confirm-buttons > div') as HTMLElement)
+    await user.click(container.querySelector('.jer-confirm-buttons > button') as HTMLElement)
     await waitFor(() => expect(setData).toHaveBeenCalledWith({ x: 'REVIVED' }))
   })
 })

@@ -465,7 +465,7 @@ interface BaseNodeProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
-  editConfirmRef: React.RefObject<HTMLDivElement | null>
+  editConfirmRef: React.RefObject<HTMLButtonElement | null>
   jsonStringify: (
     data: JsonData,
     // eslint-disable-next-line

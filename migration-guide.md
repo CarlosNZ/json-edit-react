@@ -688,6 +688,22 @@ If you used `toPathString`'s output as an HTML `name` or `id` attribute (e.g. in
 
 The exported `ThemeStyles` type is now `Partial<Record<ThemeableElement, …>>` (every key optional). If you imported it and relied on it being a *total* record, it's now optional-per-key — more permissive, so most code needs no change. See [Themes & Styles](README.md#themes--styles) in the README.
 
+### Icon controls are now `<button>` elements
+
+The clickable icon controls — the ✓ / ✗ confirm/cancel pair and the edit/copy/delete/add icons — are now real `<button>` elements instead of `<div>`s, so assistive tech announces them as actionable and reads their `aria-label`. Their appearance is unchanged (the default button chrome is reset in the bundled CSS), and they carry `tabIndex={-1}` so the editor's existing field-to-field Tab navigation is unaffected.
+
+The only thing to act on is **custom CSS that targets these controls by tag name**. If you styled them via a `div` selector, switch it to `button`:
+
+```css
+/* Before (v1) */
+.jer-confirm-buttons > div { … }
+
+/* After (v2) */
+.jer-confirm-buttons > button { … }
+```
+
+Selectors that target the wrapper classes (`.jer-confirm-buttons`, `.jer-edit-buttons`) or the icons themselves are unaffected. Consumer-supplied custom buttons (`customButtons`) remain wrapped in a `<div>`, so their markup is unchanged.
+
 ---
 
 ## Need help?

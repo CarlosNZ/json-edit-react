@@ -553,7 +553,7 @@ describe('JsonEditor — edit flow', () => {
     await user.type(input, 'hi')
 
     // .jer-confirm-buttons holds [OK, Cancel] in DOM order
-    const okBtn = container.querySelectorAll('.jer-confirm-buttons > div')[0]
+    const okBtn = container.querySelectorAll('.jer-confirm-buttons > button')[0]
     await user.click(okBtn)
 
     expect(setData).toHaveBeenCalledTimes(1)
@@ -571,12 +571,65 @@ describe('JsonEditor — edit flow', () => {
     await user.clear(input)
     await user.type(input, 'discard-me')
 
-    const cancelBtn = container.querySelectorAll('.jer-confirm-buttons > div')[1]
+    const cancelBtn = container.querySelectorAll('.jer-confirm-buttons > button')[1]
     await user.click(cancelBtn)
 
     expect(setData).not.toHaveBeenCalled()
     expect(screen.queryByRole('textbox')).toBeNull()
     expect(screen.getByText('"hello"')).toBeInTheDocument()
+  })
+
+  // The clickable controls are real <button>s (not <div onClick>) so assistive
+  // tech announces them as actionable and labels them. They carry tabIndex={-1}
+  // to stay out of the editor's field-to-field Tab flow (Enter/Escape on the
+  // field itself drive confirm/cancel).
+  test('confirm/cancel controls are labelled <button>s kept out of the Tab order', async () => {
+    const user = userEvent.setup()
+    const { container } = render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+
+    const confirmButtons = container.querySelectorAll('.jer-confirm-buttons > button')
+    expect(confirmButtons).toHaveLength(2)
+    confirmButtons.forEach((btn) => {
+      expect(btn.tagName).toBe('BUTTON')
+      expect(btn).toHaveAttribute('type', 'button')
+      expect(btn).toHaveAttribute('tabindex', '-1')
+    })
+    expect(confirmButtons[0]).toHaveAttribute('aria-label', 'OK')
+    expect(confirmButtons[1]).toHaveAttribute('aria-label', 'Cancel')
+    // No visible tooltip by default (showIconTooltips is off)
+    expect(confirmButtons[0]).toHaveAttribute('title', '')
+    expect(confirmButtons[1]).toHaveAttribute('title', '')
+  })
+
+  // Regression: the confirm/cancel buttons must honour `showIconTooltips` the
+  // same way the edit icons do — the `title` (visible browser tooltip), gated
+  // on the prop, is separate from the always-present `aria-label`.
+  test('confirm/cancel buttons show a title tooltip when showIconTooltips is enabled', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <JsonEditor data={{ greeting: 'hello' }} setData={noop} showIconTooltips />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+
+    const confirmButtons = container.querySelectorAll('.jer-confirm-buttons > button')
+    expect(confirmButtons[0]).toHaveAttribute('title', 'OK')
+    expect(confirmButtons[1]).toHaveAttribute('title', 'Cancel')
+  })
+
+  test('edit/delete icon controls are labelled <button>s kept out of the Tab order', () => {
+    const { container } = render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} />)
+
+    const editButton = container.querySelector('[aria-label="Edit"]') as HTMLElement
+    const deleteButton = container.querySelector('[aria-label="Delete"]') as HTMLElement
+    ;[editButton, deleteButton].forEach((btn) => {
+      expect(btn).not.toBeNull()
+      expect(btn.tagName).toBe('BUTTON')
+      expect(btn).toHaveAttribute('type', 'button')
+      expect(btn).toHaveAttribute('tabindex', '-1')
+    })
   })
 
   // Regression: a `draggable` ancestor — not just the immediate parent, ANY
@@ -729,7 +782,7 @@ describe('JsonEditor — structural mutations', () => {
     // Commit (OK button) writes the converted default. 'hello' → number is NaN,
     // which the editor falls back to 0. .jer-confirm-buttons holds [OK,
     // Cancel].
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(setData).toHaveBeenCalledTimes(1)
     expect(setData).toHaveBeenCalledWith({ x: 0 })
   })
@@ -1517,7 +1570,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
 
     // Committing (the OK button) submits the coerced value, which onUpdate
     // rejects. .jer-confirm-buttons holds [OK, Cancel] in DOM order.
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > div')[0])
+    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
     expect(onUpdate).toHaveBeenCalled()
 
     // The rejection reverts the value and closes the edit session.
