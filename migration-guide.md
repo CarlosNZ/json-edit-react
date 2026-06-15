@@ -9,7 +9,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | What changed                                                                                                                                                                                                                                             | Migration                                                                                                                                                                                                                                  |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Pre-built themes split into a separate package                                                                                                                                                                                                           | `npm i @json-edit-react/themes` and update theme imports                                                                                                                                                                                   |
-| `LinkCustomComponent` / `LinkCustomNodeDefinition` moved                                                                                                                                                                                                 | `npm i @json-edit-react/components`; the definition is now the `hyperlinkDefinition()` factory — see [Custom components](#2-custom-components-moved-to-json-edit-reactcomponents)                                                          |
+| Custom components moved to separate package, including the previously built-in `LinkCustomComponent`                                                                                                                                                     | `npm i @json-edit-react/components`; the definition is now the `hyperlinkDefinition()` factory — see [Custom components](#2-custom-components-moved-to-json-edit-reactcomponents)                                                          |
 | `JsonEditor` is now generic on the data type (`JsonEditor<T>`)                                                                                                                                                                                           | No action needed — defaults to `JsonData`. Opt in with<br> `<JsonEditor<MyShape> ... />`                                                                                                                                                   |
 | `setData` is now required; `viewOnly` removed; new `JsonViewer` export                                                                                                                                                                                   | For read-only, use `<JsonViewer>`, which is a wrapper around the editor with appropriate props for view-only — see [`setData` is required](#4-setdata-is-required-viewonly-removed-jsonviewer-added)                                       |
 | `restrict*` props renamed to `allow*` (polarity inverted)                                                                                                                                                                                                | Rename `restrictEdit`→`allowEdit` etc. and **invert** booleans / filter results — see [`restrict*` → `allow*`](#5-restrict-props-renamed-to-allow-semantics-inverted)                                                                      |
@@ -22,12 +22,13 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps` | Rename the fields in your definitions and the props type in your components — see [`CustomNodeDefinition` field renames](#11-customnodedefinition-field-renames)                                                                           |
 | `externalTriggers` prop replaced by an [imperative handle](https://react.dev/reference/react/useImperativeHandle)                                                                                                                                        | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/confirm/cancel` — see [the `editorRef` handle](#12-externaltriggers-prop-replaced-by-the-editorref-imperative-handle)                                      |
 | Fine-grained re-rendering: object / array / function props must be referentially stable to benefit                                                                                                                                                       | Keep `customNodeDefinitions`, filter functions, `translations`, etc. stable (module scope or `useMemo`); callbacks are stabilised for you — see [stable props](#13-keep-object-and-function-props-referentially-stable)                    |
+| Misc public-export changes — new `AutogrowTextArea`; `toPathString` is now `/`-encoded; `ThemeStyles` is `Partial`                                                                                                                                       | Mostly additive; act only if you parse `toPathString` output or typed against a total `ThemeStyles` — see [Misc changes to public exports](#14-misc-changes-to-public-exports)                                                             |
 
 ---
 
 ## 1. Pre-built themes moved to `@json-edit-react/themes`
 
-The six pre-built themes (`githubDarkTheme`, `githubLightTheme`, `monoDarkTheme`, `monoLightTheme`, `candyWrapperTheme`, `psychedelicTheme`) are no longer re-exported from `json-edit-react`. They live in a new companion package, [`@json-edit-react/themes`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/themes), which is published and versioned independently.
+The six pre-built themes (`githubDarkTheme`, `githubLightTheme`, `monoDarkTheme`, `monoLightTheme`, `candyWrapperTheme`, `psychedelicTheme`) are no longer re-exported from `json-edit-react`. They live in a new companion package, [`@json-edit-react/themes`](https://www.npmjs.com/package/@json-edit-react/themes), which is published and versioned independently.
 
 **Why:** keeps the core bundle minimal (themes are static data with no behaviour) and lets new themes ship without forcing a core release.
 
@@ -72,7 +73,7 @@ All of these moved from `json-edit-react` to `@json-edit-react/themes`:
 
 ## 2. Custom components moved to `@json-edit-react/components`
 
-The built-in `LinkCustomComponent` + `LinkCustomNodeDefinition` are no longer exported from `json-edit-react`. They — along with **11 other pre-built custom node components** — live in a new companion package, [`@json-edit-react/components`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components).
+The built-in `LinkCustomComponent` + `LinkCustomNodeDefinition` are no longer exported from `json-edit-react`. They — along with **11 other pre-built custom node components** — live in a new companion package, [`@json-edit-react/components`](https://www.npmjs.com/package/@json-edit-react/components).
 
 **Why:** the new package can ship richer components (date pickers, color pickers, markdown rendering, etc.) without dragging their third-party dependencies into core. Core keeps its zero-runtime-deps promise; consumers who want the extras opt in.
 
@@ -114,8 +115,8 @@ customNodeDefinitions={[hyperlinkDefinition({ condition: ({ key }) => key === 'h
 
 | Component                              | Use case                                                                                                      |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `LinkCustomComponent`                  | URL strings → clickable links (functionally a superset of the v1 version, with configurable `componentProps`) |
-| `EnhancedLinkCustomComponent`          | Object-shaped data `{ text, url }` → clickable string                                                         |
+| `Hyperlink`                            | URL strings → clickable links (functionally a superset of the v1 version, with configurable `componentProps`) |
+| `EnhancedLink`                         | Object-shaped data `{ text, url }` → clickable string                                                         |
 | `DateTimePicker`                       | ISO date strings, edited via `react-datepicker`                                                               |
 | `DateObject`                           | JavaScript `Date` objects                                                                                     |
 | `ColorPicker`                          | Hex/RGB/HSL color strings, edited via `react-colorful`                                                        |
@@ -366,7 +367,7 @@ The filter, search, and type functions (`FilterFunction`, `SearchFilterFunction`
 
 ## 9. One `onUpdate`; unified return shape; flat `NodeData` payloads
 
-The update callbacks are consolidated into a single result-producer with one consistent payload and return shape.
+The update callbacks are consolidated into a single result-producer with one consistent payload and return shape. See the [Update Functions](README.md#update-functions) section of the README for the full reference.
 
 ### `onEdit` / `onAdd` / `onDelete` removed — use one `onUpdate`
 
@@ -468,7 +469,7 @@ The `DEFAULT_STRING` key (`'New data!'`) is gone — if your `translations` obje
 
 ## 10. Observers reshaped: `onEditEvent` lifecycle stream; flat `onError` / `onCollapse`; `onCopy` error
 
-The observer callbacks move onto the same flat `NodeData` payload as the rest of the API, and `onEditEvent` becomes a full lifecycle stream.
+The observer callbacks move onto the same flat `NodeData` payload as the rest of the API, and `onEditEvent` becomes a full lifecycle stream. See the [Event callbacks](README.md#event-callbacks) section of the README for the full event reference.
 
 ### `onEditEvent` — from `(path, isKey)` to a discriminated event stream
 
@@ -567,7 +568,7 @@ And inside your component, rename the props type and the config prop:
 
 ## 12. `externalTriggers` prop replaced by the `editorRef` imperative handle
 
-The `externalTriggers` prop — a state-as-RPC object you mutated to trigger collapse/edit actions — is removed. Imperative control now goes through a ref handle passed via the new `editorRef` prop. The `ExternalTriggers` and `EditState` types are removed; `JsonEditorHandle` (and `JsonViewerHandle`) are added.
+The `externalTriggers` prop — a state-as-RPC object you mutated to trigger collapse/edit actions — is removed. Imperative control now goes through a ref handle passed via the new `editorRef` prop. The `ExternalTriggers` and `EditState` types are removed; `JsonEditorHandle` (and `JsonViewerHandle`) are added. See the [Imperative handle (`editorRef`)](README.md#imperative-handle-editorref) section of the README for the full handle reference.
 
 **Why:** props aren't commands. The old pattern required carefully memoising the trigger object to avoid infinite effect loops, and gave no autocomplete for the available actions. A ref handle is idiomatic React, fully typed, and removes that footgun. (`editorRef` is a *plain ref-valued prop*, not the `ref` attribute, so `JsonEditor<T>` stays a generic component with full type inference.)
 
@@ -630,7 +631,11 @@ This is standard React `memo` hygiene rather than new API, but v2's per-node mem
 
 ---
 
-## 14. New public export in core: `AutogrowTextArea`
+## 14. Misc changes to public exports
+
+A few smaller changes to the public export surface.
+
+### `AutogrowTextArea` — new public export
 
 `AutogrowTextArea` — the auto-resizing textarea primitive that powers `StringEdit` and the built-in string editor — is now exported from `json-edit-react`. This is purely additive; nothing about your existing code changes.
 
@@ -640,9 +645,7 @@ import { AutogrowTextArea } from 'json-edit-react'
 
 It joins the existing rendering primitives — `StringDisplay`, `StringEdit`, `toPathString` — that make it possible to compose custom components on top of the editor's built-in string handling. The new `@json-edit-react/components` package leans on these primitives internally; they're equally available to consumers writing their own components.
 
----
-
-## 15. `toPathString` encoding changed
+### `toPathString` encoding changed
 
 `toPathString` now joins keys with `/` (URL-encoded) instead of `.`, so the encoding is unambiguous even when keys themselves contain `.` or `/`.
 
@@ -661,19 +664,9 @@ The second `key?: 'key_'` parameter has been removed — it was an internal enco
 
 If you used `toPathString`'s output as an HTML `name` or `id` attribute (e.g. inside a custom component), nothing about how you use it changes; the string just looks different. If you parsed the returned string back into a path, you'll need to switch to `decodeURIComponent` per segment after splitting on `/`.
 
----
+### `ThemeStyles` is now a partial type
 
-## 16. Theming: partial `ThemeStyles` and function composition
-
-The theming engine is unchanged for the common cases — a `theme` prop taking colours, style objects, arrays, and style functions all behave as before. Two things are new or clarified:
-
-### `ThemeStyles` is now partial
-
-The exported `ThemeStyles` type is now `Partial<Record<ThemeableElement, …>>` — inherently optional per key. If you imported `ThemeStyles` and relied on it being a *total* record (every element required), it's now optional-per-key. The change is more permissive, so most code needs no edits.
-
-### Arrays of style functions now compose
-
-When an element's value is an array containing more than one style function, *all* of them now run and merge (later wins per property) — matching what this section always described. Previously only the last function in the array took effect. If you had multiple functions in one array and relied on just the last applying, fold them into a single function. (Functions are still always applied after static styles.)
+The exported `ThemeStyles` type is now `Partial<Record<ThemeableElement, …>>` (every key optional). If you imported it and relied on it being a *total* record, it's now optional-per-key — more permissive, so most code needs no change. See [Themes & Styles](README.md#themes--styles) in the README.
 
 ---
 
