@@ -7,12 +7,14 @@ const PACKAGES = {
   core: { name: 'json-edit-react', dir: 'build' },
   themes: { name: '@json-edit-react/themes', dir: 'packages/themes/build' },
   components: { name: '@json-edit-react/components', dir: 'packages/components/build' },
+  utils: { name: '@json-edit-react/utils', dir: 'packages/utils/build' },
 }
 
 const ENV_FLAGS = {
   core: 'MEASURE_CORE',
   themes: 'MEASURE_THEMES',
   components: 'MEASURE_COMPONENTS',
+  utils: 'MEASURE_UTILS',
 }
 
 const FORMATS = [
