@@ -134,11 +134,13 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
   }
 
   // Apply the generic "confirm" fallback once, after the loop has fully
-  // resolved any user-supplied "confirm" control. An explicitly disabled
-  // (`null`) per-type confirm is left alone — only an unset (`undefined`) one
-  // inherits the generic confirm.
+  // resolved any user-supplied "confirm" control. A per-type confirm inherits
+  // the generic confirm whenever `confirm` is explicitly provided — including
+  // `null`, so `confirm: null` disables all of them. An explicitly set
+  // per-type confirm (value or `null`) always wins, and an unset generic
+  // confirm leaves the per-type defaults untouched.
   confirmFallbackKeys.forEach((key) => {
-    if (userControls[key] === undefined && userControls.confirm)
+    if (userControls[key] === undefined && userControls.confirm !== undefined)
       controls[key] = controls.confirm as KeyEvent & React.ModifierKey[]
   })
 
@@ -207,7 +209,13 @@ export const getNextOrPrevious = (
   let candidate: CollectionKey[] | null
   if (isCollection(destination.value)) {
     if (Object.keys(destination.value).length === 0) {
-      return getNextOrPrevious(fullData, [...parentPath, destination.key], nextOrPrev, sort, isViable)
+      return getNextOrPrevious(
+        fullData,
+        [...parentPath, destination.key],
+        nextOrPrev,
+        sort,
+        isViable
+      )
     }
     candidate = getChildRecursive(fullData, [...parentPath, destination.key], nextOrPrev, sort)
   } else {

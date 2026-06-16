@@ -113,6 +113,23 @@ describe('getFullKeyboardControlMap', () => {
     expect(controls.booleanConfirm).toEqual({ key: 'Enter' })
   })
 
+  test('a disabled (null) generic confirm cascades to all inheriting value-node confirms', () => {
+    const controls = getFullKeyboardControlMap({ confirm: null })
+    expect(controls.confirm).toBeNull()
+    expect(controls.stringConfirm).toBeNull()
+    expect(controls.numberConfirm).toBeNull()
+    expect(controls.booleanConfirm).toBeNull()
+  })
+
+  test('an explicit per-type confirm still wins when the generic confirm is disabled', () => {
+    const controls = getFullKeyboardControlMap({ confirm: null, stringConfirm: 'Tab' })
+    expect(controls.confirm).toBeNull()
+    expect(controls.stringConfirm).toEqual({ key: 'Tab' })
+    // The non-overridden ones still follow the disabled generic confirm
+    expect(controls.numberConfirm).toBeNull()
+    expect(controls.booleanConfirm).toBeNull()
+  })
+
   test('disables a modifier control by storing an empty array, not null', () => {
     // `clipboardModifier`/`collapseModifier` are consumed via `.includes()`, so
     // an empty array disables them while keeping the field a real array.
