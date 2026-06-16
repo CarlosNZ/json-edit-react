@@ -580,9 +580,11 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         // Borrow the pre-built definition's ISO-date condition; the component
         // here is a custom read-only display, not the date picker
         condition: datePickerDefinition().condition,
-        component: ({ data, getStyles, nodeData }) => {
+        component: ({ value, getStyles, nodeData }) => {
           return (
-            <p style={getStyles('string', nodeData)}>{new Date(data as string).toLocaleString()}</p>
+            <p style={getStyles('string', nodeData)}>
+              {new Date(value as string).toLocaleString()}
+            </p>
           )
         },
       },
@@ -717,14 +719,14 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           typeof value === 'string' &&
           value.startsWith('http') &&
           value.endsWith('.png'),
-        component: ({ data }) => {
+        component: ({ value }) => {
           const truncate = (string: string, length = 50) =>
             string.length < length ? string : `${string.slice(0, length - 2).trim()}...`
           return (
             <div style={{ maxWidth: 250 }}>
-              <a href={data as string} target="_blank" rel="noreferrer">
-                <img src={data as string} style={{ maxHeight: 75 }} alt="logo" />
-                <p style={{ fontSize: '0.75em' }}>{truncate(data as string)}</p>{' '}
+              <a href={value as string} target="_blank" rel="noreferrer">
+                <img src={value as string} style={{ maxHeight: 75 }} alt="logo" />
+                <p style={{ fontSize: '0.75em' }}>{truncate(value as string)}</p>{' '}
               </a>
             </div>
           )
@@ -732,7 +734,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       },
       {
         condition: ({ key }) => key === 'publisher',
-        component: ({ data }) => {
+        component: ({ value }) => {
           return (
             <p
               style={{
@@ -746,7 +748,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
                 color: 'black',
               }}
             >
-              Presented by: <strong>{String(data)}</strong>
+              Presented by: <strong>{String(value)}</strong>
             </p>
           )
         },
