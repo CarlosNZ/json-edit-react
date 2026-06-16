@@ -26,9 +26,19 @@ planned contents are:
 
 ## Public API
 
-Everything consumers can import is re-exported from [src/index.ts](src/index.ts).
-Treat changes there as semver-significant. The entry is currently an empty
-placeholder — add `export * from './<group>'` lines as each helper group lands.
+Most helpers are re-exported from the root entry [src/index.ts](src/index.ts) (add
+an `export * from './<group>'` line as each lands). Treat changes there as
+semver-significant.
+
+**Exception — the filter toolkit ships under its own subpath**,
+`@json-edit-react/utils/filters` (`src/filters/`), and is deliberately NOT
+re-exported from the root. Its builder names are generic (`and`, `or`, `not`,
+`root`, `collections`, `primitives`, …), so they're kept off the package root.
+This is the package's first real sub-path export — the wiring lives in three
+places: `package.json` `exports` (+ a `typesVersions` fallback for classic
+`moduleResolution: node`), a second `jsBundle`/`dtsBundle` pair in
+[rollup.config.mjs](rollup.config.mjs), and the demo's Vite alias
+(`utilsFiltersSrcMap`). Mirror that pattern for any future sub-path group.
 
 ## Conventions
 

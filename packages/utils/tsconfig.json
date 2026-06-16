@@ -18,5 +18,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "files": ["src/index.ts"]
+  "files": ["src/index.ts", "src/filters/index.ts"]
 }

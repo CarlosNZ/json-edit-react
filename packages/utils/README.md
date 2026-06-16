@@ -165,9 +165,11 @@ You bring your own validator (`ajvAdapter` wraps a compiled AJV function; or pas
 
 The `allow*` props and `searchFilter` all take a function of a node; hand-writing them — destructure `key` / `path` / `level` / `value`, compare, combine — is repetitive. This kit gives you small, named, composable pieces instead: property builders (`byKey`, `byPath`, `byLevel`, `bySize`, `byType`, `byValue`), position constants (`root`, `collections`, `primitives`, `inArray`, `inObject`), `and` / `or` / `not` combinators, and the search bridges `matchesSearch` / `matchRecord`. Every piece is the same `FilterPredicate` shape, so it works on any of those props, and each builder interns its result — so you can write them inline without a `useMemo` or churning the editor's memoization.
 
+The toolkit ships under its own subpath — **`@json-edit-react/utils/filters`** — to keep its generic builder names off the package root.
+
 ```tsx
 import { JsonEditor } from 'json-edit-react'
-import { and, byKey, byLevel, byType, matchRecord, not, primitives } from '@json-edit-react/utils'
+import { and, byKey, byLevel, byType, matchRecord, not, primitives } from '@json-edit-react/utils/filters'
 
 <JsonEditor
   data={data}

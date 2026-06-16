@@ -44,7 +44,7 @@ import {
   not,
   primitives,
   root,
-} from '@json-edit-react/utils'
+} from '@json-edit-react/utils/filters'
 import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'
 import Ajv from 'ajv'

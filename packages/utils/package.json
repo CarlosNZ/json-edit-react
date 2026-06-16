@@ -18,6 +18,18 @@
       "types": "./build/index.d.ts",
       "import": "./build/index.esm.js",
       "require": "./build/index.cjs.js"
+    },
+    "./filters": {
+      "types": "./build/filters.d.ts",
+      "import": "./build/filters.esm.js",
+      "require": "./build/filters.cjs.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "filters": [
+        "build/filters.d.ts"
+      ]
     }
   },
   "files": [

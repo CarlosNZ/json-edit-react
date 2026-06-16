@@ -1,6 +1,6 @@
 # Filter-function toolkit
 
-Composable predicate builders for `json-edit-react`'s `allow*` props (`allowEdit`, `allowDelete`, `allowAdd`, `allowTypeSelection`, `allowDrag`, …) and `searchFilter`. Exported from `@json-edit-react/utils`. Zero runtime dependencies.
+Composable predicate builders for `json-edit-react`'s `allow*` props (`allowEdit`, `allowDelete`, `allowAdd`, `allowTypeSelection`, `allowDrag`, …) and `searchFilter`. Exported from the `@json-edit-react/utils/filters` subpath — kept off the package root so the generic builder names (`and`, `or`, `not`, `root`, `collections`, …) don't crowd it. Zero runtime dependencies.
 
 Those props all take a function of a node — `allowEdit={(node) => …}`, `searchFilter={(node, text) => …}` — and hand-writing them is repetitive: you destructure `key` / `path` / `level` / `value`, compare, and combine. This kit replaces the boilerplate with small, named, composable pieces — `byKey('id')`, `byLevel({ min: 2 })`, `and`, `or`, `not` — that read like a sentence and snap together. Every builder returns the same `FilterPredicate` shape, so the same piece works on any of those props.
 
@@ -8,7 +8,7 @@ Those props all take a function of a node — `allowEdit={(node) => …}`, `sear
 
 ```tsx
 import { JsonEditor } from 'json-edit-react'
-import { and, byKey, byLevel, byType, matchRecord, not, primitives, root } from '@json-edit-react/utils'
+import { and, byKey, byLevel, byType, matchRecord, not, primitives, root } from '@json-edit-react/utils/filters'
 
 // Only leaf values are editable; only arrays accept new children.
 <JsonEditor allowEdit={primitives} allowAdd={byType('array')} data={data} setData={setData} />

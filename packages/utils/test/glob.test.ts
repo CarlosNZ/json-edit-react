@@ -1,4 +1,4 @@
-import type { PathPattern } from '../src'
+import type { PathPattern } from '../src/filters'
 import { compilePathMatcher } from '../src/filters/_glob'
 
 // Direct unit tests for the path-glob engine that backs `byPath` (and locates

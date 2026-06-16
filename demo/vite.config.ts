@@ -70,6 +70,16 @@ const utilsSrcMap: Record<PackageOption, string> = {
   pack: path.resolve(__dirname, '../pack-output/utils/package'),
 }
 
+// The filter toolkit ships under its own subpath (`@json-edit-react/utils/filters`),
+// so it needs its own resolution target — the bare `utils` alias is anchored and
+// won't match the subpath.
+const utilsFiltersSrcMap: Record<PackageOption, string> = {
+  npm: '@json-edit-react/utils/filters',
+  local: path.resolve(__dirname, '../packages/utils/src/filters'),
+  build: path.resolve(__dirname, '../packages/utils/build/filters.esm.js'),
+  pack: path.resolve(__dirname, '../pack-output/utils/package/build/filters.esm.js'),
+}
+
 const packageFile = coreSrcMap[provider].pkgJson
 const jsonEditReactPath = coreSrcMap[provider].src
 const pkg = fs.readJsonSync(packageFile)
@@ -115,6 +125,7 @@ export default defineConfig({
       { find: /^@test-data\//, replacement: path.resolve(__dirname, '../data') + '/' },
       { find: /^@json-edit-react\/themes$/, replacement: themesSrcMap[provider] },
       { find: /^@json-edit-react\/components$/, replacement: componentsSrcMap[provider] },
+      { find: /^@json-edit-react\/utils\/filters$/, replacement: utilsFiltersSrcMap[provider] },
       { find: /^@json-edit-react\/utils$/, replacement: utilsSrcMap[provider] },
       { find: /^@json-edit-react$/, replacement: jsonEditReactPath },
       { find: /^json-edit-react$/, replacement: jsonEditReactPath },

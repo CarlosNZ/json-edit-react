@@ -24,7 +24,7 @@ import {
   primitives,
   root,
   type FilterPredicate,
-} from '@json-edit-react/utils'
+} from '@json-edit-react/utils/filters'
 
 export interface Recipe {
   id: string

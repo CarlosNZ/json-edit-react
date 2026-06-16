@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from 'json-edit-react'
-import { and, byKey, byPath, matchesSearch, matchRecord, not } from '../src'
+import { and, byKey, byPath, matchesSearch, matchRecord, not } from '../src/filters'
 
 // Integration layer for the filter kit: render a real <JsonEditor> and assert
 // on the DOM. The unit suite (filters.test.ts) owns per-builder logic against
