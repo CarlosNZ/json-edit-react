@@ -20,6 +20,7 @@ jobs:
       core: ${{ steps.filter.outputs.core }}
       themes: ${{ steps.filter.outputs.themes }}
       components: ${{ steps.filter.outputs.components }}
+      utils: ${{ steps.filter.outputs.utils }}
       any: ${{ steps.filter.outputs.changes != '[]' }}
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +36,8 @@ jobs:
               - 'packages/themes/**'
             components:
               - 'packages/components/**'
+            utils:
+              - 'packages/utils/**'
 
   size:
     needs: detect
@@ -81,6 +84,9 @@ jobs:
           if [[ "${{ needs.detect.outputs.components }}" == "true" ]]; then
             pnpm --filter @json-edit-react/components build
           fi
+          if [[ "${{ needs.detect.outputs.utils }}" == "true" ]]; then
+            pnpm --filter @json-edit-react/utils build
+          fi
 
       - name: Measure PR sizes
         working-directory: pr
@@ -89,6 +95,7 @@ jobs:
           MEASURE_CORE: ${{ needs.detect.outputs.core }}
           MEASURE_THEMES: ${{ needs.detect.outputs.themes }}
           MEASURE_COMPONENTS: ${{ needs.detect.outputs.components }}
+          MEASURE_UTILS: ${{ needs.detect.outputs.utils }}
 
       - name: Install (base)
         working-directory: base
@@ -106,6 +113,9 @@ jobs:
           if [[ "${{ needs.detect.outputs.components }}" == "true" ]]; then
             pnpm --filter @json-edit-react/components build
           fi
+          if [[ "${{ needs.detect.outputs.utils }}" == "true" ]]; then
+            pnpm --filter @json-edit-react/utils build
+          fi
 
       - name: Measure base sizes
         working-directory: base
@@ -114,6 +124,7 @@ jobs:
           MEASURE_CORE: ${{ needs.detect.outputs.core }}
           MEASURE_THEMES: ${{ needs.detect.outputs.themes }}
           MEASURE_COMPONENTS: ${{ needs.detect.outputs.components }}
+          MEASURE_UTILS: ${{ needs.detect.outputs.utils }}
 
       - name: Format comment
         run: node pr/scripts/format-size-diff.mjs base-sizes.json pr-sizes.json > comment.md
