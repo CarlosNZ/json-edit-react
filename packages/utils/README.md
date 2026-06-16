@@ -21,6 +21,7 @@ pnpm add @json-edit-react/utils
 - **Confirm-before-update hooks** — gate edits/deletes on a confirmation dialog without hand-rolling the deferred-promise dance. _Available now._ ([#307](https://github.com/CarlosNZ/json-edit-react/issues/307))
 - **Undo / redo** — wrap a consumer-owned `data`/`setData` pair with undo/redo (snapshot stacks plus `canUndo` / `canRedo`), zero-dep. _Available now._
 - **Reactive validation** — `useValidationState` runs your validator over the whole document and exposes an O(1), identity-stable error index, so styles / filters / conditions reflect validity correctly even for cross-branch effects. Ships `validationStyles` (theme sugar), `ajvAdapter`, and the `useStableValue` primitive it's built on. Zero-dep (you bring your own validator). _Available now._ ([#357](https://github.com/CarlosNZ/json-edit-react/issues/357))
+- **Filter-function toolkit** — composable predicate builders (`byKey`, `byPath`, `byLevel`, `byType`, …), `and` / `or` / `not` combinators, and search bridges for the `allow*` props and `searchFilter`. Zero-dep. _Available now._ ([#343](https://github.com/CarlosNZ/json-edit-react/issues/343))
 - **JSON Schema → Filter Functions** — generate `allowEdit` / `allowDelete` / `allowAdd` (etc.) functions from a JSON Schema so the editor UI can't produce invalid data in the first place. _Planned._ ([#285](https://github.com/CarlosNZ/json-edit-react/issues/285))
 - **Search helpers** — ready-made `searchFilter` functions for common search patterns. _Planned._ ([#319](https://github.com/CarlosNZ/json-edit-react/issues/319))
 
@@ -159,6 +160,25 @@ const MyEditor = () => {
 ```
 
 You bring your own validator (`ajvAdapter` wraps a compiled AJV function; or pass any `(data) => ValidationIssue[]`), so the package stays zero-dependency. See [src/validation/README.md](src/validation/README.md) for the consumption recipes (styles, a glyph via a custom node, `allow*` gating) and [src/stable-value/README.md](src/stable-value/README.md) for `useStableValue`, the identity-stabilizer it's built on.
+
+## Filter-function toolkit
+
+The `allow*` props and `searchFilter` all take a function of a node; hand-writing them — destructure `key` / `path` / `level` / `value`, compare, combine — is repetitive. This kit gives you small, named, composable pieces instead: property builders (`byKey`, `byPath`, `byLevel`, `bySize`, `byType`, `byValue`), position constants (`root`, `collections`, `primitives`, `inArray`, `inObject`), `and` / `or` / `not` combinators, and the search bridges `matchesSearch` / `matchRecord`. Every piece is the same `FilterPredicate` shape, so it works on any of those props, and each builder interns its result — so you can write them inline without a `useMemo` or churning the editor's memoization.
+
+```tsx
+import { JsonEditor } from 'json-edit-react'
+import { and, byKey, byLevel, byType, matchRecord, not, primitives } from '@json-edit-react/utils'
+
+<JsonEditor
+  data={data}
+  setData={setData}
+  allowEdit={and(not(byKey('id')), byLevel({ min: 2 }))} // editable below level 1, except `id`
+  allowAdd={byType('array')} // only arrays accept new children
+  searchFilter={matchRecord({ fields: ['name', 'username'] })} // keep a whole record when it matches
+/>
+```
+
+See [src/filters/README.md](src/filters/README.md) for the full reference — every builder, the glob path syntax, and the composition / referential-stability rules.
 
 ## License
 
