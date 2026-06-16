@@ -14,7 +14,7 @@
 import React, { lazy, Suspense } from 'react'
 import { type TextEditorProps } from 'json-edit-react'
 import { type Extension } from '@uiw/react-codemirror'
-import { Loading } from '../_common/Loading'
+import { Loading } from '../../_common/Loading'
 
 type Props = TextEditorProps & { theme?: string }
 

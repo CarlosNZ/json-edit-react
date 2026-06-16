@@ -18,6 +18,16 @@
       "types": "./build/index.d.ts",
       "import": "./build/index.esm.js",
       "require": "./build/index.cjs.js"
+    },
+    "./widgets": {
+      "types": "./build/widgets.d.ts",
+      "import": "./build/widgets.esm.js",
+      "require": "./build/widgets.cjs.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "widgets": ["build/widgets.d.ts"]
     }
   },
   "files": [

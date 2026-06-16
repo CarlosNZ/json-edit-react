@@ -36,9 +36,15 @@ const coreSrcMap: Record<PackageOption, { pkgJson: string; src: string }> = {
     pkgJson: path.join('..', 'package.json'),
     src: path.resolve(__dirname, '../src'),
   },
+  // `build` mode reads core's raw rollup output (`build/`) directly, so a plain
+  // `pnpm build` is enough — no need to re-stage `build_package/`, which exists
+  // only to assemble the npm-publish tree (short README + trimmed package.json).
+  // `pack` mode below is the true publish dress-rehearsal. Point at the ESM file,
+  // not the dir: `build/` has no package.json / index.js for Vite to resolve.
+  // Version comes from the root package.json (build/ carries no version).
   build: {
-    pkgJson: path.join('..', 'build_package', 'package.json'),
-    src: path.resolve(__dirname, '../build_package'),
+    pkgJson: path.join('..', 'package.json'),
+    src: path.resolve(__dirname, '../build/index.esm.js'),
   },
   pack: {
     pkgJson: path.resolve(__dirname, '../pack-output/json-edit-react/package/package.json'),
@@ -63,11 +69,32 @@ const componentsSrcMap: Record<PackageOption, string> = {
   pack: path.resolve(__dirname, '../pack-output/components/package'),
 }
 
+// The editor-slot widgets (`ReactSelect`, `CodeEditor`) ship under their own
+// subpath (`@json-edit-react/components/widgets`), so they need their own
+// resolution target — the bare `components` alias is anchored and won't match
+// the subpath.
+const componentsWidgetsSrcMap: Record<PackageOption, string> = {
+  npm: '@json-edit-react/components/widgets',
+  local: path.resolve(__dirname, '../packages/components/src/widgets'),
+  build: path.resolve(__dirname, '../packages/components/build/widgets.esm.js'),
+  pack: path.resolve(__dirname, '../pack-output/components/package/build/widgets.esm.js'),
+}
+
 const utilsSrcMap: Record<PackageOption, string> = {
   npm: '@json-edit-react/utils',
   local: path.resolve(__dirname, '../packages/utils/src'),
   build: path.resolve(__dirname, '../packages/utils/build/index.esm.js'),
   pack: path.resolve(__dirname, '../pack-output/utils/package'),
+}
+
+// The filter toolkit ships under its own subpath (`@json-edit-react/utils/filters`),
+// so it needs its own resolution target — the bare `utils` alias is anchored and
+// won't match the subpath.
+const utilsFiltersSrcMap: Record<PackageOption, string> = {
+  npm: '@json-edit-react/utils/filters',
+  local: path.resolve(__dirname, '../packages/utils/src/filters'),
+  build: path.resolve(__dirname, '../packages/utils/build/filters.esm.js'),
+  pack: path.resolve(__dirname, '../pack-output/utils/package/build/filters.esm.js'),
 }
 
 const packageFile = coreSrcMap[provider].pkgJson
@@ -114,19 +141,25 @@ export default defineConfig({
       // `../../../../../data/...` relative path.
       { find: /^@test-data\//, replacement: path.resolve(__dirname, '../data') + '/' },
       { find: /^@json-edit-react\/themes$/, replacement: themesSrcMap[provider] },
+      { find: /^@json-edit-react\/components\/widgets$/, replacement: componentsWidgetsSrcMap[provider] },
       { find: /^@json-edit-react\/components$/, replacement: componentsSrcMap[provider] },
+      { find: /^@json-edit-react\/utils\/filters$/, replacement: utilsFiltersSrcMap[provider] },
       { find: /^@json-edit-react\/utils$/, replacement: utilsSrcMap[provider] },
       { find: /^@json-edit-react$/, replacement: jsonEditReactPath },
       { find: /^json-edit-react$/, replacement: jsonEditReactPath },
     ],
     // In `pack` and `build` modes the packed/built sub-packages live outside
     // demo/node_modules. Without dedupe, vite's walk-up resolution from those
-    // files can pick up a second copy of React (from the workspace root's
-    // node_modules, or wherever else it finds one first) — different on-disk
-    // path = different React instance = hooks/context broken at runtime.
-    // Forcing react/react-dom to always resolve from the demo's own deps
-    // guarantees a single instance.
-    dedupe: ['react', 'react-dom'],
+    // files can pick up a second copy of a package (from the workspace root's
+    // pnpm store, or wherever else it finds one first) — a different on-disk
+    // path means a different module instance:
+    //   - react / react-dom: a second React breaks hooks/context at runtime.
+    //   - @codemirror/state, @codemirror/view: CodeMirror keys its extension
+    //     system on `instanceof` against these singletons, so a second copy
+    //     makes `@json-edit-react/components`' CodeEditor throw "Unrecognized
+    //     extension value … multiple instances of @codemirror/state".
+    // Forcing each to resolve from the demo's own deps guarantees one instance.
+    dedupe: ['react', 'react-dom', '@codemirror/state', '@codemirror/view'],
   },
   server: {
     port: 5175,

@@ -27,7 +27,7 @@ import {
 } from '@chakra-ui/react'
 import { InfoIcon, SmallCloseIcon } from '@chakra-ui/icons'
 import { JsonEditor, type JsonData, type NodeData, type ThemeStyles } from '@json-edit-react'
-import { type FilterPredicate } from '@json-edit-react/utils'
+import { type FilterPredicate } from '@json-edit-react/utils/filters'
 import { useExampleProps, useExampleTheme } from '../kit/exampleProps'
 import { useExamplePalette } from '../kit/useThemePalette'
 import { SplitPane } from '../kit/SplitPane'

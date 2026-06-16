@@ -17,7 +17,7 @@ import {
   primitives,
   root,
   type FilterPredicate,
-} from '../src'
+} from '../src/filters'
 
 // ---------------------------------------------------------------------------
 // One shared document, probed from every angle below. Read the tree alongside

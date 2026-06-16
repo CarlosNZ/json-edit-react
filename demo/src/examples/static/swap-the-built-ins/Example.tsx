@@ -5,7 +5,7 @@ import {
   type SelectProps,
   type TypeOptions,
 } from '@json-edit-react'
-import { CodeEditor, ReactSelect } from '@json-edit-react/components'
+import { CodeEditor, ReactSelect } from '@json-edit-react/components/widgets'
 import { buildSelectStyles } from './utils'
 import { useExampleTheme } from '../../kit/exampleProps'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---

@@ -10,6 +10,8 @@ A published package of pre-built custom node components for [`json-edit-react`](
 
 Re-exported from [src/index.ts](src/index.ts). Each component lives in its own folder under `src/` with the structure `{component.tsx, definition.ts, index.ts}` (plus `style.css` for some).
 
+**Exception — the editor-slot widgets ship under their own subpath**, `@json-edit-react/components/widgets` (`src/widgets/`), and are deliberately NOT re-exported from the root. `ReactSelect` and `CodeEditor` are a different *kind* of thing from the node-definition components: they have no `definition.ts` — they satisfy a props contract (`SelectProps`, `TextEditorProps`) and get passed to JsonEditor's top-level `Select` / `TextEditor` props to replace a built-in UI control, rather than render a node type. Splitting them out keeps the root barrel uniformly node-definition components. This is purely a **conceptual** grouping — NOT a tree-shaking measure (the widgets' heavy libs are already `React.lazy`-loaded and the wrapper code is tiny); don't conflate it with the bundle-bloat escape hatch below. The wiring lives in the same three places as a future sub-path group: `package.json` `exports` (+ a `typesVersions` fallback for classic `moduleResolution: node`), a second `jsBundle`/`dtsBundle` pair in [rollup.config.mjs](rollup.config.mjs), and the demo's Vite alias (`componentsWidgetsSrcMap`).
+
 ## Conventions
 
 ### Third-party deps strategy: Option B+
