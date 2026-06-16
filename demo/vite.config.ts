@@ -36,9 +36,15 @@ const coreSrcMap: Record<PackageOption, { pkgJson: string; src: string }> = {
     pkgJson: path.join('..', 'package.json'),
     src: path.resolve(__dirname, '../src'),
   },
+  // `build` mode reads core's raw rollup output (`build/`) directly, so a plain
+  // `pnpm build` is enough — no need to re-stage `build_package/`, which exists
+  // only to assemble the npm-publish tree (short README + trimmed package.json).
+  // `pack` mode below is the true publish dress-rehearsal. Point at the ESM file,
+  // not the dir: `build/` has no package.json / index.js for Vite to resolve.
+  // Version comes from the root package.json (build/ carries no version).
   build: {
-    pkgJson: path.join('..', 'build_package', 'package.json'),
-    src: path.resolve(__dirname, '../build_package'),
+    pkgJson: path.join('..', 'package.json'),
+    src: path.resolve(__dirname, '../build/index.esm.js'),
   },
   pack: {
     pkgJson: path.resolve(__dirname, '../pack-output/json-edit-react/package/package.json'),

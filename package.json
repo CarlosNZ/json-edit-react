@@ -35,6 +35,7 @@
     "demo:pack": "pnpm pack-all && cd demo && yarn && yarn start:pack",
     "prebuild": "pnpm lint && node scripts/run-prebuild-tests.mjs",
     "build": "rollup -c && rm -R build/dts",
+    "build-all": "pnpm -r build",
     "build-package": "pnpm build && node scripts/stage-package.mjs",
     "lint": "eslint",
     "compile": "tsc --noEmit && ts-prune",
