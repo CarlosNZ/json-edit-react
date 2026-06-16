@@ -1,0 +1,22 @@
+{
+  // Editor-facing config for this package's tests (mirrors core's
+  // test/tsconfig.json). ts-jest itself transpiles with the root
+  // test/tsconfig.json; this exists so the IDE treats the test files as a
+  // project with Jest globals + the `json-edit-react` path mapping in scope.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../../..",
+    "noEmit": true,
+    "moduleResolution": "bundler",
+    "typeRoots": ["../../../node_modules/@types"],
+    "types": ["jest", "node"],
+    // The bare 'json-edit-react' specifier (a peer dep) doesn't resolve from
+    // the repo-root node_modules; map it to core's source, matching the Jest
+    // moduleNameMapper. With no `baseUrl`, paths resolve relative to this file.
+    "paths": {
+      "json-edit-react": ["../../../src"],
+      "json-edit-react/*": ["../../../src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", "../src/**/*.ts", "../src/**/*.tsx"]
+}
