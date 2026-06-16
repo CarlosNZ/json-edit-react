@@ -35,6 +35,16 @@ import {
   UpdateFunctionProps,
   type AssignInput,
 } from '@json-edit-react'
+import {
+  and,
+  byKey,
+  byLevel,
+  byType,
+  matchRecord,
+  not,
+  primitives,
+  root,
+} from '@json-edit-react/utils'
 import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'
 import Ajv from 'ajv'
@@ -172,9 +182,12 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'Star Wars data',
-    allowEdit: ({ value }) => typeof value !== 'object' || value === null,
-    allowDelete: ({ value }) => typeof value !== 'object' || value === null,
-    allowAdd: ({ value }) => Array.isArray(value),
+    // allowEdit: ({ value }) => typeof value !== 'object' || value === null,
+    allowEdit: primitives,
+    // allowDelete: ({ value }) => typeof value !== 'object' || value === null,
+    allowDelete: primitives,
+    // allowAdd: ({ value }) => Array.isArray(value),
+    allowAdd: byType('array'),
     allowTypeSelection: ({ key, path }) => {
       if (path.slice(-2)[0] === 'films' || (path.slice(-3)[0] === 'films' && key === 'title'))
         return [
@@ -301,20 +314,14 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'Clients',
-    allowEdit: ({ key, level }) => key !== 'id' && level !== 0 && level !== 1,
-    allowAdd: ({ level }) => level !== 1,
-    allowDelete: ({ level }) => level === 1,
+    // allowEdit: ({ key, level }) => key !== 'id' && level !== 0 && level !== 1,
+    allowEdit: and(not(byKey('id')), byLevel({ min: 2 })),
+    // allowAdd: ({ level }) => level !== 1,
+    allowAdd: not(byLevel(1)),
+    // allowDelete: ({ level }) => level === 1,
+    allowDelete: byLevel(1),
     collapse: 2,
-    searchFilter: ({ path, fullData }, searchText) => {
-      const data = fullData as { name: string; username: string }[]
-      if (path?.length >= 2) {
-        const index = path?.[0] as number
-        return (
-          matchNode({ value: data[index].name }, searchText) ||
-          matchNode({ value: data[index].username }, searchText)
-        )
-      } else return false
-    },
+    searchFilter: matchRecord({ fields: ['name', 'username'] }),
     searchPlaceholder: 'Search by name or username',
     defaultValue: ({ level }) => {
       if (level === 0)
@@ -610,9 +617,12 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'theme',
-    allowEdit: ({ key, level }) => level !== 0 && !['fragments', 'styles'].includes(key as string),
-    allowDelete: ({ key }) => !['displayName', 'fragments', 'styles'].includes(key as string),
-    allowAdd: ({ level }) => level !== 0,
+    // allowEdit: ({ key, level }) => level !== 0 && !['fragments', 'styles'].includes(key as string),
+    allowEdit: and(not(root), not(byKey('fragments', 'styles'))),
+    // allowDelete: ({ key }) => !['displayName', 'fragments', 'styles'].includes(key as string),
+    allowDelete: not(byKey('displayName', 'fragments', 'styles')),
+    // allowAdd: ({ level }) => level !== 0,
+    allowAdd: not(root),
     allowTypeSelection: ['string', 'object', 'array'],
     collapse: 2,
     searchFilter: 'key',
@@ -667,16 +677,18 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     ),
     rootName: 'Superheroes',
     collapse: 2,
-    searchFilter: ({ path, fullData }, searchText = '') => {
-      const data = fullData as { name: string }[]
-      if (path?.length >= 2) {
-        const index = path?.[0] as number
-        return matchNode({ value: data[index].name }, searchText)
-      } else return false
-    },
+    // searchFilter: ({ path, fullData }, searchText = '') => {
+    //   const data = fullData as { name: string }[]
+    //   if (path?.length >= 2) {
+    //     const index = path?.[0] as number
+    //     return matchNode({ value: data[index].name }, searchText)
+    //   } else return false
+    // },
+    searchFilter: matchRecord({ fields: ['name'] }),
     searchPlaceholder: 'Search by character name',
     data: data.customNodes,
-    allowEdit: ({ level }) => level === 0,
+    // allowEdit: ({ level }) => level === 0,
+    allowEdit: root,
     allowAdd: false,
     allowDelete: false,
     onUpdate: ({ newData }, toast) => {
@@ -867,8 +879,10 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'dossier',
     collapse: 2,
     data: data.customKeys,
-    allowAdd: ({ level }) => level !== 0,
-    allowDelete: ({ level }) => level !== 0,
+    // allowAdd: ({ level }) => level !== 0,
+    allowAdd: not(root),
+    // allowDelete: ({ level }) => level !== 0,
+    allowDelete: not(root),
     customNodeDefinitions: [
       // 1. "REDACTED_" prefix — blacked-out key, original visible on hover.
       // Must come before the `_` matcher (which would still match these
