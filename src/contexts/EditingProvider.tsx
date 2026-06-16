@@ -237,16 +237,30 @@ const createEditingStore = (
   }
 
   // Fire an `onEditEvent`, building `NodeData` from the LIVE document at
-  // `path`. For pre-apply events (start*/submit*/cancel*) where the node
-  // still exists; committed ops use the frozen `BuiltCommit.nodeData` via
-  // `emitEvent` instead.
+  // `path`. For pre-apply events (start*/submit*/cancel*); committed ops use
+  // the frozen `BuiltCommit.nodeData` via `emitEvent` instead.
   const fireEditEvent = (
     path: CollectionKey[],
     event: EditEvent['event'],
     extra?: Record<string, unknown>
   ) => {
     if (!onEditEventRef.current) return
-    const nodeData = buildNodeDataFromPathRef.current?.(path)
+    let nodeData: NodeData | undefined
+    try {
+      nodeData = buildNodeDataFromPathRef.current?.(path)
+    } catch {
+      // The path is gone from the live document — e.g. the consumer swapped the
+      // whole `data` out from under an open edit, unmounting its node (a
+      // search-filtered node only renders `null`, so it stays mounted and its
+      // path survives). `buildNodeData` → `extract` throws on the missing path,
+      // so there's no node to describe: skip the event and turn editing off.
+      // The latter is the load-bearing part — otherwise the now-dangling
+      // `active` makes the NEXT open()/cancel() rebuild this same vanished path
+      // and throw here again, wedging ALL further editing. (An edit can't
+      // survive its own node vanishing, so abandoning it is the right call.)
+      commit({ ...state, active: null })
+      return
+    }
     if (nodeData) emitEvent(nodeData, event, extra)
   }
 

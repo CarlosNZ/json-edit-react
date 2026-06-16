@@ -694,6 +694,43 @@ describe('JsonEditor — edit flow', () => {
     // leaving the document untouched (no self-nesting move committed).
     expect(setData).not.toHaveBeenCalled()
   })
+
+  // Regression: an open edit whose node then UNMOUNTS — e.g. the consumer swaps
+  // the entire `data` out from under it, so the edited path no longer exists —
+  // must not wedge editing. The session stays `active` pointing at the vanished
+  // path until the next editing action; previously that next `open()` threw
+  // while building `NodeData` for the gone path to fire `cancelEdit` (only with
+  // an `onEditEvent` consumer), so NO further node could ever be edited. A
+  // search-filtered node keeps editing alive because it only renders `null`
+  // (stays mounted, path survives) — this covers the true-unmount case.
+  test('editing still works after the edited node unmounts (dataset swap)', async () => {
+    const user = userEvent.setup()
+    const Harness = () => {
+      const [data, setData] = useState<JsonData>({ greeting: 'hello' })
+      return (
+        <>
+          <button onClick={() => setData({ farewell: 'goodbye' })}>swap</button>
+          {/* `onEditEvent` is what triggered the wedge: the displaced
+              session's `cancelEdit` built NodeData from the now-gone path. */}
+          <JsonEditor data={data} setData={setData} onEditEvent={noop} />
+        </>
+      )
+    }
+    render(<Harness />)
+
+    // Open an edit on the original node.
+    await user.dblClick(screen.getByText('"hello"'))
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+
+    // Swap the whole dataset — the edited node ('greeting') unmounts.
+    await user.click(screen.getByText('swap'))
+    // The session belonged to a node that's gone, so no editor should linger.
+    expect(screen.queryByRole('textbox')).toBeNull()
+
+    // The store must not be wedged: a node in the NEW dataset still edits.
+    await user.dblClick(screen.getByText('"goodbye"'))
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
 })
 
 describe('JsonEditor — structural mutations', () => {
