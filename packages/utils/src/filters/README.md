@@ -26,6 +26,8 @@ import { and, byKey, byLevel, byType, matchRecord, not, primitives, root } from 
 
 You can write these **inline**, as above, without a `useMemo` or hoisting them out of render — see [Referential stability](#referential-stability) for why that's safe.
 
+See these builders in action in the [live demo](https://carlosnz.github.io/json-edit-react/).
+
 ## The predicate type
 
 Everything here is a `FilterPredicate`:

@@ -5,6 +5,18 @@ import type { PathPattern } from './types'
 // path; a glob string or a segment array compiles to a sequence of per-segment
 // matchers plus the `**` globstar. Compilation happens once (at builder-call
 // time, behind `intern`); the returned matcher runs per node.
+//
+// Glob rules (anchored at both ends; segments split on `.`, with `[n]`
+// normalised to `.n`):
+//   foo      a literal segment — matches the key `foo` exactly
+//   *        any one whole segment (does not cross a `.`)
+//   *Id      within a segment, `*` is zero-or-more chars — matches `userId`
+//   ?        within a segment, exactly one char
+//   {a,b}    alternation within a segment (nestable)
+//   **       a globstar: zero or more whole segments (a whole subtree)
+// So `users.*` matches `users.0` but not `users.0.name`, while `users.**`
+// matches `users`, `users.0`, and `users.0.name`. See the package README's
+// "Path patterns" section for the full reference.
 
 // Sentinel for the `**` token (zero-or-more whole segments). A symbol so it
 // can never be confused with a compiled-segment RegExp.
