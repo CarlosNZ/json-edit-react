@@ -22,7 +22,9 @@ it's a place to capture and rank ideas before they earn an issue.
 - **Search helpers** — ready-made `searchFilter` functions for common patterns.
   ([#319](https://github.com/CarlosNZ/json-edit-react/issues/319))
   Should also include **`expandToMatches(data, searchText, searchFilter?)`** — reveal search matches hidden inside collapsed subtrees. Has to be a *data-level* traversal: lazy mounting means core never evaluates `filterNode` below the collapse frontier, so it can't know about deep matches — walk `data` with the search predicate, collect matching paths, emit a `CollapseState[]` expanding every ancestor, feed it to `editorRef.collapse`. Composes with the `searchFilter` helpers (same predicate finds the paths). Drift hazard: with no custom `searchFilter` it must mirror core's default match semantics (`searchProperty`, collection-matches-via-descendants) — build it on core's exported `matchNode` / `matchNodeKey`, don't re-implement.
-- **Filter-function toolkit** — composable predicate builders (`byKey`, `byPath`, `byLevel`, `byType`, …) + `and`/`or`/`not` combinators for the `allow*` props and `searchFilter`. Full design with examples in [#343](https://github.com/CarlosNZ/json-edit-react/issues/343).
+- **Filter-function toolkit** — composable predicate builders (`byKey`, `byPath`, `byLevel`, `bySize`, `byType`, `byValue`), `root`/`collections`/`primitives`/`inArray`/`inObject` constants, `and`/`or`/`not` combinators, and the `matchesSearch`/`matchRecord` search bridges, for the `allow*` props and `searchFilter`. _Shipped_ (`src/filters/`). Design with examples in [#343](https://github.com/CarlosNZ/json-edit-react/issues/343).
+
+  Possible companion — **a predicate-driven dispatcher** (working names `pick` / `cond` / `choose`): `pick(predicate, value, predicate, value, …, default?)` → a function returning the value for the first matching predicate. One tier above the filter kit — `node → anything`, not `node → boolean` — so it's a *dispatcher* built on the predicates, **not** a filter builder (don't make it assignable to filter props, and don't name it `match*`, which collides with the boolean `matchNode`/`matchRecord`/`matchesSearch`). First-match-wins; needs a trailing default so it can return `false` (e.g. `allowTypeSelection`'s no-match value); thread `searchText` to the conditions. Typing fork: flat alternating args read best but type awkwardly (recursive variadic tuple / overload stack) vs. pairs `pick([p, v], …)` which type cleanly. Payloads aren't internable, so document "define it in your static config" rather than promising inline memo-safety. Earns its keep only if it has more than one customer (`allowTypeSelection` is the obvious one; a node→value `defaultValue` form, future node-keyed value props are the maybes) — for a single small table the hand-written if-chain is barely longer. Parked 2026-06-16.
 
 ---
 
@@ -103,8 +105,8 @@ plus a `diffJson(a, b)` helper for "what changed" UIs. Zero-dep.
 ## Rough priority
 
 1. Undo / redo — basic `useUndo` shipped; settlement-awareness extension pending
-2. Persistence
-3. Filter-function toolkit
+2. Filter-function toolkit — _shipped_ (`src/filters/`)
+3. Persistence
 
 …then validate-on-commit and dirty-state.
 
