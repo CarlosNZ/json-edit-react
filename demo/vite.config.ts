@@ -150,12 +150,16 @@ export default defineConfig({
     ],
     // In `pack` and `build` modes the packed/built sub-packages live outside
     // demo/node_modules. Without dedupe, vite's walk-up resolution from those
-    // files can pick up a second copy of React (from the workspace root's
-    // node_modules, or wherever else it finds one first) — different on-disk
-    // path = different React instance = hooks/context broken at runtime.
-    // Forcing react/react-dom to always resolve from the demo's own deps
-    // guarantees a single instance.
-    dedupe: ['react', 'react-dom'],
+    // files can pick up a second copy of a package (from the workspace root's
+    // pnpm store, or wherever else it finds one first) — a different on-disk
+    // path means a different module instance:
+    //   - react / react-dom: a second React breaks hooks/context at runtime.
+    //   - @codemirror/state, @codemirror/view: CodeMirror keys its extension
+    //     system on `instanceof` against these singletons, so a second copy
+    //     makes `@json-edit-react/components`' CodeEditor throw "Unrecognized
+    //     extension value … multiple instances of @codemirror/state".
+    // Forcing each to resolve from the demo's own deps guarantees one instance.
+    dedupe: ['react', 'react-dom', '@codemirror/state', '@codemirror/view'],
   },
   server: {
     port: 5175,
