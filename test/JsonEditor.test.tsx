@@ -9,6 +9,7 @@ import {
   type JsonViewerHandle,
   type EditEvent,
   type UpdateFunction,
+  type OnChangeFunction,
   type JsonData,
 } from '../src/types'
 
@@ -693,6 +694,70 @@ describe('JsonEditor — edit flow', () => {
     // A node can't be moved inside itself — the drop must be rejected outright,
     // leaving the document untouched (no self-nesting move committed).
     expect(setData).not.toHaveBeenCalled()
+  })
+
+  // Regression: an open edit whose node then UNMOUNTS — e.g. the consumer swaps
+  // the entire `data` out from under it, so the edited path no longer exists —
+  // must not wedge editing. The session stays `active` pointing at the vanished
+  // path until the next editing action; previously that next `open()` threw
+  // while building `NodeData` for the gone path to fire `cancelEdit` (only with
+  // an `onEditEvent` consumer), so NO further node could ever be edited. A
+  // search-filtered node keeps editing alive because it only renders `null`
+  // (stays mounted, path survives) — this covers the true-unmount case.
+  test('editing still works after the edited node unmounts (dataset swap)', async () => {
+    const user = userEvent.setup()
+    const Harness = () => {
+      const [data, setData] = useState<JsonData>({ greeting: 'hello' })
+      return (
+        <>
+          <button onClick={() => setData({ farewell: 'goodbye' })}>swap</button>
+          {/* `onEditEvent` is what triggered the wedge: the displaced
+              session's `cancelEdit` built NodeData from the now-gone path. */}
+          <JsonEditor data={data} setData={setData} onEditEvent={noop} />
+        </>
+      )
+    }
+    render(<Harness />)
+
+    // Open an edit on the original node.
+    await user.dblClick(screen.getByText('"hello"'))
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+
+    // Swap the whole dataset — the edited node ('greeting') unmounts.
+    await user.click(screen.getByText('swap'))
+    // The session belonged to a node that's gone, so no editor should linger.
+    expect(screen.queryByRole('textbox')).toBeNull()
+
+    // The store must not be wedged: a node in the NEW dataset still edits.
+    await user.dblClick(screen.getByText('"goodbye"'))
+    expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+
+  // Regression: when a consumer `onChange` TRANSFORMS the typed value (here it
+  // strips characters that aren't letters/spaces), React rewrites the
+  // controlled textarea to the transformed string, which natively drops the
+  // caret at the end. Editing mid-string — with a pre-existing illegal char
+  // that gets stripped on the first keystroke — must keep the caret beside the
+  // just-typed character, not fling it to the end.
+  test('caret stays put when onChange transforms the value mid-edit (no jump to end)', async () => {
+    const user = userEvent.setup()
+    const onChange: OnChangeFunction = ({ newValue }) =>
+      (newValue as string).replace(/[^a-zA-Z\s]/g, '')
+    render(<JsonEditor data={{ name: 'Mrs. Dennis Schulist' }} setData={noop} onChange={onChange} />)
+
+    await user.dblClick(screen.getByText('"Mrs. Dennis Schulist"'))
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe('Mrs. Dennis Schulist')
+
+    // Place the caret inside "Den|nis" (index 8) and type 'x'. The keystroke
+    // yields "Mrs. Denxnis Schulist" (caret 9); the consumer strips the
+    // pre-existing '.', so the committed value loses a char BEFORE the caret.
+    await user.type(textarea, 'x', { initialSelectionStart: 8, initialSelectionEnd: 8 })
+
+    expect(textarea.value).toBe('Mrs Denxnis Schulist')
+    // Caret lands right after the typed 'x' (index 8), NOT at the end (20).
+    expect(textarea.selectionStart).toBe(8)
+    expect(textarea.selectionStart).not.toBe(textarea.value.length)
   })
 })
 
