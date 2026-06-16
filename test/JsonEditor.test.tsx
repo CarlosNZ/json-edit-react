@@ -488,6 +488,35 @@ describe('JsonEditor — edit flow', () => {
     expect(screen.getByText('"hello"')).toBeInTheDocument()
   })
 
+  test('an `onChange` that rejects a character keeps the caret in place (no jump to end)', async () => {
+    // Regression: the edit textarea is controlled, so when `onChange` rewrites
+    // a keystroke (here: stripping a disallowed "."), React reassigns the DOM
+    // value and the browser resets the caret to the END. Typing a rejected
+    // character mid-string then jumped the caret away. The caret must instead
+    // stay where the user was typing.
+    const user = userEvent.setup()
+    // Strip any "." — mirrors a data model that disallows dots in the value.
+    const onChange = ({ newValue }: { newValue: unknown }) => String(newValue).replace(/\./g, '')
+    render(<JsonEditor data={{ name: 'abc' }} setData={noop} onChange={onChange} />)
+
+    await user.dblClick(screen.getByText('"abc"'))
+    const input = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(input.value).toBe('abc')
+
+    // Caret between 'a' and 'b', then type a rejected ".".
+    await user.type(input, '.', {
+      skipClick: true,
+      initialSelectionStart: 1,
+      initialSelectionEnd: 1,
+    })
+
+    // The "." was rejected, so the value is unchanged AND the caret stayed put
+    // (position 1) rather than jumping to the end (position 3).
+    expect(input.value).toBe('abc')
+    expect(input.selectionStart).toBe(1)
+    expect(input.selectionEnd).toBe(1)
+  })
+
   // Documents current behaviour: there is no document-level outside-click
   // handler. Clicking neutral chrome (e.g. the root key label) while editing
   // is a no-op — the input stays open. Cancelling on outside click would
@@ -540,6 +569,39 @@ describe('JsonEditor — edit flow', () => {
     expect(inputs).toHaveLength(1)
     expect((inputs[0] as HTMLTextAreaElement).value).toBe('two')
     expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('swapping `data` while editing (the editing node unmounts) does not lock further edits', async () => {
+    // Regression: the displaced-`cancel*` path rebuilt the outgoing node's
+    // `NodeData` from the LIVE document. After the whole `data` was swapped,
+    // the old path no longer resolved, so `buildNodeData` threw — aborting
+    // `open` before it set the new session and stranding `active` on the
+    // vanished node. Every later `open` re-threw, so NO further edits worked.
+    // `onEditEvent` is required to reproduce: it's what drives the rebuild.
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn()
+    const Harness = () => {
+      const [data, setData] = useState<JsonData>({ alpha: 'one', beta: 'two' })
+      return (
+        <>
+          <button onClick={() => setData([{ name: 'fresh' }])}>swap</button>
+          <JsonEditor data={data} setData={setData} onEditEvent={onEditEvent} />
+        </>
+      )
+    }
+    render(<Harness />)
+
+    await user.dblClick(screen.getByText('"one"'))
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('one')
+
+    // Swap to a differently-shaped dataset (object → array): the 'alpha' node
+    // unmounts while it is the active edit, and its path stops resolving.
+    await user.click(screen.getByText('swap'))
+    expect(screen.queryByRole('textbox')).toBeNull()
+
+    // Editing a node in the NEW dataset must still open.
+    await user.dblClick(screen.getByText('"fresh"'))
+    expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('fresh')
   })
 
   test('clicking the OK icon confirms the edit (same as pressing Enter)', async () => {

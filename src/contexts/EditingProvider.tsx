@@ -186,6 +186,10 @@ export interface EditingStore {
   submit: (args: SubmitArgs) => Promise<UpdateOutcome | undefined>
   /** Imperative read for event handlers — does not subscribe. */
   areChildrenBeingEdited: (path: CollectionKey[]) => boolean
+  /** Drop the active session if it targets `path` (and isn't held). Called when
+   *  the editing node unmounts so the store never strands a phantom session on
+   *  a node that no longer exists (e.g. the whole `data` was swapped out). */
+  closeIfActive: (path: CollectionKey[]) => void
 }
 
 const initialState: EditingStateBundle = {
@@ -246,7 +250,18 @@ const createEditingStore = (
     extra?: Record<string, unknown>
   ) => {
     if (!onEditEventRef.current) return
-    const nodeData = buildNodeDataFromPathRef.current?.(path)
+    // The path may no longer resolve in the live document — e.g. a displaced
+    // `cancel*` whose node vanished because the whole `data` was swapped out
+    // from under an open session. `buildNodeData` THROWS on a missing path, so
+    // guard it: a vanished node has no `NodeData` to report, so skip the event
+    // rather than let the throw escape `open`/`cancel` (which would abort the
+    // caller and strand the editing session, blocking all further edits).
+    let nodeData: NodeData | undefined
+    try {
+      nodeData = buildNodeDataFromPathRef.current?.(path)
+    } catch {
+      return
+    }
     if (nodeData) emitEvent(nodeData, event, extra)
   }
 
@@ -308,6 +323,22 @@ const createEditingStore = (
     } finally {
       cancelling = false
     }
+  }
+
+  // ── closeIfActive: drop a session whose node has unmounted ────────────────
+  const closeIfActive = (path: CollectionKey[]) => {
+    const active = state.active
+    // A held op resolves only through its gate, so leave it be. Otherwise only
+    // act when THIS node owns the active session (a node unmounting while a
+    // DIFFERENT node edits — Tab away, sibling delete — must not touch it).
+    if (active === null || active.phase === 'held' || !pathsEqual(active.path, path)) return
+    // Run this session's buffer cleanup (idempotent no-op on the now-unmounted
+    // node) and clear `active` silently — the node is gone, so there's no
+    // `NodeData` to report and no `cancel*` to fire.
+    const op0 = cancelOp
+    cancelOp = null
+    if (op0) op0()
+    commit({ ...state, active: null })
   }
 
   const addSettling = (pathStr: PathString, token: Token) =>
@@ -490,6 +521,7 @@ const createEditingStore = (
     submit,
     areChildrenBeingEdited: (path) =>
       state.active !== null && isDescendantOf(state.active.path, path),
+    closeIfActive,
   }
 }
 
@@ -572,6 +604,7 @@ export const useEditing = () => {
       cancel: store.cancel,
       submit: store.submit,
       areChildrenBeingEdited: store.areChildrenBeingEdited,
+      closeIfActive: store.closeIfActive,
     }),
     [bundle, store]
   )

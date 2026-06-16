@@ -30,7 +30,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   // Actions + imperative reads from the (stable) store — no subscription, so
   // editing transitions elsewhere don't re-render this node.
-  const { open, cancel, submit, areChildrenBeingEdited } = useEditingStore()
+  const { open, cancel, submit, areChildrenBeingEdited, closeIfActive } = useEditingStore()
   const { setCollapseState } = useCollapse()
   const {
     mainContainerRef,
@@ -133,6 +133,16 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // Contract #1: apply broadcast commands targeting this node. See
   // CollapseProvider top-of-file doc.
   useAppliedBroadcast(path, hasBeenOpened, animateCollapse)
+
+  // If THIS node owns the active session (whole-node JSON edit, key rename, or
+  // add) when it unmounts — e.g. the whole `data` was swapped out from under
+  // it — drop the session so the store doesn't strand a phantom `active` on a
+  // vanished node, which would block every subsequent edit. Reads the latest
+  // path from a ref so a reused fiber whose path changed still clears the
+  // right session.
+  const pathRef = useRef(path)
+  pathRef.current = path
+  useEffect(() => () => closeIfActive(pathRef.current), [closeIfActive])
 
   // For JSON-editing TextArea
   const textAreaRef = useRef<HTMLTextAreaElement>(null)

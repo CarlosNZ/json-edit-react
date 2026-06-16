@@ -64,7 +64,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // this node reads (via `getSnapshot`) is only consulted inside event
   // handlers, never during render. The only editing state that drives this
   // node's render (`isEditing`) comes from `useCommon`'s per-node selector.
-  const { open, cancel, submit, getSnapshot } = useEditingStore()
+  const { open, cancel, submit, getSnapshot, closeIfActive } = useEditingStore()
   const { setCollapseState } = useCollapse()
   const [value, setValue] = useState<typeof data | CollectionData>(
     // Bad things happen when you put a function into useState
@@ -151,6 +151,16 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     if (!derivedValues.isEditing) revertToData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data])
+
+  // If THIS node owns the active editing session when it unmounts (e.g. the
+  // whole `data` was swapped out from under an open edit), drop the session.
+  // Otherwise the store strands a phantom `active` on a vanished node, which
+  // blocks every subsequent edit. Reads the latest path from `nodeDataRef` so
+  // a reused fiber whose path changed still clears the right session.
+  useEffect(
+    () => () => closeIfActive(nodeDataRef.current.path),
+    [closeIfActive]
+  )
 
   const allowedDataTypes = useMemo(() => {
     // Include custom node options in dataType list
