@@ -1,18 +1,10 @@
+import { extract, matchNode, matchNodeKey, type JsonData } from 'json-edit-react'
 import type { FilterPredicate, NodeValueType, PathPattern, Range } from './types'
-import { intern } from './_intern'
+import { intern, internRef, internRefs } from './_intern'
 import { compilePathMatcher } from './_glob'
 
 // Public types. `Range` is intentionally NOT re-exported (see types.ts).
 export type { FilterPredicate, NodeValueType, PathPattern } from './types'
-
-// ---------------------------------------------------------------------------
-// SCAFFOLD — signatures only. Implemented one at a time (#343, step 3). Each
-// throws until built, so the test suite fails loudly rather than passing on a
-// stub's accidental return value (no false greens).
-// ---------------------------------------------------------------------------
-const TODO = (name: string): never => {
-  throw new Error(`[@json-edit-react/utils] filters: "${name}" not implemented yet`)
-}
 
 // --- Property builders ------------------------------------------------------
 
@@ -104,43 +96,84 @@ export const byValue: (
 
 // --- Node-position constants ------------------------------------------------
 
+// A value is a collection (object or array) iff it's a non-null object — the
+// same test the editor uses to split collection nodes from leaves.
+const isCollectionValue = (value: unknown): boolean => value !== null && typeof value === 'object'
+
 /** The root node (level 0). */
-export const root: FilterPredicate = () => TODO('root')
+export const root: FilterPredicate = ({ level }) => level === 0
 
 /** Objects and arrays. */
-export const collections: FilterPredicate = () => TODO('collections')
+export const collections: FilterPredicate = ({ value }) => isCollectionValue(value)
 
 /** Leaf values (everything that isn't a collection). */
-export const primitives: FilterPredicate = () => TODO('primitives')
+export const primitives: FilterPredicate = ({ value }) => !isCollectionValue(value)
 
 /** Nodes whose parent is an array. */
-export const inArray: FilterPredicate = () => TODO('inArray')
+export const inArray: FilterPredicate = ({ parentData }) => Array.isArray(parentData)
 
-/** Nodes whose parent is an object. */
-export const inObject: FilterPredicate = () => TODO('inObject')
+/** Nodes whose parent is an object (not an array; the root has no parent). */
+export const inObject: FilterPredicate = ({ parentData }) =>
+  isCollectionValue(parentData) && !Array.isArray(parentData)
 
 // --- Combinators ------------------------------------------------------------
 
+// Identity elements for the empty combinator calls — module-level singletons,
+// so `and()` / `or()` are referentially stable too.
+const alwaysTrue: FilterPredicate = () => true
+const alwaysFalse: FilterPredicate = () => false
+
 /** True when every predicate matches. `and()` (no args) is always true. */
-export const and = (...preds: FilterPredicate[]): FilterPredicate => (void preds, TODO('and'))
+export const and: (...preds: FilterPredicate[]) => FilterPredicate = internRefs(
+  (preds) => (node, searchText) => preds.every((p) => p(node, searchText)),
+  alwaysTrue
+)
 
 /** True when any predicate matches. `or()` (no args) is always false. */
-export const or = (...preds: FilterPredicate[]): FilterPredicate => (void preds, TODO('or'))
+export const or: (...preds: FilterPredicate[]) => FilterPredicate = internRefs(
+  (preds) => (node, searchText) => preds.some((p) => p(node, searchText)),
+  alwaysFalse
+)
 
 /** Negates a predicate. */
-export const not = (pred: FilterPredicate): FilterPredicate => (void pred, TODO('not'))
+export const not: (pred: FilterPredicate) => FilterPredicate = internRef(
+  (pred) => (node, searchText) => !pred(node, searchText)
+)
 
 // --- Search bridges ---------------------------------------------------------
 
-/** Wraps core's `matchNode` / `matchNodeKey` against the current `searchText`.
- * `mode` defaults to `'value'` — the editor's own default `searchFilter`. */
-export const matchesSearch = (mode: 'key' | 'value' | 'all' = 'value'): FilterPredicate =>
-  (void mode, TODO('matchesSearch'))
+/** Matches against the current `searchText` using core's own matchers:
+ * `'value'` (the default — node values), `'key'` (keys + path segments), or
+ * `'all'` (either). `searchText` is threaded in by the editor / a combinator. */
+export const matchesSearch: (mode?: 'key' | 'value' | 'all') => FilterPredicate = intern(
+  (mode: 'key' | 'value' | 'all' = 'value'): FilterPredicate => {
+    if (mode === 'key') return (node, searchText = '') => matchNodeKey(node, searchText)
+    if (mode === 'all')
+      return (node, searchText = '') =>
+        matchNode(node, searchText) || matchNodeKey(node, searchText)
+    return (node, searchText = '') => matchNode(node, searchText)
+  }
+)
 
 /** Reveals a whole record when one of its `fields` values matches `searchText`.
  * `path` (a `byPath` pattern, default `'*'` = top-level items) locates the
- * record layer. */
-export const matchRecord = (options: {
-  fields: string[]
-  path?: PathPattern
-}): FilterPredicate => (void options, TODO('matchRecord'))
+ * record layer: a node belongs to the SHORTEST prefix of its path that matches
+ * `path`. Pin a layer with the pattern — avoid `**` for the record path. */
+export const matchRecord: (options: { fields: string[]; path?: PathPattern }) => FilterPredicate =
+  intern((options: { fields: string[]; path?: PathPattern }): FilterPredicate => {
+    const { fields, path = '*' } = options
+    const isRecordPath = compilePathMatcher(path)
+    return ({ path: nodePath, fullData }, searchText = '') => {
+      for (let len = 0; len <= nodePath.length; len++) {
+        const prefix = nodePath.slice(0, len)
+        if (!isRecordPath(prefix)) continue
+        // The prefix is always a valid slice of this node's path, so extract
+        // resolves it without hitting its throw-on-missing branch.
+        const record: unknown = extract(fullData, prefix)
+        if (record === null || typeof record !== 'object') return false
+        const rec = record as Record<string, unknown>
+        return fields.some((f) => matchNode({ value: rec[f] as JsonData }, searchText))
+      }
+      return false // the node sits above the record layer
+    }
+  })
