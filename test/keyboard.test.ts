@@ -2,6 +2,7 @@ import { type MutableRefObject } from 'react'
 import {
   getFullKeyboardControlMap,
   getNextOrPrevious,
+  handleKeyPress,
   insertCharInTextArea,
 } from '../src/utils/keyboard'
 
@@ -94,6 +95,87 @@ describe('getFullKeyboardControlMap', () => {
     // Others still fall back to the generic confirm
     expect(controls.numberConfirm).toEqual({ key: 'Tab' })
     expect(controls.booleanConfirm).toEqual({ key: 'Tab' })
+  })
+
+  test('stores `null` for a disabled (null) KeyEvent control', () => {
+    const controls = getFullKeyboardControlMap({ tabForward: null, tabBack: null })
+    expect(controls.tabForward).toBeNull()
+    expect(controls.tabBack).toBeNull()
+    // Untouched controls keep their defaults
+    expect(controls.confirm).toEqual({ key: 'Enter' })
+  })
+
+  test('an explicitly disabled (null) per-type confirm is not re-enabled by the generic confirm fallback', () => {
+    const controls = getFullKeyboardControlMap({ confirm: 'Enter', stringConfirm: null })
+    expect(controls.stringConfirm).toBeNull()
+    // The other value-node confirms still inherit the generic confirm
+    expect(controls.numberConfirm).toEqual({ key: 'Enter' })
+    expect(controls.booleanConfirm).toEqual({ key: 'Enter' })
+  })
+
+  test('a disabled (null) generic confirm cascades to all inheriting value-node confirms', () => {
+    const controls = getFullKeyboardControlMap({ confirm: null })
+    expect(controls.confirm).toBeNull()
+    expect(controls.stringConfirm).toBeNull()
+    expect(controls.numberConfirm).toBeNull()
+    expect(controls.booleanConfirm).toBeNull()
+  })
+
+  test('an explicit per-type confirm still wins when the generic confirm is disabled', () => {
+    const controls = getFullKeyboardControlMap({ confirm: null, stringConfirm: 'Tab' })
+    expect(controls.confirm).toBeNull()
+    expect(controls.stringConfirm).toEqual({ key: 'Tab' })
+    // The non-overridden ones still follow the disabled generic confirm
+    expect(controls.numberConfirm).toBeNull()
+    expect(controls.booleanConfirm).toBeNull()
+  })
+
+  test('disables a modifier control by storing an empty array, not null', () => {
+    // `clipboardModifier`/`collapseModifier` are consumed via `.includes()`, so
+    // an empty array disables them while keeping the field a real array.
+    const controls = getFullKeyboardControlMap({ clipboardModifier: null, collapseModifier: null })
+    expect(controls.clipboardModifier).toEqual([])
+    expect(controls.collapseModifier).toEqual([])
+  })
+})
+
+describe('handleKeyPress with disabled controls', () => {
+  // A minimal stand-in for the React.KeyboardEvent that the real handler
+  // receives — only the fields `eventMatch` reads, plus a `preventDefault` spy.
+  const makeEvent = (key: string, modifiers: Record<string, boolean> = {}) => {
+    const preventDefault = jest.fn()
+    const e = {
+      key,
+      preventDefault,
+      shiftKey: false,
+      metaKey: false,
+      ctrlKey: false,
+      altKey: false,
+      ...modifiers,
+    } as unknown as Parameters<typeof handleKeyPress>[2]
+    return { e, preventDefault }
+  }
+
+  test('a disabled (null) binding never fires its action and lets the key fall through (no preventDefault)', () => {
+    const controls = getFullKeyboardControlMap({ tabForward: null })
+    const action = jest.fn()
+    const { e, preventDefault } = makeEvent('Tab')
+
+    handleKeyPress(controls, { tabForward: action }, e)
+
+    expect(action).not.toHaveBeenCalled()
+    expect(preventDefault).not.toHaveBeenCalled()
+  })
+
+  test('a binding left at its default still fires and suppresses native behaviour (control case)', () => {
+    const controls = getFullKeyboardControlMap({})
+    const action = jest.fn()
+    const { e, preventDefault } = makeEvent('Tab')
+
+    handleKeyPress(controls, { tabForward: action }, e)
+
+    expect(action).toHaveBeenCalledTimes(1)
+    expect(preventDefault).toHaveBeenCalledTimes(1)
   })
 })
 

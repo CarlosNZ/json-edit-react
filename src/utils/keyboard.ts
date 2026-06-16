@@ -45,9 +45,12 @@ export const getModifier = (
 // Determines whether a keyboard event matches a predefined value
 const eventMatch = (
   e: React.KeyboardEvent,
-  keyEvent: KeyEvent | React.ModifierKey[],
+  keyEvent: KeyEvent | React.ModifierKey[] | null,
   definition: string
 ) => {
+  // A `null` control means the binding is disabled — never match it, so the
+  // key falls through to native browser behaviour (e.g. Tab moves focus).
+  if (!keyEvent) return false
   const eventKey = e.key
   const eventModifier = getModifier(e)
   if (Array.isArray(keyEvent)) return eventModifier ? keyEvent.includes(eventModifier) : false
@@ -104,24 +107,40 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
   const controls = { ...defaultKeyboardControls }
   for (const key of Object.keys(defaultKeyboardControls)) {
     const typedKey = key as keyof KeyboardControls
-    if (userControls[typedKey]) {
-      const value = userControls[typedKey]
+    const value = userControls[typedKey]
 
-      const definition = (() => {
-        if (['clipboardModifier', 'collapseModifier'].includes(key))
-          return Array.isArray(value) ? value : [value]
-        if (typeof value === 'string') return { key: value }
-        return value
-      })() as KeyEvent & React.ModifierKey[]
+    // Not supplied → keep the default binding
+    if (value === undefined) continue
 
-      controls[typedKey] = definition
+    const isModifierKey = key === 'clipboardModifier' || key === 'collapseModifier'
+
+    // `null` disables the binding. The modifier-array controls
+    // (`clipboardModifier`/`collapseModifier`) are consumed via `.includes()`,
+    // which is always false for `[]`, so we store an empty array and they stay
+    // non-null. Every other (`KeyEvent`) control is stored as `null`, which
+    // `eventMatch` treats as "never matches".
+    if (value === null) {
+      controls[typedKey] = (isModifierKey ? [] : null) as unknown as KeyEvent & React.ModifierKey[]
+      continue
     }
+
+    const definition = (() => {
+      if (isModifierKey) return Array.isArray(value) ? value : [value]
+      if (typeof value === 'string') return { key: value }
+      return value
+    })() as KeyEvent & React.ModifierKey[]
+
+    controls[typedKey] = definition
   }
 
   // Apply the generic "confirm" fallback once, after the loop has fully
-  // resolved any user-supplied "confirm" control.
+  // resolved any user-supplied "confirm" control. A per-type confirm inherits
+  // the generic confirm whenever `confirm` is explicitly provided — including
+  // `null`, so `confirm: null` disables all of them. An explicitly set
+  // per-type confirm (value or `null`) always wins, and an unset generic
+  // confirm leaves the per-type defaults untouched.
   confirmFallbackKeys.forEach((key) => {
-    if (!userControls[key] && userControls.confirm)
+    if (userControls[key] === undefined && userControls.confirm !== undefined)
       controls[key] = controls.confirm as KeyEvent & React.ModifierKey[]
   })
 
@@ -190,7 +209,13 @@ export const getNextOrPrevious = (
   let candidate: CollectionKey[] | null
   if (isCollection(destination.value)) {
     if (Object.keys(destination.value).length === 0) {
-      return getNextOrPrevious(fullData, [...parentPath, destination.key], nextOrPrev, sort, isViable)
+      return getNextOrPrevious(
+        fullData,
+        [...parentPath, destination.key],
+        nextOrPrev,
+        sort,
+        isViable
+      )
     }
     candidate = getChildRecursive(fullData, [...parentPath, destination.key], nextOrPrev, sort)
   } else {
