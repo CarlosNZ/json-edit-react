@@ -42,6 +42,13 @@ const allExamples: Record<string, ExampleDef> = {
       'Exercise the optimistic commit lifecycle, the hold() gate and the full onEditEvent stream. Pick an onUpdate behaviour, then edit / rename / add / delete and watch the event viewer.',
     load: () => import('./editing-model/Example'),
   },
+  'filter-toolkit': {
+    kind: 'custom',
+    title: 'Filter toolkit',
+    blurb:
+      "Compose the `allow*` props and `searchFilter` from `@json-edit-react/utils`' predicate builders. Pick a builder to highlight every node it matches (a predicate is `(node) => boolean`, a theme style function is `(node) => CSSProperties` — the same function drives both), optionally bind it to `allowEdit`, and try the `matchesSearch` / `matchRecord` search bridges against a deep org-chart document.",
+    load: () => import('./filter-toolkit/Example'),
+  },
   'event-signals': {
     kind: 'static',
     title: 'Event signals',

@@ -17,6 +17,7 @@
 | External control       |       |                    |
 | Custom components      |       |                    | One that demonstrates all the types and props                             |
 | Custom components      |       |                    | One that demonstrates all the types and props                             |
+| Filter toolkit         | ✅️     |                    | Predicate builders from `@json-edit-react/utils`: highlight matches via a theme layer, bind to `allowEdit`, `matchesSearch`/`matchRecord` bridges; org-chart data |
 | Search utilities       |       |                    | Demonstrate "Search" utils                                                |
 | JsonViewer             |       |                    |                                                                           |
 | Validation staleness   | ✅️     |                    | `devOnly` scratchpad — naive style-fn validation under fine-grained re-rendering |
