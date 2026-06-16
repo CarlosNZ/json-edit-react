@@ -1288,6 +1288,7 @@ If (for example), you just wish to change the general "confirmation" action to "
 - On Mac, "Meta" refers to the "Cmd" key, and "Alt" refers to "Option"
 - If multiple modifiers are specified (in an array), *any* of them will be accepted (multi-modifier commands not currently supported)
 - You only need to specify values for `stringConfirm`, `numberConfirm`, and `booleanConfirm` if they should *differ* from your `confirm` value. 
+- To **disable** a control entirely, set it to `null`. The key is then no longer intercepted and falls through to its native browser behaviour. This is useful when the default bindings aren't appropriate for your data — for example, `{ tabForward: null, tabBack: null }` turns off Tab navigation between editable nodes so that <kbd>Tab</kbd>/<kbd>Shift-Tab</kbd> resume their normal focus-traversal behaviour. (The two modifier controls, `clipboardModifier` and `collapseModifier`, can likewise be disabled with `null` or an empty array `[]`.)
 - You won't be able to override system or browser behaviours: for example, on Mac "Ctrl-click" will perform a right-click, so using it as a click modifier won't work (hence we also accept "Meta"/"Cmd" as the default `clipboardModifier`).
 
 ## External control

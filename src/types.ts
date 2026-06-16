@@ -379,26 +379,28 @@ export interface KeyEvent {
   key: string
   modifier?: React.ModifierKey | React.ModifierKey[]
 }
+// Any control can be set to `null` to disable it — the key then falls through
+// to its native browser behaviour (e.g. Tab resumes normal focus traversal).
 export interface KeyboardControls {
-  confirm?: KeyEvent | string // value node defaults, key entry
-  cancel?: KeyEvent | string // all "Cancel" operations
-  objectConfirm?: KeyEvent | string
-  objectLineBreak?: KeyEvent | string
-  stringConfirm?: KeyEvent | string
-  stringLineBreak?: KeyEvent | string // for Value nodes
-  booleanConfirm?: KeyEvent | string
-  booleanToggle?: KeyEvent | string
-  numberConfirm?: KeyEvent | string
-  numberUp?: KeyEvent | string
-  numberDown?: KeyEvent | string
-  tabForward?: KeyEvent | string
-  tabBack?: KeyEvent | string
-  clipboardModifier?: React.ModifierKey | React.ModifierKey[]
-  collapseModifier?: React.ModifierKey | React.ModifierKey[]
+  confirm?: KeyEvent | string | null // value node defaults, key entry
+  cancel?: KeyEvent | string | null // all "Cancel" operations
+  objectConfirm?: KeyEvent | string | null
+  objectLineBreak?: KeyEvent | string | null
+  stringConfirm?: KeyEvent | string | null
+  stringLineBreak?: KeyEvent | string | null // for Value nodes
+  booleanConfirm?: KeyEvent | string | null
+  booleanToggle?: KeyEvent | string | null
+  numberConfirm?: KeyEvent | string | null
+  numberUp?: KeyEvent | string | null
+  numberDown?: KeyEvent | string | null
+  tabForward?: KeyEvent | string | null
+  tabBack?: KeyEvent | string | null
+  clipboardModifier?: React.ModifierKey | React.ModifierKey[] | null
+  collapseModifier?: React.ModifierKey | React.ModifierKey[] | null
 }
 
 export type KeyboardControlsFull = Omit<
-  Required<{ [Property in keyof KeyboardControls]: KeyEvent }>,
+  Required<{ [Property in keyof KeyboardControls]: KeyEvent | null }>,
   'clipboardModifier' | 'collapseModifier'
 > & {
   clipboardModifier: React.ModifierKey[]
