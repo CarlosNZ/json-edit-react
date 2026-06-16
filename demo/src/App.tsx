@@ -636,19 +636,21 @@ function App() {
                   // ]}
                   onChange={dataDefinition?.onChange ?? undefined}
                   jsonParse={JSON5.parse}
-                  keyboardControls={{
-                    // cancel: 'Tab',
-                    // confirm: { key: 'UpArrow', modifier: 'Shift' },
-                    // objectConfirm: { key: 'Enter', modifier: 'Shift' },
-                    // stringLineBreak: { key: 'Enter' },
-                    // stringConfirm: { key: 'Enter', modifier: 'Meta' },
-                    // clipboardModifier: ['Alt', 'Shift'],
-                    // collapseModifier: 'Control',
-                    // booleanConfirm: 'Enter',
-                    booleanToggle: 'r',
-                    tabForward: null,
-                    // tabBack: { key: 'Tab' },
-                  }}
+                  keyboardControls={
+                    {
+                      // cancel: 'Tab',
+                      // confirm: { key: 'Enter', modifier: 'Meta' },
+                      // objectConfirm: { key: 'Enter', modifier: 'Shift' },
+                      // stringLineBreak: { key: 'Enter' },
+                      // stringConfirm: { key: 'Enter', modifier: 'Meta' },
+                      // clipboardModifier: ['Alt', 'Shift'],
+                      // collapseModifier: 'Control',
+                      // booleanConfirm: 'Enter',
+                      // booleanToggle: 'r',
+                      // tabForward: { key: 'Tab', modifier: 'Shift' },
+                      // tabBack: { key: 'Tab' },
+                    }
+                  }
                   // insertAtBeginning="object"
                   // baseFontSize={20}
                   TextEditor={
