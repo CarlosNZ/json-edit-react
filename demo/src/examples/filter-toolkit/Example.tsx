@@ -6,13 +6,24 @@ import {
   Flex,
   FormLabel,
   Heading,
+  IconButton,
   Input,
+  InputGroup,
+  InputRightElement,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTrigger,
   Select,
   Switch,
   Text,
   Wrap,
   WrapItem,
 } from '@chakra-ui/react'
+import { SmallCloseIcon } from '@chakra-ui/icons'
 import { JsonEditor, type JsonData, type NodeData, type ThemeStyles } from '@json-edit-react'
 import { type FilterPredicate } from '@json-edit-react/utils'
 import { useExampleProps, useExampleTheme } from '../kit/exampleProps'
@@ -21,8 +32,10 @@ import { SplitPane } from '../kit/SplitPane'
 import { orgData } from './data'
 import { RECIPES, RECIPE_GROUPS, SEARCH_STRATEGIES } from './recipes'
 
-// The match highlight. A translucent amber reads on both light and dark themes,
-// and the rounded corners make a tinted key/value look like a pill.
+// The match highlight and the active-chip accent share one amber, so the
+// selected builder visually ties to what's lit up in the tree. It's bright
+// enough to read on both light and dark themes.
+const ACCENT = '#FFB300'
 const HIGHLIGHT: CSSProperties = {
   backgroundColor: 'rgba(255, 196, 0, 0.5)',
   borderRadius: '0.2em',
@@ -52,21 +65,36 @@ export default function FilterToolkit() {
   const palette = useExamplePalette()
 
   const [data, setData] = useState<JsonData>(orgData)
-  const [recipeId, setRecipeId] = useState('numbers')
+  // `null` = nothing selected (no highlight). Clicking the active chip toggles
+  // back to this.
+  const [recipeId, setRecipeId] = useState<string | null>('numbers')
   const [lockNonMatching, setLockNonMatching] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [searchId, setSearchId] = useState('value')
 
-  const activeRecipe = RECIPES.find((r) => r.id === recipeId) ?? RECIPES[0]
+  const activeRecipe = RECIPES.find((r) => r.id === recipeId) ?? null
   const activeSearch = SEARCH_STRATEGIES.find((s) => s.id === searchId) ?? SEARCH_STRATEGIES[0]
 
-  // Recompose only when the base theme or the active recipe changes. The
-  // recipe's predicate is interned (a stable reference per recipe), so this
-  // doesn't churn between unrelated renders.
+  // Compose the highlight layer over the picked theme — or just the theme when
+  // nothing's selected. The predicate is interned (stable per recipe), so this
+  // only recomputes when the base theme or active recipe actually changes.
   const theme = useMemo(
-    () => [baseTheme, buildHighlightTheme(activeRecipe.predicate)],
+    () => (activeRecipe ? [baseTheme, buildHighlightTheme(activeRecipe.predicate)] : baseTheme),
     [baseTheme, activeRecipe]
   )
+
+  // Chips borrow the editor theme's own colours (via the palette) so they stay
+  // legible on any theme; the active chip is the amber accent.
+  const chipProps = (isActive: boolean) =>
+    ({
+      size: 'xs',
+      variant: 'outline',
+      fontWeight: isActive ? 'bold' : 'normal',
+      bg: isActive ? ACCENT : 'transparent',
+      color: isActive ? 'gray.900' : palette.property ?? 'inherit',
+      borderColor: isActive ? ACCENT : palette.itemCount ?? palette.property ?? 'currentColor',
+      _hover: { borderColor: ACCENT, color: isActive ? 'gray.900' : ACCENT },
+    }) as const
 
   return (
     <SplitPane
@@ -88,7 +116,7 @@ export default function FilterToolkit() {
             // leaves the whole tree visible.
             searchFilter={searchText ? activeSearch.filter : undefined}
             // Bind the active predicate to allowEdit when the toggle is on.
-            allowEdit={lockNonMatching ? activeRecipe.predicate : undefined}
+            allowEdit={lockNonMatching && activeRecipe ? activeRecipe.predicate : undefined}
           />
         </Box>
       }
@@ -109,7 +137,7 @@ export default function FilterToolkit() {
               Pick a builder — every node it matches lights up in the tree. A predicate is just{' '}
               <Code fontSize="xs">{'(node) => boolean'}</Code>, and a theme style function is{' '}
               <Code fontSize="xs">{'(node) => CSSProperties'}</Code>, so the same function drives
-              the highlight.
+              the highlight. Click the active chip again to clear it.
             </Text>
 
             {RECIPE_GROUPS.map((group) => (
@@ -125,41 +153,113 @@ export default function FilterToolkit() {
                   {group}
                 </Text>
                 <Wrap spacing={2} mt={1.5}>
-                  {RECIPES.filter((r) => r.group === group).map((r) => (
-                    <WrapItem key={r.id}>
-                      <Button
-                        size="xs"
-                        variant={r.id === recipeId ? 'solid' : 'outline'}
-                        colorScheme={r.id === recipeId ? 'yellow' : 'gray'}
-                        onClick={() => setRecipeId(r.id)}
-                      >
-                        {r.label}
-                      </Button>
-                    </WrapItem>
-                  ))}
+                  {RECIPES.filter((r) => r.group === group).map((r) => {
+                    const isActive = r.id === recipeId
+                    return (
+                      <WrapItem key={r.id}>
+                        <Button
+                          {...chipProps(isActive)}
+                          onClick={() => setRecipeId(isActive ? null : r.id)}
+                        >
+                          {r.label}
+                        </Button>
+                      </WrapItem>
+                    )
+                  })}
                 </Wrap>
               </Box>
             ))}
 
-            <Code
-              display="block"
-              whiteSpace="pre-wrap"
-              wordBreak="break-word"
-              p={3}
-              mt={4}
-              borderRadius="md"
-              fontSize="sm"
-            >
-              {activeRecipe.code}
-            </Code>
-            <Text fontSize="sm" mt={2} color={palette.string}>
-              {activeRecipe.description}
-            </Text>
+            {activeRecipe ? (
+              <Box mt={4}>
+                <Text
+                  fontSize="xs"
+                  fontWeight="bold"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                  opacity={0.85}
+                  color={palette.itemCount}
+                >
+                  Filter function
+                </Text>
+                <Text fontSize="sm" color={palette.string} mt={1} mb={2}>
+                  The predicate you'd hand to a filter prop like <Code fontSize="xs">allowEdit</Code>{' '}
+                  or <Code fontSize="xs">searchFilter</Code> — the same{' '}
+                  <Code fontSize="xs">{'(node) => boolean'}</Code>. Here it drives the highlight (and{' '}
+                  <Code fontSize="xs">allowEdit</Code>, with the toggle below).
+                </Text>
+                <Box position="relative">
+                  {/* Floats over the top-right of the code display so the
+                      shorthand-vs-long-hand comparison is right where the eye
+                      already is. */}
+                  <Popover placement="bottom-end" isLazy>
+                    <PopoverTrigger>
+                      <Button
+                        size="xs"
+                        position="absolute"
+                        top={2}
+                        right={2}
+                        zIndex={1}
+                        bg="white"
+                        color="gray.700"
+                        borderWidth="1px"
+                        borderColor="gray.300"
+                        boxShadow="sm"
+                        _hover={{ borderColor: ACCENT, color: 'gray.900' }}
+                      >
+                        Show long-hand
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent w="auto" maxW="min(92vw, 460px)">
+                      <PopoverArrow />
+                      <PopoverCloseButton />
+                      <PopoverHeader fontWeight="bold" fontSize="sm">
+                        The same filter, written by hand
+                      </PopoverHeader>
+                      <PopoverBody>
+                        <Text fontSize="xs" mb={2} color="gray.600">
+                          What you'd pass to the prop without the toolkit:
+                        </Text>
+                        <Code
+                          display="block"
+                          whiteSpace="pre-wrap"
+                          wordBreak="break-word"
+                          p={3}
+                          borderRadius="md"
+                          fontSize="sm"
+                        >
+                          {activeRecipe.longhand}
+                        </Code>
+                      </PopoverBody>
+                    </PopoverContent>
+                  </Popover>
+                  <Code
+                    display="block"
+                    whiteSpace="pre-wrap"
+                    wordBreak="break-word"
+                    p={3}
+                    pr={28}
+                    borderRadius="md"
+                    fontSize="sm"
+                  >
+                    {activeRecipe.code}
+                  </Code>
+                </Box>
+                <Text fontSize="sm" mt={2} color={palette.string}>
+                  {activeRecipe.description}
+                </Text>
+              </Box>
+            ) : (
+              <Text mt={4} fontSize="sm" fontStyle="italic" opacity={0.8} color={palette.string}>
+                Nothing highlighted — pick a builder above to see its filter function.
+              </Text>
+            )}
 
             <Flex align="center" mt={4} gap={2}>
               <Switch
                 id="lock-edit"
                 isChecked={lockNonMatching}
+                isDisabled={!activeRecipe}
                 onChange={(e) => setLockNonMatching(e.target.checked)}
               />
               <FormLabel htmlFor="lock-edit" m={0} fontSize="sm" color={palette.property}>
@@ -167,7 +267,7 @@ export default function FilterToolkit() {
               </FormLabel>
             </Flex>
             <Text fontSize="xs" mt={1} opacity={0.85} color={palette.string}>
-              {lockNonMatching
+              {lockNonMatching && activeRecipe
                 ? 'Double-click a value to try — edits are blocked on non-highlighted nodes. (allowEdit governs value editing, so leaf-targeting recipes show it best.)'
                 : 'Off — every node is editable, as usual.'}
             </Text>
@@ -188,18 +288,31 @@ export default function FilterToolkit() {
               These turn the live search into a <Code fontSize="xs">searchFilter</Code>. Type a
               query, then switch strategy to compare how each one reveals matches.
             </Text>
-            <Input
-              mt={3}
-              size="sm"
-              bg="white"
-              color="gray.800"
-              placeholder="Search the tree…"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
+            <InputGroup mt={3} size="md">
+              <Input
+                bg="white"
+                color="gray.800"
+                placeholder="Search the tree…"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+              />
+              {searchText && (
+                <InputRightElement>
+                  <IconButton
+                    aria-label="Clear search"
+                    icon={<SmallCloseIcon />}
+                    size="sm"
+                    variant="ghost"
+                    color="gray.600"
+                    _hover={{ color: 'gray.900', bg: 'blackAlpha.100' }}
+                    onClick={() => setSearchText('')}
+                  />
+                </InputRightElement>
+              )}
+            </InputGroup>
             <Select
               mt={2}
-              size="sm"
+              size="md"
               bg="white"
               color="gray.800"
               value={searchId}
