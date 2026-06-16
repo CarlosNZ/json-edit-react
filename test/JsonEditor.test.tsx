@@ -9,6 +9,7 @@ import {
   type JsonViewerHandle,
   type EditEvent,
   type UpdateFunction,
+  type OnChangeFunction,
   type JsonData,
 } from '../src/types'
 
@@ -730,6 +731,33 @@ describe('JsonEditor — edit flow', () => {
     // The store must not be wedged: a node in the NEW dataset still edits.
     await user.dblClick(screen.getByText('"goodbye"'))
     expect(screen.getByRole('textbox')).toBeInTheDocument()
+  })
+
+  // Regression: when a consumer `onChange` TRANSFORMS the typed value (here it
+  // strips characters that aren't letters/spaces), React rewrites the
+  // controlled textarea to the transformed string, which natively drops the
+  // caret at the end. Editing mid-string — with a pre-existing illegal char
+  // that gets stripped on the first keystroke — must keep the caret beside the
+  // just-typed character, not fling it to the end.
+  test('caret stays put when onChange transforms the value mid-edit (no jump to end)', async () => {
+    const user = userEvent.setup()
+    const onChange: OnChangeFunction = ({ newValue }) =>
+      (newValue as string).replace(/[^a-zA-Z\s]/g, '')
+    render(<JsonEditor data={{ name: 'Mrs. Dennis Schulist' }} setData={noop} onChange={onChange} />)
+
+    await user.dblClick(screen.getByText('"Mrs. Dennis Schulist"'))
+    const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+    expect(textarea.value).toBe('Mrs. Dennis Schulist')
+
+    // Place the caret inside "Den|nis" (index 8) and type 'x'. The keystroke
+    // yields "Mrs. Denxnis Schulist" (caret 9); the consumer strips the
+    // pre-existing '.', so the committed value loses a char BEFORE the caret.
+    await user.type(textarea, 'x', { initialSelectionStart: 8, initialSelectionEnd: 8 })
+
+    expect(textarea.value).toBe('Mrs Denxnis Schulist')
+    // Caret lands right after the typed 'x' (index 8), NOT at the end (20).
+    expect(textarea.selectionStart).toBe(8)
+    expect(textarea.selectionStart).not.toBe(textarea.value.length)
   })
 })
 
