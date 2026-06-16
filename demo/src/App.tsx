@@ -53,7 +53,7 @@ import './style.css'
 import { getLineHeight, truncate } from './helpers'
 import { RenderProfiler } from './RenderProfiler'
 import { Loading } from '../../packages/components/src/_common/Loading'
-import { CodeEditor } from '@json-edit-react/components'
+import { CodeEditor } from '@json-edit-react/components/widgets'
 const SourceIndicator = lazy(() => import('./SourceIndicator'))
 const JsonEditor = lazy(() =>
   import('@json-edit-react').then((m) => ({ default: m.JsonEditor }))

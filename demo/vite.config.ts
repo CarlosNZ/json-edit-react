@@ -69,6 +69,17 @@ const componentsSrcMap: Record<PackageOption, string> = {
   pack: path.resolve(__dirname, '../pack-output/components/package'),
 }
 
+// The editor-slot widgets (`ReactSelect`, `CodeEditor`) ship under their own
+// subpath (`@json-edit-react/components/widgets`), so they need their own
+// resolution target — the bare `components` alias is anchored and won't match
+// the subpath.
+const componentsWidgetsSrcMap: Record<PackageOption, string> = {
+  npm: '@json-edit-react/components/widgets',
+  local: path.resolve(__dirname, '../packages/components/src/widgets'),
+  build: path.resolve(__dirname, '../packages/components/build/widgets.esm.js'),
+  pack: path.resolve(__dirname, '../pack-output/components/package/build/widgets.esm.js'),
+}
+
 const utilsSrcMap: Record<PackageOption, string> = {
   npm: '@json-edit-react/utils',
   local: path.resolve(__dirname, '../packages/utils/src'),
@@ -130,6 +141,7 @@ export default defineConfig({
       // `../../../../../data/...` relative path.
       { find: /^@test-data\//, replacement: path.resolve(__dirname, '../data') + '/' },
       { find: /^@json-edit-react\/themes$/, replacement: themesSrcMap[provider] },
+      { find: /^@json-edit-react\/components\/widgets$/, replacement: componentsWidgetsSrcMap[provider] },
       { find: /^@json-edit-react\/components$/, replacement: componentsSrcMap[provider] },
       { find: /^@json-edit-react\/utils\/filters$/, replacement: utilsFiltersSrcMap[provider] },
       { find: /^@json-edit-react\/utils$/, replacement: utilsSrcMap[provider] },

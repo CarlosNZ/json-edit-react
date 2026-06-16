@@ -12,7 +12,7 @@
 import React, { lazy, Suspense } from 'react'
 import { type SelectProps } from 'json-edit-react'
 import { type Props as ReactSelectProps } from 'react-select'
-import { Loading } from '../_common/Loading'
+import { Loading } from '../../_common/Loading'
 
 interface Option {
   value: string

@@ -34,14 +34,21 @@ Each component ships a React component plus a definition factory that produces a
 | `Undefined` | `undefined` value display |
 | `ErrorIndicator` | Wraps a node with a glyph (default ⚠️) to flag the nodes you target via `condition` — e.g. validation errors |
 
-### Editor slot components
+### Editor slot widgets
 
-Standalone components that plug into JsonEditor's `Select` and `TextEditor` props (not into `customNodeDefinitions`).
+Standalone components that plug into JsonEditor's `Select` and `TextEditor` props (not into `customNodeDefinitions`) to replace a built-in UI control. They ship under their own subpath — **`@json-edit-react/components/widgets`** — kept off the package root because they're a different mechanism from the node-definition components above.
 
-| Component | Use case |
+| Widget | Use case |
 |---|---|
 | `ReactSelect` | Drop-in replacement for the built-in `<select>`, wrapping [`react-select`](https://react-select.com). Pass to `JsonEditor`'s `Select` prop. |
 | `CodeEditor` | CodeMirror-based editor with JSON syntax highlighting. Pass to `JsonEditor`'s `TextEditor` prop to upgrade the raw-JSON text editor. Accepts an optional `theme` prop matching the built-in theme names. |
+
+```tsx
+import { JsonEditor } from 'json-edit-react'
+import { ReactSelect, CodeEditor } from '@json-edit-react/components/widgets'
+
+<JsonEditor data={data} setData={setData} Select={ReactSelect} TextEditor={CodeEditor} />
+```
 
 ## Usage
 
