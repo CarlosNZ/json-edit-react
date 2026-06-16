@@ -1,9 +1,11 @@
 import { useMemo, useState, type CSSProperties } from 'react'
 import {
   Box,
+  type BoxProps,
   Button,
   Code,
   Flex,
+  type FlexProps,
   FormLabel,
   Heading,
   IconButton,
@@ -23,12 +25,13 @@ import {
   Wrap,
   WrapItem,
 } from '@chakra-ui/react'
-import { SmallCloseIcon } from '@chakra-ui/icons'
+import { InfoIcon, SmallCloseIcon } from '@chakra-ui/icons'
 import { JsonEditor, type JsonData, type NodeData, type ThemeStyles } from '@json-edit-react'
 import { type FilterPredicate } from '@json-edit-react/utils'
 import { useExampleProps, useExampleTheme } from '../kit/exampleProps'
 import { useExamplePalette } from '../kit/useThemePalette'
 import { SplitPane } from '../kit/SplitPane'
+import { MarkdownText } from '../kit/MarkdownText'
 import { orgData } from './data'
 import { RECIPES, RECIPE_GROUPS, SEARCH_STRATEGIES } from './recipes'
 
@@ -58,6 +61,89 @@ const buildHighlightTheme = (match: FilterPredicate): ThemeStyles => {
     bracket: paint,
   }
 }
+
+// The builder expression, with a "Show long-hand" button floated over its
+// top-right that pops the equivalent hand-written filter for comparison. Shared
+// by both the highlight recipes and the search bridges.
+const FilterCode = ({ code, longhand, ...rest }: { code: string; longhand: string } & BoxProps) => (
+  <Box position="relative" {...rest}>
+    <Popover placement="bottom-end" isLazy>
+      <PopoverTrigger>
+        <Button
+          size="xs"
+          position="absolute"
+          top={2}
+          right={2}
+          zIndex={1}
+          bg="white"
+          color="gray.700"
+          borderWidth="1px"
+          borderColor="gray.300"
+          boxShadow="sm"
+          _hover={{ borderColor: ACCENT, color: 'gray.900' }}
+        >
+          Without the kit
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent w="auto" maxW="min(92vw, 460px)">
+        <PopoverArrow />
+        <PopoverCloseButton />
+        <PopoverHeader fontWeight="bold" fontSize="sm">
+          Without the kit
+        </PopoverHeader>
+        <PopoverBody>
+          <Text fontSize="xs" mb={2} color="gray.600">
+            What you'd write instead:
+          </Text>
+          <Code
+            display="block"
+            whiteSpace="pre-wrap"
+            wordBreak="break-word"
+            p={3}
+            borderRadius="md"
+            fontSize="sm"
+          >
+            {longhand}
+          </Code>
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
+    <Code
+      display="block"
+      whiteSpace="pre-wrap"
+      wordBreak="break-word"
+      p={3}
+      pr={28}
+      borderRadius="md"
+      fontSize="sm"
+    >
+      {code}
+    </Code>
+  </Box>
+)
+
+// An "info box" for a builder's plain-language description. A soft amber
+// callout — the example's own accent — with a left bar and a filled info glyph,
+// so it reads as a distinct "note" rather than another (neutral) code surface,
+// while staying a fixed light surface that's legible on any editor theme. Prose
+// is Markdown, so inline `code` renders.
+const InfoBox = ({ children, ...rest }: { children: string } & FlexProps) => (
+  <Flex
+    gap={3}
+    align="flex-start"
+    bg="#FFF8E1"
+    borderInlineStartWidth="4px"
+    borderInlineStartColor={ACCENT}
+    borderRadius="md"
+    p={3}
+    {...rest}
+  >
+    <InfoIcon mt="0.15em" boxSize="1.15em" color="#B7791F" flexShrink={0} />
+    <MarkdownText fontSize="md" color="gray.800">
+      {children}
+    </MarkdownText>
+  </Flex>
+)
 
 export default function FilterToolkit() {
   const exampleProps = useExampleProps()
@@ -91,8 +177,8 @@ export default function FilterToolkit() {
       variant: 'outline',
       fontWeight: isActive ? 'bold' : 'normal',
       bg: isActive ? ACCENT : 'transparent',
-      color: isActive ? 'gray.900' : palette.property ?? 'inherit',
-      borderColor: isActive ? ACCENT : palette.itemCount ?? palette.property ?? 'currentColor',
+      color: isActive ? 'gray.900' : (palette.property ?? 'inherit'),
+      borderColor: isActive ? ACCENT : (palette.itemCount ?? palette.property ?? 'currentColor'),
       _hover: { borderColor: ACCENT, color: isActive ? 'gray.900' : ACCENT },
     }) as const
 
@@ -121,7 +207,10 @@ export default function FilterToolkit() {
         </Box>
       }
       right={
-        <Flex direction="column" gap={4}>
+        // `zoom` scales the whole control panel — text, badges, icons, spacing
+        // — up 10%; percentages still resolve against the zoomed box, so it
+        // reflows within the pane rather than overflowing.
+        <Flex direction="column" gap={4} sx={{ zoom: 1.1 }}>
           {/* Section 1 — highlight matches (+ optional allowEdit binding). */}
           <Box
             borderRadius="lg"
@@ -183,71 +272,13 @@ export default function FilterToolkit() {
                   Filter function
                 </Text>
                 <Text fontSize="sm" color={palette.string} mt={1} mb={2}>
-                  The predicate you'd hand to a filter prop like <Code fontSize="xs">allowEdit</Code>{' '}
-                  or <Code fontSize="xs">searchFilter</Code> — the same{' '}
-                  <Code fontSize="xs">{'(node) => boolean'}</Code>. Here it drives the highlight (and{' '}
-                  <Code fontSize="xs">allowEdit</Code>, with the toggle below).
+                  The predicate you'd hand to a filter prop like{' '}
+                  <Code fontSize="xs">allowEdit</Code> or <Code fontSize="xs">searchFilter</Code> —
+                  the same <Code fontSize="xs">{'(node) => boolean'}</Code>. Here it drives the
+                  highlight (and <Code fontSize="xs">allowEdit</Code>, with the toggle below).
                 </Text>
-                <Box position="relative">
-                  {/* Floats over the top-right of the code display so the
-                      shorthand-vs-long-hand comparison is right where the eye
-                      already is. */}
-                  <Popover placement="bottom-end" isLazy>
-                    <PopoverTrigger>
-                      <Button
-                        size="xs"
-                        position="absolute"
-                        top={2}
-                        right={2}
-                        zIndex={1}
-                        bg="white"
-                        color="gray.700"
-                        borderWidth="1px"
-                        borderColor="gray.300"
-                        boxShadow="sm"
-                        _hover={{ borderColor: ACCENT, color: 'gray.900' }}
-                      >
-                        Show long-hand
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent w="auto" maxW="min(92vw, 460px)">
-                      <PopoverArrow />
-                      <PopoverCloseButton />
-                      <PopoverHeader fontWeight="bold" fontSize="sm">
-                        The same filter, written by hand
-                      </PopoverHeader>
-                      <PopoverBody>
-                        <Text fontSize="xs" mb={2} color="gray.600">
-                          What you'd pass to the prop without the toolkit:
-                        </Text>
-                        <Code
-                          display="block"
-                          whiteSpace="pre-wrap"
-                          wordBreak="break-word"
-                          p={3}
-                          borderRadius="md"
-                          fontSize="sm"
-                        >
-                          {activeRecipe.longhand}
-                        </Code>
-                      </PopoverBody>
-                    </PopoverContent>
-                  </Popover>
-                  <Code
-                    display="block"
-                    whiteSpace="pre-wrap"
-                    wordBreak="break-word"
-                    p={3}
-                    pr={28}
-                    borderRadius="md"
-                    fontSize="sm"
-                  >
-                    {activeRecipe.code}
-                  </Code>
-                </Box>
-                <Text fontSize="sm" mt={2} color={palette.string}>
-                  {activeRecipe.description}
-                </Text>
+                <FilterCode code={activeRecipe.code} longhand={activeRecipe.longhand} />
+                <InfoBox mt={3}>{activeRecipe.description}</InfoBox>
               </Box>
             ) : (
               <Text mt={4} fontSize="sm" fontStyle="italic" opacity={0.8} color={palette.string}>
@@ -324,20 +355,8 @@ export default function FilterToolkit() {
                 </option>
               ))}
             </Select>
-            <Code
-              display="block"
-              whiteSpace="pre-wrap"
-              wordBreak="break-word"
-              p={3}
-              mt={3}
-              borderRadius="md"
-              fontSize="sm"
-            >
-              {activeSearch.code}
-            </Code>
-            <Text fontSize="sm" mt={2} color={palette.string}>
-              {activeSearch.description}
-            </Text>
+            <FilterCode code={activeSearch.code} longhand={activeSearch.longhand} mt={3} />
+            <InfoBox mt={3}>{activeSearch.description}</InfoBox>
           </Box>
         </Flex>
       }

@@ -78,16 +78,6 @@ export const RECIPES: Recipe[] = [
     description: 'The `email` of each department lead — `*` matches one segment (the array index).',
     predicate: byPath('departments.*.lead.email'),
   },
-  {
-    id: 'path-skills',
-    group: 'Keys & paths',
-    label: 'every skill',
-    code: "byPath('**.members.*.skills.*')",
-    longhand:
-      "({ path }) => {\n  const i = path.lastIndexOf('members')\n  return (\n    i !== -1 &&\n    path[i + 2] === 'skills' &&\n    path.length === i + 4\n  )\n}",
-    description: 'Every skill entry, however deep — `**` skips any leading segments, then the two array indices.',
-    predicate: byPath('**.members.*.skills.*'),
-  },
 
   // --- Position ---
   {
@@ -222,14 +212,26 @@ export const RECIPES: Recipe[] = [
     predicate: not(collections),
   },
   {
-    id: 'editable-content',
+    id: 'editable-fields',
     group: 'Combinators',
-    label: 'editable content',
-    code: 'and(primitives, byLevel({ min: 2 }), not(byKey(/^id$|_at$/)))',
+    label: 'editable fields',
+    code: "and(byLevel({ min: 2 }), not(byKey('id', 'created_at', 'updated_at')))",
     longhand:
-      "({ value, level, key }) =>\n  (value === null || typeof value !== 'object') &&\n  level >= 2 &&\n  !/^id$|_at$/.test(String(key))",
-    description: 'Leaf values below the top level, except ids and timestamps — a realistic `allowEdit`.',
-    predicate: and(primitives, byLevel({ min: 2 }), not(byKey(/^id$|_at$/))),
+      "({ level, key }) =>\n  level >= 2 &&\n  !['id', 'created_at', 'updated_at'].includes(String(key))",
+    description:
+      'A realistic `allowEdit` — everything below the top level is editable, except the read-only `id` and timestamp fields.',
+    predicate: and(byLevel({ min: 2 }), not(byKey('id', 'created_at', 'updated_at'))),
+  },
+  {
+    id: 'deletable-records',
+    group: 'Combinators',
+    label: 'deletable records',
+    code: 'and(inArray, collections)',
+    longhand:
+      "({ parentData, value }) =>\n  Array.isArray(parentData) &&\n  value !== null &&\n  typeof value === 'object'",
+    description:
+      'A realistic `allowDelete` — only whole records (objects sitting directly in an array): a department, team or member, never an individual field.',
+    predicate: and(inArray, collections),
   },
 ]
 
@@ -237,6 +239,7 @@ export interface SearchStrategy {
   id: string
   label: string
   code: string
+  longhand: string
   description: string
   filter: FilterPredicate
 }
@@ -244,31 +247,82 @@ export interface SearchStrategy {
 export const SEARCH_STRATEGIES: SearchStrategy[] = [
   {
     id: 'value',
-    label: "matchesSearch('value')",
+    label: 'Search by value',
     code: "matchesSearch('value')",
-    description: 'Core’s default — matches a node’s value. Only the matching nodes (and their ancestors) stay visible.',
+    longhand: 'searchFilter="value"',
+    description:
+      'Core’s default — matches a node’s value. On its own it’s identical to the built-in `searchFilter="value"`; the builder earns its keep when you **compose** search with structure, e.g. `or(matchesSearch(), byKey("id"))` to keep id fields visible while searching.',
     filter: matchesSearch('value'),
   },
   {
     id: 'key',
-    label: "matchesSearch('key')",
+    label: 'Search by key',
     code: "matchesSearch('key')",
-    description: 'Matches keys and path segments rather than values — try a field name like “email” or “skills”.',
+    longhand: 'searchFilter="key"',
+    description:
+      'Matches keys and path segments rather than values — try a field name like “email” or “skills”. On its own, the same as the built-in `searchFilter="key"`; being a predicate, it **composes** with `and`/`or`/`not`.',
     filter: matchesSearch('key'),
   },
   {
     id: 'all',
-    label: "matchesSearch('all')",
+    label: 'Search all',
     code: "matchesSearch('all')",
-    description: 'Matches keys OR values — the union of the two above.',
+    longhand: 'searchFilter="all"',
+    description:
+      'Matches keys OR values — the union of the two above. On its own, the same as the built-in `searchFilter="all"`; being a predicate, it **composes** with `and`/`or`/`not`.',
     filter: matchesSearch('all'),
   },
   {
-    id: 'record',
-    label: 'matchRecord (people)',
-    code: "matchRecord({\n  fields: ['name', 'email', 'role'],\n  path: 'departments.*.teams.*.members.*',\n})",
+    id: 'compose-names',
+    label: 'Compose — names only',
+    code: "and(matchesSearch('value'), byKey('name'))",
+    longhand: `(node, searchText) =>
+  node.key === 'name' &&
+  typeof node.value === 'string' &&
+  node.value.toLowerCase().includes(searchText.toLowerCase())`,
     description:
-      'Reveals a person’s WHOLE record when their name, email or role matches — not just the field that hit. Search “Bao” and compare against matchesSearch.',
+      '**Composition in action** — `matchesSearch("value")` AND `byKey("name")`, so only `name` fields whose value matches stay visible. Search `bao`: a bare value search would also surface his email (it contains “bao”), but this keeps just the `name`. That’s the point of the search bridges being predicates — they slot into `and`/`or`/`not` like any other builder.',
+    filter: and(matchesSearch('value'), byKey('name')),
+  },
+  {
+    id: 'record-dept',
+    label: 'matchRecord — department',
+    code: "matchRecord({\n  fields: ['name'],\n  path: 'departments.*',\n})",
+    longhand: `(node, searchText) => {
+  // climb to the record — a top-level department
+  const p = node.path
+  if (p[0] !== 'departments' || p[1] === undefined) return false
+  const record = node.fullData.departments?.[p[1]]
+  if (!record || typeof record !== 'object') return false
+  // …then test its name
+  return String(record.name ?? '')
+    .toLowerCase()
+    .includes(searchText.toLowerCase())
+}`,
+    description:
+      'Reveals a whole **department** when its `name` matches. Search `Engineering`, `Design` or `Field` — the entire department (its teams, members, every field) stays while the others drop away. `matchesSearch` would surface only the matching `name` node.',
+    filter: matchRecord({ fields: ['name'], path: 'departments.*' }),
+  },
+  {
+    id: 'record-person',
+    label: 'matchRecord — team member',
+    code: "matchRecord({\n  fields: ['name', 'email', 'role'],\n  path: 'departments.*.teams.*.members.*',\n})",
+    longhand: `(node, searchText) => {
+  // climb to the record — departments[d].teams[t].members[m]
+  const p = node.path
+  if (p[0] !== 'departments' || p[2] !== 'teams' || p[4] !== 'members')
+    return false
+  const record =
+    node.fullData.departments?.[p[1]]?.teams?.[p[3]]?.members?.[p[5]]
+  if (!record || typeof record !== 'object') return false
+  // …then test each field
+  const q = searchText.toLowerCase()
+  return ['name', 'email', 'role'].some((f) =>
+    String(record[f] ?? '').toLowerCase().includes(q)
+  )
+}`,
+    description:
+      'Pins the record layer deeper — a single **team member**. Search a member like `Bao`, `Lena` or `Hana` and their whole record stays (id, email, skills…), not just the matching field. Department *leads* (`Ada`, `Sofia`, `Diego`) live on `departments.*.lead` — a different path — so they fall outside this record layer. That layer boundary is exactly what `path` controls.',
     filter: matchRecord({
       fields: ['name', 'email', 'role'],
       path: 'departments.*.teams.*.members.*',
