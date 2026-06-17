@@ -94,6 +94,7 @@ const themeNames = [
   'Dracula',
   'Monokai',
   'Tokyo Night',
+  'TMF',
 ]
 
 // Only default theme is loaded initially

@@ -254,6 +254,57 @@ export const monokaiTheme: Theme = {
   },
 }
 
+// Open mSupply / mSupply Foundation house palette: a warm sand canvas,
+// charcoal-slate ink and the signature coral-orange accent, with a muted
+// teal secondary and a deep brand red. Palette sampled from
+// msupply.foundation/open-msupply.
+export const tmfTheme: Theme = {
+  displayName: 'TMF',
+  fragments: {
+    coral: '#F26532', // primary brand accent
+    charcoal: '#2F3D45', // ink / headings
+    teal: '#3F7E83', // muted secondary
+    gold: '#B07A00', // legible take on the brand gold (#FEC503)
+    red: '#C60023', // deep brand red
+    taupe: '#A8998A', // warm neutral
+  },
+  styles: {
+    container: {
+      // Warm-sand card with the brand's soft, professional feel.
+      background: 'linear-gradient(160deg, #FFFDFB 0%, #F3ECE4 100%)',
+      color: '#2F3D45',
+      fontFamily: "'SF Mono', 'JetBrains Mono', 'Fira Code', ui-monospace, monospace",
+      borderRadius: '0.55em',
+      border: '1px solid #E7DDD2',
+      boxShadow: '0 2px 16px rgba(47, 61, 69, 0.1)',
+      padding: '0.6em 0.7em',
+    },
+    dropZone: 'rgba(242, 101, 50, 0.14)',
+    property: ['charcoal', { fontWeight: 600 }],
+    bracket: ['teal', { fontWeight: 'bold' }],
+    itemCount: { color: '#A8998A', fontStyle: 'italic', opacity: 0.85 },
+    string: 'coral',
+    number: ['red', { fontSize: '95%' }],
+    boolean: ['gold', { fontWeight: 'bold', fontSize: '90%' }],
+    null: { color: '#A8998A', fontVariant: 'small-caps', fontWeight: 'bold' },
+    input: {
+      color: '#2F3D45',
+      backgroundColor: '#FFFFFF',
+      border: '1px solid #DFD4C7',
+      borderRadius: '0.3em',
+    },
+    inputHighlight: 'rgba(242, 101, 50, 0.22)',
+    error: { fontSize: '0.8em', color: '#C60023', fontWeight: 'bold' },
+    iconCollection: 'charcoal',
+    iconEdit: 'teal',
+    iconDelete: 'red',
+    iconAdd: 'coral',
+    iconCopy: '#78909D',
+    iconOk: 'teal',
+    iconCancel: 'taupe',
+  },
+}
+
 export const tokyoNightTheme: Theme = {
   displayName: 'Tokyo Night',
   fragments: { purple: '#bb9af7', pink: '#f7768e', green: '#9ece6a' },

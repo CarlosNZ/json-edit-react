@@ -31,6 +31,7 @@ import { githubDarkTheme } from '@json-edit-react/themes'
 - `monoLightTheme`
 - `candyWrapperTheme`
 - `psychedelicTheme`
+- `tmfTheme`
 
 ## License
 
