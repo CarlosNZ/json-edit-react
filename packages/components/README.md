@@ -24,6 +24,7 @@ Each component ships a React component plus a definition factory that produces a
 | `EnhancedLink` | Object-shaped data with `{text, url}` rendered as a link |
 | `DatePicker` | ISO date strings, edited via a swappable date-picker widget — pass `ReactDatePicker` (or your own) via `componentProps.DatePicker` |
 | `DateObject` | JavaScript `Date` objects |
+| `UnixTimestamp` | Epoch numbers (seconds or milliseconds) shown as a date, edited via the same swappable picker as `DatePicker` |
 | `ColorPicker` | Hex/RGB/HSL color strings, edited via `react-colorful` |
 | `Markdown` | Markdown-formatted strings, rendered via `react-markdown` |
 | `Image` | Image URLs displayed inline |
@@ -85,6 +86,19 @@ datePickerDefinition({
 ```
 
 The read-only display defaults to the locale date/time; pass a `formatter: (date: Date) => string` in `componentProps` to customise it independently of the picker.
+
+### `UnixTimestamp` — epoch numbers as dates
+
+`UnixTimestamp` matches numbers in a plausible epoch window (years 1990–2100, as seconds or milliseconds) and renders them as a date, reusing the same swappable `DatePicker` widget for editing. The unit defaults to `'auto'` (detected from the value's magnitude, since the seconds and millisecond ranges don't overlap) and is preserved on commit; force it with `componentProps.unit` (`'seconds' | 'milliseconds'`).
+
+The match is a heuristic, so targeting real timestamp fields and avoiding unrelated numbers is up to you. There are two override surfaces, and `UnixTimestamp` is the component where the difference matters most:
+
+- **`condition`** narrows — it's ANDed with the guard, so a node matches only if it's *both* targeted *and* a plausible epoch: `unixTimestampDefinition({ condition: byKey(/(^|_)(created|updated)(At|_at)?$/i) })` (see `@json-edit-react/utils`).
+- **`guard`** replaces the heuristic entirely, making your targeting the sole criterion: `unixTimestampDefinition({ guard: byKey(/(^|_)(created|updated)(At|_at)?$/i) })`.
+
+Unlike `DatePicker` (whose guard is a safety contract — the date parser would choke on a non-ISO string), `UnixTimestamp`'s guard is *only* a heuristic: any number renders fine as a date, so there's nothing to protect and replacing it is safe. Prefer `guard` when you have many numbers that *look* like epochs but aren't, and want the key alone to decide — it also avoids the band silently rejecting a real timestamp that falls outside 1990–2100 (microsecond/nanosecond epochs, historical or far-future dates), which the ANDed `condition` would.
+
+The read-only view defaults to `displayAs: 'number'` — the ordinary number node with a small badge (default `'UNIX'`, set via `badgeLabel`) marking it as a timestamp. Set `displayAs: 'date'` for a formatted date instead (with the same optional `formatter`). Editing uses the widget when one is passed via `componentProps.DatePicker`; with none, the standard number editor handles edits.
 
 ### `ErrorIndicator` — flag nodes with a glyph
 
