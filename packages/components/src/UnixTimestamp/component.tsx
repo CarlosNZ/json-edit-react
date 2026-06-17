@@ -91,7 +91,9 @@ export const UnixTimestamp = (props: CustomComponentProps<UnixTimestampCustomPro
         style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4em' }}
       >
         {originalNode}
-        <span className="jer-unix-badge">{badgeLabel}</span>
+        <span className="jer-unix-badge" onDoubleClick={() => canEdit && setIsEditing(true)}>
+          {badgeLabel}
+        </span>
       </span>
     )
 

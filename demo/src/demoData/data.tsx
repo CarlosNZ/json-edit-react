@@ -9,11 +9,12 @@ const customComponentLibraryData = {
   
   ### Components available:
   - Hyperlink
+  - "Enhanced" link
   - DatePicker
   - DateObject
+  - UNIX Timestamp
   - Undefined
   - Markdown
-  - "Enhanced" link
   - BigInt
   - BooleanToggle
   - NaN
