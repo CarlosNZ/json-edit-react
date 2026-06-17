@@ -2,34 +2,35 @@ import React, { createContext, useCallback, useContext, useMemo } from 'react'
 import {
   type ThemeableElement,
   type ThemeInput,
+  type ThemeIcons,
   type NodeData,
-  type IconReplacements,
 } from '../../types'
 import { useIsomorphicLayoutEffect } from '../../hooks/useIsomorphicLayoutEffect'
-import { compileStyles, getStyles as resolveStyles, writeThemeCssVars } from './compileStyles'
+import {
+  compileStyles,
+  mergeIcons,
+  getStyles as resolveStyles,
+  writeThemeCssVars,
+} from './compileStyles'
 import { defaultTheme } from './defaultTheme'
 
 interface ThemeContext {
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
-  icons: IconReplacements
+  // Always complete — `defaultTheme` defines all seven glyphs and is merge layer 0.
+  icons: Required<ThemeIcons>
 }
 const initialContext: ThemeContext = {
   getStyles: () => ({}),
-  icons: {},
+  icons: mergeIcons(defaultTheme),
 }
 
 const ThemeProviderContext = createContext(initialContext)
 
-// Stable default so an omitted `icons` prop doesn't churn the context value.
-const EMPTY_ICONS: IconReplacements = {}
-
 export const ThemeProvider = ({
   theme = defaultTheme,
-  icons = EMPTY_ICONS,
   children,
 }: {
   theme?: ThemeInput
-  icons?: IconReplacements
   children: React.ReactNode
 }) => {
   // Memoize so the context value is referentially stable across unrelated
@@ -40,6 +41,7 @@ export const ThemeProvider = ({
   // Pass a stable `theme` reference (e.g. memoize an inline theme array) to get
   // the full benefit.
   const styles = useMemo(() => compileStyles(theme), [theme])
+  const icons = useMemo(() => mergeIcons(theme), [theme])
 
   // The two non-inlineable colours feed static rules in style.css, so they're
   // written to the document root as CSS custom properties whenever the theme

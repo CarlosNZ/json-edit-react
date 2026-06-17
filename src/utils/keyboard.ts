@@ -11,7 +11,7 @@ import {
 } from '../types'
 import { buildNodeData } from './buildNodeData'
 import { extract } from './extract'
-import { isCollection } from './misc'
+import { isCollection, toArray } from './misc'
 
 // A general keyboard handler. Matches keyboard events against the predefined
 // keyboard controls (defaults, or user-defined), and maps them to specific
@@ -125,7 +125,7 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
     }
 
     const definition = (() => {
-      if (isModifierKey) return Array.isArray(value) ? value : [value]
+      if (isModifierKey) return toArray(value)
       if (typeof value === 'string') return { key: value }
       return value
     })() as KeyEvent & React.ModifierKey[]

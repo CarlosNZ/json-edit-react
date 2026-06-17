@@ -11,6 +11,10 @@ import {
 
 export const NOOP = () => {}
 
+// Wrap a value in an array unless it already is one — for the "accepts one or
+// many" inputs (theme layers, collapse states, keyboard modifiers).
+export const toArray = <T>(value: T | T[]): T[] => (Array.isArray(value) ? value : [value])
+
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
   value !== null && typeof value === 'object'
 

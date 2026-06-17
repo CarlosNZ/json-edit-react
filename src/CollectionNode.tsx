@@ -584,7 +584,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
               style={{ zIndex: 11 + nodeData.level * 2, transition: cssTransitionValue }}
               onClick={handleCollapse}
             >
-              <Icon name="chevron" nodeData={nodeData} />
+              <Icon name="collection" nodeData={nodeData} />
             </div>
             {shouldShowKey && <KeyDisplay {...keyDisplayProps} />}
             {!isEditing && (

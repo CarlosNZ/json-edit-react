@@ -1,7 +1,6 @@
 export { JsonEditor } from './JsonEditor'
 export { JsonViewer } from './JsonViewer'
 export { defaultTheme } from './contexts/ThemeProvider'
-export { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 export { StringDisplay, StringEdit, useKeyboardListener } from './ValueNodes'
 export { AutogrowTextArea } from './AutogrowTextArea'
 export { type SelectProps } from './NativeSelect'
@@ -59,5 +58,4 @@ export {
   type TypeOptions,
   type UpdateFunctionProps,
 } from './types'
-export { type IconProps } from './Icons'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
