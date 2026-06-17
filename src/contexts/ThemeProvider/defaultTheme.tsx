@@ -15,11 +15,12 @@ const strokeIconProps: SVGProps<SVGSVGElement> = {
 export const defaultTheme: Theme = {
   displayName: 'Default',
   // The seven built-in glyphs. Core renders the wrapping <svg>; each definition
-  // supplies only the inner markup plus the attributes core can't infer. `scale`
-  // is a per-glyph size correction (multiplied onto core's ICON_TEXT_SIZE_RATIO)
-  // that compensates for source art under/over-filling its viewBox — the set is
-  // drawn by different icon families (Boxicons, Lucide, Feather, Typicons,
-  // FontAwesome), so at an identical em box they'd otherwise look uneven.
+  // supplies only the inner markup plus the attributes core can't infer.
+  // `scale` is a per-glyph size correction (multiplied onto core's
+  // ICON_TEXT_SIZE_RATIO) that compensates for source art under/over-filling
+  // its viewBox — the set is drawn by different icon families (Boxicons,
+  // Lucide, Feather, Typicons, FontAwesome), so at an identical em box they'd
+  // otherwise look uneven.
   icons: {
     // icon:bx-plus-circle | Boxicons https://boxicons.com/ | Atisa
     add: {

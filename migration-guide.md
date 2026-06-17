@@ -23,6 +23,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `externalTriggers` prop replaced by an [imperative handle](https://react.dev/reference/react/useImperativeHandle)                                                                                                                                        | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/confirm/cancel` — see [the `editorRef` handle](#12-externaltriggers-prop-replaced-by-the-editorref-imperative-handle)                                      |
 | Fine-grained re-rendering: object / array / function props must be referentially stable to benefit                                                                                                                                                       | Keep `customNodeDefinitions`, filter functions, `translations`, etc. stable (module scope or `useMemo`); callbacks are stabilised for you — see [stable props](#13-keep-object-and-function-props-referentially-stable)                    |
 | Misc public-export changes — new `AutogrowTextArea`; `toPathString` is now `/`-encoded; `ThemeStyles` is `Partial`                                                                                                                                       | Mostly additive; act only if you parse `toPathString` output or typed against a total `ThemeStyles` — see [Misc changes to public exports](#14-misc-changes-to-public-exports)                                                             |
+| `icons` prop removed; icon glyphs move into the theme | Move the config to `theme.icons` as `IconDefinition`s (or wrap with `iconFromSvg`); rename `chevron` → `collection` — see [`icons` prop removed](#15-icons-prop-removed-themes-own-their-glyphs) |
 
 ---
 
@@ -711,6 +712,57 @@ Selectors that target the wrapper classes (`.jer-confirm-buttons`, `.jer-edit-bu
 ### Closing-bracket alignment
 
 The closing bracket of an expanded object/array now aligns with the key (the start of the opening line) at every depth, rather than carrying a depth-dependent offset toward the collapse chevron. The only thing to act on is **custom CSS that positioned the outside closing bracket** via `.jer-bracket-outside`: that class no longer sets `padding-left`, so if you added a rule to compensate for the old offset, remove it.
+
+---
+
+## 15. `icons` prop removed (themes own their glyphs)
+
+The standalone `icons` prop is gone. Icon **glyphs** now live on the theme, under `theme.icons`, alongside their colours (`theme.styles.iconAdd`…). Each glyph is an `IconDefinition` (`{ content, viewBox?, svgProps?, scale? }`) rather than a bare `JSX.Element`, and the chevron key is renamed `chevron` → `collection`. See [Icons](README.md#icons) for the full shape, the `currentColor` theming rule, and `scale`.
+
+**Why:** icons are part of a theme's look, so a theme can now ship its own glyphs (not just their colours), and a per-instance override composes through the same `theme` layering as style overrides — one mechanism instead of two.
+
+### Migration
+
+Move the config from the `icons` prop into a theme layer, and rename `chevron` → `collection`. `content` is the **inner** SVG markup — core renders the wrapping `<svg>` — so drop the outer `<svg>` and keep its `viewBox` as a sibling field:
+
+```diff
+- <JsonEditor
+-   data={data}
+-   setData={setData}
+-   icons={{
+-     add: <svg viewBox="0 0 24 24"><path d="M13 7…" /></svg>,
+-     chevron: <svg viewBox="0 0 512 512"><path d="M233 406…" /></svg>,
+-   }}
+- />
++ <JsonEditor
++   data={data}
++   setData={setData}
++   theme={{
++     icons: {
++       add: { content: <path d="M13 7…" />, viewBox: '0 0 24 24' },
++       collection: { content: <path d="M233 406…" />, viewBox: '0 0 512 512' },
++     },
++     styles: {},
++   }}
++ />
+```
+
+Or skip the unwrapping — hand the original `<svg>` markup (a string, or a React `<svg>` element) to the `iconFromSvg` helper in [`@json-edit-react/utils`](README.md#icons), which strips the outer `<svg>` and lifts its `viewBox` / attributes for you:
+
+```tsx
+import { iconFromSvg } from '@json-edit-react/utils'
+
+theme={{ icons: { add: iconFromSvg('<svg viewBox="0 0 24 24">…</svg>') }, styles: {} }}
+```
+
+Keep the theme reference stable (module scope or `useMemo`), as with any `theme` value.
+
+### Removed icon exports
+
+Gone from `json-edit-react`:
+
+- The built-in icon **components** `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron` and their props type `IconProps`. The built-in glyphs now live on `defaultTheme.icons` (e.g. `defaultTheme.icons.add`) if you need to reference one.
+- The `IconReplacements` type (the old `icons`-prop shape) — replaced by `IconDefinition` and `ThemeIcons`.
 
 ---
 
