@@ -1479,7 +1479,9 @@ A few helper functions, components and types that might be useful in your own im
 
 - `StringDisplay`: main component used to display a string value. Useful as a building block in custom components — handles truncation, "show more / show less" expansion, and the standard double-click-to-edit behaviour.
 - `StringEdit`: component used when editing a string value, can be useful for custom components
-- `AutogrowTextArea`: the auto-resizing textarea primitive used by `StringEdit` and the built-in string editor- `matchNode`, `matchNodeKey`: helpers for defining custom [Search](#searchfiltering) functions
+- `AutogrowTextArea`: the auto-resizing textarea primitive used by `StringEdit` and the built-in string editor
+- `IconSvg`: renders an `IconDefinition`'s parts (`scale`, `viewBox`, inner markup as `children`, plus its `svgProps`) as an `<svg>` — the same renderer the editor uses for theme [icons](#icons); handy for previewing a glyph outside the editor
+- `matchNode`, `matchNodeKey`: helpers for defining custom [Search](#searchfiltering) functions
 - `extract`: function to extract a deeply nested object value from a string path. Originally published at [object-property-extractor](https://github.com/CarlosNZ/object-property-extractor)
 - `assign`: function to set a deep object value from a string path. Originally published at [object-property-assigner](https://github.com/CarlosNZ/object-property-assigner)
 - `isCollection`: simple utility that returns `true` if input is a "Collection" (i.e. an Object or Array)

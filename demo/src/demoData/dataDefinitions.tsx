@@ -18,6 +18,8 @@ import {
 import { ReactDatePicker } from '@json-edit-react/components/widgets'
 import {
   CustomNodeDefinition,
+  IconDefinition,
+  IconSvg,
   JsonData,
   FilterFunction,
   CustomTextDefinitions,
@@ -633,6 +635,37 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     searchFilter: 'key',
     searchPlaceholder: 'Search Theme keys',
     data: {},
+    // Render each theme icon glyph (an `IconDefinition`) as the actual icon via
+    // core's `IconSvg`, rather than the raw React-element internals. Display-only.
+    customNodeDefinitions: [
+      {
+        condition: ({ value }) =>
+          !!value &&
+          typeof value === 'object' &&
+          React.isValidElement((value as { content?: unknown }).content),
+        renderCollectionAsValue: true,
+        showEditTools: false,
+        component: ({ value, nodeData, getStyles }) => {
+          const { content, viewBox, svgProps, scale } = value as IconDefinition
+          // Derive the paint key (icon + PascalCase) the same way core does, so
+          // the preview adopts the theme's icon colour via currentColor.
+          const key = String(nodeData.key)
+          const paintKey = `icon${key[0].toUpperCase()}${key.slice(1)}` as Parameters<
+            typeof getStyles
+          >[0]
+          return (
+            <IconSvg
+              viewBox={viewBox}
+              {...svgProps}
+              scale={scale}
+              style={{ ...getStyles(paintKey, nodeData), verticalAlign: 'middle' }}
+            >
+              {content}
+            </IconSvg>
+          )
+        },
+      },
+    ],
     customTextEditorAvailable: true,
   },
   customNodes: {
