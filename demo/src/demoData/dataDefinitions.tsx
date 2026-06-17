@@ -14,6 +14,7 @@ import {
   enhancedLinkDefinition,
   imageDefinition,
   colorPickerDefinition,
+  unixTimestampDefinition,
 } from '@json-edit-react/components'
 import { ReactDatePicker } from '@json-edit-react/components/widgets'
 import {
@@ -1162,6 +1163,17 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           componentProps: {
             showTime: libraryData?.['Date & Time']?.['Show Time in Date?'] ?? false,
             DatePicker: ReactDatePicker,
+          },
+        }),
+        unixTimestampDefinition({
+          componentProps: {
+            DatePicker: ReactDatePicker,
+            showTime: libraryData?.['Date & Time']?.['Show Time in Date?'] ?? false,
+            // The `unit` defaults to 'auto', so the seconds and millisecond
+            // fields are each detected by magnitude.
+            displayAs: (libraryData?.['Date & Time']?.['Show Unix as raw number?'] ?? true)
+              ? 'number'
+              : 'date',
           },
         }),
         imageDefinition({
