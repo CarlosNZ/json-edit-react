@@ -15,7 +15,6 @@ export interface JsonEditorProps<T = JsonData> {
   showErrorMessages?: boolean
   showClipboardButton?: boolean
   theme?: ThemeInput
-  icons?: IconReplacements
   className?: string
   id?: string
   indent?: number
@@ -172,16 +171,6 @@ export interface EditingState {
   // A forced edit overrides the `allowEdit` filter — the node-skip redirect
   // in ValueNodeWrapper leaves it in place instead of bouncing off it.
   force?: boolean
-}
-
-export interface IconReplacements {
-  add?: JSX.Element
-  edit?: JSX.Element
-  delete?: JSX.Element
-  copy?: JSX.Element
-  ok?: JSX.Element
-  cancel?: JSX.Element
-  chevron?: JSX.Element
 }
 
 export interface TextEditorProps {
@@ -714,10 +703,57 @@ export type ThemeFragments = Record<string, string | React.CSSProperties>
  */
 export type ThemeStyles = Partial<Record<ThemeableElement, ThemeElementValue>>
 
+/**
+ * A themeable icon glyph. Core renders the wrapping `<svg>` itself, so it can
+ * normalise size and apply the theme's icon styling. Supply only what goes
+ * inside the `<svg>`, plus the attributes core can't infer.
+ */
+export interface IconDefinition {
+  /**
+   * Inner SVG markup — `<path>`/`<circle>`/`<g>`… pasted from a source icon,
+   * minus its outer `<svg>` tag.
+   */
+  content: React.ReactNode
+  /** From the source `<svg>`. Defaults to '0 0 24 24' (by far the most common). */
+  viewBox?: string
+  /**
+   * Pass-through `<svg>` attributes — only needed for stroke-based icons
+   * (Lucide/Feather/…): `{ fill: 'none', stroke: 'currentColor', strokeWidth: 2 }`.
+   * Colour flows in from the theme via `currentColor`; don't set size here —
+   * use `scale` (below).
+   */
+  svgProps?: React.SVGProps<SVGSVGElement>
+  /**
+   * Per-glyph size correction, multiplied onto the core size baseline
+   * (`ICON_TEXT_SIZE_RATIO`). Default 1 = the standard icon size, so a normal
+   * full-bleed glyph needs no `scale` at all. This is OUR field — NOT the CSS
+   * `scale` property or an SVG `transform`; core reads it to compute the
+   * rendered em size and it never reaches the DOM. Use it only to compensate
+   * for a glyph whose artwork under/over-fills its viewBox relative to the rest
+   * of the set: e.g. `scale: 1.3` renders 30% bigger.
+   */
+  scale?: number
+}
+
+/**
+ * A theme's icon glyphs. Keyed by the bare icon name; the matching paint lives
+ * in `styles` under `icon` + PascalCase (e.g. `collection` ↔ `iconCollection`).
+ */
+export interface ThemeIcons {
+  add?: IconDefinition
+  edit?: IconDefinition
+  delete?: IconDefinition
+  copy?: IconDefinition
+  ok?: IconDefinition
+  cancel?: IconDefinition
+  collection?: IconDefinition
+}
+
 /** A full theme definition. */
 export interface Theme {
   displayName?: string
   fragments?: ThemeFragments
+  icons?: ThemeIcons
   styles: ThemeStyles
 }
 
