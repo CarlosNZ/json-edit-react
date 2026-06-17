@@ -22,6 +22,7 @@ pnpm add @json-edit-react/utils
 - **Undo / redo** — wrap a consumer-owned `data`/`setData` pair with undo/redo (snapshot stacks plus `canUndo` / `canRedo`), zero-dep. _Available now._
 - **Reactive validation** — `useValidationState` runs your validator over the whole document and exposes an O(1), identity-stable error index, so styles / filters / conditions reflect validity correctly even for cross-branch effects. Ships `validationStyles` (theme sugar), `ajvAdapter`, and the `useStableValue` primitive it's built on. Zero-dep (you bring your own validator). _Available now._ ([#357](https://github.com/CarlosNZ/json-edit-react/issues/357))
 - **Filter-function toolkit** — composable predicate builders (`byKey`, `byPath`, `byLevel`, `byType`, …), `and` / `or` / `not` combinators, and search bridges for the `allow*` props and `searchFilter`. Zero-dep. _Available now._ ([#343](https://github.com/CarlosNZ/json-edit-react/issues/343))
+- **Icon definitions from SVG** — `iconFromSvg` turns raw SVG markup (or a React `<svg>`) into the `IconDefinition` a theme's `icons` expects, so a copied icon drops straight into a theme. Zero-dep. _Available now._ ([#369](https://github.com/CarlosNZ/json-edit-react/issues/369))
 - **JSON Schema → Filter Functions** — generate `allowEdit` / `allowDelete` / `allowAdd` (etc.) functions from a JSON Schema so the editor UI can't produce invalid data in the first place. _Planned._ ([#285](https://github.com/CarlosNZ/json-edit-react/issues/285))
 - **Search helpers** — ready-made `searchFilter` functions for common search patterns. _Planned._ ([#319](https://github.com/CarlosNZ/json-edit-react/issues/319))
 
@@ -181,6 +182,33 @@ import { and, byKey, byLevel, byType, matchRecord, not, primitives } from '@json
 ```
 
 See [src/filters/README.md](src/filters/README.md) for the full reference — every builder, the glob path syntax, and the composition / referential-stability rules.
+
+## Icon definitions from SVG
+
+A theme can supply its own icon glyphs through `Theme.icons`, where each glyph is an `IconDefinition` — `content` (the inner SVG markup) plus an optional `viewBox` / `svgProps` / `scale`. `iconFromSvg` builds that shape for you so a copied icon drops straight in: it strips the outer `<svg>` tag, lifts `viewBox` and the presentation attributes (`fill`, `stroke`, `stroke-width`, …) into the right fields, and puts the inner markup in `content`. Core still renders the wrapping `<svg>`, so the glyph picks up the theme's icon colour (via `currentColor`) and standard sizing automatically.
+
+```tsx
+import { JsonEditor } from 'json-edit-react'
+import { iconFromSvg } from '@json-edit-react/utils'
+
+// Defined at module scope → built once, stable across renders.
+const myTheme = {
+  icons: {
+    add: iconFromSvg('<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 7h-2v4H7…"/></svg>'),
+  },
+  styles: { iconAdd: '#2aa198' },
+}
+
+const MyEditor = () => <JsonEditor data={data} setData={setData} theme={myTheme} />
+```
+
+It accepts three forms:
+
+- **A raw SVG string** — a full `<svg>…</svg>`, or just the inner markup (`<path>`s) on their own.
+- **A React `<svg>` element** — unwrapped via its props/children (natural in `.tsx`). Routing the element through `iconFromSvg` is the right way to use JSX here: putting a full `<svg>` directly in an `IconDefinition`'s `content` would nest it inside the one core renders.
+- **An existing `IconDefinition`** — returned unchanged, so `iconFromSvg` is a single front door whatever the source.
+
+**Inline stability.** Pass a **string** for inline use — string inputs are interned, so `icons={{ add: iconFromSvg('<svg…>') }}` keeps a stable reference across renders. A React **element** or a pre-built **`IconDefinition`** (and likewise a React node placed directly in `theme.icons`) is a fresh object every render and is **not** interned: define it outside the component or wrap it in `useMemo`, exactly as you would any inline `theme` value — otherwise it churns the editor's re-render memoization. A stable `theme` reference is the general rule; the string form of `iconFromSvg` is the one case that's safe to write inline.
 
 ## License
 
