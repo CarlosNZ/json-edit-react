@@ -6,6 +6,8 @@ import App from './App.tsx'
 import { ChakraProvider, Flex, Spinner } from '@chakra-ui/react'
 import theme from './chakra-theme/index.ts'
 
+import { ShadowDomTest } from './ShadowDomTest'
+
 // The frozen V1 demo is lazy-loaded so V2 users never download it (or the
 // pinned `json-edit-react-v1` package). It self-provides its own
 // ChakraProvider, so the Suspense fallback below must be plain HTML (no Chakra
@@ -24,9 +26,7 @@ const ExamplesIndex = lazy(() =>
 // A bare editor rendered with no ChakraProvider / UI-framework reset, as a
 // reference for how the library looks for a plain-HTML consumer. Lazy-loaded so
 // it stays out of the main entry chunk.
-const RawHtmlPage = lazy(() =>
-  import('./RawHtmlPage').then((m) => ({ default: m.RawHtmlPage }))
-)
+const RawHtmlPage = lazy(() => import('./RawHtmlPage').then((m) => ({ default: m.RawHtmlPage })))
 
 const exampleFallback = (
   <Flex h="100vh" justify="center" align="center">
@@ -65,6 +65,10 @@ createRoot(document.getElementById('root')!).render(
             <RawHtmlPage />
           </Suspense>
         </Route>
+        <Route path="/shadow-test">
+          <ShadowDomTest />
+        </Route>
+
         <Route>
           <ChakraProvider theme={theme}>
             <App />

@@ -77,6 +77,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 - [Search/Filtering](#searchfiltering)
 - [Themes \& Styles](#themes--styles)
   - [CSS classes](#css-classes)
+  - [Importing the stylesheet (Shadow DOM)](#importing-the-stylesheet-shadow-dom)
   - [Fragments](#fragments)
   - [Icons](#icons)
 - [Localisation](#localisation)
@@ -959,6 +960,18 @@ You can play round with live editing of the themes in the [Demo app](https://car
 Another way to style the component is to target the CSS classes directly. Every element in the component has a unique class name, so you should be able to locate them in your browser inspector and override them accordingly. All class names begin with the prefix `jer-`, e.g. `jer-collection-header-row`, `jer-value-string`.
 
 Note that theme styles are applied *inline*, so for any property the theme sets they take precedence over your own CSS rules (short of `!important`). CSS-class overrides are therefore best for structural/layout tweaks the theme doesn't touch (spacing, sizing, borders); colours and fonts are best set through the `theme` prop.
+
+### Importing the stylesheet (Shadow DOM)
+
+The component's base stylesheet is bundled in and injected into the document `<head>` automatically, so in the normal case there's nothing to import — styling works out of the box.
+
+The exception is when the editor renders inside a [Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM): styles injected into the document `<head>` don't cross the shadow boundary, so the component renders unstyled. For this case the stylesheet is also published as a standalone file you can import and inject into the shadow root yourself:
+
+```js
+import 'json-edit-react/style.css'
+```
+
+How that import resolves depends on your bundler — most will inline or extract it so you can attach it where you need it (for example via a `<style>` element inside the shadow root, or by adding a constructed stylesheet to `shadowRoot.adoptedStyleSheets`). The stylesheet defines its custom properties on both `:root` and `:host`, so it applies correctly whether it lives in the document or in a shadow root.
 
 ### Fragments
 

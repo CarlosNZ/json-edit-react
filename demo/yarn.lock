@@ -1801,6 +1801,13 @@
   dependencies:
     "@uiw/codemirror-themes" "4.25.10"
 
+"@uiw/codemirror-theme-dracula@^4.23.13":
+  version "4.25.10"
+  resolved "https://registry.yarnpkg.com/@uiw/codemirror-theme-dracula/-/codemirror-theme-dracula-4.25.10.tgz#25147dabc62124c8f833d6df4f58ace02df7455d"
+  integrity sha512-YW3tsKfNOAQix7mH72AVj3Sb2QBk3Js7j4B0NStJifq1uPsm3hGc1TJ9a7UAht+xf8TNrUc1vlecrkUlfsL7yQ==
+  dependencies:
+    "@uiw/codemirror-themes" "4.25.10"
+
 "@uiw/codemirror-theme-github@^4.23.13":
   version "4.25.10"
   resolved "https://registry.yarnpkg.com/@uiw/codemirror-theme-github/-/codemirror-theme-github-4.25.10.tgz#4d7703b328c930b9098b1f3ed38f672476956a96"
@@ -1819,6 +1826,20 @@
   version "4.25.10"
   resolved "https://registry.yarnpkg.com/@uiw/codemirror-theme-quietlight/-/codemirror-theme-quietlight-4.25.10.tgz#ee75db33d53724feca840f8ae1ca173c5e8808ad"
   integrity sha512-eUBx9ZE6G5DzxsgRRGl29cf1qeQgn3APaRSMxqhNRopx7Rl4l4+XtPQCasre6CPtQLD2h13JK72fXSBKE+EHcQ==
+  dependencies:
+    "@uiw/codemirror-themes" "4.25.10"
+
+"@uiw/codemirror-theme-solarized@^4.23.13":
+  version "4.25.10"
+  resolved "https://registry.yarnpkg.com/@uiw/codemirror-theme-solarized/-/codemirror-theme-solarized-4.25.10.tgz#58a9edc3a57f6c00ddd6bab8c518ba7aafccc38f"
+  integrity sha512-mTP09g375qD86T09aRKQLHqkRSWDoot4dFUCtiyIsrvp1VeMBcA5ZSJHnI8A0lc8+hHRrvpL5fe3SnRFE+FoZg==
+  dependencies:
+    "@uiw/codemirror-themes" "4.25.10"
+
+"@uiw/codemirror-theme-tokyo-night@^4.23.13":
+  version "4.25.10"
+  resolved "https://registry.yarnpkg.com/@uiw/codemirror-theme-tokyo-night/-/codemirror-theme-tokyo-night-4.25.10.tgz#9179d2270f8caa1dd6635ac01630169cc5cd5a2e"
+  integrity sha512-nbW1szmpdlGdm9Nf03j0IU+Ecd2h/qp3vkPiHMcfEHOl3KEPPqek5UhTfpemQgdSTmohGQcY1NfUlysXsQ5y7A==
   dependencies:
     "@uiw/codemirror-themes" "4.25.10"
 

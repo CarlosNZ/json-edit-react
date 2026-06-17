@@ -1,4 +1,5 @@
-:root {
+:root,
+:host {
   --jer-select-border: #b6b6b6;
   --jer-select-focus: #777;
   --jer-select-arrow: #777;

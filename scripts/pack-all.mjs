@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Pack all three packages and extract them to `pack-output/` so the demo can
+ * Pack all four packages and extract them to `pack-output/` so the demo can
  * consume them via `VITE_JRE_SOURCE=pack`.
  *
  * Runs each package's `preview-publish` script (which performs the same
@@ -48,6 +48,13 @@ const targets = [
     tarballPrefix: 'json-edit-react-components-',
     previewPublishCwd: join(repoRoot, 'packages', 'components'),
     destName: 'components',
+  },
+  {
+    label: '@json-edit-react/utils',
+    srcDir: join(repoRoot, 'packages', 'utils'),
+    tarballPrefix: 'json-edit-react-utils-',
+    previewPublishCwd: join(repoRoot, 'packages', 'utils'),
+    destName: 'utils',
   },
 ]
 
@@ -126,4 +133,4 @@ if (!existsSync(join(outputDir, 'json-edit-react', 'package', 'package.json'))) 
   throw new Error('pack-all completed but pack-output/json-edit-react/package/package.json is missing')
 }
 
-console.log('\nAll three packages packed and extracted. Run `yarn start:pack` or `yarn build:pack` in demo.')
+console.log('\nAll four packages packed and extracted. Run `yarn start:pack` or `yarn build:pack` in demo.')

@@ -52,6 +52,17 @@ const coreSrcMap: Record<PackageOption, { pkgJson: string; src: string }> = {
   },
 }
 
+// Core's standalone stylesheet ships under its own subpath
+// (`json-edit-react/style.css`, for Shadow DOM / manual injection), so it needs
+// its own resolution target — the bare `json-edit-react` alias is anchored and
+// won't match the subpath.
+const coreStyleSrcMap: Record<PackageOption, string> = {
+  npm: 'json-edit-react/style.css',
+  local: path.resolve(__dirname, '../src/style.css'),
+  build: path.resolve(__dirname, '../build/style.css'),
+  pack: path.resolve(__dirname, '../pack-output/json-edit-react/package/build/style.css'),
+}
+
 // For `npm` mode, scoped sibling packages must be installed in demo/node_modules
 // (they fall through to normal node_modules resolution). For `local`, `build`,
 // and `pack` modes, vite rewrites the import to the in-repo path.
@@ -146,6 +157,11 @@ export default defineConfig({
       { find: /^@json-edit-react\/utils\/filters$/, replacement: utilsFiltersSrcMap[provider] },
       { find: /^@json-edit-react\/utils$/, replacement: utilsSrcMap[provider] },
       { find: /^@json-edit-react$/, replacement: jsonEditReactPath },
+      // Capture an optional query (`?inline`, `?url`, …) and re-append it via
+      // `$1` so callers can ask Vite for the stylesheet as a string rather than
+      // having it auto-injected — the anchored find would otherwise reject the
+      // query suffix.
+      { find: /^json-edit-react\/style\.css(\?.*)?$/, replacement: coreStyleSrcMap[provider] + '$1' },
       { find: /^json-edit-react$/, replacement: jsonEditReactPath },
     ],
     // In `pack` and `build` modes the packed/built sub-packages live outside

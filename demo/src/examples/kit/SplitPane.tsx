@@ -122,7 +122,7 @@ export const SplitPane = ({ left, right, storageId }: SplitPaneProps) => {
     } else {
       setBounds(defaultBounds(w))
     }
-  }, [horizontal, bounds])
+  }, [horizontal, bounds, storageKey])
 
   // On container resize: re-centre until the user has set a layout, then scale
   // the band proportionally (so it keeps its place) and clamp it back to valid.
@@ -146,8 +146,7 @@ export const SplitPane = ({ left, right, storageId }: SplitPaneProps) => {
 
   // Persist the layout once the user has set one (skip mid-drag writes).
   useEffect(() => {
-    if (bounds && !dragging && touched.current)
-      saveFractions(storageKey, bounds, widthRef.current)
+    if (bounds && !dragging && touched.current) saveFractions(storageKey, bounds, widthRef.current)
   }, [storageKey, bounds, dragging])
 
   const setEdge = useCallback((edge: Edge, value: number | ((cur: number) => number)) => {
