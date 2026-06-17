@@ -226,11 +226,14 @@ describe('getThemeCssVars', () => {
     expect(vars['--jer-icon-copy-color']).toBe('#def')
   })
 
-  it('omits a var when the value is a function', () => {
+  it('omits a var when the value is a per-node function', () => {
+    // `iconCopy` (still function-capable) stands in here: a per-node function
+    // can't collapse to one container-level value, so no var is emitted.
+    // `inputHighlight` can't reach this branch — it's typed as a colour string.
     const vars = getThemeCssVars(
-      compileStyles({ inputHighlight: () => ({ backgroundColor: 'red' }) })
+      compileStyles({ iconCopy: () => ({ color: 'red' }) })
     ) as Record<string, string>
-    expect(vars['--jer-highlight-color']).toBeUndefined()
+    expect(vars['--jer-icon-copy-color']).toBeUndefined()
   })
 
   it('emits the default-theme colours when the theme overrides neither', () => {
