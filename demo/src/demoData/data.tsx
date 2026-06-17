@@ -37,6 +37,9 @@ const customComponentLibraryData = {
     'Date Picker': new Date().toISOString(),
     'Date Object': new Date(),
     'Show Time in Date?': true,
+    'Unix Timestamp (seconds)': Math.floor(Date.now() / 1000),
+    'Unix Timestamp (ms)': Date.now(),
+    'Show Unix as raw number?': true,
     // info: 'Inserted in App.tsx',
   },
 

@@ -1,0 +1,14 @@
+/* Small "UNIX" badge shown after the number in the `displayAs: 'number'` view,
+   distinguishing a timestamp from an ordinary number. */
+.jer-unix-badge {
+  font-size: 0.7em;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.3em 0.45em;
+  border-radius: 0.4em;
+  background: rgba(127, 127, 127, 0.18);
+  opacity: 0.75;
+  vertical-align: middle;
+  user-select: none;
+}
