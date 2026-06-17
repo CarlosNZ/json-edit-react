@@ -1,6 +1,7 @@
 import { extract, matchNode, matchNodeKey, type JsonData } from 'json-edit-react'
 import type { FilterPredicate, NodeValueType, PathPattern, Range } from './types'
-import { intern, internRef, internRefs } from './_intern'
+import { intern } from '../_common/intern'
+import { internRef, internRefs } from './_intern'
 import { compilePathMatcher } from './_glob'
 
 // Public types. `Range` is intentionally NOT re-exported (see types.ts).
