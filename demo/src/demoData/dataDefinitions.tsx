@@ -15,6 +15,7 @@ import {
   imageDefinition,
   colorPickerDefinition,
 } from '@json-edit-react/components'
+import { ReactDatePicker } from '@json-edit-react/components/widgets'
 import {
   CustomNodeDefinition,
   JsonData,
@@ -135,7 +136,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     rootName: 'data',
     collapse: 2,
     data: data.intro,
-    customNodeDefinitions: [datePickerDefinition()],
+    customNodeDefinitions: [
+      datePickerDefinition({ componentProps: { DatePicker: ReactDatePicker } }),
+    ],
     // allowEdit: ({ key }) => key !== 'number',
     customTextEditorAvailable: true,
     allowTypeSelection: ({ key }) => {
@@ -755,7 +758,12 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         showKey: false,
       },
       datePickerDefinition({
-        componentProps: { showTime: false, dateFormat: 'MMM d, yyyy' },
+        componentProps: {
+          showTime: false,
+          // Un-editable so no DatePicker component required, component is
+          // purely for string formatting in "View" mode
+          // DatePicker: (props) => <ReactDatePicker {...props} dateFormat="MMM d, yyyy" />,
+        },
       }),
       // Uncomment to test a custom Collection node
       // {
@@ -1120,6 +1128,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         datePickerDefinition({
           componentProps: {
             showTime: libraryData?.['Date & Time']?.['Show Time in Date?'] ?? false,
+            DatePicker: ReactDatePicker,
           },
         }),
         imageDefinition({

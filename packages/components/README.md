@@ -22,7 +22,7 @@ Each component ships a React component plus a definition factory that produces a
 |---|---|
 | `Hyperlink` | Detects URL strings and renders them as clickable links |
 | `EnhancedLink` | Object-shaped data with `{text, url}` rendered as a link |
-| `DatePicker` | ISO date strings, edited via `react-datepicker` |
+| `DatePicker` | ISO date strings, edited via a swappable date-picker widget — pass `ReactDatePicker` (or your own) via `componentProps.DatePicker` |
 | `DateObject` | JavaScript `Date` objects |
 | `ColorPicker` | Hex/RGB/HSL color strings, edited via `react-colorful` |
 | `Markdown` | Markdown-formatted strings, rendered via `react-markdown` |
@@ -42,6 +42,7 @@ Standalone components that plug into JsonEditor's `Select` and `TextEditor` prop
 |---|---|
 | `ReactSelect` | Drop-in replacement for the built-in `<select>`, wrapping [`react-select`](https://react-select.com). Pass to `JsonEditor`'s `Select` prop. |
 | `CodeEditor` | CodeMirror-based editor with JSON syntax highlighting. Pass to `JsonEditor`'s `TextEditor` prop to upgrade the raw-JSON text editor. Accepts an optional `theme` prop matching the built-in theme names. |
+| `ReactDatePicker` | Calendar / date-time picker wrapping [`react-datepicker`](https://reactdatepicker.com). Unlike the others, it's not an editor-slot widget: pass it to a date component's `componentProps.DatePicker` (e.g. `datePickerDefinition`). Lives here because it's the same swappable-widget mechanism, and keeps `react-datepicker` opt-in. |
 
 ```tsx
 import { JsonEditor } from 'json-edit-react'
@@ -55,15 +56,35 @@ import { ReactSelect, CodeEditor } from '@json-edit-react/components/widgets'
 ```tsx
 import { JsonEditor } from 'json-edit-react'
 import { hyperlinkDefinition, datePickerDefinition } from '@json-edit-react/components'
+import { ReactDatePicker } from '@json-edit-react/components/widgets'
 
 <JsonEditor
   data={data}
   setData={setData}
-  customNodeDefinitions={[hyperlinkDefinition(), datePickerDefinition()]}
+  customNodeDefinitions={[
+    hyperlinkDefinition(),
+    datePickerDefinition({ componentProps: { DatePicker: ReactDatePicker } }),
+  ]}
 />
 ```
 
 See [json-edit-react's custom nodes documentation](https://github.com/CarlosNZ/json-edit-react#custom-nodes) for the definition shape and configuration options.
+
+### `DatePicker` — a swappable picker widget
+
+`DatePicker` renders the calendar UI from a **widget** you pass via `componentProps.DatePicker`, rather than bundling one. Import the supplied `ReactDatePicker` (above) from the `/widgets` subpath, or pass any component satisfying the exported `DatePickerWidgetProps` contract (`Date` in, `Date` out) to drop in your own picker. With no widget supplied the node falls back to editing the raw ISO string and shows a warning, so `react-datepicker` is never pulled into your bundle unless you opt in.
+
+To configure react-datepicker specifics (`dateFormat`, `minDate`, etc.), wrap the widget:
+
+```tsx
+datePickerDefinition({
+  componentProps: {
+    DatePicker: (props) => <ReactDatePicker {...props} dateFormat="dd/MM/yyyy" datePickerProps={{ minDate: new Date() }} />,
+  },
+})
+```
+
+The read-only display defaults to the locale date/time; pass a `formatter: (date: Date) => string` in `componentProps` to customise it independently of the picker.
 
 ### `ErrorIndicator` — flag nodes with a glyph
 

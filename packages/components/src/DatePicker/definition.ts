@@ -8,11 +8,6 @@ import { type CustomNodeDefinition } from 'json-edit-react'
 import { createDefinitionFactory } from '../_common/createDefinitionFactory'
 import { DatePickerCustomProps, DateTimePicker } from './component'
 
-// Styles
-import 'react-datepicker/dist/react-datepicker.css'
-// For better matching with Chakra-UI
-import './style.css'
-
 const ISO_STRING_REGEX = /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?)?$/
 
 // The condition doubles as the guard: it keeps the date parser away from

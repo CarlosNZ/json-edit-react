@@ -5,3 +5,4 @@
 // custom-node definitions.
 export * from './ReactSelect'
 export * from './CodeEditor'
+export * from './ReactDatePicker'

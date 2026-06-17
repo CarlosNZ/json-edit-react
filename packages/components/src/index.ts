@@ -16,6 +16,11 @@ export * from './ErrorIndicator'
 // (`createDefinitionFactory`) stays internal
 export { type DefinitionOverrides } from './_common/createDefinitionFactory'
 
+// The date-picker widget contract, so consumers can type their own picker (or
+// the supplied `ReactDatePicker` from the `/widgets` subpath) — mirrors core
+// exporting `SelectProps` for `ReactSelect`
+export { type DatePickerWidgetProps } from './_common/DatePickerWidget'
+
 // Editor-slot widgets (`ReactSelect`, `CodeEditor`) are NOT re-exported here.
 // They replace JsonEditor's built-in UI controls (`Select` / `TextEditor`)
 // rather than render a node type, so they ship under their own subpath,

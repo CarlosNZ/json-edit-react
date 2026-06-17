@@ -2,102 +2,116 @@
  * An example Custom Component:
  * https://github.com/CarlosNZ/json-edit-react#custom-nodes
  *
- * A date/time picker which can be configure to show (using the
- * CustomNodeDefinitions at the bottom of this file) when an ISO date/time
- * string is present in the JSON data, and present a Date picker interface
- * rather than requiring the user to edit the ISO string directly.
+ * Shows when an ISO date/time string is present in the JSON data, presenting a
+ * date-picker interface rather than requiring the user to edit the ISO string
+ * directly.
+ *
+ * The picker UI is a swappable widget: pass `ReactDatePicker` from
+ * `@json-edit-react/components/widgets` (or any component satisfying
+ * `DatePickerWidgetProps`) via `componentProps.DatePicker`. This keeps the
+ * heavy `react-datepicker` dependency opt-in and lets a consumer drop in their
+ * own picker. With no widget supplied the node falls back to editing the raw
+ * ISO string and shows a warning.
  */
 
-import React, { lazy, Suspense } from 'react'
-import { Button } from './Button'
-import { CustomComponentProps } from 'json-edit-react'
-
-// Styles
-import 'react-datepicker/dist/react-datepicker.css'
-import './style.css'
-import { Loading } from '../_common/Loading'
-
-const DatePicker = lazy(() => import('react-datepicker'))
+import React from 'react'
+import { StringEdit, toPathString, type CustomComponentProps } from 'json-edit-react'
+import { type DatePickerWidgetProps } from '../_common/DatePickerWidget'
 
 export interface DatePickerCustomProps {
-  dateFormat?: string
-  dateTimeFormat?: string
+  // The picker rendered while editing. Pass `ReactDatePicker` from
+  // `@json-edit-react/components/widgets`, or any component satisfying
+  // `DatePickerWidgetProps`. With none supplied the node falls back to editing
+  // the raw ISO string and shows `noPickerWarning`.
+  DatePicker?: React.ComponentType<DatePickerWidgetProps>
   showTime?: boolean
-  loadingText?: string
+  // Customises the read-only (non-editing) display. Defaults to
+  // `date.toLocaleString()` / `toLocaleDateString()` per `showTime`.
+  formatter?: (date: Date) => string
+  // Inline warning shown in the fallback editor when no `DatePicker` is set.
+  noPickerWarning?: React.ReactNode
 }
 
-export const DateTimePicker: React.FC<CustomComponentProps<DatePickerCustomProps>> = ({
-  value,
-  setValue,
-  handleEdit,
-  handleCancel,
-  onKeyDown,
-  isEditing,
-  setIsEditing,
-  getStyles,
-  nodeData,
-  componentProps,
-}) => {
+export const DateTimePicker = (props: CustomComponentProps<DatePickerCustomProps>) => {
   const {
-    dateFormat = 'MMM d, yyyy',
-    dateTimeFormat = 'MMM d, yyyy h:mm aa',
+    value,
+    setValue,
+    handleEdit,
+    handleCancel,
+    onKeyDown,
+    isEditing,
+    setIsEditing,
+    getStyles,
+    nodeData,
+    canEdit,
+    componentProps,
+  } = props
+
+  const {
+    DatePicker,
     showTime = true,
-    loadingText = 'Loading Date Picker',
+    formatter,
+    noPickerWarning = 'No DatePicker component provided',
   } = componentProps ?? {}
 
   const date = new Date(value as string)
-
-  const textColour = getStyles('container', nodeData).backgroundColor
-  const okColour = getStyles('iconOk', nodeData).color
-  const cancelColour = getStyles('iconCancel', nodeData).color
+  const isValidDate = !isNaN(date.getTime())
   const stringStyle = getStyles('string', nodeData)
 
-  return isEditing ? (
-    // By default, DatePicker only shows up when "editing". Due to the
-    // `showOnView: false` in the definition below, this component will not show
-    // at all when viewing (and so will show raw ISO strings). However, we've
-    // defined an alternative here too, when showOnView == true, in which case
-    // the date/time string is shown as a localised date/time.
-    <Suspense
-      fallback={
-        <div style={stringStyle}>
-          <Loading text={loadingText} />
-        </div>
-      }
-    >
-      <DatePicker
-        // Check to prevent invalid date (from previous data value) crashing the
-        // component
-        // @ts-expect-error -- isNan can take any input
-        selected={isNaN(date) ? null : date}
-        showTimeSelect={showTime}
-        dateFormat={showTime ? dateTimeFormat : dateFormat}
-        onChange={(date: Date | null) => date && setValue(date.toISOString())}
-        open={true}
-        onKeyDown={onKeyDown}
-      >
-        <div style={{ display: 'inline-flex', gap: 10 }}>
-          {/* These buttons are not really necessary -- you can either use the
-        standard Ok/Cancel icons, or keyboard Enter/Esc, but shown for demo
-        purposes */}
-          <Button textColor={textColour} color={okColour} onClick={handleEdit} text="OK" />
-          <Button
-            textColor={textColour}
-            color={cancelColour}
-            onClick={handleCancel}
-            text="Cancel"
+  if (isEditing) {
+    // No widget supplied: fall back to editing the raw ISO string, with a
+    // warning nudging the consumer to wire up a DatePicker widget.
+    if (!DatePicker)
+      return (
+        <div>
+          <StringEdit
+            styles={getStyles('input', nodeData)}
+            pathString={toPathString(nodeData.path)}
+            {...props}
+            value={value as string}
+            setValue={setValue as React.Dispatch<React.SetStateAction<string>>}
           />
+          <span style={{ ...stringStyle, opacity: 0.6, fontStyle: 'italic', fontSize: '0.8em' }}>
+            {noPickerWarning}
+          </span>
         </div>
-      </DatePicker>
-    </Suspense>
-  ) : (
+      )
+
+    return (
+      <DatePicker
+        value={isValidDate ? date : null}
+        showTime={showTime}
+        // A selection updates the buffer; commit/cancel come from core's
+        // Ok/Cancel icons and Enter/Esc. onConfirm/onCancel are wired too, so a
+        // widget shipping its own buttons works without further setup.
+        onChange={(newDate) => newDate && setValue(newDate.toISOString())}
+        onConfirm={(newDate) =>
+          handleEdit(newDate instanceof Date ? newDate.toISOString() : undefined)
+        }
+        onCancel={handleCancel}
+        onKeyDown={onKeyDown}
+      />
+    )
+  }
+
+  // View mode: a custom `formatter` wins; otherwise localised date/time. Falls
+  // back to the raw value if it doesn't parse (e.g. mid type-switch).
+  const displayValue = !isValidDate
+    ? (value as string)
+    : formatter
+      ? formatter(date)
+      : showTime
+        ? date.toLocaleString()
+        : date.toLocaleDateString()
+
+  return (
     <div
-      // Double-click behaviour same as standard elements
-      onDoubleClick={() => setIsEditing(true)}
+      // Double-click to edit, like standard value nodes.
+      onDoubleClick={() => canEdit && setIsEditing(true)}
       className="jer-value-string"
       style={stringStyle}
     >
-      "{showTime ? date.toLocaleString() : date.toLocaleDateString()}"
+      "{displayValue}"
     </div>
   )
 }
