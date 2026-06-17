@@ -2298,3 +2298,42 @@ describe('JsonEditor — textarea character insertion via keyboard', () => {
     expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('he\nllo')
   })
 })
+
+describe('JsonEditor — theme CSS custom properties (scoped to the container)', () => {
+  test('applies the non-inlineable theme colours as inline custom properties on the container', () => {
+    const { container } = render(
+      <JsonEditor
+        data={{ a: 1 }}
+        setData={noop}
+        theme={{ inputHighlight: '#abc', iconCopy: '#def' }}
+      />
+    )
+    const editor = container.querySelector('.jer-editor-container') as HTMLElement
+    expect(editor).not.toBeNull()
+    expect(editor.style.getPropertyValue('--jer-highlight-color')).toBe('#abc')
+    expect(editor.style.getPropertyValue('--jer-icon-copy-color')).toBe('#def')
+  })
+
+  test('scopes the vars per instance and leaves the document root untouched', () => {
+    const before = document.documentElement.style.getPropertyValue('--jer-highlight-color')
+    const { container } = render(
+      <>
+        <JsonEditor data={{ a: 1 }} setData={noop} theme={{ inputHighlight: 'red' }} />
+        <JsonEditor data={{ b: 2 }} setData={noop} theme={{ inputHighlight: 'blue' }} />
+      </>
+    )
+    const editors = container.querySelectorAll('.jer-editor-container')
+    expect(editors).toHaveLength(2)
+    expect((editors[0] as HTMLElement).style.getPropertyValue('--jer-highlight-color')).toBe('red')
+    expect((editors[1] as HTMLElement).style.getPropertyValue('--jer-highlight-color')).toBe('blue')
+    // The shared document root is never mutated — no cross-instance clobbering.
+    expect(document.documentElement.style.getPropertyValue('--jer-highlight-color')).toBe(before)
+  })
+
+  test('falls back to the default-theme colours when no theme prop is given', () => {
+    const { container } = render(<JsonEditor data={{ a: 1 }} setData={noop} />)
+    const editor = container.querySelector('.jer-editor-container') as HTMLElement
+    expect(editor.style.getPropertyValue('--jer-highlight-color')).toBe('#b3d8ff')
+    expect(editor.style.getPropertyValue('--jer-icon-copy-color')).toBe('#268bd2')
+  })
+})
