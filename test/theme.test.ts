@@ -1,7 +1,7 @@
 import {
   compileStyles,
   getStyles,
-  writeThemeCssVars,
+  getThemeCssVars,
 } from '../src/contexts/ThemeProvider/compileStyles'
 import { type ThemeFunction, type NodeData } from '../src/types'
 
@@ -215,20 +215,34 @@ describe('getStyles', () => {
   })
 })
 
-// ─── F — writeThemeCssVars ───────────────────────────────────────────────────
+// ─── F — getThemeCssVars ─────────────────────────────────────────────────────
 
-describe('writeThemeCssVars', () => {
-  it('writes the highlight and copy-icon custom properties', () => {
-    const el = document.createElement('div')
-    writeThemeCssVars(compileStyles({ inputHighlight: '#abc', iconCopy: '#def' }), el)
-    expect(el.style.getPropertyValue('--jer-highlight-color')).toBe('#abc')
-    expect(el.style.getPropertyValue('--jer-icon-copy-color')).toBe('#def')
+describe('getThemeCssVars', () => {
+  it('returns the highlight and copy-icon custom properties', () => {
+    const vars = getThemeCssVars(
+      compileStyles({ inputHighlight: '#abc', iconCopy: '#def' })
+    ) as Record<string, string>
+    expect(vars['--jer-highlight-color']).toBe('#abc')
+    expect(vars['--jer-icon-copy-color']).toBe('#def')
   })
 
-  it('does not write a var when the value is a function', () => {
-    const el = document.createElement('div')
-    writeThemeCssVars(compileStyles({ inputHighlight: () => ({ backgroundColor: 'red' }) }), el)
-    expect(el.style.getPropertyValue('--jer-highlight-color')).toBe('')
+  it('omits a var when the value is a per-node function', () => {
+    // `iconCopy` (still function-capable) stands in here: a per-node function
+    // can't collapse to one container-level value, so no var is emitted.
+    // `inputHighlight` can't reach this branch — it's typed as a colour string.
+    const vars = getThemeCssVars(
+      compileStyles({ iconCopy: () => ({ color: 'red' }) })
+    ) as Record<string, string>
+    expect(vars['--jer-icon-copy-color']).toBeUndefined()
+  })
+
+  it('emits the default-theme colours when the theme overrides neither', () => {
+    // `defaultTheme` is merge layer 0 and defines both, so the fragment is never
+    // empty — the un-themed editor still gets its highlight + copy-glow colours.
+    expect(getThemeCssVars(compileStyles({}))).toEqual({
+      '--jer-highlight-color': '#b3d8ff',
+      '--jer-icon-copy-color': '#268bd2',
+    })
   })
 })
 

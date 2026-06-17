@@ -5,7 +5,12 @@
   --jer-select-arrow: #777;
   --jer-form-border: 1px solid #ededf0;
   --jer-form-border-focus: 1px solid #e2e2e2;
+  /* The selection-highlight and copy-pulse colours mirror the default theme, so
+     these static rules degrade to sensible colours when a theme doesn't supply
+     the matching variable inline on the container — e.g. a dynamic `iconCopy`
+     style function, which can't collapse to one container-level value. */
   --jer-highlight-color: #b3d8ff;
+  --jer-icon-copy-color: #268bd2;
 }
 
 .jer-visible {

@@ -924,6 +924,8 @@ The `styles` property is the main one to focus on. Each key (`property`, `bracke
 - a "Style Function", which is a function that takes the same input as [Filter Functions](#filter-functions), but returns a CSS style object (or `null`). This allows you to *dynamically* change styling of various elements based on content or structure. (An example is in the [Demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) "Custom Nodes" data set, where the character names are styled larger than other string values)
 - an array combining any of the above. Static styles merge left → right (later wins per property); a "Style Function" always applies *last*, on top of the merged statics, and multiple functions compose in order. So you can pair static "fallback" styles with a conditional function — when the function returns `null` it contributes nothing, leaving the statics showing through.
 
+`inputHighlight` is the one exception to the above: it sets the text-selection colour through a `::selection` rule (surfaced as a single CSS custom property), so it accepts **only a colour string** — not a style object, function, or array.
+
 `collection`, `collectionInner`, `collectionElement` and `dropZone` aren't styled by the default theme, but can be themed the same way.
 
 For a simple example, if you want to use the "githubDark" theme, but just change a couple of small things, you'd specify something like this:
