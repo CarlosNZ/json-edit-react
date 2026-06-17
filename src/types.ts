@@ -701,7 +701,17 @@ export type ThemeFragments = Record<string, string | React.CSSProperties>
  * The styles map — inherently partial, so supply only the elements you want to
  * override.
  */
-export type ThemeStyles = Partial<Record<ThemeableElement, ThemeElementValue>>
+export type ThemeStyles = Partial<
+  Record<Exclude<ThemeableElement, 'inputHighlight'>, ThemeElementValue>
+> & {
+  /**
+   * The text-selection highlight colour, applied via a `::selection` rule and
+   * surfaced as a CSS custom property. Only a background colour is consumed, so
+   * — unlike every other element — it's a plain colour string rather than the
+   * general element-value union.
+   */
+  inputHighlight?: string
+}
 
 /**
  * A themeable icon glyph. Core renders the wrapping `<svg>` itself, so it can

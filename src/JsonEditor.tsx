@@ -176,7 +176,7 @@ const Editor: React.FC<
   onCollapse,
   collapseClickZones = DEFAULT_COLLAPSE_CLICK_ZONES,
 }) => {
-  const { getStyles } = useTheme()
+  const { getStyles, cssVars } = useTheme()
   // Root must not subscribe to editing state — that would re-render the whole
   // tree on every edit transition. Read the actions from the stable store
   // (used by the cancel-on-unmount cleanup and the `editorRef` handle below).
@@ -709,7 +709,7 @@ const Editor: React.FC<
     collapseClickZones,
   }
 
-  const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }
+  const mainContainerStyles = { ...getStyles('container', nodeData), ...cssVars, minWidth, maxWidth }
 
   // Props fontSize takes priority over theme, but we fall back on a default of
   // 16 (from CSS sheet) if neither are provided. Having a defined base size

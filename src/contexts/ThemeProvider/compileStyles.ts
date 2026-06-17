@@ -90,12 +90,21 @@ export const getStyles = (
   return typeof value === 'function' ? value(nodeData) : (value ?? {})
 }
 
-// Bridge for the two properties that can't be set inline — they feed static
-// rules in style.css, so they're written as custom properties on the root.
-export const writeThemeCssVars = (compiled: CompiledStyles, docRoot: HTMLElement) => {
+// Bridge for the two theme colours that can't be applied inline — they feed
+// static rules in style.css (the `::selection` background and the copy-pulse
+// glow). Returned as a CSS-custom-property style fragment to spread onto the
+// editor container, where they cascade to its descendants. Scoping to the
+// container (rather than the document root) keeps separate editor instances
+// from clobbering each other and lets the values reach inside a shadow root;
+// the `:root, :host` defaults in style.css cover the un-themed case. A per-node
+// theme *function* can't collapse to one container-level value, so only static
+// values are emitted.
+export const getThemeCssVars = (compiled: CompiledStyles): CSSProperties => {
   const { inputHighlight, iconCopy } = compiled
+  const vars: Record<string, string> = {}
   if (typeof inputHighlight !== 'function' && inputHighlight?.backgroundColor)
-    docRoot.style.setProperty('--jer-highlight-color', inputHighlight.backgroundColor)
+    vars['--jer-highlight-color'] = inputHighlight.backgroundColor
   if (typeof iconCopy !== 'function' && iconCopy?.color)
-    docRoot.style.setProperty('--jer-icon-copy-color', iconCopy.color)
+    vars['--jer-icon-copy-color'] = iconCopy.color
+  return vars as CSSProperties
 }
