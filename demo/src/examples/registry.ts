@@ -1,8 +1,13 @@
 import { type ExampleDef } from './types'
+import { blurbs } from '../demoData/blurbs'
 
 // One entry per targeted example. Adding a new example is one entry here plus
 // one file — the shell handles routing, theming, source display, and (for live)
 // the editable playground. Keys are the URL slug: `/examples/<slug>`.
+//
+// Examples that mirror a main-demo data set share that data set's blurb via the
+// `blurbs` map (single source of truth — see demoData/blurbs.ts), so the
+// example-page text and the demo description never drift.
 const allExamples: Record<string, ExampleDef> = {
   'delayed-settlement': {
     kind: 'static',
@@ -131,10 +136,51 @@ const allExamples: Record<string, ExampleDef> = {
   'json-schema-validation': {
     kind: 'static',
     title: 'JSON Schema validation',
-    blurb:
-      'Validate every edit against a full JSON Schema with a 3rd-party validator (Ajv). A compiled validator runs inside `onUpdate`: non-compliant changes are rejected with an inline error, and the detailed Ajv messages surface in a toast. The schema also shapes the editor — `category` is locked to its enum, and new keys on the root or `address` are restricted to the schema\'s properties, each seeded with a valid default.',
+    blurb: blurbs.jsonSchemaValidation,
     load: () => import('./static/json-schema-validation/Example'),
     code: () => import('./static/json-schema-validation/Example.tsx?raw'),
+  },
+  intro: {
+    kind: 'static',
+    title: 'Intro',
+    blurb: blurbs.intro,
+    load: () => import('./static/intro/Example'),
+    code: () => import('./static/intro/Example.tsx?raw'),
+  },
+  'star-wars': {
+    kind: 'static',
+    title: 'Star Wars',
+    blurb: blurbs.starWars,
+    load: () => import('./static/star-wars/Example'),
+    code: () => import('./static/star-wars/Example.tsx?raw'),
+  },
+  'json-placeholder': {
+    kind: 'static',
+    title: 'Client list',
+    blurb: blurbs.jsonPlaceholder,
+    load: () => import('./static/json-placeholder/Example'),
+    code: () => import('./static/json-placeholder/Example.tsx?raw'),
+  },
+  'custom-nodes': {
+    kind: 'static',
+    title: 'Custom nodes',
+    blurb: blurbs.customNodes,
+    load: () => import('./static/custom-nodes/Example'),
+    code: () => import('./static/custom-nodes/Example.tsx?raw'),
+  },
+  'custom-keys': {
+    kind: 'static',
+    title: 'Custom node keys',
+    blurb: blurbs.customKeys,
+    load: () => import('./static/custom-keys/Example'),
+    code: () => import('./static/custom-keys/Example.tsx?raw'),
+  },
+  'custom-component-library': {
+    kind: 'static',
+    title: 'Custom component library',
+    blurb: blurbs.customComponentLibrary,
+    load: () => import('./static/custom-component-library/Example'),
+    code: () => import('./static/custom-component-library/Example.tsx?raw'),
   },
   'custom-error-ui': {
     kind: 'static',

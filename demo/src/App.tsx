@@ -47,7 +47,7 @@ import {
 } from '@chakra-ui/react'
 import logoSVG from './image/logo.svg'
 import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
-import { demoDataDefinitions } from './demoData'
+import { demoDataDefinitions, type DemoPayload } from './demoData'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { getLineHeight, truncate } from './helpers'
@@ -158,9 +158,40 @@ function App() {
   // `setRawData` — so history is cleared rather than left pointing at the
   // previous dataset.
   const [rawData, setRawData] = useState<JsonData>(
-    selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data
+    selectedDataSet === 'editTheme' ? defaultTheme : (dataDefinition.data ?? {})
   )
   const { data, set: setData, reset, undo, redo, canUndo, canRedo } = useUndo(rawData, setRawData)
+
+  // Lazy (example-backed) datasets resolve their payload from a chunk; eager
+  // datasets carry it inline. `loadedPayload` holds the resolved chunk for the
+  // active lazy dataset; for an eager dataset the payload IS the definition,
+  // read synchronously so there's no stale frame on switch. It's `null` while a
+  // lazy chunk is in flight — the editor shows a spinner until it lands.
+  const [loadedPayload, setLoadedPayload] = useState<DemoPayload | null>(null)
+  const activePayload: Partial<DemoPayload> | null = dataDefinition.load
+    ? loadedPayload
+    : dataDefinition
+  const isLoadingDataset = !!dataDefinition.load && !loadedPayload
+
+  useEffect(() => {
+    const def = demoDataDefinitions[selectedDataSet]
+    // Eager datasets need no resolution; just clear any stale lazy payload.
+    if (!def.load) {
+      setLoadedPayload(null)
+      return
+    }
+    // Lazy: load the chunk, then seed the document from its data.
+    let cancelled = false
+    setLoadedPayload(null)
+    def.load().then((payload) => {
+      if (cancelled) return
+      setLoadedPayload(payload)
+      reset(payload.data)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedDataSet, reset])
 
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
@@ -184,10 +215,10 @@ function App() {
   // through with their module-scope identity intact.
   const customNodeDefinitions = useMemo(
     () =>
-      typeof dataDefinition.customNodeDefinitions === 'function'
-        ? dataDefinition.customNodeDefinitions(data)
-        : dataDefinition.customNodeDefinitions,
-    [dataDefinition, data]
+      typeof activePayload?.customNodeDefinitions === 'function'
+        ? activePayload.customNodeDefinitions(data)
+        : activePayload?.customNodeDefinitions,
+    [activePayload, data]
   )
 
   const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
@@ -218,14 +249,14 @@ function App() {
   // filter the data set defines: a node is permitted only if the toggle is on
   // AND the data set's own filter permits it.
   const allowEdit: FilterFunction | boolean = (() => {
-    const customAllow = dataDefinition?.allowEdit
+    const customAllow = activePayload?.allowEdit
     if (typeof customAllow === 'function') return (input) => allowEditEnabled && customAllow(input)
     if (customAllow !== undefined) return customAllow
     return allowEditEnabled
   })()
 
   const allowDelete: FilterFunction | boolean = (() => {
-    const customAllow = dataDefinition?.allowDelete
+    const customAllow = activePayload?.allowDelete
     if (typeof customAllow === 'function')
       return (input) => allowDeleteEnabled && customAllow(input)
     if (customAllow !== undefined) return customAllow
@@ -233,7 +264,7 @@ function App() {
   })()
 
   const allowAdd: FilterFunction | boolean = (() => {
-    const customAllow = dataDefinition?.allowAdd
+    const customAllow = activePayload?.allowAdd
     if (typeof customAllow === 'function') return (input) => allowAddEnabled && customAllow(input)
     if (customAllow !== undefined) return customAllow
     return allowAddEnabled
@@ -274,10 +305,10 @@ function App() {
   const editorTheme = useMemo(
     () => [
       selectedDataSet === 'editTheme' ? (data as Theme) : theme,
-      dataDefinition?.styles ?? {},
+      activePayload?.styles ?? {},
       { container: { paddingTop: '1em' } },
     ],
-    [selectedDataSet, data, theme, dataDefinition]
+    [selectedDataSet, data, theme, activePayload]
   )
 
   const onCopy = useCallback(
@@ -337,7 +368,9 @@ function App() {
         else reset(liveData)
         break
       default:
-        reset(newDataDefinition.data)
+        // Eager datasets seed synchronously; lazy ones are seeded by the
+        // load effect once their chunk resolves (see above).
+        if (!newDataDefinition.load) reset(newDataDefinition.data ?? {})
     }
 
     if (selected === 'intro') navigate('/')
@@ -407,7 +440,7 @@ function App() {
         reset(data)
         break
       default:
-        reset(dataDefinition.data)
+        reset(activePayload?.data ?? {})
     }
 
     setState(newState)
@@ -504,6 +537,11 @@ function App() {
                 _focus={{ w: '45%' }}
                 transition={'width 0.3s'}
               />
+              {isLoadingDataset ? (
+                <Flex h={200} justify="center" align="center">
+                  <Spinner label="Loading dataset…" />
+                </Flex>
+              ) : (
               <RenderProfiler>
                 <JsonEditor<typeof data>
                   data={data}
@@ -516,11 +554,11 @@ function App() {
                     // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
                     // as the catch-all (delete/rename/move).
                     const runDemoUpdate = () => {
-                      if (nodeData.event === 'edit' && dataDefinition?.onEdit)
-                        return dataDefinition.onEdit(nodeData)
-                      if (nodeData.event === 'add' && dataDefinition?.onAdd)
-                        return dataDefinition.onAdd(nodeData)
-                      return (dataDefinition?.onUpdate ?? (() => undefined))(
+                      if (nodeData.event === 'edit' && activePayload?.onEdit)
+                        return activePayload.onEdit(nodeData)
+                      if (nodeData.event === 'add' && activePayload?.onAdd)
+                        return activePayload.onAdd(nodeData)
+                      return (activePayload?.onUpdate ?? (() => undefined))(
                         nodeData,
                         toast as (options: unknown) => void
                       )
@@ -539,9 +577,9 @@ function App() {
                     if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
                   }}
                   onError={
-                    dataDefinition.onError
+                    activePayload?.onError
                       ? (errorData) => {
-                          const message = dataDefinition.onError!(errorData)
+                          const message = activePayload.onError!(errorData)
                           toast({
                             title: 'ERROR 😢',
                             description: message,
@@ -552,7 +590,7 @@ function App() {
                         }
                       : undefined
                   }
-                  showErrorMessages={dataDefinition.showErrorMessages}
+                  showErrorMessages={activePayload?.showErrorMessages}
                   collapse={collapseLevel}
                   collapseAnimationTime={collapseTime}
                   showCollectionCount={
@@ -570,7 +608,7 @@ function App() {
                   // allowEdit={(nodeData) => typeof nodeData.value === 'string'}
                   allowDelete={allowDelete}
                   allowAdd={allowAdd}
-                  allowTypeSelection={dataDefinition?.allowTypeSelection}
+                  allowTypeSelection={activePayload?.allowTypeSelection}
                   // allowTypeSelection={[
                   //   'string',
                   //   'number',
@@ -589,7 +627,7 @@ function App() {
                   //   },
                   // ]}
                   allowDrag={true}
-                  searchFilter={dataDefinition?.searchFilter}
+                  searchFilter={activePayload?.searchFilter}
                   searchText={searchText}
                   sortKeys={sortKeys}
                   // sortKeys={
@@ -607,8 +645,8 @@ function App() {
                   //       }
                   //     : false
                   // }
-                  defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
-                  newKeyOptions={dataDefinition?.newKeyOptions}
+                  defaultValue={activePayload?.defaultValue ?? defaultNewValue}
+                  newKeyOptions={activePayload?.newKeyOptions}
                   showArrayIndexes={showIndexes}
                   arrayIndexStart={arraysFromOne ? 1 : 0}
                   showStringQuotes={showStringQuotes}
@@ -617,7 +655,7 @@ function App() {
                   className="block-shadow"
                   stringTruncateLength={90}
                   customNodeDefinitions={customNodeDefinitions}
-                  customText={dataDefinition?.customTextDefinitions}
+                  customText={activePayload?.customTextDefinitions}
                   // icons={{ chevron: <IconCancel size="1.2em" /> }}
                   // customButtons={[
                   //   {
@@ -635,7 +673,7 @@ function App() {
                   //     onClick: (nodeData, e) => console.log(nodeData),
                   //   },
                   // ]}
-                  onChange={dataDefinition?.onChange ?? undefined}
+                  onChange={activePayload?.onChange ?? undefined}
                   jsonParse={JSON5.parse}
                   keyboardControls={
                     {
@@ -703,6 +741,7 @@ function App() {
                   showIconTooltips
                 />
               </RenderProfiler>
+              )}
             </Suspense>
           </Box>
           {/* DEMO: confirm-before-update modal (Intro dataset).
@@ -898,7 +937,7 @@ function App() {
                   </FormLabel>
                   <Input
                     className="inputWidth"
-                    disabled={dataDefinition.defaultValue !== undefined}
+                    disabled={activePayload?.defaultValue !== undefined}
                     type="text"
                     value={defaultNewValue}
                     onChange={(e) => updateState({ defaultNewValue: e.target.value })}
@@ -909,7 +948,7 @@ function App() {
                     <Checkbox
                       id="allowEditCheckbox"
                       isChecked={allowEditEnabled}
-                      disabled={dataDefinition.allowEdit !== undefined}
+                      disabled={activePayload?.allowEdit !== undefined}
                       onChange={() => toggleState('allowEdit')}
                       w="50%"
                     >
@@ -918,7 +957,7 @@ function App() {
                     <Checkbox
                       id="allowDeleteCheckbox"
                       isChecked={allowDeleteEnabled}
-                      disabled={dataDefinition.allowDelete !== undefined}
+                      disabled={activePayload?.allowDelete !== undefined}
                       onChange={() => toggleState('allowDelete')}
                       w="50%"
                     >
@@ -929,7 +968,7 @@ function App() {
                     <Checkbox
                       id="allowAddCheckbox"
                       isChecked={allowAddEnabled}
-                      disabled={dataDefinition.allowAdd !== undefined}
+                      disabled={activePayload?.allowAdd !== undefined}
                       onChange={() => toggleState('allowAdd')}
                       w="50%"
                     >
@@ -995,7 +1034,7 @@ function App() {
                         id="customEditorCheckbox"
                         isChecked={customTextEditor}
                         onChange={() => toggleState('customTextEditor')}
-                        disabled={!dataDefinition.customTextEditorAvailable}
+                        disabled={!activePayload?.customTextEditorAvailable}
                       >
                         Custom Text Editor
                       </Checkbox>
