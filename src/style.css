@@ -136,6 +136,10 @@ select:focus + .focus {
 /* .jer-component {
 } */
 
+/* .jer-collection-element {
+  min-height: 1.7em;
+} */
+
 .jer-collection-header-row,
 .jer-value-main-row {
   display: flex;
@@ -145,8 +149,11 @@ select:focus + .focus {
 }
 
 .jer-collection-header-row {
-  display: flex;
   flex-wrap: wrap;
+}
+
+.jer-value-main-row {
+  gap: 0;
 }
 
 /* .jer-brackets {
@@ -227,9 +234,6 @@ select:focus + .focus {
   margin-top: 0.4em;
 }
 
-/* .jer-collection-element {
-} */
-
 /* .jer-collection-error-row {
 } */
 
@@ -244,11 +248,6 @@ select:focus + .focus {
 
 .jer-value-component {
   position: relative;
-}
-
-.jer-value-main-row {
-  display: flex;
-  gap: 0;
 }
 
 .jer-value-and-buttons {
