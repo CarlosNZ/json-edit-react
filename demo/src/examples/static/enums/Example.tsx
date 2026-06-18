@@ -2,6 +2,7 @@ import { useState } from 'react'
 import {
   JsonEditor,
   standardDataTypes,
+  valueDataTypes,
   type EnumDefinition,
   type TypeFilterFunction,
 } from '@json-edit-react'
@@ -13,8 +14,8 @@ import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 //
 //   - `priority` is LOCKED to the Priority enum — it's the
 //     only type offered, so the value must stay Low/Med/High
-//   - `day` and `colour` offer their enum ALONGSIDE every
-//     standard type, via the `standardDataTypes` spread
+//   - `day` and `colour` offer their enum next to the
+//     scalar types only (the `valueDataTypes` spread)
 const initialData = {
   title: 'Design review',
   day: 'Wednesday',
@@ -48,10 +49,11 @@ const priorityEnum: EnumDefinition = {
 const allowTypeSelection: TypeFilterFunction = ({ key }) => {
   // A single enum returned = locked to that type (no selector).
   if (key === 'priority') return [priorityEnum]
-  // The enum offered next to all the standard types.
-  if (key === 'day') return [...standardDataTypes, dayEnum]
-  if (key === 'colour') return [...standardDataTypes, colourEnum]
-  // Everything else: the standard types only.
+  // The enum offered next to the scalar types only — a
+  // day or colour shouldn't become an object or array.
+  if (key === 'day') return [...valueDataTypes, dayEnum]
+  if (key === 'colour') return [...valueDataTypes, colourEnum]
+  // Everything else can be any standard type.
   return [...standardDataTypes]
 }
 
