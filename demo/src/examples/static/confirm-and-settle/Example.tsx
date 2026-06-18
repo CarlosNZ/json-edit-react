@@ -46,8 +46,8 @@ const Server = {
   },
 }
 
-const DELAYED = 'Delayed Settlement'
-const CONFIRM = 'Name with confirmation'
+const DELAYED = 'Server-side validation'
+const CONFIRM = 'Local confirmation'
 const CAREFUL = 'Careful'
 
 const initialData = {

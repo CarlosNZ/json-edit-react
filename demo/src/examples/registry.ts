@@ -53,7 +53,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Event signals',
     blurb:
-      "Surface the full `onEditEvent` lifecycle as toast notifications — pass in your own notifier and fire it on every event, colour-coded by category: in-progress (blue), applied / save confirmed (green), discarded or removed (orange), save rejected (red). Saves settle after a random delay and fail one in four, so the stream mixes `updateSuccess` and `updateError`. Edit, rename, add, move or delete a node and watch it stream.",
+      'Surface the full `onEditEvent` lifecycle as toast notifications — pass in your own notifier and fire it on every event, colour-coded by category: in-progress (blue), applied / save confirmed (green), discarded or removed (orange), save rejected (red). Saves settle after a random delay and fail one in four, so the stream mixes `updateSuccess` and `updateError`. Edit, rename, add, move or delete a node and watch it stream.',
     load: () => import('./static/event-signals/Example'),
     code: () => import('./static/event-signals/Example.tsx?raw'),
   },
@@ -108,7 +108,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'onUpdate basics',
     blurb:
-      "Basic `onUpdate` usage: branch on the `event` (edit / add / delete / rename / move) and return a value to drive each outcome. Editing `username` transforms it (`{ value }`), a bad `email` rejects with a custom message (`{ error }`), a negative `age` reverts with the default error (`false`), and deleting `id` silently cancels (`null`).",
+      'Basic `onUpdate` usage: branch on the `event` (edit / add / delete / rename / move) and return a value to drive each outcome. Editing `username` transforms it (`{ value }`), a bad `email` rejects with a custom message (`{ error }`), a negative `age` reverts with the default error (`false`), and deleting `id` silently cancels (`null`).',
     load: () => import('./static/on-update/Example'),
     code: () => import('./static/on-update/Example.tsx?raw'),
   },
@@ -116,7 +116,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Confirm & settle',
     blurb:
-      "Three gating patterns in one editor. `Delayed Settlement` commits optimistically then settles after a random 0.5–3s — accepting with a toast, or rejecting a value that doesn't contain a \"Z\". `Name with confirmation` gates edits behind a modal via `useConfirmOnUpdate` (which drives core's `hold()`). Deleting `Careful` combines both: a confirmation modal, then a random 0.5–3s settle from a flaky server that fails half the time. Nothing can be added; only `Careful` can be deleted.",
+      'Three gating patterns in one editor. `Server-side validation` commits optimistically then settles after a random 0.5–3s — accepting with a toast, or rejecting a value that doesn\'t contain a "Z". `Local confirmation` gates edits behind a modal via `useConfirmOnUpdate` (which drives core\'s `hold()`). Deleting `Careful` combines both: a confirmation modal, then a random 0.5–3s settle from a flaky server that fails half the time.',
     load: () => import('./static/confirm-and-settle/Example'),
     code: () => import('./static/confirm-and-settle/Example.tsx?raw'),
   },
@@ -124,7 +124,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Custom buttons',
     blurb:
-      "Add your own action buttons alongside the built-in Copy / Edit / Delete. Each button's `Element` receives the node's `nodeData` and can render conditionally, while `onClick` runs any handler — here, an \"open link\" button on URLs and a \"duplicate\" button on array items.",
+      'Add your own action buttons alongside the built-in Copy / Edit / Delete. Each button\'s `Element` receives the node\'s `nodeData` and can render conditionally, while `onClick` runs any handler — here, an "open link" button on URLs and a "duplicate" button on array items.',
     load: () => import('./static/custom-buttons/Example'),
     code: () => import('./static/custom-buttons/Example.tsx?raw'),
   },
@@ -140,7 +140,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Swap the built-ins',
     blurb:
-      "Replace JsonEditor's native dropdown and raw-JSON textarea with the `ReactSelect` (`react-select` wrapper) and `CodeEditor` (CodeMirror) components from `@json-edit-react/components`. Try the type selector, add a new key on the `task` object, edit the enum-typed `status` / `priority` values, or open \"Edit as JSON\" on any collection.",
+      'Replace JsonEditor\'s native dropdown and raw-JSON textarea with the `ReactSelect` (`react-select` wrapper) and `CodeEditor` (CodeMirror) components from `@json-edit-react/components`. Try the type selector, add a new key on the `task` object, edit the enum-typed `status` / `priority` values, or open "Edit as JSON" on any collection.',
     load: () => import('./static/swap-the-built-ins/Example'),
     code: () => import('./static/swap-the-built-ins/Example.tsx?raw'),
   },
@@ -156,7 +156,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Validation flagging (dev)',
     blurb:
-      "Reactive validation with `useValidationState` (`@json-edit-react/utils`) plus the `ErrorIndicator` glyph component (`@json-edit-react/components`). An AJV schema links `payment.method` to `card.number` (`minLength: 16` only while method is `card`), so editing `method` flips the validity of a node on another branch. `errorIndicatorDefinition` adds a ⚠️ to invalid nodes via its `condition`, memoized on the validation state — so the marker appears/clears cross-branch the instant validity changes. The fix for the sibling “Validation staleness” gotcha.",
+      'Reactive validation with `useValidationState` (`@json-edit-react/utils`) plus the `ErrorIndicator` glyph component (`@json-edit-react/components`). An AJV schema links `payment.method` to `card.number` (`minLength: 16` only while method is `card`), so editing `method` flips the validity of a node on another branch. `errorIndicatorDefinition` adds a ⚠️ to invalid nodes via its `condition`, memoized on the validation state — so the marker appears/clears cross-branch the instant validity changes. The fix for the sibling “Validation staleness” gotcha.',
     load: () => import('./static/validation-flagging/Example'),
     code: () => import('./static/validation-flagging/Example.tsx?raw'),
     devOnly: true,
@@ -165,7 +165,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Validation staleness (dev)',
     blurb:
-      "Scratchpad: why validating inside a style function breaks under fine-grained re-rendering. The schema links `payment.method` to `card.number` (`minLength: 16` applies only while method is `card`), so editing `method` changes the validity of a node on another branch — which never re-renders. The banner above the editor recomputes every commit and tells the truth; the node styling lags. Collapse/re-expand `card` to force a re-render and watch it correct itself.",
+      'Scratchpad: why validating inside a style function breaks under fine-grained re-rendering. The schema links `payment.method` to `card.number` (`minLength: 16` applies only while method is `card`), so editing `method` changes the validity of a node on another branch — which never re-renders. The banner above the editor recomputes every commit and tells the truth; the node styling lags. Collapse/re-expand `card` to force a re-render and watch it correct itself.',
     load: () => import('./static/validation-staleness/Example'),
     code: () => import('./static/validation-staleness/Example.tsx?raw'),
     devOnly: true,
