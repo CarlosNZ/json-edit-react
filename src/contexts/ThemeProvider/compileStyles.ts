@@ -4,27 +4,34 @@ import {
   type ThemeValueUnit,
   type ThemeFunction,
   type ThemeableElement,
+  type ThemeIcons,
   type CompiledStyles,
   type Theme,
   type NodeData,
 } from '../../types'
 import { defaultTheme } from './defaultTheme'
+import { toArray } from '../../utils/misc'
 
 // Elements whose bare-string shorthand targets a property other than `color`.
 const DEFAULT_PROP: Partial<Record<ThemeableElement, keyof CSSProperties>> = {
   container: 'backgroundColor',
   collection: 'backgroundColor',
-  collectionInner: 'backgroundColor',
   collectionElement: 'backgroundColor',
+  headerRow: 'backgroundColor',
+  valueRow: 'backgroundColor',
   dropZone: 'borderColor',
   inputHighlight: 'backgroundColor',
 }
 
+// The ordered theme stack a `ThemeInput` resolves to: `defaultTheme` first
+// (always layer 0), then each supplied entry coerced to a full `Theme`. Shared
+// by both derivations (`compileStyles`, `mergeIcons`) so the "merge over
+// default" rule lives in exactly one place.
+const resolveThemeStack = (themeInput: ThemeInput): Theme[] =>
+  [defaultTheme, ...toArray(themeInput)].map((t) => ('styles' in t ? t : { styles: t }))
+
 export const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
-  const themes: Theme[] = [
-    defaultTheme,
-    ...(Array.isArray(themeInput) ? themeInput : [themeInput]),
-  ].map((t) => ('styles' in t ? t : { styles: t }))
+  const themes = resolveThemeStack(themeInput)
 
   const base: Partial<Record<ThemeableElement, CSSProperties>> = {}
   const fns: Partial<Record<ThemeableElement, ThemeFunction[]>> = {}
@@ -60,6 +67,16 @@ export const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
       : b
   }
   return compiled
+}
+
+// Merge each theme's `icons` in array order (defaultTheme first), later wins
+// per glyph key — exactly parallel to how `styles` compose. defaultTheme defines
+// all seven glyphs, so the result is always complete and the renderer can index
+// it without a fallback path.
+export const mergeIcons = (themeInput: ThemeInput): Required<ThemeIcons> => {
+  const merged = {} as ThemeIcons
+  for (const { icons } of resolveThemeStack(themeInput)) if (icons) Object.assign(merged, icons)
+  return merged as Required<ThemeIcons>
 }
 
 // Resolve a compiled element to concrete CSS: call the closure, return the

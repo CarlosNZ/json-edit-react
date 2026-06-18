@@ -11,7 +11,9 @@ export default [
       { file: 'build/index.cjs.js', format: 'cjs' },
       { file: 'build/index.esm.js', format: 'esm' },
     ],
-    external: ['json-edit-react'],
+    // A theme that ships `icons` emits JSX → `react/jsx-runtime` imports; keep
+    // React (a peer dep) external so the runtime is never bundled.
+    external: (id) => id === 'json-edit-react' || id === 'react' || id.startsWith('react/'),
     plugins: [
       typescript({
         module: 'ESNext',

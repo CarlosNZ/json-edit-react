@@ -757,7 +757,7 @@ export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.React
   const innerProps = props as unknown as JsonEditorProps<JsonData>
 
   return (
-    <ThemeProvider theme={innerProps.theme ?? defaultTheme} icons={innerProps.icons}>
+    <ThemeProvider theme={innerProps.theme ?? defaultTheme}>
       <TreeStateProvider
         onEditEvent={innerProps.onEditEvent}
         onCollapse={innerProps.onCollapse}

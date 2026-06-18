@@ -88,6 +88,14 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/swap-the-built-ins/Example'),
     code: () => import('./static/swap-the-built-ins/Example.tsx?raw'),
   },
+  'custom-icons': {
+    kind: 'static',
+    title: 'Custom icons',
+    blurb:
+      "Replace the built-in Edit / Copy / Delete glyphs via `theme.icons`, each authored a different way: a hand-written `IconDefinition`, a React `<svg>` through `iconFromSvg`, and a plain SVG string through `iconFromSvg`. Hover a row to reveal them, then switch the theme — the glyphs recolour via `currentColor`, except the Copy icon's fixed amber back page, showing a glyph can carry some of its own colour and still be themeable.",
+    load: () => import('./static/custom-icons/Example'),
+    code: () => import('./static/custom-icons/Example.tsx?raw'),
+  },
   'validation-flagging': {
     kind: 'static',
     title: 'Validation flagging (dev)',

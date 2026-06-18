@@ -222,7 +222,6 @@ This is a reference list of *all* possible props, divided into related sections.
 | Prop                    | Type                                                | Default                     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ----------------------- | --------------------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `theme`                 | `ThemeInput`                                        | `defaultTheme`              | Either one of the built-in themes (imported separately), or an object specifying some or all theme properties — see [Themes](#themes--styles).                                                                                                                                                                                                                                                                                                                                                |
-| `icons`                 | `{[iconName]: JSX.Element, ... }`                   | `{ }`                       | Replace the built-in icons by specifying them here — see [Themes](#themes--styles).                                                                                                                                                                                                                                                                                                                                                                                                           |  |
 | `showIconTooltips`      | `boolean`                                           | false                       | Display icon tooltips when hovering.                                                                                                                                                                                                                                                                                                                                                                                                                                                          |  |
 | `indent`                | `number`                                            | `3`                         | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `collapse`              | `boolean\|number\|FilterFunction`                   | `false`                     | Defines which nodes of the JSON tree will be displayed "opened" in the UI on load — see [Collapse](#collapse).                                                                                                                                                                                                                                                                                                                                                                                |
@@ -891,6 +890,7 @@ However, you can pass in your own theme object, or part thereof. The theme struc
 ```js
 {
   displayName: 'Default',
+  // icons: { … },  // optional per-glyph IconDefinitions — see "Icons" below
   styles: {
     container: {
       backgroundColor: '#f6f6f6',
@@ -926,7 +926,7 @@ The `styles` property is the main one to focus on. Each key (`property`, `bracke
 
 `inputHighlight` is the one exception to the above: it sets the text-selection colour through a `::selection` rule (surfaced as a single CSS custom property), so it accepts **only a colour string** — not a style object, function, or array.
 
-`collection`, `collectionInner`, `collectionElement` and `dropZone` aren't styled by the default theme, but can be themed the same way.
+`collection`, `collectionElement`, `headerRow`, `valueRow` and `dropZone` aren't styled by the default theme, but can be themed the same way. `headerRow` targets a collection's header line (key + brackets) and `valueRow` a leaf value's row — useful for row height/background.
 
 For a simple example, if you want to use the "githubDark" theme, but just change a couple of small things, you'd specify something like this:
 
@@ -952,7 +952,7 @@ So, to summarise, the `theme` prop can take *either*:
 
 - an imported theme, e.g `"candyWrapperTheme"`
 - a theme object:
-  - can be structured as above with `fragments`, `styles`, `displayName` etc., or just the `styles` part (at the root level)
+  - can be structured as above with `fragments`, `styles`, `displayName`, `icons` (glyphs — see [Icons](#icons)) etc., or just the `styles` part (at the root level)
 - a theme name *and* an override object in an array, i.e. `[ "<themeName>, {...overrides } ]`
 
 You can play round with live editing of the themes in the [Demo app](https://carlosnz.github.io/json-edit-react/) by selecting "Edit this theme!" from the "Demo data" selector (though you won't be able to create functions in JSON).
@@ -1002,21 +1002,52 @@ styles: {
 
 ### Icons
 
-The default icons can be replaced, but you need to provide them as React/HTML elements. Just define any or all of them within the `icons` prop, keyed as:
+A theme owns its icon **glyphs** as well as their colour. The glyph (which shape renders) lives on `theme.icons`; the colour lives on `theme.styles` under `iconAdd`…`iconCollection` (above). The two are independent — restyle the default glyph, swap the glyph, or both.
 
-```js
- icons={{
-  add: <YourIcon /> 
-  edit: <YourIcon /> 
-  delete: <YourIcon />
-  copy: <YourIcon />
-  ok: <YourIcon />
-  cancel: <YourIcon />
-  chevron: <YourIcon />
-}}
+`theme.icons` is keyed by icon name (`add`, `edit`, `delete`, `copy`, `ok`, `cancel`, and `collection` — the expand/collapse chevron), and each value is an `IconDefinition`. Supply only the glyphs you want to replace; the rest fall back to the defaults.
+
+```ts
+interface IconDefinition {
+  content: React.ReactNode // the inner SVG markup — <path>/<circle>/… (no outer <svg>)
+  viewBox?: string // defaults to '0 0 24 24'
+  svgProps?: React.SVGProps<SVGSVGElement> // extra <svg> attrs, e.g. a stroke icon: { fill: 'none', stroke: 'currentColor', strokeWidth: 2 }
+  scale?: number // per-glyph size tweak (default 1)
+}
 ```
 
-The Icon components will need to have their own styles defined, as the theme styles *won't* be added to the custom elements.
+Core renders the wrapping `<svg>` itself, so you supply only what goes inside it:
+
+```tsx
+const myTheme = {
+  icons: {
+    add: { content: <path d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4z" /> },
+  },
+  styles: { iconAdd: '#2aa198' }, // colours the glyph
+}
+```
+
+**Colour follows `currentColor`.** Core applies the theme's icon colour to the `<svg>`, so any glyph path that uses `fill="currentColor"` (or sets no `fill`) adopts it. A path with its own explicit `fill` keeps that colour — so multi-colour glyphs (flags, brand logos) survive theming, as long as every coloured path carries its own `fill`.
+
+**Sizing.** Icons render a little larger than text by default; `scale` is a per-glyph multiplier on that baseline (e.g. `scale: 1.3` renders 30% bigger). Use it only to even out a glyph whose artwork over- or under-fills its viewBox — size lives in the glyph, never in `styles`.
+
+**Pasting raw SVG.** The `iconFromSvg` helper in [`@json-edit-react/utils`](#optional-companion-packages) turns a raw SVG string (or a React `<svg>` element) into an `IconDefinition`, so you can drop a copied icon straight in:
+
+```tsx
+import { iconFromSvg } from '@json-edit-react/utils'
+
+const myTheme = {
+  icons: { add: iconFromSvg('<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 7h-2v4H7…"/></svg>') },
+  styles: {},
+}
+```
+
+A **string** passed to `iconFromSvg` is interned, so it's stable to write inline. A React **element**, a pre-built **`IconDefinition`**, or a raw React node placed directly in `theme.icons` is a fresh object each render — define it outside the component or wrap it in `useMemo` (the same rule as any inline `theme` value) so it doesn't churn the editor's re-rendering.
+
+To replace an icon for a single editor instance, layer it onto the `theme` array — the same mechanism as style overrides:
+
+```tsx
+theme={[githubDarkTheme, { icons: { add: iconFromSvg('<svg…>') } }]}
+```
 
 ## Localisation
 
@@ -1451,7 +1482,7 @@ A few helper functions, components and types that might be useful in your own im
 - `StringDisplay`: main component used to display a string value. Useful as a building block in custom components — handles truncation, "show more / show less" expansion, and the standard double-click-to-edit behaviour.
 - `StringEdit`: component used when editing a string value, can be useful for custom components
 - `AutogrowTextArea`: the auto-resizing textarea primitive used by `StringEdit` and the built-in string editor
-- `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron`: all the built-in [icon](#icons) components
+- `IconSvg`: renders an `IconDefinition`'s parts (`scale`, `viewBox`, inner markup as `children`, plus its `svgProps`) as an `<svg>` — the same renderer the editor uses for theme [icons](#icons); handy for previewing a glyph outside the editor
 - `matchNode`, `matchNodeKey`: helpers for defining custom [Search](#searchfiltering) functions
 - `extract`: function to extract a deeply nested object value from a string path. Originally published at [object-property-extractor](https://github.com/CarlosNZ/object-property-extractor)
 - `assign`: function to set a deep object value from a string path. Originally published at [object-property-assigner](https://github.com/CarlosNZ/object-property-assigner)
@@ -1472,7 +1503,8 @@ A few helper functions, components and types that might be useful in your own im
 - [`CustomNodeDefinition`](#custom-nodes), [`CustomTextDefinitions`](#custom-text), [`CustomTextFunction`](#custom-text), [`JsonEditorHandle`](#imperative-handle-editorref), [`JsonViewerHandle`](#imperative-handle-editorref), [`StartEditOptions`](#imperative-handle-editorref), [`StartEditResult`](#imperative-handle-editorref): input/output types of the respective props
 - `TranslateFunction`: function that takes a [localisation](#localisation) key and returns a translated string
 - `LocalisedString`: keys for the [`translations`](#localisation) object
-- `IconReplacements`: input type for the `icons` prop
+- `IconDefinition`: a themeable icon glyph (`content` plus optional `viewBox`/`svgProps`/`scale`) — see [Icons](#icons)
+- `ThemeIcons`: the `theme.icons` map (icon name → `IconDefinition`)
 - `CollectionNodeProps`: all props passed internally to "collection" nodes (i.e. objects/arrays)
 - `ValueNodeProps`: all props passed internally to "value" nodes (i.e. *not* objects/arrays)
 - `CustomComponentProps`: all props passed internally to [Custom nodes](#custom-nodes); basically the same as `CollectionNodeProps` with an extra `componentProps` field for passing props unique to your component`

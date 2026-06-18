@@ -34,12 +34,20 @@
     "preview-publish": "pnpm pack"
   },
   "peerDependencies": {
-    "json-edit-react": "workspace:^"
+    "json-edit-react": "workspace:^",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.1.6",
     "@rollup/plugin-terser": "^0.4.4",
+    "@types/react": "19.1.1",
     "json-edit-react": "workspace:*",
+    "react": "^19.1.0",
     "rollup": "^4.10.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-dts": "^6.1.0",

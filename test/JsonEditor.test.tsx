@@ -2337,3 +2337,22 @@ describe('JsonEditor — theme CSS custom properties (scoped to the container)',
     expect(editor.style.getPropertyValue('--jer-icon-copy-color')).toBe('#268bd2')
   })
 })
+
+describe('JsonEditor — headerRow / valueRow themeable elements', () => {
+  test('theme styles land on the collection header and leaf value rows', () => {
+    const { container } = render(
+      <JsonEditor
+        data={{ obj: { a: 1 } }}
+        setData={noop}
+        theme={{ headerRow: { minHeight: '2.5em' }, valueRow: { minHeight: '3em' } }}
+      />
+    )
+    const header = container.querySelector('.jer-collection-header-row') as HTMLElement
+    const valueRow = container.querySelector('.jer-value-main-row') as HTMLElement
+    expect(header.style.minHeight).toBe('2.5em')
+    expect(valueRow.style.minHeight).toBe('3em')
+    // The functional inline `position: relative` still wins — it's the collapse
+    // icon's positioning anchor, so a theme can't accidentally clobber it.
+    expect(header.style.position).toBe('relative')
+  })
+})
