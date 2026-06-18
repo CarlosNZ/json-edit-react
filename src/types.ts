@@ -135,7 +135,7 @@ export type JsonViewerProps<T = JsonData> = Omit<
 }
 
 export const valueDataTypes = ['string', 'number', 'boolean', 'null'] as const
-const collectionDataTypes = ['object', 'array'] as const
+export const collectionDataTypes = ['object', 'array'] as const
 export const standardDataTypes = [...valueDataTypes, ...collectionDataTypes] as const
 
 export type CollectionDataType = (typeof collectionDataTypes)[number]

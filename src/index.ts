@@ -11,6 +11,8 @@ export { toPathString, splitPropertyString } from './utils/pathTools'
 export { assign, type AssignInput, type AssignOptions } from './utils/assign'
 export { extract } from './utils/extract'
 export {
+  valueDataTypes,
+  collectionDataTypes,
   standardDataTypes,
   type JsonEditorProps,
   type JsonViewerProps,
