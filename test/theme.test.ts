@@ -51,6 +51,10 @@ describe('compileStyles — shorthand & merge over default', () => {
     expect(compileStyles({ inputHighlight: '#abc' }).inputHighlight).toEqual({
       backgroundColor: '#abc',
     })
+    // Row elements default their bare-string shorthand to background, like the
+    // other structural elements.
+    expect(compileStyles({ headerRow: '#eee' }).headerRow).toEqual({ backgroundColor: '#eee' })
+    expect(compileStyles({ valueRow: '#eee' }).valueRow).toEqual({ backgroundColor: '#eee' })
   })
 
   it('merges an object value over the default, keeping unspecified props', () => {

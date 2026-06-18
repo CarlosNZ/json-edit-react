@@ -926,7 +926,7 @@ The `styles` property is the main one to focus on. Each key (`property`, `bracke
 
 `inputHighlight` is the one exception to the above: it sets the text-selection colour through a `::selection` rule (surfaced as a single CSS custom property), so it accepts **only a colour string** — not a style object, function, or array.
 
-`collection`, `collectionInner`, `collectionElement` and `dropZone` aren't styled by the default theme, but can be themed the same way.
+`collection`, `collectionElement`, `headerRow`, `valueRow` and `dropZone` aren't styled by the default theme, but can be themed the same way. `headerRow` targets a collection's header line (key + brackets) and `valueRow` a leaf value's row — useful for row height/background.
 
 For a simple example, if you want to use the "githubDark" theme, but just change a couple of small things, you'd specify something like this:
 

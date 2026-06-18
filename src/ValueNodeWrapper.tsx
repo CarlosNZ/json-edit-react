@@ -506,6 +506,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       <div
         className="jer-value-main-row"
         style={{
+          ...getStyles('valueRow', nodeData),
           flexWrap: (name as string).length > 10 ? 'wrap' : 'nowrap',
         }}
       >

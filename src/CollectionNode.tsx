@@ -575,7 +575,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       {showCollectionWrapper ? (
         <div
           className="jer-collection-header-row"
-          style={{ position: 'relative' }}
+          style={{ ...getStyles('headerRow', nodeData), position: 'relative' }}
           onClick={collapseClickZones.includes('header') ? handleCollapse : undefined}
         >
           <div className="jer-collection-name">
@@ -630,7 +630,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       ) : !showKey ? (
         <></>
       ) : (
-        <div className="jer-collection-header-row" style={{ position: 'relative' }}>
+        <div
+          className="jer-collection-header-row"
+          style={{ ...getStyles('headerRow', nodeData), position: 'relative' }}
+        >
           <KeyDisplay {...keyDisplayProps} />
           {EditButtonDisplay}
         </div>
@@ -641,7 +644,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           overflowY: isCollapsed || isAnimating ? 'clip' : 'visible',
           // Prevent collapse if this node or any children are being edited
           maxHeight: childrenEditing ? undefined : maxHeight,
-          ...getStyles('collectionInner', nodeData),
           transition: cssTransitionValue,
         }}
         ref={contentRef}

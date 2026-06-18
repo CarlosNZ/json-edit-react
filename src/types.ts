@@ -649,8 +649,9 @@ export interface InputProps {
 export type ThemeableElement =
   | 'container'
   | 'collection'
-  | 'collectionInner'
   | 'collectionElement'
+  | 'headerRow'
+  | 'valueRow'
   | 'dropZone'
   | 'property'
   | 'bracket'

@@ -24,6 +24,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | Fine-grained re-rendering: object / array / function props must be referentially stable to benefit                                                                                                                                                       | Keep `customNodeDefinitions`, filter functions, `translations`, etc. stable (module scope or `useMemo`); callbacks are stabilised for you — see [stable props](#13-keep-object-and-function-props-referentially-stable)                    |
 | Misc public-export changes — new `AutogrowTextArea`; `toPathString` is now `/`-encoded; `ThemeStyles` is `Partial`                                                                                                                                       | Mostly additive; act only if you parse `toPathString` output or typed against a total `ThemeStyles` — see [Misc changes to public exports](#14-misc-changes-to-public-exports)                                                             |
 | `icons` prop removed; icon glyphs move into the theme | Move the config to `theme.icons` as `IconDefinition`s (or wrap with `iconFromSvg`); rename `chevron` → `collection` — see [`icons` prop removed](#15-icons-prop-removed-themes-own-their-glyphs) |
+| Themeable elements: `collectionInner` removed; `headerRow` / `valueRow` added | Theme the header line via `headerRow` and leaf rows via `valueRow`; move any `collectionInner` styles to `headerRow` and/or `collection` — see [Themeable elements](#16-themeable-elements-collectioninner-removed-headerrow-and-valuerow-added) |
 
 ---
 
@@ -763,6 +764,21 @@ Gone from `json-edit-react`:
 
 - The built-in icon **components** `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron` and their props type `IconProps`. The built-in glyphs now live on `defaultTheme.icons` (e.g. `defaultTheme.icons.add`) if you need to reference one.
 - The `IconReplacements` type (the old `icons`-prop shape) — replaced by `IconDefinition` and `ThemeIcons`.
+
+---
+
+## 16. Themeable elements: `collectionInner` removed, `headerRow` and `valueRow` added
+
+The set of styleable parts (`theme.styles` keys) gains two row-level elements and drops one.
+
+- **`headerRow`** — a collection's header line (the key + brackets row).
+- **`valueRow`** — a leaf value's row.
+
+Both accept the usual element value — a colour string (applied as background), a full `CSSProperties` object, a style function, or an array — so you can theme row backgrounds, padding, or `minHeight` per row.
+
+**`collectionInner` is removed.** It targeted the children-body wrapper as distinct from the header; that distinction is now expressed more directly with `headerRow` (style the header) plus `collection` (style the whole block). If a theme set `collectionInner`, move those styles to `headerRow` and/or `collection`.
+
+`collection`, `collectionElement`, and `dropZone` are unchanged.
 
 ---
 
