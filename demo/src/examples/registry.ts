@@ -112,6 +112,14 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/on-update/Example'),
     code: () => import('./static/on-update/Example.tsx?raw'),
   },
+  'on-change': {
+    kind: 'static',
+    title: 'onChange validation',
+    blurb:
+      "Constrain or transform input live with `onChange`, which runs on every keystroke (before commit) and returns the value to put back in the field. Editing `name` strips anything that isn't a letter or space, `age` is clamped to 0–100 as you type, and `couponCode` is forced to upper case.",
+    load: () => import('./static/on-change/Example'),
+    code: () => import('./static/on-change/Example.tsx?raw'),
+  },
   'confirm-and-settle': {
     kind: 'static',
     title: 'Confirm & settle',
@@ -119,6 +127,14 @@ const allExamples: Record<string, ExampleDef> = {
       'Three gating patterns in one editor. `Server-side validation` commits optimistically then settles after a random 0.5–3s — accepting with a toast, or rejecting a value that doesn\'t contain a "Z". `Local confirmation` gates edits behind a modal via `useConfirmOnUpdate` (which drives core\'s `hold()`). Deleting `Careful` combines both: a confirmation modal, then a random 0.5–3s settle from a flaky server that fails half the time.',
     load: () => import('./static/confirm-and-settle/Example'),
     code: () => import('./static/confirm-and-settle/Example.tsx?raw'),
+  },
+  'custom-error-ui': {
+    kind: 'static',
+    title: 'Custom error UI',
+    blurb:
+      'Replace the built-in inline error messages with your own UI. `showErrorMessages` is off and every change is rejected by `onUpdate`, so `onError` fires for each failure and raises a toast detailing the error `code`, the `path`, and a message. Edit, add or delete any field to see its code, or rename a key onto an existing sibling (e.g. `port` → `host`) for a `KEY_EXISTS` error. And try inserting invalid JSON in the raw editor for an `INVALID_JSON` error.',
+    load: () => import('./static/custom-error-ui/Example'),
+    code: () => import('./static/custom-error-ui/Example.tsx?raw'),
   },
   'custom-buttons': {
     kind: 'static',

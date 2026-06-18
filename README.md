@@ -598,42 +598,17 @@ onUpdate={async (props, { hold }) => {
 [![▶ Live example: Confirm & settle](https://img.shields.io/badge/▶_Live_example-Confirm_%26_settle-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/confirm-and-settle)
 
 
-
-
 ### `onChange` — validating each keystroke
 
-Similar to the Update function, the `onChange` function is executed as the user input changes. You can use this to restrict or constrain user input -- e.g. limiting numbers to positive values, or preventing line breaks in strings. The function *must* return a value in order to update the user input field, so if no changes are to be made, just return it unmodified.
+Similar to the Update function, the **`onChange`** function can be used to validate user input, except it's executed as the user types, not on submission. You can use this to restrict, constrain or transform user input — e.g. limiting numbers to positive values, or preventing line breaks in strings. The function *must* return a value in order to update the user input field, so if no changes are to be made, just return the input value unmodified.
 
-The input is the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with the in-progress `newValue` added. (Since this runs *before* the data is committed, there's no `newData` — `value` is the current value, `fullData` the current document.)
+The input is the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with the in-progress `newValue` included in the object. (Since this runs *before* the data is committed, there's no `newData` — `value` is the current value, `fullData` the current document.)
 
-<details>
-<summary>
-
-#### Examples
-</summary>
-
-- Restrict "age" inputs to positive values up to 100:  
-  ```js
-  // in <JsonEditor /> props
-  onChange = ({ newValue, key }) => {
-        if (key === "age" && newValue < 0) return 0;
-        if (key === "age" && newValue > 100) return 100;
-        return newValue
-      }
-  ```
-- Only allow alphabetical or whitespace input for "name" field (including no line breaks):  
-  ```js
-  onChange = ({ newValue, key }) => {
-      if (key === 'name' && typeof newValue === "string")
-        return newValue.replace(/[^a-zA-Z\s]|\n|\r/gm, '');
-      return newValue;
-    }
-  ```
-</details>
+[![▶ Live example: onChange validation](https://img.shields.io/badge/▶_Live_example-onChange_validation-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/on-change)
 
 ### `onError`
 
-Normally, the component will display simple error messages whenever an error condition is detected (e.g. invalid JSON input, duplicate keys, or custom errors returned by the [`onUpdate` function](#update-functions)). However, you can provide your own `onError` callback in order to implement your own error UI, or run additional side effects. (In the former case, you'd probably want to disable the `showErrorMessages` prop, too.) It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with the following additional fields spread on top:
+Normally, the component will display simple error messages whenever an error condition is detected (e.g. invalid JSON input, duplicate keys, or custom errors returned by the [`onUpdate` function](#update-functions)). However, you can provide your own `onError` callback to capture the error data in order to implement your own error UI, or run additional side effects. (In the former case, you'd probably want to disable the `showErrorMessages` prop, too.) It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with the following additional fields spread on top:
 
 ```js
 {
@@ -646,8 +621,8 @@ Normally, the component will display simple error messages whenever an error con
     }
 }
 ```
-> [!NOTE]
-> An example of a custom Error UI can be seen in the [Demo](#https://carlosnz.github.io/json-edit-react/?data=customNodes) with the "Custom Nodes" data set -- when you enter invalid JSON input a "Toast" notification is displayed instead of the normal component error message.
+
+[![▶ Live example: Custom error UI](https://img.shields.io/badge/▶_Live_example-Custom_error_UI-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-error-ui)
 
 ### `onCopy`
 
@@ -666,7 +641,7 @@ The `onCopy` callback runs whenever an item is **copied** to the clipboard. It r
 ```
 
 > [!TIP]
-> Since there is very little user feedback when clicking "Copy", a good idea would be to present some kind of notification (see [Demo](https://carlosnz.github.io/json-edit-react/)). There are situations (such as an insecure environment) where the browser won't actually permit any clipboard actions. In this case, the `success` property will be `false`, so you can handle it appropriately.
+> Since there is very little user feedback when clicking "Copy", a good idea would be to present some kind of notification (see [Demo](https://carlosnz.github.io/json-edit-react/) "Toast" notifications). There are situations (such as an insecure environment) where the browser won't actually permit any clipboard actions. In this case, the `success` property will be `false`, so you can handle it appropriately.
 
 ### JSON Schema validation
 
