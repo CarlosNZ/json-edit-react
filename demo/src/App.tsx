@@ -1110,12 +1110,7 @@ function App() {
       </Flex>
       <Box h={50} />
       <footer>
-        <Text fontSize="sm">
-          {`json-edit-react v${__VERSION__} `}
-          <Link href="/json-edit-react/v1" color="gray.500">
-            (Use V1.x)
-          </Link>
-        </Text>
+        <Text fontSize="sm">{`json-edit-react v${__VERSION__}`}</Text>
       </footer>
     </div>
   )
