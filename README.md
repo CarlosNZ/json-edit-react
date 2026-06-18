@@ -645,7 +645,9 @@ The `onCopy` callback runs whenever an item is **copied** to the clipboard. It r
 
 ### JSON Schema validation
 
-It's possible to do full [JSON Schema](https://json-schema.org/) validation by creating an [Update Function](#update-functions) that passes the data to a 3rd-party schema validation library (e.g. [Ajv](https://ajv.js.org/)). This will then reject any invalid input, and display an error in the UI (or via a custom [onError](#onerror-function) function). You can see an example of this in the [Demo](https://carlosnz.github.io/json-edit-react/?data=jsonSchemaValidation) with the "JSON Schema Validation" data set (and the "Custom Nodes" data set). 
+It's possible to do full [JSON Schema](https://json-schema.org/) validation by creating an [`onUpdate`](#onupdate--accept-reject-transform) that passes the data to a 3rd-party schema validation library (e.g. [Ajv](https://ajv.js.org/)). This will then reject any invalid input, and display an error in the UI (or via a custom [onError](#onerror) function). You can see an example of this in the [Demo](https://carlosnz.github.io/json-edit-react/?data=jsonSchemaValidation) with the "JSON Schema Validation" data set (and the "Custom Nodes" data set). 
+
+HERE
 
 An example `onUpdate` validation function (using Ajv) could be something like this:
 
