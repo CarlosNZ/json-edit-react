@@ -128,6 +128,14 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/confirm-and-settle/Example'),
     code: () => import('./static/confirm-and-settle/Example.tsx?raw'),
   },
+  'json-schema-validation': {
+    kind: 'static',
+    title: 'JSON Schema validation',
+    blurb:
+      'Validate every edit against a full JSON Schema with a 3rd-party validator (Ajv). A compiled validator runs inside `onUpdate`: non-compliant changes are rejected with an inline error, and the detailed Ajv messages surface in a toast. The schema also shapes the editor — `category` is locked to its enum, and new keys on the root or `address` are restricted to the schema\'s properties, each seeded with a valid default.',
+    load: () => import('./static/json-schema-validation/Example'),
+    code: () => import('./static/json-schema-validation/Example.tsx?raw'),
+  },
   'custom-error-ui': {
     kind: 'static',
     title: 'Custom error UI',

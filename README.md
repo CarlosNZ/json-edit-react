@@ -647,46 +647,7 @@ The `onCopy` callback runs whenever an item is **copied** to the clipboard. It r
 
 It's possible to do full [JSON Schema](https://json-schema.org/) validation by creating an [`onUpdate`](#onupdate--accept-reject-transform) that passes the data to a 3rd-party schema validation library (e.g. [Ajv](https://ajv.js.org/)). This will then reject any invalid input, and display an error in the UI (or via a custom [onError](#onerror) function). You can see an example of this in the [Demo](https://carlosnz.github.io/json-edit-react/?data=jsonSchemaValidation) with the "JSON Schema Validation" data set (and the "Custom Nodes" data set). 
 
-HERE
-
-An example `onUpdate` validation function (using Ajv) could be something like this:
-
-```js
-import { JsonEditor } from 'json-edit-react'
-import Ajv from 'ajv'
-import schema from './my-json-schema.json'
-
-// Put these outside React components:
-const ajv = new Ajv()
-const validate = ajv.compile(schema)
-
-// Etc....
-
-// In the React component:
-return 
-  <JsonEditor
-    data={ jsonData }
-    onUpdate={ ({ newData }) => {
-      const valid = validate(newData)
-      if (!valid) {
-        console.log('Errors', validate.errors)
-        const errorMessage = validate.errors
-          ?.map((error) => `${error.instancePath}${error.instancePath ? ': '
-            : ''}${error.message}`)
-          .join('\n')
-        // Send detailed error message to an external UI element,
-        // such as a "Toast" notification
-         displayError({
-          title: 'Not compliant with JSON Schema',
-          description: errorMessage,
-          status: 'error',
-        })
-        // This message is returned to and displayed in the json-edit-react UI
-        return { error: 'JSON Schema error' }
-      }
-    }}
-  { ...otherProps } />
-``` 
+[![▶ Live example: JSON Schema validation](https://img.shields.io/badge/▶_Live_example-JSON_Schema_validation-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/json-schema-validation)
 
 ## Appearance & theming
 

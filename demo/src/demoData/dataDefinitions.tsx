@@ -49,12 +49,20 @@ import {
   primitives,
   root,
 } from '@json-edit-react/utils/filters'
-import jsonSchema from './jsonSchema.json'
 import customNodesSchema from './customNodesSchema.json'
 import Ajv from 'ajv'
+// The JSON Schema validation data set is owned by its own example page (the
+// single source of truth for its data, schema and logic); we import the
+// reusable pieces back here. See examples/static/json-schema-validation.
+import {
+  initialData as jsonSchemaData,
+  validate as validateJsonSchema,
+  allowTypeSelection as jsonSchemaAllowTypeSelection,
+  newKeyOptions as jsonSchemaNewKeyOptions,
+  defaultValue as jsonSchemaDefaultValue,
+} from '../examples/static/json-schema-validation/Example'
 
 const ajv = new Ajv()
-const validateJsonSchema = ajv.compile(jsonSchema)
 const validateCustomNodes = ajv.compile(customNodesSchema)
 
 // Used by the "Custom Keys" data set — a small glossary of agent codenames
@@ -391,7 +399,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           won't be allowed to make any changes that don't comply with the schema. The schema being
           enforced here is{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/demoData/jsonSchema.json"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/examples/static/json-schema-validation/schema.json"
             isExternal
           >
             this one.
@@ -405,18 +413,14 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       </Flex>
     ),
     rootName: 'data',
-    data: data.jsonSchemaValidation,
+    data: jsonSchemaData,
     collapse: 2,
     onUpdate: ({ newData }, toast) => {
-      const valid = validateJsonSchema(newData)
-      if (!valid) {
-        console.log('Errors', validateJsonSchema.errors)
-        const errorMessage = validateJsonSchema.errors
-          ?.map((error) => `${error.instancePath}${error.instancePath ? ': ' : ''}${error.message}`)
-          .join('\n')
+      const error = validateJsonSchema(newData)
+      if (error !== null) {
         toast({
           title: 'Not compliant with JSON Schema',
-          description: errorMessage,
+          description: error,
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -424,38 +428,9 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         return { error: 'JSON Schema error' }
       }
     },
-    allowTypeSelection: ({ key }) => {
-      if (key === 'category')
-        return [
-          ...standardDataTypes,
-          {
-            enum: 'Category',
-            values: ['human', 'enhanced human', 'extra-terrestrial'],
-            matchPriority: 1,
-          },
-        ]
-      return true
-    },
-    newKeyOptions: ({ key }) => {
-      if (key === 'data') return ['name', 'age', 'address', 'hobbies', 'category', 'isAlive']
-      if (key === 'address') return ['street', 'suburb', 'city', 'state', 'postalCode', 'country']
-    },
-    defaultValue: ({ key }, newKey) => {
-      if (key === 'hobbies') return 'Enter a hobby'
-
-      if (newKey === 'country') return 'United States'
-      if (newKey === 'suburb') return 'Enter a suburb'
-      if (newKey === 'category') return 'human'
-      if (newKey === 'isAlive') return true
-      if (newKey === 'hobbies') return ['avenging', '...add more']
-      if (newKey === 'address')
-        return {
-          street: 'Enter street address',
-          city: 'City',
-          state: 'CA',
-          postalCode: '12345',
-        }
-    },
+    allowTypeSelection: jsonSchemaAllowTypeSelection,
+    newKeyOptions: jsonSchemaNewKeyOptions,
+    defaultValue: jsonSchemaDefaultValue,
     customTextEditorAvailable: true,
   },
   liveData: {
