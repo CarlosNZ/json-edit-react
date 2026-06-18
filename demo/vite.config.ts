@@ -112,10 +112,46 @@ const packageFile = coreSrcMap[provider].pkgJson
 const jsonEditReactPath = coreSrcMap[provider].src
 const pkg = fs.readJsonSync(packageFile)
 
+// The deploy subpath. Defaults to the primary site; override with
+// `VITE_BASE_PATH` to build for a different GitHub Pages location (e.g.
+// `/json-edit-react-v2/` for a side-by-side preview repo). The router base in
+// `main.tsx` derives from this via `import.meta.env.BASE_URL`.
+const PRIMARY_BASE = '/json-edit-react/'
+const base = process.env.VITE_BASE_PATH ?? PRIMARY_BASE
+
+// Any base other than the primary site is a throwaway preview deploy — mark it
+// `noindex` so the temporary URL never competes with the real site in search.
+const isPreviewDeploy = base !== PRIMARY_BASE
+
+// On a preview deploy, inject `<meta name="robots" content="noindex">`. Runs
+// before `spaFallbackPlugin`'s copy, so the generated `404.html` inherits it too.
+const noindexPlugin: Plugin = {
+  name: 'noindex-preview',
+  transformIndexHtml() {
+    if (!isPreviewDeploy) return
+    return [
+      { tag: 'meta', attrs: { name: 'robots', content: 'noindex' }, injectTo: 'head' },
+    ]
+  },
+}
+
+// Copy index.html → 404.html so GitHub Pages serves the SPA shell for any
+// unmatched path (deep links, refreshes, shared URLs), letting wouter
+// client-route instead of 404ing. Base-agnostic — it copies whatever base the
+// build was made with. See dev-docs/GH-PAGES-SPA-FALLBACK.md.
+const spaFallbackPlugin = {
+  name: 'spa-404-fallback',
+  closeBundle() {
+    const out = path.resolve(__dirname, 'build')
+    const index = path.join(out, 'index.html')
+    if (fs.existsSync(index)) fs.copySync(index, path.join(out, '404.html'))
+  },
+}
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), json5Plugin()],
-  base: '/json-edit-react/',
+  plugins: [react(), json5Plugin(), noindexPlugin, spaFallbackPlugin],
+  base,
   resolve: {
     // Order matters: more specific scoped aliases must come before the bare
     // `@json-edit-react` alias so `@json-edit-react/themes` doesn't accidentally

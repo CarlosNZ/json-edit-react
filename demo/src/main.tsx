@@ -30,7 +30,9 @@ const exampleFallback = (
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Router base="/json-edit-react">
+    {/* Router base tracks Vite's `base` (set via VITE_BASE_PATH at build time,
+        default `/json-edit-react/`), with the trailing slash stripped. */}
+    <Router base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <Switch>
         <Route path="/examples/:slug">
           {({ slug }) => (
