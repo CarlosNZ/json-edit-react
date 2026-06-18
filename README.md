@@ -77,7 +77,6 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [Enums](#enums)
   - [New-key restrictions \& default values](#new-key-restrictions--default-values)
   - [Drag-and-drop reordering](#drag-and-drop-reordering)
-  - [Editing a node as raw text / JSON](#editing-a-node-as-raw-text--json)
 - [Reacting to changes](#reacting-to-changes)
   - [`onUpdate` — accept, reject, transform](#onupdate--accept-reject-transform)
   - [Async updates \& gating — `hold()`](#async-updates--gating--hold)
@@ -510,7 +509,7 @@ You can see an example of this in the [JSON Schema validation data](https://carl
 
 ### Drag-and-drop reordering
 
-The `allowDrag` property controls which items (if any) can be dragged into new positions. By default, this is *off*, so you must set `allowDrag = true` to enable this functionality. Like the Edit permissions above, this property can also take a Filter function for fine-grained control. There are a couple of additional considerations, though:
+The `allowDrag` property controls which items (if any) can be dragged into new positions. By default, this is *off*, so you must set `allowDrag = true` to enable this functionality. Like the Edit permissions above, this property can also take a `FilterFunction` for fine-grained control. There are a couple of additional considerations, though:
 
 - JavaScript does *not* guarantee object property order, so enabling this feature may yield unpredictable results. See [here](https://dev.to/frehner/the-order-of-js-object-keys-458d) for an explanation of how key ordering is handled.
 > [!WARNING]
@@ -521,10 +520,6 @@ The `allowDrag` property controls which items (if any) can be dragged into new p
 - The `allowDrag` filter applies to the *source* element (i.e. the node being dragged), not the destination.
 - To be draggable, the node must *also* be delete-able (via the `allowDelete` prop), as dragging a node to a new destination is essentially just deleting it and adding it back elsewhere.
 - Similarly, the destination collection must be editable in order to drop it in there. This ensures that if you've gone to the trouble of configuring restrictive editing constraints using Filter functions, you can be confident that they can't be circumvented via drag-n-drop.
-
-### Editing a node as raw text / JSON
-
-PLACEHOLDER FOR "Editing a node as raw text / JSON" — brief intro to editing a node as raw text/JSON; the `TextEditor` override detail lives under "Replacing the text/code editor" in Custom nodes & components.
 
 ## Reacting to changes
 
