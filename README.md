@@ -1388,13 +1388,7 @@ type OnCollapseFunction = (
 
 ### Imperative handle (`editorRef`)
 
-You can *drive* the editor's UI imperatively via a handle: open a value-edit
-**input session** at a node, commit or cancel it, and collapse nodes. The
-handle deliberately doesn't include data mutators — you already own `data` and
-`setData`, so changing a value is just `setData(newData)` and the editor reflects
-it. Create a ref with `useRef` and pass it to the `editorRef` prop (an ordinary
-prop, not the `ref` attribute — this keeps `JsonEditor` a generic component with
-full type inference):
+You can *drive* the editor's UI imperatively via a handle: open a value-edit **input session** at a node, commit or cancel it, and collapse nodes. The handle deliberately doesn't include data mutators — you already own `data` and `setData`, so changing a value is just `setData(newData)` and the editor reflects it. Create a ref with `useRef` and pass it to the `editorRef` prop (an ordinary prop, not the `ref` attribute — this keeps `JsonEditor` a generic component with full type inference):
 
 ```ts
 import { useRef } from 'react'
