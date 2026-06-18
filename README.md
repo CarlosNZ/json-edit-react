@@ -496,48 +496,17 @@ You can see examples of this in the [Star Wars data set](https://carlosnz.github
 
 ### New-key restrictions & default values
 
-You can restrict the available properties a given collection node can have (when adding new properties) by setting the `newKeyOptions` prop. The value can be either a **list of keys**, or a callback (with same input shape as the other `FilterFunctions`) returning the key list.
+You can restrict the available properties a given collection node can have (when adding new properties) by setting the `newKeyOptions` prop. The value can be either a **list of keys**, or a [`NewKeyOptionsFunction`](#filter-functions) callback which returns the key list.
 
 This will cause the UI to present a Drop-down selector when adding a new key rather than the usual text input:
 
 <img width="415" alt="Key selection" src="image/key_select.png">
 
-The initial value for newly-added keys can also be defined with the `defaultValue` prop -- this can be *any* value, or a callback returning any value. The input signature for the `defaultValue` callback is almost the same as the `FilterFunctions`, but it can take a second argument, which is the name of the new key.
+The initial *value* for newly-added keys can also be defined with the `defaultValue` prop -- this can be *any* value, or a [`DefaultValueFunction`](#filter-functions) callback returning any value. The input signature is almost the same as standard `FilterFunctions`, but it can take a second argument, which is the name of the new key.
 
 You can see an example of this in the [JSON Schema validation data](https://carlosnz.github.io/json-edit-react/?data=jsonSchemaValidation) of the Demo app when you add new keys to either the `address` collection or the root node.
 
-<details>
-<summary>
-
-#### Key restriction and Default value example:
-</summary>
-
-- *For an "address" node, only appropriate properties are available, with defaults for each:*
-
-```js
-newKeyOptions = ({ key }) => {
-      if (key === 'address') return ['street', 'city', 'state', 'postalCode', 'country']
-    },
-defaultValue = (_, newKey) => { // Ignoring normal first parameter in this case
-  switch (newKey) {
-    case 'street':
-      return 'Enter street name'
-    case 'city':
-      return getCurrentCity() // function defined elsewhere
-    case 'state':
-      return getCurrentState()
-    case 'postalCode':
-      return '123456'
-    case 'country':
-      return 'United States'
-  }
-}
-```
-> [!NOTE]
-> The `newKeyOptions` and `defaultValue` functions needn't return anything -- if they don't, they'll just use:
-> - `newKeyOptions`: normal text input for new key
-> - `defaultValue`: `null`
-</details>
+[![▶ Live example: New keys & defaults](https://img.shields.io/badge/▶_Live_example-New_keys_%26_defaults-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/new-key-restrictions)
 
 ### Drag-and-drop reordering
 
@@ -1421,6 +1390,8 @@ A few helper functions, components and types that might be useful in your own im
 - `splitPropertyString`: the rough inverse for dot/bracket notation — parses a property-path string into a path array, e.g. `"data.organisations.nodes[0]" => ["data", "organisations", "nodes", 0]`. Bracket indices become numbers (array indices); this is the same parsing `extract`/`assign` use, and is handy for building the `path` passed to the `editorRef` handle.
 - `defaultTheme`: the "default" theme baseline used when no `theme` prop is supplied. (Additional themes ship in [`@json-edit-react/themes`](#themes--styles).)
 - `standardDataTypes`: array containing all standard data types: `[ 'string','number', 'boolean', 'null', 'object', 'array' ]`
+- `valueDataTypes`: the scalar subset of the above — `[ 'string', 'number', 'boolean', 'null' ]`
+- `collectionDataTypes`: the container subset — `[ 'object', 'array' ]`
 
 ### Types
 

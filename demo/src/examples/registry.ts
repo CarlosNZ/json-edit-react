@@ -96,6 +96,14 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/enums/Example'),
     code: () => import('./static/enums/Example.tsx?raw'),
   },
+  'new-key-restrictions': {
+    kind: 'static',
+    title: 'New keys & defaults',
+    blurb:
+      'Shape how new keys are added with `newKeyOptions` and `defaultValue`. Adding to `contact` offers a fixed dropdown of fields, each seeded with its own default value; adding to the open-ended `tags` object falls back to a free-text key and a `null` value.',
+    load: () => import('./static/new-key-restrictions/Example'),
+    code: () => import('./static/new-key-restrictions/Example.tsx?raw'),
+  },
   'custom-buttons': {
     kind: 'static',
     title: 'Custom buttons',
