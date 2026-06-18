@@ -64,6 +64,38 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/heat-map/Example'),
     code: () => import('./static/heat-map/Example.tsx?raw'),
   },
+  'json-viewer': {
+    kind: 'static',
+    title: 'Read-only viewer',
+    blurb:
+      'Browse a rich, deeply-nested document with `JsonViewer` — the read-only sibling of `JsonEditor`. Every edit / add / delete / drag affordance is stripped, but you can still collapse and expand any branch and copy a value or its path. Switch the theme above, or expand into the planets.',
+    load: () => import('./static/json-viewer/Example'),
+    code: () => import('./static/json-viewer/Example.tsx?raw'),
+  },
+  'edit-restrictions': {
+    kind: 'static',
+    title: 'Edit restrictions',
+    blurb:
+      'Drive `allowEdit` / `allowDelete` / `allowAdd` with filter functions: the root and `id` are read-only, only leaf values can be deleted, only the `roles` array accepts new items, and the `settings` keys are locked while their values stay editable — a key-rename restriction, since renaming a property needs both `allowEdit` and `allowDelete`.',
+    load: () => import('./static/edit-restrictions/Example'),
+    code: () => import('./static/edit-restrictions/Example.tsx?raw'),
+  },
+  'type-restrictions': {
+    kind: 'static',
+    title: 'Type restrictions',
+    blurb:
+      'Constrain which data types each node can become with an `allowTypeSelection` filter function — including an Enum and a custom node type. `status` is locked to a Status enum, `done` stays boolean, numbers offer scalars only (never null or collections), and any string can switch to a custom "Colour" swatch node.',
+    load: () => import('./static/type-restrictions/Example'),
+    code: () => import('./static/type-restrictions/Example.tsx?raw'),
+  },
+  enums: {
+    kind: 'static',
+    title: 'Enums',
+    blurb:
+      'Restrict values to a fixed list with Enum types. A calendar event where `priority` is locked to a Priority enum (the only type it can be), while `day` and `colour` offer their enum alongside the standard types via the `standardDataTypes` spread. `matchPriority` makes existing strings load as their enum type.',
+    load: () => import('./static/enums/Example'),
+    code: () => import('./static/enums/Example.tsx?raw'),
+  },
   'custom-buttons': {
     kind: 'static',
     title: 'Custom buttons',
