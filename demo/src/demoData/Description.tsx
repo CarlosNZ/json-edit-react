@@ -9,8 +9,14 @@ const LazyMarkdownText = lazy(() =>
   import('../examples/kit/MarkdownText').then((m) => ({ default: m.MarkdownText }))
 )
 
+// `color` / `fontSize` mirror the Chakra `Text` baseStyle (`secondary`, 16) the
+// demo descriptions used before they were Markdown — `MarkdownText` is now a
+// transparent renderer (its prose inherits the wrapper), so the theme colour
+// has to be supplied here rather than picked up from the baseStyle.
 export const Description = ({ children }: { children: string }) => (
   <Suspense fallback={null}>
-    <LazyMarkdownText>{children}</LazyMarkdownText>
+    <LazyMarkdownText color="secondary" fontSize={16}>
+      {children}
+    </LazyMarkdownText>
   </Suspense>
 )

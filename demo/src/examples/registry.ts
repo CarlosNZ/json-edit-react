@@ -136,6 +136,7 @@ const allExamples: Record<string, ExampleDef> = {
   'json-schema-validation': {
     kind: 'static',
     title: 'JSON Schema validation',
+    demoDataSet: 'jsonSchemaValidation',
     blurb: blurbs.jsonSchemaValidation,
     load: () => import('./static/json-schema-validation/Example'),
     code: () => import('./static/json-schema-validation/Example.tsx?raw'),
@@ -143,6 +144,7 @@ const allExamples: Record<string, ExampleDef> = {
   intro: {
     kind: 'static',
     title: 'Intro',
+    demoDataSet: 'intro',
     blurb: blurbs.intro,
     load: () => import('./static/intro/Example'),
     code: () => import('./static/intro/Example.tsx?raw'),
@@ -150,6 +152,7 @@ const allExamples: Record<string, ExampleDef> = {
   'star-wars': {
     kind: 'static',
     title: 'Star Wars',
+    demoDataSet: 'starWars',
     blurb: blurbs.starWars,
     load: () => import('./static/star-wars/Example'),
     code: () => import('./static/star-wars/Example.tsx?raw'),
@@ -157,6 +160,7 @@ const allExamples: Record<string, ExampleDef> = {
   'json-placeholder': {
     kind: 'static',
     title: 'Client list',
+    demoDataSet: 'jsonPlaceholder',
     blurb: blurbs.jsonPlaceholder,
     load: () => import('./static/json-placeholder/Example'),
     code: () => import('./static/json-placeholder/Example.tsx?raw'),
@@ -164,6 +168,7 @@ const allExamples: Record<string, ExampleDef> = {
   'custom-nodes': {
     kind: 'static',
     title: 'Custom nodes',
+    demoDataSet: 'customNodes',
     blurb: blurbs.customNodes,
     load: () => import('./static/custom-nodes/Example'),
     code: () => import('./static/custom-nodes/Example.tsx?raw'),
@@ -171,6 +176,7 @@ const allExamples: Record<string, ExampleDef> = {
   'custom-keys': {
     kind: 'static',
     title: 'Custom node keys',
+    demoDataSet: 'customKeys',
     blurb: blurbs.customKeys,
     load: () => import('./static/custom-keys/Example'),
     code: () => import('./static/custom-keys/Example.tsx?raw'),
@@ -178,6 +184,7 @@ const allExamples: Record<string, ExampleDef> = {
   'custom-component-library': {
     kind: 'static',
     title: 'Custom component library',
+    demoDataSet: 'customComponentLibrary',
     blurb: blurbs.customComponentLibrary,
     load: () => import('./static/custom-component-library/Example'),
     code: () => import('./static/custom-component-library/Example.tsx?raw'),

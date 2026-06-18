@@ -13,6 +13,11 @@ export interface ExampleComponentProps {
 interface ExampleBase {
   title: string
   blurb: string
+  // For examples that mirror a main-demo data set: the data-set key (e.g.
+  // `jsonPlaceholder`). The example page's "Go to Demo site" link uses it to
+  // deep-link to that data set (`/?data=<key>`); omit it and the link goes to
+  // the demo's default view.
+  demoDataSet?: string
   // Set `false` to hide the theme picker — for concepts where an injected
   // theme doesn't apply (e.g. editing a theme object itself).
   theme?: false

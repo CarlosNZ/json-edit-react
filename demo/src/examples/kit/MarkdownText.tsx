@@ -18,14 +18,21 @@ interface MarkdownTextProps extends BoxProps {
 // are external Chakra links. Spread any Chakra <Box> props (color, fontSize,
 // maxW, spacing…) to style the wrapper; the last block's bottom margin is
 // trimmed so the surrounding spacing is the caller's to control.
+//
+// Block elements use `color="inherit"` and `fontSize="inherit"` so the body
+// text follows the wrapper's `color` / `fontSize` (e.g. the themed
+// `palette.string`, or the `sm` an index card passes). Without it, the theme's
+// `Text` baseStyle (`color: secondary`, `fontSize: 16`) would override them.
 export const MarkdownText = ({ children, palette, ...boxProps }: MarkdownTextProps) => {
   const components = useMemo<Components>(
     () => ({
       p: ({ children }) => (
-        <Text mb={2}>{children}</Text>
+        <Text color="inherit" fontSize="inherit" mb={2}>
+          {children}
+        </Text>
       ),
       ul: ({ children }) => (
-        <UnorderedList mb={2} pl={2}>
+        <UnorderedList color="inherit" fontSize="inherit" mb={2} pl={2}>
           {children}
         </UnorderedList>
       ),

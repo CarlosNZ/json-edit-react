@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
 import { Box, Button, Center, Flex, Heading, Icon, Spinner, useToast } from '@chakra-ui/react'
-import { ArrowBackIcon } from '@chakra-ui/icons'
+import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import { FaGithub, FaNpm } from 'react-icons/fa'
 import { defaultTheme, type Theme } from '@json-edit-react'
 import { examples } from './registry'
@@ -96,6 +96,9 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
   }
 
   const showPicker = def.theme !== false
+  // Examples that mirror a demo data set deep-link to it; others go to the
+  // demo's default view. (Both resolve to `<App />` via the catch-all route.)
+  const demoUrl = def.demoDataSet ? `/?data=${def.demoDataSet}` : '/'
 
   return (
     <Box
@@ -130,9 +133,9 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
               variant="link"
               leftIcon={<ArrowBackIcon />}
               color={palette.itemCount}
-              onClick={() => navigate('/examples')}
+              onClick={() => window.history.back()}
             >
-              All examples
+              Back
             </Button>
             {/* GitHub + npm links, matching the main demo's icons/sizing. */}
             <Flex align="center" gap={5}>
@@ -155,14 +158,23 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
           <Heading size="lg" color={palette.property}>
             {def.title}
           </Heading>
-          <MarkdownText palette={palette} color={palette.string} maxW="3xl" mt={1}>
+          <MarkdownText palette={palette} color={palette.string} fontSize={16} maxW="6xl" mt={1}>
             {def.blurb}
           </MarkdownText>
-          {showPicker && (
-            <Flex justify="flex-end" mt={2}>
+          <Flex direction="column" align="flex-end" gap={2} mt={2}>
+            <Button
+              variant="link"
+              size="sm"
+              rightIcon={<ArrowForwardIcon />}
+              color={palette.itemCount}
+              onClick={() => navigate(demoUrl)}
+            >
+              Go to Demo site
+            </Button>
+            {showPicker && (
               <ThemePicker value={theme} onChange={setTheme} size="sm" maxW={220} />
-            </Flex>
-          )}
+            )}
+          </Flex>
         </Box>
       </Box>
 
