@@ -277,3 +277,7 @@ export const tokyoNightTheme: Theme = {
     iconCancel: 'pink',
   },
 }
+
+// Themes that carry more than plain style data (a colour palette, style
+// functions, icon glyphs) live in their own module to keep this index tidy.
+export { r18jvTheme } from './r18jv'

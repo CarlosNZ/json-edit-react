@@ -31,6 +31,12 @@ import { githubDarkTheme } from '@json-edit-react/themes'
 - `monoLightTheme`
 - `candyWrapperTheme`
 - `psychedelicTheme`
+- `solarizedDarkTheme`
+- `solarizedLightTheme`
+- `draculaTheme`
+- `monokaiTheme`
+- `tokyoNightTheme`
+- `r18jvTheme` — also ships its own icon glyphs, not just colours
 
 ## License
 
