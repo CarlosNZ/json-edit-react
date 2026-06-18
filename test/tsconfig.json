@@ -3,9 +3,12 @@
   "compilerOptions": {
     "rootDir": "..",
     "noEmit": true,
+    "jsx": "react-jsx",
     "moduleResolution": "bundler",
     "typeRoots": ["../node_modules/@types"],
-    "types": ["jest", "node"]
+    "types": ["jest", "node", "@testing-library/jest-dom"],
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
-  "include": ["**/*.ts", "../src/**/*.ts"]
+  "include": ["**/*.ts", "**/*.tsx", "../src/**/*.ts", "../src/**/*.tsx"]
 }
