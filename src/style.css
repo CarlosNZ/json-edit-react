@@ -192,7 +192,19 @@ select:focus + .focus {
 .jer-collapse-icon {
   position: absolute;
   left: -1.2em;
-  top: 0.35em;
+  /* Centre vertically on the row (its positioning context) independent of row
+     height: top:50% is mid-row, translateY(-50%) pulls back by half the icon's
+     own height. Survives row min-height and per-theme icon-scale changes. */
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* The collapse animation rotates the icon via `.jer-rotate-90`, which sets the
+   same `transform` property, so the centring translate is re-stated here or
+   it'd be lost when collapsed. The icon box is square → translate + rotate
+   compose cleanly. */
+.jer-collapse-icon.jer-rotate-90 {
+  transform: translateY(-50%) rotate(-90deg);
 }
 
 .jer-collection-inner {
@@ -445,10 +457,6 @@ select:focus + .focus {
 
 .jer-copy-pulse:active {
   top: 0.07em;
-}
-
-.jer-rotate-90 {
-  transform: rotate(-90deg);
 }
 
 .jer-accordion-icon {
