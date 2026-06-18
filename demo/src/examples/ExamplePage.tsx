@@ -132,7 +132,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
             <Button
               variant="link"
               leftIcon={<ArrowBackIcon />}
-              color={palette.itemCount}
+              color={palette.property}
               onClick={() => window.history.back()}
             >
               Back
@@ -166,7 +166,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
               variant="link"
               size="sm"
               rightIcon={<ArrowForwardIcon />}
-              color={palette.itemCount}
+              color={palette.property}
               onClick={() => navigate(demoUrl)}
             >
               Go to Demo site
