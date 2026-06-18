@@ -525,7 +525,7 @@ The `allowDrag` property controls which items (if any) can be dragged into new p
 
 ### `onUpdate` — accept, reject, transform
 
-A single **`onUpdate`** callback runs whenever the data changes in the editor — for *every* kind of change. You might wish to use this to update some external state, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema. (It is *not* an alternative to `setData` — see [Managing state](#managing-state).)
+The **`onUpdate`** prop allows you to provide a callback that runs whenever the data changes in the editor — for *every* kind of change. You might wish to use this to update some external state, post a notification, make an API call, modify the data before saving it, or [validate the data structure](#json-schema-validation) against a JSON schema. (It is *not* an alternative to `setData` — see [Managing state](#managing-state).)
 
 The function receives two arguments. The first is a single object, built on the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, etc.) with an **`event`** discriminant plus the change-specific fields; the second is a `control` object for [gating the commit](#optimistic-updates-and-gating-hold):
 
@@ -566,8 +566,7 @@ The function can return nothing (the change proceeds as normal), or a value to a
 
 (Any of the above may also be returned from an `async` function / `Promise`.)
 
-> [!WARNING]
-> The [Update function](#update-functions) (`onUpdate`) is *not* an alternative to `setData` — it's for side effects (e.g. notifications), validation, or mutating the value before it reaches `setData`. Trying to drive your own state from them leads to drift between the internal display state and your external copy.
+[![▶ Live example: onUpdate basics](https://img.shields.io/badge/▶_Live_example-onUpdate_basics-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/on-update)
 
 ### Async updates & gating — `hold()`
 
@@ -590,6 +589,16 @@ onUpdate={async (props, { hold }) => {
 - While held, the editor stays open and the rest of the tree can't be edited (one operation at a time).
 - `release()` applies the change and closes the editor.
 - If you `hold()` but never `release()`, the eventual `onUpdate` result decides — the change commits when the promise resolves (unless it resolves to a reject/cancel). So a plain `hold()` → `await` → `return` keeps the editor open for the duration and then commits.
+
+> [!TIP]
+> A common difficulty in React is getting a modal confirmation to `await` a decision. Modals are fundamentally *declarative* — you render `<Modal open={…} />` and respond to its button callbacks — but an async `onUpdate` wants to ask *imperatively* ("did the user confirm?") and carry on with the answer. Bridging the two by hand means juggling a deferred promise, the dialog's open state, and core's synchronous `hold()` gate all at once.
+>
+> [`@json-edit-react/utils`](https://www.npmjs.com/package/@json-edit-react/utils) does that bridging for you. **`useConfirmOnUpdate`** lets you declare *when* to confirm and *what* to say, and returns a ready-made `onUpdate` plus the `dialog` state to drive your own modal; the lower-level **`useJsonEditorConfirm`** hands back an awaitable `confirm()` (`Promise<boolean>`) for gating anything — an editor edit, a toolbar action, a custom-node button. You still bring the modal; the hook owns the `await`.
+
+[![▶ Live example: Confirm & settle](https://img.shields.io/badge/▶_Live_example-Confirm_%26_settle-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/confirm-and-settle)
+
+
+
 
 ### `onChange` — validating each keystroke
 

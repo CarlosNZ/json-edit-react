@@ -104,6 +104,22 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/new-key-restrictions/Example'),
     code: () => import('./static/new-key-restrictions/Example.tsx?raw'),
   },
+  'on-update': {
+    kind: 'static',
+    title: 'onUpdate basics',
+    blurb:
+      "Basic `onUpdate` usage: branch on the `event` (edit / add / delete / rename / move) and return a value to drive each outcome. Editing `username` transforms it (`{ value }`), a bad `email` rejects with a custom message (`{ error }`), a negative `age` reverts with the default error (`false`), and deleting `id` silently cancels (`null`).",
+    load: () => import('./static/on-update/Example'),
+    code: () => import('./static/on-update/Example.tsx?raw'),
+  },
+  'confirm-and-settle': {
+    kind: 'static',
+    title: 'Confirm & settle',
+    blurb:
+      "Three gating patterns in one editor. `Delayed Settlement` commits optimistically then settles after a random 0.5–3s — accepting with a toast, or rejecting a value that doesn't contain a \"Z\". `Name with confirmation` gates edits behind a modal via `useConfirmOnUpdate` (which drives core's `hold()`). Deleting `Careful` combines both: a confirmation modal, then a random 0.5–3s settle from a flaky server that fails half the time. Nothing can be added; only `Careful` can be deleted.",
+    load: () => import('./static/confirm-and-settle/Example'),
+    code: () => import('./static/confirm-and-settle/Example.tsx?raw'),
+  },
   'custom-buttons': {
     kind: 'static',
     title: 'Custom buttons',
