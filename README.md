@@ -1447,24 +1447,12 @@ interface CollapseState {
 
 A few behaviours worth noting:
 
-- **`startEdit` is synchronous** and returns `true` if it opened the session, or
-  the reason it didn't: `'PATH_NOT_FOUND'` (the path doesn't exist in the current
-  data) or `'RESTRICTED'` (`allowEdit` blocks it) — so you can give your own
-  feedback (e.g. a toast) on a refused command. The target is never silently
-  redirected to a different node.
-- Pass **`overrideRestrictions: true`** to bypass the filter. A common pattern is
-  to lock the whole tree with `allowEdit={false}` and imperatively enable editing
-  on one node through your own UI. It skips **only** the filter: your `onUpdate`
-  still runs at `confirm()` and may reject or transform the value.
-- **`confirm()`** commits the open session — it triggers the same path as clicking
-  the editor's confirm button, running your `onUpdate`. **`cancel()`** discards it.
-  Only one session is open at a time, so both take no arguments.
-- `startEdit` will **auto-reveal a target that's currently collapsed** — any
-  collapsed ancestors expand so the node becomes visible and enters the session.
+- **`startEdit` is synchronous** and returns `true` if it opened the session, or the reason it didn't: `'PATH_NOT_FOUND'` (the path doesn't exist in the current data) or `'RESTRICTED'` (`allowEdit` blocks it) — so you can give your own feedback (e.g. a toast) on a refused command. The target is never silently redirected to a different node.
+- Pass **`overrideRestrictions: true`** to bypass the filter. A common pattern is to lock the whole tree with `allowEdit={false}` and imperatively enable editing on one node through your own UI. It skips **only** the filter: your `onUpdate` still runs at `confirm()` and may reject or transform the value.
+- **`confirm()`** commits the open session — it triggers the same path as clicking the editor's confirm button, running your `onUpdate`. **`cancel()`** discards it. Only one session is open at a time, so both take no arguments.
+- `startEdit` will **auto-reveal a target that's currently collapsed** — any collapsed ancestors expand so the node becomes visible and enters the session.
 
-`JsonViewer` exposes the same `editorRef` prop, but its handle (`JsonViewerHandle`)
-is **collapse-only** — the editing actions aren't meaningful (and would bypass the
-read-only contract) in a viewer.
+`JsonViewer` exposes the same `editorRef` prop, but its handle (`JsonViewerHandle`) is **collapse-only** — the editing actions aren't meaningful (and would bypass the read-only contract) in a viewer.
 
 
 ## Undo functionality
