@@ -109,6 +109,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [Customising the key — `keyComponent`](#customising-the-key--keycomponent)
   - [Decorating the default node — `passOriginalNode`](#decorating-the-default-node--passoriginalnode)
   - [Collection nodes](#collection-nodes)
+  - [Displaying a collection as a value](#displaying-a-collection-as-a-value)
   - [Editing as JSON — `stringifyReplacer` / `parseReviver`](#editing-as-json--stringifyreplacer--parsereviver)
 - [Overriding and extending the UI](#overriding-and-extending-the-ui)
   - [Replacing the text/code editor — `TextEditor` (`CodeEditor`)](#replacing-the-textcode-editor--texteditor-codeeditor)
@@ -1171,15 +1172,17 @@ The collection-specific details:
 
 - `showCollectionWrapper: false` is the full-replacement escape hatch — no chevron, brackets, or built-in collapse, so you're responsible for completely rendering the data within.
 
-See the different "wrapper" and "inner" elements in use:  
+See the different "wrapper" and "inner" component elements in use:  
 [![▶ Live example: Custom collection nodes](https://img.shields.io/badge/▶_Live_example-Custom_collection_nodes-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-collection-nodes)
 
 A "full-takeover" example:  
 [![▶ Live example: Student ID cards](https://img.shields.io/badge/▶_Live_example-Student_ID_cards-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/student-cards)
 
-#### Displaying a collection as a value
+### Displaying a collection as a value
 
 For a specialised object you'd rather treat as a single value — a JavaScript [`Date`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date), say — set **`renderCollectionAsValue: true`**. The whole object is passed to your `component` as one value instead of being expanded into key/value rows; your component is responsible for handling it. The [`DateObject`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components/src/DateObject) and [`EnhancedLink`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components/src/EnhancedLink) components in `@json-edit-react/components` both do this.
+
+[![▶ Live example: Collection as a value](https://img.shields.io/badge/▶_Live_example-Collection_as_a_value-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/collection-as-value)
 
 ### Editing as JSON — `stringifyReplacer` / `parseReviver`
 

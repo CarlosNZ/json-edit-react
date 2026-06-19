@@ -277,6 +277,14 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/student-cards/Example'),
     code: () => import('./static/student-cards/Example.tsx?raw'),
   },
+  'collection-as-value': {
+    kind: 'static',
+    title: 'Collection as a value',
+    blurb:
+      '`renderCollectionAsValue` treats a whole object as a single value rather than expanding it into key/value rows — the matched object is handed to your `component` as `value`, which renders (and edits) it as one field. This landmark record uses three: a from-scratch `Location` for `{ lat, lng }` (a map link in view, two number inputs while editing), plus the pre-built `DateObject` (a real `Date`) and `EnhancedLink` (a `{ text, url }`) from `@json-edit-react/components`. The plain `name` and `architect` fields render as normal rows.',
+    load: () => import('./static/collection-as-value/Example'),
+    code: () => import('./static/collection-as-value/Example.tsx?raw'),
+  },
   'custom-error-ui': {
     kind: 'static',
     title: 'Custom error UI',
