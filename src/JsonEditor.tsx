@@ -137,7 +137,7 @@ const Editor: React.FC<
   showClipboardButton = true,
   onCopy,
   indent = 2,
-  collapse = false,
+  collapse = 3, // open the top 3 levels; deeper nodes start collapsed
   collapseAnimationTime = 300, // must be equivalent to CSS value
   showCollectionCount = 'when-collapsed-or-filtered',
   allowEdit = true,
