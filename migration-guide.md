@@ -340,6 +340,8 @@ The filtered-count form is driven by a new localisation key, `ITEMS_FILTERED`. I
 
 Both `{{visible}}` and `{{total}}` placeholders are substituted at render time.
 
+A second display **default** also changed (not a rename): `collapse` now defaults to `3` (previously `false`). The tree opens with its top three levels of nesting expanded (levels 0–2) and anything deeper collapsed, so deeply-nested data no longer renders its full depth on first paint. Most ordinary data is three levels or shallower, so it still appears fully expanded — the visible change is confined to deep structures. To restore the v1 fully-open default, set `collapse={false}`.
+
 ---
 
 ## 8. Flat `NodeData` payloads
