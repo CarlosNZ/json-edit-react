@@ -19,7 +19,7 @@ export const initialData = [
     name: 'Clark Kent',
     dateOfBirth: '1977-04-14T12:00:00-06:00',
     aliases: ['Superman', 'Man of Steel', 'Son of Krypton'],
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Superman_shield.svg/2560px-Superman_shield.svg.png',
+    logo: 'https://logos-world.net/wp-content/uploads/2020/11/Superman-Logo.png',
     portrayedBy: ['Christopher Reeve', 'Brandon Routh', 'Henry Cavill'],
     publisher: 'D.C. Comics',
   },
