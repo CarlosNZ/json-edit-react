@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { JsonEditor, ThemeStyles } from '@json-edit-react'
+import { SearchBox } from '../../kit/SearchBox'
 import { useExampleTheme } from '../../kit/exampleProps'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
@@ -69,16 +70,28 @@ const heatMapTheme: ThemeStyles = {
 export default function HeatMap() {
   const [data, setData] = useState(initialData)
   const theme = useExampleTheme()
+  // `searchFilter="all"` matches on keys and values, so a
+  // search hits a country or any of its cities.
+  const [searchText, setSearchText] = useState('')
 
   return (
-    <JsonEditor
-      data={data}
-      setData={setData}
-      {...useExampleProps()} // ---cut---
-      rootName="temperatures (°C)"
-      // The heatMap style functions (above) merge with the
-      // selected theme and override it where they overlap.
-      theme={[theme, heatMapTheme]}
-    />
+    <div style={{ position: 'relative' }}>
+      <SearchBox
+        value={searchText}
+        onChange={setSearchText}
+        placeholder="Search countries or cities"
+      />
+      <JsonEditor
+        data={data}
+        setData={setData}
+        {...useExampleProps()} // ---cut---
+        rootName="temperatures (°C)"
+        // The heatMap style functions (above) merge with the
+        // selected theme and override it where they overlap.
+        theme={[theme, heatMapTheme]}
+        searchFilter="key"
+        searchText={searchText}
+      />
+    </div>
   )
 }

@@ -3,6 +3,7 @@ import { JsonEditor, type FilterFunction, type TypeFilterFunction } from '@json-
 import { datePickerDefinition, hyperlinkDefinition } from '@json-edit-react/components'
 import { byType, primitives } from '@json-edit-react/utils/filters'
 import { initialData } from './data'
+import { SearchBox } from '../../kit/SearchBox'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
 export { initialData }
@@ -118,19 +119,26 @@ export const customNodeDefinitions = [datePickerDefinition(), hyperlinkDefinitio
 
 export default function StarWars() {
   const [data, setData] = useState(initialData)
+  // Wire a floating search box to the editor's `searchText`.
+  // With no `searchFilter`, the editor matches on values.
+  const [searchText, setSearchText] = useState('')
 
   return (
-    <JsonEditor
-      data={data}
-      setData={setData}
-      {...useExampleProps()} // ---cut---
-      rootName="Star Wars data"
-      collapse={1}
-      allowEdit={allowEdit}
-      allowDelete={allowDelete}
-      allowAdd={allowAdd}
-      allowTypeSelection={allowTypeSelection}
-      customNodeDefinitions={customNodeDefinitions}
-    />
+    <div style={{ position: 'relative' }}>
+      <SearchBox value={searchText} onChange={setSearchText} placeholder="Search" />
+      <JsonEditor
+        data={data}
+        setData={setData}
+        {...useExampleProps()} // ---cut---
+        rootName="Star Wars data"
+        collapse={1}
+        allowEdit={allowEdit}
+        allowDelete={allowDelete}
+        allowAdd={allowAdd}
+        allowTypeSelection={allowTypeSelection}
+        customNodeDefinitions={customNodeDefinitions}
+        searchText={searchText}
+      />
+    </div>
   )
 }

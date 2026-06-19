@@ -15,6 +15,7 @@ import { matchRecord, root } from '@json-edit-react/utils/filters'
 import Ajv from 'ajv'
 import schema from './schema.json'
 import { initialData } from './data'
+import { SearchBox } from '../../kit/SearchBox'
 import { useExampleTheme } from '../../kit/exampleProps'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
@@ -151,6 +152,8 @@ type Toast = (options: {
 export default function CustomNodes({ toast }: { toast: Toast }) {
   const [data, setData] = useState<JsonData>(initialData)
   const theme = useExampleTheme()
+  // `searchFilter` (above) matches a record on its `name`.
+  const [searchText, setSearchText] = useState('')
 
   const onUpdate: UpdateFunction = ({ newData }) => {
     const error = validate(newData)
@@ -175,24 +178,28 @@ export default function CustomNodes({ toast }: { toast: Toast }) {
     })
 
   return (
-    <JsonEditor
-      data={data}
-      setData={setData}
-      {...useExampleProps()} // ---cut---
-      rootName="Superheroes"
-      collapse={2}
-      onUpdate={onUpdate}
-      onError={onError}
-      showErrorMessages={false}
-      allowEdit={allowEdit}
-      allowAdd={allowAdd}
-      allowDelete={allowDelete}
-      searchFilter={searchFilter}
-      customNodeDefinitions={customNodeDefinitions}
-      customText={customTextDefinitions}
-      // The conditional `styles` (above) merge with the
-      // selected theme and override it where they overlap.
-      theme={[theme, styles]}
-    />
+    <div style={{ position: 'relative' }}>
+      <SearchBox value={searchText} onChange={setSearchText} placeholder="Search by name" />
+      <JsonEditor
+        data={data}
+        setData={setData}
+        {...useExampleProps()} // ---cut---
+        rootName="Superheroes"
+        collapse={2}
+        onUpdate={onUpdate}
+        onError={onError}
+        showErrorMessages={false}
+        allowEdit={allowEdit}
+        allowAdd={allowAdd}
+        allowDelete={allowDelete}
+        searchFilter={searchFilter}
+        searchText={searchText}
+        customNodeDefinitions={customNodeDefinitions}
+        customText={customTextDefinitions}
+        // The conditional `styles` (above) merge with the
+        // selected theme and override it where they overlap.
+        theme={[theme, styles]}
+      />
+    </div>
   )
 }

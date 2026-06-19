@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { JsonViewer } from '@json-edit-react'
+import { SearchBox } from '../../kit/SearchBox'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
 // A rich, read-only document — the kind of reference data you browse but never
@@ -83,12 +85,20 @@ const solarSystem = {
 }
 
 export default function SolarSystemViewer() {
+  // Read-only, but still searchable: wire a search box to
+  // `searchText` (no filter set, so it matches values).
+  const [searchText, setSearchText] = useState('')
+
   return (
-    <JsonViewer
-      data={solarSystem}
-      {...useExampleProps()} // ---cut---
-      rootName="solarSystem"
-      collapse={2}
-    />
+    <div style={{ position: 'relative' }}>
+      <SearchBox value={searchText} onChange={setSearchText} placeholder="Search" />
+      <JsonViewer
+        data={solarSystem}
+        {...useExampleProps()} // ---cut---
+        rootName="solarSystem"
+        collapse={2}
+        searchText={searchText}
+      />
+    </div>
   )
 }

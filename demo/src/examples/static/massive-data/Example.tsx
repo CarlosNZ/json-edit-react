@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { JsonEditor, type JsonData } from '@json-edit-react'
+import { SearchBox } from '../../kit/SearchBox'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
 export default function MassiveDataSet() {
   const props = useExampleProps() // ---cut---
   const [data, setData] = useState<JsonData | null>(null)
+  // A search box filters the loaded data set on value.
+  const [searchText, setSearchText] = useState('')
 
   // Pull the ~900 KB data set in only once this example mounts. The dynamic
   // `import()` splits it into its own chunk, so it never weighs down the
@@ -23,15 +26,19 @@ export default function MassiveDataSet() {
   if (!data) return <p style={{ padding: '1em', opacity: 0.7 }}>Loading data set…</p>
 
   return (
-    <JsonEditor
-      data={data}
-      setData={setData}
-      {...props} // ---cut---
-      rootName="world"
-      // ~19,000 nodes: collapse everything past the top level so the first
-      // render stays cheap (collapsed branches don't render their children).
-      // Expand into any branch to explore.
-      collapse={1}
-    />
+    <div style={{ position: 'relative' }}>
+      <SearchBox value={searchText} onChange={setSearchText} placeholder="Search" />
+      <JsonEditor
+        data={data}
+        setData={setData}
+        {...props} // ---cut---
+        rootName="world"
+        // ~19,000 nodes: collapse everything past the top level so the first
+        // render stays cheap (collapsed branches don't render their children).
+        // Expand into any branch to explore.
+        collapse={1}
+        searchText={searchText}
+      />
+    </div>
   )
 }

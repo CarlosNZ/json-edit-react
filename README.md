@@ -653,7 +653,7 @@ It's possible to do full [JSON Schema](https://json-schema.org/) validation by c
 
 ### Using a prebuilt theme (`@json-edit-react/themes`)
 
-A small selection of pre-built themes is available in the [`@json-edit-react/themes`](#optional-companion-packages) companion package (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react/)). Install the package, then import a theme and pass it as the `theme` prop:
+A selection of curated themes is available in the [`@json-edit-react/themes`](#optional-companion-packages) companion package (as seen in the [Demo app](https://carlosnz.github.io/json-edit-react-v2/)). Install the package, then import a theme and pass it as the `theme` prop:
 
 ```sh
 npm i @json-edit-react/themes
@@ -675,13 +675,8 @@ const MyApp = () => {
 }
 ```
 
-The following themes are exported (although realistically, these exist more to showcase the capabilities — I'm open to better built-in themes, so feel free to [create an issue](https://github.com/CarlosNZ/json-edit-react/issues) with suggestions):
-- `githubDarkTheme`
-- `githubLightTheme`
-- `monoDarkTheme`
-- `monoLightTheme`
-- `candyWrapperTheme`
-- `psychedelicTheme`
+> [!TIP]
+> If you've created a cool theme, feel free to [submit a PR](https://github.com/CarlosNZ/json-edit-react/pulls) to include it in the themes package
 
 ### Customising styles — the `theme` object
 

@@ -10,6 +10,7 @@ import {
 } from '@json-edit-react'
 import Ajv from 'ajv'
 import schema from './schema.json'
+import { SearchBox } from '../../kit/SearchBox'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
 // Full JSON Schema validation via a 3rd-party validator. A
@@ -95,6 +96,7 @@ type Toast = (options: {
 
 export default function JsonSchemaValidation({ toast }: { toast: Toast }) {
   const [data, setData] = useState<JsonData>(initialData)
+  const [searchText, setSearchText] = useState('')
 
   const onUpdate: UpdateFunction = ({ newData }) => {
     const error = validate(newData)
@@ -110,16 +112,20 @@ export default function JsonSchemaValidation({ toast }: { toast: Toast }) {
   }
 
   return (
-    <JsonEditor
-      data={data}
-      setData={setData}
-      {...useExampleProps()} // ---cut---
-      rootName="data"
-      collapse={2}
-      onUpdate={onUpdate}
-      allowTypeSelection={allowTypeSelection}
-      newKeyOptions={newKeyOptions}
-      defaultValue={defaultValue}
-    />
+    <div style={{ position: 'relative' }}>
+      <SearchBox value={searchText} onChange={setSearchText} placeholder="Search" />
+      <JsonEditor
+        data={data}
+        setData={setData}
+        {...useExampleProps()} // ---cut---
+        rootName="data"
+        collapse={2}
+        onUpdate={onUpdate}
+        allowTypeSelection={allowTypeSelection}
+        newKeyOptions={newKeyOptions}
+        defaultValue={defaultValue}
+        searchText={searchText}
+      />
+    </div>
   )
 }

@@ -21,7 +21,7 @@ export const SearchBox = ({ value, onChange, placeholder = 'Search' }: SearchBox
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       placeholder={focused ? placeholder : '🔍'}
-      style={{ ...searchStyle, width: focused ? '60%' : '5rem' }}
+      style={{ ...searchStyle, width: focused ? '60%' : '7rem', maxWidth: 250 }}
     />
   )
 }

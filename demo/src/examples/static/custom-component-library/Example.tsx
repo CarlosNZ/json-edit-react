@@ -17,6 +17,7 @@ import {
 } from '@json-edit-react/components'
 import { ReactDatePicker } from '@json-edit-react/components/widgets'
 import { initialData, type CustomComponentLibraryData } from './data'
+import { SearchBox } from '../../kit/SearchBox'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
 // Showcases every custom component in the Custom Component
@@ -95,15 +96,20 @@ export const customNodeDefinitions = (currentData: JsonData) => {
 
 export default function CustomComponentLibrary() {
   const [data, setData] = useState<JsonData>(initialData)
+  const [searchText, setSearchText] = useState('')
 
   return (
-    <JsonEditor
-      data={data}
-      setData={setData}
-      {...useExampleProps()} // ---cut---
-      rootName="components"
-      collapse={3}
-      customNodeDefinitions={customNodeDefinitions(data)}
-    />
+    <div style={{ position: 'relative' }}>
+      <SearchBox value={searchText} onChange={setSearchText} placeholder="Search" />
+      <JsonEditor
+        data={data}
+        setData={setData}
+        {...useExampleProps()} // ---cut---
+        rootName="components"
+        collapse={3}
+        customNodeDefinitions={customNodeDefinitions(data)}
+        searchText={searchText}
+      />
+    </div>
   )
 }
