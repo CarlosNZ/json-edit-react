@@ -3,7 +3,7 @@ import {
   getStyles,
   getThemeCssVars,
 } from '../src/contexts/ThemeProvider/compileStyles'
-import { type ThemeFunction, type NodeData } from '../src/types'
+import { type StyleFunction, type NodeData } from '../src/types'
 
 // Minimal NodeData fixture — theme functions only read the few fields they
 // need.
@@ -147,7 +147,7 @@ describe('compileStyles — function composition', () => {
   })
 
   it('treats a null function result as contributing nothing', () => {
-    const fn: ThemeFunction = (nd) => (nd.value === 'x' ? { color: 'red' } : null)
+    const fn: StyleFunction = (nd) => (nd.value === 'x' ? { color: 'red' } : null)
     const c = compileStyles({ string: fn })
     expect(getStyles(c, 'string', makeNodeData({ value: 'x' }))).toEqual({ color: 'red' })
     expect(getStyles(c, 'string', makeNodeData({ value: 'y' }))).toEqual({
