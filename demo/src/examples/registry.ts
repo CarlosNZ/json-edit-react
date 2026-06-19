@@ -226,6 +226,17 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/bigint/Example'),
     code: () => import('./static/bigint/Example.tsx?raw'),
   },
+  'creating-types': {
+    kind: 'static',
+    title: 'Creating custom types',
+    blurb:
+      'Turn a node *into* a custom type from the Type selector (`showInTypeSelector` + a `defaultValue`), and use `editOnTypeSwitch` to decide what happens next. Two types are on offer — edit any value, click the type icon, and pick one:\n\n' +
+      '- **Color** — `editOnTypeSwitch: true`, so picking it *opens the editor* seeded with its Hot Pink default. For types you always want to set right away.\n' +
+      '- **Location** — a `"(lat, lng)"` string shown as a 📍 map link, with `editOnTypeSwitch: false`: picking it just *drops the default landmark* (Mount Everest) and closes — no editing step.\n\n' +
+      "Each type's `defaultValue` satisfies its `condition`, so the new node renders as that type immediately.",
+    load: () => import('./static/creating-types/Example'),
+    code: () => import('./static/creating-types/Example.tsx?raw'),
+  },
   'custom-error-ui': {
     kind: 'static',
     title: 'Custom error UI',

@@ -375,7 +375,7 @@ The generic flows through `data`, `setData`, the `onUpdate` / `onChange` / `onEr
 (nodeData) => result
 ```
 
-The dynamic capabilities of the editor are powered by one core concept — the `FilterFunction`. You provide a callback that receives a bunch of metadata about the current node, and returns a boolean, or value, that determines what happens. Editing, search, styling, conditional rendering all rely on this workhorse structure, so we'll explain the shape of it here so you'll grasp how it's used throughout this doc.
+The dynamic capabilities of the editor are powered by one core concept — the `FilterFunction`. You provide a callback that receives a bunch of metadata about the current node, and it returns a boolean, or value, that determines what happens. Editing, search, styling, conditional rendering all rely on this workhorse structure, so we'll explain the shape of it here so you'll grasp how it's used throughout this doc.
 
 | Type                    | Shape                                 | Drives                                                             | Section                   |
 | ----------------------- | ------------------------------------- | ------------------------------------------------------------------ | ------------------------- |
@@ -1118,6 +1118,8 @@ To let users turn a node _into_ your custom type from the Type selector, set **`
 - **`defaultValue`** — the value inserted when the type is chosen. It must satisfy your `condition` (so the new node immediately renders as your component).
 
 By default, choosing the type commits `defaultValue` and closes the editor. For types the user will almost always want to edit straight away (date, colour, BigInt), set **`editOnTypeSwitch: true`** (requires `component` + `showOnEdit`): the edit buffer is seeded by your `fromStandardType` (so a string→Symbol switch carries the string into the description), falling back to `defaultValue`; your component opens in its edit state, one commit happens on confirm, and <kbd>Esc</kbd> cancels the whole switch.
+
+[![▶ Live example: Creating custom types](https://img.shields.io/badge/▶_Live_example-Creating_custom_types-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/creating-types)
 
 ### Customising the key — `keyComponent`
 
