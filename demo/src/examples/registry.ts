@@ -215,6 +215,17 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/display-vs-edit/Example'),
     code: () => import('./static/display-vs-edit/Example.tsx?raw'),
   },
+  bigint: {
+    kind: 'static',
+    title: 'BigInt',
+    blurb:
+      "A from-scratch `BigInt` node — for values JSON and plain JS numbers can't hold (the IDs here are past `Number.MAX_SAFE_INTEGER`). It wires the complete non-plain-value lifecycle as two mirrored pairs of hooks:\n\n" +
+      '- **Inline editing** — `toStandardType` demotes the BigInt to a digit string for the edit buffer, and `fromStandardType` converts it back on confirm (and *throws* on a non-integer, rejecting the edit).\n' +
+      '- **Edit as JSON** — `stringifyReplacer` / `parseReviver` round-trip the BigInt through a tagged `{ __type, value }` object, because JSON has no BigInt and `JSON.stringify` throws on a raw one.\n\n' +
+      'Type selection is on, so the menu also shows `fromStandardType`\'s *seed* path: switch a digit string to BigInt and the digits carry over; switch the name and the conversion throws, falling back to `defaultValue` (Esc restores it). Try "Edit as JSON" on the root to watch the round-trip — then flip **Enable processing** off to drop all four hooks at once and see editing fall back to plain strings.',
+    load: () => import('./static/bigint/Example'),
+    code: () => import('./static/bigint/Example.tsx?raw'),
+  },
   'custom-error-ui': {
     kind: 'static',
     title: 'Custom error UI',

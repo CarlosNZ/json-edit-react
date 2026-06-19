@@ -1108,6 +1108,8 @@ If your component edits a value whose committed form isn't the raw text in the e
 
 `throw` to signal an unconvertible value. On a **confirm** that rejects the edit — nothing commits, the editor stays open with the user's text intact, and the message shows inline and fires `onError` (the same as confirming invalid JSON). On a **type-switch seed** there's nothing to reject yet, so it simply falls back to seeding `defaultValue` (the original stays recoverable with <kbd>Esc</kbd>).
 
+[![▶ Live example: BigInt](https://img.shields.io/badge/▶_Live_example-BigInt-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/bigint)
+
 ### Letting users create your type
 
 To let users turn a node _into_ your custom type from the Type selector, set **`showInTypeSelector: true`** and provide:
