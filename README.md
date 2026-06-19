@@ -98,9 +98,10 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [`translations`](#translations)
   - [Dynamic text — `customText`](#dynamic-text--customtext)
 - [Keyboard control](#keyboard-control)
-- [Custom nodes \& components](#custom-nodes--components)
-  - [Using the prebuilt components (`@json-edit-react/components`)](#using-the-prebuilt-components-json-edit-reactcomponents)
-  - [Writing a custom node — `condition` + `component`](#writing-a-custom-node--condition--component)
+- [Custom Nodes \& Components](#custom-nodes--components)
+  - [How to use the pre-built components](#how-to-use-the-pre-built-components)
+  - [Writing a custom node definition — `condition` + `component`](#writing-a-custom-node-definition--condition--component)
+  - [But what are we targeting?](#but-what-are-we-targeting)
   - [Handling JSON](#handling-json)
   - [Customising the key — `keyComponent`](#customising-the-key--keycomponent)
   - [Collection nodes \& collections-as-values](#collection-nodes--collections-as-values)
@@ -124,6 +125,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 - [Changelog](#changelog)
 - [LEFTOVERS](#leftovers)
   - [Importing the stylesheet (Shadow DOM)](#importing-the-stylesheet-shadow-dom)
+  - [PENDING on custom nodes](#pending-on-custom-nodes)
 
 <!-- NPM USAGE -->
 
@@ -971,40 +973,43 @@ If (for example), you just wish to change the general "confirmation" action to "
 - To **disable** a control entirely, set it to `null`. The key is then no longer intercepted and falls through to its native browser behaviour. This is useful when the default bindings aren't appropriate for your data — for example, `{ tabForward: null, tabBack: null }` turns off Tab navigation between editable nodes so that <kbd>Tab</kbd>/<kbd>Shift-Tab</kbd> resume their normal focus-traversal behaviour. Because the per-type confirms inherit from `confirm`, setting `confirm: null` disables <kbd>Enter</kbd>-to-submit across string, number, boolean and null value editors at once (object/array nodes use `objectConfirm`, so disable that separately if needed). The two modifier controls, `clipboardModifier` and `collapseModifier`, can likewise be disabled with `null` or an empty array `[]`.
 - You won't be able to override system or browser behaviours: for example, on Mac "<kbd>Ctrl</kbd>-click" will perform a right-click, so using it as a click modifier won't work (hence we also accept "Meta"/"Cmd" as the default `clipboardModifier`).
 
-## Custom nodes & components
+## Custom Nodes & Components
 
-You can replace certain nodes in the data tree with your own custom components. An example might be for an image display, or a custom date editor, or just to add some visual bling. See the "Custom Nodes" data set in the [interactive demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) to see it in action. (There is also a custom Date picker that appears when editing ISO strings in the other data sets.)
+Custom nodes are a powerful way to extend the functionality of **json-edit-react** to integrate any kind of data structure you can imagine into the editor. They're built around two simple properties:
 
-### Using the prebuilt components (`@json-edit-react/components`)
+- **condition** — what nodes get treated as "special"
+- **component** — what we render those nodes with
+
+See the "Custom Nodes" data set in the [demo](https://carlosnz.github.io/json-edit-react-v2/?data=customNodes) to see a few in action.
+
+A wide range of pre-build custom components are available in a separate package to import and drop in as required. These include hyperlinks, date pickers, color pickers, image renderers and several "non-JSON" data types (`undefined`, `BigInt`, `Symbol`, etc.)
+
+Browse them all at [`@json-edit-react/components`](www.npmjs.com/package/json-edit-react), and see most of them in use on the demo site's ["Custom Component Library"](http://localhost:5175/json-edit-react-v2/?data=customComponentLibrary).
+
+[![▶ Live example: Custom component library](https://img.shields.io/badge/▶_Live_example-Custom_component_library-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-component-library)
 
 > [!TIP]
-> A set of pre-built Custom components is published as [`@json-edit-react/components`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components) — drop-in date pickers, color pickers, Markdown rendering, hyperlinks, and more. See examples in the [Demo app](https://carlosnz.github.io/json-edit-react/?data=customComponentLibrary), and the [package README](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components#building-your-own) for a reference on building your own.  
-> Please contribute your own if you think they'd be useful to others.
+> Feel free to contribute any custom components you've made that you think would be useful to others
 
-#### Active hyperlinks (example)
+### How to use the pre-built components
 
-A drop-in custom component to turn url strings into clickable links is available from the [`@json-edit-react/components`](#optional-companion-packages) companion package:
+Details for each specific component are available on that package's [README](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components), but the general pattern is the same: import the component's **definition factory**, call it, and pass the result into the `customNodeDefinitions` prop. For example, the `Hyperlink` component — which turns URL strings into clickable links — is added like this:
 
-```sh
-npm i @json-edit-react/components
-```
-
-```js
+```jsx
 import { JsonEditor } from 'json-edit-react'
 import { hyperlinkDefinition } from '@json-edit-react/components'
 
-// ...Other stuff
-return (
-  <JsonEditor
-    {...otherProps}
-    customNodeDefinitions={[hyperlinkDefinition(), ...otherCustomDefinitions]}
-  />
-  )
+// Define once (module scope or `useMemo`) so the reference stays stable
+const customNodeDefinitions = [hyperlinkDefinition()], //add other definitions in the array
+
+const App = () => (
+  <JsonEditor data={data} setData={setData} customNodeDefinitions={customNodeDefinitions} />
+)
 ```
 
-For object-shaped link data (e.g. `{ text, url }` pairs displayed as a clickable string), use `enhancedLinkDefinition` from the same package.
+Each factory accepts an optional options object to customise its behaviour — e.g. `hyperlinkDefinition({ condition: ({ key }) => key === 'homepage' })` to restrict it to a specific field — and falls back to sensible defaults when called with no arguments.
 
-### Writing a custom node — `condition` + `component`
+### Writing a custom node definition — `condition` + `component`
 
 Custom nodes are provided in the `customNodeDefinitions` prop, as an array of objects of following structure:
 
@@ -1018,7 +1023,9 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
 
   componentProps,       // object (optional) — props shared by `keyComponent` and `component`
   showKey,              // boolean (optional), default true
-  defaultValue,         // JSON value for a new instance of your component
+  defaultValue,         // value for a new instance of your component
+  
+  // Components are "display only" by default (falls back to core UI for editing)
   showOnEdit            // boolean, default false
   showOnView            // boolean, default true
   showEditTools         // boolean, default true
@@ -1048,6 +1055,22 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
 }
 ```
 
+The `condition` is just a [Filter function](#filter-functions), with the same `nodeData` input (`key`, `path`, `value`, etc.), and `component` is a React component. Every node in the data structure will be run through each condition function, and any that match will be rendered by your custom component. Note that if a node matches more than one definition's `condition`, the *first* one will be used, so place them in the array in priority order.
+
+The component will receive *all* the same props as a standard node component plus some additional ones — see [BaseNodeProps](https://github.com/CarlosNZ/json-edit-react/blob/b085f6391dabf574809f1040b11401c13344923d/src/types.ts#L219-L265) (common to all nodes) and [CustomComponentProps](https://github.com/CarlosNZ/json-edit-react/blob/b085f6391dabf574809f1040b11401c13344923d/src/types.ts#L275-L287) type definitions. Specifically, if you want to update the data structure from your custom node, you'll need to call the `setValue` method on your node's data value. And if you enable `passOriginalNode` above, you'll also have access to `originalNode` and `originalNodeKey` in order to render the standard content (i.e. what would have been rendered if it wasn't intercepted by this custom node) -- this can be helpful if you want your custom node to just be the default content with a little extra decoration (e.g. [Error Indicator](https://github.com/CarlosNZ/json-edit-react/blob/v2.0-dev/packages/components/README.md#errorindicator--flag-nodes-with-a-glyph)). (*Note:* you may need a little custom CSS to render these original node components identically to the default display.)
+
+If your component provides its own editing UI (`showOnEdit: true`) and its underlying value isn't the raw edit buffer — say the buffer holds a digit string but the node's value is a `BigInt` — define `fromStandardType: (value, nodeData, componentProps) => value` on the definition. It runs on every confirm path (the ✓ button, <kbd>Enter</kbd>, <kbd>Tab</kbd>, `editorRef.confirm()`) and returns the value to commit. Make it pass already-correct values through unchanged (the buffer still holds the node's committed value until the editor's first keystroke). To *reject* invalid input, throw — nothing is committed, the edit stays open with the user's text intact, and the thrown message displays inline and fires `onError` (the same behaviour as confirming invalid JSON on a collection edit).
+
+You can pass additional props specific to your component, if required, through the `componentProps` object. A thorough example of a custom **Date Picker** is used in the demo (along with a couple of other more basic presentational ones), which you can inspect to see how to utilise the standard props and a couple of custom props. View the source code [here](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/DatePicker/component.tsx).
+
+
+### But what are we targeting?
+
+
+By default, your `component` is presented to the right of the property key it belongs to, like any other value, and the key is rendered by the library. If you want to customize the **key** as well, use the `keyComponent` slot — see [Customising keys](#customising-keys) below.
+
+If you want a single component to render the **entire row** (both key and value together — for example a tightly-coupled composite where the layout can't be decomposed into two slots), you can set `showKey: false` and let your `component` take the whole row. This is supported as an escape hatch; for most cases the `keyComponent` + `component` split is cleaner and preserves the standard key-editing UX.
+
 A definition can target two slots independently — the **key** slot (via `keyComponent`) and the **value/contents** slot (via `component`). Either or both. The same model applies uniformly to value nodes and collection nodes:
 
 | Slot                | Value node                                       | Collection node                                                      |
@@ -1058,19 +1081,7 @@ A definition can target two slots independently — the **key** slot (via `keyCo
 
 Most cases are best served by targeting the specific slot you want to change — e.g. for a clickable or highlighted key, use `keyComponent`; for an alternative value renderer (image, date picker, etc.), use `component`.
 
-The `condition` is just a [Filter function](#filter-functions), with the same input parameters (`key`, `path`, `value`, etc.), and `component` is a React component. Every node in the data structure will be run through each condition function, and any that match will be rendered by your custom component. Note that if a node matches more than one definition's `condition`, the *first* one will be used, so place them in the array in priority order.
 
-The component will receive *all* the same props as a standard node component plus some additional ones — see [BaseNodeProps](https://github.com/CarlosNZ/json-edit-react/blob/b085f6391dabf574809f1040b11401c13344923d/src/types.ts#L219-L265) (common to all nodes) and [CustomComponentProps](https://github.com/CarlosNZ/json-edit-react/blob/b085f6391dabf574809f1040b11401c13344923d/src/types.ts#L275-L287) type definitions. Specifically, if you want to update the data structure from your custom node, you'll need to call the `setValue` method on your node's data value. And if you enable `passOriginalNode` above, you'll also have access to `originalNode` and `originalNodeKey` in order to render the standard content (i.e. what would have been rendered if it wasn't intercepted by this custom node) -- this can be helpful if you want your custom node to just be the default content with a little extra decoration. (*Note:* you may need a little custom CSS to render these original node components identically to the default display.)
-
-If your component needs to reflect an in-flight save — for example a spinner or overlay while an async `onUpdate` completes — read the `isPending` prop: it's `true` while this node's optimistic edit is settling (i.e. the value is already applied locally but the async `onUpdate` hasn't resolved yet), and `false` otherwise.
-
-If your component provides its own editing UI (`showOnEdit: true`) and its underlying value isn't the raw edit buffer — say the buffer holds a digit string but the node's value is a `BigInt` — define `fromStandardType: (value, nodeData, componentProps) => value` on the definition. It runs on every confirm path (the ✓ button, <kbd>Enter</kbd>, <kbd>Tab</kbd>, `editorRef.confirm()`) and returns the value to commit. Make it pass already-correct values through unchanged (the buffer still holds the node's committed value until the editor's first keystroke). To *reject* invalid input, throw — nothing is committed, the edit stays open with the user's text intact, and the thrown message displays inline and fires `onError` (the same behaviour as confirming invalid JSON on a collection edit).
-
-You can pass additional props specific to your component, if required, through the `componentProps` object. A thorough example of a custom **Date Picker** is used in the demo (along with a couple of other more basic presentational ones), which you can inspect to see how to utilise the standard props and a couple of custom props. View the source code [here](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/DatePicker/component.tsx).
-
-By default, your `component` is presented to the right of the property key it belongs to, like any other value, and the key is rendered by the library. If you want to customize the **key** as well, use the `keyComponent` slot — see [Customising keys](#customising-keys) below.
-
-If you want a single component to render the **entire row** (both key and value together — for example a tightly-coupled composite where the layout can't be decomposed into two slots), you can set `showKey: false` and let your `component` take the whole row. This is supported as an escape hatch; for most cases the `keyComponent` + `component` split is cleaner and preserves the standard key-editing UX.
 
 ### Handling JSON
 
@@ -1516,4 +1527,8 @@ import 'json-edit-react/style.css'
 
 How that import resolves depends on your bundler — most will inline or extract it so you can attach it where you need it (for example via a `<style>` element inside the shadow root, or by adding a constructed stylesheet to `shadowRoot.adoptedStyleSheets`). The stylesheet defines its custom properties on both `:root` and `:host`, so it applies correctly whether it lives in the document or in a shadow root.
 
+
+### PENDING on custom nodes
+
+If your component needs to reflect an in-flight save — for example a spinner or overlay while an async `onUpdate` completes — read the `isPending` prop: it's `true` while this node's optimistic edit is settling (i.e. the value is already applied locally but the async `onUpdate` hasn't resolved yet), and `false` otherwise.
 
