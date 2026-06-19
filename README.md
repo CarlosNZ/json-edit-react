@@ -1014,6 +1014,8 @@ const App = () => (
 
 Each factory accepts an optional options object to customise its behaviour — e.g. `hyperlinkDefinition({ condition: ({ key }) => key === 'homepage' })` to restrict it to a specific field — and falls back to sensible defaults when called with no arguments.
 
+That `condition` doesn't _replace_ the definition's built-in one — it's **AND-ed** with it. Each pre-built definition already recognises the data it handles (URL strings for `Hyperlink`, ISO dates for `DatePicker`), so a `condition` you supply only narrows _where_ the component applies. This AND-ing is exactly why the definitions are exposed as factory functions.
+
 ### Writing a custom node definition — `condition` + `component`
 
 Custom nodes are provided in the `customNodeDefinitions` prop, as an array of objects of following structure:
@@ -1086,7 +1088,9 @@ Your `component` gets all the props a built-in node gets, plus a few extras — 
 - **`componentProps`** — the custom props your component receives — your own config, like props you'd pass to any React component — regardless of whether it sits in the `component` or `keyComponent` slot.
 - **`isPending`** — `true` while this node's optimistic edit is still settling (an async `onUpdate` hasn't resolved yet) — drive a spinner or overlay off it.
 
-A worked example with both standard and custom props is the [Date Picker component](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/DatePicker/component.tsx) in `@json-edit-react/components`.
+A worked example with both standard and custom props: see the [Date Picker component source](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/DatePicker/component.tsx) (in `@json-edit-react/components`) for the props read from _inside_ a component, or the focused example below for a custom `componentProps` config wired from the _outside_.
+
+[![▶ Live example: Date picker](https://img.shields.io/badge/▶_Live_example-Date_picker-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/date-picker)
 
 ### Display vs. edit modes
 
@@ -1095,6 +1099,8 @@ By default a custom component is a **display** component: it renders in the view
 - **`showOnView`** (default `true`) — render in view mode.
 - **`showOnEdit`** (default `false`) — render in edit mode too. Set this for a component that _is_ its own editor (a date picker, a colour picker).
 - **`showEditTools`** (default `true`) — show the copy / add / edit / delete icons on hover. Disable them only if your component supplies its own way to enter edit mode.
+
+[![▶ Live example: Display vs. edit modes](https://img.shields.io/badge/▶_Live_example-Display_vs._edit_modes-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/display-vs-edit)
 
 ### Editing a non-plain value — `fromStandardType`
 

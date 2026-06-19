@@ -69,6 +69,7 @@ export default function DatePickerExample() {
       rootName="event"
       customNodeDefinitions={customNodeDefinitions}
       allowTypeSelection={false}
+      allowDelete={false}
     />
   )
 }

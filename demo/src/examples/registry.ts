@@ -202,6 +202,19 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/date-picker/Example'),
     code: () => import('./static/date-picker/Example.tsx?raw'),
   },
+  'display-vs-edit': {
+    kind: 'static',
+    title: 'Display vs. edit modes',
+    blurb:
+      'Four custom components on one product card, each landing at a different point on the view/edit spectrum — set by three flags (`showOnView`, `showOnEdit`, `showEditTools`):\n\n' +
+      '- **`brightness`** — a meter bar. The *default* custom node: shown in view, but editing falls back to the standard number input.\n' +
+      '- **`warmth`** — a Kelvin slider. *Edit-only* (`showOnView: false`): the raw number shows in view, the slider appears only on edit.\n' +
+      '- **`rating`** — click-to-set stars. *One interface* — it commits on click and never opens an edit session, so `showEditTools` is off and `showOnEdit` goes unused (the pre-built `BooleanToggle` works the same way).\n' +
+      '- **`accent`** — the pre-built `ColorPicker`, custom in *both* modes (a swatch in view, a wheel on edit); edit tools off, so a double-click on the swatch starts editing.\n\n' +
+      'The meter, slider and stars are written from scratch; the colour picker is the pre-built `ColorPicker` from `@json-edit-react/components`.',
+    load: () => import('./static/display-vs-edit/Example'),
+    code: () => import('./static/display-vs-edit/Example.tsx?raw'),
+  },
   'custom-error-ui': {
     kind: 'static',
     title: 'Custom error UI',
