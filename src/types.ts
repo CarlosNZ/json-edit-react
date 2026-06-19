@@ -675,7 +675,7 @@ export type ThemeableElement =
  * A style function: derives CSS from a node's data at render time. May return
  * `null` / `undefined` to contribute nothing — useful as a conditional layer.
  */
-export type ThemeFunction = (nodeData: NodeData) => React.CSSProperties | null | undefined
+export type StyleFunction = (nodeData: NodeData) => React.CSSProperties | null | undefined
 
 /**
  * One unit of a `ThemeElementValue`. A bare string is resolved against the
@@ -683,7 +683,7 @@ export type ThemeFunction = (nodeData: NodeData) => React.CSSProperties | null |
  * element's default property (`color`, or `backgroundColor` / `borderColor` for
  * a few elements). e.g. `"#FFF"`, `{ fontWeight: "bold" }`, a style function.
  */
-export type ThemeValueUnit = string | React.CSSProperties | ThemeFunction
+export type ThemeValueUnit = string | React.CSSProperties | StyleFunction
 
 /**
  * The value applied to a single element: one unit, or an array of units merged
@@ -782,18 +782,18 @@ export type ThemeInput = Theme | ThemeStyles | Array<Theme | ThemeStyles>
 // CompiledStyles).
 export interface ElementStyle {
   base: React.CSSProperties
-  fns: ThemeFunction[]
+  fns: StyleFunction[]
 }
 export type ResolvedStyles = Record<ThemeableElement, ElementStyle>
 
-// A compiled style function. Unlike `ThemeFunction` it never returns null — it
+// A compiled style function. Unlike `StyleFunction` it never returns null — it
 // always merges the static base with each function's output into a concrete
 // object.
-export type CompiledThemeFunction = (nodeData: NodeData) => React.CSSProperties
+export type CompiledStyleFunction = (nodeData: NodeData) => React.CSSProperties
 
 // The compiled theme. Partial: an element no theme styles has no entry, so the
 // map carries only what's styled. `getStyles` fills the gap with `{}` at read
 // time.
 export type CompiledStyles = Partial<
-  Record<ThemeableElement, React.CSSProperties | CompiledThemeFunction>
+  Record<ThemeableElement, React.CSSProperties | CompiledStyleFunction>
 >

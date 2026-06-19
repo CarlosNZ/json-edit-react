@@ -2,7 +2,7 @@ import { type CSSProperties } from 'react'
 import {
   type ThemeInput,
   type ThemeValueUnit,
-  type ThemeFunction,
+  type StyleFunction,
   type ThemeableElement,
   type ThemeIcons,
   type CompiledStyles,
@@ -34,7 +34,7 @@ export const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
   const themes = resolveThemeStack(themeInput)
 
   const base: Partial<Record<ThemeableElement, CSSProperties>> = {}
-  const fns: Partial<Record<ThemeableElement, ThemeFunction[]>> = {}
+  const fns: Partial<Record<ThemeableElement, StyleFunction[]>> = {}
 
   // Resolve each theme in array order. Statics merge into `base`, functions
   // append to `fns`. Cross-theme: later overlays earlier, per element.
