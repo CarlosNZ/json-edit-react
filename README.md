@@ -90,7 +90,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [CSS classes](#css-classes)
   - [Style fragments](#style-fragments)
   - [Icons](#icons)
-  - [Initial expansion \& `collapse`](#initial-expansion--collapse)
+- [`collapse` — Initial expansion](#collapse--initial-expansion)
 - [Search \& filtering](#search--filtering)
   - [Basic search — `searchText` + `searchFilter`](#basic-search--searchtext--searchfilter)
   - [Custom search — `SearchFilterFunction`](#custom-search--searchfilterfunction)
@@ -375,7 +375,7 @@ The dynamic capabilities of the editor are powered by one core concept — the `
 | `FilterFunction`        | `(nodeData) => boolean`               | `allowEdit` / `allowDelete` / `allowAdd` / `allowDrag`, `collapse` | Controlling editing       |
 | `TypeFilterFunction`    | `(nodeData) => boolean \| DataType[]` | `allowTypeSelection`                                               | Controlling editing       |
 | `SearchFilterFunction`  | `(nodeData, searchText) => boolean`   | `searchFilter`                                                     | Search & filtering        |
-| Style function          | `(nodeData) => CSS \| null`           | `theme` styles                                                     | Appearance & theming      |
+| `StyleFunction`         | `(nodeData) => CSS \| null`           | `theme` styles                                                     | Appearance & theming      |
 | `CustomTextFunction`    | `(nodeData) => string \| null`        | `customText`                                                       | Localisation              |
 | `condition`             | `(nodeData) => boolean`               | `customNodeDefinitions`                                            | Custom nodes & components |
 | `DefaultValueFunction`  | `(nodeData, newKey?) => value`        | `defaultValue`                                                     | Controlling editing       |
@@ -721,52 +721,37 @@ However, you can pass in your own theme object, or part thereof. A theme object 
 The `styles` property is the main one to focus on. Each key (`property`, `bracket`, `itemCount`) refers to a part of the UI. The value for each key is *either*:
 - a `string`, in which case it is interpreted as the colour (or background colour in the case of `container` and `inputHighlight`)
 - a full CSS style object for fine-grained definition. You only need to provide properties you wish to override — all unspecified ones will fallback to either the default theme, or another theme that you specify as the "base".
-- a "Style Function", which is a function that takes the same input as [Filter Functions](#filter-functions), but returns a CSS style object (or `null`). This allows you to *dynamically* change styling of various elements based on content or structure. (An example is in the [Demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) "Custom Nodes" data set, where the character names are styled larger than other string values)
+- a `Style Function`, which is a variant of [Filter Function](#filter-functions) tha takes the same input, but returns a CSS style object (or `null`). This allows you to *dynamically* change styling of various elements based on content or structure. (An example is in the [Demo](https://carlosnz.github.io/json-edit-react/?data=customNodes) "Custom Nodes" data set, where the character names are styled larger than other string values)
 - an array combining any of the above. Static styles merge left → right (later wins per property); a "Style Function" always applies *last*, on top of the merged statics, and multiple functions compose in order. So you can pair static "fallback" styles with a conditional function — when the function returns `null` it contributes nothing, leaving the statics showing through.
 
 `inputHighlight` is the one exception to the above: it sets the text-selection colour through a `::selection` rule (surfaced as a single CSS custom property), so it accepts **only a colour string** — not a style object, function, or array.
 
-`collection`, `collectionElement`, `headerRow`, `valueRow` and `dropZone` aren't styled by the default theme, but can be themed the same way. `headerRow` targets a collection's header line (key + brackets) and `valueRow` a leaf value's row — useful for row height/background.
+For a simple example, you can take an existing theme and override just a few things — pair static overrides (a fixed icon colour, bold-italic booleans) with a conditional style function, all pinned in place as you switch the base theme:
 
-For a simple example, if you want to use the "githubDark" theme, but just change a couple of small things, you'd specify something like this:
+[![▶ Live example: Theme overrides](https://img.shields.io/badge/▶_Live_example-Theme_overrides-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/theme-overrides)
 
-```js
-// in <JsonEditor /> props
-theme={[
-        githubDarkTheme,
-        {
-            iconEdit: 'grey',
-            boolean: { color: 'red', fontStyle: 'italic', fontWeight: 'bold', fontSize: '80%' },
-        },
-      ]}
-```
+Here's another cool use for Style Functions:
 
-
-Which would change the "Edit" icon and boolean values from this:  
-<img width="218" alt="Github Dark theme original" src="image/theme_edit_before.png">  
-into this:  
-<img width="218" alt="Github Dark theme modified" src="image/theme_edit_after.png">
-
-Or you could create your own theme from scratch and overwrite the whole theme object.
+[![▶ Live example: Heat map](https://img.shields.io/badge/▶_Live_example-Heat_map-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/heat-map)
 
 So, to summarise, the `theme` prop can take *either*:
 
 - an imported theme, e.g `"candyWrapperTheme"`
 - a theme object:
   - can be structured as above with `fragments`, `styles`, `displayName`, `icons` (glyphs — see [Icons](#icons)) etc., or just the `styles` part (at the root level)
-- a theme name *and* an override object in an array, i.e. `[ "<themeName>, {...overrides } ]`
+- any number of theme objects (each can be as full or minimal as you like) in an array (with later ones taking precedence when they overlap properties)
 
-You can play round with live editing of the themes in the [Demo app](https://carlosnz.github.io/json-edit-react/) by selecting "Edit this theme!" from the "Demo data" selector (though you won't be able to create functions in JSON).
+You can play round with live editing of the themes in the [Demo app](https://carlosnz.github.io/json-edit-react-v2/?data=editTheme) with the "Edit this theme!" data set.
 
 ### CSS classes
 
 Another way to style the component is to target the CSS classes directly. Every element in the component has a unique class name, so you should be able to locate them in your browser inspector and override them accordingly. All class names begin with the prefix `jer-`, e.g. `jer-collection-header-row`, `jer-value-string`.
 
-Note that theme styles are applied *inline*, so for any property the theme sets they take precedence over your own CSS rules (short of `!important`). CSS-class overrides are therefore best for structural/layout tweaks the theme doesn't touch (spacing, sizing, borders); colours and fonts are best set through the `theme` prop.
+Note that theme styles are applied *inline*, so any property the theme sets takes precedence over your own CSS rules (short of `!important`). CSS-class overrides are therefore best for structural/layout tweaks the theme doesn't touch (spacing, sizing, borders); colours and fonts are best set through the `theme` prop.
 
 ### Style fragments
 
-A `fragments` object lets you define named, reusable style tokens — a colour or a snippet of CSS — and reference them by name from any element's value. Think of it as a palette: define a value once and reuse it in several unrelated places, so a later tweak only happens in one spot.
+A `fragments` object is a convenience to define named, reusable style tokens — a colour or a snippet of CSS — and reference them by name from any element's value. Think of it as a palette: define a value once and reuse it in several unrelated places, so a later tweak only happens in one spot.
 ```js
 fragments: { accent: '#E63946' },
 styles: {
@@ -785,11 +770,21 @@ styles: {
 
 ### Icons
 
-A theme owns its icon **glyphs** as well as their colour. The glyph (which shape renders) lives on `theme.icons`; the colour lives on `theme.styles` under `iconAdd`…`iconCollection` (above). The two are independent — restyle the default glyph, swap the glyph, or both.
+A theme owns its icon **glyphs** as well as their colour, though any icons not defined fall through as per the styles, bottoming out with the default icons.
 
-`theme.icons` is keyed by icon name (`add`, `edit`, `delete`, `copy`, `ok`, `cancel`, and `collection` — the expand/collapse chevron), and each value is an `IconDefinition`. Supply only the glyphs you want to replace; the rest fall back to the defaults.
+The `icons` property is for defining the glyphs; the `styles.icon...` properties control the CSS that gets applied to them, though if an icon as specific colours applied to an inner path, these won't be overridden. The property is structure as follows:
 
 ```ts
+interface ThemeIcons {
+  add?: IconDefinition
+  edit?: IconDefinition
+  delete?: IconDefinition
+  copy?: IconDefinition
+  ok?: IconDefinition
+  cancel?: IconDefinition
+  collection?: IconDefinition
+}
+
 interface IconDefinition {
   content: React.ReactNode // the inner SVG markup — <path>/<circle>/… (no outer <svg>)
   viewBox?: string // defaults to '0 0 24 24'
@@ -824,15 +819,22 @@ const myTheme = {
 }
 ```
 
-A **string** passed to `iconFromSvg` is interned, so it's stable to write inline. A React **element**, a pre-built **`IconDefinition`**, or a raw React node placed directly in `theme.icons` is a fresh object each render — define it outside the component or wrap it in `useMemo` (the same rule as any inline `theme` value) so it doesn't churn the editor's re-rendering.
-
-To replace an icon for a single editor instance, layer it onto the `theme` array — the same mechanism as style overrides:
+To replace an icon of another theme, layer the new icon onto the `theme` array — the same mechanism as style overrides:
 
 ```tsx
 theme={[githubDarkTheme, { icons: { add: iconFromSvg('<svg…>') } }]}
 ```
 
-### Initial expansion & `collapse`
+> [!CAUTION]
+> A **string** passed to `iconFromSvg` is interned — identical markup returns the same `IconDefinition` object every time — so the result is referentially stable and safe to write inline, like in this example. The other forms aren't: a React **element**, a pre-built **`IconDefinition`**, or a raw React node placed directly in `theme.icons` produces a new object on every render. Define that value outside the component, or wrap it in `useMemo` (the same rule as any inline `theme` value), so its changing reference doesn't churn the editor's re-rendering.
+
+[![▶ Live example: Custom icons](https://img.shields.io/badge/▶_Live_example-Custom_icons-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react/examples/custom-icons)
+
+## `collapse` — Initial expansion
+
+The `collapse` prop determines at what level the tree is expanded to when initially loading:
+- `false`: fully open, all nodes expanded all the way down
+- `true`: fully closed
 
 The `collapse` prop can take a `boolean` value, in which case the data is initialised with *all* nodes either closed (`true`) or open (`false`). However a `number` value is probably more useful here — this specifies a nesting depth after which nodes will be closed. A `FilterFunction` with the same signature as the edit restrictions can also be provided for more fine-grained control of the initial display state.
 

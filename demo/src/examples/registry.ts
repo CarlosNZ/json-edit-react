@@ -65,7 +65,8 @@ const allExamples: Record<string, ExampleDef> = {
   'heat-map': {
     kind: 'static',
     title: 'Heat map',
-    blurb: 'A static example showing a heat map of temperatures across different cities.',
+    blurb:
+      'Drive styling from the data itself with Style Functions — give a theme element a function of the node instead of a fixed value. Here, a `number` function paints every temperature on a cold-blue → hot-red gradient by its value, while a `property` function tints each country by the average of its cities. Both merge over whichever base theme you pick, so switch the theme above and the heat map stays lit — then edit a temperature and watch its colour shift live.',
     load: () => import('./static/heat-map/Example'),
     code: () => import('./static/heat-map/Example.tsx?raw'),
   },
@@ -228,6 +229,14 @@ const allExamples: Record<string, ExampleDef> = {
       "Replace the built-in Edit / Copy / Delete glyphs via `theme.icons`, each authored a different way: a hand-written `IconDefinition`, a React `<svg>` through `iconFromSvg`, and a plain SVG string through `iconFromSvg`. Hover a row to reveal them, then switch the theme — the glyphs recolour via `currentColor`, except the Copy icon's fixed amber back page, showing a glyph can carry some of its own colour and still be themeable.",
     load: () => import('./static/custom-icons/Example'),
     code: () => import('./static/custom-icons/Example.tsx?raw'),
+  },
+  'theme-overrides': {
+    kind: 'static',
+    title: 'Theme overrides',
+    blurb:
+      'Layer your own styling over any base theme. The `theme` prop takes an array — the base theme, then override layers that merge on top (later wins, with style functions applied last). Here fixed edit/delete icon colours, bold-italic booleans, green/red boolean tints, and hex-string colour swatches all stay pinned as you switch the base theme above.',
+    load: () => import('./static/theme-overrides/Example'),
+    code: () => import('./static/theme-overrides/Example.tsx?raw'),
   },
   'validation-flagging': {
     kind: 'static',
