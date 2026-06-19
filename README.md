@@ -680,17 +680,22 @@ const MyApp = () => {
 
 ### Customising styles — the `theme` object
 
-However, you can pass in your own theme object, or part thereof. The theme structure is as follows (this is the "default" theme definition):
+However, you can pass in your own theme object, or part thereof. A theme object looks like the following (this is the "default" theme definition):
 
 ```js
 {
   displayName: 'Default',
-  // icons: { … },  // optional per-glyph IconDefinitions — see "Icons" below
+  icons: { … },  // optional per-glyph IconDefinitions — see "Icons" below
   styles: {
     container: {
       backgroundColor: '#f6f6f6',
       fontFamily: 'monospace',
     },
+    // collection: {},
+    // collectionElement: {},
+    // headerRow: {},
+    // valueRow: {},
+    // dropZone: {},
     property: '#292929',
     bracket: { color: '#002b36', fontWeight: 'bold' },
     itemCount: { color: '#0000004d', fontStyle: 'italic' },
@@ -735,6 +740,7 @@ theme={[
         },
       ]}
 ```
+
 
 Which would change the "Edit" icon and boolean values from this:  
 <img width="218" alt="Github Dark theme original" src="image/theme_edit_before.png">  

@@ -1,5 +1,5 @@
 import { useEffect, useRef, lazy, Suspense, useMemo, useCallback } from 'react'
-import { useSearch, useLocation } from 'wouter'
+import { useSearch, useLocation, Link as RouterLink } from 'wouter'
 import JSON5 from 'json5'
 import {
   Theme,
@@ -48,6 +48,7 @@ import {
 import logoSVG from './image/logo.svg'
 import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions, type DemoPayload } from './demoData'
+import { exampleSlugByDataSet } from './examples/registry'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { getLineHeight, truncate } from './helpers'
@@ -109,6 +110,8 @@ function App() {
   const queryParams = new URLSearchParams(searchString)
   const selectedDataSet = queryParams.get('data') ?? 'intro'
   const dataDefinition = demoDataDefinitions[selectedDataSet]
+  // If this data set has a mirrored example page, link to its source.
+  const exampleSlug = exampleSlugByDataSet[selectedDataSet]
 
   const [state, setState] = useState<AppState>({
     rootName: dataDefinition.rootName ?? 'data',
@@ -542,205 +545,205 @@ function App() {
                   <Spinner label="Loading dataset…" />
                 </Flex>
               ) : (
-              <RenderProfiler>
-                <JsonEditor<typeof data>
-                  data={data}
-                  setData={setData}
-                  rootName={rootName}
-                  theme={editorTheme}
-                  indent={indent}
-                  onUpdate={async (nodeData) => {
-                    // §17: one `onUpdate`. The datasets' per-operation helpers
-                    // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
-                    // as the catch-all (delete/rename/move).
-                    const runDemoUpdate = () => {
-                      if (nodeData.event === 'edit' && activePayload?.onEdit)
-                        return activePayload.onEdit(nodeData)
-                      if (nodeData.event === 'add' && activePayload?.onAdd)
-                        return activePayload.onAdd(nodeData)
-                      return (activePayload?.onUpdate ?? (() => undefined))(
-                        nodeData,
-                        toast as (options: unknown) => void
-                      )
-                    }
-                    const result = await runDemoUpdate()
-                    // Reject (false) or silent cancel (null): pass straight
-                    // through, no commit and no post-commit side effect.
-                    if (result === false || result === null) return result
-                    // Object result (error / { value } override): pass
-                    // through to the library. `true` is a plain commit — fall
-                    // through to the side effect like void/undefined.
-                    if (result && result !== true) return result
-                    // Commit (true | void | undefined): run the post-commit
-                    // demo side effect.
-                    const { newData } = nodeData
-                    if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
-                  }}
-                  onError={
-                    activePayload?.onError
-                      ? (errorData) => {
-                          const message = activePayload.onError!(errorData)
-                          toast({
-                            title: 'ERROR 😢',
-                            description: message,
-                            status: 'error',
-                            duration: 5000,
-                            isClosable: true,
-                          })
-                        }
-                      : undefined
-                  }
-                  showErrorMessages={activePayload?.showErrorMessages}
-                  collapse={collapseLevel}
-                  collapseAnimationTime={collapseTime}
-                  showCollectionCount={
-                    showCount === 'Yes'
-                      ? true
-                      : showCount === 'When collapsed'
-                        ? 'when-collapsed'
-                        : showCount === 'When collapsed or filtered'
-                          ? 'when-collapsed-or-filtered'
-                          : false
-                  }
-                  showClipboardButton={allowCopy}
-                  onCopy={onCopy}
-                  allowEdit={allowEdit}
-                  // allowEdit={(nodeData) => typeof nodeData.value === 'string'}
-                  allowDelete={allowDelete}
-                  allowAdd={allowAdd}
-                  allowTypeSelection={activePayload?.allowTypeSelection}
-                  // allowTypeSelection={[
-                  //   'string',
-                  //   'number',
-                  //   'boolean',
-                  //   'null',
-                  //   { enum: 'Option', values: ['One', 'Two', 'Three'] },
-                  //   {
-                  //     enum: 'Hobby',
-                  //     values: ['partying', 'building stuff', 'avenging', 'time travel'],
-                  //     matchPriority: 1,
-                  //   },
-                  //   {
-                  //     enum: 'Other activities that could be quite long',
-                  //     values: ['changing', 'building stuff', 'avenging', 'money money money money'],
-                  //     matchPriority: 2,
-                  //   },
-                  // ]}
-                  allowDrag={true}
-                  searchFilter={activePayload?.searchFilter}
-                  searchText={searchText}
-                  sortKeys={sortKeys}
-                  // sortKeys={
-                  //   sortKeys
-                  //     ? (a, b) => {
-                  //         const nameRev1 = String(a[0]).length
-                  //         const nameRev2 = String(b[0]).length
-                  //         if (nameRev1 < nameRev2) {
-                  //           return -1
-                  //         }
-                  //         if (nameRev1 > nameRev2) {
-                  //           return 1
-                  //         }
-                  //         return 0
-                  //       }
-                  //     : false
-                  // }
-                  defaultValue={activePayload?.defaultValue ?? defaultNewValue}
-                  newKeyOptions={activePayload?.newKeyOptions}
-                  showArrayIndexes={showIndexes}
-                  arrayIndexStart={arraysFromOne ? 1 : 0}
-                  showStringQuotes={showStringQuotes}
-                  minWidth={'min(500px, 95vw)'}
-                  maxWidth="min(670px, 90vw)"
-                  className="block-shadow"
-                  stringTruncateLength={90}
-                  customNodeDefinitions={customNodeDefinitions}
-                  customText={activePayload?.customTextDefinitions}
-                  // icons={{ chevron: <IconCancel size="1.2em" /> }}
-                  // customButtons={[
-                  //   {
-                  //     Element: () => (
-                  //       <svg fill="none" viewBox="0 0 24 24" height="1em" width="1em">
-                  //         <path
-                  //           fill="currentColor"
-                  //           fillRule="evenodd"
-                  //           d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 2c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11z"
-                  //           clipRule="evenodd"
-                  //         />
-                  //         <path fill="currentColor" d="M16 12l-6 4.33V7.67L16 12z" />
-                  //       </svg>
-                  //     ),
-                  //     onClick: (nodeData, e) => console.log(nodeData),
-                  //   },
-                  // ]}
-                  onChange={activePayload?.onChange ?? undefined}
-                  jsonParse={JSON5.parse}
-                  keyboardControls={
-                    {
-                      // cancel: 'Tab',
-                      // confirm: { key: 'Enter', modifier: 'Meta' },
-                      // objectConfirm: { key: 'Enter', modifier: 'Shift' },
-                      // stringLineBreak: { key: 'Enter' },
-                      // stringConfirm: { key: 'Enter', modifier: 'Meta' },
-                      // clipboardModifier: ['Alt', 'Shift'],
-                      // collapseModifier: 'Control',
-                      // booleanConfirm: 'Enter',
-                      // booleanToggle: 'r',
-                      // tabForward: { key: 'Tab', modifier: 'Shift' },
-                      // tabBack: { key: 'Tab' },
-                    }
-                  }
-                  // insertAtBeginning="object"
-                  // baseFontSize={20}
-                  TextEditor={
-                    customTextEditor
-                      ? (props) => (
-                          <Suspense
-                            fallback={
-                              <div
-                                className="loading"
-                                style={{ height: `${getLineHeight(data)}lh` }}
-                              >
-                                <Loading text="Loading code editor" />
-                              </div>
-                            }
-                          >
-                            <CodeEditor {...props} theme={theme?.displayName ?? ''} />
-                          </Suspense>
+                <RenderProfiler>
+                  <JsonEditor<typeof data>
+                    data={data}
+                    setData={setData}
+                    rootName={rootName}
+                    theme={editorTheme}
+                    indent={indent}
+                    onUpdate={async (nodeData) => {
+                      // §17: one `onUpdate`. The datasets' per-operation helpers
+                      // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
+                      // as the catch-all (delete/rename/move).
+                      const runDemoUpdate = () => {
+                        if (nodeData.event === 'edit' && activePayload?.onEdit)
+                          return activePayload.onEdit(nodeData)
+                        if (nodeData.event === 'add' && activePayload?.onAdd)
+                          return activePayload.onAdd(nodeData)
+                        return (activePayload?.onUpdate ?? (() => undefined))(
+                          nodeData,
+                          toast as (options: unknown) => void
                         )
-                      : undefined
-                  }
-                  // collapseClickZones={['property', 'header']}
-                  onEditEvent={(e) => {
-                    // A session is "editing" from `start*` until it closes with
-                    // `commit*`/`cancel*`. `submit*` happens mid-session (the
-                    // editor may still be open during a `hold()` gate), so it
-                    // mustn't flip the flag; settlement/instant events don't
-                    // either.
-                    if (e.event.startsWith('start')) setIsEditing(true)
-                    else if (e.event.startsWith('commit') || e.event.startsWith('cancel'))
-                      setIsEditing(false)
-                  }}
-                  onCollapse={(input) => {
-                    // Showcase the onCollapse callback — only while the
-                    // External Control panel is on screen (fires for both
-                    // handle-driven and user chevron-click collapses).
-                    if (!showExternalControl) return
-                    const label = input.path.length > 0 ? input.path.join('.') : 'root'
-                    toast({
-                      title: `${input.collapsed ? 'Collapsed' : 'Expanded'} ${label}`,
-                      status: 'info',
-                      duration: 2000,
-                      isClosable: true,
-                    })
-                  }}
-                  editorRef={editorRef}
-                  // translations={{
-                  //   EMPTY_STRING: 'Nah',
-                  // }}
-                  showIconTooltips
-                />
-              </RenderProfiler>
+                      }
+                      const result = await runDemoUpdate()
+                      // Reject (false) or silent cancel (null): pass straight
+                      // through, no commit and no post-commit side effect.
+                      if (result === false || result === null) return result
+                      // Object result (error / { value } override): pass
+                      // through to the library. `true` is a plain commit — fall
+                      // through to the side effect like void/undefined.
+                      if (result && result !== true) return result
+                      // Commit (true | void | undefined): run the post-commit
+                      // demo side effect.
+                      const { newData } = nodeData
+                      if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
+                    }}
+                    onError={
+                      activePayload?.onError
+                        ? (errorData) => {
+                            const message = activePayload.onError!(errorData)
+                            toast({
+                              title: 'ERROR 😢',
+                              description: message,
+                              status: 'error',
+                              duration: 5000,
+                              isClosable: true,
+                            })
+                          }
+                        : undefined
+                    }
+                    showErrorMessages={activePayload?.showErrorMessages}
+                    collapse={collapseLevel}
+                    collapseAnimationTime={collapseTime}
+                    showCollectionCount={
+                      showCount === 'Yes'
+                        ? true
+                        : showCount === 'When collapsed'
+                          ? 'when-collapsed'
+                          : showCount === 'When collapsed or filtered'
+                            ? 'when-collapsed-or-filtered'
+                            : false
+                    }
+                    showClipboardButton={allowCopy}
+                    onCopy={onCopy}
+                    allowEdit={allowEdit}
+                    // allowEdit={(nodeData) => typeof nodeData.value === 'string'}
+                    allowDelete={allowDelete}
+                    allowAdd={allowAdd}
+                    allowTypeSelection={activePayload?.allowTypeSelection}
+                    // allowTypeSelection={[
+                    //   'string',
+                    //   'number',
+                    //   'boolean',
+                    //   'null',
+                    //   { enum: 'Option', values: ['One', 'Two', 'Three'] },
+                    //   {
+                    //     enum: 'Hobby',
+                    //     values: ['partying', 'building stuff', 'avenging', 'time travel'],
+                    //     matchPriority: 1,
+                    //   },
+                    //   {
+                    //     enum: 'Other activities that could be quite long',
+                    //     values: ['changing', 'building stuff', 'avenging', 'money money money money'],
+                    //     matchPriority: 2,
+                    //   },
+                    // ]}
+                    allowDrag={true}
+                    searchFilter={activePayload?.searchFilter}
+                    searchText={searchText}
+                    sortKeys={sortKeys}
+                    // sortKeys={
+                    //   sortKeys
+                    //     ? (a, b) => {
+                    //         const nameRev1 = String(a[0]).length
+                    //         const nameRev2 = String(b[0]).length
+                    //         if (nameRev1 < nameRev2) {
+                    //           return -1
+                    //         }
+                    //         if (nameRev1 > nameRev2) {
+                    //           return 1
+                    //         }
+                    //         return 0
+                    //       }
+                    //     : false
+                    // }
+                    defaultValue={activePayload?.defaultValue ?? defaultNewValue}
+                    newKeyOptions={activePayload?.newKeyOptions}
+                    showArrayIndexes={showIndexes}
+                    arrayIndexStart={arraysFromOne ? 1 : 0}
+                    showStringQuotes={showStringQuotes}
+                    minWidth={'min(500px, 95vw)'}
+                    maxWidth="min(670px, 90vw)"
+                    className="block-shadow"
+                    stringTruncateLength={90}
+                    customNodeDefinitions={customNodeDefinitions}
+                    customText={activePayload?.customTextDefinitions}
+                    // icons={{ chevron: <IconCancel size="1.2em" /> }}
+                    // customButtons={[
+                    //   {
+                    //     Element: () => (
+                    //       <svg fill="none" viewBox="0 0 24 24" height="1em" width="1em">
+                    //         <path
+                    //           fill="currentColor"
+                    //           fillRule="evenodd"
+                    //           d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 2c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11z"
+                    //           clipRule="evenodd"
+                    //         />
+                    //         <path fill="currentColor" d="M16 12l-6 4.33V7.67L16 12z" />
+                    //       </svg>
+                    //     ),
+                    //     onClick: (nodeData, e) => console.log(nodeData),
+                    //   },
+                    // ]}
+                    onChange={activePayload?.onChange ?? undefined}
+                    jsonParse={JSON5.parse}
+                    keyboardControls={
+                      {
+                        // cancel: 'Tab',
+                        // confirm: { key: 'Enter', modifier: 'Meta' },
+                        // objectConfirm: { key: 'Enter', modifier: 'Shift' },
+                        // stringLineBreak: { key: 'Enter' },
+                        // stringConfirm: { key: 'Enter', modifier: 'Meta' },
+                        // clipboardModifier: ['Alt', 'Shift'],
+                        // collapseModifier: 'Control',
+                        // booleanConfirm: 'Enter',
+                        // booleanToggle: 'r',
+                        // tabForward: { key: 'Tab', modifier: 'Shift' },
+                        // tabBack: { key: 'Tab' },
+                      }
+                    }
+                    // insertAtBeginning="object"
+                    // baseFontSize={20}
+                    TextEditor={
+                      customTextEditor
+                        ? (props) => (
+                            <Suspense
+                              fallback={
+                                <div
+                                  className="loading"
+                                  style={{ height: `${getLineHeight(data)}lh` }}
+                                >
+                                  <Loading text="Loading code editor" />
+                                </div>
+                              }
+                            >
+                              <CodeEditor {...props} theme={theme?.displayName ?? ''} />
+                            </Suspense>
+                          )
+                        : undefined
+                    }
+                    // collapseClickZones={['property', 'header']}
+                    onEditEvent={(e) => {
+                      // A session is "editing" from `start*` until it closes with
+                      // `commit*`/`cancel*`. `submit*` happens mid-session (the
+                      // editor may still be open during a `hold()` gate), so it
+                      // mustn't flip the flag; settlement/instant events don't
+                      // either.
+                      if (e.event.startsWith('start')) setIsEditing(true)
+                      else if (e.event.startsWith('commit') || e.event.startsWith('cancel'))
+                        setIsEditing(false)
+                    }}
+                    onCollapse={(input) => {
+                      // Showcase the onCollapse callback — only while the
+                      // External Control panel is on screen (fires for both
+                      // handle-driven and user chevron-click collapses).
+                      if (!showExternalControl) return
+                      const label = input.path.length > 0 ? input.path.join('.') : 'root'
+                      toast({
+                        title: `${input.collapsed ? 'Collapsed' : 'Expanded'} ${label}`,
+                        status: 'info',
+                        duration: 2000,
+                        isClosable: true,
+                      })
+                    }}
+                    editorRef={editorRef}
+                    // translations={{
+                    //   EMPTY_STRING: 'Nah',
+                    // }}
+                    showIconTooltips
+                  />
+                </RenderProfiler>
               )}
             </Suspense>
           </Box>
@@ -1146,6 +1149,11 @@ function App() {
           <Box maxW={350} pt={4}>
             {dataDefinition.description}
           </Box>
+          {exampleSlug && (
+            <Link as={RouterLink} href={`/examples/${exampleSlug}`} color="accent" fontSize="sm">
+              View the source code for this example
+            </Link>
+          )}
         </VStack>
       </Flex>
       <Box h={50} />
