@@ -177,8 +177,15 @@ const allExamples: Record<string, ExampleDef> = {
   'custom-keys': {
     kind: 'static',
     title: 'Custom node keys',
-    demoDataSet: 'customKeys',
-    blurb: blurbs.customKeys,
+    blurb:
+      'This dossier demonstrates the `keyComponent` property of Custom Nodes — a definition can render its own component in place of the property label, for both value *and* collection nodes.\n\n' +
+      'Five inline definitions are at work here:\n\n' +
+      '- Keys starting with `_` are *classified* (italic + 🔒). Try expanding `_emergencyContact` — this works on collection keys, not just leaf values.\n' +
+      '- Keys starting with `REDACTED_` are blacked out — the original key is preserved in the data and shown on hover.\n' +
+      '- Codename keys (`M`, `Q`, `dob`, `bp`) get an inline expansion via a shared `componentProps` map.\n' +
+      '- Keys ending in `!` get a ⚠️ priority badge.\n' +
+      '- URLs under `Field Reports` use `keyComponent` *and* `component` in one definition — 🔗 in the key, clickable anchor in the value.\n\n' +
+      'Double-click any customised key to enter the standard key-edit input. Try renaming `REDACTED_passportId` to drop the prefix and watch the redaction lift.',
     load: () => import('./static/custom-keys/Example'),
     code: () => import('./static/custom-keys/Example.tsx?raw'),
   },

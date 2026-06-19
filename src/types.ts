@@ -605,8 +605,8 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   // commits, the session stays open, and the thrown message surfaces via
   // `onError` (inline error + observer callback). Also runs on an
   // `editOnTypeSwitch` switch to seed the editor from the node's current
-  // value (a throw there seeds the value's string form for the user to fix;
-  // without the hook the buffer seeds with `defaultValue`). Must pass
+  // value (a throw there isn't a reject — the seed falls back to
+  // `defaultValue`, the same as switching with no hook). Must pass
   // already-correct values through unchanged — the buffer holds the raw
   // committed value until the editor's first keystroke.
   fromStandardType?: (value: unknown, nodeData: NodeData, componentProps?: T) => unknown

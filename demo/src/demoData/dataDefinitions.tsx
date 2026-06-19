@@ -413,21 +413,6 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       }
     },
   },
-  customKeys: {
-    name: '🕵️ Custom Node keys',
-    description: <Description>{blurbs.customKeys}</Description>,
-    rootName: 'dossier',
-    collapse: 2,
-    load: async () => {
-      const m = await import('../examples/static/custom-keys/Example')
-      return {
-        data: m.initialData,
-        allowAdd: m.allowAdd,
-        allowDelete: m.allowDelete,
-        customNodeDefinitions: m.customNodeDefinitions,
-      }
-    },
-  },
   customComponentLibrary: {
     name: '📚 Custom Component Library',
     description: <Description>{blurbs.customComponentLibrary}</Description>,

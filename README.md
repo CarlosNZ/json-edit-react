@@ -1144,7 +1144,7 @@ Plus a handful of layout/interaction extras — `styles` / `getStyles` (theme st
 > [!WARNING]
 > The colon after the key is **not** rendered for you — your component owns the entire key slot. And `showKey: false` suppresses the key slot completely, including any `keyComponent`.
 
-See the [Custom Keys data set](https://carlosnz.github.io/json-edit-react/?data=customKeys) in the demo for short reference implementations (classified-field markers, redacted keys, priority badges, and a definition that uses both slots together).
+[![▶ Live example: Custom node keys](https://img.shields.io/badge/▶_Live_example-Custom_node_keys-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-keys)
 
 ### Decorating the default node — `passOriginalNode`
 

@@ -45,17 +45,6 @@ export const blurbs = {
   You can also see how the property count text changes depending on the data. This is using dynamic [Custom Text](https://github.com/CarlosNZ/json-edit-react#custom-text) definitions.
 
   We are also using a conditional [Theme function](https://github.com/CarlosNZ/json-edit-react#themes--styles) for the character name (to make it bolder and larger than other strings).`,
-  customKeys: `This dossier demonstrates the [\`keyComponent\`](https://github.com/CarlosNZ/json-edit-react#customising-keys) property of [Custom Nodes](https://github.com/CarlosNZ/json-edit-react#custom-nodes) — a definition can render its own component in place of the property label, for both value *and* collection nodes.
-
-  Five inline definitions are at work here:
-
-  - Keys starting with \`_\` are *classified* (italic + 🔒). Try expanding \`_emergencyContact\` — this works on collection keys, not just leaf values.
-  - Keys starting with \`REDACTED_\` are blacked out — the original key is preserved in the data and shown on hover.
-  - Codename keys (\`M\`, \`Q\`, \`dob\`, \`bp\`) get an inline expansion via a shared \`componentProps\` map.
-  - Keys ending in \`!\` get a ⚠️ priority badge.
-  - URLs under \`Field Reports\` use \`keyComponent\` *and* \`component\` in one definition — 🔗 in the key, clickable anchor in the value.
-
-  Double-click any customised key to enter the standard key-edit input. Try renaming \`REDACTED_passportId\` to drop the prefix and watch the redaction lift.`,
   customComponentLibrary: `Here are examples of all the custom components available in the [Custom Component Library](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/README.md), which aims to provide ready-to-go [Custom Node definitions & components](https://github.com/CarlosNZ/json-edit-react#custom-nodes) for common data types or useful data structures.
 
   See their implementation in the [package source](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components/src) for how to use.
