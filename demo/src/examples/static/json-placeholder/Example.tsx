@@ -27,6 +27,22 @@ export { initialData }
 //   - `onChange` restricts `name` to letters/spaces and
 //     strips line breaks from a few text fields.
 
+// Search matches a person on their `name` or `username`,
+// then reveals all of that person's fields. `matchRecord`
+// is the filter toolkit's shorthand for this hand-written
+// equivalent:
+//
+// ({ path, fullData }, searchText) => {
+//   if (path?.length >= 2) {
+//     const index = path?.[0]
+//     return (
+//       matchNode({ value: fullData[index].name }, searchText) ||
+//       matchNode({ value: fullData[index].username }, searchText)
+//     )
+//   } else return false
+// }
+export const searchFilter = matchRecord({ fields: ['name', 'username'] })
+
 // `id` is never editable, and only values at level 2 or
 // deeper can be edited (so the root array and the Person
 // objects themselves stay locked).
@@ -38,10 +54,6 @@ export const allowAdd = not(byLevel(1))
 
 // Only whole Person objects (level 1) can be deleted.
 export const allowDelete = byLevel(1)
-
-// Search matches a person on their `name` or `username`,
-// then reveals all of that person's fields.
-export const searchFilter = matchRecord({ fields: ['name', 'username'] })
 
 // Adding to the root array (level 0) seeds a full Person
 // object; adding anywhere else seeds a plain string.

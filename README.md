@@ -90,7 +90,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [CSS classes](#css-classes)
   - [Style fragments](#style-fragments)
   - [Icons](#icons)
-- [`collapse` — Initial expansion](#collapse--initial-expansion)
+- [Initial expansion — `collapse`](#initial-expansion--collapse)
 - [Search \& filtering](#search--filtering)
   - [Basic search — `searchText` + `searchFilter`](#basic-search--searchtext--searchfilter)
   - [Custom search — `SearchFilterFunction`](#custom-search--searchfilterfunction)
@@ -743,6 +743,10 @@ So, to summarise, the `theme` prop can take *either*:
 
 You can play round with live editing of the themes in the [Demo app](https://carlosnz.github.io/json-edit-react-v2/?data=editTheme) with the "Edit this theme!" data set.
 
+> [!NOTE]
+> #### Sizing and scaling
+> Internally, all sizing and spacing is done in `em`s, never `px` (aside from the [`baseFontSize`](#look-and-feel--ui), which sets the "base" size). This makes scaling a lot easier — just change the `baseFontSize` prop (or set `fontSize` on the main container via targeting the class, or tweaking the [theme](#themes--styles)), and watch the *whole* component scale accordingly.
+
 ### CSS classes
 
 Another way to style the component is to target the CSS classes directly. Every element in the component has a unique class name, so you should be able to locate them in your browser inspector and override them accordingly. All class names begin with the prefix `jer-`, e.g. `jer-collection-header-row`, `jer-value-string`.
@@ -830,7 +834,7 @@ theme={[githubDarkTheme, { icons: { add: iconFromSvg('<svg…>') } }]}
 
 [![▶ Live example: Custom icons](https://img.shields.io/badge/▶_Live_example-Custom_icons-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react/examples/custom-icons)
 
-## `collapse` — Initial expansion
+## Initial expansion — `collapse`
 
 The `collapse` prop determines at what level the tree is expanded to when initially loading:
 - `false`: fully open, all nodes expanded all the way down
@@ -845,7 +849,7 @@ The `collapse` prop determines at what level the tree is expanded to when initia
 
 ### Basic search — `searchText` + `searchFilter`
 
-The displayed data can be filtered based on search input from a user. The user input should be captured independently (we don't provide a UI here) and passed in with the `searchText` prop. This input is debounced internally (time can be set with the `searchDebounceTime` prop), so no need for that as well. The values that the `searchText` are tested against is specified with the `searchFilter` prop. By default (no `searchFilter` defined), it will match against the data *values* (with case-insensitive partial matching — i.e. input "Ilb", will match value "Bilbo").
+The displayed data can be filtered based on search input from a user. The user input should be captured independently (we don't provide a UI here) and passed in with the `searchText` prop. This input is debounced internally (time can be set with the `searchDebounceTime` prop). The values that the `searchText` are tested against is specified with the `searchFilter` prop. By default (no `searchFilter` defined), it will match against the data *values* (with case-insensitive partial matching — i.e. input "Rod", will match value "Frodo").
 
 ### Custom search — `SearchFilterFunction`
 
@@ -857,20 +861,12 @@ You can specify what should be matched by setting `searchFilter` to either `"key
 
 There are two helper functions (`matchNode()` and `matchNodeKey()`) exported with the package that might make creating a search function easier (these are the functions used internally for the `"key"` and `"value"` matches described above). You can see what they do [here](https://github.com/CarlosNZ/json-edit-react/blob/574f2c1ba3e724c93ce8ab9cdba2fe8ebbbbf806/src/filterHelpers.ts#L64-L95).
 
-An example custom search function can be seen in the [Demo](#https://carlosnz.github.io/json-edit-react/?data=jsonPlaceholder) with the "Client list" data set -- the search function matches by "name" and "username", and makes the entire "Client" object visible when one matches, so it can be used to find a particular person and edit their specific details:
+An example custom search function can be seen in the [Demo](https://carlosnz.github.io/json-edit-react-v2/?data=jsonPlaceholder) with the "Client list" data set — the search function matches by "name" and "username", and makes the entire "Client" object visible when one matches, so it can be used to find a particular person and edit their specific details.
 
-```js 
-({ path, fullData }, searchText) => {
-  // Matches *any* node that shares a path (i.e. a descendent) with a matching name/username
-    if (path?.length >= 2) {
-      const index = path?.[0]
-      return (
-        matchNode({ value: fullData[index].name }, searchText) ||
-        matchNode({ value: fullData[index].username }, searchText)
-      )
-    } else return false
-  }
-```
+[![▶ Live example: Client list](https://img.shields.io/badge/▶_Live_example-Client_list-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/json-placeholder)
+
+> [!TIP]
+> `searchFilter` callbacks like the one shown here can be fiddly to write, so we've provided a [filter-function toolkit](packages/utils/src/filters/README.md) in [`@json-edit-react/utils`](https://www.npmjs.com/package/@json-edit-react/utils) — a set of small, composable predicate builders (`byKey`, `byPath`, `byLevel`, `byType`, `byValue`), position constants (`root`, `collections`, `primitives`), combinators (`and` / `or` / `not`), and search bridges (`matchRecord`, `matchesSearch`) that snap together to build both `searchFilter` and the `allow*` editing props. The `matchRecord` shown above is one of them, and because every builder is *interned*, you can write them inline — no `useMemo` — without defeating json-edit-react's fine-grained re-rendering.
 
 ## Localisation
 
@@ -909,37 +905,28 @@ Localise your implementation (or just customise the default messages) by passing
 
 Your `translations` object doesn't have to be exhaustive — only define the keys you want to modify.
 
+[![▶ Live example: Localisation](https://img.shields.io/badge/▶_Live_example-Localisation-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/localisation)
+
 ### Dynamic text — `customText`
 
-It's possible to change the various text strings displayed by the component. You can [localise it](#localisation), but you can also specify functions to override the displayed text based on certain conditions. For example, say we want the property count text (e.g. `6 items` by default) to give a summary of a certain type of node, which can look nice when collapsed. For example (taken from the [Demo](https://carlosnz.github.io/json-edit-react/?data=customNodes)):
+It's possible to change the various text strings displayed by the component. You can [localise it](#localisation), but you can also specify functions to override the displayed text based on certain conditions. For example, say we want the property count text (e.g. `6 items` by default) to give a summary of a certain type of node, which can look nice when collapsed. For example (taken from the [Demo](https://carlosnz.github.io/json-edit-react-v2/?data=customNodes)):
 
 <img width="391" alt="Custom text example" src="image/custom_text.png">
 
-The `customText` property takes an object, with any of the [localisable keys](#localisation) as keys, with a function that returns a string (or `null`, which causes it to fallback to the localised or default string). The input to these functions is the same as for [Filter functions](#filter-functions), so in this example, it would be defined like so:
+The `customText` property type is:
 
-```js
+```ts
+type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>
 
-// The function definition
-const itemCountReplacement = ({ key, value, size }) => {
-    // This returns "Steve Rogers (Marvel)" for the node summary
-    if (value instanceof Object && 'name' in value)
-      return `${value.name} (${(value)?.publisher ?? ''})`
-    // This returns "X names" for the alias lists
-    if (key === 'aliases' && Array.isArray(value))
-      return `${size} ${size === 1 ? 'name' : 'names'}`
-    // Everything else as normal
-    return null
-  }
-
-// And in component props...
-...otherProps,
-customText = {
-  ITEM_SINGLE: itemCountReplacement,
-  ITEMS_MULTIPLE: itemCountReplacement,
-}
+// i.e.
+// {
+//   ITEM_SINGLE: (nodeData) => string | null,
+//   ITEMS_MULTIPLE: (nodeData) => string | null
+//   ...etc. for other keys as desired
+// }
 ```
 
-When a search filter is active, the count switches to `ITEMS_FILTERED` (e.g. `"3 of 20 items"`). The override receives the standard `NodeData`, with `size` as the total and `visibleSize` (set on every collection node while a filter is active — see [Filter functions](#filter-functions)) as the visible count.
+[![▶ Live example: Custom text](https://img.shields.io/badge/▶_Live_example-Custom_text-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-text)
 
 ## Keyboard control
 
@@ -978,11 +965,11 @@ If (for example), you just wish to change the general "confirmation" action to "
 
 - Key names come from [this list](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values)
 - Accepted modifiers are "Meta", "Control", "Alt", "Shift"
-- On Mac, "Meta" refers to the "Cmd" key, and "Alt" refers to "Option"
+- On Mac, "Meta" refers to the <kbd>Cmd</kbd> key, and "Alt" refers to <kbd>Option</kbd>
 - If multiple modifiers are specified (in an array), *any* of them will be accepted (multi-modifier commands not currently supported)
 - You only need to specify values for `stringConfirm`, `numberConfirm`, and `booleanConfirm` if they should *differ* from your `confirm` value — they inherit whatever you set `confirm` to, including `null`.
-- To **disable** a control entirely, set it to `null`. The key is then no longer intercepted and falls through to its native browser behaviour. This is useful when the default bindings aren't appropriate for your data — for example, `{ tabForward: null, tabBack: null }` turns off Tab navigation between editable nodes so that <kbd>Tab</kbd>/<kbd>Shift-Tab</kbd> resume their normal focus-traversal behaviour. Because the per-type confirms inherit from `confirm`, setting `confirm: null` disables Enter-to-submit across string, number, boolean and null value editors at once (object/array nodes use `objectConfirm`, so disable that separately if needed). The two modifier controls, `clipboardModifier` and `collapseModifier`, can likewise be disabled with `null` or an empty array `[]`.
-- You won't be able to override system or browser behaviours: for example, on Mac "Ctrl-click" will perform a right-click, so using it as a click modifier won't work (hence we also accept "Meta"/"Cmd" as the default `clipboardModifier`).
+- To **disable** a control entirely, set it to `null`. The key is then no longer intercepted and falls through to its native browser behaviour. This is useful when the default bindings aren't appropriate for your data — for example, `{ tabForward: null, tabBack: null }` turns off Tab navigation between editable nodes so that <kbd>Tab</kbd>/<kbd>Shift-Tab</kbd> resume their normal focus-traversal behaviour. Because the per-type confirms inherit from `confirm`, setting `confirm: null` disables <kbd>Enter</kbd>-to-submit across string, number, boolean and null value editors at once (object/array nodes use `objectConfirm`, so disable that separately if needed). The two modifier controls, `clipboardModifier` and `collapseModifier`, can likewise be disabled with `null` or an empty array `[]`.
+- You won't be able to override system or browser behaviours: for example, on Mac "<kbd>Ctrl</kbd>-click" will perform a right-click, so using it as a click modifier won't work (hence we also accept "Meta"/"Cmd" as the default `clipboardModifier`).
 
 ## Custom nodes & components
 
@@ -1529,6 +1516,4 @@ import 'json-edit-react/style.css'
 
 How that import resolves depends on your bundler — most will inline or extract it so you can attach it where you need it (for example via a `<style>` element inside the shadow root, or by adding a constructed stylesheet to `shadowRoot.adoptedStyleSheets`). The stylesheet defines its custom properties on both `:root` and `:host`, so it applies correctly whether it lives in the document or in a shadow root.
 
-> [!NOTE]
-> ### About sizing and scaling
-> Internally, all sizing and spacing is done in `em`s, never `px` (aside from the [`baseFontSize`](#look-and-feel--ui), which sets the "base" size). This makes scaling a lot easier — just change the `baseFontSize` prop (or set `fontSize` on the main container via targeting the class, or tweaking the [theme](#themes--styles)), and watch the *whole* component scale accordingly.
+
