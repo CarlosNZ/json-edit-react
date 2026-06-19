@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   JsonEditor,
   type CustomComponentProps,
@@ -34,8 +34,24 @@ const initialData = {
 // --- Three bespoke components ---------------------------------
 
 // (1) Display-only. A meter bar drawn from a 0–100 number.
-const MeterBar = ({ value, canEdit, setIsEditing, getStyles, nodeData }: CustomComponentProps) => {
-  const pct = Math.max(0, Math.min(100, Number(value) || 0))
+const MeterBar = ({
+  value,
+  canEdit,
+  setIsEditing,
+  handleEdit,
+  getStyles,
+  nodeData,
+}: CustomComponentProps) => {
+  const num = Number(value) || 0
+  const pct = Math.max(0, Math.min(100, num))
+  // brightness is display-only: its edit runs through the
+  // standard number editor, not this component, so there's no
+  // commit to intercept. Instead we heal the value — if a
+  // committed brightness lands outside 0–100, snap it back.
+  // All inside the definition, no onUpdate / onChange.
+  useEffect(() => {
+    if (pct !== num) handleEdit(pct)
+  }, [num, pct, handleEdit])
   return (
     <div
       onDoubleClick={() => canEdit && setIsEditing(true)}
@@ -106,18 +122,27 @@ const WarmthSlider = ({ value, setValue, onKeyDown, getStyles, nodeData }: Custo
 const StarRating = ({ value, canEdit, handleEdit }: CustomComponentProps) => {
   const rating = Number(value) || 0
   const [hover, setHover] = useState(0)
+  const [pulse, setPulse] = useState(0)
   const active = hover || rating
   return (
-    <span style={{ display: 'inline-flex', gap: '0.1em', fontSize: '1.3em', lineHeight: 1 }}>
+    <span style={{ display: 'inline-flex', gap: '0.1em', fontSize: '2.2em', lineHeight: 1 }}>
       {[1, 2, 3, 4, 5].map((n) => (
         <span
           key={n}
-          onClick={() => canEdit && handleEdit(n)}
+          onClick={() => {
+            if (!canEdit) return
+            handleEdit(n)
+            // brief pop so a click registers even mid-hover
+            setPulse(n)
+            setTimeout(() => setPulse(0), 150)
+          }}
           onMouseEnter={() => canEdit && setHover(n)}
           onMouseLeave={() => setHover(0)}
           style={{
             cursor: canEdit ? 'pointer' : 'default',
             color: n <= active ? '#f5b301' : 'rgba(127, 127, 127, 0.35)',
+            transform: pulse === n ? 'scale(1.4)' : 'scale(1)',
+            transition: 'transform 150ms ease-out',
           }}
         >
           ★
