@@ -1150,6 +1150,8 @@ Plus a handful of layout/interaction extras — `styles` / `getStyles` (theme st
 
 Sometimes you don't want to _replace_ a node, just add to it. Set **`passOriginalNode: true`** and your component also receives **`originalNode`** and **`originalNodeKey`** — the value and key exactly as the library would have rendered them. Render those plus your decoration (a badge, a marker, a highlight) for a "default node, with extra" effect. The [`ErrorIndicator`](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/README.md) component works this way. (You may need a little CSS to line your wrapper up with the default layout.)
 
+[![▶ Live example: Decorating nodes](https://img.shields.io/badge/▶_Live_example-Decorating_nodes-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/decorating-nodes)
+
 ### Collection nodes
 
 Object and array nodes use the same two slots as value nodes, plus options for the parts a value node doesn't have. The full mapping across both: 
@@ -1169,6 +1171,8 @@ The collection-specific details:
 
 - `showCollectionWrapper: false` is the full-replacement escape hatch — no chevron, brackets, or built-in collapse, so you supply your own show/hide. Prefer the slots above for most needs.
 
+[![▶ Live example: Custom collection nodes](https://img.shields.io/badge/▶_Live_example-Custom_collection_nodes-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-collection-nodes)
+
 #### Displaying a collection as a value
 
 For a specialised object you'd rather treat as a single value — a JavaScript [`Date`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date), say — set **`renderCollectionAsValue: true`**. The whole object is passed to your `component` as one value instead of being expanded into key/value rows; your component is responsible for handling it. The [`DateObject`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components/src/DateObject) and [`EnhancedLink`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components/src/EnhancedLink) components in `@json-edit-react/components` both do this.
@@ -1177,7 +1181,7 @@ For a specialised object you'd rather treat as a single value — a JavaScript [
 
 If your node holds a non-JSON value (`BigInt`, `Date`, `Symbol`, …), editing the document as raw JSON text would lose it to the default `JSON.stringify` / `JSON.parse`. Supply a [**replacer**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify#replacer) and [**reviver**](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse#the_reviver_parameter) to serialize and restore it however you like.
 
-This is separate from [`fromStandardType`](#editing-a-non-plain-value--fromstandardtype): that handles the inline **edit buffer** (field editing and type-switching), whereas this handles **JSON text**. A non-JSON type like `BigInt` typically needs both.
+This is separate from [`fromStandardType`](#editing-a-non-plain-value--fromstandardtype): that handles the inline **edit buffer** (field editing and type-switching), whereas this handles **JSON text**. A non-JSON type like `BigInt` typically needs both, as seen in the example [above](#editing-a-non-plain-value--fromstandardtype)
 
 The [`BigInt`](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/BigInt/definition.ts) component, for example, round-trips through:
 

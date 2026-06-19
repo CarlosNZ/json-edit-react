@@ -245,6 +245,29 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/creating-types/Example'),
     code: () => import('./static/creating-types/Example.tsx?raw'),
   },
+  'decorating-nodes': {
+    kind: 'static',
+    title: 'Decorating nodes',
+    blurb:
+      'A custom component usually *replaces* a node, but it can also wrap the original. With `passOriginalNode`, the component is handed the node exactly as the library would have rendered it (`originalNode`) to embed within its own output — the default node, plus your decoration (a badge, a marker, a highlight). The pre-built `ErrorIndicator` from `@json-edit-react/components` does just this: it renders the node untouched and appends a ⚠️.\n\n' +
+      'These team scores should all be numbers, but about a third arrive as strings (`"50"` instead of `50`). A `condition` flags those string values, so each invalid score gets a warning marker. Switch one to the `number` type from the type selector (while editing) and the marker clears — its value carries straight over.\n\n' +
+      'Scores are randomly generated on every load: a normal distribution centred on 65 (± 15), clamped to 1–100.',
+    load: () => import('./static/decorating-nodes/Example'),
+    code: () => import('./static/decorating-nodes/Example.tsx?raw'),
+  },
+  'custom-collection-nodes': {
+    kind: 'static',
+    title: 'Custom collection nodes',
+    blurb:
+      'Custom *collection* nodes (objects and arrays) get two slots a value node lacks, plus flags to drop the default chrome — together they turn raw JSON into real UI. `component` owns the **contents** (rendered between the brackets, with the child rows handed to you as `children`); `wrapperComponent` wraps the **whole node** (it arrives as `children`).\n\n' +
+      'This profile uses them at three levels of takeover:\n\n' +
+      '- **note** — `wrapperComponent` only. The node renders exactly as normal (chevron, brackets, rows) inside a callout frame; the contents are untouched.\n' +
+      '- **skills** — `component` only, with `showCollectionWrapper: false` to drop the brackets. The default rows still arrive as `children`; they are just re-wrapped in a panel.\n' +
+      '- **profile** — *both* slots, with the brackets and key turned off too, so no default chrome remains. The `component` ignores `children` and builds its own avatar and field list straight from the data, while the `wrapperComponent` supplies the card and its title.\n\n' +
+      'So `component` is always handed the rows as `children`, but it can ignore them and render from `nodeData` instead — as the profile does.',
+    load: () => import('./static/custom-collection-nodes/Example'),
+    code: () => import('./static/custom-collection-nodes/Example.tsx?raw'),
+  },
   'custom-error-ui': {
     kind: 'static',
     title: 'Custom error UI',
