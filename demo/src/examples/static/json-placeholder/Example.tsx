@@ -1,7 +1,8 @@
-import { useState, type CSSProperties } from 'react'
+import { useState } from 'react'
 import { JsonEditor, type DefaultValueFunction, type OnChangeFunction } from '@json-edit-react'
 import { and, byKey, byLevel, matchRecord, not } from '@json-edit-react/utils/filters'
 import { initialData } from './data'
+import { SearchBox } from '../../kit/SearchBox'
 import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 
 export { initialData }
@@ -83,24 +84,18 @@ export const onChange: OnChangeFunction = ({ newValue, key }) => {
 
 export default function JsonPlaceholder() {
   const [data, setData] = useState(initialData)
-  // The editor filters on `searchText`; wire it to your own
-  // search box — `searchFilter` above does the matching.
+  // The editor filters on `searchText`; wire it to a search
+  // box — `searchFilter` above does the matching. The wrapping
+  // div is the positioning context for `SearchBox`, which
+  // floats over the editor's top-right corner.
   const [searchText, setSearchText] = useState('')
-  const [searchFocused, setSearchFocused] = useState(false)
 
-  // The wrapper is the positioning context for the search box,
-  // which floats over the editor's top-right corner (it widens
-  // on focus, like the search on the main demo).
   return (
     <div style={{ position: 'relative' }}>
-      <input
-        type="search"
+      <SearchBox
         value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-        onFocus={() => setSearchFocused(true)}
-        onBlur={() => setSearchFocused(false)}
-        placeholder={searchFocused ? 'Search by name or username' : '🔍'}
-        style={{ ...searchStyle, width: searchFocused ? '60%' : '5rem' }}
+        onChange={setSearchText}
+        placeholder="Search by name or username"
       />
       <JsonEditor
         data={data}
@@ -118,17 +113,4 @@ export default function JsonPlaceholder() {
       />
     </div>
   )
-}
-
-const searchStyle: CSSProperties = {
-  position: 'absolute',
-  top: '0.5em',
-  right: '0.5em',
-  zIndex: 10,
-  padding: '0.4em 0.8em',
-  fontSize: '0.9em',
-  borderRadius: 50,
-  border: '1px solid gainsboro',
-  backgroundColor: '#f6f6f6',
-  transition: 'width 0.3s',
 }
