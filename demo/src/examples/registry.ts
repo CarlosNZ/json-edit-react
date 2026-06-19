@@ -268,6 +268,15 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/custom-collection-nodes/Example'),
     code: () => import('./static/custom-collection-nodes/Example.tsx?raw'),
   },
+  'student-cards': {
+    kind: 'static',
+    title: 'Student ID cards',
+    blurb:
+      'A class roster where each entry in the `students` array is rendered as a designed ID card. A single `wrapperComponent` matches those objects by path, turns off the default brackets and key (`showCollectionWrapper: false`, `showKey: false`), and lays out the photo, name, dates and membership badge straight from the data.\n\n' +
+      'The card supplies its own colours and fonts, so it stays a polished, consistent object on every theme — while the surrounding `school` / `classroom` / `teacher` fields render with the normal editor. Flip the "Render students as ID Cards" toggle (a pre-built `BooleanToggle`) off to drop the definition and reveal the raw student objects.',
+    load: () => import('./static/student-cards/Example'),
+    code: () => import('./static/student-cards/Example.tsx?raw'),
+  },
   'custom-error-ui': {
     kind: 'static',
     title: 'Custom error UI',
