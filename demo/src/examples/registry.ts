@@ -190,6 +190,18 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/custom-component-library/Example'),
     code: () => import('./static/custom-component-library/Example.tsx?raw'),
   },
+  'date-picker': {
+    kind: 'static',
+    title: 'Date picker',
+    blurb:
+      'The pre-built `DatePicker` from `@json-edit-react/components` swaps a calendar widget in for ISO date/time strings — its built-in `condition` is the guard, so the plain-string `name` is left untouched. The same component is registered three times, each scoped to one field and handed different `componentProps`:\n\n' +
+      '- **Date only** — `startDate` sets `showTime: false`, dropping the time fields.\n' +
+      '- **Date + time** — `checkIn` keeps the defaults.\n' +
+      '- **Custom display** — `rsvpBy` passes a `formatter` to control its read-only text.\n\n' +
+      'Since `componentProps` is set per-definition, separate definitions are how you send different props to different nodes. The picker UI is the swappable `ReactDatePicker` widget, passed via `componentProps.DatePicker`.',
+    load: () => import('./static/date-picker/Example'),
+    code: () => import('./static/date-picker/Example.tsx?raw'),
+  },
   'custom-error-ui': {
     kind: 'static',
     title: 'Custom error UI',
