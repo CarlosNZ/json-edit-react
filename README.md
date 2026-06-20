@@ -113,6 +113,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [Editing as JSON — `stringifyReplacer` / `parseReviver`](#editing-as-json--stringifyreplacer--parsereviver)
 - [Overriding and extending the UI](#overriding-and-extending-the-ui)
   - [Replacing the text/code editor — `TextEditor` (`CodeEditor`)](#replacing-the-textcode-editor--texteditor-codeeditor)
+  - [Replacing the native `<select>` element](#replacing-the-native-select-element)
   - [Custom buttons](#custom-buttons)
 - [Programmatic control](#programmatic-control)
   - [Listening to the lifecycle — `onEditEvent`](#listening-to-the-lifecycle--oneditevent)
@@ -1190,7 +1191,7 @@ If your node holds a non-JSON value (`BigInt`, `Date`, `Symbol`, …), editing t
 
 This is separate from [`fromStandardType`](#editing-a-non-plain-value--fromstandardtype): that handles the inline **edit buffer** (field editing and type-switching), whereas this handles **JSON text**. A non-JSON type like `BigInt` typically needs both, as seen in the example [above](#editing-a-non-plain-value--fromstandardtype).
 
-The [`BigInt`](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/BigInt/definition.ts) component, for example, round-trips through:
+The [`BigInt`](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/src/BigInt/definition.ts) component, for example, is represented in JSON text as:
 
 ```json
 {
@@ -1198,12 +1199,21 @@ The [`BigInt`](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/co
   "value": 1234567890123456789012345678901234567890
 }
 ```
+which can then be re-parsed into a true `BigInt` when committing.
 
 ## Overriding and extending the UI
 
+**json-edit-react** aims to be unopinionated about UI implementations, so as well as being extremely [style-able](#appearance--theming), you can also swap out basic UI elements with your own, as well as adding your own [custom buttons](#custom-buttons) to the edit tools.
+
+Two UI elements ("widgets") are easily swappable — you just have to provide an alternative component that complies with the same API surface:
+- `textarea` — used for editing JSON blocks, passed in on the `TextEditor` prop
+- `select` — drop-down selectors for [type switching](#restricting-data-types--allowtypeselection), [enum selection](#enums) and [new key options](#new-key-restrictions--default-values), passed in on the `Select` prop
+
+[![▶ Live example: Swap the built-ins](https://img.shields.io/badge/▶_Live_example-Swap_the_built--ins-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/swap-the-built-ins)
+
 ### Replacing the text/code editor — `TextEditor` (`CodeEditor`)
 
-The user can edit the entire JSON object (or a sub-node) as raw text (provided you haven't disabled it using an [`allowEdit` function](#filter-functions)). By default, we just display a native HTML [textarea](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea) element for plain-text editing. However, you can offer a more sophisticated text/code editor by passing the component into the `TextEditor` prop. Your component must provide the following props for json-edit-react to use:
+By default, this is a native HTML [textarea](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea) element for plain-text editing. You can replace it with any component that offers the following API:
 
 - `value: string` — the current text
 - `onChange: (value: string) => void`  — should be called on every keystroke to update `value`
@@ -1213,13 +1223,14 @@ You can see an example in the [demo](https://carlosnz.github.io/json-edit-react/
 
 <img width="800" alt="Text editor comparison" src="image/text-editor-comparison.png">  
 
-See the codebase for the exact implementation details:
-
-- [Simple component that wraps CodeMirror](https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/CodeEditor.tsx)
-- [Prop passed to json-edit-react](https://github.com/CarlosNZ/json-edit-react/blob/d6e3c39d1fe876fa8ed267301ebecf128132b602/demo/src/App.tsx#L450-L465)
+This demo component is available from the `@json-edit-react/components` package
 
 > [!TIP]
 > True `JSON` text is rather fussy about formatting (quoted keys, no trailing commas, etc.), which can be annoying to deal with when typing by hand. I recommend accepting "looser" `JSON` text input by passing in an alternative parser, such as [JSON5](https://json5.org/) (which is what is used in the [Demo](https://carlosnz.github.io/json-edit-react/)). Set this via [the `jsonParse` prop](#custom-components--overrides-incl-localisation).
+
+### Replacing the native `<select>` element
+
+NOTE: But what about the `<input>` element?
 
 ### Custom buttons
 

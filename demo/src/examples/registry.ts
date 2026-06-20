@@ -313,7 +313,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Swap the built-ins',
     blurb:
-      'Replace JsonEditor\'s native dropdown and raw-JSON textarea with the `ReactSelect` (`react-select` wrapper) and `CodeEditor` (CodeMirror) components from `@json-edit-react/components`. Try the type selector, add a new key on the `task` object, edit the enum-typed `status` / `priority` values, or open "Edit as JSON" on any collection.',
+      'Replace the native dropdown and raw-JSON textarea with the `ReactSelect` (`react-select` wrapper) and `CodeEditor` (CodeMirror) components from `@json-edit-react/components`. Try the type selector, add a new key on the `task` object, edit the enum-typed `status` / `priority` values, or open "Edit as JSON" on any collection.',
     load: () => import('./static/swap-the-built-ins/Example'),
     code: () => import('./static/swap-the-built-ins/Example.tsx?raw'),
   },
@@ -338,11 +338,11 @@ const allExamples: Record<string, ExampleDef> = {
     title: 'Localisation',
     blurb:
       "Switch the editor's entire UI language from inside the data: the first field is a `Language` enum (English / Japanese / French), and changing it swaps the `translations` prop so every label, tooltip, count and error re-renders in the chosen language. Only the chrome translates — your data stays put.\n\n" +
-      "The rest is tuned to surface as many UI strings as possible:\n\n" +
+      'The rest is tuned to surface as many UI strings as possible:\n\n' +
       "- **Tooltips & counts** — `showIconTooltips` shows the tooltip strings on hover; `showCollectionCount` keeps item counts visible, and a search switches them to the filtered 'n of m' form.\n" +
-      "- **Errors** — only `settings` (editable values, plus new keys) and the language switch are accepted, so editing, deleting, renaming or moving anything else surfaces the localised error messages — as do renaming onto an existing key and invalid raw JSON.\n" +
+      '- **Errors** — only `settings` (editable values, plus new keys) and the language switch are accepted, so editing, deleting, renaming or moving anything else surfaces the localised error messages — as do renaming onto an existing key and invalid raw JSON.\n' +
       "- **Adding keys** — see the free-text key prompt, the `settings` dropdown, and the 'no options' message once a collection's keys run out.\n" +
-      "- **Odds & ends** — convert a `settings` value to an object to seed a default-named child; an empty property key and a truncated string cover the rest.",
+      '- **Odds & ends** — convert a `settings` value to an object to seed a default-named child; an empty property key and a truncated string cover the rest.',
     load: () => import('./static/localisation/Example'),
     code: () => import('./static/localisation/Example.tsx?raw'),
   },
@@ -351,7 +351,7 @@ const allExamples: Record<string, ExampleDef> = {
     title: 'Custom text',
     blurb:
       "`customText` overrides the editor's localisable strings with functions of the node, so the displayed text adapts to each node's content, depth and size. This music library shows three techniques at once:\n\n" +
-      '- **Aggregate counts** — an album\'s item count becomes `9 tracks · 47 min` (summed from the data); a genre\'s becomes `2 albums · 16 min`.\n' +
+      "- **Aggregate counts** — an album's item count becomes `9 tracks · 47 min` (summed from the data); a genre's becomes `2 albums · 16 min`.\n" +
       '- **Empty states** — an empty album or genre reads `No tracks yet` / `No albums yet` instead of `0 items`.\n' +
       '- **Context-aware prompts** — the add-a-key placeholder is `Name a new genre…` at the root and `New album title…` inside a genre.\n\n' +
       "Edit a track's length, or add and remove whole songs, and every summary recomputes live. Light edit rules keep each song's `title` / `seconds` intact, and tracks are numbered from 1.",
