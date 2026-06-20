@@ -1207,13 +1207,13 @@ which can then be re-parsed into a true `BigInt` when committing.
 
 Two UI elements ("widgets") are easily swappable — you just have to provide an alternative component that complies with the same API surface:
 - `textarea` — used for editing JSON blocks, passed in on the `TextEditor` prop
-- `select` — drop-down selectors for [type switching](#restricting-data-types--allowtypeselection), [enum selection](#enums) and [new key options](#new-key-restrictions--default-values), passed in on the `Select` prop
+- `select` — drop-down selectors, passed in on the `Select` prop
 
 [![▶ Live example: Swap the built-ins](https://img.shields.io/badge/▶_Live_example-Swap_the_built--ins-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/swap-the-built-ins)
 
 ### Replacing the text/code editor — `TextEditor` (`CodeEditor`)
 
-By default, this is a native HTML [textarea](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea) element for plain-text editing. You can replace it with any component that offers the following API:
+By default, this is a native HTML [`textarea`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/textarea) element for plain-text editing. You can replace it with any component that offers the following API:
 
 - `value: string` — the current text
 - `onChange: (value: string) => void`  — should be called on every keystroke to update `value`
@@ -1230,7 +1230,46 @@ This demo component is available from the `@json-edit-react/components` package
 
 ### Replacing the native `<select>` element
 
-NOTE: But what about the `<input>` element?
+Similarly, the drop-downs used in component are stock HTML [`select`](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/select) elements. Drop-downs can appear in 3 places:
+
+- [type selection](#restricting-data-types--allowtypeselection)
+- [enum options](#enums)
+- [new key options](#new-key-restrictions--default-values)
+
+You can provide any component you like that conforms to the following API:
+
+```ts
+export interface SelectProps {
+  options: string[]
+  /** Controlled value. Mutually exclusive with `defaultValue`. */
+  value?: string
+  /** Initial value when used uncontrolled — typically `''` so the
+   *  placeholder shows first. Mutually exclusive with `value`. */
+  defaultValue?: string
+  /** Fired with the selected option's value. */
+  onChange: (value: string) => void
+  /** Forwarded to the underlying input. Lets the call site keep
+   *  ownership of keyboard semantics via `handleKeyboard(...)`. */
+  onKeyDown?: (e: React.KeyboardEvent) => void
+  /** Grab focus on mount. */
+  autoFocus?: boolean
+  /** Disabled first option shown when nothing is selected. */
+  placeholder?: string
+  /** Form name / id hint. */
+  name?: string
+  /** Class applied to the inner control. */
+  className?: string
+}
+```
+
+If your drop-down component of choice has a different interface, you can create a thin wrapper component around it to translate the props accordingly. I have provided an example of this using [**react-select**](https://react-select.com/home) in the `@json-edit-react/components` repo, called [ReactSelect](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/README.md#editor-slot-widgets), so you can copy that pattern or just use that one directly (this is the component used in the [example](https://carlosnz.github.io/json-edit-react-v2/examples/swap-the-built-ins) above).
+
+#### But what about the text input element?
+
+I haven't made the main string input component swappable, for two main reasons:
+
+1. It's actually a special `textarea` that grows in width and height as the contents changes, not just a single-line `<input>`. I'm using a [bit of a hack](https://github.com/CarlosNZ/json-edit-react/blob/main/src/AutogrowTextArea.tsx) to achieve this, so it wouldn't be straightforward to just swap it out with a single component that could directly replace it.
+2. Unlike `<select>`, which has genuinely useful functionality differences in other offerings, the text input is intended to be minimal, so you can achieve (almost) the full look as any UI library just using CSS (Details for specific libraries forthcoming)/
 
 ### Custom buttons
 
