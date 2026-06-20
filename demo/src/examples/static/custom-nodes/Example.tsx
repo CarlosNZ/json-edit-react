@@ -15,9 +15,7 @@ import { matchRecord, root } from '@json-edit-react/utils/filters'
 import Ajv from 'ajv'
 import schema from './schema.json'
 import { initialData } from './data'
-import { SearchBox } from '../../kit/SearchBox'
-import { useExampleTheme } from '../../kit/exampleProps'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { SearchBox, useEditorDefaults, useEditorTheme, useToast } from '@example-resources'
 
 // Custom Nodes let you supply your own components to present
 // specialised data in a unique way. Compare the raw JSON (edit
@@ -141,17 +139,10 @@ export const styles: ThemeStyles = {
   string: ({ key }) => (key === 'name' ? { fontWeight: 'bold', fontSize: '120%' } : null),
 }
 
-type Toast = (options: {
-  title: string
-  description?: string
-  status: 'error'
-  duration?: number
-  isClosable?: boolean
-}) => void
-
-export default function CustomNodes({ toast }: { toast: Toast }) {
+export default function CustomNodes() {
+  const toast = useToast()
   const [data, setData] = useState<JsonData>(initialData)
-  const theme = useExampleTheme()
+  const theme = useEditorTheme()
   // `searchFilter` (above) matches a record on its `name`.
   const [searchText, setSearchText] = useState('')
 
@@ -183,7 +174,7 @@ export default function CustomNodes({ toast }: { toast: Toast }) {
       <JsonEditor
         data={data}
         setData={setData}
-        {...useExampleProps()} // ---cut---
+        {...useEditorDefaults()}
         rootName="Superheroes"
         collapse={2}
         onUpdate={onUpdate}

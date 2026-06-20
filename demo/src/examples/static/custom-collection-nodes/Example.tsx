@@ -6,7 +6,7 @@ import {
   type CustomWrapperProps,
   type JsonData,
 } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // Custom COLLECTION nodes (objects/arrays) get two extra slots:
 // `component` owns the CONTENTS (between the brackets) and
@@ -25,9 +25,10 @@ import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 //     builds its own UI from the data (`nodeData.value`) — an
 //     avatar + field list; the wrapper adds the card and title.
 //
-// Takeaway: `component` is handed the rows as `children`, but can
-// ignore them and render from `nodeData` instead (as profile
-// does); a `wrapperComponent` always gets the whole node.
+// Takeaway: `component` is handed the rows as `children`,
+// but can ignore them and render from `nodeData` instead (as
+// profile does); a `wrapperComponent` always gets the whole
+// node.
 //
 // Colours come from the theme via `getStyles`, and panels use
 // a translucent overlay — so it all tracks the active theme.
@@ -230,7 +231,7 @@ export default function CustomCollectionNodes() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="scientist"
       customNodeDefinitions={customNodeDefinitions}
     />

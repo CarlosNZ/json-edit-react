@@ -6,7 +6,7 @@ import {
   type NodeData,
 } from '@json-edit-react'
 import { booleanToggleDefinition } from '@json-edit-react/components'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // A from-scratch BigInt node — for values JSON and plain JS
 // numbers can't hold (these run to 128-bit, far past Number's
@@ -133,7 +133,7 @@ export default function BigIntExample() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="user"
       customNodeDefinitions={customNodeDefinitions}
       jsonStringify={jsonStringify}

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { JsonEditor, type UpdateFunction } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // `onUpdate` runs on every change. Branch on `event`, and
 // return a value to accept / transform / reject / cancel it.
@@ -62,7 +62,7 @@ export default function OnUpdateBasics() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="account"
       onUpdate={onUpdate}
     />

@@ -10,8 +10,7 @@ import {
 } from '@json-edit-react'
 import Ajv from 'ajv'
 import schema from './schema.json'
-import { SearchBox } from '../../kit/SearchBox'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { SearchBox, useEditorDefaults, useToast } from '@example-resources'
 
 // Full JSON Schema validation via a 3rd-party validator. A
 // compiled Ajv validator runs inside `onUpdate`: a
@@ -86,15 +85,8 @@ export const initialData = {
   category: 'human',
 }
 
-type Toast = (options: {
-  title: string
-  description?: string
-  status: 'error'
-  duration?: number
-  isClosable?: boolean
-}) => void
-
-export default function JsonSchemaValidation({ toast }: { toast: Toast }) {
+export default function JsonSchemaValidation() {
+  const toast = useToast()
   const [data, setData] = useState<JsonData>(initialData)
   const [searchText, setSearchText] = useState('')
 
@@ -117,7 +109,7 @@ export default function JsonSchemaValidation({ toast }: { toast: Toast }) {
       <JsonEditor
         data={data}
         setData={setData}
-        {...useExampleProps()} // ---cut---
+        {...useEditorDefaults()}
         rootName="data"
         collapse={2}
         onUpdate={onUpdate}

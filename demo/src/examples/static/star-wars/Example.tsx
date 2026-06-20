@@ -3,8 +3,7 @@ import { JsonEditor, type FilterFunction, type TypeFilterFunction } from '@json-
 import { datePickerDefinition, hyperlinkDefinition } from '@json-edit-react/components'
 import { byType, primitives } from '@json-edit-react/utils/filters'
 import { initialData } from './data'
-import { SearchBox } from '../../kit/SearchBox'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { SearchBox, useEditorDefaults } from '@example-resources'
 
 export { initialData }
 
@@ -129,7 +128,7 @@ export default function StarWars() {
       <JsonEditor
         data={data}
         setData={setData}
-        {...useExampleProps()} // ---cut---
+        {...useEditorDefaults()}
         rootName="Star Wars data"
         collapse={1}
         allowEdit={allowEdit}

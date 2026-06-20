@@ -7,7 +7,7 @@ import {
 } from '@json-edit-react'
 import { datePickerDefinition } from '@json-edit-react/components'
 import { ReactDatePicker } from '@json-edit-react/components/widgets'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // A friendly playground for the editor — poke at every kind
 // of value and see how editing works. Click the "edit" icon
@@ -75,7 +75,7 @@ export default function Intro() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="data"
       collapse={2}
       customNodeDefinitions={customNodeDefinitions}

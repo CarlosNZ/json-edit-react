@@ -7,7 +7,7 @@ import {
   type JsonData,
   type NodeData,
 } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // "Letting users create your type": custom node types AND an
 // enum in one Type selector — they're a unified system. Edit
@@ -132,7 +132,7 @@ export default function CreatingTypes() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="place"
       customNodeDefinitions={customNodeDefinitions}
       allowTypeSelection={[...valueDataTypes, 'Colour', 'Location', continentEnum]}

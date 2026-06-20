@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { JsonEditor, type JsonData } from '@json-edit-react'
 import { errorIndicatorDefinition } from '@json-edit-react/components'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // "Decorating the default node" — wrap the library's own
 // rendering instead of replacing it. `passOriginalNode` hands
@@ -57,7 +57,7 @@ export default function DecoratingNodes() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="scores"
       customNodeDefinitions={customNodeDefinitions}
     />

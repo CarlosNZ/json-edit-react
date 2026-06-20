@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
-import { Box, Button, Center, Flex, Heading, Icon, Spinner, useToast } from '@chakra-ui/react'
+import { Box, Button, Center, Flex, Heading, Icon, Spinner } from '@chakra-ui/react'
 import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import { FaGithub, FaNpm } from 'react-icons/fa'
 import { defaultTheme, type Theme } from '@json-edit-react'
@@ -39,11 +39,6 @@ const Loading = () => (
 export const ExamplePage = ({ slug }: { slug: string }) => {
   const navigate = useLocation()[1]
   const def = examples[slug]
-
-  // Injected into every rendered example (see ExampleComponentProps) so an
-  // example can surface its event stream as notifications — the shell owns the
-  // toast styling, the example just fires it.
-  const toast = useToast()
 
   const [theme, setTheme] = useState<Theme>(defaultTheme)
   const [source, setSource] = useState<string | null>(null)
@@ -190,7 +185,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
             // `useExamplePalette`) to theme its own chrome.
             <ExampleEditorProvider value={editorProps}>
               <Suspense fallback={<Loading />}>
-                {ExampleComponent && <ExampleComponent toast={toast} />}
+                {ExampleComponent && <ExampleComponent />}
               </Suspense>
             </ExampleEditorProvider>
           )}
@@ -208,7 +203,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
                 <Box className="block-shadow" borderRadius="md">
                   <ExampleEditorProvider value={editorProps}>
                     <Suspense fallback={<Loading />}>
-                      {ExampleComponent && <ExampleComponent toast={toast} />}
+                      {ExampleComponent && <ExampleComponent />}
                     </Suspense>
                   </ExampleEditorProvider>
                 </Box>

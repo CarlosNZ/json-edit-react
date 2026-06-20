@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { JsonEditor, type OnChangeFunction } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // `onChange` runs on every keystroke (not on commit), and
 // MUST return a value — what it returns becomes the new
@@ -41,7 +41,7 @@ export default function OnChangeValidation() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="signup"
       onChange={onChange}
     />

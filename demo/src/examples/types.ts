@@ -1,14 +1,10 @@
 import { type ComponentType } from 'react'
-import { type CreateToastFnReturn } from '@chakra-ui/react'
 
-// Props the shell injects into a rendered example component. `toast` is Chakra's
-// toast fn (from the shell's `useToast`), so an example can surface its event /
-// notification stream without wiring up its own toast styling. The shell always
-// provides it; examples that don't need it (a plain prop-less component) stay
-// assignable, so this is required rather than optional.
-export interface ExampleComponentProps {
-  toast: CreateToastFnReturn
-}
+// The shell injects no props into example components — they pull what
+// they need (editor defaults, toast, …) from `@example-resources`
+// themselves. Kept as an explicit empty props type so the `load`
+// signatures below read clearly.
+export type ExampleComponentProps = Record<string, never>
 
 interface ExampleBase {
   title: string

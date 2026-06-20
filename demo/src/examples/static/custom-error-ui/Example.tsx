@@ -6,7 +6,7 @@ import {
   type OnErrorFunction,
   type UpdateFunction,
 } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults, useToast } from '@example-resources'
 
 // Bring your own error UI. Here the "server" is read-only:
 // `onUpdate` rejects every change, `showErrorMessages` is off
@@ -20,14 +20,6 @@ import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 //   - rename a key onto a sibling that already exists (e.g.
 //     `port` → `host`) → a KEY_EXISTS error, raised by the
 //     editor itself before `onUpdate` even runs
-type Toast = (options: {
-  title: string
-  description: string
-  status: 'error'
-  duration?: number
-  isClosable?: boolean
-  position?: 'bottom-left'
-}) => void
 
 const initialData = {
   host: 'api.example.com',
@@ -53,7 +45,8 @@ const LABELS: Partial<Record<JerErrorCode, string>> = {
   KEY_EXISTS: 'Duplicate key',
 }
 
-export default function CustomErrorUi({ toast }: { toast: Toast }) {
+export default function CustomErrorUi() {
+  const toast = useToast()
   const [data, setData] = useState<JsonData>(initialData)
 
   // The custom error UI: every error becomes a toast spelling
@@ -74,7 +67,7 @@ export default function CustomErrorUi({ toast }: { toast: Toast }) {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="config"
       showErrorMessages={false}
       onUpdate={onUpdate}

@@ -6,17 +6,17 @@ import {
   type JsonData,
 } from '@json-edit-react'
 import { booleanToggleDefinition } from '@json-edit-react/components'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
-// Student ID cards. Only the objects inside `students` are matched
-// (by their path), and each renders as a self-contained card: a
-// `wrapperComponent` with the brackets and key turned off, drawing
-// its own layout straight from the node's data.
+// Student ID cards. Only the objects inside `students` are
+// matched (by their path), and each renders as a self-contained
+// card: a `wrapperComponent` with the brackets and key turned
+// off, drawing its own layout straight from the node's data.
 //
-// Unlike the "scientist" example, the card sets its OWN colours and
-// fonts — it's a designed object, not themed chrome — so it looks
-// identical on every editor theme. The surrounding fields (school,
-// classroom, teacher) render normally.
+// Unlike the "scientist" example, the card sets its OWN colours
+// and fonts — it's a designed object, not themed chrome — so it
+// looks identical on every editor theme. The surrounding fields
+// (school, classroom, teacher) render normally.
 //
 // The "Render students as ID Cards" boolean (a pre-built
 // BooleanToggle) gates the card definition: turn it off and the
@@ -69,7 +69,8 @@ const initialData = {
   students,
 }
 
-// The card's own design palette (independent of the editor theme).
+// The card's own design palette (independent of the editor
+// theme).
 const SANS = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
 const INK = '#1e293b' // headings
 const SUBTLE = '#64748b' // labels
@@ -96,9 +97,9 @@ const Field = ({ label, value }: { label: string; value: string }) => (
 )
 
 // `wrapperComponent` for a student: ignores the node's default
-// rendering entirely and lays out a card from `value` (the student
-// object). The definition turns off the brackets and key, so this
-// card is all that shows.
+// rendering entirely and lays out a card from `value` (the
+// student object). The definition turns off the brackets and
+// key, so this card is all that shows.
 const StudentCard = ({ value }: CustomWrapperProps) => {
   const s = value as unknown as Student
   return (
@@ -243,7 +244,7 @@ export default function StudentCards() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="class"
       customNodeDefinitions={customNodeDefinitions}
     />

@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import { JsonEditor, ThemeStyles } from '@json-edit-react'
-import { SearchBox } from '../../kit/SearchBox'
-import { useExampleTheme } from '../../kit/exampleProps'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { SearchBox, useEditorDefaults, useEditorTheme } from '@example-resources'
 
 const initialData = {
   'New Zealand': {
@@ -38,8 +36,10 @@ const initialData = {
 const MIN_TEMP = -30
 const MAX_TEMP = 45
 
-const LIGHTNESS = 0.65 // OKLCH L — perceived lightness, held constant
-const CHROMA = 0.25 // OKLCH C — perceived colorfulness, held constant
+// OKLCH L — perceived lightness, held constant
+const LIGHTNESS = 0.65
+// OKLCH C — perceived colorfulness, held constant
+const CHROMA = 0.25
 const HUE_COLD = 264 // blue (OKLCH hue angles differ from HSL!)
 const HUE_HOT = 29 // red
 
@@ -69,7 +69,7 @@ const heatMapTheme: ThemeStyles = {
 
 export default function HeatMap() {
   const [data, setData] = useState(initialData)
-  const theme = useExampleTheme()
+  const theme = useEditorTheme()
   // `searchFilter="all"` matches on keys and values, so a
   // search hits a country or any of its cities.
   const [searchText, setSearchText] = useState('')
@@ -84,7 +84,7 @@ export default function HeatMap() {
       <JsonEditor
         data={data}
         setData={setData}
-        {...useExampleProps()} // ---cut---
+        {...useEditorDefaults()}
         rootName="temperatures (°C)"
         // The heatMap style functions (above) merge with the
         // selected theme and override it where they overlap.

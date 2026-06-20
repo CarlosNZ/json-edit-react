@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { JsonEditor, type ThemeStyles } from '@json-edit-react'
-import { useExampleTheme } from '../../kit/exampleProps'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults, useEditorTheme } from '@example-resources'
 
 // Take any base theme and layer your own styling on top. The
 // `theme` prop accepts an array: the base theme first, then
@@ -67,13 +66,13 @@ const styleFunctions: ThemeStyles = {
 
 export default function ThemeOverrides() {
   const [data, setData] = useState(initialData)
-  const theme = useExampleTheme()
+  const theme = useEditorTheme()
 
   return (
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="tokens"
       collapse={2}
       // The base theme first, then the static overrides, then

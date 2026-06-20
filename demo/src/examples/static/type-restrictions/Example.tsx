@@ -6,19 +6,25 @@ import {
   type EnumDefinition,
   type TypeFilterFunction,
 } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
-// A task card where each field restricts which TYPES it can become, via an
-// `allowTypeSelection` filter function. Open the "Type" selector while editing
-// a value to see the offered types (or none, when the type is locked):
+// A task card where each field restricts which TYPES it can
+// become, via an `allowTypeSelection` filter function. Open
+// the "Type" selector while editing a value to see the
+// offered types (or none, when the type is locked):
 //
-//   - `status` is locked to a Status ENUM (To do / In progress / Done / Blocked)
-//   - `done` stays a boolean — returning `false` removes the selector entirely
-//   - any string can be plain text or the custom "Colour" type (a swatch)
-//   - numbers offer the scalar types only — never null or a nested collection
+//   - `status` is locked to a Status ENUM (To do / In
+//     progress / Done / Blocked)
+//   - `done` stays a boolean — returning `false` removes the
+//     selector entirely
+//   - any string can be plain text or the custom "Colour"
+//     type (a swatch)
+//   - numbers offer the scalar types only — never null or a
+//     nested collection
 //
-// `accentColour` starts as a hex string, so the Colour custom node already
-// renders it as a swatch; switch any other string to "Colour" to get one too.
+// `accentColour` starts as a hex string, so the Colour
+// custom node already renders it as a swatch; switch any
+// other string to "Colour" to get one too.
 const initialData = {
   title: 'Ship the v2 docs',
   status: 'In progress',
@@ -27,16 +33,18 @@ const initialData = {
   accentColour: '#4c9aff',
 }
 
-// An Enum restricts a value to a fixed list. `matchPriority` lets an existing
-// string ("In progress") be recognised as this type when the data first loads.
+// An Enum restricts a value to a fixed list. `matchPriority`
+// lets an existing string ("In progress") be recognised as
+// this type when the data first loads.
 const statusEnum: EnumDefinition = {
   enum: 'Status',
   values: ['To do', 'In progress', 'Done', 'Blocked'],
   matchPriority: 1,
 }
 
-// A tiny custom node: any hex-colour string renders as a swatch. It's view-only
-// (no `showOnEdit`), so editing falls back to the normal text input.
+// A tiny custom node: any hex-colour string renders as a
+// swatch. It's view-only (no `showOnEdit`), so editing falls
+// back to the normal text input.
 const ColourSwatch = ({ value }: CustomComponentProps) => {
   const hex = typeof value === 'string' ? value : '#000000'
   return (
@@ -63,17 +71,22 @@ const customNodeDefinitions: CustomNodeDefinition[] = [
     component: ColourSwatch,
     name: 'Colour', // the label shown in the Type selector
     showInTypeSelector: true,
-    defaultValue: '#4c9aff', // inserted when "Colour" is picked (must match `condition`)
+    // inserted when "Colour" is picked (must match `condition`)
+    defaultValue: '#4c9aff',
   },
 ]
 
-// Returns the types offered for each node — an array the selector lists, or
-// `false` to lock the type entirely.
+// Returns the types offered for each node — an array the
+// selector lists, or `false` to lock the type entirely.
 const allowTypeSelection: TypeFilterFunction = ({ key, value }) => {
-  if (key === 'status') return [statusEnum] // locked to the Status enum
-  if (typeof value === 'boolean') return false // booleans stay boolean
-  if (typeof value === 'string') return ['string', 'Colour'] // text, or a swatch
-  return ['string', 'number', 'boolean'] // scalars only — never null/collections
+  // locked to the Status enum
+  if (key === 'status') return [statusEnum]
+  // booleans stay boolean
+  if (typeof value === 'boolean') return false
+  // text, or a swatch
+  if (typeof value === 'string') return ['string', 'Colour']
+  // scalars only — never null/collections
+  return ['string', 'number', 'boolean']
 }
 
 export default function TypeRestrictions() {
@@ -83,7 +96,7 @@ export default function TypeRestrictions() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="task"
       allowTypeSelection={allowTypeSelection}
       customNodeDefinitions={customNodeDefinitions}

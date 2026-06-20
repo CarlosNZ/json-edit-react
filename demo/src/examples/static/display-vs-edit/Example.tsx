@@ -6,7 +6,7 @@ import {
   type NodeData,
 } from '@json-edit-react'
 import { colorPickerDefinition } from '@json-edit-react/components'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // Four custom components on one product card, each at a
 // different point on the view/edit spectrum — controlled by
@@ -192,7 +192,7 @@ export default function DisplayVsEdit() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="product"
       customNodeDefinitions={customNodeDefinitions}
       allowDelete={false}

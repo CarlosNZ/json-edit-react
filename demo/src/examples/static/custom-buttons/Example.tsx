@@ -6,7 +6,7 @@ import {
   type CustomButtonDefinition,
   type NodeData,
 } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 const initialData = {
   title: 'Weekend reading list',
@@ -26,16 +26,18 @@ const initialData = {
   ],
 }
 
-// A custom button's `Element` renders for *every* node, so return `null` to
-// hide it where it doesn't apply — here, only on string values that look like a
-// URL. It receives the same `nodeData` as the update callbacks.
+// A custom button's `Element` renders for *every* node, so
+// return `null` to hide it where it doesn't apply — here, only
+// on string values that look like a URL. It receives the same
+// `nodeData` as the update callbacks.
 const OpenLinkButton = ({ nodeData }: { nodeData: NodeData }) => {
   const { value } = nodeData
   if (typeof value !== 'string' || !/^https?:\/\//.test(value)) return null
-  // Match the built-in buttons' size (1.4em) and render a bare inline <svg>
-  // like they do, so it lines up vertically alongside them. The `jer-icon`
-  // class gives the same hover scale/fade as the core buttons. The <title>
-  // gives a hover tooltip; `currentColor` inherits the theme's text colour.
+  // Match the built-in buttons' size (1.4em) and render a bare
+  // inline <svg> like they do, so it lines up vertically
+  // alongside them. The `jer-icon` class gives the same hover
+  // scale/fade as the core buttons. The <title> gives a hover
+  // tooltip; `currentColor` inherits the theme's text colour.
   return (
     <svg
       className="jer-icon"
@@ -56,13 +58,15 @@ const OpenLinkButton = ({ nodeData }: { nodeData: NodeData }) => {
   )
 }
 
-// Shown on any array element (its key is its numeric index). Lets you clone a
-// whole article object, or a single tag string, with one click.
+// Shown on any array element (its key is its numeric index).
+// Lets you clone a whole article object, or a single tag
+// string, with one click.
 const DuplicateButton = ({ nodeData }: { nodeData: NodeData }) => {
   if (typeof nodeData.key !== 'number') return null
-  // The copy glyph fills more of its 24×24 box than the link icon, so a
-  // slightly smaller size (1.25em) makes the two read as the same visual
-  // weight. Artwork spans 2–22 on both axes — centred in the viewBox.
+  // The copy glyph fills more of its 24×24 box than the link
+  // icon, so a slightly smaller size (1.25em) makes the two
+  // read as the same visual weight. Artwork spans 2–22 on both
+  // axes — centred in the viewBox.
   return (
     <svg
       className="jer-icon"
@@ -85,9 +89,10 @@ const DuplicateButton = ({ nodeData }: { nodeData: NodeData }) => {
 export default function CustomButtons() {
   const [data, setData] = useState(initialData)
 
-  // `setData` is referentially stable, so the array is built once. Custom
-  // buttons feed into every node's props, so a stable reference keeps the
-  // tree's fine-grained re-rendering intact.
+  // `setData` is referentially stable, so the array is built
+  // once. Custom buttons feed into every node's props, so a
+  // stable reference keeps the tree's fine-grained re-rendering
+  // intact.
   const customButtons = useMemo<CustomButtonDefinition[]>(
     () => [
       {
@@ -100,9 +105,10 @@ export default function CustomButtons() {
         Element: DuplicateButton,
         onClick: (nodeData) => {
           const index = nodeData.key as number
-          // `assign` is json-edit-react's own immutable setter; `insert: true`
-          // splices `clone` into the parent array at the target index, leaving
-          // the original right before it.
+          // `assign` is json-edit-react's own immutable
+          // setter; `insert: true` splices `clone` into the
+          // parent array at the target index, leaving the
+          // original right before it.
           const insertPath = [...nodeData.path.slice(0, -1), index + 1]
           const clone = structuredClone(nodeData.value)
           setData(
@@ -119,7 +125,7 @@ export default function CustomButtons() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="readingList"
       customButtons={customButtons}
       collapse={4}

@@ -15,6 +15,19 @@ import { useToast } from '@chakra-ui/react'
 // couldn't reflect it. Spread it into every example's <JsonEditor>.
 export { useExampleProps as useEditorDefaults } from './exampleProps'
 
+// The resolved base Theme (the picker's current choice), for examples
+// that compose their own styles on top of it.
+export { useExampleTheme as useEditorTheme } from './exampleProps'
+
+// A palette derived from the active theme (accent / edit colours), for
+// examples that need theme-matched colours of their own.
+export { useExamplePalette as useEditorPalette } from './useThemePalette'
+export type { ThemePalette } from './useThemePalette'
+
+// A search box several examples render above the editor — re-exported
+// so they pull it from the one place, not a deep `../../kit/` path.
+export { SearchBox } from './SearchBox'
+
 // Chakra's toast fn (the demo's notifier). Examples call it as
 // `const toast = useToast()` and fire it from their handlers —
 // importing it from here keeps the example source free of a direct

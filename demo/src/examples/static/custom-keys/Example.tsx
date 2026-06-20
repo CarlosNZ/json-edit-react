@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { JsonEditor, type CustomNodeDefinition, type JsonData } from '@json-edit-react'
 import { not, root } from '@json-edit-react/utils/filters'
 import { initialData } from './data'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // A spy dossier showing the `keyComponent` property of Custom
 // Nodes: a definition can render its own component in place of
@@ -213,7 +213,7 @@ export default function CustomKeys() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="dossier"
       collapse={2}
       allowAdd={allowAdd}

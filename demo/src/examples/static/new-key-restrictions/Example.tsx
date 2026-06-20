@@ -4,7 +4,7 @@ import {
   type DefaultValueFunction,
   type NewKeyOptionsFunction,
 } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // Two ways to shape how NEW keys get added to a collection:
 //
@@ -57,7 +57,7 @@ export default function NewKeyRestrictions() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="profile"
       newKeyOptions={newKeyOptions}
       defaultValue={defaultValue}

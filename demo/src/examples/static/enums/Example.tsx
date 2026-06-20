@@ -6,7 +6,7 @@ import {
   type EnumDefinition,
   type TypeFilterFunction,
 } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // Enums restrict a value to a fixed list, shown as a
 // dropdown when you edit. Open the "Type" selector on a
@@ -64,7 +64,7 @@ export default function Enums() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="event"
       allowTypeSelection={allowTypeSelection}
     />

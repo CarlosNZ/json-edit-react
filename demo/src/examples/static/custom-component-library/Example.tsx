@@ -17,8 +17,7 @@ import {
 } from '@json-edit-react/components'
 import { ReactDatePicker } from '@json-edit-react/components/widgets'
 import { initialData, type CustomComponentLibraryData } from './data'
-import { SearchBox } from '../../kit/SearchBox'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { SearchBox, useEditorDefaults } from '@example-resources'
 
 // Showcases every custom component in the Custom Component
 // Library (`@json-edit-react/components`) — ready-to-go
@@ -104,7 +103,7 @@ export default function CustomComponentLibrary() {
       <JsonEditor
         data={data}
         setData={setData}
-        {...useExampleProps()} // ---cut---
+        {...useEditorDefaults()}
         rootName="components"
         collapse={3}
         customNodeDefinitions={customNodeDefinitions(data)}

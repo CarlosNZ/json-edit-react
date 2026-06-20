@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { JsonEditor, type JsonData } from '@json-edit-react'
 import { datePickerDefinition } from '@json-edit-react/components'
 import { ReactDatePicker } from '@json-edit-react/components/widgets'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // The pre-built `DatePicker` from `@json-edit-react/components`
 // swaps a calendar widget in for any ISO date/time string. Its
@@ -65,7 +65,7 @@ export default function DatePickerExample() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="event"
       customNodeDefinitions={customNodeDefinitions}
       allowTypeSelection={false}

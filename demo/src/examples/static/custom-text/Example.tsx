@@ -7,7 +7,7 @@ import {
   type FilterFunction,
   type JsonData,
 } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // `customText` overrides the editor's localisable strings with
 // FUNCTIONS of the node, so the displayed text adapts to each
@@ -138,7 +138,7 @@ export default function CustomText() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="library"
       collapse={startCollapsed}
       showCollectionCount

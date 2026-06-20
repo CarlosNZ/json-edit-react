@@ -8,8 +8,7 @@ import {
   type TypeFilterFunction,
   type UpdateFunction,
 } from '@json-edit-react'
-import { SearchBox } from '../../kit/SearchBox'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { SearchBox, useEditorDefaults } from '@example-resources'
 
 // Localise the editor's whole UI from inside the data. The
 // first field, `Language`, is an enum locked to English /
@@ -168,7 +167,7 @@ export default function Localisation() {
       <JsonEditor
         data={data}
         setData={setData}
-        {...useExampleProps()} // ---cut---
+        {...useEditorDefaults()}
         rootName="document"
         translations={translations}
         searchText={searchText}

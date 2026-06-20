@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { JsonEditor, type FilterFunction, type JsonData } from '@json-edit-react'
 import { useConfirmOnUpdate, type ConfirmDialogState } from '@json-edit-react/utils'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults, useToast } from '@example-resources'
 
 // Three gating patterns in one editor:
 //   - "Delayed Settlement": optimistic edit; settles after a
@@ -10,18 +10,13 @@ import { useExampleProps } from '../../kit/exampleProps' // ---cut---
 //   - "Careful": deleting it is BOTH confirmed (modal) AND
 //     delay-settled by a server that fails ~half the time.
 // `useConfirmOnUpdate` runs the modal + hold() gating; its
-// `onUpdate` option carries the delayed/async logic.
-// `toast` is injected as a prop (the demo passes Chakra's
-// `useToast()`); we use its `update` to mutate the SAME toast.
+// `onUpdate` option carries the delayed/async logic. We use
+// the toast's `update` to mutate the SAME toast.
 type ToastId = string | number
 type ToastOpts = {
   title: string
   status: 'info' | 'success' | 'error'
   duration?: number | null
-}
-interface Toast {
-  (opts: ToastOpts): ToastId | undefined
-  update: (id: ToastId, opts: ToastOpts) => void
 }
 
 // A server round-trip: a random 0.5–3s of latency.
@@ -64,8 +59,8 @@ const allowDelete: FilterFunction = ({ key }) => key === CAREFUL
 // library. It's driven entirely by the `dialog` object the
 // hook returns: `isOpen` toggles it, `onConfirm` / `onCancel`
 // are the button handlers, and `title` / `message` carry the
-// content. Swap in your own modal (Chakra, MUI, Radix…) — the
-// only contract is these fields.
+// content. Swap in your own modal (Chakra, MUI, Radix…) —
+// the only contract is these fields.
 const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel }: ConfirmDialogState) => {
   if (!isOpen) return null
   return (
@@ -86,7 +81,8 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel }: ConfirmDi
   )
 }
 
-export default function ConfirmAndSettle({ toast }: { toast: Toast }) {
+export default function ConfirmAndSettle() {
+  const toast = useToast()
   const [data, setData] = useState<JsonData>(initialData)
 
   // Show a toast on submit, then update the SAME toast on
@@ -145,7 +141,7 @@ export default function ConfirmAndSettle({ toast }: { toast: Toast }) {
       <JsonEditor
         data={data}
         setData={setData}
-        {...useExampleProps()} // ---cut---
+        {...useEditorDefaults()}
         rootName="form"
         allowAdd={false}
         allowDelete={allowDelete}

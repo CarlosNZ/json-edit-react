@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { JsonEditor, type DefaultValueFunction, type OnChangeFunction } from '@json-edit-react'
 import { and, byKey, byLevel, matchRecord, not } from '@json-edit-react/utils/filters'
 import { initialData } from './data'
-import { SearchBox } from '../../kit/SearchBox'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { SearchBox, useEditorDefaults } from '@example-resources'
 
 export { initialData }
 
@@ -36,8 +35,8 @@ export { initialData }
 //   if (path?.length >= 2) {
 //     const index = path?.[0]
 //     return (
-//       matchNode({ value: fullData[index].name }, searchText) ||
-//       matchNode({ value: fullData[index].username }, searchText)
+//     matchNode({ value: fullData[index].name }, searchText) ||
+//     matchNode({ value: fullData[index].username }, searchText)
 //     )
 //   } else return false
 // }
@@ -112,7 +111,7 @@ export default function JsonPlaceholder() {
       <JsonEditor
         data={data}
         setData={setData}
-        {...useExampleProps()} // ---cut---
+        {...useEditorDefaults()}
         rootName="Clients"
         collapse={2}
         allowEdit={allowEdit}

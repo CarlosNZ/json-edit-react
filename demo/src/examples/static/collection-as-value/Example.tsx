@@ -7,7 +7,7 @@ import {
   type NodeData,
 } from '@json-edit-react'
 import { dateObjectDefinition, enhancedLinkDefinition } from '@json-edit-react/components'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 // `renderCollectionAsValue`: treat a whole object as ONE value,
 // not as expandable key/value rows. The matched object is handed
@@ -94,9 +94,9 @@ const Location = ({
 }
 
 const customNodeDefinitions = [
-  // From-scratch: a `{ lat, lng }` object, rendered as one value.
-  // `showInTypeSelector` + `defaultValue` also list it in the Type
-  // menu, so any node can be switched to a Location.
+  // From-scratch: a `{ lat, lng }` object, rendered as one
+  // value. `showInTypeSelector` + `defaultValue` also list it
+  // in the Type menu, so any node can be switched to a Location.
   {
     condition: ({ value }: NodeData) => isCollection(value) && 'lat' in value && 'lng' in value,
     component: Location,
@@ -116,17 +116,20 @@ const customNodeDefinitions = [
     fromStandardType: (value: unknown) => {
       // The buffer is already the object — pass it through.
       if (isCollection(value) && 'lat' in value && 'lng' in value) return value
-      // Else parse a "lat, lng" string; a throw just seeds the
-      // defaultValue (e.g. switching from a non-coordinate value).
+      // Else parse a "lat, lng" string; a throw just seeds
+      // the defaultValue (e.g. switching from a non-coordinate
+      // value).
       const [lat, lng] = String(value).split(',').map(Number)
       if (!Number.isFinite(lat) || !Number.isFinite(lng))
         throw new Error('Expected a "lat, lng" string')
       return { lat, lng }
     },
   },
-  // Pre-built: a real `Date`, shown as a date (no time component).
+  // Pre-built: a real `Date`, shown as a date (no time
+  // component).
   dateObjectDefinition({ componentProps: { showTime: false } }),
-  // Pre-built: a `{ text, url }` object, shown as a clickable link.
+  // Pre-built: a `{ text, url }` object, shown as a clickable
+  // link.
   enhancedLinkDefinition(),
 ]
 
@@ -137,7 +140,7 @@ export default function CollectionAsValue() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="landmark"
       customNodeDefinitions={customNodeDefinitions}
     />
