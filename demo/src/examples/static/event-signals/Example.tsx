@@ -32,8 +32,7 @@ type Toast = (options: {
 const statusForEvent = (event: EditEvent['event']): ToastStatus => {
   if (event === 'updateError') return 'error'
   if (event.startsWith('cancel') || event === 'delete') return 'warning'
-  if (event.startsWith('commit') || event === 'updateSuccess' || event === 'move')
-    return 'success'
+  if (event.startsWith('commit') || event === 'updateSuccess' || event === 'move') return 'success'
   return 'info' // start* / submit*
 }
 
@@ -83,10 +82,12 @@ export default function EventSignals({ toast }: { toast: Toast }) {
     [toast]
   )
 
+  console.log('Props', useExampleProps())
+
   // Settle after a random 0.5–3 s, then fail 1 in 4 saves — so the stream mixes
   // updateSuccess (green) and updateError (red) at unpredictable delays.
   const onUpdate = useCallback<UpdateFunction>(async () => {
-    await wait(500 + Math.random() * 2500)
+    await wait(200 + Math.random() * 3000)
     if (Math.random() < 0.25) return { error: 'Random save failure (1 in 4)' }
   }, [])
 

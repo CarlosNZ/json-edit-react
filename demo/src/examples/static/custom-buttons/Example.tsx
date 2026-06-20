@@ -122,6 +122,7 @@ export default function CustomButtons() {
       {...useExampleProps()} // ---cut---
       rootName="readingList"
       customButtons={customButtons}
+      collapse={4}
     />
   )
 }

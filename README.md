@@ -1273,7 +1273,7 @@ I haven't made the main string input component swappable, for two main reasons:
 
 ### Custom buttons
 
-In addition to the "Copy", "Edit" and "Delete" buttons that appear by each value, you can add your own buttons if you need to allow some custom operations on the data. Provide an array of button definitions in the `customButtons` prop, with the following structure:
+In addition to the "Copy", "Edit" and "Delete" buttons that appear by each value, you can add your own buttons if you need to allow some custom operations. Provide an array of button definitions in the `customButtons` prop, with the following structure:
 
 ```ts
 customButtons = [
@@ -1283,10 +1283,14 @@ customButtons = [
   }
 ]
 ```
-Where `NodeData` is the same data structure received by the previous [Update Functions](#update-functions).
+> [!WARNING]
+> The `onClick` is *optional* -- don't provide it if you have your own `onClick` handler within your button component.
 
 > [!NOTE]
-> The `onClick` is optional -- don't provide it if you have your own `onClick` handler within your button component.
+> Unlike [custom node definitions](#custom-nodes--components), custom buttons don't have a `condition` property. However, you can still make them conditional as they have full access to each node's `nodeData` — just return `null` from the component when they shouldn't appear.
+
+
+[![▶ Live example: Custom buttons](https://img.shields.io/badge/▶_Live_example-Custom_buttons-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-buttons)
 
 ## Programmatic control
 
