@@ -23,6 +23,7 @@
       "@json-edit-react/utils/*": ["../packages/utils/src/*"],
       "@json-edit-react": ["../src/"],
       "@json-edit-react/*": ["../src/*"],
+      "@example-resources": ["./src/examples/kit/resources.ts"],
       // `@json-edit-react` is mapped to core's source (`../src`), which lives in
       // the pnpm workspace and would otherwise resolve `react` from the root's
       // `@types/react` copy — a different physical copy than the demo's. Two

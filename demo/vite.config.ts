@@ -167,6 +167,13 @@ export default defineConfig({
       // so examples can import a big data set by a clean name rather than a deep
       // `../../../../../data/...` relative path.
       { find: /^@test-data\//, replacement: path.resolve(__dirname, '../data') + '/' },
+      // A single, clearly-named source for example-harness scaffolding
+      // (`useEditorDefaults`, `useToast`, …) — imported visibly in examples
+      // rather than via hidden `// ---cut---` lines or deep relative paths.
+      {
+        find: /^@example-resources$/,
+        replacement: path.resolve(__dirname, 'src/examples/kit/resources.ts'),
+      },
       { find: /^@json-edit-react\/themes$/, replacement: themesSrcMap[provider] },
       { find: /^@json-edit-react\/components\/widgets$/, replacement: componentsWidgetsSrcMap[provider] },
       { find: /^@json-edit-react\/components$/, replacement: componentsSrcMap[provider] },
