@@ -1311,14 +1311,13 @@ The `onEditEvent` callback streams the complete **interaction lifecycle**. It re
 | Delete or move a node | `delete` *or* `move`                                                | Instant — fires once, no session                                                        |
 | Save settled          | `updateSuccess` *or* `updateError`                                  | Only fired when an `onUpdate` ran; carries the `operation` (and, on error, the `error`) |
 
-> [!NOTE]
-> A few things worth knowing:
-> - A session ends with **exactly one** of `commit*` (applied) or `cancel*` (closed without applying) — and `cancel*` also fires when `onUpdate` returns `null`, not only on an explicit cancel.
-> - A [`hold()` gate](#optimistic-updates-and-gating-hold), if you've set one, runs in the `submit*` window.
-> - **Add events describe the parent collection** (the node you're adding *into*); `commitAdd` is where the add lands.
-> - **Array adds are instant** — they emit only `commitAdd` (no `startAdd`/`submitAdd`/`cancelAdd`, since there's no key-entry step).
-> - A **no-op confirm** (the user submits without changing the value) still emits `commitEdit` — the session closed cleanly, it just didn't change anything (and no `update*` follows, since `onUpdate` isn't run).
-> - A type change mid-edit that's structural (to an object/array/custom node) is itself a commit, so it emits `commitEdit` while editing continues — one session can emit multiple `commitEdit`s.
+A few things worth knowing:
+- A session ends with **exactly one** of `commit*` (applied) or `cancel*` (closed without applying) — and `cancel*` also fires when `onUpdate` returns `null`, not only on an explicit cancel.
+- A [`hold()` gate](#optimistic-updates-and-gating-hold), if you've set one, runs in the `submit*` window.
+- **Add events describe the parent collection** (the node you're adding *into*); `commitAdd` is where the add lands.
+- **Array adds are instant** — they emit only `commitAdd` (no `startAdd`/`submitAdd`/`cancelAdd`, since there's no key-entry step).
+- A **no-op confirm** (the user submits without changing the value) still emits `commitEdit` — the session closed cleanly, it just didn't change anything (and no `update*` follows, since `onUpdate` isn't run).
+- A type change mid-edit that's structural (to an object/array/custom node) is itself a commit, so it emits `commitEdit` while editing continues — one session can emit multiple `commitEdit`s.
 
 [![▶ Live example: Event signals](https://img.shields.io/badge/▶_Live_example-Event_signals-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/event-signals)
 
@@ -1336,13 +1335,13 @@ type OnCollapseFunction = (
 ) => void
 ```
 
-HERE
+[![▶ Live example: Collapse signals](https://img.shields.io/badge/▶_Live_example-Collapse_signals-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/collapse-signals)
 
 ### Driving the editor — the `editorRef` handle
 
-You can *drive* the editor's UI imperatively via a handle: open a value-edit **input session** at a node, commit or cancel it, and collapse nodes. The handle deliberately doesn't include data mutators — you already own `data` and `setData`, so changing a value is just `setData(newData)` and the editor reflects it. Create a ref with `useRef` and pass it to the `editorRef` prop (an ordinary prop, not the `ref` attribute — this keeps `JsonEditor` a generic component with full type inference):
+You can *drive* the editor's UI imperatively via a handle: open a value-edit **input session** at a node, commit or cancel it, and collapse nodes. Create a ref with `useRef` and pass it to the `editorRef` prop (an ordinary prop, not the `ref` attribute):
 
-```ts
+```tsx
 import { useRef } from 'react'
 import { JsonEditor, type JsonEditorHandle } from 'json-edit-react'
 
@@ -1393,12 +1392,15 @@ interface CollapseState {
 
 A few behaviours worth noting:
 
-- **`startEdit` is synchronous** and returns `true` if it opened the session, or the reason it didn't: `'PATH_NOT_FOUND'` (the path doesn't exist in the current data) or `'RESTRICTED'` (`allowEdit` blocks it) — so you can give your own feedback (e.g. a toast) on a refused command. The target is never silently redirected to a different node.
 - Pass **`overrideRestrictions: true`** to bypass the filter. A common pattern is to lock the whole tree with `allowEdit={false}` and imperatively enable editing on one node through your own UI. It skips **only** the filter: your `onUpdate` still runs at `confirm()` and may reject or transform the value.
+- **`startEdit` is synchronous** and returns `true` if it opened the session, or the reason it didn't: `'PATH_NOT_FOUND'` (the path doesn't exist in the current data) or `'RESTRICTED'` (`allowEdit` blocks it) — so you can give your own feedback (e.g. a toast) on a refused command. The target is never silently redirected to a different node.
 - **`confirm()`** commits the open session — it triggers the same path as clicking the editor's confirm button, running your `onUpdate`. **`cancel()`** discards it. Only one session is open at a time, so both take no arguments.
 - `startEdit` will **auto-reveal a target that's currently collapsed** — any collapsed ancestors expand so the node becomes visible and enters the session.
 
-`JsonViewer` exposes the same `editorRef` prop, but its handle (`JsonViewerHandle`) is **collapse-only** — the editing actions aren't meaningful (and would bypass the read-only contract) in a viewer.
+HERE
+
+> [!NOTE]
+> `JsonViewer` exposes the same `editorRef` prop, but its handle (`JsonViewerHandle`) is **collapse-only** — the editing actions aren't meaningful (and would bypass the read-only contract) in a viewer.
 
 ## Performance
 

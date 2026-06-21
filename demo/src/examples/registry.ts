@@ -58,9 +58,17 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Event signals',
     blurb:
-      'Surface the full `onEditEvent` lifecycle as toast notifications — pass in your own notifier and fire it on every event, colour-coded by category: in-progress (blue), applied / save confirmed (green), discarded or removed (orange), save rejected (red). Toggle **Use delayed settlement** to switch the `onUpdate` save between immediate (edits commit straight away, so the stream ends at `commitEdit`) and asynchronous (saves settle after a random delay and fail one in four, adding `updateSuccess` / `updateError` to the tail). Edit, rename, add, move or delete a node and watch it stream.',
+      'Display the full `onEditEvent` lifecycle as toast notifications — pass in your own notifier and fire it on every event, colour-coded by category: in-progress (blue), applied / save confirmed (green), discarded or removed (orange), save rejected (red). Toggle **Use delayed settlement** to switch the `onUpdate` save between immediate (edits commit straight away, so the stream ends at `commitEdit`) and asynchronous (saves settle after a random delay and fail one in four, adding `updateSuccess` / `updateError` to the tail). Edit, rename, add, move or delete a node and watch it stream.',
     load: () => import('./static/event-signals/Example'),
     code: () => import('./static/event-signals/Example.tsx?raw'),
+  },
+  'collapse-signals': {
+    kind: 'static',
+    title: 'Collapse signals',
+    blurb:
+      "Dis every `onCollapse` event as a toast — each shows the node's `path`, whether it was collapsed or expanded, and whether the action reached all descendants. Click a node's collapse arrow to fold just that node, then hold the modifier key (`Alt` / `Option`) while clicking to fold its whole subtree and watch `includeChildren` flip to `true`. The data is deliberately deep so the descendant collapse is easy to see.",
+    load: () => import('./static/collapse-signals/Example'),
+    code: () => import('./static/collapse-signals/Example.tsx?raw'),
   },
   'heat-map': {
     kind: 'static',
