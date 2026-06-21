@@ -2,6 +2,7 @@ import { useLocation } from 'wouter'
 import { Box, Heading, Image, SimpleGrid, Text } from '@chakra-ui/react'
 import { examples } from './registry'
 import { MarkdownText } from './kit/MarkdownText'
+import { truncate } from '../helpers'
 
 // shields.io badge per example kind. Green = a static live example; pink (the
 // json-edit-react accent) = an editable react-live playground; purple = a
@@ -27,7 +28,7 @@ export const ExamplesIndex = () => {
   const navigate = useLocation()[1]
 
   return (
-    <Box maxW="4xl" mx="auto" px={6} py={10}>
+    <Box maxW="6xl" mx="auto" px={6} py={10}>
       <Heading variant="accent" mb={2}>
         Examples
       </Heading>
@@ -35,7 +36,7 @@ export const ExamplesIndex = () => {
         Focused, single-concept demos of <strong>json-edit-react</strong> — each shows a live editor
         and its source.
       </Text>
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
         {Object.entries(examples).map(([slug, def]) => (
           <Box
             key={slug}
@@ -59,7 +60,7 @@ export const ExamplesIndex = () => {
               {def.title}
             </Heading>
             <MarkdownText fontSize="sm" color="gray.600" mb={4}>
-              {def.blurb}
+              {truncate(def.blurb, 150)}
             </MarkdownText>
             {/* `mt="auto"` pushes the badge to the card's bottom so badges
                 line up across the row; `alignSelf` keeps it at its natural

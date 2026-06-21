@@ -7,13 +7,42 @@
 // picker-selected theme, a toast) is a hook; only truly static things
 // (types, pure helpers) are plain exports.
 
+import { useCallback } from 'react'
 import { useToast } from '@chakra-ui/react'
+import { type OnCopyFunction } from '@json-edit-react'
+import { truncate } from '../../helpers'
+import { useExampleProps } from './exampleProps'
 
-// The editor props the shell controls — theme (from the picker),
-// className, sizing, counts. A hook, not a constant: the theme is
-// chosen at runtime and delivered through context, so a frozen object
-// couldn't reflect it. Spread it into every example's <JsonEditor>.
-export { useExampleProps as useEditorDefaults } from './exampleProps'
+// The editor defaults every example spreads into its <JsonEditor> /
+// <JsonViewer>: the shell-controlled presentation (theme from the
+// picker, className, sizing, counts) plus a shared `onCopy` that
+// toasts the copied value or path — mirroring the main demo. A hook,
+// not a constant, because the theme arrives via context and `onCopy`
+// needs the toast fn, both at render time.
+export const useEditorDefaults = () => {
+  const props = useExampleProps()
+  const toast = useToast()
+  const onCopy = useCallback<OnCopyFunction>(
+    ({ stringValue, type, success, error }) =>
+      success
+        ? toast({
+            title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
+            description: truncate(String(stringValue)),
+            status: 'success',
+            duration: 5000,
+            isClosable: true,
+          })
+        : toast({
+            title: 'Problem copying to clipboard',
+            description: error?.message,
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+          }),
+    [toast]
+  )
+  return { ...props, onCopy }
+}
 
 // The resolved base Theme (the picker's current choice), for examples
 // that compose their own styles on top of it.
