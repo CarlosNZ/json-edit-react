@@ -117,6 +117,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [Custom buttons](#custom-buttons)
 - [Programmatic control](#programmatic-control)
   - [Listening to the lifecycle — `onEditEvent`](#listening-to-the-lifecycle--oneditevent)
+  - [Listening to expansion events — `onCollapse`](#listening-to-expansion-events--oncollapse)
   - [Driving the editor — the `editorRef` handle](#driving-the-editor--the-editorref-handle)
 - [Performance](#performance)
   - [Fine-grained re-rendering \& referentially-stable props](#fine-grained-re-rendering--referentially-stable-props)
@@ -1300,46 +1301,42 @@ You can interact with the component externally, with event callbacks and trigger
 
 Pass in a function to the props `onEditEvent` and `onCollapse` if you want your app to be able to respond to these events.
 
-The `onEditEvent` callback streams the complete **interaction lifecycle** — start/submit/commit/cancel for value-edit, key-rename and add sessions, the instant `delete`/`move`, and the background settlement (`updateSuccess`/`updateError`) of any committed change whose `onUpdate` ran. It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, …) with an `event` discriminant spread on top:
+The `onEditEvent` callback streams the complete **interaction lifecycle**. It receives the standard [node data](#filter-functions) (`key`, `path`, `value`, `fullData`, …) with an `event` field — the current step — spread on top. Each kind of change emits its own events: editing a value, renaming a key and adding a property run as multi-step **sessions**, while deleting, moving, and the background result of a save each fire a single event.
 
-```ts
-type EditEvent =
-  // value edit
-  | { event: 'startEdit' } | { event: 'submitEdit' } | { event: 'commitEdit' } | { event: 'cancelEdit' }
-  // key rename ('commitRename' also carries oldKey + newKey)
-  | { event: 'startRename' } | { event: 'submitRename' }
-  | { event: 'commitRename'; oldKey: CollectionKey; newKey: CollectionKey }
-  | { event: 'cancelRename' }
-  // add
-  | { event: 'startAdd' } | { event: 'submitAdd' } | { event: 'commitAdd' } | { event: 'cancelAdd' }
-  // instant (no session)
-  | { event: 'delete' } | { event: 'move' }
-  // background settlement (only fired when an onUpdate runs)
-  | { event: 'updateSuccess'; operation: EditOperation }
-  | { event: 'updateError'; operation: EditOperation; error: JerError }
-// ...each spread onto the node's NodeData
-type OnEditEventFunction = (e: EditEvent) => void
-```
+| Change                | Events (in order)                                                   | Notes                                                                                   |
+| --------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Edit a value          | `startEdit` → `submitEdit` → `commitEdit` *or* `cancelEdit`         |                                                                                         |
+| Rename a key          | `startRename` → `submitRename` → `commitRename` *or* `cancelRename` | `commitRename` also carries `oldKey` + `newKey`                                         |
+| Add a property        | `startAdd` → `submitAdd` → `commitAdd` *or* `cancelAdd`             |                                                                                         |
+| Delete or move a node | `delete` *or* `move`                                                | Instant — fires once, no session                                                        |
+| Save settled          | `updateSuccess` *or* `updateError`                                  | Only fired when an `onUpdate` ran; carries the `operation` (and, on error, the `error`) |
 
-A session opens with a `start*`, then `submit*` (the user committed — a [`hold()` gate](#optimistic-updates-and-gating-hold) may run in this window), then terminates with **exactly one** of `commit*` (the change was applied and the editor closed) or `cancel*` (the session closed *without* applying — an explicit cancel, or a `null` returned from `onUpdate`). `delete` and `move` fire a single event on commit. When `onUpdate` runs, its background result then arrives as `updateSuccess` or `updateError` (carrying the `operation` and, on error, the `error`).
+> [!NOTE]
+> A few things worth knowing:
+> - A session ends with **exactly one** of `commit*` (applied) or `cancel*` (closed without applying) — and `cancel*` also fires when `onUpdate` returns `null`, not only on an explicit cancel.
+> - A [`hold()` gate](#optimistic-updates-and-gating-hold), if you've set one, runs in the `submit*` window.
+> - **Add events describe the parent collection** (the node you're adding *into*); `commitAdd` is where the add lands.
+> - **Array adds are instant** — they emit only `commitAdd` (no `startAdd`/`submitAdd`/`cancelAdd`, since there's no key-entry step).
+> - A **no-op confirm** (the user submits without changing the value) still emits `commitEdit` — the session closed cleanly, it just didn't change anything (and no `update*` follows, since `onUpdate` isn't run).
+> - A type change mid-edit that's structural (to an object/array/custom node) is itself a commit, so it emits `commitEdit` while editing continues — one session can emit multiple `commitEdit`s.
 
-A few things worth knowing:
-- **Add events describe the parent collection** (the node you're adding *into*); `commitAdd` is where the add lands.
-- **Array adds are instant** — they emit only `commitAdd` (no `startAdd`/`submitAdd`/`cancelAdd`, since there's no key-entry step).
-- A **no-op confirm** (the user submits without changing the value) still emits `commitEdit` — the session closed cleanly, it just didn't change anything (and no `update*` follows, since `onUpdate` isn't run).
-- A type change mid-edit that's structural (to an object/array/custom node) is itself a commit, so it emits `commitEdit` while editing continues — one session can emit multiple `commitEdit`s.
+[![▶ Live example: Event signals](https://img.shields.io/badge/▶_Live_example-Event_signals-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/event-signals)
+
+### Listening to expansion events — `onCollapse`
 
 The `onCollapse` callback is executed when the user opens or collapses a node (or you drive it via `editorRef.collapse`). It receives the node's [node data](#filter-functions) with the collapse flags spread on top:
 
 ```ts
 type OnCollapseFunction = (
-  props: NodeData & {
+  nodeData: NodeData & {
     collapsed: boolean // closing = true, opening = false
     includeChildren: boolean // if opened/closed with the Modifier key to
                              // affect all descendants as well
   }
 ) => void
 ```
+
+HERE
 
 ### Driving the editor — the `editorRef` handle
 
