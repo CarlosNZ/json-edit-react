@@ -58,7 +58,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Event signals',
     blurb:
-      'Surface the full `onEditEvent` lifecycle as toast notifications — pass in your own notifier and fire it on every event, colour-coded by category: in-progress (blue), applied / save confirmed (green), discarded or removed (orange), save rejected (red). Saves settle after a random delay and fail one in four, so the stream mixes `updateSuccess` and `updateError`. Edit, rename, add, move or delete a node and watch it stream.',
+      'Surface the full `onEditEvent` lifecycle as toast notifications — pass in your own notifier and fire it on every event, colour-coded by category: in-progress (blue), applied / save confirmed (green), discarded or removed (orange), save rejected (red). Toggle **Use delayed settlement** to switch the `onUpdate` save between immediate (edits commit straight away, so the stream ends at `commitEdit`) and asynchronous (saves settle after a random delay and fail one in four, adding `updateSuccess` / `updateError` to the tail). Edit, rename, add, move or delete a node and watch it stream.',
     load: () => import('./static/event-signals/Example'),
     code: () => import('./static/event-signals/Example.tsx?raw'),
   },
