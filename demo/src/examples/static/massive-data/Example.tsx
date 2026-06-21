@@ -39,6 +39,7 @@ export default function MassiveDataSet() {
         // any branch to explore.
         collapse={2}
         searchText={searchText}
+        searchFilter="all"
       />
     </div>
   )

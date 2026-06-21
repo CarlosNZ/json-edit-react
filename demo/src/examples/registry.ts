@@ -322,7 +322,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Massive data set',
     blurb:
-      "A ~19,000-node document that stays responsive because of how the editor renders, not any trick in the data. It opens expanded only two levels deep, with `collapse={2}`, and a collapsed branch isn't rendered at all until you first expand it — so the initial render only pays for what's visible. From there, editing a value re-renders just that node and its ancestors, never the whole tree, and the search box filters the entire document behind a single debounced pass. Expand a branch, edit a leaf, or search — it stays snappy throughout.",
+      "A ~19,000-node document. It opens only two levels deep (`collapse={2}`), and a collapsed branch isn't rendered until you first expand it, so the initial render only pays for what's visible. Editing a value re-renders just that node, not the whole tree. Expand a branch, edit a leaf, or search to explore.",
     load: () => import('./static/massive-data/Example'),
     code: () => import('./static/massive-data/Example.tsx?raw'),
   },

@@ -121,7 +121,6 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [Driving the editor — the `editorRef` handle](#driving-the-editor--the-editorref-handle)
 - [Performance considerations](#performance-considerations)
   - [Keep non-callback props referentially stable](#keep-non-callback-props-referentially-stable)
-  - [Large documents](#large-documents)
 - [Undo functionality](#undo-functionality)
   - [`useUndo`](#useundo)
   - [`useConfirmOnUpdate`](#useconfirmonupdate)
@@ -1407,12 +1406,17 @@ A few additional behaviours worth noting:
 
 ## Performance considerations
 
-`JsonEditor` re-renders at the granularity of a single node: editing or committing one value re-renders that node and its chain of ancestors, not the whole tree. That holds even for very large documents — but a few things on your side keep the optimisation intact, and a couple of props help when a document gets big.
+> [!Important]
+> For a large data set, the single most effective thing you can do is **load it mostly collapsed** — the editor only renders nodes that are expanded into view, so a collapsed branch costs nothing until you open it.
+
+Beyond that, `JsonEditor` re-renders at the granularity of a single node (editing one value re-renders just that node, not the whole tree), which you keep intact by passing referentially-stable props (below).
+
+
+[![▶ Live example: Massive data set](https://img.shields.io/badge/▶_Live_example-Massive_data_set-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/massive-data)
 
 ### Keep non-callback props referentially stable
 
-> [!IMPORTANT]
-> The editor decides whether a node can skip re-rendering by comparing its props **by reference**. So every object / array / function prop you pass should keep a **stable identity** across renders where it hasn't meaningfully changed — define it at module scope, or wrap it in `useMemo` / `useCallback`. A brand-new value every render — `customNodeDefinitions={[…]}`, `allowEdit={(node) => …}`, `theme={{ … }}` — silently defeats this: it still works correctly, it just re-renders far more than it needs to.
+The editor decides whether a node can skip re-rendering by comparing its props **by reference**. So every object / array / function prop you pass should keep a **stable identity** across renders where it hasn't meaningfully changed — define it at module scope, or wrap it in `useMemo` / `useCallback`. A brand-new value every render — `customNodeDefinitions={[…]}`, `allowEdit={(node) => …}`, `theme={{ … }}` — silently defeats this: it still works correctly, it just re-renders far more than it needs to.
 
 In practice this covers **every non-primitive prop except the event callbacks**, in particular:
 
@@ -1423,16 +1427,6 @@ In practice this covers **every non-primitive prop except the event callbacks**,
 **The event callbacks are the exception — pass them inline freely.** `onUpdate`, `onChange`, `onError`, `onEditEvent`, `onCollapse` and `onCopy` are wrapped in a stable, always-latest identity internally, so an inline arrow there costs nothing. The stability rule is only about the *non-callback* props above.
 
 `theme` is worth calling out specially: it feeds a React context, and a context update bypasses the per-node memo, so an **unstable `theme` re-renders the entire tree on every render** — not just one node. If you build a theme inline (e.g. `theme={['githubDark', { styles: … }]}`), memoise it.
-
-### Large documents
-
-There's no virtualisation — render cost scales with the number of **expanded** nodes — so for large documents:
-
-- **Start collapsed.** A subtree that begins collapsed (via the `collapse` prop — a depth `number`, or a filter function) isn't rendered at all until it's first expanded, so the initial mount only pays for what's visible. (Once a node has been opened it stays mounted, so re-collapsing and re-expanding can animate.)
-- **Lean on the search debounce.** `searchText` changes are debounced by `searchDebounceTime` (default `350` ms) before the tree re-filters, and the filter runs once per `(data, searchText, searchFilter)` change — so keep a custom `searchFilter` cheap (and, per above, referentially stable).
-- **Use [`JsonViewer`](#read-only-display--jsonviewer) for read-only data** — it omits the editing machinery entirely.
-
-[![▶ Live example: Massive data set](https://img.shields.io/badge/▶_Live_example-Massive_data_set-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/massive-data)
 
 ## Undo functionality
 
