@@ -119,9 +119,10 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
   - [Listening to the lifecycle — `onEditEvent`](#listening-to-the-lifecycle--oneditevent)
   - [Listening to expansion events — `onCollapse`](#listening-to-expansion-events--oncollapse)
   - [Driving the editor — the `editorRef` handle](#driving-the-editor--the-editorref-handle)
-- [Performance](#performance)
-  - [Fine-grained re-rendering \& referentially-stable props](#fine-grained-re-rendering--referentially-stable-props)
-- [Undo \& redo (`@json-edit-react/utils`)](#undo--redo-json-edit-reactutils)
+- [Performance considerations](#performance-considerations)
+  - [Keep non-callback props referentially stable](#keep-non-callback-props-referentially-stable)
+  - [Large documents](#large-documents)
+- [Undo functionality](#undo-functionality)
   - [`useUndo`](#useundo)
   - [`useConfirmOnUpdate`](#useconfirmonupdate)
 - [Exported helpers \& types](#exported-helpers--types)
@@ -1390,26 +1391,50 @@ interface CollapseState {
 }
 ```
 
-A few behaviours worth noting:
+> [!TIP]
+> Pass **`overrideRestrictions: true`** to bypass the filter. *A common pattern is to lock the whole tree with `allowEdit={false}` and imperatively enable editing on one node through your own UI*. It skips **only** the filter: your `onUpdate` still runs at `confirm()` and may reject or transform the value.
 
-- Pass **`overrideRestrictions: true`** to bypass the filter. A common pattern is to lock the whole tree with `allowEdit={false}` and imperatively enable editing on one node through your own UI. It skips **only** the filter: your `onUpdate` still runs at `confirm()` and may reject or transform the value.
+[![▶ Live example: Imperative control](https://img.shields.io/badge/▶_Live_example-Imperative_control-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/imperative-control)
+
+A few additional behaviours worth noting:
+
 - **`startEdit` is synchronous** and returns `true` if it opened the session, or the reason it didn't: `'PATH_NOT_FOUND'` (the path doesn't exist in the current data) or `'RESTRICTED'` (`allowEdit` blocks it) — so you can give your own feedback (e.g. a toast) on a refused command. The target is never silently redirected to a different node.
 - **`confirm()`** commits the open session — it triggers the same path as clicking the editor's confirm button, running your `onUpdate`. **`cancel()`** discards it. Only one session is open at a time, so both take no arguments.
 - `startEdit` will **auto-reveal a target that's currently collapsed** — any collapsed ancestors expand so the node becomes visible and enters the session.
 
-[![▶ Live example: Imperative control](https://img.shields.io/badge/▶_Live_example-Imperative_control-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/imperative-control)
-
 > [!NOTE]
 > `JsonViewer` exposes the same `editorRef` prop, but its handle (`JsonViewerHandle`) is **collapse-only** — the editing actions aren't meaningful (and would bypass the read-only contract) in a viewer.
 
-## Performance
+## Performance considerations
 
-### Fine-grained re-rendering & referentially-stable props
+`JsonEditor` re-renders at the granularity of a single node: editing or committing one value re-renders that node and its chain of ancestors, not the whole tree. That holds even for very large documents — but a few things on your side keep the optimisation intact, and a couple of props help when a document gets big.
+
+### Keep non-callback props referentially stable
 
 > [!IMPORTANT]
-> Keep your `customNodeDefinitions` array **referentially stable** — define it at module scope, or wrap it in `useMemo`. The editor compares this prop by reference to decide whether a node can skip re-rendering, so a brand-new inline array (`customNodeDefinitions={[...]}`) on every render forces every node to re-render every time, defeating the editor's fine-grained re-rendering. It still works correctly — just slower. The same guidance applies to your `condition` and other function/object props.
+> The editor decides whether a node can skip re-rendering by comparing its props **by reference**. So every object / array / function prop you pass should keep a **stable identity** across renders where it hasn't meaningfully changed — define it at module scope, or wrap it in `useMemo` / `useCallback`. A brand-new value every render — `customNodeDefinitions={[…]}`, `allowEdit={(node) => …}`, `theme={{ … }}` — silently defeats this: it still works correctly, it just re-renders far more than it needs to.
 
-## Undo & redo (`@json-edit-react/utils`)
+In practice this covers **every non-primitive prop except the event callbacks**, in particular:
+
+- **`customNodeDefinitions`** — and, since they live inside it, the `condition` functions and `componentProps` of each definition.
+- **The restriction / filter props, whenever you give them a function (or an array/object) rather than a plain boolean** — `allowEdit`, `allowDelete`, `allowAdd`, `allowDrag`, `allowTypeSelection`, `searchFilter`, `customText`, and `collapse` when it's a filter function rather than a number.
+- **`theme`** (which carries your `icons`), **`translations`**, **`keyboardControls`**, **`customButtons`**, `collapseClickZones` — and any other object/array prop.
+
+**The event callbacks are the exception — pass them inline freely.** `onUpdate`, `onChange`, `onError`, `onEditEvent`, `onCollapse` and `onCopy` are wrapped in a stable, always-latest identity internally, so an inline arrow there costs nothing. The stability rule is only about the *non-callback* props above.
+
+`theme` is worth calling out specially: it feeds a React context, and a context update bypasses the per-node memo, so an **unstable `theme` re-renders the entire tree on every render** — not just one node. If you build a theme inline (e.g. `theme={['githubDark', { styles: … }]}`), memoise it.
+
+### Large documents
+
+There's no virtualisation — render cost scales with the number of **expanded** nodes — so for large documents:
+
+- **Start collapsed.** A subtree that begins collapsed (via the `collapse` prop — a depth `number`, or a filter function) isn't rendered at all until it's first expanded, so the initial mount only pays for what's visible. (Once a node has been opened it stays mounted, so re-collapsing and re-expanding can animate.)
+- **Lean on the search debounce.** `searchText` changes are debounced by `searchDebounceTime` (default `350` ms) before the tree re-filters, and the filter runs once per `(data, searchText, searchFilter)` change — so keep a custom `searchFilter` cheap (and, per above, referentially stable).
+- **Use [`JsonViewer`](#read-only-display--jsonviewer) for read-only data** — it omits the editing machinery entirely.
+
+[![▶ Live example: Massive data set](https://img.shields.io/badge/▶_Live_example-Massive_data_set-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/massive-data)
+
+## Undo functionality
 
 Even though Undo/Redo functionality is probably desirable in most cases, this is not built in to the component, for two main reasons:
 1. It would involve too much additional UI and I didn't want this component becoming opinionated about the look and feel beyond the essentials (which are mostly customisable/style-able anyway)

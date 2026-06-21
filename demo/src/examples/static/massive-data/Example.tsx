@@ -37,7 +37,7 @@ export default function MassiveDataSet() {
         // level so the first render stays cheap (collapsed
         // branches don't render their children). Expand into
         // any branch to explore.
-        collapse={1}
+        collapse={2}
         searchText={searchText}
       />
     </div>

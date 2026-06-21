@@ -75,7 +75,7 @@ const allExamples: Record<string, ExampleDef> = {
     selfChrome: true,
     title: 'Imperative control',
     blurb:
-      'Drive the editor from your own UI through the `editorRef` handle. Type a node `path`, then **Start Edit** to open a value-edit session there — its return value (`true`, `RESTRICTED`, or `PATH_NOT_FOUND`) shows as a toast — and **Confirm** or **Cancel** it.\n\nThe tree carries the same lock-down as the Edit restrictions example, so editing `id` or `settings` is refused unless you tick **Bypass edit restrictions** (which skips only the `allowEdit` filter — `onUpdate` still runs at confirm). You can also **Collapse** / **Expand** the path, optionally with **Include children** to fold the whole subtree.\n\nTip: rather than typing a path, hold **Cmd / Ctrl** and click the clipboard icon on any node to copy its path, then paste it in.',
+      'Drive the editor from your own UI through the `editorRef` handle. Enter a node `path`, then **Start Edit** to open a value-edit session there — its return value (`true`, `RESTRICTED`, or `PATH_NOT_FOUND`) shows as a toast — and **Confirm** or **Cancel** it.\n\nThe tree carries the same lock-down as the Edit restrictions example, so editing `id` or `settings` is refused unless you tick **Bypass edit restrictions** (which skips only the `allowEdit` filter — `onUpdate` still runs at confirm). You can also **Collapse** / **Expand** the path, optionally with **Include children** to fold the whole subtree.\n\n***Tip**: rather than typing a path, hold **Cmd / Ctrl** and click the clipboard icon on any node to copy its path, then paste it in.*',
     load: () => import('./static/imperative-control/Example'),
     code: () => import('./static/imperative-control/Example.tsx?raw'),
   },
@@ -322,7 +322,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Massive data set',
     blurb:
-      "A ~19,000-node document (~900 KB) that's lazy-loaded with a dynamic `import()`, so it sits in its own chunk and never weighs down the initial bundle. It opens collapsed past the top level to keep the first render fast — expand into any branch to explore.",
+      "A ~19,000-node document that stays responsive because of how the editor renders, not any trick in the data. It opens expanded only two levels deep, with `collapse={2}`, and a collapsed branch isn't rendered at all until you first expand it — so the initial render only pays for what's visible. From there, editing a value re-renders just that node and its ancestors, never the whole tree, and the search box filters the entire document behind a single debounced pass. Expand a branch, edit a leaf, or search — it stays snappy throughout.",
     load: () => import('./static/massive-data/Example'),
     code: () => import('./static/massive-data/Example.tsx?raw'),
   },
