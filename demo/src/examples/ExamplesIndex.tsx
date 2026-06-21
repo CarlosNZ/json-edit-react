@@ -2,7 +2,6 @@ import { useLocation } from 'wouter'
 import { Box, Heading, Image, SimpleGrid, Text } from '@chakra-ui/react'
 import { examples } from './registry'
 import { MarkdownText } from './kit/MarkdownText'
-import { truncate } from '../helpers'
 
 // shields.io badge per example kind. Green = a static live example; pink (the
 // json-edit-react accent) = an editable react-live playground; purple = a
@@ -59,8 +58,12 @@ export const ExamplesIndex = () => {
             <Heading size="md" mb={1} variant="sub">
               {def.title}
             </Heading>
-            <MarkdownText fontSize="sm" color="gray.600" mb={4}>
-              {truncate(def.blurb, 150)}
+            {/* Clamp to 3 lines with a CSS ellipsis (`noOfLines` →
+                `-webkit-line-clamp`) so the full markdown still renders —
+                links/emphasis can't be cut mid-token — and every card keeps a
+                uniform height. */}
+            <MarkdownText fontSize="sm" color="gray.600" mb={4} noOfLines={3}>
+              {def.blurb}
             </MarkdownText>
             {/* `mt="auto"` pushes the badge to the card's bottom so badges
                 line up across the row; `alignSelf` keeps it at its natural
