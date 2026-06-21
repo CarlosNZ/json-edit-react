@@ -1,15 +1,8 @@
 import { useCallback, useState } from 'react'
-import {
-  JsonEditor,
-  type JsonData,
-  type OnEditEventFunction,
-  type UpdateFunction,
-} from '@json-edit-react'
+import { JsonEditor, type JsonData, type OnEditEventFunction } from '@json-edit-react'
 import { booleanToggleDefinition } from '@json-edit-react/components'
 import { useEditorDefaults, useToast } from '@example-resources'
-import { statusForEvent, describeEvent } from './exampleHelpers'
-
-const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+import { statusForEvent, describeEvent, saveToRemoteServer } from './exampleHelpers'
 
 const initialData = {
   'Use delayed settlement': false,
@@ -54,16 +47,6 @@ export default function EventSignals() {
     [toast]
   )
 
-  // The "delayed settlement" save: settle after a random
-  // 0.5–3 s, then fail 1 in 4 — so the stream mixes
-  // updateSuccess (green) and updateError (red). The toggle
-  // that controls this is exempt, so it stays responsive.
-  const onUpdate = useCallback<UpdateFunction>(async ({ path }) => {
-    if (path[0] === 'Use delayed settlement') return
-    await wait(200 + Math.random() * 3000)
-    if (Math.random() < 0.25) return { error: 'Random save failure (1 in 4)' }
-  }, [])
-
   return (
     <JsonEditor
       data={data}
@@ -73,8 +56,8 @@ export default function EventSignals() {
       allowTypeSelection
       customNodeDefinitions={customNodeDefinitions}
       // Off → no onUpdate (edits commit immediately); on → the
-      // delayed save above.
-      onUpdate={useDelayed ? onUpdate : undefined}
+      // delayed saveToRemoteServer.
+      onUpdate={useDelayed ? saveToRemoteServer : undefined}
       onEditEvent={onEditEvent}
     />
   )
