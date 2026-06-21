@@ -70,6 +70,15 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/collapse-signals/Example'),
     code: () => import('./static/collapse-signals/Example.tsx?raw'),
   },
+  'imperative-control': {
+    kind: 'static',
+    selfChrome: true,
+    title: 'Imperative control',
+    blurb:
+      'Drive the editor from your own UI through the `editorRef` handle. Type a node `path`, then **Start Edit** to open a value-edit session there — its return value (`true`, `RESTRICTED`, or `PATH_NOT_FOUND`) shows as a toast — and **Confirm** or **Cancel** it.\n\nThe tree carries the same lock-down as the Edit restrictions example, so editing `id` or `settings` is refused unless you tick **Bypass edit restrictions** (which skips only the `allowEdit` filter — `onUpdate` still runs at confirm). You can also **Collapse** / **Expand** the path, optionally with **Include children** to fold the whole subtree.\n\nTip: rather than typing a path, hold **Cmd / Ctrl** and click the clipboard icon on any node to copy its path, then paste it in.',
+    load: () => import('./static/imperative-control/Example'),
+    code: () => import('./static/imperative-control/Example.tsx?raw'),
+  },
   'heat-map': {
     kind: 'static',
     title: 'Heat map',

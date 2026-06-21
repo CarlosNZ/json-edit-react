@@ -61,9 +61,12 @@ export const ExamplesIndex = () => {
             {/* Clamp to 3 lines with a CSS ellipsis (`noOfLines` →
                 `-webkit-line-clamp`) so the full markdown still renders —
                 links/emphasis can't be cut mid-token — and every card keeps a
-                uniform height. */}
+                uniform height. Paragraph breaks in the blurb are flattened to
+                spaces first: `-webkit-line-clamp` only clamps reliably over a
+                single block, and the card just wants a one-paragraph teaser
+                (the full multi-paragraph blurb shows on the example page). */}
             <MarkdownText fontSize="sm" color="gray.600" mb={4} noOfLines={3}>
-              {def.blurb}
+              {def.blurb.replace(/\s*\n+\s*/g, ' ')}
             </MarkdownText>
             {/* `mt="auto"` pushes the badge to the card's bottom so badges
                 line up across the row; `alignSelf` keeps it at its natural

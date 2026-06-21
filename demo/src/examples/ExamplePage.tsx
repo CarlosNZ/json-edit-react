@@ -95,6 +95,16 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
   // demo's default view. (Both resolve to `<App />` via the catch-all route.)
   const demoUrl = def.demoDataSet ? `/?data=${def.demoDataSet}` : '/'
 
+  // The rendered example (static + custom both ship a component). Shared so the
+  // static branch can choose whether to wrap it in the shell's drop-shadow.
+  const exampleContent = (
+    <ExampleEditorProvider value={editorProps}>
+      <Suspense fallback={<Loading />}>
+        {ExampleComponent && <ExampleComponent />}
+      </Suspense>
+    </ExampleEditorProvider>
+  )
+
   return (
     <Box
       minH="100vh"
@@ -179,16 +189,11 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
           wider. */}
       <ExamplePaletteContext.Provider value={palette}>
         <Box maxW={PANE_MAX_WIDTH} mx="auto">
-          {def.kind === 'custom' && (
+          {def.kind === 'custom' &&
             // A bespoke interactive page: no source panel. The editor provider
             // lets it spread `useExampleProps()`; it reads the palette (via
             // `useExamplePalette`) to theme its own chrome.
-            <ExampleEditorProvider value={editorProps}>
-              <Suspense fallback={<Loading />}>
-                {ExampleComponent && <ExampleComponent />}
-              </Suspense>
-            </ExampleEditorProvider>
-          )}
+            exampleContent}
 
           {def.kind === 'static' && (
             // Drag a handle — the band's left edge, the centre divider, or its
@@ -199,14 +204,16 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
               storageId={slug}
               left={
                 // Shadow hugs the editor's own rounded container (like the main
-                // demo, which puts `.block-shadow` on the JsonEditor).
-                <Box className="block-shadow" borderRadius="md">
-                  <ExampleEditorProvider value={editorProps}>
-                    <Suspense fallback={<Loading />}>
-                      {ExampleComponent && <ExampleComponent />}
-                    </Suspense>
-                  </ExampleEditorProvider>
-                </Box>
+                // demo, which puts `.block-shadow` on the JsonEditor). Examples
+                // that render their own chrome around multiple boxes opt out
+                // with `selfChrome` and shadow each box themselves.
+                def.selfChrome ? (
+                  exampleContent
+                ) : (
+                  <Box className="block-shadow" borderRadius="md">
+                    {exampleContent}
+                  </Box>
+                )
               }
               right={
                 source !== null ? (

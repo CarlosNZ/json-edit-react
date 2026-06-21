@@ -21,6 +21,12 @@ interface ExampleBase {
   // production builds (see registry.ts), so it neither appears in the index
   // nor resolves as a route on the deployed demo.
   devOnly?: boolean
+  // Static examples only: by default the shell wraps the rendered example (the
+  // split view's left pane) in one drop-shadow container. Set `true` when the
+  // example renders its own chrome around more than just the editor (e.g. a
+  // control panel above it) and wants to shadow each box itself — the shell
+  // then leaves the left pane bare, like a `custom` example.
+  selfChrome?: boolean
 }
 
 // A source string to display, resolving to `{ default: string }`. Static

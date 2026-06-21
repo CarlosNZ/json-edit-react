@@ -1397,7 +1397,7 @@ A few behaviours worth noting:
 - **`confirm()`** commits the open session — it triggers the same path as clicking the editor's confirm button, running your `onUpdate`. **`cancel()`** discards it. Only one session is open at a time, so both take no arguments.
 - `startEdit` will **auto-reveal a target that's currently collapsed** — any collapsed ancestors expand so the node becomes visible and enters the session.
 
-HERE
+[![▶ Live example: Imperative control](https://img.shields.io/badge/▶_Live_example-Imperative_control-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/imperative-control)
 
 > [!NOTE]
 > `JsonViewer` exposes the same `editorRef` prop, but its handle (`JsonViewerHandle`) is **collapse-only** — the editing actions aren't meaningful (and would bypass the read-only contract) in a viewer.
