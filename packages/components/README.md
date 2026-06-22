@@ -18,31 +18,31 @@ pnpm add @json-edit-react/components
 
 Each component ships a React component plus a definition factory that produces a `CustomNodeDefinition` ready to drop into `customNodeDefinitions`.
 
-| Component | Use case |
-|---|---|
-| `Hyperlink` | Detects URL strings and renders them as clickable links |
-| `EnhancedLink` | Object-shaped data with `{text, url}` rendered as a link |
-| `DatePicker` | ISO date strings, edited via a swappable date-picker widget — pass `ReactDatePicker` (or your own) via `componentProps.DatePicker` |
-| `DateObject` | JavaScript `Date` objects |
-| `UnixTimestamp` | Epoch numbers (seconds or milliseconds) shown as a date, edited via the same swappable picker as `DatePicker` |
-| `ColorPicker` | Hex/RGB/HSL color strings, edited via `react-colorful` |
-| `Markdown` | Markdown-formatted strings, rendered via `react-markdown` |
-| `Image` | Image URLs displayed inline |
-| `BooleanToggle` | Boolean values rendered as a toggle switch |
-| `BigInt` | `BigInt` values |
-| `NaN` | `NaN` value display |
-| `Symbol` | `Symbol` value display |
-| `Undefined` | `undefined` value display |
-| `ErrorIndicator` | Wraps a node with a glyph (default ⚠️) to flag the nodes you target via `condition` — e.g. validation errors |
+| Component        | Use case                                                                                                                           |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `Hyperlink`      | Detects URL strings and renders them as clickable links                                                                            |
+| `EnhancedLink`   | Object-shaped data with `{text, url}` rendered as a link                                                                           |
+| `DatePicker`     | ISO date strings, edited via a swappable date-picker widget — pass `ReactDatePicker` (or your own) via `componentProps.DatePicker` |
+| `DateObject`     | JavaScript `Date` objects                                                                                                          |
+| `UnixTimestamp`  | Epoch numbers (seconds or milliseconds) shown as a date, edited via the same swappable picker as `DatePicker`                      |
+| `ColorPicker`    | Hex/RGB/HSL color strings, edited via `react-colorful`                                                                             |
+| `Markdown`       | Markdown-formatted strings, rendered via `react-markdown`                                                                          |
+| `Image`          | Image URLs displayed inline                                                                                                        |
+| `BooleanToggle`  | Boolean values rendered as a toggle switch                                                                                         |
+| `BigInt`         | `BigInt` values                                                                                                                    |
+| `NaN`            | `NaN` value display                                                                                                                |
+| `Symbol`         | `Symbol` value display                                                                                                             |
+| `Undefined`      | `undefined` value display                                                                                                          |
+| `ErrorIndicator` | Wraps a node with a glyph (default ⚠️) to flag the nodes you target via `condition` — e.g. validation errors                        |
 
 ### Editor slot widgets
 
 Standalone components that plug into JsonEditor's `Select` and `TextEditor` props (not into `customNodeDefinitions`) to replace a built-in UI control. They ship under their own subpath — **`@json-edit-react/components/widgets`** — kept off the package root because they're a different mechanism from the node-definition components above.
 
-| Widget | Use case |
-|---|---|
-| `ReactSelect` | Drop-in replacement for the built-in `<select>`, wrapping [`react-select`](https://react-select.com). Pass to `JsonEditor`'s `Select` prop. |
-| `CodeEditor` | CodeMirror-based editor with JSON syntax highlighting. Pass to `JsonEditor`'s `TextEditor` prop to upgrade the raw-JSON text editor. Accepts an optional `theme` prop matching the built-in theme names. |
+| Widget            | Use case                                                                                                                                                                                                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ReactSelect`     | Drop-in replacement for the built-in `<select>`, wrapping [`react-select`](https://react-select.com). Pass to `JsonEditor`'s `Select` prop.                                                                                                                                                                                           |
+| `CodeEditor`      | CodeMirror-based editor with JSON syntax highlighting. Pass to `JsonEditor`'s `TextEditor` prop to upgrade the raw-JSON text editor. Accepts an optional `theme` prop matching the built-in theme names.                                                                                                                              |
 | `ReactDatePicker` | Calendar / date-time picker wrapping [`react-datepicker`](https://reactdatepicker.com). Unlike the others, it's not an editor-slot widget: pass it to a date component's `componentProps.DatePicker` (e.g. `datePickerDefinition`). Lives here because it's the same swappable-widget mechanism, and keeps `react-datepicker` opt-in. |
 
 ```tsx

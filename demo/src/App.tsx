@@ -1,5 +1,5 @@
 import { useEffect, useRef, lazy, Suspense, useMemo, useCallback } from 'react'
-import { useSearch, useLocation } from 'wouter'
+import { useSearch, useLocation, Link as RouterLink } from 'wouter'
 import JSON5 from 'json5'
 import {
   Theme,
@@ -47,7 +47,8 @@ import {
 } from '@chakra-ui/react'
 import logoSVG from './image/logo.svg'
 import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
-import { demoDataDefinitions } from './demoData'
+import { demoDataDefinitions, type DemoPayload } from './demoData'
+import { exampleSlugByDataSet } from './examples/registry'
 import { useDatabase } from './useDatabase'
 import './style.css'
 import { getLineHeight, truncate } from './helpers'
@@ -109,6 +110,8 @@ function App() {
   const queryParams = new URLSearchParams(searchString)
   const selectedDataSet = queryParams.get('data') ?? 'intro'
   const dataDefinition = demoDataDefinitions[selectedDataSet]
+  // If this data set has a mirrored example page, link to its source.
+  const exampleSlug = exampleSlugByDataSet[selectedDataSet]
 
   const [state, setState] = useState<AppState>({
     rootName: dataDefinition.rootName ?? 'data',
@@ -158,9 +161,40 @@ function App() {
   // `setRawData` — so history is cleared rather than left pointing at the
   // previous dataset.
   const [rawData, setRawData] = useState<JsonData>(
-    selectedDataSet === 'editTheme' ? defaultTheme : dataDefinition.data
+    selectedDataSet === 'editTheme' ? defaultTheme : (dataDefinition.data ?? {})
   )
   const { data, set: setData, reset, undo, redo, canUndo, canRedo } = useUndo(rawData, setRawData)
+
+  // Lazy (example-backed) datasets resolve their payload from a chunk; eager
+  // datasets carry it inline. `loadedPayload` holds the resolved chunk for the
+  // active lazy dataset; for an eager dataset the payload IS the definition,
+  // read synchronously so there's no stale frame on switch. It's `null` while a
+  // lazy chunk is in flight — the editor shows a spinner until it lands.
+  const [loadedPayload, setLoadedPayload] = useState<DemoPayload | null>(null)
+  const activePayload: Partial<DemoPayload> | null = dataDefinition.load
+    ? loadedPayload
+    : dataDefinition
+  const isLoadingDataset = !!dataDefinition.load && !loadedPayload
+
+  useEffect(() => {
+    const def = demoDataDefinitions[selectedDataSet]
+    // Eager datasets need no resolution; just clear any stale lazy payload.
+    if (!def.load) {
+      setLoadedPayload(null)
+      return
+    }
+    // Lazy: load the chunk, then seed the document from its data.
+    let cancelled = false
+    setLoadedPayload(null)
+    def.load().then((payload) => {
+      if (cancelled) return
+      setLoadedPayload(payload)
+      reset(payload.data)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [selectedDataSet, reset])
 
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
@@ -184,10 +218,10 @@ function App() {
   // through with their module-scope identity intact.
   const customNodeDefinitions = useMemo(
     () =>
-      typeof dataDefinition.customNodeDefinitions === 'function'
-        ? dataDefinition.customNodeDefinitions(data)
-        : dataDefinition.customNodeDefinitions,
-    [dataDefinition, data]
+      typeof activePayload?.customNodeDefinitions === 'function'
+        ? activePayload.customNodeDefinitions(data)
+        : activePayload?.customNodeDefinitions,
+    [activePayload, data]
   )
 
   const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
@@ -218,14 +252,14 @@ function App() {
   // filter the data set defines: a node is permitted only if the toggle is on
   // AND the data set's own filter permits it.
   const allowEdit: FilterFunction | boolean = (() => {
-    const customAllow = dataDefinition?.allowEdit
+    const customAllow = activePayload?.allowEdit
     if (typeof customAllow === 'function') return (input) => allowEditEnabled && customAllow(input)
     if (customAllow !== undefined) return customAllow
     return allowEditEnabled
   })()
 
   const allowDelete: FilterFunction | boolean = (() => {
-    const customAllow = dataDefinition?.allowDelete
+    const customAllow = activePayload?.allowDelete
     if (typeof customAllow === 'function')
       return (input) => allowDeleteEnabled && customAllow(input)
     if (customAllow !== undefined) return customAllow
@@ -233,7 +267,7 @@ function App() {
   })()
 
   const allowAdd: FilterFunction | boolean = (() => {
-    const customAllow = dataDefinition?.allowAdd
+    const customAllow = activePayload?.allowAdd
     if (typeof customAllow === 'function') return (input) => allowAddEnabled && customAllow(input)
     if (customAllow !== undefined) return customAllow
     return allowAddEnabled
@@ -274,10 +308,10 @@ function App() {
   const editorTheme = useMemo(
     () => [
       selectedDataSet === 'editTheme' ? (data as Theme) : theme,
-      dataDefinition?.styles ?? {},
+      activePayload?.styles ?? {},
       { container: { paddingTop: '1em' } },
     ],
-    [selectedDataSet, data, theme, dataDefinition]
+    [selectedDataSet, data, theme, activePayload]
   )
 
   const onCopy = useCallback(
@@ -337,7 +371,9 @@ function App() {
         else reset(liveData)
         break
       default:
-        reset(newDataDefinition.data)
+        // Eager datasets seed synchronously; lazy ones are seeded by the
+        // load effect once their chunk resolves (see above).
+        if (!newDataDefinition.load) reset(newDataDefinition.data ?? {})
     }
 
     if (selected === 'intro') navigate('/')
@@ -407,7 +443,7 @@ function App() {
         reset(data)
         break
       default:
-        reset(dataDefinition.data)
+        reset(activePayload?.data ?? {})
     }
 
     setState(newState)
@@ -504,205 +540,211 @@ function App() {
                 _focus={{ w: '45%' }}
                 transition={'width 0.3s'}
               />
-              <RenderProfiler>
-                <JsonEditor<typeof data>
-                  data={data}
-                  setData={setData}
-                  rootName={rootName}
-                  theme={editorTheme}
-                  indent={indent}
-                  onUpdate={async (nodeData) => {
-                    // §17: one `onUpdate`. The datasets' per-operation helpers
-                    // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
-                    // as the catch-all (delete/rename/move).
-                    const runDemoUpdate = () => {
-                      if (nodeData.event === 'edit' && dataDefinition?.onEdit)
-                        return dataDefinition.onEdit(nodeData)
-                      if (nodeData.event === 'add' && dataDefinition?.onAdd)
-                        return dataDefinition.onAdd(nodeData)
-                      return (dataDefinition?.onUpdate ?? (() => undefined))(
-                        nodeData,
-                        toast as (options: unknown) => void
-                      )
-                    }
-                    const result = await runDemoUpdate()
-                    // Reject (false) or silent cancel (null): pass straight
-                    // through, no commit and no post-commit side effect.
-                    if (result === false || result === null) return result
-                    // Object result (error / { value } override): pass
-                    // through to the library. `true` is a plain commit — fall
-                    // through to the side effect like void/undefined.
-                    if (result && result !== true) return result
-                    // Commit (true | void | undefined): run the post-commit
-                    // demo side effect.
-                    const { newData } = nodeData
-                    if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
-                  }}
-                  onError={
-                    dataDefinition.onError
-                      ? (errorData) => {
-                          const message = dataDefinition.onError!(errorData)
-                          toast({
-                            title: 'ERROR 😢',
-                            description: message,
-                            status: 'error',
-                            duration: 5000,
-                            isClosable: true,
-                          })
-                        }
-                      : undefined
-                  }
-                  showErrorMessages={dataDefinition.showErrorMessages}
-                  collapse={collapseLevel}
-                  collapseAnimationTime={collapseTime}
-                  showCollectionCount={
-                    showCount === 'Yes'
-                      ? true
-                      : showCount === 'When collapsed'
-                        ? 'when-collapsed'
-                        : showCount === 'When collapsed or filtered'
-                          ? 'when-collapsed-or-filtered'
-                          : false
-                  }
-                  showClipboardButton={allowCopy}
-                  onCopy={onCopy}
-                  allowEdit={allowEdit}
-                  // allowEdit={(nodeData) => typeof nodeData.value === 'string'}
-                  allowDelete={allowDelete}
-                  allowAdd={allowAdd}
-                  allowTypeSelection={dataDefinition?.allowTypeSelection}
-                  // allowTypeSelection={[
-                  //   'string',
-                  //   'number',
-                  //   'boolean',
-                  //   'null',
-                  //   { enum: 'Option', values: ['One', 'Two', 'Three'] },
-                  //   {
-                  //     enum: 'Hobby',
-                  //     values: ['partying', 'building stuff', 'avenging', 'time travel'],
-                  //     matchPriority: 1,
-                  //   },
-                  //   {
-                  //     enum: 'Other activities that could be quite long',
-                  //     values: ['changing', 'building stuff', 'avenging', 'money money money money'],
-                  //     matchPriority: 2,
-                  //   },
-                  // ]}
-                  allowDrag={true}
-                  searchFilter={dataDefinition?.searchFilter}
-                  searchText={searchText}
-                  sortKeys={sortKeys}
-                  // sortKeys={
-                  //   sortKeys
-                  //     ? (a, b) => {
-                  //         const nameRev1 = String(a[0]).length
-                  //         const nameRev2 = String(b[0]).length
-                  //         if (nameRev1 < nameRev2) {
-                  //           return -1
-                  //         }
-                  //         if (nameRev1 > nameRev2) {
-                  //           return 1
-                  //         }
-                  //         return 0
-                  //       }
-                  //     : false
-                  // }
-                  defaultValue={dataDefinition?.defaultValue ?? defaultNewValue}
-                  newKeyOptions={dataDefinition?.newKeyOptions}
-                  showArrayIndexes={showIndexes}
-                  arrayIndexStart={arraysFromOne ? 1 : 0}
-                  showStringQuotes={showStringQuotes}
-                  minWidth={'min(500px, 95vw)'}
-                  maxWidth="min(670px, 90vw)"
-                  className="block-shadow"
-                  stringTruncateLength={90}
-                  customNodeDefinitions={customNodeDefinitions}
-                  customText={dataDefinition?.customTextDefinitions}
-                  // icons={{ chevron: <IconCancel size="1.2em" /> }}
-                  // customButtons={[
-                  //   {
-                  //     Element: () => (
-                  //       <svg fill="none" viewBox="0 0 24 24" height="1em" width="1em">
-                  //         <path
-                  //           fill="currentColor"
-                  //           fillRule="evenodd"
-                  //           d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 2c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11z"
-                  //           clipRule="evenodd"
-                  //         />
-                  //         <path fill="currentColor" d="M16 12l-6 4.33V7.67L16 12z" />
-                  //       </svg>
-                  //     ),
-                  //     onClick: (nodeData, e) => console.log(nodeData),
-                  //   },
-                  // ]}
-                  onChange={dataDefinition?.onChange ?? undefined}
-                  jsonParse={JSON5.parse}
-                  keyboardControls={
-                    {
-                      // cancel: 'Tab',
-                      // confirm: { key: 'Enter', modifier: 'Meta' },
-                      // objectConfirm: { key: 'Enter', modifier: 'Shift' },
-                      // stringLineBreak: { key: 'Enter' },
-                      // stringConfirm: { key: 'Enter', modifier: 'Meta' },
-                      // clipboardModifier: ['Alt', 'Shift'],
-                      // collapseModifier: 'Control',
-                      // booleanConfirm: 'Enter',
-                      // booleanToggle: 'r',
-                      // tabForward: { key: 'Tab', modifier: 'Shift' },
-                      // tabBack: { key: 'Tab' },
-                    }
-                  }
-                  // insertAtBeginning="object"
-                  // baseFontSize={20}
-                  TextEditor={
-                    customTextEditor
-                      ? (props) => (
-                          <Suspense
-                            fallback={
-                              <div
-                                className="loading"
-                                style={{ height: `${getLineHeight(data)}lh` }}
-                              >
-                                <Loading text="Loading code editor" />
-                              </div>
-                            }
-                          >
-                            <CodeEditor {...props} theme={theme?.displayName ?? ''} />
-                          </Suspense>
+              {isLoadingDataset ? (
+                <Flex h={200} justify="center" align="center">
+                  <Spinner label="Loading dataset…" />
+                </Flex>
+              ) : (
+                <RenderProfiler>
+                  <JsonEditor<typeof data>
+                    data={data}
+                    setData={setData}
+                    rootName={rootName}
+                    theme={editorTheme}
+                    indent={indent}
+                    onUpdate={async (nodeData) => {
+                      // §17: one `onUpdate`. The datasets' per-operation helpers
+                      // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
+                      // as the catch-all (delete/rename/move).
+                      const runDemoUpdate = () => {
+                        if (nodeData.event === 'edit' && activePayload?.onEdit)
+                          return activePayload.onEdit(nodeData)
+                        if (nodeData.event === 'add' && activePayload?.onAdd)
+                          return activePayload.onAdd(nodeData)
+                        return (activePayload?.onUpdate ?? (() => undefined))(
+                          nodeData,
+                          toast as (options: unknown) => void
                         )
-                      : undefined
-                  }
-                  // collapseClickZones={['property', 'header']}
-                  onEditEvent={(e) => {
-                    // A session is "editing" from `start*` until it closes with
-                    // `commit*`/`cancel*`. `submit*` happens mid-session (the
-                    // editor may still be open during a `hold()` gate), so it
-                    // mustn't flip the flag; settlement/instant events don't
-                    // either.
-                    if (e.event.startsWith('start')) setIsEditing(true)
-                    else if (e.event.startsWith('commit') || e.event.startsWith('cancel'))
-                      setIsEditing(false)
-                  }}
-                  onCollapse={(input) => {
-                    // Showcase the onCollapse callback — only while the
-                    // External Control panel is on screen (fires for both
-                    // handle-driven and user chevron-click collapses).
-                    if (!showExternalControl) return
-                    const label = input.path.length > 0 ? input.path.join('.') : 'root'
-                    toast({
-                      title: `${input.collapsed ? 'Collapsed' : 'Expanded'} ${label}`,
-                      status: 'info',
-                      duration: 2000,
-                      isClosable: true,
-                    })
-                  }}
-                  editorRef={editorRef}
-                  // translations={{
-                  //   EMPTY_STRING: 'Nah',
-                  // }}
-                  showIconTooltips
-                />
-              </RenderProfiler>
+                      }
+                      const result = await runDemoUpdate()
+                      // Reject (false) or silent cancel (null): pass straight
+                      // through, no commit and no post-commit side effect.
+                      if (result === false || result === null) return result
+                      // Object result (error / { value } override): pass
+                      // through to the library. `true` is a plain commit — fall
+                      // through to the side effect like void/undefined.
+                      if (result && result !== true) return result
+                      // Commit (true | void | undefined): run the post-commit
+                      // demo side effect.
+                      const { newData } = nodeData
+                      if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
+                    }}
+                    onError={
+                      activePayload?.onError
+                        ? (errorData) => {
+                            const message = activePayload.onError!(errorData)
+                            toast({
+                              title: 'ERROR 😢',
+                              description: message,
+                              status: 'error',
+                              duration: 5000,
+                              isClosable: true,
+                            })
+                          }
+                        : undefined
+                    }
+                    showErrorMessages={activePayload?.showErrorMessages}
+                    collapse={collapseLevel}
+                    collapseAnimationTime={collapseTime}
+                    showCollectionCount={
+                      showCount === 'Yes'
+                        ? true
+                        : showCount === 'When collapsed'
+                          ? 'when-collapsed'
+                          : showCount === 'When collapsed or filtered'
+                            ? 'when-collapsed-or-filtered'
+                            : false
+                    }
+                    showClipboardButton={allowCopy}
+                    onCopy={onCopy}
+                    allowEdit={allowEdit}
+                    // allowEdit={(nodeData) => typeof nodeData.value === 'string'}
+                    allowDelete={allowDelete}
+                    allowAdd={allowAdd}
+                    allowTypeSelection={activePayload?.allowTypeSelection}
+                    // allowTypeSelection={[
+                    //   'string',
+                    //   'number',
+                    //   'boolean',
+                    //   'null',
+                    //   { enum: 'Option', values: ['One', 'Two', 'Three'] },
+                    //   {
+                    //     enum: 'Hobby',
+                    //     values: ['partying', 'building stuff', 'avenging', 'time travel'],
+                    //     matchPriority: 1,
+                    //   },
+                    //   {
+                    //     enum: 'Other activities that could be quite long',
+                    //     values: ['changing', 'building stuff', 'avenging', 'money money money money'],
+                    //     matchPriority: 2,
+                    //   },
+                    // ]}
+                    allowDrag={true}
+                    searchFilter={activePayload?.searchFilter}
+                    searchText={searchText}
+                    sortKeys={sortKeys}
+                    // sortKeys={
+                    //   sortKeys
+                    //     ? (a, b) => {
+                    //         const nameRev1 = String(a[0]).length
+                    //         const nameRev2 = String(b[0]).length
+                    //         if (nameRev1 < nameRev2) {
+                    //           return -1
+                    //         }
+                    //         if (nameRev1 > nameRev2) {
+                    //           return 1
+                    //         }
+                    //         return 0
+                    //       }
+                    //     : false
+                    // }
+                    defaultValue={activePayload?.defaultValue ?? defaultNewValue}
+                    newKeyOptions={activePayload?.newKeyOptions}
+                    showArrayIndexes={showIndexes}
+                    arrayIndexStart={arraysFromOne ? 1 : 0}
+                    showStringQuotes={showStringQuotes}
+                    minWidth={'min(500px, 95vw)'}
+                    maxWidth="min(670px, 90vw)"
+                    className="block-shadow"
+                    stringTruncateLength={90}
+                    customNodeDefinitions={customNodeDefinitions}
+                    customText={activePayload?.customTextDefinitions}
+                    // icons={{ chevron: <IconCancel size="1.2em" /> }}
+                    // customButtons={[
+                    //   {
+                    //     Element: () => (
+                    //       <svg fill="none" viewBox="0 0 24 24" height="1em" width="1em">
+                    //         <path
+                    //           fill="currentColor"
+                    //           fillRule="evenodd"
+                    //           d="M12 21a9 9 0 100-18 9 9 0 000 18zm0 2c6.075 0 11-4.925 11-11S18.075 1 12 1 1 5.925 1 12s4.925 11 11 11z"
+                    //           clipRule="evenodd"
+                    //         />
+                    //         <path fill="currentColor" d="M16 12l-6 4.33V7.67L16 12z" />
+                    //       </svg>
+                    //     ),
+                    //     onClick: (nodeData, e) => console.log(nodeData),
+                    //   },
+                    // ]}
+                    onChange={activePayload?.onChange ?? undefined}
+                    jsonParse={JSON5.parse}
+                    keyboardControls={
+                      {
+                        // cancel: 'Tab',
+                        // confirm: { key: 'Enter', modifier: 'Meta' },
+                        // objectConfirm: { key: 'Enter', modifier: 'Shift' },
+                        // stringLineBreak: { key: 'Enter' },
+                        // stringConfirm: { key: 'Enter', modifier: 'Meta' },
+                        // clipboardModifier: ['Alt', 'Shift'],
+                        // collapseModifier: 'Control',
+                        // booleanConfirm: 'Enter',
+                        // booleanToggle: 'r',
+                        // tabForward: { key: 'Tab', modifier: 'Shift' },
+                        // tabBack: { key: 'Tab' },
+                      }
+                    }
+                    // insertAtBeginning="object"
+                    // baseFontSize={20}
+                    TextEditor={
+                      customTextEditor
+                        ? (props) => (
+                            <Suspense
+                              fallback={
+                                <div
+                                  className="loading"
+                                  style={{ height: `${getLineHeight(data)}lh` }}
+                                >
+                                  <Loading text="Loading code editor" />
+                                </div>
+                              }
+                            >
+                              <CodeEditor {...props} theme={theme?.displayName ?? ''} />
+                            </Suspense>
+                          )
+                        : undefined
+                    }
+                    // collapseClickZones={['property', 'header']}
+                    onEditEvent={(e) => {
+                      // A session is "editing" from `start*` until it closes with
+                      // `commit*`/`cancel*`. `submit*` happens mid-session (the
+                      // editor may still be open during a `hold()` gate), so it
+                      // mustn't flip the flag; settlement/instant events don't
+                      // either.
+                      if (e.event.startsWith('start')) setIsEditing(true)
+                      else if (e.event.startsWith('commit') || e.event.startsWith('cancel'))
+                        setIsEditing(false)
+                    }}
+                    onCollapse={(input) => {
+                      // Showcase the onCollapse callback — only while the
+                      // External Control panel is on screen (fires for both
+                      // handle-driven and user chevron-click collapses).
+                      if (!showExternalControl) return
+                      const label = input.path.length > 0 ? input.path.join('.') : 'root'
+                      toast({
+                        title: `${input.collapsed ? 'Collapsed' : 'Expanded'} ${label}`,
+                        status: 'info',
+                        duration: 2000,
+                        isClosable: true,
+                      })
+                    }}
+                    editorRef={editorRef}
+                    // translations={{
+                    //   EMPTY_STRING: 'Nah',
+                    // }}
+                    showIconTooltips
+                  />
+                </RenderProfiler>
+              )}
             </Suspense>
           </Box>
           {/* DEMO: confirm-before-update modal (Intro dataset).
@@ -898,7 +940,7 @@ function App() {
                   </FormLabel>
                   <Input
                     className="inputWidth"
-                    disabled={dataDefinition.defaultValue !== undefined}
+                    disabled={activePayload?.defaultValue !== undefined}
                     type="text"
                     value={defaultNewValue}
                     onChange={(e) => updateState({ defaultNewValue: e.target.value })}
@@ -909,7 +951,7 @@ function App() {
                     <Checkbox
                       id="allowEditCheckbox"
                       isChecked={allowEditEnabled}
-                      disabled={dataDefinition.allowEdit !== undefined}
+                      disabled={activePayload?.allowEdit !== undefined}
                       onChange={() => toggleState('allowEdit')}
                       w="50%"
                     >
@@ -918,7 +960,7 @@ function App() {
                     <Checkbox
                       id="allowDeleteCheckbox"
                       isChecked={allowDeleteEnabled}
-                      disabled={dataDefinition.allowDelete !== undefined}
+                      disabled={activePayload?.allowDelete !== undefined}
                       onChange={() => toggleState('allowDelete')}
                       w="50%"
                     >
@@ -929,7 +971,7 @@ function App() {
                     <Checkbox
                       id="allowAddCheckbox"
                       isChecked={allowAddEnabled}
-                      disabled={dataDefinition.allowAdd !== undefined}
+                      disabled={activePayload?.allowAdd !== undefined}
                       onChange={() => toggleState('allowAdd')}
                       w="50%"
                     >
@@ -995,7 +1037,7 @@ function App() {
                         id="customEditorCheckbox"
                         isChecked={customTextEditor}
                         onChange={() => toggleState('customTextEditor')}
-                        disabled={!dataDefinition.customTextEditorAvailable}
+                        disabled={!activePayload?.customTextEditorAvailable}
                       >
                         Custom Text Editor
                       </Checkbox>
@@ -1107,6 +1149,11 @@ function App() {
           <Box maxW={350} pt={4}>
             {dataDefinition.description}
           </Box>
+          {exampleSlug && (
+            <Link as={RouterLink} href={`/examples/${exampleSlug}`} color="accent" fontSize="sm">
+              View the source code for this example
+            </Link>
+          )}
         </VStack>
       </Flex>
       <Box h={50} />

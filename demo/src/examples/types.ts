@@ -1,18 +1,19 @@
 import { type ComponentType } from 'react'
-import { type CreateToastFnReturn } from '@chakra-ui/react'
 
-// Props the shell injects into a rendered example component. `toast` is Chakra's
-// toast fn (from the shell's `useToast`), so an example can surface its event /
-// notification stream without wiring up its own toast styling. The shell always
-// provides it; examples that don't need it (a plain prop-less component) stay
-// assignable, so this is required rather than optional.
-export interface ExampleComponentProps {
-  toast: CreateToastFnReturn
-}
+// The shell injects no props into example components — they pull what
+// they need (editor defaults, toast, …) from `@example-resources`
+// themselves. Kept as an explicit empty props type so the `load`
+// signatures below read clearly.
+export type ExampleComponentProps = Record<string, never>
 
 interface ExampleBase {
   title: string
   blurb: string
+  // For examples that mirror a main-demo data set: the data-set key (e.g.
+  // `jsonPlaceholder`). The example page's "Go to Demo site" link uses it to
+  // deep-link to that data set (`/?data=<key>`); omit it and the link goes to
+  // the demo's default view.
+  demoDataSet?: string
   // Set `false` to hide the theme picker — for concepts where an injected
   // theme doesn't apply (e.g. editing a theme object itself).
   theme?: false
@@ -20,6 +21,12 @@ interface ExampleBase {
   // production builds (see registry.ts), so it neither appears in the index
   // nor resolves as a route on the deployed demo.
   devOnly?: boolean
+  // Static examples only: by default the shell wraps the rendered example (the
+  // split view's left pane) in one drop-shadow container. Set `true` when the
+  // example renders its own chrome around more than just the editor (e.g. a
+  // control panel above it) and wants to shadow each box itself — the shell
+  // then leaves the left pane bare, like a `custom` example.
+  selfChrome?: boolean
 }
 
 // A source string to display, resolving to `{ default: string }`. Static
