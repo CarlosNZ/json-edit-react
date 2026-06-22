@@ -84,15 +84,15 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 It's pretty self explanatory (click the "edit" icon to edit, etc.), but there are a few not-so-obvious ways of interacting with the editor:
 
 - **Double-click** a value (or a key) to edit it
-- When editing a string, use `Cmd/Ctrl/Shift-Enter` to add a new line (`Enter` submits the value)
-- It's the opposite when editing a full object/array node (which you do by **clicking "edit"** on an object or array value) — `Enter` for new line, and `Cmd/Ctrl/Shift-Enter` for submit
-- `Escape` to **cancel** editing
+- When editing a string, use <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>-<kbd>Enter</kbd> or <kbd>Shift</kbd>-<kbd>Enter</kbd> to add a new line (<kbd>Enter</kbd> submits the value)
+- It's the opposite when editing a full object/array node (which you do by **clicking "edit"** on an object or array value) — <kbd>Enter</kbd> for new line, and <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>/<kbd>Shift</kbd>-<kbd>Enter</kbd> for submit
+- <kbd>Escape</kbd> to **cancel** editing
 - Use <kbd>Tab</kbd>/<kbd>Shift-Tab</kbd> to quickly move from one value to another when editing
-- When clicking the "**clipboard**" icon, holding down `Cmd/Ctrl` will copy the *path* to the selected node rather than its value
-- When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
-- For Number inputs, **arrow-up** and **down** keys will increment/decrement the value
-- For Boolean inputs, **space bar** will toggle the value
-- Easily navigate to the next or previous node for editing using the `Tab`/`Shift-Tab` keys.
+- When clicking the "**clipboard**" icon, holding down <kbd>Cmd</kbd>/<kbd>Ctrl</kbd> will copy the *path* to the selected node rather than its value
+- When opening/closing a node, hold down <kbd>Alt</kbd>/<kbd>Option</kbd> to open/close *all* child nodes at once
+- For Number inputs, the <kbd>↑</kbd> / <kbd>↓</kbd> arrow keys will increment/decrement the value
+- For Boolean inputs, the <kbd>Space</kbd> bar will toggle the value
+- Easily navigate to the next or previous node for editing using the <kbd>Tab</kbd>/<kbd>Shift-Tab</kbd> keys.
 - **Drag and drop** items to change the structure or modify display order
 - When editing is not permitted, double-clicking a string value will expand the text to the full value if it is truncated due to length (there is also a clickable "..." for long strings)
 - **JSON text input** can accept "looser" input, if an additional JSON parsing method is provided (e.g. [JSON5](https://json5.org/)). See `jsonParse` prop.
@@ -934,7 +934,7 @@ The default keyboard controls are [outlined above](#keyboard-control), but it's 
 }
 ```
 
-If (for example), you just wish to change the general "confirmation" action to "Cmd-Enter" (on Mac), or "Ctrl-Enter", you'd just pass in:
+If (for example), you just wish to change the general "confirmation" action to <kbd>Cmd-Enter</kbd> (on Mac), or <kbd>Ctrl-Enter</kbd>, you'd just pass in:
 ```ts
   keyboardControls = {
     confirm: {
