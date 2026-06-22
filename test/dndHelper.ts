@@ -94,6 +94,10 @@ export const dragAndDrop = async (
 
   const dataTransfer = makeDataTransfer()
   await act(async () => {
+    // Production arms the drag on a primary-button mousedown (the Firefox
+    // phantom-dragstart guard in `useDragNDrop`). A bare `dragStart` is
+    // rejected as unarmed, so we mirror the browser's real grab sequence.
+    fireEvent.mouseDown(source, { button: 0 })
     fireEvent.dragStart(source, { dataTransfer })
   })
 
@@ -112,14 +116,4 @@ export const dragAndDrop = async (
   await act(async () => {
     fireEvent.dragEnd(source, { dataTransfer })
   })
-}
-
-/**
- * Look up the value cell next to a given key – useful when a test wants to
- * assert on the rendered value rather than just the data passed to setData.
- */
-export const valueTextFor = (root: HTMLElement, key: string | number): string => {
-  const row = rowFor(root, key)
-  const valueEl = row.querySelector('[class^="jer-value-"]')
-  return valueEl?.textContent ?? row.textContent ?? ''
 }

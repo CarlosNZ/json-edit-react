@@ -1,3 +1,4 @@
+import { Theme } from '@json-edit-react'
 import {
   githubDarkTheme,
   githubLightTheme,
@@ -5,11 +6,17 @@ import {
   monoDarkTheme,
   candyWrapperTheme,
   psychedelicTheme,
-  Theme,
-} from '@json-edit-react'
+  solarizedDarkTheme,
+  solarizedLightTheme,
+  draculaTheme,
+  monokaiTheme,
+  tokyoNightTheme,
+  r18jvTheme,
+} from '@json-edit-react/themes'
 
 // This file contains functions that return theme objects
-// Each function is dynamically imported when needed to reduce initial bundle size
+// Each function is dynamically imported when needed to reduce initial bundle
+// size
 
 export const getGithubDarkTheme = (): Theme => githubDarkTheme
 export const getGithubLightTheme = (): Theme => githubLightTheme
@@ -17,6 +24,13 @@ export const getWhiteBlackTheme = (): Theme => monoLightTheme
 export const getBlackWhiteTheme = (): Theme => monoDarkTheme
 export const getCandyWrapperTheme = (): Theme => candyWrapperTheme
 export const getPsychedelicTheme = (): Theme => psychedelicTheme
+export const getSolarizedDarkTheme = (): Theme => solarizedDarkTheme
+export const getSolarizedLightTheme = (): Theme => solarizedLightTheme
+export const getDraculaTheme = (): Theme => draculaTheme
+export const getMonokaiTheme = (): Theme => monokaiTheme
+export const getTokyoNightTheme = (): Theme => tokyoNightTheme
+// Name derived from the 'r18jv' display name (no spaces) → `getr18jvTheme`.
+export const getr18jvTheme = (): Theme => r18jvTheme
 
 // Allow dynamic accessing of theme getter functions
 interface ThemeGetters {
@@ -31,4 +45,10 @@ export const themeGetters: ThemeGetters = {
   getBlackWhiteTheme,
   getCandyWrapperTheme,
   getPsychedelicTheme,
+  getSolarizedDarkTheme,
+  getSolarizedLightTheme,
+  getDraculaTheme,
+  getMonokaiTheme,
+  getTokyoNightTheme,
+  getr18jvTheme,
 }

@@ -130,9 +130,11 @@ const estimateHeight = (
 ) => {
   if (!contentRef.current) return 0
 
-  const baseFontSize = parseInt(
-    getComputedStyle(containerRef.current).getPropertyValue('line-height') ?? '16px'
-  )
+  // `|| 16` (not `??`) handles three jsdom/edge cases together: empty string
+  // (jsdom returns `''` for unset computed styles, which `??` wouldn't catch),
+  // `NaN` from `parseInt` on non-numeric values like `"normal"`, and `0`.
+  const baseFontSize =
+    parseInt(getComputedStyle(containerRef.current).getPropertyValue('line-height')) || 16
 
   const width = contentRef.current?.offsetWidth ?? 0
   const charsPerLine = width / (baseFontSize * 0.5)

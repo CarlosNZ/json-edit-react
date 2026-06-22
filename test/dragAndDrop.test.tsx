@@ -1,4 +1,3 @@
-import React from 'react'
 import { act, fireEvent, render } from '@testing-library/react'
 import { JsonEditor } from '../src'
 import { dragAndDrop, rowFor } from './dndHelper'
@@ -16,7 +15,7 @@ describe('Drag-and-drop: rearranging within a single collection', () => {
   test('moves a key inside an object', async () => {
     const setData = jest.fn()
     const { container } = render(
-      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} restrictDrag={false} />
+      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} allowDrag />
     )
 
     // Drop 'a' onto the bottom half of 'b' → 'a' should land between 'b' and 'c'.
@@ -32,7 +31,7 @@ describe('Drag-and-drop: rearranging within a single collection', () => {
   test('moves a key to the very top of an object', async () => {
     const setData = jest.fn()
     const { container } = render(
-      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} restrictDrag={false} />
+      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} allowDrag />
     )
 
     await dragAndDrop(rowFor(container, 'c'), rowFor(container, 'a'), 'above')
@@ -45,7 +44,7 @@ describe('Drag-and-drop: rearranging within a single collection', () => {
   test('reorders elements within an array', async () => {
     const setData = jest.fn()
     const { container } = render(
-      <JsonEditor data={[10, 20, 30, 40]} setData={setData} restrictDrag={false} />
+      <JsonEditor data={[10, 20, 30, 40]} setData={setData} allowDrag />
     )
 
     // Move index 0 (value 10) to the bottom-half of index 2 (value 30).
@@ -65,7 +64,7 @@ describe('Drag-and-drop: across sibling collections', () => {
       dst: { z: 9 },
     }
     const { container } = render(
-      <JsonEditor data={data} setData={setData} restrictDrag={false} />
+      <JsonEditor data={data} setData={setData} allowDrag />
     )
 
     // Drag 'x' (inside 'src') onto 'z' (inside 'dst'), below position.
@@ -89,7 +88,7 @@ describe('Drag-and-drop: edge cases', () => {
       dst: { z: 'leaf' },
     }
     const { container } = render(
-      <JsonEditor data={data} setData={setData} restrictDrag={false} />
+      <JsonEditor data={data} setData={setData} allowDrag />
     )
 
     await dragAndDrop(rowFor(container, 'x'), rowFor(container, 'z'), 'above')
@@ -115,7 +114,7 @@ describe('Drag-and-drop: edge cases', () => {
     // Production calls console.warn for the error; silence it during this test.
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {})
     const { container } = render(
-      <JsonEditor data={data} setData={setData} onError={onError} restrictDrag={false} />
+      <JsonEditor data={data} setData={setData} onError={onError} allowDrag />
     )
 
     // Scope the target lookup to the `dst` subtree so we land on dst.dup, not src.dup.
@@ -132,8 +131,8 @@ describe('Drag-and-drop: edge cases', () => {
   })
 })
 
-describe('Drag-and-drop: restrictDrag', () => {
-  test('restrictDrag={true} (the default) blocks reordering', async () => {
+describe('Drag-and-drop: allowDrag', () => {
+  test('allowDrag defaults to false — rows are not draggable without it', async () => {
     const setData = jest.fn()
     const { container } = render(
       <JsonEditor data={{ a: 1, b: 2 }} setData={setData} />
@@ -147,10 +146,10 @@ describe('Drag-and-drop: restrictDrag', () => {
     expect(setData).not.toHaveBeenCalled()
   })
 
-  test('restrictDrag={false} enables reordering', async () => {
+  test('allowDrag={true} enables reordering', async () => {
     const setData = jest.fn()
     const { container } = render(
-      <JsonEditor data={{ a: 1, b: 2 }} setData={setData} restrictDrag={false} />
+      <JsonEditor data={{ a: 1, b: 2 }} setData={setData} allowDrag />
     )
 
     expect(rowFor(container, 'a').getAttribute('draggable')).toBe('true')
@@ -159,16 +158,16 @@ describe('Drag-and-drop: restrictDrag', () => {
     expect(setData).toHaveBeenCalledTimes(1)
   })
 
-  test('restrictDrag function selectively blocks per-node', async () => {
+  test('allowDrag function selectively enables per-node', async () => {
     const setData = jest.fn()
-    // Block dragging on the key named "locked", allow everything else.
-    const restrictDrag = ({ key }: { key: string | number }) => key === 'locked'
+    // Allow dragging everywhere EXCEPT the key named "locked".
+    const allowDrag = ({ key }: { key: string | number }) => key !== 'locked'
 
     const { container } = render(
       <JsonEditor
         data={{ free: 1, locked: 2, other: 3 }}
         setData={setData}
-        restrictDrag={restrictDrag}
+        allowDrag={allowDrag}
       />
     )
 
@@ -186,10 +185,10 @@ describe('Drag-and-drop: restrictDrag', () => {
     expect(Object.keys(result)).toEqual(['locked', 'other', 'free'])
   })
 
-  test('viewOnly disables dragging regardless of restrictDrag={false}', async () => {
+  test('viewOnly via allowEdit={false} + allowDrag={false} disables dragging', async () => {
     const setData = jest.fn()
     const { container } = render(
-      <JsonEditor data={{ a: 1, b: 2 }} setData={setData} viewOnly restrictDrag={false} />
+      <JsonEditor data={{ a: 1, b: 2 }} setData={setData} allowEdit={false} />
     )
 
     expect(rowFor(container, 'a').getAttribute('draggable')).toBe('false')
@@ -199,16 +198,17 @@ describe('Drag-and-drop: restrictDrag', () => {
 })
 
 describe('Drag-and-drop: interaction with active edit', () => {
-  test('rows become non-draggable while an edit session is open', async () => {
-    // Per `useCommon.ts`, `canDrag` is gated on `currentlyEditingElement === null`.
-    // So as soon as the user clicks Edit on any row, every row in the tree
-    // should report `draggable="false"`, and a drag attempt should be a no-op.
+  test('the editing row becomes non-draggable, and drops are rejected while editing', async () => {
+    // Per `useDragNDrop.onDragStart`, drags are rejected entirely while
+    // anything is being edited (`editingStore.getSnapshot().active !== null`).
+    // The editing leaf row also flips its `draggable` attribute to "false"
+    // (the ancestor chain is covered separately in JsonEditor.test.tsx).
     const setData = jest.fn()
     const { container } = render(
       <JsonEditor
         data={{ a: 1, b: 2, c: 3 }}
         setData={setData}
-        restrictDrag={false}
+        allowDrag
         showIconTooltips
       />
     )
@@ -219,19 +219,18 @@ describe('Drag-and-drop: interaction with active edit', () => {
 
     // Open edit on 'a'.
     const editBtn = rowFor(container, 'a').querySelector(
-      'div[title="Edit"]'
+      'button[aria-label="Edit"]'
     ) as HTMLElement
     expect(editBtn).not.toBeNull()
     act(() => {
       fireEvent.click(editBtn)
     })
 
-    // All rows now non-draggable.
+    // The editing leaf is now non-draggable.
     expect(rowFor(container, 'a').getAttribute('draggable')).toBe('false')
-    expect(rowFor(container, 'b').getAttribute('draggable')).toBe('false')
-    expect(rowFor(container, 'c').getAttribute('draggable')).toBe('false')
 
-    // And attempting a drag has no effect.
+    // A drag started on a sibling is rejected by onDragStart, so no
+    // setData call should fire.
     await dragAndDrop(rowFor(container, 'b'), rowFor(container, 'c'), 'below')
     expect(setData).not.toHaveBeenCalled()
   })

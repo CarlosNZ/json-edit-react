@@ -3,12 +3,23 @@
   "compilerOptions": {
     "rootDir": "..",
     "noEmit": true,
-    "jsx": "react-jsx",
     "moduleResolution": "bundler",
     "typeRoots": ["../node_modules/@types"],
-    "types": ["jest", "node", "@testing-library/jest-dom"],
-    "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "types": ["jest", "node"],
+    // The sub-packages import (types-only) from the bare 'json-edit-react'
+    // specifier, which doesn't resolve from the repo-root node_modules. Map it
+    // to core's source so ts-jest can type-check tests that pull in those hooks.
+    "baseUrl": "..",
+    "paths": {
+      "json-edit-react": ["src"],
+      "json-edit-react/*": ["src/*"]
+    }
   },
-  "include": ["**/*.ts", "**/*.tsx", "../src/**/*.ts", "../src/**/*.tsx"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../src/**/*.ts",
+    "../src/**/*.tsx",
+    "../packages/utils/src/**/*.ts"
+  ]
 }

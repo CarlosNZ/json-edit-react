@@ -1,0 +1,64 @@
+{
+  "name": "@json-edit-react/themes",
+  "version": "0.1.0",
+  "description": "Pre-built themes for json-edit-react",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CarlosNZ/json-edit-react.git",
+    "directory": "packages/themes"
+  },
+  "homepage": "https://github.com/CarlosNZ/json-edit-react/tree/main/packages/themes",
+  "main": "build/index.cjs.js",
+  "module": "build/index.esm.js",
+  "types": "build/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.esm.js",
+      "require": "./build/index.cjs.js"
+    }
+  },
+  "files": [
+    "build/**/*"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "rollup -c && rm -rf build/dts",
+    "clean": "rm -rf build",
+    "compile": "tsc --noEmit",
+    "prepack": "pnpm build",
+    "preview-publish": "pnpm pack"
+  },
+  "peerDependencies": {
+    "json-edit-react": "workspace:^",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@types/react": "19.1.1",
+    "json-edit-react": "workspace:*",
+    "react": "^19.1.0",
+    "rollup": "^4.10.0",
+    "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-dts": "^6.1.0",
+    "rollup-plugin-sizes": "^1.0.6",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "json-edit-react",
+    "themes",
+    "react",
+    "json-editor"
+  ]
+}

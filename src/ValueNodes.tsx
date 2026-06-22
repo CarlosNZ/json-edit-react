@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { AutogrowTextArea } from './AutogrowTextArea'
-import { insertCharInTextArea, toPathString } from './helpers'
+import { insertCharInTextArea } from './utils/keyboard'
+import { toPathString } from './utils/pathTools'
 import { useTheme } from './contexts'
 import {
   type NodeData,
@@ -17,7 +18,7 @@ interface StringDisplayProps {
   styles: React.CSSProperties
   pathString: string
   showStringQuotes?: boolean
-  stringTruncate?: number
+  stringTruncateLength?: number
   canEdit: boolean
   setIsEditing: (value: React.SetStateAction<boolean>) => void
   translate: TranslateFunction
@@ -30,7 +31,7 @@ interface StringDisplayProps {
 export const StringDisplay: React.FC<StringDisplayProps> = ({
   nodeData,
   showStringQuotes = true,
-  stringTruncate = 200,
+  stringTruncateLength = 200,
   pathString,
   canEdit,
   setIsEditing,
@@ -44,7 +45,7 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
 
   const quoteChar = showStringQuotes ? '"' : ''
 
-  const requiresTruncation = value.length > stringTruncate
+  const requiresTruncation = value.length > stringTruncateLength
 
   const handleMaybeEdit = () => {
     if (canEdit) setIsEditing(true)
@@ -80,7 +81,7 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
       ) : (
         <>
           <TextWrapper>
-            <span>{value.slice(0, stringTruncate - 2).trimEnd()}</span>{' '}
+            <span>{value.slice(0, stringTruncateLength - 2).trimEnd()}</span>{' '}
           </TextWrapper>
           <span className="jer-string-expansion jer-ellipsis" onClick={() => setIsExpanded(true)}>
             ...
@@ -122,7 +123,7 @@ export const StringEdit: React.FC<StringEditProps> = ({
       name={pathString}
       value={value}
       setValue={setValue}
-      handleKeyPress={(e) => {
+      onKeyDown={(e) => {
         handleKeyboard(e, {
           stringConfirm: handleEdit,
           stringLineBreak: () => {
@@ -153,34 +154,23 @@ export const StringValue: React.FC<InputProps & { value: string; enumType?: Enum
 
   const pathString = toPathString(path)
 
-  const { value, setValue, nodeData, handleEdit, handleKeyboard, keyboardCommon } = props
+  const { value, setValue, nodeData, handleEdit, handleKeyboard, keyboardCommon, Select } = props
 
   if (isEditing && enumType) {
     return (
-      <div className="jer-select jer-select-enums">
-        <select
-          name={`${pathString}-value-select`}
-          className="jer-select-inner"
-          onChange={(e) => setValue(e.target.value)}
-          value={value}
-          autoFocus
-          onKeyDown={(e: React.KeyboardEvent) => {
-            handleKeyboard(e, {
-              stringConfirm: handleEdit,
-              ...keyboardCommon,
-            })
-          }}
-        >
-          {enumType.values.map((val) => {
-            return (
-              <option value={val} key={val}>
-                {val}
-              </option>
-            )
-          })}
-        </select>
-        <span className="focus"></span>
-      </div>
+      <Select
+        name={`${pathString}-value-select`}
+        value={value}
+        onChange={setValue}
+        options={enumType.values}
+        autoFocus
+        onKeyDown={(e) =>
+          handleKeyboard(e, {
+            stringConfirm: handleEdit,
+            ...keyboardCommon,
+          })
+        }
+      />
     )
   }
 
