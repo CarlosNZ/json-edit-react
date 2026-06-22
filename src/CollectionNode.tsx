@@ -212,6 +212,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // — the editor's outer container still needs to render even when nothing
   // matches, so the user sees an "empty" tree rather than nothing at all.
   const isVisible = useNodeVisible(path) || nodeData.level === 0
+  // Holds the latest `handleEdit` for the store's commit-on-displace callback.
+  // Declared ABOVE the early-return so the hook runs on every render; assigned
+  // once `handleEdit` exists below.
+  const handleEditRef = useRef<(onCommit?: unknown) => void>(NOOP)
   if (!isVisible && !childrenEditing) return null
 
   // `visibleSize` is a number on tracked collections while a filter is
@@ -268,7 +272,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   // Commits the raw-JSON edit of this collection through the store's commit
   // engine. Parse failure keeps the session open (only the error fires).
-  const handleEdit = () => {
+  // `onCommit` lets a commit-on-displace open the next node at the commit
+  // moment (a parse failure returns first, so it never runs → switch blocked).
+  const handleEdit = (onCommit?: unknown) => {
     // Parse exactly the text shown: `editBufferValue` reuses the string the
     // memo already serialized, so the parsed input and the INVALID_JSON
     // payload match the textarea. The `?? jsonStringify(data)` is a type
@@ -285,12 +291,29 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       return
     }
     setError(null)
-    // `onCommit: clearEditBuffer` clears the buffer at the commit moment, so a
-    // `hold()` keeps the typed JSON visible until then (buffer ⊥ data).
-    submit({ op: 'edit', path, value, onCommit: clearEditBuffer }).then((outcome) => {
+    // `onCommit` is a real callback only from commit-on-displace/Tab; the ✓/OK
+    // button (`onOk={handleEdit}`) calls it with a click event, which we ignore.
+    const advance = typeof onCommit === 'function' ? (onCommit as () => void) : undefined
+    // The buffer clears at the commit moment (so a `hold()` keeps the typed JSON
+    // visible until then), then `advance` opens any displace/Tab target.
+    submit({
+      op: 'edit',
+      path,
+      value,
+      onCommit: () => {
+        clearEditBuffer()
+        advance?.()
+      },
+    }).then((outcome) => {
       if (outcome?.status === 'error') onError(outcome.error, value as CollectionData)
     })
   }
+
+  // Point the commit-on-displace ref (declared above the visibility
+  // early-return) at the LIVE `handleEdit` — it closes over the current edit
+  // buffer, so a frozen closure would commit the stale one (see
+  // ValueNodeWrapper for the rationale).
+  handleEditRef.current = handleEdit
 
   // Commits an add and fires `commitAdd` (or the error observer).
   const handleAdd = (key: string) => {
@@ -485,7 +508,13 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     // Gated on `canEdit`: custom components call `setIsEditing` unconditionally
     // (e.g. on double-click), so a read-only node must hand them a no-op rather
     // than an opener.
-    setIsEditing: canEdit ? () => open(path, { cancelOp: clearEditBuffer }) : NOOP,
+    setIsEditing: canEdit
+      ? () =>
+          open(path, {
+            cancelOp: clearEditBuffer,
+            commitOp: (onCommit) => handleEditRef.current(onCommit),
+          })
+      : NOOP,
     getStyles,
     canDragOnto: canEdit,
     canEdit,
@@ -506,7 +535,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
         canEdit
           ? () => {
               hasBeenOpened.current = true
-              open(path, { cancelOp: clearEditBuffer })
+              open(path, {
+                cancelOp: clearEditBuffer,
+                commitOp: (onCommit) => handleEditRef.current(onCommit),
+              })
             }
           : undefined
       }

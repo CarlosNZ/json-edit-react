@@ -521,26 +521,30 @@ describe('JsonEditor — edit flow', () => {
     expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('one')
   })
 
-  test('starting an edit on a second node cancels the first cleanly', async () => {
+  test('starting an edit on a second node commits the first (changed) edit', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     render(<JsonEditor data={{ a: 'one', b: 'two' }} setData={setData} />)
 
-    // Open edit on 'a'
+    // Open edit on 'a' and change it (no Enter/Tab).
     await user.dblClick(screen.getByText('"one"'))
     const firstInput = screen.getByRole('textbox') as HTMLTextAreaElement
     await user.clear(firstInput)
-    await user.type(firstInput, 'partial-edit-not-committed')
+    await user.type(firstInput, 'committed-on-switch')
 
-    // Without confirming, double-click the second value to switch focus
+    // Displacing by double-clicking the second value commits 'a' (like Tab),
+    // then opens 'b'.
     await user.dblClick(screen.getByText('"two"'))
 
-    // Exactly one input is open, and it's the second value (not a leaked
-    // first one)
+    // The changed edit on 'a' committed...
+    expect(setData).toHaveBeenCalledTimes(1)
+    expect(setData).toHaveBeenCalledWith({ a: 'committed-on-switch', b: 'two' })
+
+    // ...and exactly one input is open — the second value (not a leaked first
+    // one).
     const inputs = screen.getAllByRole('textbox')
     expect(inputs).toHaveLength(1)
     expect((inputs[0] as HTMLTextAreaElement).value).toBe('two')
-    expect(setData).not.toHaveBeenCalled()
   })
 
   test('clicking the OK icon confirms the edit (same as pressing Enter)', async () => {
@@ -1234,7 +1238,7 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     expect(seq).not.toContain('cancelEdit')
   })
 
-  test('node-switch fires cancelEdit for the displaced session before startEdit for the new one', async () => {
+  test('node-switch commits the displaced (changed) session before startEdit for the new one', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     render(
@@ -1243,17 +1247,17 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
 
     // Open edit on `a`, then click Edit on `b` while `a` is still active.
     await user.dblClick(screen.getByText('"first"'))
-    // Typed-but-uncommitted text on `a`. The displaced session must report as
-    // a cancel (not a silent close).
+    // Typed-but-uncommitted change on `a`. Displacing commits it (like Tab),
+    // not cancels it.
     await user.clear(screen.getByRole('textbox'))
     await user.type(screen.getByRole('textbox'), 'edited-a')
     await user.dblClick(screen.getByText('"second"'))
 
     const seq = onEditEvent.mock.calls.map(([e]) => e.event)
-    expect(seq).toEqual(['startEdit', 'cancelEdit', 'startEdit'])
-    expect(onEditEvent.mock.calls[0][0]).toMatchObject({ key: 'a' })
-    expect(onEditEvent.mock.calls[1][0]).toMatchObject({ event: 'cancelEdit', key: 'a' })
-    expect(onEditEvent.mock.calls[2][0]).toMatchObject({ event: 'startEdit', key: 'b' })
+    expect(seq).toEqual(['startEdit', 'submitEdit', 'commitEdit', 'startEdit'])
+    expect(onEditEvent.mock.calls[0][0]).toMatchObject({ event: 'startEdit', key: 'a' })
+    expect(onEditEvent.mock.calls[2][0]).toMatchObject({ event: 'commitEdit', key: 'a' })
+    expect(onEditEvent.mock.calls[3][0]).toMatchObject({ event: 'startEdit', key: 'b' })
   })
 
   test('editorRef.cancel fires cancelEdit and clears the local edit buffer', async () => {
@@ -1286,6 +1290,151 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     // original value, not the typed-but-uncommitted text.
     await user.dblClick(screen.getByText('"hello"'))
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('hello')
+  })
+})
+
+describe('JsonEditor — commit-on-displace (clicking another node while editing)', () => {
+  // Displacing an open edit by opening another node behaves like Tab: a changed
+  // edit commits, an unchanged one closes via commit* (no setData), and an
+  // edit that can't commit blocks the switch and stays open with its error.
+  // The object-add session is the one exception — it cancels (you can't Tab out
+  // of a new-key edit either).
+
+  test('displacing an UNCHANGED value edit commits quietly (no setData) and opens the new node', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(<JsonEditor data={{ a: 'one', b: 'two' }} setData={setData} onEditEvent={onEditEvent} />)
+
+    await user.dblClick(screen.getByText('"one"'))
+    // No change to the buffer, then displace.
+    await user.dblClick(screen.getByText('"two"'))
+
+    // No mutation, but the session closed via commit (not cancel), and 'b'
+    // opened.
+    expect(setData).not.toHaveBeenCalled()
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'submitEdit', 'commitEdit', 'startEdit'])
+    const inputs = screen.getAllByRole('textbox')
+    expect(inputs).toHaveLength(1)
+    expect((inputs[0] as HTMLTextAreaElement).value).toBe('two')
+  })
+
+  test('displacing a collection edit with INVALID JSON is blocked: editor stays open with its error, new node not opened', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const { container } = render(
+      <JsonEditor
+        data={{ obj: { x: 1 }, other: 'val' }}
+        setData={setData}
+        onEditEvent={onEditEvent}
+        showIconTooltips
+      />
+    )
+
+    // Open the raw-JSON editor on the `obj` collection (its header Edit pencil
+    // is the first within its component subtree).
+    const objComponent = screen.getByText('obj').closest('.jer-component') as HTMLElement
+    await user.click(objComponent.querySelector('[title="Edit"]') as HTMLElement)
+    const textarea = container.querySelector('textarea.jer-collection-text-area') as HTMLTextAreaElement
+    await user.clear(textarea)
+    await user.type(textarea, 'abc') // not valid JSON
+
+    // Attempt to displace onto another node — blocked by the parse failure.
+    await user.dblClick(screen.getByText('"val"'))
+
+    expect(setData).not.toHaveBeenCalled()
+    // The collection editor is still the only open input, preserving the bad
+    // text, with its error shown; 'other' did not open.
+    const inputs = screen.getAllByRole('textbox')
+    expect(inputs).toHaveLength(1)
+    expect((inputs[0] as HTMLTextAreaElement).value).toBe('abc')
+    expect(container.querySelector('.jer-error-slug')).toHaveTextContent('Invalid JSON')
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit']) // no commit, no startEdit for 'other'
+  })
+
+  test('displacing a key rename (changed) commits the rename, then opens the new node', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(
+      <JsonEditor data={{ oldName: 1, other: 99 }} setData={setData} onEditEvent={onEditEvent} />
+    )
+
+    await user.dblClick(screen.getByText('oldName'))
+    const keyInput = screen.getByDisplayValue('oldName') as HTMLInputElement
+    await user.clear(keyInput)
+    await user.type(keyInput, 'newName')
+
+    // Displace by double-clicking another node's value.
+    await user.dblClick(screen.getByText('99'))
+
+    expect(setData).toHaveBeenCalledTimes(1)
+    expect(setData).toHaveBeenCalledWith({ newName: 1, other: 99 })
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startRename', 'submitRename', 'commitRename', 'startEdit'])
+  })
+
+  test('displacing an UNCHANGED key rename fires commitRename (no setData) and opens the new node', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(
+      <JsonEditor data={{ oldName: 1, other: 99 }} setData={setData} onEditEvent={onEditEvent} />
+    )
+
+    await user.dblClick(screen.getByText('oldName'))
+    // No change to the key, then displace.
+    await user.dblClick(screen.getByText('99'))
+
+    expect(setData).not.toHaveBeenCalled()
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startRename', 'submitRename', 'commitRename', 'startEdit'])
+  })
+
+  test('displacing a key rename to a DUPLICATE key is blocked — rename stays open with error, new node not opened', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor data={{ a: 1, oldName: 2, other: 3 }} setData={setData} />
+    )
+
+    await user.dblClick(screen.getByText('oldName'))
+    const keyInput = screen.getByDisplayValue('oldName') as HTMLInputElement
+    await user.clear(keyInput)
+    await user.type(keyInput, 'a') // 'a' already exists
+
+    await user.dblClick(screen.getByText('3')) // try to displace onto 'other'
+
+    expect(setData).not.toHaveBeenCalled()
+    // The rename input is still open showing 'a', the error renders, and
+    // 'other' did not open.
+    expect(screen.getByDisplayValue('a')).toBeInTheDocument()
+    expect(container.querySelector('.jer-error-slug')).toHaveTextContent('Key already exists')
+    expect(screen.getByText('3')).toBeInTheDocument()
+  })
+
+  test('displacing an object add session cancels the add (no commit) and opens the new node', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const { container } = render(
+      <JsonEditor data={{ existing: 'value' }} setData={setData} onEditEvent={onEditEvent} showIconTooltips />
+    )
+
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(newKeyInput)
+    await user.type(newKeyInput, 'wip')
+
+    // Displace by double-clicking the existing value.
+    await user.dblClick(screen.getByText('"value"'))
+
+    expect(setData).not.toHaveBeenCalled()
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startAdd', 'cancelAdd', 'startEdit'])
   })
 })
 

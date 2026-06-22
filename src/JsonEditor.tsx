@@ -376,7 +376,10 @@ const Editor: React.FC<
         return {
           input: { ...nodeData, newData, event: 'rename', newKey } as UpdateFunctionProps,
           nodeData,
-          isNoOp: false,
+          // A same-key rename (unchanged) is a no-op: the engine fires
+          // `commitRename` and skips `onUpdate`, matching how an unchanged value
+          // edit closes via `commitEdit`.
+          isNoOp: oldKey === newKey,
           apply: () => commitData(newData),
           // Restore the parent with its original key order.
           revert: () =>

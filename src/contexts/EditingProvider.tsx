@@ -148,6 +148,13 @@ export type SubmitArgs = CommitRequest & {
 interface OpenOptions {
   op?: EditOperation
   cancelOp?: () => void
+  // Commit-on-displace: when this session is displaced by opening another node,
+  // commit its buffer (passing `onCommit` = "open the new node") instead of
+  // cancelling. The node forwards to its LIVE commit handler (a stale closure
+  // would commit the empty initial buffer); an invalid/blocked commit must not
+  // call `onCommit`, which leaves this session open and blocks the switch.
+  // Sessions that omit this (e.g. object-add) keep the cancel-on-displace path.
+  commitOp?: (onCommit: () => void) => void
   // Imperative (handle-driven) edit — overrides `allowEdit`. See
   // `EditingState.force`.
   force?: boolean
@@ -206,6 +213,13 @@ const createEditingStore = (
   // closure var (not state) so installing/clearing it never notifies.
   let cancelOp: (() => void) | null = null
 
+  // Commit-on-displace callback for the active editing session (see
+  // `OpenOptions.commitOp`). Shares `cancelOp`'s lifecycle: registered by
+  // `installSession`, cleared on every session-ending transition. When a switch
+  // displaces a session that registered one, `open()` commits via this instead
+  // of cancelling.
+  let commitOp: ((onCommit: () => void) => void) | null = null
+
   // Re-entrancy guard: a registered `cancelOp` may itself route back through
   // `cancel()`; the recursive call no-ops so the outer flow owns the single
   // state-clear + single cancel* emission.
@@ -259,6 +273,8 @@ const createEditingStore = (
       // and throw here again, wedging ALL further editing. (An edit can't
       // survive its own node vanishing, so abandoning it is the right call.)
       commit({ ...state, active: null })
+      cancelOp = null
+      commitOp = null
       return
     }
     if (nodeData) emitEvent(nodeData, event, extra)
@@ -267,6 +283,19 @@ const createEditingStore = (
   const setActive = (active: EditingState | null) => {
     if (sameSession(state.active, active) && state.active?.phase === active?.phase) return
     commit({ ...state, active })
+  }
+
+  // Install a new editing session: register its UI-cleanup + commit-on-displace
+  // callbacks, make it active, and fire `start*`. Factored out of `open()` so
+  // the commit-on-displace path can DEFER it into the outgoing commit's
+  // `onCommit` (open the new node only once the previous one has committed)
+  // without `open()` re-entering itself.
+  const installSession = (next: EditingState, options?: OpenOptions) => {
+    cancelOp = options?.cancelOp ?? null
+    commitOp = options?.commitOp ?? null
+    setActive(next)
+    const startEvent = eventForOp(next.op, 'start')
+    if (startEvent) fireEditEvent(next.path, startEvent)
   }
 
   // ── open: start an inline editing session ────────────────────────────────
@@ -279,14 +308,27 @@ const createEditingStore = (
     const prev = state.active
     const isSwitch = prev !== null && !sameSession(prev, next)
 
-    // Run the outgoing session's UI cleanup before installing the new one. If
-    // that cancelOp itself routed through `cancel()`, it cleared state + fired
-    // cancel* already — the post-check below avoids a double-fire.
+    // Commit-on-displace: a switch away from a session that registered a commit
+    // callback behaves like Tab — commit the outgoing buffer, then open the new
+    // node from inside the commit's `onCommit` (synchronous for editor ops, so
+    // it still feels instant). A blocked/invalid commit never calls `onCommit`,
+    // so the switch is blocked and the outgoing session stays open with its
+    // error; its `commitOp`/`cancelOp` are left registered for a retry (a
+    // genuine commit clears them in `apply()`/the no-op branch).
+    if (isSwitch && commitOp) {
+      commitOp(() => installSession(next, options))
+      return
+    }
+
+    // Otherwise (first open, same session, or a session that opted out of
+    // commit-on-displace — e.g. object-add): run the outgoing session's UI
+    // cleanup and fire cancel* for it, then install the new session. If that
+    // cleanup itself routed through `cancel()`, it cleared state + fired
+    // cancel* already — the post-check avoids a double-fire.
     const op0 = cancelOp
     cancelOp = null
+    commitOp = null
     if (op0) op0()
-
-    cancelOp = options?.cancelOp ?? null
 
     // Fire cancel* for the displaced session if its cleanup didn't already tear
     // it down (state.active still pointing at `prev`). A displaced session is
@@ -297,9 +339,7 @@ const createEditingStore = (
       if (cancelEvent) fireEditEvent(prev.path, cancelEvent)
     }
 
-    setActive(next)
-    const startEvent = eventForOp(op, 'start')
-    if (startEvent) fireEditEvent(path, startEvent)
+    installSession(next, options)
   }
 
   // ── cancel: abort the active session (true user/external cancel) ──────────
@@ -313,6 +353,7 @@ const createEditingStore = (
     try {
       const op0 = cancelOp
       cancelOp = null
+      commitOp = null
       if (op0) op0()
       if (prev !== null) {
         if (state.active !== null) commit({ ...state, active: null })
@@ -338,7 +379,23 @@ const createEditingStore = (
   const submit = (request: SubmitArgs) => {
     const { op, path, instant, onCommit } = request
     const prims = commitRef.current
-    const built = prims?.buildCommit(request)
+    let built: BuiltCommit | null
+    try {
+      built = prims?.buildCommit(request) ?? null
+    } catch {
+      // The target path vanished (e.g. a commit-on-displace fired for a session
+      // whose node unmounted because the consumer swapped `data`). There's
+      // nothing to commit and no node to describe — `buildCommit` → `extract`
+      // throws. Abandon the session quietly (no submit*/commit*) but still run
+      // `onCommit`, so a displace/Tab proceeds to open the next node rather than
+      // wedging on the gone path.
+      if (sameSession(state.active, { path, op, phase: 'editing' }))
+        commit({ ...state, active: null })
+      cancelOp = null
+      commitOp = null
+      onCommit?.()
+      return Promise.resolve(undefined)
+    }
     const extra = built?.extra
     const pathStr = toPathString(path)
     const token = ++nextToken
@@ -356,6 +413,7 @@ const createEditingStore = (
       if (sameSession(state.active, { path, op, phase: 'editing' }))
         commit({ ...state, active: null })
       cancelOp = null
+      commitOp = null
       const commitEvent = eventForOp(op, 'commit')
       if (commitEvent) {
         // `built` present (genuine no-op) → fire its frozen snapshot; otherwise
@@ -379,7 +437,10 @@ const createEditingStore = (
       // Close the originating session — `sameSession` is phase-agnostic, so
       // this matches both an `editing` submit and the release of a `held` op
       // (same path + op). A Tab/onCommit may reopen the next node after.
+      // Clear both callbacks BEFORE `onCommit` runs: a commit-on-displace
+      // `onCommit` re-opens the next node and registers ITS callbacks.
       cancelOp = null
+      commitOp = null
       if (sameSession(state.active, { path, op, phase: 'editing' }))
         commit({ ...state, active: null })
       if (hasUpdate) addSettling(pathStr, token)
@@ -450,6 +511,8 @@ const createEditingStore = (
         // Gate declined (or rejected) before applying → cancel the session.
         if (state.active?.phase === 'held' && pathsEqual(state.active.path, path)) {
           commit({ ...state, active: null })
+          cancelOp = null
+          commitOp = null
         }
         const cancelEvent = eventForOp(op, 'cancel')
         if (cancelEvent) emitEvent(nodeData, cancelEvent)

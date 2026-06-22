@@ -149,7 +149,12 @@ This group is about the **event stream** (watch the 🔔 log), not timing.
 | A5 | Click **＋** on an object, type a key, **Enter** | `startAdd` → `submitAdd` → `commitAdd` → `updateSuccess` | events fire at the **parent collection** path |
 | A6 | Click **＋** on an **array** | `commitAdd` → `updateSuccess` | array adds are **instant** — no `startAdd`/`submitAdd` |
 | A7 | Click the **🗑 delete** icon on a node | `delete` → `updateSuccess` | instant — single lifecycle event |
-| A8 | Double-click value A, then (without confirming) double-click value B | `startEdit`(A) → `cancelEdit`(A) → `startEdit`(B) | the displaced session cancels cleanly |
+| A8 | Double-click value A, **change it**, then (without confirming) double-click value B | `startEdit`(A) → `submitEdit`(A) → `commitEdit`(A) → `startEdit`(B) … then `updateSuccess`(A) | **commit-on-displace**: a switch commits the outgoing edit (like Tab), then opens B |
+| A8b | Double-click value A, **don't change it**, double-click value B | `startEdit`(A) → `submitEdit`(A) → `commitEdit`(A) → `startEdit`(B) | unchanged → closes via `commitEdit` (no `updateSuccess`, no ⏳, no `setData`), then opens B |
+| A8c | Open collection A's **JSON editor**, type **invalid JSON**, double-click value B | `startEdit`(A) only | switch **blocked**: A stays open with its inline error, B does **not** open (Esc still cancels). Same for a value whose custom `fromStandardType` throws |
+| A8d | Double-click **key** A, rename it, double-click value B | `startRename`(A) → `submitRename`(A) → `commitRename`(A) → `startEdit`(B) … `updateSuccess`(A) | rename commits on displace; an **unchanged** key fires `commitRename` with no `updateSuccess`/⏳ |
+| A8e | Double-click **key** A, rename it to an **existing** key, double-click value B | `startRename`(A) only | duplicate key **blocks** the switch: A stays open with the "key exists" error, B does **not** open |
+| A8f | Click **＋** on an object, type a key, then double-click value B | `startAdd`(A) → `cancelAdd`(A) → `startEdit`(B) | object **add** is the exception — a displace **cancels** it (you can't Tab out of a new-key edit either), then opens B |
 | A9 | Double-click value A, change it, **Tab** | `startEdit`(A) → `submitEdit`(A) → `commitEdit`(A) → `startEdit`(B) … then `updateSuccess`(A) | the next field opens **synchronously**; the settlement event for A arrives just after (it's async — interleaving is normal) |
 
 ### Group B — Optimistic slow settle (set `TEST_MODE = 'slow-ok'`)

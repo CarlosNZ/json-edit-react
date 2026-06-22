@@ -503,6 +503,8 @@ The observer callbacks move onto the same flat `NodeData` payload as the rest of
 
 It now fires for the **complete** lifecycle (`start*` → `submit*` → `commit*`, or `start*` → `cancel*`) of value-edit, key-rename and add sessions, plus the instant `delete`/`move` and the background settlement (`updateSuccess`/`updateError`) of any committed change whose `onUpdate` ran — not just edit start/stop. This absorbs the role a dedicated `onRenameProperty` would have played (a rename surfaces as `startRename`/`submitRename`/`commitRename`). A no-op confirm (submitting with no change) reports `commitEdit` (the session closed cleanly); an explicit cancel or a `null` returned from `onUpdate` reports `cancel*`.
 
+One behaviour change to be aware of: opening an edit on **another** node while one is in progress (clicking its pencil, double-clicking another value, or clicking another key to rename) now **commits** the open edit — the same as Tab — instead of cancelling it. So a displaced session reports `submit*`/`commit*` (and runs `onUpdate`), or, if the buffer can't commit (malformed JSON, a duplicate key, a throwing `fromStandardType`), the switch is **blocked** and the editor stays open with its error. The object-**add** session is the exception — a switch still cancels it. If you relied on clicking away to discard an edit, Esc / ✗ are the explicit discard gestures.
+
 ### `onError` and `onCollapse` — flat `NodeData`
 
 Both now receive the standard flat node data instead of a bespoke object:

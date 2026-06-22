@@ -46,7 +46,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     handleKeyboard,
     customNodeData,
   } = props
-  const { submit, cancel } = useEditingStore()
+  const { submit } = useEditingStore()
   const [error, setError] = useState<string | null>(null)
 
   const nodeData = {
@@ -149,24 +149,23 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const getNextOrPreviousAtPath = (type: 'next' | 'prev') =>
     getNextOrPrevious(getLatestData(), path, type, sort, isViableTarget)
 
-  // Commits a key rename through the store's commit engine. The no-op /
-  // duplicate-key checks stay client-side and close the session as a cancel.
-  const handleEditKey = (newKey: string) => {
-    // No-op rename (unchanged key): close the session without committing.
-    if (name === newKey) {
-      cancel()
-      return
-    }
+  // Commits a key rename through the store's commit engine. `onCommit` lets a
+  // commit-on-displace / Tab open the next node at the commit moment.
+  const handleEditKey = (newKey: string, onCommit?: () => void) => {
     if (!parentData) return
-    if (Object.keys(parentData).includes(newKey)) {
+    // Duplicate key (and not the unchanged key itself) can't commit: surface
+    // the error and keep the session open WITHOUT running `onCommit`, so a
+    // displacing switch is blocked (like an invalid value/JSON edit). Esc/✗
+    // remain the escape hatch.
+    if (name !== newKey && Object.keys(parentData).includes(newKey)) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
-      cancel()
       return
     }
     // First-class `event: 'rename'`: the engine fires `submitRename` →
-    // `commitRename` (carrying old + new keys) and settles. A rejected
-    // settlement reverts and surfaces the error here.
-    submit({ op: 'rename', path, newKey }).then((outcome) => {
+    // `commitRename` (carrying old + new keys) and settles. An unchanged key is
+    // a no-op (`buildCommit` flags it) — `commitRename`, no `onUpdate`. A
+    // rejected settlement reverts and surfaces the error here.
+    submit({ op: 'rename', path, newKey, onCommit }).then((outcome) => {
       if (outcome?.status === 'error') onError(outcome.error, newKey as ValueData)
     })
   }
