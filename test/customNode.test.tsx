@@ -698,6 +698,28 @@ describe('CustomNode — fromStandardType commit transform', () => {
     expect(screen.getByTestId('custom')).toBeInTheDocument()
   })
 
+  test('displacing onto another node with a throwing hook is blocked: session stays open, nothing commits, new node not opened', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    render(
+      <JsonEditor
+        data={{ x: BigInt(5), y: 'plain' }}
+        setData={setData}
+        customNodeDefinitions={[bigintDef()]}
+      />
+    )
+    const input = await startEdit(user)
+    setBuffer(input, 'abc')
+
+    // Attempt to displace onto the sibling value — the throwing
+    // `fromStandardType` blocks the switch (same as Enter / ✓ on invalid).
+    await user.dblClick(screen.getByText('"plain"'))
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(screen.getByTestId('custom-input')).toBeInTheDocument() // still open
+    expect(screen.getByText('"plain"')).toBeInTheDocument() // 'y' did not open
+  })
+
   test('confirming the unchanged buffer is a no-op (tolerant pass-through)', async () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn() as jest.MockedFunction<UpdateFunction>

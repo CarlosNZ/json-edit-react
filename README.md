@@ -87,6 +87,7 @@ It's pretty self explanatory (click the "edit" icon to edit, etc.), but there ar
 - When editing a string, use `Cmd/Ctrl/Shift-Enter` to add a new line (`Enter` submits the value)
 - It's the opposite when editing a full object/array node (which you do by **clicking "edit"** on an object or array value) — `Enter` for new line, and `Cmd/Ctrl/Shift-Enter` for submit
 - `Escape` to **cancel** editing
+- Use <kbd>Tab</kbd>/<kbd>Shift-Tab</kbd> to quickly move from one value to another when editing
 - When clicking the "**clipboard**" icon, holding down `Cmd/Ctrl` will copy the *path* to the selected node rather than its value
 - When opening/closing a node, hold down "Alt/Option" to open/close *all* child nodes at once
 - For Number inputs, **arrow-up** and **down** keys will increment/decrement the value

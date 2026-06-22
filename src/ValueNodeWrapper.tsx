@@ -181,6 +181,11 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // Early return if this node is filtered out
   const isVisible = useNodeVisible(path)
 
+  // Holds the latest `handleEdit` for the store's commit-on-displace callback.
+  // Declared ABOVE the early-return so the hook runs on every render (a
+  // filtered-out node returns null below); assigned once `handleEdit` exists.
+  const handleEditRef = useRef<(inputValue?: unknown, onCommit?: () => void) => void>(NOOP)
+
   if (!isVisible) return null
 
   // A local (deferred) type-switch is in progress when the editing `dataType`
@@ -363,6 +368,12 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     submit({ op: 'edit', path, value: newValue, onCommit }).then(settleEdit(newValue))
   }
 
+  // Point the commit-on-displace ref (declared above the visibility
+  // early-return) at the LIVE `handleEdit`, which closes over the current
+  // `value`/`dataType` buffer — a closure frozen at `open()` time would commit
+  // the stale initial buffer.
+  handleEditRef.current = handleEdit
+
   const handleCancel = () => {
     // Revert the buffer locally, then drive the store cancel (which also runs
     // `cancelOp` = `revertToData` — idempotent). The local revert covers entry
@@ -396,7 +407,15 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // reuses the same opener but gates to `undefined` when `!canEdit`, to hide
   // the icon rather than render a dead one. A forced/imperative edit takes a
   // separate path (`editorRef.startEdit` → `open(..., { force: true })`).
-  const startEdit = () => open(path, { cancelOp: revertToData })
+  // `commitOp`: displacing this edit by opening another node commits the buffer
+  // (like Tab) instead of cancelling. A throwing `fromStandardType` makes
+  // `handleEdit` return before `submit`, so `onCommit` never runs and the
+  // switch is blocked (the editor stays open with its error).
+  const startEdit = () =>
+    open(path, {
+      cancelOp: revertToData,
+      commitOp: (onCommit) => handleEditRef.current(undefined, onCommit),
+    })
   const setIsEditing = canEdit ? startEdit : NOOP
 
   // Commit this field's edit, then open the next/previous node in the given Tab

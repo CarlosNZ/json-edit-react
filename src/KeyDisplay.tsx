@@ -24,7 +24,7 @@ interface KeyDisplayProps {
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
-  handleEditKey: (newKey: string) => void
+  handleEditKey: (newKey: string, onCommit?: () => void) => void
   handleCancel: () => void
   handleClick?: (e: React.MouseEvent) => void
   keyValueArray?: Array<[string | number, ValueData]>
@@ -58,6 +58,13 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   // Actions only (no subscription) — `isEditingKey` arrives via props.
   const { open, cancel } = useEditingStore()
 
+  // The rename `<input>` is uncontrolled (`defaultValue`), so its in-progress
+  // value lives in the DOM. `renameCommitOp` reads it live to commit on
+  // displace (the keyboard paths read `e.target.value` directly instead).
+  const keyInputRef = React.useRef<HTMLInputElement>(null)
+  const renameCommitOp = (onCommit: () => void) =>
+    handleEditKey(keyInputRef.current?.value ?? String(name), onCommit)
+
   const displayKey = typeof name === 'number' ? String(name + arrayIndexStart) : name
 
   if (!isEditingKey) {
@@ -82,7 +89,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
             if (canEditKey) handleEditKey(newKey)
           }}
           startEditingKey={() => {
-            if (canEditKey) open(path, { op: 'rename' })
+            if (canEditKey) open(path, { op: 'rename', commitOp: renameCommitOp })
           }}
           handleClick={handleClick}
           styles={derivedKeyStyles}
@@ -95,7 +102,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
       <span
         className="jer-key-text"
         style={derivedKeyStyles}
-        onDoubleClick={() => canEditKey && open(path, { op: 'rename' })}
+        onDoubleClick={() => canEditKey && open(path, { op: 'rename', commitOp: renameCommitOp })}
         onClick={handleClick}
       >
         {emptyStringKey ? <span className="jer-empty-string">{emptyStringKey}</span> : displayKey}
@@ -106,6 +113,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
 
   return (
     <input
+      ref={keyInputRef}
       className="jer-input-text jer-key-edit"
       type="text"
       name={pathString}
@@ -116,20 +124,27 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
         handleKeyboard(e, {
           stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
           cancel: handleCancel,
+          // Tab commits the rename, then opens the next node at the commit
+          // moment (via `onCommit`) — so an invalid (duplicate-key) rename
+          // blocks the move and stays open, matching value-edit Tab / displace.
           tabForward: () => {
-            handleEditKey((e.target as HTMLInputElement).value)
-            if (keyValueArray) {
-              const firstChildKey = keyValueArray?.[0][0]
-              const next = firstChildKey ? [...path, firstChildKey] : getNextOrPrevious('next')
-              if (next) open(next)
-              else cancel()
-            } else open(path)
+            const value = (e.target as HTMLInputElement).value
+            handleEditKey(value, () => {
+              if (keyValueArray) {
+                const firstChildKey = keyValueArray?.[0][0]
+                const next = firstChildKey ? [...path, firstChildKey] : getNextOrPrevious('next')
+                if (next) open(next)
+                else cancel()
+              } else open(path)
+            })
           },
           tabBack: () => {
-            handleEditKey((e.target as HTMLInputElement).value)
-            const prev = getNextOrPrevious('prev')
-            if (prev) open(prev)
-            else cancel()
+            const value = (e.target as HTMLInputElement).value
+            handleEditKey(value, () => {
+              const prev = getNextOrPrevious('prev')
+              if (prev) open(prev)
+              else cancel()
+            })
           },
         })
       }

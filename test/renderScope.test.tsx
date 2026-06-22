@@ -190,7 +190,7 @@ describe('Stage B — lazy jsonStringify', () => {
     expect(reopened).not.toContain('{"x":2}')
   })
 
-  test('leaving JSON-edit by editing elsewhere does not leave a stale buffer', async () => {
+  test('leaving JSON-edit by editing elsewhere commits and does not leave a stale buffer', async () => {
     const user = userEvent.setup()
     const Host = () => {
       const [data, setData] = useState<object>({ a: { inner: 1 }, b: 'leafB' })
@@ -204,15 +204,17 @@ describe('Stage B — lazy jsonStringify', () => {
     const ta = screen.getByRole('textbox') as HTMLTextAreaElement
     fireEvent.change(ta, { target: { value: '{"inner":2}' } })
 
-    // Leave by starting an edit elsewhere — moves the store's editing element
-    // off `a` without running `a`'s handleEdit/handleCancel at all.
+    // Leave by starting an edit elsewhere — commit-on-displace commits `a`'s
+    // valid change (like Tab), then opens `b`.
     await user.dblClick(screen.getByText('"leafB"'))
 
-    // Re-open `a`'s JSON editor. `a` was never confirmed, so its data is still
-    // { inner: 1 } — it must show that freshly, not the stale `{"inner":2}`.
+    // Re-open `a`'s JSON editor (its Edit button is index 1; `b` shows OK/Cancel
+    // while editing, not an Edit pencil). The change committed (so `a` is now
+    // { inner: 2 }) and the buffer was cleared — it shows the committed value
+    // freshly serialized (pretty-printed), NOT the stale compact `{"inner":2}`.
     await user.click(screen.getAllByTitle('Edit')[1])
     const reopened = (screen.getByRole('textbox') as HTMLTextAreaElement).value
-    expect(reopened).toContain('"inner": 1')
+    expect(reopened).toContain('"inner": 2')
     expect(reopened).not.toContain('{"inner":2}')
   })
 })
