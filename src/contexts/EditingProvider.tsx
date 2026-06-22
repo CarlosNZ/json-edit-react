@@ -164,11 +164,16 @@ interface OpenOptions {
 // commit.
 type Phase = 'start' | 'submit' | 'commit' | 'cancel'
 const EVENT_FOR_OP: Record<EditOperation, Partial<Record<Phase, EditEvent['event']>>> = {
-  edit:   { start: 'startEdit',   submit: 'submitEdit',   cancel: 'cancelEdit',   commit: 'commitEdit' },
-  add:    { start: 'startAdd',    submit: 'submitAdd',    cancel: 'cancelAdd',    commit: 'commitAdd' },
-  rename: { start: 'startRename', submit: 'submitRename', cancel: 'cancelRename', commit: 'commitRename' },
+  edit: { start: 'startEdit', submit: 'submitEdit', cancel: 'cancelEdit', commit: 'commitEdit' },
+  add: { start: 'startAdd', submit: 'submitAdd', cancel: 'cancelAdd', commit: 'commitAdd' },
+  rename: {
+    start: 'startRename',
+    submit: 'submitRename',
+    cancel: 'cancelRename',
+    commit: 'commitRename',
+  },
   delete: { commit: 'delete' },
-  move:   { commit: 'move' },
+  move: { commit: 'move' },
 }
 const eventForOp = (op: EditOperation, phase: Phase): EditEvent['event'] | null =>
   EVENT_FOR_OP[op][phase] ?? null
@@ -387,8 +392,8 @@ const createEditingStore = (
       // whose node unmounted because the consumer swapped `data`). There's
       // nothing to commit and no node to describe — `buildCommit` → `extract`
       // throws. Abandon the session quietly (no submit*/commit*) but still run
-      // `onCommit`, so a displace/Tab proceeds to open the next node rather than
-      // wedging on the gone path.
+      // `onCommit`, so a displace/Tab proceeds to open the next node rather
+      // than wedging on the gone path.
       if (sameSession(state.active, { path, op, phase: 'editing' }))
         commit({ ...state, active: null })
       cancelOp = null
