@@ -441,7 +441,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       )
     })
   ) : (
-    <div className="jer-collection-text-edit">
+    // -custom variant for Custom TextEditor so it remains full width and not
+    // fit to content like the default textarea
+    <div className={`jer-collection-text-edit${TextEditor ? '-custom' : ''}`}>
       {TextEditor ? (
         <TextEditor
           value={editBufferValue ?? ''}
@@ -689,10 +691,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           )}
         </div>
         {!isEditing && showCollectionWrapper && (
-          <div
-            className="jer-brackets jer-bracket-outside"
-            style={getStyles('bracket', nodeData)}
-          >
+          <div className="jer-brackets jer-bracket-outside" style={getStyles('bracket', nodeData)}>
             {brackets.close}
           </div>
         )}

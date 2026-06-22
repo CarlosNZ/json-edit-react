@@ -211,12 +211,19 @@ select:focus + .focus {
   position: relative;
 }
 
-.jer-collection-text-edit {
+.jer-collection-text-edit,
+.jer-collection-text-edit-custom {
   display: flex;
   flex-direction: column;
   gap: 0.3em;
   align-items: flex-start;
   line-height: 1.1em;
+}
+
+/* Default <textarea> only: Keep OK/Cancel buttons bound by the text area width
+*/
+.jer-collection-text-edit {
+  width: fit-content;
 }
 
 .jer-collection-text-area {
