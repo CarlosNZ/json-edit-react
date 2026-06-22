@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { JsonEditor, type JsonData, type OnEditEventFunction } from '@json-edit-react'
 import { booleanToggleDefinition } from '@json-edit-react/components'
 import { useEditorDefaults, useToast } from '@example-resources'
@@ -25,6 +25,11 @@ export default function EventSignals() {
   const [data, setData] = useState<JsonData>(initialData)
   const toast = useToast()
 
+  // Monotonic counter prepended to each toast, so the fire order
+  // is unambiguous when events land near-simultaneously (e.g.
+  // submitEdit always precedes commitEdit).
+  const seqRef = useRef(0)
+
   const useDelayed =
     (data as { 'Use delayed settlement'?: boolean })['Use delayed settlement'] ?? false
 
@@ -34,11 +39,12 @@ export default function EventSignals() {
   // async save resolves.
   const onEditEvent = useCallback<OnEditEventFunction>(
     (e) => {
+      const seq = ++seqRef.current
       toast({
-        title: e.event,
+        title: `${seq}. ${e.event}`,
         description: describeEvent(e),
         status: statusForEvent(e.event),
-        duration: 2500,
+        duration: 3500,
         isClosable: true,
         position: 'top-right',
         variant: 'left-accent',
