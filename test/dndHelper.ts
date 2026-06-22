@@ -8,9 +8,9 @@
 //
 // Source events that the production hook listens for:
 //   onDragStart           — on the draggable row
-//   onDragOver / onDrop   — on the drop target (the row itself for 'above',
-//                            or the absolutely-positioned `.jer-drop-target-bottom`
-//                            child for 'below')
+//   onDragOver / onDrop   — on the drop target (the row itself for
+//                            'above', or the absolutely-positioned
+//                            `.jer-drop-target-bottom` child for 'below')
 //   onDragEnter / onDragExit — purely visual (drop-zone highlight)
 //   onDragEnd             — clears the dragSource on the source row
 //
@@ -63,7 +63,8 @@ export const rowFor = (root: HTMLElement, key: string | number): HTMLElement => 
   return row
 }
 
-/** Bottom-half drop target rendered as a child of the row during an active drag. */
+/** Bottom-half drop target rendered as a child of the row during an
+ *  active drag. */
 const bottomTarget = (row: HTMLElement): HTMLElement | null =>
   row.querySelector('.jer-drop-target-bottom')
 
@@ -72,12 +73,12 @@ const bottomTarget = (row: HTMLElement): HTMLElement | null =>
  *
  * `position` selects which half of the target row receives the drop:
  *   - 'above' (default) drops onto the row itself
- *   - 'below' drops onto the bottom-half overlay (only present while a drag
- *     is in progress, hence we re-query after `dragStart`)
+ *   - 'below' drops onto the bottom-half overlay (only present while a
+ *     drag is in progress, hence we re-query after `dragStart`)
  *
- * The drop chain inside `JsonEditor` is async (`onMove` → `handleEdit`
- * awaits the user-supplied `onUpdate`), so we wrap in `act` and flush
- * microtasks before returning.  Tests can stay synchronous-looking by
+ * The drop chain inside `JsonEditor` is async when the consumer supplies
+ * `onUpdate` (`onMove` → `handleEdit` awaits it), so we wrap in `act` and
+ * flush microtasks before returning. Tests can stay synchronous-looking by
  * `await`-ing this helper.
  *
  * In real browsers, `draggable="false"` cancels the native `dragstart`
@@ -102,13 +103,28 @@ export const dragAndDrop = async (
   })
 
   // Bottom-half target only mounts after dragStart fires, so re-query.
-  const dropEl = position === 'below' ? bottomTarget(target) ?? target : target
+  // Throw loudly rather than silently degrading to an `'above'` drop on
+  // `target` — a missing bottom overlay means production didn't enter the
+  // drag-in-progress state and the test setup is broken.
+  let dropEl: HTMLElement
+  if (position === 'below') {
+    const bottom = bottomTarget(target)
+    if (!bottom) {
+      throw new Error(
+        "dragAndDrop: '.jer-drop-target-bottom' not mounted on target after dragStart"
+      )
+    }
+    dropEl = bottom
+  } else {
+    dropEl = target
+  }
 
   await act(async () => {
     fireEvent.dragEnter(dropEl, { dataTransfer })
     fireEvent.dragOver(dropEl, { dataTransfer })
     fireEvent.drop(dropEl, { dataTransfer })
-    // Flush the `onMove` → `handleEdit` async chain.
+    // Flush the `onMove` → `handleEdit` async chain (no-op when the
+    // consumer supplied no `onUpdate`, since submit then runs sync).
     await Promise.resolve()
     await Promise.resolve()
   })
