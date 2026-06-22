@@ -7,7 +7,7 @@
 A highly-configurable [React](https://github.com/facebook/react) component for editing or viewing JSON/object data
 
 
-## [Explore the Demo](https://carlosnz.github.io/json-edit-react-v2/) <!-- omit in toc -->
+## 🚀️ [Explore the Demo](https://carlosnz.github.io/json-edit-react-v2/) <!-- omit in toc -->
 
 ![NPM Version](https://img.shields.io/npm/v/json-edit-react)
 ![GitHub License](https://img.shields.io/github/license/carlosnz/json-edit-react)
@@ -42,7 +42,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 - **COMPONENTS**: [@json-edit-react/components](https://www.npmjs.com/package/@json-edit-react/components) - custom node components (links, date picker, etc.)
 - **UTILITIES**: [@json-edit-react/themes](https://www.npmjs.com/package/@json-edit-react/themes) — a collection of helpers and tools for enhancing json-edit-react
 
-> [!NOTE]
+> [!IMPORTANT]
 > This documentation is for V2 of **json-edit-react**, which is currently in beta. V1 docs are [here](https://github.com/CarlosNZ/json-edit-react).
 > 
 > If you're upgrading from V1, be sure to read the [migration guide](https://github.com/CarlosNZ/json-edit-react/blob/main/migration-guide.md).
@@ -58,80 +58,24 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 - [Installation](#installation)
 - [Implementation](#implementation)
 - [Props Reference](#props-reference)
-  - [Data Management](#data-management)
-  - [Restricting Editing](#restricting-editing)
-  - [Look and Feel / UI](#look-and-feel--ui)
-  - [Search and Filtering](#search-and-filtering)
-  - [Custom components \& overrides (incl. Localisation)](#custom-components--overrides-incl-localisation)
-  - [External interaction](#external-interaction)
-  - [Miscellaneous](#miscellaneous)
 - [Managing state](#managing-state)
-  - [Controlled component — `data` + `setData`](#controlled-component--data--setdata)
-  - [Read-only display — `JsonViewer`](#read-only-display--jsonviewer)
-  - [Typed data — `JsonEditor<T>`](#typed-data--jsoneditort)
 - [Filter Functions](#filter-functions)
-  - [The `NodeData` object](#the-nodedata-object)
 - [Controlling editing](#controlling-editing)
-  - [Permissions — `allowEdit` / `allowDelete` / `allowAdd`](#permissions--allowedit--allowdelete--allowadd)
-  - [Restricting data types — `allowTypeSelection`](#restricting-data-types--allowtypeselection)
-  - [Enums](#enums)
-  - [New-key restrictions \& default values](#new-key-restrictions--default-values)
-  - [Drag-and-drop reordering](#drag-and-drop-reordering)
 - [Reacting to changes](#reacting-to-changes)
-  - [`onUpdate` — accept, reject, transform](#onupdate--accept-reject-transform)
-  - [Async updates \& gating — `hold()`](#async-updates--gating--hold)
-  - [`onChange` — validating each keystroke](#onchange--validating-each-keystroke)
-  - [`onError`](#onerror)
-  - [`onCopy`](#oncopy)
-  - [JSON Schema validation](#json-schema-validation)
 - [Appearance \& theming](#appearance--theming)
-  - [Using a prebuilt theme (`@json-edit-react/themes`)](#using-a-prebuilt-theme-json-edit-reactthemes)
-  - [Customising styles — the `theme` object](#customising-styles--the-theme-object)
-  - [CSS classes](#css-classes)
-  - [Style fragments](#style-fragments)
-  - [Icons](#icons)
 - [Initial expansion — `collapse`](#initial-expansion--collapse)
 - [Search \& filtering](#search--filtering)
-  - [Basic search — `searchText` + `searchFilter`](#basic-search--searchtext--searchfilter)
-  - [Custom search — `SearchFilterFunction`](#custom-search--searchfilterfunction)
 - [Localisation](#localisation)
-  - [`translations`](#translations)
-  - [Dynamic text — `customText`](#dynamic-text--customtext)
 - [Keyboard control](#keyboard-control)
 - [Custom Nodes \& Components](#custom-nodes--components)
-  - [How to use the pre-built components](#how-to-use-the-pre-built-components)
-  - [Writing a custom node definition — `condition` + `component`](#writing-a-custom-node-definition--condition--component)
-  - [The two slots: key and value](#the-two-slots-key-and-value)
-  - [What your component receives](#what-your-component-receives)
-  - [Display vs. edit modes](#display-vs-edit-modes)
-  - [Editing a non-plain value — `fromStandardType`](#editing-a-non-plain-value--fromstandardtype)
-  - [Letting users create your type](#letting-users-create-your-type)
-  - [Customising the key — `keyComponent`](#customising-the-key--keycomponent)
-  - [Decorating the default node — `passOriginalNode`](#decorating-the-default-node--passoriginalnode)
-  - [Collection nodes](#collection-nodes)
-  - [Displaying a collection as a value](#displaying-a-collection-as-a-value)
-  - [Editing as JSON — `stringifyReplacer` / `parseReviver`](#editing-as-json--stringifyreplacer--parsereviver)
 - [Overriding and extending the UI](#overriding-and-extending-the-ui)
-  - [Replacing the text/code editor — `TextEditor` (`CodeEditor`)](#replacing-the-textcode-editor--texteditor-codeeditor)
-  - [Replacing the native `<select>` element](#replacing-the-native-select-element)
-  - [Custom buttons](#custom-buttons)
 - [Programmatic control](#programmatic-control)
-  - [Listening to the lifecycle — `onEditEvent`](#listening-to-the-lifecycle--oneditevent)
-  - [Listening to expansion events — `onCollapse`](#listening-to-expansion-events--oncollapse)
-  - [Driving the editor — the `editorRef` handle](#driving-the-editor--the-editorref-handle)
 - [Performance considerations](#performance-considerations)
-  - [Keep non-callback props referentially stable](#keep-non-callback-props-referentially-stable)
 - [Undo functionality](#undo-functionality)
 - [Exported helpers \& types](#exported-helpers--types)
-  - [Functions \& components](#functions--components)
-  - [Types](#types)
 - [Issues \& support](#issues--support)
-- [Roadmap](#roadmap)
 - [Inspiration](#inspiration)
 - [Changelog](#changelog)
-- [LEFTOVERS](#leftovers)
-  - [Importing the stylesheet (Shadow DOM)](#importing-the-stylesheet-shadow-dom)
-  - [PENDING on custom nodes](#pending-on-custom-nodes)
 
 <!-- NPM USAGE -->
 
@@ -200,15 +144,15 @@ This is a reference list of *all* possible props, divided into related sections.
 
 </summary>
 
-| Prop                  | Type                    | Default | Description                                                                                                                                   |
-| --------------------- | ----------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `data`                | `object\|array`         | -       | The data to be displayed / edited                                                                                                             |
-| `setData`             | `object\|array => void` | -       | Method to update your `data` object. **Required.** See [Managing state](#managing-state) below for additional notes.                          |
+| Prop                  | Type                    | Default | Description                                                                                                                                                    |
+| --------------------- | ----------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data`                | `object\|array`         | -       | The data to be displayed / edited                                                                                                                              |
+| `setData`             | `object\|array => void` | -       | Method to update your `data` object. **Required.** See [Managing state](#managing-state) below for additional notes.                                           |
 | `onUpdate`            | `UpdateFunction`        | -       | A function to run whenever a value is changed in the editor — edit, add, delete, rename *or* move. See [Update functions](#onupdate--accept-reject-transform). |
-| `onChange`            | `OnChangeFunction`      | -       | A function to modify/constrain user input as they type — see [OnChange functions](#onchange--validating-each-keystroke).                                        |
-| `onError`             | `OnErrorFunction`       | -       | A function to run whenever the component reports an error — see [OnErrorFunction](#onerror).                                         |
-| `showClipboardButton` | `boolean`               | `true`  | Show or hide the "Copy to clipboard" button in the UI.                                                                                        |
-| `onCopy`              | `OnCopyFunction`        | -       | A function to run whenever an item is **copied** to the clipboard — see [Copy Function](#oncopy).                                      |
+| `onChange`            | `OnChangeFunction`      | -       | A function to modify/constrain user input as they type — see [OnChange functions](#onchange--validating-each-keystroke).                                       |
+| `onError`             | `OnErrorFunction`       | -       | A function to run whenever the component reports an error — see [OnErrorFunction](#onerror).                                                                   |
+| `showClipboardButton` | `boolean`               | `true`  | Show or hide the "Copy to clipboard" button in the UI.                                                                                                         |
+| `onCopy`              | `OnCopyFunction`        | -       | A function to run whenever an item is **copied** to the clipboard — see [Copy Function](#oncopy).                                                              |
 
 </details>
 <details>
@@ -218,15 +162,15 @@ This is a reference list of *all* possible props, divided into related sections.
 
 </summary>
 
-| Prop                 | Type                                       | Default | Description                                                                                                                                                                        |
-| -------------------- | ------------------------------------------ | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `allowEdit`          | `boolean\|FilterFunction`                  | `true`  | If `false`, no editing at all is permitted. A callback function can be provided (return `true` to permit a given node) — see [Advanced Editing Control](#filter-functions) |
-| `allowDelete`        | `boolean\|FilterFunction`                  | `true`  | As with `allowEdit` but for deletion                                                                                                                                               |
-| `allowAdd`           | `boolean\|FilterFunction`                  | `true`  | As with `allowEdit` but for adding new properties                                                                                                                                  |
-| `allowTypeSelection` | `boolean\|TypeOptions\|TypeFilterFunction` | `true`  | Controls which data types the user can select, including [Custom Node](#custom-nodes--components) types, and **Enums** — see [Data Type Restrictions](#restricting-data-types--allowtypeselection)                 |
-| `newKeyOptions`      | `string[] \| NewKeyOptionsFunction`        | -       | New keys can be restricted to certain values — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                                  |
-| `defaultValue`       | `any\|DefaultValueFunction`                | `null`  | Value that new properties are initialised with — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                                |
-| `allowDrag`          | `boolean\|FilterFunction`                  | `false` | Set to `true` to enable drag and drop functionality — see [Drag-n-drop](#drag-and-drop-reordering)                                                                                              |
+| Prop                 | Type                                       | Default | Description                                                                                                                                                                                        |
+| -------------------- | ------------------------------------------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `allowEdit`          | `boolean\|FilterFunction`                  | `true`  | If `false`, no editing at all is permitted. A callback function can be provided (return `true` to permit a given node) — see [Advanced Editing Control](#filter-functions)                         |
+| `allowDelete`        | `boolean\|FilterFunction`                  | `true`  | As with `allowEdit` but for deletion                                                                                                                                                               |
+| `allowAdd`           | `boolean\|FilterFunction`                  | `true`  | As with `allowEdit` but for adding new properties                                                                                                                                                  |
+| `allowTypeSelection` | `boolean\|TypeOptions\|TypeFilterFunction` | `true`  | Controls which data types the user can select, including [Custom Node](#custom-nodes--components) types, and **Enums** — see [Data Type Restrictions](#restricting-data-types--allowtypeselection) |
+| `newKeyOptions`      | `string[] \| NewKeyOptionsFunction`        | -       | New keys can be restricted to certain values — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                                                  |
+| `defaultValue`       | `any\|DefaultValueFunction`                | `null`  | Value that new properties are initialised with — see [New Key Restrictions & Default Values](#new-key-restrictions--default-values)                                                                |
+| `allowDrag`          | `boolean\|FilterFunction`                  | `false` | Set to `true` to enable drag and drop functionality — see [Drag-n-drop](#drag-and-drop-reordering)                                                                                                 |
 
 </details>
 
@@ -238,10 +182,10 @@ This is a reference list of *all* possible props, divided into related sections.
 
 | Prop                    | Type                                                      | Default                        | Description                                                                                                                                                                                                                                                                                                                                                                                               |
 | ----------------------- | --------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `theme`                 | `ThemeInput`                                              | `defaultTheme`                 | Either one of the built-in themes (imported separately), or an object specifying some or all theme properties — see [Themes](#appearance--theming).                                                                                                                                                                                                                                                            |
+| `theme`                 | `ThemeInput`                                              | `defaultTheme`                 | Either one of the built-in themes (imported separately), or an object specifying some or all theme properties — see [Themes](#appearance--theming).                                                                                                                                                                                                                                                       |
 | `showIconTooltips`      | `boolean`                                                 | false                          | Display icon tooltips when hovering.                                                                                                                                                                                                                                                                                                                                                                      |  |
 | `indent`                | `number`                                                  | `3`                            | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                                                                                                                                        |
-| `collapse`              | `boolean\|number\|FilterFunction`                         | `3`                            | Defines which depth level of the data tree will be displayed "expanded" in the UI on initial load — see [Collapse](#initial-expansion--collapse).                                                                                                                                                                                                                                                                            |
+| `collapse`              | `boolean\|number\|FilterFunction`                         | `3`                            | Defines which depth level of the data tree will be displayed "expanded" in the UI on initial load — see [Collapse](#initial-expansion--collapse).                                                                                                                                                                                                                                                         |
 | `collapseAnimationTime` | `number`                                                  | `300`                          | Time (in ms) for the transition animation when collapsing collection nodes.                                                                                                                                                                                                                                                                                                                               |
 | `collapseClickZones`    | `Array<"left" \| "header" \| "property">`                 | `["left", "header"]`           | Aside from the <span style="font-size: 140%">`⌄`</span> icon, you can specify other regions of the UI to be clickable for collapsing/opening a collection.                                                                                                                                                                                                                                                |
 | `rootName`              | `string`                                                  | `"data"`                       | A name to display in the editor as the root of the data object.                                                                                                                                                                                                                                                                                                                                           |
@@ -256,7 +200,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | `baseFontSize`          | `number\|string` (CSS value)                              | `16px`                         | The "base" font size from which all other sizings are derived (in `em`s). By changing this you will scale the entire component.                                                                                                                                                                                                                                                                           |
 | `insertAtTop`           | `boolean\|"object"\|"array"`                              | `false`                        | If `true`, inserts new values at the *top* rather than bottom. Can set the behaviour just for arrays or objects by setting to `"object"` or `"array"` respectively.                                                                                                                                                                                                                                       |
 | `errorDisplayTime`      | `number`                                                  | `2500`                         | Time (in ms) to display the error message in the UI.                                                                                                                                                                                                                                                                                                                                                      |  |
-| `showErrorMessages`     | `boolean `                                                | `true`                         | Whether or not the component should display its own error messages (you'd probably only want to disable this if you provided your own [`onError` function](#onerror))                                                                                                                                                                                                                            |
+| `showErrorMessages`     | `boolean `                                                | `true`                         | Whether or not the component should display its own error messages (you'd probably only want to disable this if you provided your own [`onError` function](#onerror))                                                                                                                                                                                                                                     |
 </details>
 <details>
 <summary>
@@ -264,11 +208,11 @@ This is a reference list of *all* possible props, divided into related sections.
 ### Search and Filtering
 </summary>
 
-| Prop                 | Type                                          | Default     | Description                                                                                                      |
-| -------------------- | --------------------------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------- |
-| `searchText`         | `string`                                      | `undefined` | Data visibility will be filtered by matching against value, using the method defined below in `searchFilter`     |
+| Prop                 | Type                                          | Default     | Description                                                                                                        |
+| -------------------- | --------------------------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------ |
+| `searchText`         | `string`                                      | `undefined` | Data visibility will be filtered by matching against value, using the method defined below in `searchFilter`       |
 | `searchFilter`       | `"key"\|"value"\|"all"\|SearchFilterFunction` | `undefined` | Define how `searchText` should be matched to filter the visible items — see [Search/Filtering](#search--filtering) |
-| `searchDebounceTime` | `number`                                      | `350`       | Debounce time when `searchText` changes                                                                          |
+| `searchDebounceTime` | `number`                                      | `350`       | Debounce time when `searchText` changes                                                                            |
 
 </details>
 <details>
@@ -277,17 +221,17 @@ This is a reference list of *all* possible props, divided into related sections.
 ### Custom components & overrides (incl. Localisation)
 </summary>
 
-| Prop                    | Type                                                | Default                                   | Description                                                                                                                                                                                                                                                       |
-| ----------------------- | --------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prop                    | Type                                                | Default                                   | Description                                                                                                                                                                                                                                                                   |
+| ----------------------- | --------------------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `customNodeDefinitions` | `CustomNodeDefinition[]`                            |                                           | You can provide custom React components to override specific nodes in the data tree, according to a condition function — see [Custom nodes](#custom-nodes--components) or browse the [@json-edit-react/components](https://www.npmjs.com/package/@json-edit-react/components) |
-| `customButtons`         | `CustomButtonDefinition[]`                          | `[]`                                      | You can add your own buttons to the Edit Buttons panel if you'd like to be able to perform a custom operation on the data — see [Custom Buttons](#custom-buttons)                                                                                                 |
-| `translations`          | `LocalisedStrings`                                  | `{ }`                                     | UI strings (such as error messages) can be translated by passing an object containing localised string values (there are only a few) — see [Localisation](#localisation)                                                                                          |
-| `customText`            | `CustomTextDefinitions`                             |                                           | In addition to [localising the component](#localisation) text strings, you can also *dynamically* alter them, depending on the data — see [Custom Text](#dynamic-text--customtext)                                                                                             |
-| `TextEditor`            | `ReactComponent`<br>&nbsp;&nbsp;`<TextEditorProps>` |                                           | Pass a component to offer a custom text/code editor when editing full JSON object as text. [See details](#replacing-the-textcode-editor--texteditor-codeeditor)                                                                                                                                    |
-| `Select`                | `ReactComponent`<br>&nbsp;&nbsp;`<SelectProps>`     | `<NativeSelect>`                          | Pass a component to replace the built-in native `<select>` (drop-down)                                                                                                                                                                                            |
-| `jsonParse`             | `(input: string) => JsonData`                       | `JSON.parse`                              | Provide an alternative JSON parser (e.g. [JSON5](https://json5.org/)), to allow "looser" text input when editing JSON blocks.                                                                                                                                     |
-| `jsonStringify`         | `(data: JsonData) => string`                        | `(data) => JSON.stringify(data, null, 2)` | Similarly, override the presentation of the text when editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                              |
-| `keyboardControls`      | `KeyboardControls`                                  | As explained [above](#keyboard-control)              | Override some or all of the keyboard controls — see [Keyboard customisation](#keyboard-control)                                                                                                                                                             |
+| `customButtons`         | `CustomButtonDefinition[]`                          | `[]`                                      | You can add your own buttons to the Edit Buttons panel if you'd like to be able to perform a custom operation on the data — see [Custom Buttons](#custom-buttons)                                                                                                             |
+| `translations`          | `LocalisedStrings`                                  | `{ }`                                     | UI strings (such as error messages) can be translated by passing an object containing localised string values (there are only a few) — see [Localisation](#localisation)                                                                                                      |
+| `customText`            | `CustomTextDefinitions`                             |                                           | In addition to [localising the component](#localisation) text strings, you can also *dynamically* alter them, depending on the data — see [Custom Text](#dynamic-text--customtext)                                                                                            |
+| `TextEditor`            | `ReactComponent`<br>&nbsp;&nbsp;`<TextEditorProps>` |                                           | Pass a component to offer a custom text/code editor when editing full JSON object as text. [See details](#replacing-the-textcode-editor--texteditor-codeeditor)                                                                                                               |
+| `Select`                | `ReactComponent`<br>&nbsp;&nbsp;`<SelectProps>`     | `<NativeSelect>`                          | Pass a component to replace the built-in native `<select>` (drop-down)                                                                                                                                                                                                        |
+| `jsonParse`             | `(input: string) => JsonData`                       | `JSON.parse`                              | Provide an alternative JSON parser (e.g. [JSON5](https://json5.org/)), to allow "looser" text input when editing JSON blocks.                                                                                                                                                 |
+| `jsonStringify`         | `(data: JsonData) => string`                        | `(data) => JSON.stringify(data, null, 2)` | Similarly, override the presentation of the text when editing JSON. You can supply different formatting parameters to the native `JSON.stringify()`, or provide a third-party option, like the aforementioned JSON5.                                                          |
+| `keyboardControls`      | `KeyboardControls`                                  | As explained [above](#keyboard-control)   | Override some or all of the keyboard controls — see [Keyboard customisation](#keyboard-control)                                                                                                                                                                               |
 
 </details>
 <details>
@@ -298,11 +242,11 @@ This is a reference list of *all* possible props, divided into related sections.
 
 More detail [below](#programmatic-control)
 
-| Prop          | Type                    | Default | Description                                                                                                                                                                                                   |
-| ------------- | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prop          | Type                    | Default | Description                                                                                                                                                                                                                           |
+| ------------- | ----------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `onEditEvent` | `OnEditEventFunction`   | -       | Callback for the full edit lifecycle — `start`/`submit`/`commit`/`cancel`, the instant `delete`/`move`, and the background `updateSuccess`/`updateError` settlement — see [Event callbacks](#listening-to-the-lifecycle--oneditevent) |
-| `onCollapse`  | `OnCollapseFunction`    | -       | Callback to execute whenever the user collapses or opens a node                                                                                                                                               |
-| `editorRef`   | `Ref<JsonEditorHandle>` | -       | Imperative handle to collapse/open nodes or start/stop editing. See [Imperative handle](#driving-the-editor--the-editorref-handle)                                                                                         |
+| `onCollapse`  | `OnCollapseFunction`    | -       | Callback to execute whenever the user collapses or opens a node                                                                                                                                                                       |
+| `editorRef`   | `Ref<JsonEditorHandle>` | -       | Imperative handle to collapse/open nodes or start/stop editing. See [Imperative handle](#driving-the-editor--the-editorref-handle)                                                                                                    |
 
 </details>
 
@@ -319,6 +263,8 @@ More detail [below](#programmatic-control)
 </details>
 
 ----
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Managing state
 
@@ -368,6 +314,8 @@ The generic flows through `data`, `setData`, the `onUpdate` / `onChange` / `onEr
 
 > [!TIP]
 > `T` describes the data you *provide*. It is an input contract, not a runtime invariant — if the user can freely restructure the JSON, post-edit values may not conform to `T`. Pair with `allowAdd` / `allowDelete` / `allowTypeSelection` to lock the shape, or validate inside `onUpdate` if you depend on it.
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Filter Functions
 
@@ -421,6 +369,8 @@ interface NodeData {
 ```
 
 Let's get into the many ways we can use this...
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Controlling editing
 
@@ -528,6 +478,8 @@ The `allowDrag` property controls which items (if any) can be dragged into new p
 - The `allowDrag` filter applies to the *source* element (i.e. the node being dragged), not the destination.
 - To be draggable, the node must *also* be delete-able (via the `allowDelete` prop), as dragging a node to a new destination is essentially just deleting it and adding it back elsewhere.
 - Similarly, the destination collection must be editable in order to drop it in there. This ensures that if you've gone to the trouble of configuring restrictive editing constraints using Filter functions, you can be confident that they can't be circumvented via drag-n-drop.
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Reacting to changes
 
@@ -656,6 +608,8 @@ The `onCopy` callback runs whenever an item is **copied** to the clipboard. It r
 It's possible to do full [JSON Schema](https://json-schema.org/) validation by creating an [`onUpdate`](#onupdate--accept-reject-transform) that passes the data to a 3rd-party schema validation library (e.g. [Ajv](https://ajv.js.org/)). This will then reject any invalid input, and display an error in the UI (or via a custom [onError](#onerror) function). You can see an example of this in the [Demo](https://carlosnz.github.io/json-edit-react-v2/?data=jsonSchemaValidation) with the "JSON Schema Validation" data set (and the "Custom Nodes" data set). 
 
 [![▶ Live example: JSON Schema validation](https://img.shields.io/badge/▶_Live_example-JSON_Schema_validation-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/json-schema-validation)
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Appearance & theming
 
@@ -842,6 +796,20 @@ theme={[githubDarkTheme, { icons: { add: iconFromSvg('<svg…>') } }]}
 
 [![▶ Live example: Custom icons](https://img.shields.io/badge/▶_Live_example-Custom_icons-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-icons)
 
+### The bundled stylesheet (Shadow DOM)
+
+The component's base stylesheet is bundled in and injected into the document `<head>` automatically, so in the normal case there's nothing to import — styling works out of the box.
+
+The exception is when the editor renders inside a [Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM): styles injected into the document `<head>` don't cross the shadow boundary, so the component renders unstyled. For this case the stylesheet is also published as a standalone file you can import and inject into the shadow root yourself:
+
+```js
+import 'json-edit-react/style.css'
+```
+
+How that import resolves depends on your bundler — most will inline or extract it so you can attach it where you need it (for example via a `<style>` element inside the shadow root, or by adding a constructed stylesheet to `shadowRoot.adoptedStyleSheets`). The stylesheet defines its custom properties on both `:root` and `:host`, so it applies correctly whether it lives in the document or in a shadow root.
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
+
 ## Initial expansion — `collapse`
 
 The `collapse` prop determines at what level the tree is expanded to when initially loading:
@@ -852,6 +820,8 @@ The `collapse` prop determines at what level the tree is expanded to when initia
 
 > [!NOTE]
 > The tree reacts to a changing `collapse` prop — whenever it changes, the full tree resets to the collapse state determined by the new `collapse` value (or per-node `FilterFunction` result)
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Search & filtering
 
@@ -875,6 +845,8 @@ An example custom search function can be seen in the [Demo](https://carlosnz.git
 
 > [!TIP]
 > `searchFilter` callbacks like the one shown here can be fiddly to write, so we've provided a [filter-function toolkit](packages/utils/src/filters/README.md) in [`@json-edit-react/utils`](https://www.npmjs.com/package/@json-edit-react/utils) — a set of small, composable predicate builders (`byKey`, `byPath`, `byLevel`, `byType`, `byValue`), position constants (`root`, `collections`, `primitives`), combinators (`and` / `or` / `not`), and search bridges (`matchRecord`, `matchesSearch`) that snap together to build both `searchFilter` and the `allow*` editing props. The `matchRecord` shown above is one of them, and because every builder is *interned*, you can write them inline — no `useMemo` — without defeating json-edit-react's fine-grained re-rendering.
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Localisation
 
@@ -936,6 +908,8 @@ type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTe
 
 [![▶ Live example: Custom text](https://img.shields.io/badge/▶_Live_example-Custom_text-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-text)
 
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
+
 ## Keyboard control
 
 The default keyboard controls are [outlined above](#keyboard-control), but it's possible to customise/override these. Just pass in a `keyboardControls` prop with the actions you wish to override defined. The default config object is:
@@ -978,6 +952,8 @@ If (for example), you just wish to change the general "confirmation" action to "
 - You only need to specify values for `stringConfirm`, `numberConfirm`, and `booleanConfirm` if they should *differ* from your `confirm` value — they inherit whatever you set `confirm` to, including `null`.
 - To **disable** a control entirely, set it to `null`. The key is then no longer intercepted and falls through to its native browser behaviour. This is useful when the default bindings aren't appropriate for your data — for example, `{ tabForward: null, tabBack: null }` turns off Tab navigation between editable nodes so that <kbd>Tab</kbd>/<kbd>Shift-Tab</kbd> resume their normal focus-traversal behaviour. Because the per-type confirms inherit from `confirm`, setting `confirm: null` disables <kbd>Enter</kbd>-to-submit across string, number, boolean and null value editors at once (object/array nodes use `objectConfirm`, so disable that separately if needed). The two modifier controls, `clipboardModifier` and `collapseModifier`, can likewise be disabled with `null` or an empty array `[]`.
 - You won't be able to override system or browser behaviours: for example, on Mac "<kbd>Ctrl</kbd>-click" will perform a right-click, so using it as a click modifier won't work (hence we also accept "Meta"/"Cmd" as the default `clipboardModifier`).
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Custom Nodes & Components
 
@@ -1200,6 +1176,8 @@ The [`BigInt`](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/co
 ```
 which can then be re-parsed into a true `BigInt` when committing.
 
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
+
 ## Overriding and extending the UI
 
 **json-edit-react** aims to be unopinionated about UI implementations, so as well as being extremely [style-able](#appearance--theming), you can also swap out basic UI elements with your own, as well as adding your own [custom buttons](#custom-buttons) to the edit tools.
@@ -1290,6 +1268,8 @@ customButtons = [
 
 
 [![▶ Live example: Custom buttons](https://img.shields.io/badge/▶_Live_example-Custom_buttons-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-buttons)
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Programmatic control
 
@@ -1402,6 +1382,8 @@ A few additional behaviours worth noting:
 > [!NOTE]
 > `JsonViewer` exposes the same `editorRef` prop, but its handle (`JsonViewerHandle`) is **collapse-only** — the editing actions aren't meaningful (and would bypass the read-only contract) in a viewer.
 
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
+
 ## Performance considerations
 
 > [!Important]
@@ -1426,12 +1408,16 @@ In practice this covers **every non-primitive prop except the event callbacks**,
 
 `theme` is worth calling out specially: it feeds a React context, and a context update bypasses the per-node memo, so an **unstable `theme` re-renders the entire tree on every render** — not just one node. If you build a theme inline (e.g. `theme={['githubDark', { styles: … }]}`), memoise it.
 
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
+
 ## Undo functionality
 
 Even though Undo/Redo functionality is probably desirable in most cases, this is not built in to the component, for two main reasons:
 1. It would involve too much additional UI and this component is intentionally unopinionated about look and feel beyond the essentials (which are mostly customisable/style-able anyway)
 2. It is quite straightforward to implement using existing libraries. In fact, I have provided a simple hook in the `@json-edit-react/utils` package called `useUndo`, which is what I'm using in the  [Demo](https://carlosnz.github.io/json-edit-react-v2/).
 
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Exported helpers & types
 
@@ -1483,21 +1469,19 @@ A few helper functions, components and types that might be useful in your own im
 - `TextEditorProps`: props for custom [Text Editor](#replacing-the-textcode-editor--texteditor-codeeditor)
 - `SelectProps`: props accepted by a custom `Select` component (supplied via the `Select` prop) that replaces the built-in native drop-down
 
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
+
 ## Issues & support
 
 Please open an issue: https://github.com/CarlosNZ/json-edit-react/issues
 
-## Roadmap
-
-Things in the pipeline:
-
-1. I'm working on a script that can take a JSON Schema and return the suite of [Filter Functions](#filter-functions) required to fully constrain the component's editing UI to comply with this schema (we can already do [validation](#json-schema-validation), but this prevent most invalid data from ever being entered). I don't think it'll part of the main package, as I don't want to increase the bundle size for a companion script -- I may release it in its own package, or just publish the code here in the repo.
-2. Alternative line wrapping and pagination for array data [#2](https://github.com/CarlosNZ/json-edit-react/issues/2) [#195](https://github.com/CarlosNZ/json-edit-react/issues/195)
-3. Start thinking about V2
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Inspiration
 
 This component is heavily inspired by [react-json-view](https://github.com/mac-s-g/react-json-view), a great package that I've used in my own projects. However, it seems to have been abandoned now, and requires a few critical fixes, so I decided to create my own from scratch and extend the functionality while I was at it.
+
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Changelog
 
@@ -1630,26 +1614,5 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 - **0.9.1**: Export more Types from the package
 - **0.9.0**: Initial release
 
-## LEFTOVERS
-
-PLACEHOLDER FOR these blocks had no home in the proposed structure. Preserved verbatim (nothing lost); decide where each goes (or delete) during the rewrite.
-
-
-
-### Importing the stylesheet (Shadow DOM)
-
-The component's base stylesheet is bundled in and injected into the document `<head>` automatically, so in the normal case there's nothing to import — styling works out of the box.
-
-The exception is when the editor renders inside a [Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM): styles injected into the document `<head>` don't cross the shadow boundary, so the component renders unstyled. For this case the stylesheet is also published as a standalone file you can import and inject into the shadow root yourself:
-
-```js
-import 'json-edit-react/style.css'
-```
-
-How that import resolves depends on your bundler — most will inline or extract it so you can attach it where you need it (for example via a `<style>` element inside the shadow root, or by adding a constructed stylesheet to `shadowRoot.adoptedStyleSheets`). The stylesheet defines its custom properties on both `:root` and `:host`, so it applies correctly whether it lives in the document or in a shadow root.
-
-
-### PENDING on custom nodes
-
-If your component needs to reflect an in-flight save — for example a spinner or overlay while an async `onUpdate` completes — read the `isPending` prop: it's `true` while this node's optimistic edit is settling (i.e. the value is already applied locally but the async `onUpdate` hasn't resolved yet), and `false` otherwise.
+<div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
