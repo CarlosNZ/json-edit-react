@@ -279,31 +279,34 @@ describe('Drag-and-drop: interaction with active edit', () => {
       fireEvent.click(editBtn)
     })
 
-    // 3. Fire dragStart on the (still-armed) 'b'. The unarmed-guard does
-    //    NOT catch this — only the editing-active clause does. Then run
-    //    the rest of the drop sequence; the production hook should have
-    //    rejected the dragStart so no `dragSource` is set, and the drop
-    //    is a no-op.
+    // 3. Fire dragStart on the (still-armed) 'b' in its OWN `act()` so
+    //    React commits `setDragSource({ path })` before the drop runs.
+    //    Without the split, `dragStart` and `drop` run in the same batch:
+    //    `handleDrop` then reads `dragSource.path === null` and returns
+    //    early — the drop is a no-op for the wrong reason, and removing
+    //    the editing-gate clause would NOT fail the test. With the split
+    //    the only thing rejecting the drag is the editing-active clause.
+    const dataTransfer = {
+      data: {},
+      setData: () => {},
+      getData: () => '',
+      clearData: () => {},
+      setDragImage: () => {},
+      dropEffect: 'none',
+      effectAllowed: 'all',
+      files: [],
+      items: [],
+      types: [],
+    }
     await act(async () => {
-      fireEvent.dragStart(bRow, {
-        dataTransfer: {
-          data: {},
-          setData: () => {},
-          getData: () => '',
-          clearData: () => {},
-          setDragImage: () => {},
-          dropEffect: 'none',
-          effectAllowed: 'all',
-          files: [],
-          items: [],
-          types: [],
-        },
-      })
-      fireEvent.dragOver(cRow)
-      fireEvent.drop(cRow)
+      fireEvent.dragStart(bRow, { dataTransfer })
+    })
+    await act(async () => {
+      fireEvent.dragOver(cRow, { dataTransfer })
+      fireEvent.drop(cRow, { dataTransfer })
       await Promise.resolve()
       await Promise.resolve()
-      fireEvent.dragEnd(bRow)
+      fireEvent.dragEnd(bRow, { dataTransfer })
     })
 
     expect(setData).not.toHaveBeenCalled()
