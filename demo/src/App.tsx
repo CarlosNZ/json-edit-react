@@ -96,6 +96,7 @@ const themeNames = [
   'Monokai',
   'Tokyo Night',
   'r18jv',
+  'TMF',
 ]
 
 // Only default theme is loaded initially

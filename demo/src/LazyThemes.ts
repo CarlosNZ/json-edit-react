@@ -12,6 +12,7 @@ import {
   monokaiTheme,
   tokyoNightTheme,
   r18jvTheme,
+  tmfTheme,
 } from '@json-edit-react/themes'
 
 // This file contains functions that return theme objects
@@ -31,6 +32,8 @@ export const getMonokaiTheme = (): Theme => monokaiTheme
 export const getTokyoNightTheme = (): Theme => tokyoNightTheme
 // Name derived from the 'r18jv' display name (no spaces) → `getr18jvTheme`.
 export const getr18jvTheme = (): Theme => r18jvTheme
+// Display name 'TMF' (no spaces) → `getTMFTheme`.
+export const getTMFTheme = (): Theme => tmfTheme
 
 // Allow dynamic accessing of theme getter functions
 interface ThemeGetters {
@@ -51,4 +54,5 @@ export const themeGetters: ThemeGetters = {
   getMonokaiTheme,
   getTokyoNightTheme,
   getr18jvTheme,
+  getTMFTheme,
 }

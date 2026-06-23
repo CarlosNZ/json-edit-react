@@ -19,6 +19,7 @@ const SHIKI_FOR_JER: Record<string, string> = {
   Monokai: 'monokai',
   'Tokyo Night': 'tokyo-night',
   r18jv: 'github-light', // light theme; no direct Shiki equivalent
+  TMF: 'github-light', // warm light theme; no direct Shiki equivalent
 }
 const DEFAULT_SHIKI = 'github-light'
 

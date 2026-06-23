@@ -17,6 +17,7 @@ const themeNames = [
   'Monokai',
   'Tokyo Night',
   'r18jv',
+  'TMF',
 ]
 
 const STORAGE_KEY = 'jer-examples-theme'

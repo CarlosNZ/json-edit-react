@@ -37,6 +37,7 @@ import { githubDarkTheme } from '@json-edit-react/themes'
 - `monokaiTheme`
 - `tokyoNightTheme`
 - `r18jvTheme`
+- `tmfTheme`
 
 ## Icon set credits
 
