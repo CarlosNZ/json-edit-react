@@ -654,6 +654,7 @@ function App() {
                     showArrayIndexes={showIndexes}
                     arrayIndexStart={arraysFromOne ? 1 : 0}
                     showStringQuotes={showStringQuotes}
+                    insertAtTop
                     minWidth={'min(500px, 95vw)'}
                     maxWidth="min(670px, 90vw)"
                     className="block-shadow"
