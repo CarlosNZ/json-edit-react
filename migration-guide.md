@@ -6,23 +6,25 @@
 
 If you only have a few minutes, these are the changes most likely to affect existing code:
 
-| What changed                                                                                                                                                                                                                                             | Migration                                                                                                                                                                                                                                  |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Pre-built themes split into a separate package                                                                                                                                                                                                           | `npm i @json-edit-react/themes` and update theme imports                                                                                                                                                                                   |
-| Custom components moved to separate package, including the previously built-in `LinkCustomComponent`                                                                                                                                                     | `npm i @json-edit-react/components`; the definition is now the `hyperlinkDefinition()` factory — see [Custom components](#2-custom-components-moved-to-json-edit-reactcomponents)                                                          |
-| `JsonEditor` is now generic on the data type (`JsonEditor<T>`)                                                                                                                                                                                           | No action needed — defaults to `JsonData`. Opt in with<br> `<JsonEditor<MyShape> ... />`                                                                                                                                                   |
-| `setData` is now required; `viewOnly` removed; new `JsonViewer` export                                                                                                                                                                                   | For read-only, use `<JsonViewer>`, which is a wrapper around the editor with appropriate props for view-only — see [`setData` is required](#4-setdata-is-required-viewonly-removed-jsonviewer-added)                                       |
-| `restrict*` props renamed to `allow*` (polarity inverted)                                                                                                                                                                                                | Rename `restrictEdit`→`allowEdit` etc. and **invert** booleans / filter results — see [`restrict*` → `allow*`](#5-restrict-props-renamed-to-allow-semantics-inverted)                                                                      |
-| `enableClipboard` split into `showClipboardButton` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction`                                                                                                                                    | Rename the boolean to `showClipboardButton`; move any copy callback to `onCopy` — see [`enableClipboard` split](#6-enableclipboard-split-into-showclipboardbutton--oncopy)                                                                 |
-| Several display / config props renamed                                                                                                                                                                                                                   | Rename `keySort`, `rootFontSize`, `errorMessageTimeout`, `stringTruncate`, `showArrayIndices`, `arrayIndexFromOne` — see [Display / config prop renames](#7-display--config-prop-renames)                                                  |
-| Callback payloads are now a single flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`)                                                                                                                                      | Rename those fields in `onUpdate` / `onChange` / `onError` / `onCollapse` / `onCopy` — see [Flat `NodeData` payloads](#8-flat-nodedata-payloads)                                                                                           |
-| `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`, return shape unified                                                                                                                                                                         | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads) |
-| `JerError`'s `code` union gains `RENAME_ERROR` / `MOVE_ERROR` / `CLIPBOARD_ERROR`                                                                                                                                                                        | Handle the new codes only if you exhaustively `switch` on `error.code` — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads)                                                                                 |
-| `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JerError`                                                                                              | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error)                           |
-| `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps`; the component's `onError` reporter is removed | Rename the fields in your definitions and the props type in your components; replace any component `onError` call with a `throw`ing `fromStandardType` — see [`CustomNodeDefinition` field renames](#11-customnodedefinition-field-renames)                                                                           |
-| `externalTriggers` prop replaced by an [imperative handle](https://react.dev/reference/react/useImperativeHandle)                                                                                                                                        | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/confirm/cancel` — see [the `editorRef` handle](#12-externaltriggers-prop-replaced-by-the-editorref-imperative-handle)                                      |
-| Fine-grained re-rendering: object / array / function props must be referentially stable to benefit                                                                                                                                                       | Keep `customNodeDefinitions`, filter functions, `translations`, etc. stable (module scope or `useMemo`); callbacks are stabilised for you — see [stable props](#13-keep-object-and-function-props-referentially-stable)                    |
-| Misc public-export changes — new `AutogrowTextArea`; `toPathString` is now `/`-encoded; `ThemeStyles` is `Partial`                                                                                                                                       | Mostly additive; act only if you parse `toPathString` output or typed against a total `ThemeStyles` — see [Misc changes to public exports](#14-misc-changes-to-public-exports)                                                             |
+| What changed                                                                                                                                                                                                                                                                                            | Migration                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Pre-built themes split into a separate package                                                                                                                                                                                                                                                          | `npm i @json-edit-react/themes` and update theme imports                                                                                                                                                                                         |
+| Custom components moved to separate package, including the previously built-in `LinkCustomComponent`                                                                                                                                                                                                    | `npm i @json-edit-react/components`; the definition is now the `hyperlinkDefinition()` factory — see [Custom components](#2-custom-components-moved-to-json-edit-reactcomponents)                                                                |
+| `JsonEditor` is now generic on the data type (`JsonEditor<T>`)                                                                                                                                                                                                                                          | No action needed — defaults to `JsonData`. Opt in with<br> `<JsonEditor<MyShape> ... />`                                                                                                                                                         |
+| `setData` is now required; `viewOnly` removed; new `JsonViewer` export                                                                                                                                                                                                                                  | For read-only, use `<JsonViewer>`, which is a wrapper around the editor with appropriate props for view-only — see [`setData` is required](#4-setdata-is-required-viewonly-removed-jsonviewer-added)                                             |
+| `restrict*` props renamed to `allow*` (polarity inverted)                                                                                                                                                                                                                                               | Rename `restrictEdit`→`allowEdit` etc. and **invert** booleans / filter results — see [`restrict*` → `allow*`](#5-restrict-props-renamed-to-allow-semantics-inverted)                                                                            |
+| `enableClipboard` split into `showClipboardButton` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction`                                                                                                                                                                                   | Rename the boolean to `showClipboardButton`; move any copy callback to `onCopy` — see [`enableClipboard` split](#6-enableclipboard-split-into-showclipboardbutton--oncopy)                                                                       |
+| Several display / config props renamed                                                                                                                                                                                                                                                                  | Rename `keySort`, `rootFontSize`, `errorMessageTimeout`, `stringTruncate`, `showArrayIndices`, `arrayIndexFromOne` — see [Display / config prop renames](#7-display--config-prop-renames)                                                        |
+| Callback payloads are now a single flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`)                                                                                                                                                                                     | Rename those fields in `onUpdate` / `onChange` / `onError` / `onCollapse` / `onCopy` — see [Flat `NodeData` payloads](#8-flat-nodedata-payloads)                                                                                                 |
+| `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`, return shape unified                                                                                                                                                                                                                        | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads)       |
+| `JerError`'s `code` union gains `RENAME_ERROR` / `MOVE_ERROR` / `CLIPBOARD_ERROR`                                                                                                                                                                                                                       | Handle the new codes only if you exhaustively `switch` on `error.code` — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads)                                                                                       |
+| `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JerError`                                                                                                                                             | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error)                                 |
+| `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps`; the component's `onError` reporter is removed | Rename the fields in your definitions and the props type in your components; replace any component `onError` call with a `throw`ing `fromStandardType` — see [`CustomNodeDefinition` field renames](#11-customnodedefinition-field-renames)      |
+| `externalTriggers` prop replaced by an [imperative handle](https://react.dev/reference/react/useImperativeHandle)                                                                                                                                                                                       | Use a `useRef<JsonEditorHandle>` and call `editorRef.current.collapse/startEdit/confirm/cancel` — see [the `editorRef` handle](#12-externaltriggers-prop-replaced-by-the-editorref-imperative-handle)                                            |
+| Fine-grained re-rendering: object / array / function props must be referentially stable to benefit                                                                                                                                                                                                      | Keep `customNodeDefinitions`, filter functions, `translations`, etc. stable (module scope or `useMemo`); callbacks are stabilised for you — see [stable props](#13-keep-object-and-function-props-referentially-stable)                          |
+| Misc public-export changes — new `AutogrowTextArea`; `toPathString` is now `/`-encoded; `ThemeStyles` is `Partial`                                                                                                                                                                                      | Mostly additive; act only if you parse `toPathString` output or typed against a total `ThemeStyles` — see [Misc changes to public exports](#14-misc-changes-to-public-exports)                                                                   |
+| `icons` prop removed; icon glyphs move into the theme                                                                                                                                                                                                                                                   | Move the config to `theme.icons` as `IconDefinition`s (or wrap with `iconFromSvg`); rename `chevron` → `collection` — see [`icons` prop removed](#15-icons-prop-removed-themes-own-their-glyphs)                                                 |
+| Themeable elements: `collectionInner` removed; `headerRow` / `valueRow` added                                                                                                                                                                                                                           | Theme the header line via `headerRow` and leaf rows via `valueRow`; move any `collectionInner` styles to `headerRow` and/or `collection` — see [Themeable elements](#16-themeable-elements-collectioninner-removed-headerrow-and-valuerow-added) |
 
 ---
 
@@ -338,6 +340,8 @@ The filtered-count form is driven by a new localisation key, `ITEMS_FILTERED`. I
 
 Both `{{visible}}` and `{{total}}` placeholders are substituted at render time.
 
+A second display **default** also changed (not a rename): `collapse` now defaults to `3` (previously `false`). The tree opens with its top three levels of nesting expanded (levels 0–2) and anything deeper collapsed, so deeply-nested data no longer renders its full depth on first paint. Most ordinary data is three levels or shallower, so it still appears fully expanded — the visible change is confined to deep structures. To restore the v1 fully-open default, set `collapse={false}`.
+
 ---
 
 ## 8. Flat `NodeData` payloads
@@ -499,6 +503,8 @@ The observer callbacks move onto the same flat `NodeData` payload as the rest of
 
 It now fires for the **complete** lifecycle (`start*` → `submit*` → `commit*`, or `start*` → `cancel*`) of value-edit, key-rename and add sessions, plus the instant `delete`/`move` and the background settlement (`updateSuccess`/`updateError`) of any committed change whose `onUpdate` ran — not just edit start/stop. This absorbs the role a dedicated `onRenameProperty` would have played (a rename surfaces as `startRename`/`submitRename`/`commitRename`). A no-op confirm (submitting with no change) reports `commitEdit` (the session closed cleanly); an explicit cancel or a `null` returned from `onUpdate` reports `cancel*`.
 
+One behaviour change to be aware of: opening an edit on **another** node while one is in progress (clicking its pencil, double-clicking another value, or clicking another key to rename) now **commits** the open edit — the same as Tab — instead of cancelling it. So a displaced session reports `submit*`/`commit*` (and runs `onUpdate`), or, if the buffer can't commit (malformed JSON, a duplicate key, a throwing `fromStandardType`), the switch is **blocked** and the editor stays open with its error. The object-**add** session is the exception — a switch still cancels it.
+
 ### `onError` and `onCollapse` — flat `NodeData`
 
 Both now receive the standard flat node data instead of a bespoke object:
@@ -531,19 +537,19 @@ Both now receive the standard flat node data instead of a bespoke object:
 
 The custom-node API was aligned around one distinction: a **node** is a position in the data tree; a **component** is the React function that renders it. The render-slot fields now say `component` (they hold React components, not "elements"), the visibility flags are all positive `show*`, and the props type is named for what it is.
 
-| v1                     | v2                     | Notes                                                                                                          |
-| ---------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `element`              | `component`            | The value / contents render slot                                                                               |
-| `customKey`            | `keyComponent`         | The key render slot                                                                                            |
-| `wrapperElement`       | `wrapperComponent`     | The collection wrapper slot                                                                                    |
-| `customNodeProps`      | `componentProps`       | Config passed to `component` + `keyComponent`                                                                  |
-| `hideKey: true`        | `showKey: false`       | **Polarity inverted** — `showKey` defaults to `true`                                                           |
-| `showInTypesSelector`  | `showInTypeSelector`   | Matches the "Type" selector label                                                                              |
-| type `CustomNodeProps` | `CustomComponentProps` | The props your component receives; also resolves the old `CustomNodeProps` / `CustomNodeDefinition` name clash |
-| `onError` (received)   | **removed**            | Custom components no longer receive an error-reporter prop — reject invalid input by `throw`ing from the definition's `fromStandardType` instead |
-| `setIsEditingKey`      | `startEditingKey`      | A key component's "enter key-edit mode" trigger — it's a zero-arg command, not a React `Dispatch`, so the `setIs*` name misled |
-| `handleKeyPress` (received) | `onKeyDown`       | The key-down handler your component attaches to its input — renamed off React's deprecated "keyPress" name, and consistent with `TextEditorProps.onKeyDown` |
-| `data` (received)      | `value` / `nodeData.value` | `CustomComponentProps` no longer carries the redundant `data` field — read the live value via `value`, or the committed value via `nodeData.value` |
+| v1                          | v2                         | Notes                                                                                                                                                       |
+| --------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `element`                   | `component`                | The value / contents render slot                                                                                                                            |
+| `customKey`                 | `keyComponent`             | The key render slot                                                                                                                                         |
+| `wrapperElement`            | `wrapperComponent`         | The collection wrapper slot                                                                                                                                 |
+| `customNodeProps`           | `componentProps`           | Config passed to `component` + `keyComponent`                                                                                                               |
+| `hideKey: true`             | `showKey: false`           | **Polarity inverted** — `showKey` defaults to `true`                                                                                                        |
+| `showInTypesSelector`       | `showInTypeSelector`       | Matches the "Type" selector label                                                                                                                           |
+| type `CustomNodeProps`      | `CustomComponentProps`     | The props your component receives; also resolves the old `CustomNodeProps` / `CustomNodeDefinition` name clash                                              |
+| `onError` (received)        | **removed**                | Custom components no longer receive an error-reporter prop — reject invalid input by `throw`ing from the definition's `fromStandardType` instead            |
+| `setIsEditingKey`           | `startEditingKey`          | A key component's "enter key-edit mode" trigger — it's a zero-arg command, not a React `Dispatch`, so the `setIs*` name misled                              |
+| `handleKeyPress` (received) | `onKeyDown`                | The key-down handler your component attaches to its input — renamed off React's deprecated "keyPress" name, and consistent with `TextEditorProps.onKeyDown` |
+| `data` (received)           | `value` / `nodeData.value` | `CustomComponentProps` no longer carries the redundant `data` field — read the live value via `value`, or the committed value via `nodeData.value`          |
 
 `wrapperProps` keeps its name, but is now delivered to your `wrapperComponent` as `wrapperProps` (previously it arrived as `customNodeProps`); the wrapper's props type is the new `CustomWrapperProps`. `CustomNodeDefinition` is unchanged; `CustomKeyProps` keeps its name but renames `setIsEditingKey` → `startEditingKey` (above).
 
@@ -711,6 +717,72 @@ Selectors that target the wrapper classes (`.jer-confirm-buttons`, `.jer-edit-bu
 ### Closing-bracket alignment
 
 The closing bracket of an expanded object/array now aligns with the key (the start of the opening line) at every depth, rather than carrying a depth-dependent offset toward the collapse chevron. The only thing to act on is **custom CSS that positioned the outside closing bracket** via `.jer-bracket-outside`: that class no longer sets `padding-left`, so if you added a rule to compensate for the old offset, remove it.
+
+---
+
+## 15. `icons` prop removed (themes own their glyphs)
+
+The standalone `icons` prop is gone. Icon **glyphs** now live on the theme, under `theme.icons`, alongside their colours (`theme.styles.iconAdd`…). Each glyph is an `IconDefinition` (`{ content, viewBox?, svgProps?, scale? }`) rather than a bare `JSX.Element`, and the chevron key is renamed `chevron` → `collection`. See [Icons](README.md#icons) for the full shape, the `currentColor` theming rule, and `scale`.
+
+**Why:** icons are part of a theme's look, so a theme can now ship its own glyphs (not just their colours), and a per-instance override composes through the same `theme` layering as style overrides — one mechanism instead of two.
+
+### Migration
+
+Move the config from the `icons` prop into a theme layer, and rename `chevron` → `collection`. `content` is the **inner** SVG markup — core renders the wrapping `<svg>` — so drop the outer `<svg>` and keep its `viewBox` as a sibling field:
+
+```diff
+- <JsonEditor
+-   data={data}
+-   setData={setData}
+-   icons={{
+-     add: <svg viewBox="0 0 24 24"><path d="M13 7…" /></svg>,
+-     chevron: <svg viewBox="0 0 512 512"><path d="M233 406…" /></svg>,
+-   }}
+- />
++ <JsonEditor
++   data={data}
++   setData={setData}
++   theme={{
++     icons: {
++       add: { content: <path d="M13 7…" />, viewBox: '0 0 24 24' },
++       collection: { content: <path d="M233 406…" />, viewBox: '0 0 512 512' },
++     },
++     styles: {},
++   }}
++ />
+```
+
+Or skip the unwrapping — hand the original `<svg>` markup (a string, or a React `<svg>` element) to the `iconFromSvg` helper in [`@json-edit-react/utils`](README.md#icons), which strips the outer `<svg>` and lifts its `viewBox` / attributes for you:
+
+```tsx
+import { iconFromSvg } from '@json-edit-react/utils'
+
+theme={{ icons: { add: iconFromSvg('<svg viewBox="0 0 24 24">…</svg>') }, styles: {} }}
+```
+
+Keep the theme reference stable (module scope or `useMemo`), as with any `theme` value.
+
+### Removed icon exports
+
+Gone from `json-edit-react`:
+
+- The built-in icon **components** `IconAdd`, `IconEdit`, `IconDelete`, `IconCopy`, `IconOk`, `IconCancel`, `IconChevron` and their props type `IconProps`. The built-in glyphs now live on `defaultTheme.icons` (e.g. `defaultTheme.icons.add`) if you need to reference one.
+- The `IconReplacements` type (the old `icons`-prop shape) — replaced by `IconDefinition` and `ThemeIcons`.
+
+---
+
+## 16. Themeable elements: `collectionInner` removed, `headerRow` and `valueRow` added
+
+The set of styleable parts (`theme.styles` keys) gains two row-level elements and drops one.
+
+- **`headerRow`** — a collection's header line (the key + brackets row).
+- **`valueRow`** — a leaf value's row.
+
+Both accept the usual element value — a colour string (applied as background), a full `CSSProperties` object, a style function, or an array — so you can theme row backgrounds, padding, or `minHeight` per row.
+
+**`collectionInner` is removed.** It targeted the children-body wrapper as distinct from the header; that distinction is now expressed more directly with `headerRow` (style the header) plus `collection` (style the whole block). If a theme set `collectionInner`, move those styles to `headerRow` and/or `collection`.
+
+`collection`, `collectionElement`, and `dropZone` are unchanged.
 
 ---
 

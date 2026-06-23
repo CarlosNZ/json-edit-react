@@ -27,7 +27,7 @@ export const ExamplesIndex = () => {
   const navigate = useLocation()[1]
 
   return (
-    <Box maxW="4xl" mx="auto" px={6} py={10}>
+    <Box maxW="6xl" mx="auto" px={6} py={10}>
       <Heading variant="accent" mb={2}>
         Examples
       </Heading>
@@ -35,7 +35,7 @@ export const ExamplesIndex = () => {
         Focused, single-concept demos of <strong>json-edit-react</strong> — each shows a live editor
         and its source.
       </Text>
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
         {Object.entries(examples).map(([slug, def]) => (
           <Box
             key={slug}
@@ -58,8 +58,15 @@ export const ExamplesIndex = () => {
             <Heading size="md" mb={1} variant="sub">
               {def.title}
             </Heading>
-            <MarkdownText fontSize="sm" color="gray.600" mb={4}>
-              {def.blurb}
+            {/* Clamp to 3 lines with a CSS ellipsis (`noOfLines` →
+                `-webkit-line-clamp`) so the full markdown still renders —
+                links/emphasis can't be cut mid-token — and every card keeps a
+                uniform height. Paragraph breaks in the blurb are flattened to
+                spaces first: `-webkit-line-clamp` only clamps reliably over a
+                single block, and the card just wants a one-paragraph teaser
+                (the full multi-paragraph blurb shows on the example page). */}
+            <MarkdownText fontSize="sm" color="gray.600" mb={4} noOfLines={3}>
+              {def.blurb.replace(/\s*\n+\s*/g, ' ')}
             </MarkdownText>
             {/* `mt="auto"` pushes the badge to the card's bottom so badges
                 line up across the row; `alignSelf` keeps it at its natural

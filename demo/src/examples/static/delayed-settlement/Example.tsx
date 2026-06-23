@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { JsonEditor } from '@json-edit-react'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 const initialData = {
   name: 'Project Phoenix',
@@ -16,7 +16,7 @@ export default function DelayedSettlement() {
     <JsonEditor
       data={data}
       setData={setData}
-      {...useExampleProps()} // ---cut---
+      {...useEditorDefaults()}
       rootName="project"
       onUpdate={async ({ newData }) => {
         // Simulate persisting the change to a server.

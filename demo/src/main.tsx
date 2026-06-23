@@ -8,12 +8,6 @@ import theme from './chakra-theme/index.ts'
 
 import { ShadowDomTest } from './ShadowDomTest'
 
-// The frozen V1 demo is lazy-loaded so V2 users never download it (or the
-// pinned `json-edit-react-v1` package). It self-provides its own
-// ChakraProvider, so the Suspense fallback below must be plain HTML (no Chakra
-// ancestor yet on `/v1`).
-const AppV1 = lazy(() => import('./v1/index.tsx'))
-
 // Targeted, single-concept examples. Lazy-loaded so the main demo (`/`) never
 // pulls in the examples code (or its shiki/react-live deps).
 const ExamplePage = lazy(() =>
@@ -36,13 +30,10 @@ const exampleFallback = (
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Router base="/json-edit-react">
+    {/* Router base tracks Vite's `base` (set via VITE_BASE_PATH at build time,
+        default `/json-edit-react/`), with the trailing slash stripped. */}
+    <Router base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
       <Switch>
-        <Route path="/v1">
-          <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading…</div>}>
-            <AppV1 />
-          </Suspense>
-        </Route>
         <Route path="/examples/:slug">
           {({ slug }) => (
             <ChakraProvider theme={theme}>

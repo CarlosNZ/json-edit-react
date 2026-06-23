@@ -78,6 +78,7 @@ import {
   type CollapseState,
   type BuildNodeDataFromPathRef,
 } from '../types'
+import { toArray } from '../utils/misc'
 
 interface CollapseContext {
   commands: CollapseState[] | null
@@ -123,7 +124,7 @@ export const CollapseProvider = ({
         )
         return
       }
-      const incoming = Array.isArray(state) ? state : [state]
+      const incoming = toArray(state)
       // Snapshot the commands. They're retained in provider state and
       // replayed to late mounts — a caller mutating the originals after
       // dispatch must not silently change the pending broadcast.

@@ -5,7 +5,12 @@
   --jer-select-arrow: #777;
   --jer-form-border: 1px solid #ededf0;
   --jer-form-border-focus: 1px solid #e2e2e2;
+  /* The selection-highlight and copy-pulse colours mirror the default theme, so
+     these static rules degrade to sensible colours when a theme doesn't supply
+     the matching variable inline on the container — e.g. a dynamic `iconCopy`
+     style function, which can't collapse to one container-level value. */
   --jer-highlight-color: #b3d8ff;
+  --jer-icon-copy-color: #268bd2;
 }
 
 .jer-visible {
@@ -131,6 +136,10 @@ select:focus + .focus {
 /* .jer-component {
 } */
 
+/* .jer-collection-element {
+  min-height: 1.7em;
+} */
+
 .jer-collection-header-row,
 .jer-value-main-row {
   display: flex;
@@ -140,8 +149,11 @@ select:focus + .focus {
 }
 
 .jer-collection-header-row {
-  display: flex;
   flex-wrap: wrap;
+}
+
+.jer-value-main-row {
+  gap: 0;
 }
 
 /* .jer-brackets {
@@ -180,19 +192,38 @@ select:focus + .focus {
 .jer-collapse-icon {
   position: absolute;
   left: -1.2em;
-  top: 0.35em;
+  /* Centre vertically on the row (its positioning context) independent of row
+     height: top:50% is mid-row, translateY(-50%) pulls back by half the icon's
+     own height. Survives row min-height and per-theme icon-scale changes. */
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* The collapse animation rotates the icon via `.jer-rotate-90`, which sets the
+   same `transform` property, so the centring translate is re-stated here or
+   it'd be lost when collapsed. The icon box is square → translate + rotate
+   compose cleanly. */
+.jer-collapse-icon.jer-rotate-90 {
+  transform: translateY(-50%) rotate(-90deg);
 }
 
 .jer-collection-inner {
   position: relative;
 }
 
-.jer-collection-text-edit {
+.jer-collection-text-edit,
+.jer-collection-text-edit-custom {
   display: flex;
   flex-direction: column;
   gap: 0.3em;
   align-items: flex-start;
   line-height: 1.1em;
+}
+
+/* Default <textarea> only: Keep OK/Cancel buttons bound by the text area width
+*/
+.jer-collection-text-edit {
+  width: fit-content;
 }
 
 .jer-collection-text-area {
@@ -222,9 +253,6 @@ select:focus + .focus {
   margin-top: 0.4em;
 }
 
-/* .jer-collection-element {
-} */
-
 /* .jer-collection-error-row {
 } */
 
@@ -239,11 +267,6 @@ select:focus + .focus {
 
 .jer-value-component {
   position: relative;
-}
-
-.jer-value-main-row {
-  display: flex;
-  gap: 0;
 }
 
 .jer-value-and-buttons {
@@ -348,6 +371,7 @@ select:focus + .focus {
   align-items: center;
   cursor: pointer;
   height: 1em;
+  margin-right: 0.2em;
 }
 
 /* The icon controls are real <button>s for accessibility. This neutralises the
@@ -441,10 +465,6 @@ select:focus + .focus {
 
 .jer-copy-pulse:active {
   top: 0.07em;
-}
-
-.jer-rotate-90 {
-  transform: rotate(-90deg);
 }
 
 .jer-accordion-icon {

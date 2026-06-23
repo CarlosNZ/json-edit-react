@@ -18,6 +18,7 @@ const SHIKI_FOR_JER: Record<string, string> = {
   Dracula: 'dracula',
   Monokai: 'monokai',
   'Tokyo Night': 'tokyo-night',
+  r18jv: 'github-light', // light theme; no direct Shiki equivalent
 }
 const DEFAULT_SHIKI = 'github-light'
 

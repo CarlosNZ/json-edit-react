@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'wouter'
-import { Box, Button, Center, Flex, Heading, Icon, Spinner, useToast } from '@chakra-ui/react'
-import { ArrowBackIcon } from '@chakra-ui/icons'
+import { Box, Button, Center, Flex, Heading, Icon, Spinner } from '@chakra-ui/react'
+import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import { FaGithub, FaNpm } from 'react-icons/fa'
 import { defaultTheme, type Theme } from '@json-edit-react'
 import { examples } from './registry'
@@ -39,11 +39,6 @@ const Loading = () => (
 export const ExamplePage = ({ slug }: { slug: string }) => {
   const navigate = useLocation()[1]
   const def = examples[slug]
-
-  // Injected into every rendered example (see ExampleComponentProps) so an
-  // example can surface its event stream as notifications — the shell owns the
-  // toast styling, the example just fires it.
-  const toast = useToast()
 
   const [theme, setTheme] = useState<Theme>(defaultTheme)
   const [source, setSource] = useState<string | null>(null)
@@ -96,6 +91,19 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
   }
 
   const showPicker = def.theme !== false
+  // Examples that mirror a demo data set deep-link to it; others go to the
+  // demo's default view. (Both resolve to `<App />` via the catch-all route.)
+  const demoUrl = def.demoDataSet ? `/?data=${def.demoDataSet}` : '/'
+
+  // The rendered example (static + custom both ship a component). Shared so the
+  // static branch can choose whether to wrap it in the shell's drop-shadow.
+  const exampleContent = (
+    <ExampleEditorProvider value={editorProps}>
+      <Suspense fallback={<Loading />}>
+        {ExampleComponent && <ExampleComponent />}
+      </Suspense>
+    </ExampleEditorProvider>
+  )
 
   return (
     <Box
@@ -129,10 +137,10 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
             <Button
               variant="link"
               leftIcon={<ArrowBackIcon />}
-              color={palette.itemCount}
-              onClick={() => navigate('/examples')}
+              color={palette.property}
+              onClick={() => window.history.back()}
             >
-              All examples
+              Back
             </Button>
             {/* GitHub + npm links, matching the main demo's icons/sizing. */}
             <Flex align="center" gap={5}>
@@ -155,14 +163,23 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
           <Heading size="lg" color={palette.property}>
             {def.title}
           </Heading>
-          <MarkdownText palette={palette} color={palette.string} maxW="3xl" mt={1}>
+          <MarkdownText palette={palette} color={palette.string} fontSize={16} maxW="6xl" mt={1}>
             {def.blurb}
           </MarkdownText>
-          {showPicker && (
-            <Flex justify="flex-end" mt={2}>
+          <Flex direction="column" align="flex-end" gap={2} mt={2}>
+            <Button
+              variant="link"
+              size="sm"
+              rightIcon={<ArrowForwardIcon />}
+              color={palette.property}
+              onClick={() => navigate(demoUrl)}
+            >
+              Go to Demo site
+            </Button>
+            {showPicker && (
               <ThemePicker value={theme} onChange={setTheme} size="sm" maxW={220} />
-            </Flex>
-          )}
+            )}
+          </Flex>
         </Box>
       </Box>
 
@@ -172,16 +189,11 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
           wider. */}
       <ExamplePaletteContext.Provider value={palette}>
         <Box maxW={PANE_MAX_WIDTH} mx="auto">
-          {def.kind === 'custom' && (
+          {def.kind === 'custom' &&
             // A bespoke interactive page: no source panel. The editor provider
             // lets it spread `useExampleProps()`; it reads the palette (via
             // `useExamplePalette`) to theme its own chrome.
-            <ExampleEditorProvider value={editorProps}>
-              <Suspense fallback={<Loading />}>
-                {ExampleComponent && <ExampleComponent toast={toast} />}
-              </Suspense>
-            </ExampleEditorProvider>
-          )}
+            exampleContent}
 
           {def.kind === 'static' && (
             // Drag a handle — the band's left edge, the centre divider, or its
@@ -192,14 +204,16 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
               storageId={slug}
               left={
                 // Shadow hugs the editor's own rounded container (like the main
-                // demo, which puts `.block-shadow` on the JsonEditor).
-                <Box className="block-shadow" borderRadius="md">
-                  <ExampleEditorProvider value={editorProps}>
-                    <Suspense fallback={<Loading />}>
-                      {ExampleComponent && <ExampleComponent toast={toast} />}
-                    </Suspense>
-                  </ExampleEditorProvider>
-                </Box>
+                // demo, which puts `.block-shadow` on the JsonEditor). Examples
+                // that render their own chrome around multiple boxes opt out
+                // with `selfChrome` and shadow each box themselves.
+                def.selfChrome ? (
+                  exampleContent
+                ) : (
+                  <Box className="block-shadow" borderRadius="md">
+                    {exampleContent}
+                  </Box>
+                )
               }
               right={
                 source !== null ? (

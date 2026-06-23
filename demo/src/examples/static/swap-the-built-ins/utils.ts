@@ -1,5 +1,5 @@
 import { type StylesConfig } from 'react-select'
-import { type ThemePalette } from '../../kit/useThemePalette'
+import { type ThemePalette } from '@example-resources'
 
 // Lighten an `rgb()`/`rgba()` color toward white by blending each channel.
 // Returns the input unchanged if it can't be parsed.

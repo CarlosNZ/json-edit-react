@@ -16,8 +16,10 @@
     "build:local": "VITE_JRE_SOURCE=local yarn build",
     "build:build": "VITE_JRE_SOURCE=build yarn build",
     "build:pack": "VITE_JRE_SOURCE=pack yarn build",
+    "build-v2": "VITE_BASE_PATH=/json-edit-react-v2/ yarn build:local",
     "predeploy": "yarn build",
     "deploy": "gh-pages -d build",
+    "deploy-v2": "yarn build-v2 && gh-pages -d build --repo https://github.com/CarlosNZ/json-edit-react-v2.git",
     "lint": "eslint .",
     "serve": "vite preview",
     "compile": "tsc -b --noEmit"
@@ -41,7 +43,6 @@
     "firebase": "^10.13.0",
     "framer-motion": "^11.0.3",
     "json-edit-react": "1.30.1",
-    "json-edit-react-v1": "npm:json-edit-react@^1",
     "json5": "^2.2.3",
     "react": "^19.0.0",
     "react-colorful": "^5.6.1",

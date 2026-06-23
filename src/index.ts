@@ -1,9 +1,9 @@
 export { JsonEditor } from './JsonEditor'
 export { JsonViewer } from './JsonViewer'
 export { defaultTheme } from './contexts/ThemeProvider'
-export { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 export { StringDisplay, StringEdit, useKeyboardListener } from './ValueNodes'
 export { AutogrowTextArea } from './AutogrowTextArea'
+export { IconSvg } from './Icons'
 export { type SelectProps } from './NativeSelect'
 export { matchNode, matchNodeKey } from './utils/filter'
 export { isCollection } from './utils/misc'
@@ -11,6 +11,8 @@ export { toPathString, splitPropertyString } from './utils/pathTools'
 export { assign, type AssignInput, type AssignOptions } from './utils/assign'
 export { extract } from './utils/extract'
 export {
+  valueDataTypes,
+  collectionDataTypes,
   standardDataTypes,
   type JsonEditorProps,
   type JsonViewerProps,
@@ -35,7 +37,8 @@ export {
   type NewKeyOptionsFunction,
   type DefaultValueFunction,
   type CompareFunction,
-  type IconReplacements,
+  type IconDefinition,
+  type ThemeIcons,
   type CollectionNodeProps,
   type ValueNodeProps,
   type CustomComponentProps,
@@ -58,5 +61,4 @@ export {
   type TypeOptions,
   type UpdateFunctionProps,
 } from './types'
-export { type IconProps } from './Icons'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'

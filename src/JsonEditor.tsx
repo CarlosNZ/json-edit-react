@@ -137,7 +137,7 @@ const Editor: React.FC<
   showClipboardButton = true,
   onCopy,
   indent = 2,
-  collapse = false,
+  collapse = 3, // open the top 3 levels; deeper nodes start collapsed
   collapseAnimationTime = 300, // must be equivalent to CSS value
   showCollectionCount = 'when-collapsed-or-filtered',
   allowEdit = true,
@@ -176,7 +176,7 @@ const Editor: React.FC<
   onCollapse,
   collapseClickZones = DEFAULT_COLLAPSE_CLICK_ZONES,
 }) => {
-  const { getStyles } = useTheme()
+  const { getStyles, cssVars } = useTheme()
   // Root must not subscribe to editing state — that would re-render the whole
   // tree on every edit transition. Read the actions from the stable store
   // (used by the cancel-on-unmount cleanup and the `editorRef` handle below).
@@ -376,7 +376,10 @@ const Editor: React.FC<
         return {
           input: { ...nodeData, newData, event: 'rename', newKey } as UpdateFunctionProps,
           nodeData,
-          isNoOp: false,
+          // A same-key rename (unchanged) is a no-op: the engine fires
+          // `commitRename` and skips `onUpdate`, matching how an unchanged value
+          // edit closes via `commitEdit`.
+          isNoOp: oldKey === newKey,
           apply: () => commitData(newData),
           // Restore the parent with its original key order.
           revert: () =>
@@ -709,7 +712,7 @@ const Editor: React.FC<
     collapseClickZones,
   }
 
-  const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }
+  const mainContainerStyles = { ...getStyles('container', nodeData), ...cssVars, minWidth, maxWidth }
 
   // Props fontSize takes priority over theme, but we fall back on a default of
   // 16 (from CSS sheet) if neither are provided. Having a defined base size
@@ -757,7 +760,7 @@ export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.React
   const innerProps = props as unknown as JsonEditorProps<JsonData>
 
   return (
-    <ThemeProvider theme={innerProps.theme ?? defaultTheme} icons={innerProps.icons}>
+    <ThemeProvider theme={innerProps.theme ?? defaultTheme}>
       <TreeStateProvider
         onEditEvent={innerProps.onEditEvent}
         onCollapse={innerProps.onCollapse}

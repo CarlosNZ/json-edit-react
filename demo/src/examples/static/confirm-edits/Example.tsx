@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { JsonEditor, type JsonData } from '@json-edit-react'
 import { useConfirmOnUpdate, type ConfirmDialogState } from '@json-edit-react/utils'
-import { useExampleProps } from '../../kit/exampleProps' // ---cut---
+import { useEditorDefaults } from '@example-resources'
 
 const initialData = {
   name: 'Project Phoenix',
@@ -11,11 +11,12 @@ const initialData = {
   tags: ['internal', 'q3'],
 }
 
-// A plain, self-contained confirmation modal — no UI library. It's driven
-// entirely by the `dialog` object the hook returns: `isOpen` toggles it,
-// `onConfirm` / `onCancel` are the button handlers, and `title` / `message`
-// carry the content. Swap in your own modal (Chakra, MUI, Radix…) — the only
-// contract is these fields.
+// A plain, self-contained confirmation modal — no UI library.
+// It's driven entirely by the `dialog` object the hook returns:
+// `isOpen` toggles it, `onConfirm` / `onCancel` are the button
+// handlers, and `title` / `message` carry the content. Swap in
+// your own modal (Chakra, MUI, Radix…) — the only contract is
+// these fields.
 const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel }: ConfirmDialogState) => {
   if (!isOpen) return null
   return (
@@ -39,10 +40,11 @@ const ConfirmModal = ({ isOpen, title, message, onConfirm, onCancel }: ConfirmDi
 export default function ConfirmationExample() {
   const [data, setData] = useState<JsonData>(initialData)
 
-  // Ask before committing any change. The hook runs the hold() gate for us —
-  // the edited node stays open and the rest of the tree is blocked while the
-  // modal is up — then commits on Confirm, or reverts on Cancel. `confirmOn`
-  // takes the event names to gate (or a predicate); `message` can be a string
+  // Ask before committing any change. The hook runs the hold()
+  // gate for us — the edited node stays open and the rest of the
+  // tree is blocked while the modal is up — then commits on
+  // Confirm, or reverts on Cancel. `confirmOn` takes the event
+  // names to gate (or a predicate); `message` can be a string
   // or, as here, a function of the edit.
   const { onUpdate, dialog } = useConfirmOnUpdate({
     confirmOn: ['edit', 'add', 'delete', 'rename'],
@@ -68,7 +70,7 @@ export default function ConfirmationExample() {
       <JsonEditor
         data={data}
         setData={setData}
-        {...useExampleProps()} // ---cut---
+        {...useEditorDefaults()}
         rootName="project"
         onUpdate={onUpdate}
       />

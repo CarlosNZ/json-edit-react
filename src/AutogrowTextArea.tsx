@@ -6,6 +6,10 @@
  *
  * See https://css-tricks.com/the-cleanest-trick-for-autogrowing-textareas for
  * the basic idea of how it works.
+ *
+ * This will eventually be replace by CSS property `field-sizing: content` once
+ * browser support and uptake is more widespread. See branch `test/field-sizing`
+ * for an implementation using that approach.
  */
 
 import React, { useRef } from 'react'

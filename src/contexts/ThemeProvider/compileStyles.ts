@@ -2,32 +2,39 @@ import { type CSSProperties } from 'react'
 import {
   type ThemeInput,
   type ThemeValueUnit,
-  type ThemeFunction,
+  type StyleFunction,
   type ThemeableElement,
+  type ThemeIcons,
   type CompiledStyles,
   type Theme,
   type NodeData,
 } from '../../types'
 import { defaultTheme } from './defaultTheme'
+import { toArray } from '../../utils/misc'
 
 // Elements whose bare-string shorthand targets a property other than `color`.
 const DEFAULT_PROP: Partial<Record<ThemeableElement, keyof CSSProperties>> = {
   container: 'backgroundColor',
   collection: 'backgroundColor',
-  collectionInner: 'backgroundColor',
   collectionElement: 'backgroundColor',
+  headerRow: 'backgroundColor',
+  valueRow: 'backgroundColor',
   dropZone: 'borderColor',
   inputHighlight: 'backgroundColor',
 }
 
+// The ordered theme stack a `ThemeInput` resolves to: `defaultTheme` first
+// (always layer 0), then each supplied entry coerced to a full `Theme`. Shared
+// by both derivations (`compileStyles`, `mergeIcons`) so the "merge over
+// default" rule lives in exactly one place.
+const resolveThemeStack = (themeInput: ThemeInput): Theme[] =>
+  [defaultTheme, ...toArray(themeInput)].map((t) => ('styles' in t ? t : { styles: t }))
+
 export const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
-  const themes: Theme[] = [
-    defaultTheme,
-    ...(Array.isArray(themeInput) ? themeInput : [themeInput]),
-  ].map((t) => ('styles' in t ? t : { styles: t }))
+  const themes = resolveThemeStack(themeInput)
 
   const base: Partial<Record<ThemeableElement, CSSProperties>> = {}
-  const fns: Partial<Record<ThemeableElement, ThemeFunction[]>> = {}
+  const fns: Partial<Record<ThemeableElement, StyleFunction[]>> = {}
 
   // Resolve each theme in array order. Statics merge into `base`, functions
   // append to `fns`. Cross-theme: later overlays earlier, per element.
@@ -62,6 +69,16 @@ export const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
   return compiled
 }
 
+// Merge each theme's `icons` in array order (defaultTheme first), later wins
+// per glyph key — exactly parallel to how `styles` compose. defaultTheme defines
+// all seven glyphs, so the result is always complete and the renderer can index
+// it without a fallback path.
+export const mergeIcons = (themeInput: ThemeInput): Required<ThemeIcons> => {
+  const merged = {} as ThemeIcons
+  for (const { icons } of resolveThemeStack(themeInput)) if (icons) Object.assign(merged, icons)
+  return merged as Required<ThemeIcons>
+}
+
 // Resolve a compiled element to concrete CSS: call the closure, return the
 // object as-is (a stable reference), or `{}` for an element no theme styles —
 // so the public contract is always a concrete CSSProperties object.
@@ -74,12 +91,21 @@ export const getStyles = (
   return typeof value === 'function' ? value(nodeData) : (value ?? {})
 }
 
-// Bridge for the two properties that can't be set inline — they feed static
-// rules in style.css, so they're written as custom properties on the root.
-export const writeThemeCssVars = (compiled: CompiledStyles, docRoot: HTMLElement) => {
+// Bridge for the two theme colours that can't be applied inline — they feed
+// static rules in style.css (the `::selection` background and the copy-pulse
+// glow). Returned as a CSS-custom-property style fragment to spread onto the
+// editor container, where they cascade to its descendants. Scoping to the
+// container (rather than the document root) keeps separate editor instances
+// from clobbering each other and lets the values reach inside a shadow root;
+// the `:root, :host` defaults in style.css cover the un-themed case. A per-node
+// theme *function* can't collapse to one container-level value, so only static
+// values are emitted.
+export const getThemeCssVars = (compiled: CompiledStyles): CSSProperties => {
   const { inputHighlight, iconCopy } = compiled
+  const vars: Record<string, string> = {}
   if (typeof inputHighlight !== 'function' && inputHighlight?.backgroundColor)
-    docRoot.style.setProperty('--jer-highlight-color', inputHighlight.backgroundColor)
+    vars['--jer-highlight-color'] = inputHighlight.backgroundColor
   if (typeof iconCopy !== 'function' && iconCopy?.color)
-    docRoot.style.setProperty('--jer-icon-copy-color', iconCopy.color)
+    vars['--jer-icon-copy-color'] = iconCopy.color
+  return vars as CSSProperties
 }

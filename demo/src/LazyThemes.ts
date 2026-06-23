@@ -11,7 +11,7 @@ import {
   draculaTheme,
   monokaiTheme,
   tokyoNightTheme,
-  tmfTheme,
+  r18jvTheme,
 } from '@json-edit-react/themes'
 
 // This file contains functions that return theme objects
@@ -29,7 +29,8 @@ export const getSolarizedLightTheme = (): Theme => solarizedLightTheme
 export const getDraculaTheme = (): Theme => draculaTheme
 export const getMonokaiTheme = (): Theme => monokaiTheme
 export const getTokyoNightTheme = (): Theme => tokyoNightTheme
-export const getTMFTheme = (): Theme => tmfTheme
+// Name derived from the 'r18jv' display name (no spaces) → `getr18jvTheme`.
+export const getr18jvTheme = (): Theme => r18jvTheme
 
 // Allow dynamic accessing of theme getter functions
 interface ThemeGetters {
@@ -49,5 +50,5 @@ export const themeGetters: ThemeGetters = {
   getDraculaTheme,
   getMonokaiTheme,
   getTokyoNightTheme,
-  getTMFTheme,
+  getr18jvTheme,
 }

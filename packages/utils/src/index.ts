@@ -32,6 +32,10 @@ export * from './undo'
 export * from './stable-value'
 export * from './validation'
 
+// Build an IconDefinition (for `Theme.icons`) from raw SVG markup or a React
+// <svg> element. https://github.com/CarlosNZ/json-edit-react/issues/369
+export * from './icon'
+
 // NOTE: the filter-function toolkit (`./filters`) is deliberately NOT re-exported
 // here. It ships under its own subpath — `@json-edit-react/utils/filters` — so its
 // generic builder names (`and`, `or`, `not`, `root`, `collections`, `primitives`,
