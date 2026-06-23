@@ -25,7 +25,7 @@ const iconColor = '#4d4d4d' // glyph outlines (via currentColor)
 // taste. Note the `collection` chevron under-fills its 16×16 viewBox, so it
 // reads smaller than the 24×24 action glyphs at the same scale; give it its own
 // scale if you want them matched.
-const iconScale = 0.8
+const iconScale = 0.9
 
 export const r18jvTheme: Theme = {
   displayName: 'r18jv',
@@ -127,7 +127,7 @@ export const r18jvTheme: Theme = {
     container: [
       'white',
       {
-        fontSize: '1em',
+        fontSize: '1.1em',
         fontFamily:
           'ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace',
         fontWeight: 400,

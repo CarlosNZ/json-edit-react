@@ -371,6 +371,7 @@ select:focus + .focus {
   align-items: center;
   cursor: pointer;
   height: 1em;
+  margin-right: 0.2em;
 }
 
 /* The icon controls are real <button>s for accessibility. This neutralises the
