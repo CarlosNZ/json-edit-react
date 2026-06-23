@@ -473,6 +473,10 @@ const Editor: React.FC<
           return typeof result.error === 'string'
             ? { status: 'error', error: { code, message: result.error } }
             : { status: 'error', error: result.error }
+        // A key set to `undefined` counts as "no override for this key" (not
+        // "override to undefined") — consistent with the protocol's top-level
+        // "undefined/void = proceed" and the `error` check above. Overriding a
+        // node *to* undefined isn't supported here; `null` overrides work.
         const hasData = result.data !== undefined
         const hasValue = result.value !== undefined
         // Returning both is a mistake — `data` (whole-document) wins, `value` is
