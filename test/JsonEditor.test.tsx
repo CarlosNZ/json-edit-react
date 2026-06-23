@@ -1957,7 +1957,6 @@ describe('JsonEditor — restrictions and callbacks', () => {
     // is ignored, and a dev-time warning flags the mistake.
     await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ whole: 'doc' }))
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('both'))
-    warn.mockRestore()
   })
 
   test('onUpdate returning null silently cancels: no commit, no error, input reverts', async () => {
