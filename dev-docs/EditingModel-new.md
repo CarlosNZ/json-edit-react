@@ -41,7 +41,8 @@ A single `onUpdate` prop — no separate gate prop. The model passes a control o
 ```ts
 type UpdateResult =
   | void | undefined | true            // commit
-  | { value: JsonData }                // commit, overriding the committed value
+  | { value: unknown }                 // commit, overriding the edited NODE's value (edit/add only)
+  | { data: JsonData }                 // commit, overriding the WHOLE document
   | null                               // silent cancel — revert (if already applied), no error
   | false                              // reject — revert + default error message
   | { error: string | JerError } // reject — revert + this message
@@ -142,7 +143,7 @@ startX ──▶ [submitX] ──▶ commitX ──▶ [ updateSuccess | updateE
 
 | `onUpdate` returns | events after `commitX` |
 |---|---|
-| `void`/`true`/`{ value }` | `updateSuccess` |
+| `void`/`true`/`{ value }`/`{ data }` | `updateSuccess` |
 | `false`/`{ error }`/throws | `updateError` (+ revert) |
 | `null` | none — a **cancel**: fires `cancelX` instead of `commitX` (when held); a `null` *after* an optimistic commit reverts silently |
 
@@ -286,7 +287,8 @@ reconcile({ path, token, op, result, apply, getPrev }):
 
   match result:
     void | true   → fire('updateSuccess')
-    { value }     → applyValue(path, value) ; fire('updateSuccess')
+    { value }     → applyValue(nodePath, value) ; fire('updateSuccess')   // node-level (edit/add); ignored elsewhere
+    { data }      → applyValue([], data) ; fire('updateSuccess')          // whole-document
     false|{error} → applyValue(path, getPrev()) ; fire('updateError', {error})   // buffer untouched (§9.1)
     null          → applyValue(path, getPrev())                                   // silent revert
 ```

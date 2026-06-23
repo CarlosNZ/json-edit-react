@@ -245,13 +245,13 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return true
     },
     onEdit: ({ newData, path }) => {
-      if (path[0] !== 'messages' && path.length !== 3) return { value: newData }
+      if (path[0] !== 'messages' && path.length !== 3) return { data: newData }
       const parentPath = [path[0], path[1]]
       const messageObject = (newData as { messages: { [key: number]: { timeStamp: string } } })
         ?.messages?.[path[1] as number]
       messageObject.timeStamp = new Date().toISOString()
       const data = assign(newData as AssignInput, parentPath, messageObject)
-      return { value: data }
+      return { data }
     },
     onAdd: ({ path, newData }) => {
       if (path[0] === 'messages' && path.length === 2) {
@@ -259,7 +259,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         const messages = [...(newData?.messages ?? [])]
         messages.sort((a, b) => new Date(b.timeStamp).getTime() - new Date(a.timeStamp).getTime())
         const data = assign(newData as AssignInput, 'messages', messages)
-        return { value: data }
+        return { data }
       }
       return
     },

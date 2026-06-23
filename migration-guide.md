@@ -16,7 +16,7 @@ If you only have a few minutes, these are the changes most likely to affect exis
 | `enableClipboard` split into `showClipboardButton` (boolean) + `onCopy` (callback); `CopyFunction` → `OnCopyFunction`                                                                                                                                                                                   | Rename the boolean to `showClipboardButton`; move any copy callback to `onCopy` — see [`enableClipboard` split](#6-enableclipboard-split-into-showclipboardbutton--oncopy)                                                                       |
 | Several display / config props renamed                                                                                                                                                                                                                                                                  | Rename `keySort`, `rootFontSize`, `errorMessageTimeout`, `stringTruncate`, `showArrayIndices`, `arrayIndexFromOne` — see [Display / config prop renames](#7-display--config-prop-renames)                                                        |
 | Callback payloads are now a single flat `NodeData` (`currentData`→`fullData`, `currentValue`→`value`, `name`→`key`)                                                                                                                                                                                     | Rename those fields in `onUpdate` / `onChange` / `onError` / `onCollapse` / `onCopy` — see [Flat `NodeData` payloads](#8-flat-nodedata-payloads)                                                                                                 |
-| `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`, return shape unified                                                                                                                                                                                                                        | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ value }` / `{ error }` (and `null` to silently cancel) — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads)       |
+| `onEdit` / `onAdd` / `onDelete` merged into one `onUpdate`, return shape unified                                                                                                                                                                                                                        | Use a single `onUpdate` and `switch (props.event)`; replace tuple / bare-string returns with `{ data }` (whole-document, was `['value', …]`) / `{ value }` (node-level) / `{ error }` (and `null` to silently cancel) — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads)       |
 | `JerError`'s `code` union gains `RENAME_ERROR` / `MOVE_ERROR` / `CLIPBOARD_ERROR`                                                                                                                                                                                                                       | Handle the new codes only if you exhaustively `switch` on `error.code` — see [One `onUpdate`](#9-one-onupdate-unified-return-shape-flat-nodedata-payloads)                                                                                       |
 | `onEditEvent` is now a lifecycle stream `(e) => …` (was `(path, isKey) => …`); `onError` / `onCollapse` use flat `NodeData`; `onCopy.error` is a `JerError`                                                                                                                                             | `switch (e.event)` over start/confirm/cancel + delete/move; update the flat payload fields — see [Observers reshaped](#10-observers-reshaped-oneditevent-lifecycle-stream-flat-onerror--oncollapse-oncopy-error)                                 |
 | `CustomNodeDefinition` fields renamed (`element`→`component`, `customKey`→`keyComponent`, `customNodeProps`→`componentProps`, `hideKey`→`showKey` (inverted), `showInTypesSelector`→`showInTypeSelector`); type `CustomNodeProps`→`CustomComponentProps`; the component's `onError` reporter is removed | Rename the fields in your definitions and the props type in your components; replace any component `onError` call with a `throw`ing `fromStandardType` — see [`CustomNodeDefinition` field renames](#11-customnodedefinition-field-renames)      |
@@ -403,11 +403,11 @@ Renaming a key and moving a node (drag-drop) previously reached the update callb
 
 ### Unified `UpdateResult` return shape
 
-The five legacy return shapes collapse into one. The `['value', x]` / `['error', x]` tuple forms and the bare-string error are removed:
+The five legacy return shapes collapse into one. The `['value', x]` / `['error', x]` tuple forms and the bare-string error are removed, and the override key now distinguishes **node-level** from **whole-document**:
 
 ```diff
-- return ['value', sortedArray]      // override the committed value
-+ return { value: sortedArray }
+- return ['value', updatedDocument]  // override — replaced the WHOLE document
++ return { data: updatedDocument }   // whole-document override (was `['value', …]`)
 
 - return 'That value is not allowed' // reject with a message
 + return { error: 'That value is not allowed' }
@@ -415,6 +415,8 @@ The five legacy return shapes collapse into one. The `['value', x]` / `['error',
 - return ['error', 'Nope']
 + return { error: 'Nope' }           // or { error: { code, message } }
 ```
+
+The override tuple `['value', x]` always replaced the **whole document** (it ran `setData(x)`); that is now **`{ data: x }`**. The new **`{ value: x }`** means something different — the **edited node's** value, applied at its own path (for `edit` / `add` only; ignored for `rename` / `move` / `delete`) — so reach for it for the common "tidy what the user just typed" case (lower-case, round, sort *this* array) and use `{ data }` when you need to rewrite siblings or stamp a top-level field. Returning both is a mistake: `data` wins and `value` is ignored, with a console warning.
 
 `true` / `void` / `undefined` (proceed) and `false` (reject with a generic message) are unchanged. **New:** returning **`null`** silently cancels the change — no commit and *no* error message (use it to quietly abort a change that isn't an error; `false` still shows an error).
 

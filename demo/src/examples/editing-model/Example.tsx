@@ -71,7 +71,7 @@ const MODES: { value: Mode; label: string; desc: string }[] = [
       'The save returns a replacement document. Simulates a server that ' +
       'canonicalises your data: after 3 s the whole document is replaced with ' +
       'your edit plus a fresh top-level _editedAt timestamp — showing how an ' +
-      'onUpdate `{ value }` return rewrites the result.',
+      'onUpdate `{ data }` return rewrites the whole result.',
   },
   {
     value: 'cancel-null',
@@ -173,7 +173,7 @@ export default function EditingModel() {
         case 'override':
           await wait(DELAY)
           return {
-            value: {
+            data: {
               ...(nodeData.newData as Record<string, unknown>),
               _editedAt: new Date().toLocaleTimeString(),
             },
