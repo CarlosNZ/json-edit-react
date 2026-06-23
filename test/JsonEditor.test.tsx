@@ -1852,10 +1852,100 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(screen.queryByText('"rejected"')).toBeNull()
   })
 
-  test('onUpdate returning { value } passes the override straight to setData', async () => {
+  test('onUpdate returning { value } on an edit applies at the edited node, not the whole document', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    const onUpdate = jest.fn(() => ({ value: { x: 'OVERRIDDEN' } }))
+    const onUpdate = jest.fn(() => ({ value: 'OVERRIDDEN' }))
+    render(<JsonEditor data={{ x: 'hello', y: 'world' }} setData={setData} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'whatever{Enter}')
+
+    // `{ value }` is the edited NODE's value: applied at its path (`x`), leaving
+    // the sibling untouched. A whole-document override would instead collapse
+    // the doc to the bare string 'OVERRIDDEN'.
+    await waitFor(() =>
+      expect(setData).toHaveBeenLastCalledWith({ x: 'OVERRIDDEN', y: 'world' })
+    )
+  })
+
+  test('onUpdate returning { data } replaces the whole document', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(() => ({ data: { completely: 'different' } }))
+    render(<JsonEditor data={{ x: 'hello', y: 'world' }} setData={setData} onUpdate={onUpdate} />)
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'whatever{Enter}')
+
+    // `{ data }` is the whole document, applied at the root path.
+    await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ completely: 'different' }))
+  })
+
+  test('onUpdate returning { value } on an add applies at the new child path', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(() => ({ value: 42 }))
+    const { container } = render(
+      <JsonEditor
+        data={{ existing: 'value' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        showIconTooltips
+      />
+    )
+
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(newKeyInput)
+    await user.type(newKeyInput, 'fresh{Enter}')
+
+    // The new node is added (default `null`) then `{ value }` overrides it at
+    // the child's path — the sibling and the rest of the doc are untouched.
+    await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ existing: 'value', fresh: 42 }))
+  })
+
+  test('onUpdate returning { value } on a delete is ignored — the delete still applies', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(() => ({ value: 'ignored' }))
+    render(
+      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={setData} onUpdate={onUpdate} showIconTooltips />
+    )
+
+    const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
+    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+
+    // `{ value }` has no meaning for a delete: it's discarded (no override) and
+    // the node is removed as normal. `rename`/`move` share this gated branch.
+    await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ y: 'bye' }))
+  })
+
+  test('onUpdate returning { data } on a delete replaces the whole document', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(() => ({ data: { replaced: true } }))
+    render(
+      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={setData} onUpdate={onUpdate} showIconTooltips />
+    )
+
+    const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
+    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+
+    // `{ data }` is not gated by event — it replaces the whole document even on
+    // a structural change.
+    await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ replaced: true }))
+  })
+
+  test('onUpdate returning both { value } and { data }: data wins and a warning is emitted', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    const onUpdate = jest.fn(() => ({ value: 'node-level', data: { whole: 'doc' } }))
     render(<JsonEditor data={{ x: 'hello' }} setData={setData} onUpdate={onUpdate} />)
 
     await user.dblClick(screen.getByText('"hello"'))
@@ -1863,9 +1953,10 @@ describe('JsonEditor — restrictions and callbacks', () => {
     await user.clear(input)
     await user.type(input, 'whatever{Enter}')
 
-    // The user's typed value is applied optimistically, then the override wins:
-    // the last write is the override (`{ value }` replaces the whole document).
-    await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ x: 'OVERRIDDEN' }))
+    // The broader operation wins: `{ data }` replaces the document, `{ value }`
+    // is ignored, and a dev-time warning flags the mistake.
+    await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ whole: 'doc' }))
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('both'))
   })
 
   test('onUpdate returning null silently cancels: no commit, no error, input reverts', async () => {

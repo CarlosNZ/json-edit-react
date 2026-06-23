@@ -209,8 +209,18 @@ export interface JerError {
 /**
  * The one canonical update result (§17, Category 2). `void`/`undefined`/`true`
  * commit; `false` rejects with a generic error; `null` is a silent abort (no
- * commit, no error); the object form overrides the committed `value` or rejects
+ * commit, no error); the object form overrides what gets committed, or rejects
  * with a custom `error` (a bare `string` is wrapped into a `JerError`).
+ *
+ * The two override keys differ in scope:
+ * - `value` — the edited node's value, applied at its path. Mirrors the
+ *   `newValue` the callback receives. Honoured only for `edit`/`add`; ignored
+ *   for `rename`/`move`/`delete` (the commit proceeds unchanged).
+ * - `data` — the whole document, applied at the root. Mirrors `newData`. Works
+ *   on every event.
+ *
+ * Returning both is a mistake: `data` (the broader operation) wins and `value`
+ * is ignored (with a dev-time warning).
  */
 export type UpdateResult<T = JsonData> =
   | true
@@ -219,7 +229,8 @@ export type UpdateResult<T = JsonData> =
   | false
   | null
   | {
-      value?: T
+      value?: unknown
+      data?: T
       error?: string | JerError
     }
 

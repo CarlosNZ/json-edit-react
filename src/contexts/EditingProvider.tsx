@@ -91,7 +91,10 @@ export type CommitRequest =
  *  `onUpdate`'s raw return (incl. localised reject messages) to this. */
 export type UpdateOutcome =
   | { status: 'commit' }
-  | { status: 'override'; value: JsonData }
+  // `path` is where the override applies: `[]` for a whole-document `{ data }`
+  // override, or the edited node's path for a node-level `{ value }` override.
+  // `runUpdate` resolves it (it knows the event + node); `reconcile` just applies.
+  | { status: 'override'; value: JsonData; path: CollectionKey[] }
   | { status: 'cancel' }
   | { status: 'error'; error: JerError }
 
@@ -131,7 +134,8 @@ export interface CommitPrimitives {
   /** Prepare a commit (compute `newData`, the input, and apply/revert). `null`
    *  if the target path no longer exists. */
   buildCommit: (request: CommitRequest) => BuiltCommit | null
-  /** Apply an arbitrary value at `path` (used for an `{ value }` override). */
+  /** Apply an arbitrary value at `path` (used for `{ value }`/`{ data }`
+   *  overrides — node path or root `[]` respectively). */
   applyValue: (path: CollectionKey[], value: unknown) => void
 }
 
@@ -547,10 +551,10 @@ const createEditingStore = (
         emitEvent(nodeData, 'updateError', { operation: op, error: outcome.error })
         break
       case 'override':
-        // An override replaces the WHOLE document (`onUpdate` returned a
-        // modified `newData`), not just the edited node — apply it at the root
-        // path.
-        commitRef.current?.applyValue([], outcome.value)
+        // An override applies `value` at `outcome.path`: `[]` for a whole-
+        // document `{ data }` return, or the edited node's path for a node-level
+        // `{ value }` return. `runUpdate` resolved which.
+        commitRef.current?.applyValue(outcome.path, outcome.value)
         emitEvent(nodeData, 'updateSuccess', { operation: op, ...extra })
         break
       case 'commit':

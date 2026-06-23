@@ -522,7 +522,8 @@ The function can return nothing (the change proceeds as normal), or a value to a
 - `true` / `void` / `undefined`: the change proceeds as normal
 - `false`: treats the change as an error — the data is not updated (reverts to the previous value) and a generic error message is displayed in the UI
 - `null`: **silently cancels** the change — no update, and *no* error message (unlike `false`). Use this to quietly abort a change that isn't an error
-- `{ value: <value> }`: use the returned `<value>` instead of the input data. You might use this to automatically modify user input — for example, sorting an array, or inserting a timestamp field into an object
+- `{ value: <value> }`: replace the **edited node's** value with `<value>` (applied at its path). Use this to tidy what the user just entered — lower-case a string, round a number, trim, sort *this* array. Honoured for `edit` and `add`; ignored for `rename` / `move` / `delete` (those events have no node value to set)
+- `{ data: <data> }`: replace the **whole document** with `<data>`. Use this for cross-field changes — stamping a `lastModified`, sorting sibling nodes, canonicalising the structure. Works for every event. (Returning both `value` and `data` is a mistake: `data` wins and `value` is ignored, with a console warning.)
 - `{ error: <string> }` (or `{ error: { code, message } }`): treats the change as an error, with your provided message shown in the UI
 
 (Any of the above may also be returned from an `async` function / `Promise`.)
