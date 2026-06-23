@@ -75,7 +75,7 @@ export const tokyoNightTheme: Theme = {
   icons: phosphorLightIcons,
   styles: {
     container: { color: '#a9b1d6', backgroundColor: '#1a1b26' },
-    dropZone: 'rgba(122, 162, 247, 0.18)',
+    dropZone: '#c0caf59c',
     property: '#c0caf5',
     bracket: '#7aa2f7',
     itemCount: ['#565f89', { fontStyle: 'normal', fontSize: '95%' }],

@@ -239,7 +239,7 @@ export const tmfTheme: Theme = {
       // { boxShadow: '0 4px 8px 0 rgba(96, 97, 112, 0.16), 0 0 2px 0 rgba(40, 41, 61, 0.04)' },
     ],
     // valueRow: ['white', { border: '1px solid black' }],
-    dropZone: 'rgba(242, 101, 50, 0.14)',
+    dropZone: 'rgb(233, 92, 48, 0.65)',
     property: ['rgb(233, 92, 48)', { fontWeight: 600 }],
     bracket: ['rgb(62, 123, 250)', { fontWeight: 'bold' }],
     itemCount: { color: 'rgb(143, 144, 166)', fontStyle: 'italic', opacity: 0.85 },

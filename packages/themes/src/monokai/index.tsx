@@ -64,7 +64,7 @@ export const monokaiTheme: Theme = {
       backgroundColor: '#272822',
       fontFamily: "Monaco, Consolas, 'DejaVu Sans Mono', monospace",
     },
-    dropZone: 'rgba(166, 226, 46, 0.15)',
+    dropZone: '#e6db749f',
     property: 'green',
     bracket: '#f8f8f2',
     itemCount: [

@@ -113,7 +113,7 @@ export const draculaTheme: Theme = {
       color: '#f8f8f2',
       backgroundColor: '#282a36',
     },
-    dropZone: 'rgba(139, 233, 253, 0.15)',
+    dropZone: '#f1fa8c81',
     property: '#f8f8f2',
     bracket: 'green',
     itemCount: '#6272a4',

@@ -71,7 +71,7 @@ export const githubDarkTheme: Theme = {
   icons: octicons,
   styles: {
     container: { backgroundColor: '#0d1117', color: 'white' },
-    dropZone: 'rgba(165, 214, 255, 0.17)',
+    dropZone: 'rgba(165, 214, 255, 0.47)',
     property: '#E6EDF3',
     bracket: 'lime',
     itemCount: '#8B949E',

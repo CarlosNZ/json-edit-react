@@ -12,7 +12,7 @@ export const monoDarkTheme: Theme = {
   },
   styles: {
     container: ['lightText', { backgroundColor: 'black' }],
-    dropZone: '#e0e0e029',
+    dropZone: '#e0e0e074',
     property: 'lightText',
     bracket: 'midGrey',
     itemCount: '#4a4a4a',

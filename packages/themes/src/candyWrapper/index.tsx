@@ -86,7 +86,7 @@ export const candyWrapperTheme: Theme = {
   styles: {
     container: 'minty',
     property: 'pop',
-    dropZone: '#eb121217',
+    dropZone: '#eb121265',
     bracket: 'dark',
     itemCount: ['pale', { fontWeight: 'bold' }],
     string: 'mid',

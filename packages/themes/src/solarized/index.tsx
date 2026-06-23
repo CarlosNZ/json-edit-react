@@ -101,7 +101,7 @@ export const solarizedDarkTheme: Theme = {
   icons: lucideIcons,
   styles: {
     container: { color: '#839496', backgroundColor: '#002b36' },
-    dropZone: 'rgba(38, 139, 210, 0.15)',
+    dropZone: '#586e75',
     property: { fontWeight: 'bold', color: '#93a1a1' },
     bracket: 'green',
     itemCount: '#586e75',
@@ -127,7 +127,7 @@ export const solarizedLightTheme: Theme = {
   icons: lucideIcons,
   styles: {
     container: { color: '#657b83', backgroundColor: '#fdf6e3' },
-    dropZone: 'rgba(38, 139, 210, 0.15)',
+    dropZone: '#586e75',
     property: ['#586e75', { fontWeight: 'bold' }],
     bracket: 'green',
     itemCount: '#93a1a1',
