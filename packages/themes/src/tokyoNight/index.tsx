@@ -1,3 +1,7 @@
+// Tokyo Night colour scheme by enkia (MIT),
+// https://github.com/enkia/tokyo-night-vscode-theme. Adapted as a
+// json-edit-react theme; all credit to the original author.
+
 import { type Theme, type ThemeIcons } from 'json-edit-react'
 
 // Phosphor Light set (https://phosphoricons.com/) for the Tokyo Night theme — a

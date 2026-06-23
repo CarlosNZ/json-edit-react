@@ -43,3 +43,4 @@ Output: `build/index.cjs.js`, `build/index.esm.js`, `build/index.d.ts`.
 1. Add the theme. A plain (colours-only) theme goes inline in [src/index.ts](src/index.ts), same style as the existing ones. A theme that carries a colour palette, style functions, or icon glyphs goes in its own `.tsx` module (e.g. `src/<name>/index.tsx`), re-exported from `index.ts` — see "Shipping theme icons".
 2. Add a changeset: `pnpm changeset` at the repo root, pick `@json-edit-react/themes`, minor bump.
 3. Document the new theme name in [README.md](README.md).
+4. If the theme adapts an existing colour scheme, credit the original author in the README's "Theme credits" table (and add a short credit comment at the top of the theme's source file). If it ships borrowed icon glyphs, also add a row to "Icon set credits". The README tables are the shipped attribution — source-file comments are stripped at build.

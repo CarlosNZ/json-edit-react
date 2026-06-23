@@ -1,20 +1,14 @@
 import { type Theme, type ThemeIcons } from 'json-edit-react'
 
-// TMF (mSupply Foundation) theme — a medical-app brand theme, so it wears
-// medically-themed glyphs at a larger-than-normal size.
+// TMF theme (https://msupply.foundation/open-msupply)
 //
 // Action glyphs are Phosphor Fill (https://phosphoricons.com/, MIT) — a filled
-// weight so the linear gradients actually show. Each action icon defines its
-// own `<linearGradient>` and paints with `fill="url(#id)"`; the gradient
-// overrides the theme's `icon*` colour, so those style entries no longer apply
-// to the gradiented glyphs. Stops below are brand-flavoured placeholders — tweak
-// freely. (The same gradient id repeats per rendered node; that's harmless since
-// every instance is identical and resolves to the first match.)
+// weight so the linear gradients actually show.
 //
-// ok/cancel are NOT from the set — they're self-coloured "button" glyphs: a
-// white tick on a blue disc, and its reverse (blue ✕ on a white disc with a blue
-// ring so it reads on the light canvas). They paint with explicit colours, so
-// the `iconOk`/`iconCancel` style colours don't apply to them.
+// OK/Cancel are NOT from the set — they're self-coloured "button" glyphs: a
+// white tick on a blue disc, and its reverse (blue ✕ on a white disc with a
+// blue ring so it reads on the light canvas). They paint with explicit colours,
+// so the `iconOk`/`iconCancel` style colours don't apply to them.
 const BRAND_BLUE = 'rgb(62, 123, 250)'
 
 // Larger-than-normal action/button glyphs (the collapse caret stays smaller —

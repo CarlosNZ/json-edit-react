@@ -1,3 +1,7 @@
+// Solarized colour scheme by Ethan Schoonover (MIT),
+// https://ethanschoonover.com/solarized. Adapted as json-edit-react themes;
+// all credit to the original author.
+
 import { type SVGProps } from 'react'
 import { type Theme, type ThemeIcons } from 'json-edit-react'
 

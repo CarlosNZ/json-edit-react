@@ -1,3 +1,6 @@
+// Palette inspired by the original Monokai colour scheme by Wimer Hazenberg.
+// All credit for the colours to the author; no affiliation with Monokai Pro.
+
 import { type Theme, type ThemeIcons } from 'json-edit-react'
 
 // Pixelarticons set (https://pixelarticons.com/, MIT) for the Monokai theme — a

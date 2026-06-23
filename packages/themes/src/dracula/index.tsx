@@ -1,3 +1,7 @@
+// Dracula colour scheme by Zeno Rocha & the Dracula Theme team (MIT),
+// https://draculatheme.com. Adapted as a json-edit-react theme; all credit to
+// the original authors.
+
 import { type Theme, type ThemeIcons } from 'json-edit-react'
 
 // Phosphor Duotone icon set (https://phosphoricons.com/) for the Dracula theme.
