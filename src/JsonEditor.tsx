@@ -473,7 +473,27 @@ const Editor: React.FC<
           return typeof result.error === 'string'
             ? { status: 'error', error: { code, message: result.error } }
             : { status: 'error', error: result.error }
-        if (result.value !== undefined) return { status: 'override', value: result.value as JsonData }
+        // A key set to `undefined` counts as "no override for this key" (not
+        // "override to undefined") — consistent with the protocol's top-level
+        // "undefined/void = proceed" and the `error` check above. Overriding a
+        // node *to* undefined isn't supported here; `null` overrides work.
+        const hasData = result.data !== undefined
+        const hasValue = result.value !== undefined
+        // Returning both is a mistake — `data` (whole-document) wins, `value` is
+        // ignored. Warn so it's caught at dev time.
+        if (hasData && hasValue)
+          console.warn(
+            'json-edit-react: onUpdate returned both { value } and { data }; ' +
+              '{ data } (whole-document) takes precedence and { value } is ignored.'
+          )
+        // `{ data }` replaces the whole document — apply at the root path.
+        if (hasData) return { status: 'override', value: result.data as JsonData, path: [] }
+        // `{ value }` is the edited node's value — apply at its path. Only
+        // meaningful for `edit`/`add` (the node has a value); for
+        // `rename`/`move`/`delete` it has no target, so ignore it and commit
+        // normally. For `add`, `input.path` is the new child's full path.
+        if (hasValue && (input.event === 'edit' || input.event === 'add'))
+          return { status: 'override', value: result.value as JsonData, path: input.path }
       }
       return { status: 'commit' }
     },

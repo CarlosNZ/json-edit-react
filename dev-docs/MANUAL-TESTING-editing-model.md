@@ -76,7 +76,7 @@ onUpdate={async (nodeData, { hold }) => {
     case 'override':
       await wait(DELAY)
       return {
-        value: { ...(nodeData.newData as Record<string, unknown>), _editedAt: new Date().toLocaleTimeString() },
+        data: { ...(nodeData.newData as Record<string, unknown>), _editedAt: new Date().toLocaleTimeString() },
       }
     case 'cancel-null':
       await wait(DELAY)
@@ -205,7 +205,7 @@ Proves a stale failure can't clobber a node you've reopened.
 
 ### Group H — Override / silent cancel / throw
 
-- **H1 — Override** (`TEST_MODE = 'override'`): edit a value, **Enter**. After 3 s, the doc gains/updates a top-level **`_editedAt`** field (and your typed value is kept too) — the `{ value }` return replaced the whole document. Console: `commitEdit` → `updateSuccess`.
+- **H1 — Override** (`TEST_MODE = 'override'`): edit a value, **Enter**. After 3 s, the doc gains/updates a top-level **`_editedAt`** field (and your typed value is kept too) — the `{ data }` return replaced the whole document. Console: `commitEdit` → `updateSuccess`.
 - **H2 — Silent cancel** (`TEST_MODE = 'cancel-null'`): edit a value, **Enter**. Value shows optimistically, then ~3 s later **reverts with NO error** (no red message, no toast). Console: `commitEdit` … (3 s) … *(no `update*` event)*.
 - **H3 — Throw** (`TEST_MODE = 'throw'`): edit a value, **Enter**. After 3 s it reverts and surfaces **"Simulated save failure"** (the thrown message). Console: `commitEdit` → `updateError`.
 

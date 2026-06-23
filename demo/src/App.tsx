@@ -99,8 +99,37 @@ const themeNames = [
   'TMF',
 ]
 
+// Persisted theme choice (stored as the display name), so the selection
+// survives reloads. Mirrors the Example pages' ThemePicker.
+const THEME_STORAGE_KEY = 'jer-demo-theme'
+
 // Only default theme is loaded initially
 const themes = [defaultTheme]
+
+// Resolve a theme display-name to its `Theme`, lazy-loading the themes chunk on
+// demand and caching the result in `themes`. The getter-name convention
+// (`get<Name>Theme`, spaces/ampersands stripped) matches `themeGetters` in
+// LazyThemes.ts.
+const loadThemeByName = async (themeName: string): Promise<Theme | undefined> => {
+  const existing = themes.find((th) => th.displayName === themeName)
+  if (existing) return existing
+  if (themeName === 'Default') return defaultTheme
+  try {
+    const functionName = `get${themeName.replace(/\s+&\s+|\s+/g, '')}Theme`
+    const lazyThemesModule = await import('./LazyThemes')
+    const getter = lazyThemesModule.themeGetters[functionName]
+    if (getter) {
+      const newTheme = getter()
+      if (newTheme) {
+        themes.push(newTheme)
+        return newTheme
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load theme:', error)
+  }
+  return undefined
+}
 
 console.log(`json-edit-react v${__VERSION__}`)
 console.log(`Site built: ${__BUILD_TIME__}`)
@@ -200,6 +229,28 @@ function App() {
   useEffect(() => {
     if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
   }, [loading, liveData, reset, selectedDataSet])
+
+  // Restore the persisted theme on mount so the selection survives reloads
+  // (mirrors the Example pages' ThemePicker). Stored as a display name; resolve
+  // it back to the `Theme` via the same lazy loader the picker uses. Functional
+  // setState so a late-resolving lazy chunk doesn't clobber other state.
+  useEffect(() => {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY)
+    if (!stored || stored === 'Default') return
+    loadThemeByName(stored).then((theme) => {
+      if (!theme) return
+      setState((s) => ({ ...s, theme }))
+      // On the theme editor the document IS the theme (the editor styles from
+      // `data`, not `state.theme`), so seed the editor too — otherwise it shows
+      // the default while the selector shows the restored choice. Mirrors the
+      // editTheme case in handleChangeData.
+      if (selectedDataSet === 'editTheme') {
+        previousTheme.current = theme
+        reset(theme)
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount only
+  }, [])
 
   // useEffect(() => {
   //   const localStorageState = localStorage.getItem('collapseState')
@@ -383,37 +434,10 @@ function App() {
 
   const handleThemeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const themeName = e.target.value
-
-    // If theme is already loaded, use it
-    let theme = themes.find((th) => th.displayName === themeName)
-
-    // If theme is not loaded yet, load it using LazyThemes
-    if (!theme && themeName !== 'Default') {
-      try {
-        // Create a function name for the getter based on theme name
-        const functionName = `get${themeName.replace(/\s+&\s+|\s+/g, '')}Theme`
-
-        // Dynamically import the themes module
-        const lazyThemesModule = await import('./LazyThemes')
-
-        // Get the theme using the themeGetters map
-        if (lazyThemesModule.themeGetters[functionName]) {
-          const newTheme = lazyThemesModule.themeGetters[functionName]()
-
-          // Add to available themes to avoid loading again
-          if (newTheme) {
-            themes.push(newTheme)
-            theme = newTheme
-          }
-        }
-      } catch (error) {
-        console.error('Failed to load theme:', error)
-        return
-      }
-    }
-
+    const theme = await loadThemeByName(themeName)
     if (!theme) return
 
+    localStorage.setItem(THEME_STORAGE_KEY, themeName)
     updateState({ theme })
     if (selectedDataSet === 'editTheme') {
       setData(theme)

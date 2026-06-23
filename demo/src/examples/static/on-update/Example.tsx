@@ -6,7 +6,8 @@ import { useEditorDefaults } from '@example-resources'
 // return a value to accept / transform / reject / cancel it.
 // Try these — each shows one of the return types:
 //
-//   - edit `username` → it's lower-cased ({ value })
+//   - edit `username` → lower-cased in place ({ value })
+//   - edit `email` (valid) → stamps `lastEdited` ({ data })
 //   - remove the "@" from `email` → rejected ({ error })
 //   - set `age` below zero → reverted (false)
 //   - delete `id` → reverted with no message (null)
@@ -16,6 +17,7 @@ interface Account {
   username: string
   email: string
   age: number
+  lastEdited?: string
 }
 
 const initialData: Account = {
@@ -29,17 +31,19 @@ const onUpdate: UpdateFunction<Account> = (props) => {
   switch (props.event) {
     case 'edit': {
       const { key, newValue, newData } = props
-      // TRANSFORM the committed value. NOTE: `{ value }` is
-      // currently a WHOLE-DOCUMENT override, so we return the
-      // full `newData` with just `username` lower-cased.
-      // TODO(#375): when `{ value }` becomes node-level this is
-      // just `{ value: newValue.toLowerCase() }`, and we'll add
-      // a `{ data }` branch to demo the whole-document override.
+      // NODE-LEVEL `{ value }`: transform just the edited node's
+      // value — applied at its own path, the rest of the doc
+      // untouched.
       if (key === 'username' && typeof newValue === 'string')
-        return { value: { ...newData, username: newValue.toLowerCase() } }
-      // CUSTOM ERROR: reject with your own message.
-      if (key === 'email' && typeof newValue === 'string' && !newValue.includes('@'))
-        return { error: 'Not a valid email address' }
+        return { value: newValue.toLowerCase() }
+      if (key === 'email' && typeof newValue === 'string') {
+        // CUSTOM ERROR: reject with your own message.
+        if (!newValue.includes('@'))
+          return { error: 'Not a valid email address' }
+        // WHOLE-DOCUMENT `{ data }`: rewrite the whole document —
+        // here, stamp a top-level `lastEdited` alongside the edit.
+        return { data: { ...newData, lastEdited: new Date().toLocaleTimeString() } }
+      }
       // GENERIC ERROR: reject, revert, show the default message.
       if (key === 'age' && typeof newValue === 'number' && newValue < 0) return false
       return // accept the change

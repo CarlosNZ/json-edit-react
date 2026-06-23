@@ -1,6 +1,11 @@
 /** @type {import('jest').Config} */
 export default {
   testEnvironment: 'jsdom',
+  // Auto-restore `jest.spyOn` spies to their original implementation after each
+  // test, so a spy installed mid-test (e.g. silencing `console.warn`) can't
+  // leak into later tests if an assertion throws before a manual restore would
+  // run.
+  restoreMocks: true,
   testMatch: [
     '<rootDir>/test/**/*.test.{ts,tsx}',
     // Workspace-package tests live under their own package (keeps the root

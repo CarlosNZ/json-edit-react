@@ -110,8 +110,9 @@ describe('Drag-and-drop: edge cases', () => {
       src: { dup: 1 },
       dst: { dup: 2 },
     }
-    // Production calls console.warn for the error; silence it here.
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    // Production calls console.warn for the error; silence it here (auto-
+    // restored after the test via Jest's `restoreMocks`).
+    jest.spyOn(console, 'warn').mockImplementation(() => {})
     const { container } = render(
       <JsonEditor data={data} setData={setData} onError={onError} allowDrag />
     )
@@ -126,8 +127,6 @@ describe('Drag-and-drop: edge cases', () => {
     expect(setData).not.toHaveBeenCalled()
     expect(onError).toHaveBeenCalledTimes(1)
     expect(onError.mock.calls[0][0].error.code).toBe('KEY_EXISTS')
-
-    warn.mockRestore()
   })
 
   test('an onUpdate that rejects a move reverts and fires updateError', async () => {
