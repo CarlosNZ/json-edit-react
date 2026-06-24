@@ -36,69 +36,47 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 
 <img width="392" alt="screenshot" src="image/screenshot.png">
 
+
+----
+
+> **📣️ ANNOUNCEMENT**
+> 
+> V2 of **json-edit-react** is now available in beta, with significant refactors and performance improvements.
+> ```
+> npm install json-edit-react@beta
+> yarn add json-edit-react@beta
+> pnpm add json-edit-react@beta
+> ```
+> ❗️ If you're upgrading from V1, be sure to read the [migration guide](https://github.com/CarlosNZ/json-edit-react/blob/main/migration-guide.md).
+>
+> 📖️ **[FULL DOCS](https://github.com/CarlosNZ/json-edit-react/blob/main/README_V2.md)**
+> 
+> If you've got any suggestions, please join the discussion [here](https://github.com/CarlosNZ/json-edit-react/discussions/198).
+
+
 <!-- NPM INTRO -->
 
 ----
-
-> [!NOTE]
-> V2 of **json-edit-react** is just around the corner, with significant refactors and performance improvements. If you've got any suggestions, please join the discussion [here](https://github.com/CarlosNZ/json-edit-react/discussions/198).
->
-> Expect a first beta very soon 😎️
-
-----
-
-> [!IMPORTANT]
-> Breaking changes:
-> - **Version 1.19.0** has a change to the `theme` input. Built-in themes must now be imported separately and passed in, rather than just naming the theme as a string. This is better for tree-shaking, so unused themes won't be bundled with your build. See [Themes & Styles](#themes--styles).
-> - **Version 1.14.0** has a change which recommends you provide a `setData` prop and not use `onUpdate` for updating your data externally. See [Managing state](#managing-state).
 
 ## Contents  <!-- omit in toc -->
 - [Installation](#installation)
 - [Implementation](#implementation)
 - [Usage](#usage)
 - [Props Reference](#props-reference)
-  - [Data Management](#data-management)
-  - [Restricting Editing](#restricting-editing)
-  - [Look and Feel / UI](#look-and-feel--ui)
-  - [Search and Filtering](#search-and-filtering)
-  - [Custom components \& overrides (incl. Localisation)](#custom-components--overrides-incl-localisation)
-  - [External control](#external-control)
-  - [Miscellaneous](#miscellaneous)
 - [Managing State](#managing-state)
 - [Update Functions](#update-functions)
-  - [OnChange Function](#onchange-function)
-  - [OnError Function](#onerror-function)
-  - [Copy Function](#copy-function)
-  - [JSON Schema Validation](#json-schema-validation)
 - [Advanced Editing Control](#advanced-editing-control)
-  - [`restrictEdit`, `restrictDelete` \& `restrictAdd`](#restrictedit-restrictdelete--restrictadd)
-  - [`collapse`](#collapse)
-  - [Data Type Restrictions](#data-type-restrictions)
-  - [New Key Restrictions \& Default Values](#new-key-restrictions--default-values)
-  - [Drag-n-drop](#drag-n-drop)
 - [Full object editing](#full-object-editing)
 - [Search/Filtering](#searchfiltering)
 - [Themes \& Styles](#themes--styles)
-  - [CSS classes](#css-classes)
-  - [Fragments](#fragments)
-  - [Icons](#icons)
 - [Localisation](#localisation)
 - [Custom Nodes](#custom-nodes)
-  - [Customising keys](#customising-keys)
-  - [Active hyperlinks](#active-hyperlinks)
-  - [Handling JSON](#handling-json)
-  - [Custom Collection nodes](#custom-collection-nodes)
-  - [Displaying Collections as Values](#displaying-collections-as-values)
 - [Custom Text](#custom-text)
 - [Custom Buttons](#custom-buttons)
 - [Keyboard customisation](#keyboard-customisation)
 - [External control](#external-control-1)
-  - [Event callbacks](#event-callbacks)
-  - [Event triggers](#event-triggers)
 - [Undo functionality](#undo-functionality)
 - [Exported helpers](#exported-helpers)
-  - [Functions \& Components](#functions--components)
-  - [Types](#types)
 - [Issues, bugs, suggestions?](#issues-bugs-suggestions)
 - [Roadmap](#roadmap)
 - [Inspiration](#inspiration)
