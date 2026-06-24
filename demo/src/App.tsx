@@ -55,6 +55,7 @@ import { getLineHeight, truncate } from './helpers'
 import { RenderProfiler } from './RenderProfiler'
 import { Loading } from '../../packages/components/src/_common/Loading'
 import { CodeEditor } from '@json-edit-react/components/widgets'
+import { Banner } from './Banner'
 const SourceIndicator = lazy(() => import('./SourceIndicator'))
 const JsonEditor = lazy(() =>
   import('@json-edit-react').then((m) => ({ default: m.JsonEditor }))
@@ -476,6 +477,7 @@ function App() {
 
   return (
     <div className="App">
+      <Banner />
       <Flex
         px={8}
         pt={4}
