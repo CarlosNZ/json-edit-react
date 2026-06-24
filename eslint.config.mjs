@@ -15,6 +15,10 @@ export default tseslint.config(
       '.rollup.cache',
       'custom-component-library',
       'build_package',
+      // packages/ holds the V2 sub-packages and isn't part of the v1.x build
+      'packages',
+      // .claude holds Claude Code worktrees — full repo checkouts, never source
+      '.claude',
     ],
   },
   {
