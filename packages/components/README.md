@@ -6,6 +6,9 @@ Almost all have zero external dependencies, and those that do are clearly marked
 
 Check out the custom components in action in the [Custom Component Library demo page](https://carlosnz.github.io/json-edit-react-v2/?data=customComponentLibrary)
 
+> [!IMPORTANT]
+> Requires **json-edit-react** version 2.x
+
 ## Install
 
 ```sh
