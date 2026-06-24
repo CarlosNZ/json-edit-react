@@ -40,7 +40,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 
 - **THEMES**: [@json-edit-react/themes](https://www.npmjs.com/package/@json-edit-react/themes) — curated, ready-made [themes] (#themes)
 - **COMPONENTS**: [@json-edit-react/components](https://www.npmjs.com/package/@json-edit-react/components) - custom node components (links, date picker, etc.)
-- **UTILITIES**: [@json-edit-react/themes](https://www.npmjs.com/package/@json-edit-react/themes) — a collection of helpers and tools for enhancing json-edit-react
+- **UTILITIES**: [@json-edit-react/themes](https://www.npmjs.com/package/@json-edit-react/themes) — a collection of helpers and tools for extending and streamlining your **json-edit-react** experience
 
 > [!IMPORTANT]
 > This documentation is for V2 of **json-edit-react**, which is currently in beta. V1 docs are [here](https://github.com/CarlosNZ/json-edit-react).
