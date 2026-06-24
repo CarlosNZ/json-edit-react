@@ -13,11 +13,11 @@ Publish order: **utils → themes → components → core** (core last so the su
 
 ## Two rules that keep this safe
 
-**Rule 1 — everything goes to the `beta` tag, never `latest`.** `pnpm release` is `changeset publish`, and `changeset publish` with no `--tag` and no pre-mode is hard-coded to publish to `latest` (it does *not* read the prerelease suffix from the version string). We sidestep that entirely by publishing each package by hand with an explicit `--tag beta`. Core already has a stable `latest` (`1.30.1`), so `--tag beta` leaves it untouched — verify that after the core publish.
+**Rule 1 — protect core's `latest`; sub-packages go to `latest` on purpose.** `pnpm release` is `changeset publish`, and `changeset publish` with no `--tag` and no pre-mode is hard-coded to publish to `latest` (it does *not* read the prerelease suffix from the version string). For **core** we sidestep that by publishing with an explicit `--tag beta`: core already has a stable `latest` (`1.30.1`) that must stay put — verify that after the core publish. The **sub-packages** have no stable release, so we *want* each beta to be their `latest` (it's what `npm install @json-edit-react/<name>` resolves to and what their npm page shows) — publish them with **no `--tag`**. The version string still carries the `-beta.N` suffix; only the dist-tag differs.
 
 **Rule 2 — core's `version` field must read `2.0.0-beta.0` *before* you pack any subpackage.** Each subpackage declares `"json-edit-react": "workspace:^"`, and pnpm freezes that into the *published* peer-dep as `^<core's current version field>` at pack time. Core's field is currently `2.0.0-dev`, and `2.0.0-beta.0` does **not** satisfy `^2.0.0-dev` (because `beta` < `dev` in prerelease ordering). So if you pack a subpackage before fixing core's field, you ship a peer range your own core beta can't satisfy. `^2.0.0-beta.0` is the range you want — it accepts every `2.0.0-beta.N` and the eventual `2.0.0` final.
 
-**Note on brand-new packages and `latest`.** npm always points `latest` at a package's very first published version, even when you pass `--tag beta`, because `latest` must exist and there's nothing else to point it at. So the three subpackages will end up with `latest` = `0.9.0-beta.0`. That's fine — they have no stable release yet, so a beta `latest` is the only sensible value, and it advances to a real release when you cut the 2.0.0 final. The package whose `latest` genuinely matters is core, and core is safe because it already has a stable `latest`.
+**Note on brand-new packages and `latest`.** npm always points `latest` at a package's very first published version, so the first sub-package publish sets `latest` = `0.9.0-beta.0` regardless of `--tag`. Because we publish every subsequent sub-package beta to `latest` too (no `--tag`), `latest` keeps advancing to the newest beta — the only sensible value while there's no stable release, and it carries straight through to the real release when you cut the 2.0.0 final. The package whose `latest` genuinely matters is core, and core is safe because it already has a stable `latest`. (If an early sub-package publish created a `beta` dist-tag, it's now redundant — remove it with `npm dist-tag rm @json-edit-react/<name> beta`.)
 
 ## Why changeset consumption moves to the front
 
@@ -102,9 +102,10 @@ In that packed `package.json`, confirm:
 - `README.md` is the npm form — bold-label blockquotes, not raw `[!IMPORTANT]` (`cat /tmp/jre-pack/package/README.md`).
 
 ```sh
-# 1.3  Publish to the beta tag — run from INSIDE the package dir via a
-#      subshell, through with-npm-readme.mjs so the published README is the
-#      npm form (admonitions -> bold-label blockquotes), restored after.
+# 1.3  Publish to `latest` (no --tag — sub-packages have no stable release, so
+#      their newest beta should be `latest`). Run from INSIDE the package dir
+#      via a subshell, through with-npm-readme.mjs so the published README is
+#      the npm form (admonitions -> bold-label blockquotes), restored after.
 #      Do NOT use `pnpm -C packages/utils publish`: pnpm 10.8.x leaks the -C
 #      dir and the command word into the npm call, so npm sees multiple
 #      package-specs and fails with EUSAGE. (publish reruns the prepack
@@ -112,7 +113,7 @@ In that packed `package.json`, confirm:
 #      pnpm's default publish-branch expectation; the wrapper still needs
 #      this package's README committed + clean to restore it.)
 (cd packages/utils && node ../../scripts/with-npm-readme.mjs . -- \
-  pnpm publish --tag beta --access public --no-git-checks)
+  pnpm publish --access public --no-git-checks)
 ```
 
 ```sh
@@ -120,7 +121,7 @@ In that packed `package.json`, confirm:
 npm view @json-edit-react/utils version dist-tags
 ```
 
-Then open `https://www.npmjs.com/package/@json-edit-react/utils` and check: README renders, version shown is `0.9.0-beta.0`, the `beta` tag is listed, the install snippet, the "Dependencies" tab shows the `^2.0.0-beta.0` peer dep, and the published file list looks right.
+Then open `https://www.npmjs.com/package/@json-edit-react/utils` and check: README renders (it's the default page, since `latest` now points at this beta), version shown is `0.9.0-beta.0`, `latest` points at it (`npm dist-tag ls`), the install snippet, the "Dependencies" tab shows the `^2.0.0-beta.0` peer dep, and the published file list looks right.
 
 > **Checkpoint.** You wanted to thoroughly inspect the npm page before continuing — do that here. Ping me if anything's surprising.
 
@@ -138,7 +139,7 @@ rm -rf /tmp/jre-pack && mkdir -p /tmp/jre-pack
 tar -tzf /tmp/jre-pack/*.tgz
 tar -xzf /tmp/jre-pack/*.tgz -C /tmp/jre-pack && cat /tmp/jre-pack/package/package.json
 (cd packages/themes && node ../../scripts/with-npm-readme.mjs . -- \
-  pnpm publish --tag beta --access public --no-git-checks)
+  pnpm publish --access public --no-git-checks)
 npm view @json-edit-react/themes version dist-tags
 ```
 
@@ -158,7 +159,7 @@ rm -rf /tmp/jre-pack && mkdir -p /tmp/jre-pack
 tar -tzf /tmp/jre-pack/*.tgz
 tar -xzf /tmp/jre-pack/*.tgz -C /tmp/jre-pack && cat /tmp/jre-pack/package/package.json
 (cd packages/components && node ../../scripts/with-npm-readme.mjs . -- \
-  pnpm publish --tag beta --access public --no-git-checks)
+  pnpm publish --access public --no-git-checks)
 npm view @json-edit-react/components version dist-tags
 ```
 
@@ -227,14 +228,15 @@ Prove the four packages actually co-install and the peer ranges line up — this
 ```sh
 cd "$(mktemp -d)"
 npm init -y >/dev/null
+# Sub-packages resolve from `latest` (plain name); core needs `@beta`.
 npm install react react-dom \
   json-edit-react@beta \
-  @json-edit-react/utils@beta \
-  @json-edit-react/themes@beta \
-  @json-edit-react/components@beta
+  @json-edit-react/utils \
+  @json-edit-react/themes \
+  @json-edit-react/components
 ```
 
-Expect a clean install with no `ERESOLVE` / unmet-peer errors. Core should resolve to `2.0.0-beta.0`. A tiny `import { JsonEditor } from 'json-edit-react'` in a throwaway file is a worthwhile extra confidence check.
+Expect a clean install with no `ERESOLVE` / unmet-peer errors. Core should resolve to `2.0.0-beta.0`, and the sub-packages to their newest `0.9.0-beta.N`. A tiny `import { JsonEditor } from 'json-edit-react'` in a throwaway file is a worthwhile extra confidence check.
 
 ---
 
@@ -242,7 +244,7 @@ Expect a clean install with no `ERESOLVE` / unmet-peer errors. Core should resol
 
 The changesets are all consumed now, and there is **no** `.changeset/pre.json` in play (we never entered pre-mode), so the workflow stays simple:
 
-- **A new beta of one package**: hand-bump just that package's `version` (keep the dotted `-beta.N` suffix and keep it moving forward), `build`, then `publish --tag beta`. Packages drift out of sync freely — that's expected.
+- **A new beta of one package**: hand-bump just that package's `version` (keep the dotted `-beta.N` suffix and keep it moving forward), `build`, then publish. A **sub-package** publishes with no `--tag` (it goes to `latest`, advancing it to the newest beta); **core** publishes with `--tag beta` (its `latest` stays at the stable `1.30.1`). Packages drift out of sync freely — that's expected. See [PUBLISHING-CHEATSHEET.md](PUBLISHING-CHEATSHEET.md#incremental-beta--tweak-one-package-ship-a-new-beta) for the exact commands.
 - **Re-publishing a subpackage after core's beta moves**: its peer range re-freezes to core's *current* `version` field. Keep that field monotonic so the range never goes backwards.
 - **Record changes for the eventual 2.0.0 changelog**: add a `pnpm changeset` per change as usual; they accumulate and get consumed when you cut the final.
 - **Cutting 2.0.0 final**: publish core `2.0.0` to `latest` (advancing it off `1.30.1`), and publish the subpackage finals so their `latest` advances off the betas.

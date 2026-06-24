@@ -1,6 +1,6 @@
 {
   "name": "@json-edit-react/components",
-  "version": "0.9.0-beta.0",
+  "version": "0.9.0-beta.1",
   "description": "Ready-to-use custom node components for json-edit-react",
   "license": "MIT",
   "repository": {
