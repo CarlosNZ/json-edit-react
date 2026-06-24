@@ -1244,6 +1244,37 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@json-edit-react/components@0.9.0-beta.0":
+  version "0.9.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@json-edit-react/components/-/components-0.9.0-beta.0.tgz#5a9376945675dc62dfacd8566b9ed2fbbc12563f"
+  integrity sha512-aKulxGcOxzcieYr22Xwax/glQlhQOrbR0quaSMj6IhZbMrZCDj1KkeLHu+563EUn8goFr1qyGU9THMV6DsMnJg==
+  dependencies:
+    "@codemirror/lang-json" "^6.0.1"
+    "@uiw/codemirror-theme-console" "^4.23.13"
+    "@uiw/codemirror-theme-dracula" "^4.23.13"
+    "@uiw/codemirror-theme-github" "^4.23.13"
+    "@uiw/codemirror-theme-monokai" "^4.23.13"
+    "@uiw/codemirror-theme-quietlight" "^4.23.13"
+    "@uiw/codemirror-theme-solarized" "^4.23.13"
+    "@uiw/codemirror-theme-tokyo-night" "^4.23.13"
+    "@uiw/react-codemirror" "^4.23.13"
+    colord "^2.9.3"
+    react-colorful "^5.6.1"
+    react-datepicker "^7.5.0"
+    react-markdown "^10.1.0"
+    react-select "^5.10.0"
+    use-debounce "^10.0.5"
+
+"@json-edit-react/themes@0.9.0-beta.0":
+  version "0.9.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@json-edit-react/themes/-/themes-0.9.0-beta.0.tgz#1661c924ba67889d728fa222b06337375e7f7231"
+  integrity sha512-ZHfcFcq6MGZDWq6yzG7B28K8GFeodcqqj+R1eD8k1YIFOCJQTH7qR9LfGO08thKvg9XFGUEQFFEiDeyMZQa4zw==
+
+"@json-edit-react/utils@0.9.0-beta.0":
+  version "0.9.0-beta.0"
+  resolved "https://registry.yarnpkg.com/@json-edit-react/utils/-/utils-0.9.0-beta.0.tgz#064e4148b5a3812a5baf897406a59ac3487c2036"
+  integrity sha512-PHcpmr34e7S/krcyOstoT4yDl+W0b05toO5oAQsHAnJeubtjrw5jKkAGl8UZl3aEJm142qRZyk9SKzfBRaB34A==
+
 "@lezer/common@^1.0.0", "@lezer/common@^1.1.0", "@lezer/common@^1.2.0", "@lezer/common@^1.3.0", "@lezer/common@^1.5.0":
   version "1.5.2"
   resolved "https://registry.yarnpkg.com/@lezer/common/-/common-1.5.2.tgz#d6840db13779e3f1b42e70c9a97c4086d12fae22"
@@ -2934,10 +2965,10 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@1.30.1:
-  version "1.30.1"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-1.30.1.tgz#103834f9ad3b6d4ab8ed693ee859c39c310e742d"
-  integrity sha512-YVF6YamBQBh5eO8XXP2DG2QH/ihG3EebairbH8oGWNY6JXk+2TQgkbPpPiJ6rC6joa4ig+3WgaF2lWEk23HuWA==
+json-edit-react@2.0.0-beta.0:
+  version "2.0.0-beta.0"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-2.0.0-beta.0.tgz#ca12ab19bc62ab85463bb3976beb05bc3c0ba69b"
+  integrity sha512-5sv4+Jhil01oJIOAXFsHk8uWGePDCN/X/DODcf0JnlEPEVvT+JCAa5Mb/gyLAH30JkVIMuN5Nie1rxUO0bcoKQ==
 
 json-parse-even-better-errors@^2.3.0:
   version "2.3.1"

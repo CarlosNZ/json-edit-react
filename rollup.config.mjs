@@ -44,7 +44,16 @@ export default [
         declaration: true,
         declarationDir: 'build/dts',
       }),
-      terser(),
+      terser({
+        // toplevel: true,
+        compress: {
+          passes: 3,
+          // pure_getters: true,
+          // unsafe_* flags here once you've tested behaviour, e.g.:
+          // unsafe_arrows: true,
+          // unsafe_methods: true,
+        },
+      }),
       emitStandaloneCss(),
       bundleSize(),
       sizes(),
