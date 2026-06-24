@@ -14,10 +14,25 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
     "paths": {
+      "@json-edit-react/themes": ["../packages/themes/src"],
+      "@json-edit-react/themes/*": ["../packages/themes/src/*"],
+      "@json-edit-react/components": ["../packages/components/src"],
+      "@json-edit-react/components/*": ["../packages/components/src/*"],
+      "@json-edit-react/utils": ["../packages/utils/src"],
+      "@json-edit-react/utils/*": ["../packages/utils/src/*"],
+      "@json-edit-react": ["../src/"],
       "@json-edit-react/*": ["../src/*"],
-      "@json-edit-react": ["../src/"]
+      "@example-resources": ["./src/examples/kit/resources.ts"],
+      // `@json-edit-react` is mapped to core's source (`../src`), which lives in
+      // the pnpm workspace and would otherwise resolve `react` from the root's
+      // `@types/react` copy — a different physical copy than the demo's. Two
+      // copies of the same version still clash on the `unique symbol` in React's
+      // ref types, so pin all react type resolution to the demo's single copy.
+      "react": ["./node_modules/@types/react"],
+      "react/*": ["./node_modules/@types/react/*"],
+      "react-dom": ["./node_modules/@types/react-dom"],
+      "react-dom/*": ["./node_modules/@types/react-dom/*"]
     },
     /* Linting */
     "strict": true,
@@ -26,6 +41,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "../custom-component-library/components/DatePicker/DateTimePicker.tsx"]
-  // "exclude": ["src/json-edit-react/**/*"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

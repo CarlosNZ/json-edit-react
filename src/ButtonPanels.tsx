@@ -1,25 +1,27 @@
 import React, { useState } from 'react'
-import { extract } from './utils'
+import { extract } from './utils/extract'
 import { Icon } from './Icons'
-import { useTheme } from './contexts'
+import { useTheme, useEditingStore, useEditingSelector } from './contexts'
+import { useIsomorphicLayoutEffect } from './hooks/useIsomorphicLayoutEffect'
 import { type TranslateFunction } from './localisation'
 import {
-  type CollectionKey,
   type CollectionDataType,
-  type CopyFunction,
   type CopyType,
   type NodeData,
   type CustomButtonDefinition,
   type KeyboardControlsFull,
+  type OnCopyFunction,
   JsonData,
-  OnEditEventFunction,
 } from './types'
-import { getModifier } from './helpers'
+import { type SelectProps } from './NativeSelect'
+import { getModifier } from './utils/keyboard'
+import { pathsEqual, stringifyPath } from './utils/pathTools'
 
 interface EditButtonProps {
   startEdit?: () => void
   handleDelete?: () => void
-  enableClipboard: boolean | CopyFunction
+  showClipboardButton: boolean
+  onCopy?: OnCopyFunction
   handleAdd?: (newKey: string) => void
   type?: CollectionDataType
   nodeData: NodeData
@@ -31,21 +33,22 @@ interface EditButtonProps {
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
   getNewKeyOptions?: (nodeDate: NodeData) => string[] | null | void
-  editConfirmRef: React.RefObject<HTMLDivElement | null>
+  editConfirmRef: React.RefObject<HTMLButtonElement | null>
   jsonStringify: (
     data: JsonData,
     // eslint-disable-next-line
     replacer?: (this: any, key: string, value: unknown) => string
   ) => string
-  onEditEvent?: OnEditEventFunction
   showIconTooltips: boolean
+  Select: React.ComponentType<SelectProps>
 }
 
 export const EditButtons: React.FC<EditButtonProps> = ({
   startEdit,
   handleDelete,
   handleAdd,
-  enableClipboard,
+  showClipboardButton,
+  onCopy,
   type,
   customButtons,
   nodeData,
@@ -55,59 +58,74 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   editConfirmRef,
   getNewKeyOptions,
   jsonStringify,
-  onEditEvent,
   showIconTooltips,
+  Select,
 }) => {
   const { getStyles } = useTheme()
+  // Actions only (no subscription beyond the `isAddingHere` selector below).
+  // Aliased — `startEdit` is also an EditButtons prop (the value-edit icon).
+  const { open, cancel } = useEditingStore()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
 
-  // This value indicates whether the user is adding a new key to an object.
-  // Normally such an indicator would be a boolean, but in this case it can also
-  // be an array of strings. This is to avoid having to have a separate state
-  // value for the list of key options as well as an "are we adding a key?"
-  // state value.
+  // Holds the new-key options list (or `true` for a free-text add).
+  // Open/close is driven by the store (`mode: 'add'`) so the start/cancel
+  // events and the one-session-at-a-time invariant are shared with
+  // edit/rename; this just carries the options *content* (which the
+  // primitive-only store selector can't), synced by the effect below.
   const [addingKeyState, setAddingKeyState] = useState<string[] | boolean>(false)
 
-  const { key, path, value: data } = nodeData
+  const { path, value: data } = nodeData
+
+  // Is an add session open on THIS collection? The session lives in the editing
+  // store (`mode: 'add'`, `path` = this collection), so the start/cancel events
+  // and the one-session-at-a-time invariant are shared with edit/rename.
+  const isAddingHere = useEditingSelector((s) => {
+    const e = s.active
+    return e !== null && e.op === 'add' && pathsEqual(e.path, path)
+  })
 
   const hasKeyOptionsList = Array.isArray(addingKeyState)
 
-  const updateAddingState = (active: boolean) => {
-    // Add 'null' to the path to indicate that the actual path of where the new
-    // key will go is not yet known.
-    // Also, "active" matches the second "isKey" parameter here, even though it
-    // describes a different thing.
-    if (onEditEvent) onEditEvent(active ? [...path, null] : null, active)
-
-    if (!active) {
+  // Sync the local options/content state to the store session. On open
+  // compute the available keys; on close reset. `startAdd` / `cancelAdd` are
+  // fired by the store; `commitAdd` by CollectionNode's commit.
+  useIsomorphicLayoutEffect(() => {
+    if (!isAddingHere) {
       setAddingKeyState(false)
+      setNewKey(NEW_KEY_PROMPT)
       return
     }
-
-    // Don't show keys that already exist in the object
+    // Don't offer keys that already exist. Reads the node's OWN subtree (by
+    // `path`), kept consistent by structural sharing even if `fullData` is
+    // stale.
     const existingKeys = Object.keys(extract(nodeData.fullData, path) as object)
-
     const options = getNewKeyOptions
       ? getNewKeyOptions(nodeData)?.filter((key) => !existingKeys.includes(key))
       : null
     if (options) setNewKey('')
     setAddingKeyState(options ?? true)
+    // Fire only on the open/close transition; the reads inside are
+    // intentionally captured at that moment, not re-subscribed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAddingHere])
+
+  // Open an add session on this object collection (shows the new-key input).
+  const openAdd = () => open(path, { op: 'add' })
+
+  // Commit the open add session (OK button / Enter). Delegates to `handleAdd`,
+  // which fires the `commitAdd` / error observer.
+  const commitAdd = () => {
+    if (!handleAdd) return
+    // Options-list with nothing chosen yet — silent no-op.
+    if (hasKeyOptionsList && !newKey) return
+    handleAdd(type === 'array' ? '' : newKey)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     handleKeyboard(e, {
-      stringConfirm: () => {
-        if (handleAdd) {
-          updateAddingState(false)
-          handleAdd(newKey)
-          setNewKey(NEW_KEY_PROMPT)
-        }
-      },
-      cancel: () => {
-        updateAddingState(false)
-        setNewKey(NEW_KEY_PROMPT)
-      },
+      stringConfirm: () => commitAdd(),
+      cancel: () => cancel(),
     })
   }
 
@@ -118,7 +136,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     let stringValue = ''
     let success: boolean
     let errorMessage: string | null = null
-    if (enableClipboard) {
+    if (showClipboardButton) {
       const modifier = getModifier(e)
       if (modifier && keyboardControls.clipboardModifier.includes(modifier)) {
         value = stringifyPath(path)
@@ -129,16 +147,13 @@ export const EditButtons: React.FC<EditButtonProps> = ({
         stringValue = typeof value === 'object' ? jsonStringify(data) : String(value)
       }
       if (!navigator.clipboard) {
-        if (typeof enableClipboard === 'function')
-          enableClipboard({
-            success: false,
-            value,
-            stringValue,
-            path,
-            key,
-            type: copyType,
-            errorMessage: "Can't access clipboard API",
-          })
+        onCopy?.({
+          ...nodeData,
+          success: false,
+          stringValue,
+          type: copyType,
+          error: { code: 'CLIPBOARD_ERROR', message: "Can't access clipboard API" },
+        })
         return
       }
       navigator.clipboard
@@ -149,17 +164,15 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           errorMessage = err.message
         })
         .finally(() => {
-          if (typeof enableClipboard === 'function') {
-            enableClipboard({
-              success,
-              errorMessage,
-              value,
-              stringValue,
-              path,
-              key,
-              type: copyType,
-            })
-          }
+          onCopy?.({
+            ...nodeData,
+            success,
+            stringValue,
+            type: copyType,
+            error: success
+              ? undefined
+              : { code: 'CLIPBOARD_ERROR', message: errorMessage ?? 'Copy failed' },
+          })
         })
     }
   }
@@ -167,83 +180,89 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   return (
     <div
       className="jer-edit-buttons"
-      style={{ opacity: addingKeyState ? 1 : undefined }}
+      style={{ opacity: isAddingHere ? 1 : undefined }}
       onClick={(e) => e.stopPropagation()}
     >
-      {enableClipboard && (
-        <div
+      {showClipboardButton && (
+        // tabIndex={-1} keeps the control out of the editor's field-to-field
+        // Tab flow (owned by `keyboardControls`) while keeping the native
+        // button role + the aria-label for assistive tech. `aria-label` is
+        // unconditional; `title` (the visible tooltip) stays gated on
+        // `showIconTooltips`.
+        <button
+          type="button"
+          tabIndex={-1}
           onClick={handleCopy}
           className="jer-copy-pulse"
+          aria-label={translate('TOOLTIP_COPY', nodeData)}
           title={showIconTooltips ? translate('TOOLTIP_COPY', nodeData) : ''}
         >
           <Icon name="copy" nodeData={nodeData} />
-        </div>
+        </button>
       )}
       {startEdit && (
-        <div
+        <button
+          type="button"
+          tabIndex={-1}
           onClick={startEdit}
+          aria-label={translate('TOOLTIP_EDIT', nodeData)}
           title={showIconTooltips ? translate('TOOLTIP_EDIT', nodeData) : ''}
         >
           <Icon name="edit" nodeData={nodeData} />
-        </div>
+        </button>
       )}
       {handleDelete && (
-        <div
+        <button
+          type="button"
+          tabIndex={-1}
           onClick={handleDelete}
+          aria-label={translate('TOOLTIP_DELETE', nodeData)}
           title={showIconTooltips ? translate('TOOLTIP_DELETE', nodeData) : ''}
         >
           <Icon name="delete" nodeData={nodeData} />
-        </div>
+        </button>
       )}
       {handleAdd && (
-        <div
+        <button
+          type="button"
+          tabIndex={-1}
           onClick={() => {
-            if (type === 'object') updateAddingState(true)
-            // For arrays, we don't need to add a key
+            // Objects open a key-entry session; arrays add a default value
+            // immediately (no key to fill — a one-shot, as before).
+            if (type === 'object') openAdd()
             else handleAdd('')
           }}
+          aria-label={translate('TOOLTIP_ADD', nodeData)}
           title={showIconTooltips ? translate('TOOLTIP_ADD', nodeData) : ''}
         >
           <Icon name="add" nodeData={nodeData} />
-        </div>
+        </button>
       )}
       {customButtons?.map(({ Element, onClick }, i) => (
+        // Custom buttons stay <div>s: the inner `Element` is consumer-owned and
+        // may itself be interactive, so wrapping it in a <button> risks nested
+        // interactive content.
         <div key={i} onClick={(e) => onClick && onClick(nodeData, e)}>
           <Element nodeData={nodeData} />
         </div>
       ))}
-      {addingKeyState && handleAdd && type === 'object' && (
+      {isAddingHere && handleAdd && type === 'object' && (
         <>
           {hasKeyOptionsList ? (
-            <div className="jer-select jer-select-keys">
-              <select
-                name="new-key-select"
-                className="jer-select-inner"
-                onChange={(e) => {
-                  handleAdd(e.target.value)
-                  updateAddingState(false)
-                }}
-                defaultValue=""
-                autoFocus
-                onKeyDown={(e: React.KeyboardEvent) => {
-                  handleKeyboard(e, {
-                    cancel: () => updateAddingState(false),
-                  })
-                }}
-              >
-                <option value="" disabled>
-                  {addingKeyState.length > 0
-                    ? translate('KEY_SELECT', nodeData)
-                    : translate('NO_KEY_OPTIONS', nodeData)}
-                </option>
-                {addingKeyState.map((val) => (
-                  <option value={val} key={val}>
-                    {val}
-                  </option>
-                ))}
-              </select>
-              <span className="focus"></span>
-            </div>
+            <Select
+              name="new-key-select"
+              // The chosen option IS the key — commit it directly.
+              onChange={handleAdd}
+              defaultValue=""
+              autoFocus
+              onKeyDown={(e) => handleKeyboard(e, { cancel: () => cancel() })}
+              placeholder={
+                addingKeyState.length > 0
+                  ? translate('KEY_SELECT', nodeData)
+                  : translate('NO_KEY_OPTIONS', nodeData)
+              }
+              options={addingKeyState}
+            />
           ) : (
             <input
               className="jer-input-new-key"
@@ -258,16 +277,11 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             />
           )}
           <InputButtons
-            onOk={() => {
-              if (hasKeyOptionsList && !newKey) return
-
-              updateAddingState(false)
-              handleAdd(newKey)
-            }}
-            onCancel={() => {
-              updateAddingState(false)
-            }}
+            onOk={() => commitAdd()}
+            onCancel={() => cancel()}
             nodeData={nodeData}
+            translate={translate}
+            showIconTooltips={showIconTooltips}
             editConfirmRef={editConfirmRef}
             hideOk={hasKeyOptionsList}
           />
@@ -281,26 +295,47 @@ export const InputButtons: React.FC<{
   onOk: () => void
   onCancel: () => void
   nodeData: NodeData
-  editConfirmRef: React.RefObject<HTMLDivElement | null>
+  translate: TranslateFunction
+  showIconTooltips: boolean
+  editConfirmRef: React.RefObject<HTMLButtonElement | null>
   hideOk?: boolean
-}> = ({ onOk, onCancel, nodeData, editConfirmRef, hideOk = false }) => {
+}> = ({
+  onOk,
+  onCancel,
+  nodeData,
+  translate,
+  showIconTooltips,
+  editConfirmRef,
+  hideOk = false,
+}) => {
+  // tabIndex={-1}: the field itself commits/cancels via Enter/Escape
+  // (`keyboardControls`), so these are pointer affordances — kept out of the
+  // Tab order, but real <button>s for screen-reader semantics. `aria-label` is
+  // unconditional; `title` (the visible tooltip) stays gated on
+  // `showIconTooltips`, matching the edit icons.
   return (
     <div className="jer-confirm-buttons">
       {!hideOk && (
-        // Pass an anonymous function to prevent passing event to onOk
-        <div onClick={onOk} ref={editConfirmRef as React.RefObject<HTMLDivElement>}>
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={onOk}
+          aria-label={translate('TOOLTIP_OK', nodeData)}
+          title={showIconTooltips ? translate('TOOLTIP_OK', nodeData) : ''}
+          ref={editConfirmRef as React.RefObject<HTMLButtonElement>}
+        >
           <Icon name="ok" nodeData={nodeData} />
-        </div>
+        </button>
       )}
-      <div onClick={onCancel}>
+      <button
+        type="button"
+        tabIndex={-1}
+        onClick={onCancel}
+        aria-label={translate('TOOLTIP_CANCEL', nodeData)}
+        title={showIconTooltips ? translate('TOOLTIP_CANCEL', nodeData) : ''}
+      >
         <Icon name="cancel" nodeData={nodeData} />
-      </div>
+      </button>
     </div>
   )
 }
-
-const stringifyPath = (path: CollectionKey[]): string =>
-  path.reduce((str: string, part) => {
-    if (typeof part === 'number') return `${str}[${part}]`
-    else return str === '' ? part : `${str}.${part}`
-  }, '')

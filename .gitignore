@@ -37,11 +37,7 @@ typings/
 #Misc
 .DS_Store
 
-# Duplicated source code for GUI app
-demo/src/json-edit-react
-
 # Dev playground file
-.npmrc
 temp.js
 .vscode/settings.json
 demo/src/firebaseConfig.json
@@ -50,6 +46,13 @@ demo/src/firebaseConfig.json
 build_package
 demo/src/package
 custom-component-library/components/package
-.original-readme.md
-.npm-readme.md
-demo/src/imports/import.ts
+
+# Packed tarballs from `pnpm pack` (preview-publish output)
+*.tgz
+
+# Extracted tarballs from `pnpm pack-all` (consumed by VITE_JRE_SOURCE=pack)
+pack-output/
+
+# Python bytecode cache (produced when scripts/build_npm_readme.py is imported)
+__pycache__/
+*.pyc

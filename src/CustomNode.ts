@@ -1,26 +1,65 @@
 import {
+  type CustomComponentProps,
   type CustomKeyProps,
   type CustomNodeDefinition,
-  type CustomNodeProps,
+  type CustomWrapperProps,
   type NodeData,
+  type ValueData,
 } from './types'
 
 export interface CustomNodeData {
-  CustomNode?: React.FC<CustomNodeProps>
-  CustomWrapper?: React.FC<CustomNodeProps>
-  CustomKey?: React.FC<CustomKeyProps>
+  CustomComponent?: React.FC<CustomComponentProps>
+  CustomWrapperComponent?: React.FC<CustomWrapperProps>
+  CustomKeyComponent?: React.FC<CustomKeyProps>
   name?: string
-  customNodeProps?: Record<string, unknown>
+  componentProps?: Record<string, unknown>
   wrapperProps?: Record<string, unknown>
-  hideKey?: boolean
+  showKey?: boolean
   defaultValue?: unknown
-  showInTypesSelector?: boolean
+  showInTypeSelector?: boolean
+  editOnTypeSwitch?: boolean
   showOnEdit?: boolean
   showOnView?: boolean
   showEditTools?: boolean
   showCollectionWrapper?: boolean
   passOriginalNode?: boolean
   renderCollectionAsValue?: boolean
+  toStandardType?: (value: unknown) => ValueData
+  fromStandardType?: (
+    value: unknown,
+    nodeData: NodeData,
+    componentProps?: Record<string, unknown>
+  ) => unknown
+}
+
+// Maps a definition to the renderable CustomNodeData shape, applying the
+// field defaults. Used for the committed-data condition match below, and for
+// the "effective" data of an in-session `editOnTypeSwitch` target (where the
+// definition is picked by name, not condition).
+export const buildCustomNodeData = (definition: CustomNodeDefinition): CustomNodeData => {
+  const {
+    component,
+    wrapperComponent,
+    keyComponent,
+    showKey = true,
+    showEditTools = true,
+    showOnEdit = false,
+    showOnView = true,
+    showCollectionWrapper = true,
+    ...rest
+  } = definition
+
+  return {
+    CustomComponent: component,
+    CustomWrapperComponent: wrapperComponent,
+    CustomKeyComponent: keyComponent,
+    showKey,
+    showEditTools,
+    showOnEdit,
+    showOnView,
+    showCollectionWrapper,
+    ...rest,
+  }
 }
 
 // Fetches matching custom nodes (based on condition filter) from custom node
@@ -29,35 +68,7 @@ export const getCustomNode = (
   customNodeDefinitions: CustomNodeDefinition[] = [],
   nodeData: NodeData
 ): CustomNodeData => {
-  const matchingDefinitions = customNodeDefinitions.filter(({ condition }) => condition(nodeData))
-  if (matchingDefinitions.length === 0) return {}
-
   // Only take the first one that matches
-  const {
-    element,
-    wrapperElement,
-    customKey,
-    customNodeProps,
-    wrapperProps,
-    hideKey = false,
-    showEditTools = true,
-    showOnEdit = false,
-    showOnView = true,
-    showCollectionWrapper = true,
-    ...rest
-  } = matchingDefinitions[0]
-
-  return {
-    CustomNode: element,
-    CustomWrapper: wrapperElement,
-    CustomKey: customKey,
-    customNodeProps,
-    wrapperProps,
-    hideKey,
-    showEditTools,
-    showOnEdit,
-    showOnView,
-    showCollectionWrapper,
-    ...rest,
-  }
+  const matchingDefinition = customNodeDefinitions.find(({ condition }) => condition(nodeData))
+  return matchingDefinition ? buildCustomNodeData(matchingDefinition) : {}
 }

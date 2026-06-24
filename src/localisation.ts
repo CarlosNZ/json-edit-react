@@ -1,8 +1,10 @@
 import { type CustomTextDefinitions, type NodeData } from './types'
+import { isObject } from './utils/misc'
 
 const localisedStrings = {
   ITEM_SINGLE: '{{count}} item',
   ITEMS_MULTIPLE: '{{count}} items',
+  ITEMS_FILTERED: '{{visible}} of {{total}} items',
   KEY_NEW: 'Enter new key',
   KEY_SELECT: 'Select key',
   NO_KEY_OPTIONS: 'No key options',
@@ -11,7 +13,8 @@ const localisedStrings = {
   ERROR_UPDATE: 'Update unsuccessful',
   ERROR_DELETE: 'Delete unsuccessful',
   ERROR_ADD: 'Adding node unsuccessful',
-  DEFAULT_STRING: 'New data!',
+  ERROR_RENAME: 'Rename unsuccessful',
+  ERROR_MOVE: 'Move unsuccessful',
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
   EMPTY_STRING: '<empty string>',
@@ -19,13 +22,15 @@ const localisedStrings = {
   TOOLTIP_EDIT: 'Edit',
   TOOLTIP_DELETE: 'Delete',
   TOOLTIP_ADD: 'Add',
+  TOOLTIP_OK: 'OK',
+  TOOLTIP_CANCEL: 'Cancel',
 }
 
 export type LocalisedStrings = typeof localisedStrings
 export type TranslateFunction = (
   key: keyof LocalisedStrings,
   customData: NodeData,
-  count?: number
+  counts?: number | Record<string, string | number>
 ) => string
 
 const translate = (
@@ -33,21 +38,30 @@ const translate = (
   customText: CustomTextDefinitions,
   customTextData: NodeData,
   key: keyof LocalisedStrings,
-  count?: number
+  counts?: number | Record<string, string | number>
 ): string => {
   if (customText[key]) {
     const output = customText[key](customTextData)
     if (output !== null) return output
   }
 
-  const string = key in translations ? (translations[key] as string) : localisedStrings[key]
-  return count === undefined ? string : string?.replace('{{count}}', String(count))
+  let string = key in translations ? (translations[key] as string) : localisedStrings[key]
+  if (counts !== undefined) {
+    const tokens = isObject(counts) ? counts : { count: counts }
+    for (const [token, value] of Object.entries(tokens)) {
+      string = string?.replace(`{{${token}}}`, String(value))
+    }
+  }
+  return string
 }
 
 export const getTranslateFunction = (
   translations: Partial<LocalisedStrings>,
   customText: CustomTextDefinitions
 ) => {
-  return (key: keyof LocalisedStrings, customTextData: NodeData, count?: number) =>
-    translate(translations, customText, customTextData, key, count)
+  return (
+    key: keyof LocalisedStrings,
+    customTextData: NodeData,
+    counts?: number | Record<string, string | number>
+  ) => translate(translations, customText, customTextData, key, counts)
 }

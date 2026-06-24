@@ -6,16 +6,21 @@
  *
  * See https://css-tricks.com/the-cleanest-trick-for-autogrowing-textareas for
  * the basic idea of how it works.
+ *
+ * This will eventually be replace by CSS property `field-sizing: content` once
+ * browser support and uptake is more widespread. See branch `test/field-sizing`
+ * for an implementation using that approach.
  */
 
-import React from 'react'
+import React, { useRef } from 'react'
+import { useIsomorphicLayoutEffect } from './hooks/useIsomorphicLayoutEffect'
 
 interface TextAreaProps {
   className: string
   name: string
   value: string
   setValue: React.Dispatch<React.SetStateAction<string>>
-  handleKeyPress: (e: React.KeyboardEvent) => void
+  onKeyDown: (e: React.KeyboardEvent) => void
   styles: React.CSSProperties
   textAreaRef?: React.MutableRefObject<HTMLTextAreaElement | null>
 }
@@ -25,10 +30,33 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   name,
   value,
   setValue,
-  handleKeyPress,
+  onKeyDown,
   styles,
   textAreaRef,
 }) => {
+  // This textarea is controlled, so `setValue` can hand back a TRANSFORMED
+  // value (e.g. a consumer `onChange` that strips illegal characters). React
+  // then rewrites the DOM value to the transformed string, and that write
+  // natively drops the caret at the END — so a mid-string edit gets yanked to
+  // the end on every transformed keystroke. Remember the caret (and the length
+  // it sat in) at the keystroke, then re-place it once the new value commits.
+  const caretRef = useRef<{ start: number; sourceLength: number } | null>(null)
+  useIsomorphicLayoutEffect(() => {
+    const caret = caretRef.current
+    caretRef.current = null
+    const el = textAreaRef?.current
+    if (!caret || !el) return
+    // Shift the caret by the net length change, so a strip/insert at or before
+    // it (the input-restriction norm) keeps it beside the same character.
+    const target = caret.start + value.length - caret.sourceLength
+    const next = Math.max(0, Math.min(target, value.length))
+    // Only when React actually moved the caret (a transform changed the value);
+    // the no-op skip leaves normal typing — and IME composition — untouched.
+    if (el.selectionStart !== next) el.setSelectionRange(next, next)
+    // `textAreaRef` is a stable ref object, so listing it for exhaustive-deps
+    // adds no real re-runs (the caret only restores when `value` changes).
+  }, [value, textAreaRef])
+
   // Adding extra (hidden) char when adding new lines to input prevents
   // mis-alignment between real value and dummy value
   if (typeof value !== 'string') return null
@@ -51,12 +79,23 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
         className={className}
         name={`${name}_textarea`}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          // Only a mid-string edit can be yanked to the end, so record the
+          // caret for restoration only then. Appending at the end (the common
+          // case) needs nothing — an end caret stays correct through a
+          // transform — so the layout effect just bails on the null.
+          const { value: nativeValue, selectionStart } = e.target
+          caretRef.current =
+            selectionStart !== null && selectionStart < nativeValue.length
+              ? { start: selectionStart, sourceLength: nativeValue.length }
+              : null
+          setValue(nativeValue)
+        }}
         autoFocus
         onFocus={(e) => {
           if (value.length < 40) e.target.select()
         }}
-        onKeyDown={handleKeyPress}
+        onKeyDown={onKeyDown}
       />
       {/* The "dummy" replica which causes the *actual* textarea to resize: */}
       <span

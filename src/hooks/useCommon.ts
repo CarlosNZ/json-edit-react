@@ -3,17 +3,25 @@
  * Nodes and Value Nodes
  */
 
-import { useCallback, useState } from 'react'
-import { useTreeState } from '../contexts'
+import React, { useCallback, useRef, useState } from 'react'
+import {
+  useEditingSelector,
+  useEditingStore,
+  useRawFilterState,
+  useVisibleChildCount,
+} from '../contexts'
 import {
   type CollectionNodeProps,
   type ErrorString,
   type JerError,
+  type NodeData,
+  type ThemeableElement,
   type ValueData,
   type ValueNodeProps,
   type JsonData,
 } from '../types'
-import { toPathString } from '../helpers'
+import { getNextOrPrevious } from '../utils/keyboard'
+import { pathsEqual, toPathString } from '../utils/pathTools'
 
 interface CommonProps {
   props: CollectionNodeProps | ValueNodeProps
@@ -22,89 +30,188 @@ interface CommonProps {
 
 export const useCommon = ({ props, collapsed }: CommonProps) => {
   const {
-    data,
     nodeData: incomingNodeData,
     parentData,
-    onEdit,
     onError: onErrorCallback,
+    getLatestData,
     showErrorMessages,
-    restrictEditFilter,
-    restrictDeleteFilter,
-    restrictAddFilter,
-    restrictDragFilter,
+    allowEditFilter,
+    allowDeleteFilter,
+    allowAddFilter,
+    allowDragFilter,
     translate,
-    errorMessageTimeout,
+    errorDisplayTime,
+    sort,
+    arrayIndexStart,
+    handleKeyboard,
+    customNodeData,
   } = props
-  const { currentlyEditingElement, setCurrentlyEditingElement } = useTreeState()
+  const { submit } = useEditingStore()
   const [error, setError] = useState<string | null>(null)
 
-  const nodeData = { ...incomingNodeData, collapsed }
+  const nodeData = {
+    ...incomingNodeData,
+    collapsed,
+    visibleSize: useVisibleChildCount(incomingNodeData.path),
+  }
   const { path, key: name, size } = nodeData
 
   const pathString = toPathString(path)
 
-  const canEdit = !restrictEditFilter(nodeData)
-  const canDelete = !restrictDeleteFilter(nodeData)
-  const canAdd = !restrictAddFilter(nodeData)
-  const canDrag = !restrictDragFilter(nodeData) && canDelete && currentlyEditingElement === null
+  // Per-node editing flags as primitive selectors: this node re-renders only
+  // when its OWN boolean flips, so moving an edit between nodes re-renders just
+  // the two involved, not the whole tree.
+  const isEditing = useEditingSelector((s) => {
+    const active = s.active
+    return active !== null && active.op === 'edit' && pathsEqual(active.path, path)
+  })
+  const isEditingKey = useEditingSelector((s) => {
+    const active = s.active
+    return active !== null && active.op === 'rename' && pathsEqual(active.path, path)
+  })
+  // True while this node's optimistic commit is in flight: the value is already
+  // applied locally, but the consumer's async `onUpdate` hasn't settled yet.
+  // Primitive slice keyed on this node's own path, so only this node
+  // re-renders when its save starts/finishes. Stays `false` when there's no
+  // `onUpdate` (the commit settles synchronously) or for a no-op edit.
+  const isPending = useEditingSelector((s) => pathString in s.settling)
+
+  const canEdit = allowEditFilter(nodeData)
+  const canDelete = allowDeleteFilter(nodeData)
+  const canAdd = allowAddFilter(nodeData)
+  // Drag permission no longer depends on global editing state (which would
+  // re-render every node when editing starts/ends). "Don't drag while editing"
+  // is enforced at drag-start instead (see useDragNDrop), reading the store
+  // imperatively.
+  const canDrag = allowDragFilter(nodeData) && canDelete
 
   const showError = (errorString: ErrorString) => {
     if (showErrorMessages) {
       setError(errorString)
-      setTimeout(() => setError(null), errorMessageTimeout)
+      setTimeout(() => setError(null), errorDisplayTime)
     }
     console.warn('Error', errorString)
   }
 
+  // `onError` keeps a stable identity (it's a node prop, threaded down and
+  // compared by the memo), so it can't close over the live document or this
+  // node's churning `nodeData` — once `onErrorCallback` is stabilized upstream
+  // the closure freezes. Read this node's `NodeData` from a ref-to-latest and
+  // the live document from `getLatestData()` (so the flat payload is current).
+  const nodeDataRef = useRef(nodeData)
+  nodeDataRef.current = nodeData
   const onError = useCallback(
     (error: JerError, errorValue: JsonData | string) => {
       showError(error.message)
       if (onErrorCallback) {
         onErrorCallback({
-          currentData: nodeData.fullData,
-          errorValue,
-          currentValue: data,
-          name,
-          path,
+          ...nodeDataRef.current,
+          fullData: getLatestData(),
           error,
+          errorValue,
         })
       }
     },
+    // `showError` itself isn't listed (it'd churn onError every render); its
+    // closure values (`showErrorMessages`, `errorDisplayTime`) are, so onError
+    // re-captures a fresh `showError` whenever either changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [onErrorCallback, showErrorMessages]
+    [onErrorCallback, showErrorMessages, getLatestData, errorDisplayTime]
   )
 
-  const handleEditKey = (newKey: string) => {
-    setCurrentlyEditingElement(null)
-    if (name === newKey) return
+  // Tab-viability predicate: a candidate leaf is a valid Tab target only
+  // if it would be visible AND editable. Visibility comes from the
+  // precomputed `filterState.visiblePaths` Set; editability is the
+  // existing `allowEditFilter(nodeData)`. Closures over the live filter
+  // state, so a search keystroke that re-builds the state implicitly
+  // re-builds the predicate (via useCallback identity), but only when
+  // those inputs actually change — the §16 memo invariants hold.
+  //
+  // Hooks-rules note: we read the WHOLE filter state via
+  // `useRawFilterState` (not per-path `useNodeVisible`) because the
+  // predicate is invoked for many candidate paths during a single Tab,
+  // and we can't call hooks inside a loop.
+  const filterState = useRawFilterState()
+  const isViableTarget = useCallback(
+    (candidate: NodeData) => {
+      const visible =
+        filterState === null || filterState.visiblePaths.has(toPathString(candidate.path))
+      return visible && allowEditFilter(candidate)
+    },
+    [filterState, allowEditFilter]
+  )
+
+  // Stable wrapper around `getNextOrPrevious` against the LIVE document for
+  // this node's `path`, so callers (`KeyDisplay`, value-node `tabForward` /
+  // `tabBack`) don't need to re-thread `getLatestData` / `path` / `sort`.
+  // Threads `isViableTarget` so Tab skips filtered-out / non-editable
+  // leaves up front instead of landing on them and bouncing.
+  const getNextOrPreviousAtPath = (type: 'next' | 'prev') =>
+    getNextOrPrevious(getLatestData(), path, type, sort, isViableTarget)
+
+  // Commits a key rename through the store's commit engine. `onCommit` lets a
+  // commit-on-displace / Tab open the next node at the commit moment.
+  const handleEditKey = (newKey: string, onCommit?: () => void) => {
     if (!parentData) return
-    const parentPath = path.slice(0, -1)
-    const existingKeys = Object.keys(parentData)
-    if (existingKeys.includes(newKey)) {
+    // Duplicate key (and not the unchanged key itself) can't commit: surface
+    // the error and keep the session open WITHOUT running `onCommit`, so a
+    // displacing switch is blocked (like an invalid value/JSON edit). Esc/✗
+    // remain the escape hatch.
+    if (name !== newKey && Object.keys(parentData).includes(newKey)) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, newKey)
       return
     }
-
-    // Need to update data in array form to preserve key order
-    const newData = Object.fromEntries(
-      Object.entries(parentData).map(([key, val]) => (key === name ? [newKey, val] : [key, val]))
-    )
-    onEdit(newData, parentPath).then((error) => {
-      if (error) {
-        onError({ code: 'UPDATE_ERROR', message: error }, newKey as ValueData)
-      }
+    // First-class `event: 'rename'`: the engine fires `submitRename` →
+    // `commitRename` (carrying old + new keys) and settles. An unchanged key is
+    // a no-op (`buildCommit` flags it) — `commitRename`, no `onUpdate`. A
+    // rejected settlement reverts and surfaces the error here.
+    submit({ op: 'rename', path, newKey, onCommit }).then((outcome) => {
+      if (outcome?.status === 'error') onError(outcome.error, newKey as ValueData)
     })
   }
 
-  // Common DERIVED VALUES (this makes the JSX logic less messy)
-  const isEditing = currentlyEditingElement === pathString
-  const isEditingKey = currentlyEditingElement === `key_${pathString}`
+  // Common DERIVED VALUES (this makes the JSX logic less messy). `isEditing` /
+  // `isEditingKey` are the per-node selector subscriptions computed above.
   const isArray = typeof path.slice(-1)[0] === 'number'
   const canEditKey = parentData !== null && canEdit && canAdd && canDelete && !isArray
 
-  const derivedValues = { isEditing, isEditingKey, isArray, canEditKey }
+  const derivedValues = { isEditing, isEditingKey, isPending, isArray, canEditKey }
 
   const emptyStringKey = name === '' && path.length > 0 ? translate('EMPTY_STRING', nodeData) : null
+
+  // Shared `KeyDisplay` props. Caller supplies `handleCancel`, `getStyles`,
+  // and (collection-only) `keyValueArray` + `handleClick`; `useCommon` already
+  // owns the rest. Centralizes the prop list so a new `KeyDisplay` field
+  // doesn't need to be threaded through both call sites.
+  const buildKeyDisplayProps = ({
+    handleCancel,
+    getStyles,
+    keyValueArray,
+    handleClick,
+  }: {
+    handleCancel: () => void
+    getStyles: (component: ThemeableElement, nodeData: typeof incomingNodeData) => React.CSSProperties
+    keyValueArray?: Array<[string | number, ValueData]>
+    handleClick?: (e: React.MouseEvent) => void
+  }) => ({
+    canEditKey,
+    isEditingKey,
+    pathString,
+    path,
+    name,
+    arrayIndexStart,
+    handleKeyboard,
+    handleEditKey,
+    handleCancel,
+    styles: getStyles('property', nodeData),
+    getNextOrPrevious: getNextOrPreviousAtPath,
+    emptyStringKey,
+    nodeData,
+    customNodeData,
+    getStyles,
+    ...(keyValueArray !== undefined ? { keyValueArray } : {}),
+    ...(handleClick !== undefined ? { handleClick } : {}),
+  })
 
   return {
     pathString,
@@ -123,5 +230,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     handleEditKey,
     derivedValues,
     emptyStringKey,
+    getNextOrPreviousAtPath,
+    buildKeyDisplayProps,
   }
 }

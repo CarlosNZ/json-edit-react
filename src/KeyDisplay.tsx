@@ -1,9 +1,9 @@
 /**
- * Component to display the "Property" value for both Collection and Value nodes
+ * Renders the key ("Property") label for both Collection and Value nodes
  */
 
 import React from 'react'
-import { useTreeState } from './contexts'
+import { useEditingStore } from './contexts'
 import {
   type KeyboardControlsFull,
   type CollectionKey,
@@ -19,12 +19,12 @@ interface KeyDisplayProps {
   pathString: string
   path: CollectionKey[]
   name: string | number
-  arrayIndexFromOne: boolean
+  arrayIndexStart: number
   handleKeyboard: (
     e: React.KeyboardEvent,
     eventMap: Partial<Record<keyof KeyboardControlsFull, () => void>>
   ) => void
-  handleEditKey: (newKey: string) => void
+  handleEditKey: (newKey: string, onCommit?: () => void) => void
   handleCancel: () => void
   handleClick?: (e: React.MouseEvent) => void
   keyValueArray?: Array<[string | number, ValueData]>
@@ -42,7 +42,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   pathString,
   path,
   name,
-  arrayIndexFromOne,
+  arrayIndexStart,
   handleKeyboard,
   handleEditKey,
   handleCancel,
@@ -55,9 +55,17 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   customNodeData,
   getStyles,
 }) => {
-  const { setCurrentlyEditingElement } = useTreeState()
+  // Actions only (no subscription) — `isEditingKey` arrives via props.
+  const { open, cancel } = useEditingStore()
 
-  const displayKey = typeof name === 'number' ? String(name + (arrayIndexFromOne ? 1 : 0)) : name
+  // The rename `<input>` is uncontrolled (`defaultValue`), so its in-progress
+  // value lives in the DOM. `renameCommitOp` reads it live to commit on
+  // displace (the keyboard paths read `e.target.value` directly instead).
+  const keyInputRef = React.useRef<HTMLInputElement>(null)
+  const renameCommitOp = (onCommit: () => void) =>
+    handleEditKey(keyInputRef.current?.value ?? String(name), onCommit)
+
+  const displayKey = typeof name === 'number' ? String(name + arrayIndexStart) : name
 
   if (!isEditingKey) {
     // Theme styles plus the same layout derivation the default key span
@@ -69,10 +77,10 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
       minWidth: `${Math.min(displayKey.length + 1, 5)}ch`,
       flexShrink: displayKey.length > 10 ? 1 : 0,
     }
-    if (customNodeData?.CustomKey && nodeData && getStyles) {
-      const { CustomKey, customNodeProps } = customNodeData
+    if (customNodeData?.CustomKeyComponent && nodeData && getStyles) {
+      const { CustomKeyComponent, componentProps } = customNodeData
       return (
-        <CustomKey
+        <CustomKeyComponent
           nodeData={nodeData}
           name={emptyStringKey ?? displayKey}
           path={path}
@@ -80,12 +88,12 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
           handleEditKey={(newKey) => {
             if (canEditKey) handleEditKey(newKey)
           }}
-          setIsEditingKey={() => {
-            if (canEditKey) setCurrentlyEditingElement(path, 'key')
+          startEditingKey={() => {
+            if (canEditKey) open(path, { op: 'rename', commitOp: renameCommitOp })
           }}
           handleClick={handleClick}
           styles={derivedKeyStyles}
-          customNodeProps={customNodeProps}
+          componentProps={componentProps}
           getStyles={getStyles}
         />
       )
@@ -94,7 +102,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
       <span
         className="jer-key-text"
         style={derivedKeyStyles}
-        onDoubleClick={() => canEditKey && setCurrentlyEditingElement(path, 'key')}
+        onDoubleClick={() => canEditKey && open(path, { op: 'rename', commitOp: renameCommitOp })}
         onClick={handleClick}
       >
         {emptyStringKey ? <span className="jer-empty-string">{emptyStringKey}</span> : displayKey}
@@ -105,6 +113,7 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
 
   return (
     <input
+      ref={keyInputRef}
       className="jer-input-text jer-key-edit"
       type="text"
       name={pathString}
@@ -115,18 +124,27 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
         handleKeyboard(e, {
           stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
           cancel: handleCancel,
+          // Tab commits the rename, then opens the next node at the commit
+          // moment (via `onCommit`) — so an invalid (duplicate-key) rename
+          // blocks the move and stays open, matching value-edit Tab / displace.
           tabForward: () => {
-            handleEditKey((e.target as HTMLInputElement).value)
-            if (keyValueArray) {
-              const firstChildKey = keyValueArray?.[0][0]
-              setCurrentlyEditingElement(
-                firstChildKey ? [...path, firstChildKey] : getNextOrPrevious('next')
-              )
-            } else setCurrentlyEditingElement(path)
+            const value = (e.target as HTMLInputElement).value
+            handleEditKey(value, () => {
+              if (keyValueArray) {
+                const firstChildKey = keyValueArray?.[0][0]
+                const next = firstChildKey ? [...path, firstChildKey] : getNextOrPrevious('next')
+                if (next) open(next)
+                else cancel()
+              } else open(path)
+            })
           },
           tabBack: () => {
-            handleEditKey((e.target as HTMLInputElement).value)
-            setCurrentlyEditingElement(getNextOrPrevious('prev'))
+            const value = (e.target as HTMLInputElement).value
+            handleEditKey(value, () => {
+              const prev = getNextOrPrevious('prev')
+              if (prev) open(prev)
+              else cancel()
+            })
           },
         })
       }

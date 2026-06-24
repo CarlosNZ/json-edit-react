@@ -1,32 +1,50 @@
 export { JsonEditor } from './JsonEditor'
+export { JsonViewer } from './JsonViewer'
 export { defaultTheme } from './contexts/ThemeProvider'
-export { IconAdd, IconEdit, IconDelete, IconCopy, IconOk, IconCancel, IconChevron } from './Icons'
 export { StringDisplay, StringEdit, useKeyboardListener } from './ValueNodes'
-export { LinkCustomComponent, LinkCustomNodeDefinition } from './customComponents'
-export { matchNode, matchNodeKey, isCollection, toPathString } from './helpers'
-export { assign, extract, type AssignInput, type AssignOptions } from './utils'
+export { AutogrowTextArea } from './AutogrowTextArea'
+export { IconSvg } from './Icons'
+export { type SelectProps } from './NativeSelect'
+export { matchNode, matchNodeKey } from './utils/filter'
+export { isCollection } from './utils/misc'
+export { toPathString, splitPropertyString } from './utils/pathTools'
+export { assign, type AssignInput, type AssignOptions } from './utils/assign'
+export { extract } from './utils/extract'
 export {
+  valueDataTypes,
+  collectionDataTypes,
   standardDataTypes,
   type JsonEditorProps,
+  type JsonViewerProps,
+  type JsonEditorHandle,
+  type JsonViewerHandle,
+  type StartEditOptions,
+  type StartEditResult,
   type UpdateFunction,
+  type UpdateResult,
   type OnChangeFunction,
   type OnErrorFunction,
   type OnEditEventFunction,
+  type EditEvent,
   type OnCollapseFunction,
   type JerError,
+  type JerErrorCode,
   type DataType,
-  type CopyFunction,
+  type OnCopyFunction,
   type FilterFunction,
   type SearchFilterFunction,
   type TypeFilterFunction,
   type NewKeyOptionsFunction,
   type DefaultValueFunction,
   type CompareFunction,
-  type IconReplacements,
+  type IconDefinition,
+  type ThemeIcons,
   type CollectionNodeProps,
   type ValueNodeProps,
-  type CustomNodeProps,
+  type CustomComponentProps,
+  type CustomWrapperProps,
   type CustomNodeDefinition,
+  type CustomButtonDefinition,
   type CustomKeyProps,
   type CustomTextDefinitions,
   type CustomTextFunction,
@@ -43,15 +61,4 @@ export {
   type TypeOptions,
   type UpdateFunctionProps,
 } from './types'
-export { type EditState, type ExternalTriggers } from './hooks'
-export { type IconProps } from './Icons'
 export { type LocalisedStrings, type TranslateFunction } from './localisation'
-
-export {
-  githubDarkTheme,
-  githubLightTheme,
-  monoDarkTheme,
-  monoLightTheme,
-  candyWrapperTheme,
-  psychedelicTheme,
-} from './additionalThemes'

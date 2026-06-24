@@ -1,10 +1,16 @@
-:root {
+:root,
+:host {
   --jer-select-border: #b6b6b6;
   --jer-select-focus: #777;
   --jer-select-arrow: #777;
   --jer-form-border: 1px solid #ededf0;
   --jer-form-border-focus: 1px solid #e2e2e2;
+  /* The selection-highlight and copy-pulse colours mirror the default theme, so
+     these static rules degrade to sensible colours when a theme doesn't supply
+     the matching variable inline on the container — e.g. a dynamic `iconCopy`
+     style function, which can't collapse to one container-level value. */
   --jer-highlight-color: #b3d8ff;
+  --jer-icon-copy-color: #268bd2;
 }
 
 .jer-visible {
@@ -130,6 +136,10 @@ select:focus + .focus {
 /* .jer-component {
 } */
 
+/* .jer-collection-element {
+  min-height: 1.7em;
+} */
+
 .jer-collection-header-row,
 .jer-value-main-row {
   display: flex;
@@ -139,8 +149,11 @@ select:focus + .focus {
 }
 
 .jer-collection-header-row {
-  display: flex;
   flex-wrap: wrap;
+}
+
+.jer-value-main-row {
+  gap: 0;
 }
 
 /* .jer-brackets {
@@ -155,20 +168,51 @@ select:focus + .focus {
   padding-left: 0;
 }
 
-/* .jer-collection-item-count {
-} */
+/* Hidden by `display: none` (not `opacity: 0` alone) so a hidden count
+   collapses its flex gap and leaves no space between the brackets. The
+   `allow-discrete` transition-behavior is set inline alongside the transition
+   (so the `all` transition includes `display`), and `@starting-style` below
+   gives the fade-in a frame to animate from — together they fade the count
+   in/out on collapse instead of popping. `jer-visible`/`jer-hidden` (shared,
+   opacity-only) drive the fade; this class only toggles `display`. */
+.jer-collection-item-count {
+  display: none;
+}
+
+.jer-collection-item-count.jer-visible {
+  display: block;
+}
+
+@starting-style {
+  .jer-collection-item-count.jer-visible {
+    opacity: 0;
+  }
+}
 
 .jer-collapse-icon {
   position: absolute;
   left: -1.2em;
-  top: 0.35em;
+  /* Centre vertically on the row (its positioning context) independent of row
+     height: top:50% is mid-row, translateY(-50%) pulls back by half the icon's
+     own height. Survives row min-height and per-theme icon-scale changes. */
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* The collapse animation rotates the icon via `.jer-rotate-90`, which sets the
+   same `transform` property, so the centring translate is re-stated here or
+   it'd be lost when collapsed. The icon box is square → translate + rotate
+   compose cleanly. */
+.jer-collapse-icon.jer-rotate-90 {
+  transform: translateY(-50%) rotate(-90deg);
 }
 
 .jer-collection-inner {
   position: relative;
 }
 
-.jer-collection-text-edit {
+.jer-collection-text-edit,
+.jer-collection-text-edit-custom {
   display: flex;
   flex-direction: column;
   gap: 0.3em;
@@ -176,7 +220,19 @@ select:focus + .focus {
   line-height: 1.1em;
 }
 
+/* Default <textarea> only: Keep OK/Cancel buttons bound by the text area width
+*/
+.jer-collection-text-edit {
+  width: fit-content;
+}
+
 .jer-collection-text-area {
+  /* `box-sizing` and `line-height` are pinned (not just inherited) so the
+     AutogrowTextArea's real <textarea> and its hidden measuring <span> can't
+     drift apart when a host rule targets `textarea`/`input` or applies a global
+     `* { box-sizing: border-box }` reset. content-box is the model the sizing
+     was designed against, so consumers without a reset see no change. */
+  box-sizing: content-box;
   resize: both;
   padding-top: 0.2em;
   padding-left: 0.5em;
@@ -184,6 +240,7 @@ select:focus + .focus {
   padding-bottom: 0;
   overflow: hidden;
   max-height: 40em;
+  line-height: 1.25em;
   font-family: inherit;
   font-size: 0.85em;
 }
@@ -196,16 +253,13 @@ select:focus + .focus {
   margin-top: 0.4em;
 }
 
-/* .jer-collection-element {
+/* .jer-collection-error-row {
 } */
 
-.jer-collection-error-row {
+.jer-collection-error-row-edit {
   position: absolute;
   bottom: 0.5em;
 }
-
-/* .jer-collection-error-row-edit {
-} */
 
 .jer-error-slug {
   margin-left: 1em;
@@ -213,11 +267,6 @@ select:focus + .focus {
 
 .jer-value-component {
   position: relative;
-}
-
-.jer-value-main-row {
-  display: flex;
-  gap: 0;
 }
 
 .jer-value-and-buttons {
@@ -253,6 +302,9 @@ select:focus + .focus {
 }
 
 .jer-input-text {
+  /* See `.jer-collection-text-area` — pinned so the autogrow <textarea> and its
+     measuring <span> stay in sync under a host CSS reset. */
+  box-sizing: content-box;
   resize: none;
   margin: 0;
   height: 1.4em;
@@ -319,6 +371,26 @@ select:focus + .focus {
   align-items: center;
   cursor: pointer;
   height: 1em;
+  margin-right: 0.2em;
+}
+
+/* The icon controls are real <button>s for accessibility. This neutralises the
+   user-agent button chrome so they render identically to surrounding elements.
+   Only properties a <button> won't otherwise take from context are listed:
+   background/border/margin/padding/appearance don't inherit, and form controls
+   are UA-special-cased so `font`/`color` must be re-asserted (`font: inherit`
+   is load-bearing — the icons are sized in `em`). `cursor` inherits from the
+   wrapper rule above, whose flexbox also centres the button, so neither is
+   needed here. Scoped with `>` so it never leaks into custom-button content. */
+.jer-edit-buttons > button,
+.jer-confirm-buttons > button {
+  appearance: none;
+  background: none;
+  border: none;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
 }
 
 .jer-input-buttons {
@@ -395,10 +467,6 @@ select:focus + .focus {
   top: 0.07em;
 }
 
-.jer-rotate-90 {
-  transform: rotate(-90deg);
-}
-
 .jer-accordion-icon {
   /* font-size: '2em'; */
 }
@@ -417,7 +485,7 @@ select:focus + .focus {
 
 .jer-drag-n-drop-padding {
   height: 0.5em;
-  border: 1px dashed #e0e0e0;
+  border: 1px dashed #b4b4b4;
   border-radius: 0.3em;
 }
 

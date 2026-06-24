@@ -1,34 +1,53 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { assign, extract, type AssignOptions, type AssignInput } from './utils'
+import React, {
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { assign, type AssignOptions, type AssignInput } from './utils/assign'
+import { buildNodeData } from './utils/buildNodeData'
+import { extract } from './utils/extract'
 import { CollectionNode } from './CollectionNode'
-import {
-  getFullKeyboardControlMap,
-  handleKeyPress,
-  isCollection,
-  matchNode,
-  matchNodeKey,
-  restoreUndefined,
-  UNDEFINED,
-} from './helpers'
+import { NativeSelect } from './NativeSelect'
+import { getFullKeyboardControlMap, handleKeyPress } from './utils/keyboard'
+import { computeFilterState, matchNode, matchNodeKey } from './utils/filter'
+import { isCollection, NOOP, restoreUndefined, UNDEFINED } from './utils/misc'
 import {
   type CollectionData,
   type JsonEditorProps,
   type FilterFunction,
-  type InternalUpdateFunction,
   type NodeData,
   type SearchFilterFunction,
   type CollectionKey,
-  type UpdateFunctionReturn,
-  type UpdateFunction,
   type UpdateFunctionProps,
+  type UpdateControl,
+  type JerErrorCode,
+  type SortFunction,
+  type BuildNodeDataFromPath,
+  type BuildNodeDataFromPathRef,
   type JsonData,
   type KeyboardControls,
   ValueData,
   CustomNodeDefinition,
 } from './types'
-import { useTheme, ThemeProvider, TreeStateProvider, defaultTheme, useTreeState } from './contexts'
-import { useData, useTriggers } from './hooks'
-import { getTranslateFunction } from './localisation'
+import {
+  useTheme,
+  ThemeProvider,
+  TreeStateProvider,
+  defaultTheme,
+  useEditingStore,
+  useCollapse,
+  FilterStateProvider,
+} from './contexts'
+import {
+  type CommitPrimitives,
+  type CommitRequest,
+  type BuiltCommit,
+  type UpdateOutcome,
+} from './contexts/EditingProvider'
+import { getTranslateFunction, type LocalisedStrings } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
 import './style.css'
@@ -41,61 +60,131 @@ const defaultJsonStringify = (
   replacer?: (key: string, value: unknown) => unknown
 ) => JSON.stringify(data, replacer, 2)
 
-const Editor: React.FC<JsonEditorProps> = ({
-  data: srcData,
-  setData: srcSetData,
+// The localisation key for a generic reject (`onUpdate` → `false`), per event,
+// so the message matches the `onError` code the node routes it to (`ADD_ERROR`,
+// `DELETE_ERROR`, `RENAME_ERROR`, `MOVE_ERROR`). `edit` uses `ERROR_UPDATE`,
+// which also covers internal failures (code `UPDATE_ERROR`). Typed as an
+// exhaustive `Record` over the event union so a new event can't slip through.
+const ERROR_MESSAGE_KEY: Record<UpdateFunctionProps['event'], keyof LocalisedStrings> = {
+  edit: 'ERROR_UPDATE',
+  add: 'ERROR_ADD',
+  delete: 'ERROR_DELETE',
+  rename: 'ERROR_RENAME',
+  move: 'ERROR_MOVE',
+}
+
+// The `onError` code per event, so a generic (`false`) reject surfaces with the
+// matching code alongside the `ERROR_MESSAGE_KEY` message.
+const ERROR_CODE: Record<UpdateFunctionProps['event'], JerErrorCode> = {
+  edit: 'UPDATE_ERROR',
+  add: 'ADD_ERROR',
+  delete: 'DELETE_ERROR',
+  rename: 'RENAME_ERROR',
+  move: 'MOVE_ERROR',
+}
+
+// Wrap an optional consumer callback so its identity stays STABLE across
+// renders (lets the React.memo'd nodes bail) while always invoking the LATEST
+// implementation — even when passed inline. Same refs-to-latest idea as the
+// update callbacks (and the same render-time-write safety: the wrapper runs
+// only from event handlers, never during render, so there is no mid-render read
+// to tear). Returns `undefined` when the consumer supplied nothing, so
+// downstream `if (cb)` guards still hold.
+const useStableCallback = <Args extends unknown[], R>(
+  cb: ((...args: Args) => R) | undefined
+): ((...args: Args) => R) | undefined => {
+  const ref = useRef(cb)
+  // Keep the last DEFINED callback — never overwrite with `undefined`. The
+  // wrapper is only handed out while `cb` is defined, and holding a real
+  // function means even a prior render's wrapper invoked after `cb` is removed
+  // (a concurrent-mode window) can't deref `undefined` via the `!` below.
+  // Parameterising by Args/R keeps the wrapper's signature == cb's (no cast).
+  if (cb) ref.current = cb
+  const stable = useRef((...args: Args): R => ref.current!(...args))
+  return cb ? stable.current : undefined
+}
+
+// Module-scoped stable defaults: a destructure default like `= []` allocates a
+// fresh array on every render when the prop is omitted, which would defeat the
+// React.memo node boundary (the prop would look "changed" every render). These
+// shared references keep the default stable.
+const EMPTY_CUSTOM_NODE_DEFINITIONS: CustomNodeDefinition[] = []
+const DEFAULT_COLLAPSE_CLICK_ZONES: Array<'left' | 'header' | 'property'> = ['header', 'left']
+// Same rationale: omitted object/array props would otherwise allocate a fresh
+// `{}`/`[]` every render, churning the `useMemo`s that derive `translate`,
+// `fullKeyboardControls`, etc., and defeating the node memo on every commit.
+const EMPTY_TRANSLATIONS: NonNullable<JsonEditorProps<JsonData>['translations']> = {}
+const EMPTY_CUSTOM_TEXT: NonNullable<JsonEditorProps<JsonData>['customText']> = {}
+const EMPTY_KEYBOARD_CONTROLS: NonNullable<JsonEditorProps<JsonData>['keyboardControls']> = {}
+const EMPTY_CUSTOM_BUTTONS: NonNullable<JsonEditorProps<JsonData>['customButtons']> = []
+
+const Editor: React.FC<
+  JsonEditorProps<JsonData> & {
+    buildNodeDataFromPathRef: BuildNodeDataFromPathRef
+    commitRef: React.RefObject<CommitPrimitives | undefined>
+  }
+> = ({
+  data,
+  setData,
+  buildNodeDataFromPathRef,
+  commitRef,
   rootName = 'root',
-  onUpdate = () => {},
-  onEdit: srcEdit = onUpdate,
-  onDelete: srcDelete = onUpdate,
-  onAdd: srcAdd = onUpdate,
+  onUpdate = NOOP,
   onChange,
   onError,
   onEditEvent,
   showErrorMessages = true,
-  enableClipboard = true,
+  showClipboardButton = true,
+  onCopy,
   indent = 2,
-  collapse = false,
+  collapse = 3, // open the top 3 levels; deeper nodes start collapsed
   collapseAnimationTime = 300, // must be equivalent to CSS value
-  showCollectionCount = true,
-  restrictEdit = false,
-  restrictDelete = false,
-  restrictAdd = false,
-  restrictTypeSelection = false,
-  restrictDrag = true,
-  viewOnly,
+  showCollectionCount = 'when-collapsed-or-filtered',
+  allowEdit = true,
+  allowDelete = true,
+  allowAdd = true,
+  allowTypeSelection = true,
+  allowDrag = false,
   searchFilter: searchFilterInput,
   searchText,
   searchDebounceTime = 350,
-  keySort = false,
-  showArrayIndices = true,
-  arrayIndexFromOne = false,
+  sortKeys = false,
+  showArrayIndexes = true,
+  arrayIndexStart = 0,
   showStringQuotes = true,
   showIconTooltips = false,
   defaultValue = null,
   newKeyOptions,
   minWidth = 250,
   maxWidth = 'min(600px, 90vw)',
-  rootFontSize,
-  stringTruncate = 250,
-  translations = {},
+  baseFontSize,
+  stringTruncateLength = 250,
+  translations = EMPTY_TRANSLATIONS,
   className,
   id,
-  customText = {},
-  customNodeDefinitions = [],
-  customButtons = [],
+  customText = EMPTY_CUSTOM_TEXT,
+  customNodeDefinitions = EMPTY_CUSTOM_NODE_DEFINITIONS,
+  customButtons = EMPTY_CUSTOM_BUTTONS,
   jsonParse = JSON.parse,
   jsonStringify = defaultJsonStringify,
   TextEditor,
-  errorMessageTimeout = 2500,
-  keyboardControls = {},
-  externalTriggers,
+  Select = NativeSelect,
+  errorDisplayTime = 2500,
+  keyboardControls = EMPTY_KEYBOARD_CONTROLS,
+  editorRef,
   insertAtTop = false,
   onCollapse,
-  collapseClickZones = ['header', 'left'],
+  collapseClickZones = DEFAULT_COLLAPSE_CLICK_ZONES,
 }) => {
-  const { getStyles } = useTheme()
-  const { setCurrentlyEditingElement } = useTreeState()
+  const { getStyles, cssVars } = useTheme()
+  // Root must not subscribe to editing state — that would re-render the whole
+  // tree on every edit transition. Read the actions from the stable store
+  // (used by the cancel-on-unmount cleanup and the `editorRef` handle below).
+  const {
+    open: openEditSession,
+    cancel: cancelEditSession,
+    getSnapshot: getEditingSnapshot,
+  } = useEditingStore()
   const collapseFilter = useMemo(() => getFilterFunction(collapse), [collapse])
   const translate = useMemo(
     () => getTranslateFunction(translations, customText),
@@ -103,189 +192,347 @@ const Editor: React.FC<JsonEditorProps> = ({
   )
   const [debouncedSearchText, setDebouncedSearchText] = useState(searchText)
 
-  const [data, setData] = useData<JsonData>({ setData: srcSetData, data: srcData })
-
   const mainContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    setCurrentlyEditingElement(null)
+    cancelEditSession()
     const debounce = setTimeout(() => setDebouncedSearchText(searchText), searchDebounceTime)
     return () => clearTimeout(debounce)
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- setCurrentlyEditingElement is a React state setter, and can't change
+    // `cancelEditSession` is intentionally excluded — same reasoning as the
+    // editorRef deps below: it's store-stable, but a consumer's inline
+    // `onEditEvent` would re-bind it every render and re-fire this effect,
+    // cancelling in-progress edits mid-keystroke. React still picks up the
+    // latest closure when a listed dep changes, so cancel runs once per
+    // genuine search-input change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchText, searchDebounceTime])
 
-  const nodeData: NodeData = {
-    key: rootName,
-    path: [],
-    level: 0,
-    index: 0,
-    value: data,
-    size: typeof data === 'object' && data !== null ? Object.keys(data).length : 1,
-    parentData: null,
-    fullData: data,
-  }
+  // Root node (path []). Same canonical builder the `editorRef` handle uses.
+  const nodeData: NodeData = buildNodeData(data, [], rootName)
 
-  // Common method for handling data update. It runs the updated data through
-  // provided "onUpdate" function, then updates data state or returns error
-  // information accordingly
-  const handleEdit = async (updateMethod: UpdateFunction, input: UpdateFunctionProps) => {
-    const result = await updateMethod(input)
+  // Refs-to-latest so the update callbacks below can be referentially STABLE
+  // (useCallback with empty deps) yet always act on the current data and the
+  // latest consumer callbacks — even when those are passed inline (as the demo
+  // does). Stable identities are what let the React.memo'd nodes bail out
+  // instead of re-rendering the whole tree on every commit.
+  //
+  // Writing `.current` during render is safe here because every read happens in
+  // an event handler or async committer (the `useCallback`s below, and the
+  // stabilised side-effect callbacks) — never during render to produce output.
+  // With no mid-render read there is nothing to tear. Moving these writes into
+  // a layout effect (the textbook "concurrent-safe" form) would instead open a
+  // child-first staleness window, since a child's effects run before this
+  // parent's — strictly worse for refs that only ever feed event handlers.
+  const dataRef = useRef(data)
+  dataRef.current = data
+  const setDataRef = useRef(setData)
+  setDataRef.current = setData
+  const translateRef = useRef(translate)
+  translateRef.current = translate
+  const rootNodeDataRef = useRef(nodeData)
+  rootNodeDataRef.current = nodeData
+  // Single result-producer source (§17): one `onUpdate` for every operation.
+  const onUpdateRef = useRef(onUpdate)
+  onUpdateRef.current = onUpdate
+  const rootNameRef = useRef(rootName)
+  rootNameRef.current = rootName
+  // Assigned just after `sort` is defined below; lets the stable update
+  // handlers build a node's full `NodeData` payload with the live comparator.
+  const sortRef = useRef<SortFunction | undefined>(undefined)
 
-    if (result === true || result === undefined) {
-      setData(input.newData)
-      return
+  // Stable accessor for the latest whole document, so a memoized node can read
+  // the live tree at event time (onChange `currentData`, Tab navigation) rather
+  // than the `nodeData.fullData` prop, which a bailed sibling keeps stale.
+  const getLatestData = useCallback(() => dataRef.current, [])
+
+  // Stabilise the consumer's side-effect callbacks the same way, so a node that
+  // bails out of re-rendering still invokes the latest implementation (not a
+  // stale closure) when the consumer passes them inline.
+  const onChangeStable = useStableCallback(onChange)
+  const onErrorStable = useStableCallback(onError)
+  const onCollapseStable = useStableCallback(onCollapse)
+  const onEditEventStable = useStableCallback(onEditEvent)
+  const onCopyStable = useStableCallback(onCopy)
+
+  // Document-mutation primitives the EditingProvider's commit engine calls.
+  // The Provider owns the lifecycle (when to apply optimistically, gate,
+  // settle, and which events fire); these own `setData`/`updateDataObject`.
+  // Read the live document via refs so their identity stays stable (the memo'd
+  // nodes bail).
+  //
+  // Every document write goes through `commitDocument`, which updates
+  // `dataRef` *synchronously* before calling `setData`. This keeps the
+  // latest-data ref consistent with optimistic writes rather than only with
+  // rendered state: a synchronous `onUpdate` (e.g. `() => false`) resolves its
+  // settlement in a microtask that runs *before* React re-renders, so a revert
+  // reading `dataRef.current` would otherwise see the pre-apply document and
+  // either undo the wrong thing or throw (deleting a not-yet-present added
+  // key). The next render's `dataRef.current = data` (above) reconciles it
+  // back to the real state — identical when `setData` is the recommended
+  // controlled setter.
+  const commitDocument = useCallback((d: unknown) => {
+    dataRef.current = d as JsonData
+    setDataRef.current(d as JsonData)
+  }, [])
+
+  const applyValue = useCallback(
+    (path: CollectionKey[], value: unknown) => {
+      commitDocument(updateDataObject(dataRef.current, path, value, 'update').newData)
+    },
+    [commitDocument]
+  )
+
+  // Prepare a commit for any op: compute `newData`, the `onUpdate` input, and
+  // the optimistic `apply` + per-path `revert` thunks. `revert` reads the LIVE
+  // doc so a late failure restores the right node without clobbering concurrent
+  // commits to other paths (an edit re-sets the old value; add/delete invert;
+  // move restores the pre-move doc — see the `move` case).
+  const buildCommit = useCallback((request: CommitRequest): BuiltCommit | null => {
+    const data = dataRef.current
+    const rootName = rootNameRef.current
+    const sort = sortRef.current
+    const commitData = commitDocument
+    const { op, path } = request
+
+    switch (op) {
+      case 'edit': {
+        const { newData, currentValue, newValue } = updateDataObject(data, path, request.value, 'update')
+        const nodeData = buildNodeData(data, path, rootName, sort)
+        return {
+          input: { ...nodeData, newData, event: 'edit', newValue } as UpdateFunctionProps,
+          nodeData,
+          isNoOp: currentValue === newValue,
+          apply: () => commitData(newData),
+          revert: () =>
+            commitData(updateDataObject(dataRef.current, path, currentValue, 'update').newData),
+        }
+      }
+      case 'delete': {
+        const { newData, currentValue } = updateDataObject(data, path, '', 'delete')
+        const nodeData = buildNodeData(data, path, rootName, sort)
+        return {
+          input: { ...nodeData, newData, event: 'delete' } as UpdateFunctionProps,
+          nodeData,
+          isNoOp: false,
+          apply: () => commitData(newData),
+          // Re-insert the removed value at its ORIGINAL position (a plain `add`
+          // appends the key to the end of the object). `nodeData.index` is the
+          // node's position in its parent. `insertBefore` is read for an object
+          // parent, `insert` for an array — passing both is harmless (each path
+          // ignores the other).
+          revert: () =>
+            commitData(
+              updateDataObject(dataRef.current, path, currentValue, 'add', {
+                insert: true,
+                insertBefore: nodeData.index,
+              }).newData
+            ),
+        }
+      }
+      case 'add': {
+        // `path` is the collection; the new child lands at `[...path, key]`.
+        const childPath = [...path, request.key]
+        const { newData, newValue } = updateDataObject(
+          data,
+          childPath,
+          request.value,
+          'add',
+          request.options
+        )
+        // Event payload describes the committed child (post-add
+        // position/value).
+        const nodeData = buildNodeData(newData, childPath, rootName, sort)
+        return {
+          // The new node doesn't exist in `data` yet for the `onUpdate` input —
+          // build its position from `newData`, but describe the PRE-add state
+          // otherwise (value unset, size null, current parent + document).
+          input: {
+            ...nodeData,
+            value: undefined,
+            size: null,
+            parentData: (extract(data, path) ?? null) as object | null,
+            fullData: data,
+            newData,
+            event: 'add',
+            newValue,
+          } as UpdateFunctionProps,
+          nodeData,
+          isNoOp: false,
+          apply: () => commitData(newData),
+          revert: () => commitData(updateDataObject(dataRef.current, childPath, '', 'delete').newData),
+        }
+      }
+      case 'rename': {
+        const parentPath = path.slice(0, -1)
+        const oldKey = path[path.length - 1]
+        const { newKey } = request
+        const parentData = extract(data, parentPath) as Record<string, unknown>
+        const renamedParent = Object.fromEntries(
+          Object.entries(parentData).map(([k, v]) => (k === oldKey ? [newKey, v] : [k, v]))
+        )
+        // `updateDataObject` handles the root case (`parentPath === []`).
+        const { newData } = updateDataObject(data, parentPath, renamedParent, 'update')
+        const nodeData = buildNodeData(data, path, rootName, sort)
+        return {
+          input: { ...nodeData, newData, event: 'rename', newKey } as UpdateFunctionProps,
+          nodeData,
+          // A same-key rename (unchanged) is a no-op: the engine fires
+          // `commitRename` and skips `onUpdate`, matching how an unchanged value
+          // edit closes via `commitEdit`.
+          isNoOp: oldKey === newKey,
+          apply: () => commitData(newData),
+          // Restore the parent with its original key order.
+          revert: () =>
+            commitData(updateDataObject(dataRef.current, parentPath, parentData, 'update').newData),
+          extra: { oldKey, newKey },
+        }
+      }
+      case 'move': {
+        // Delete source + add at target, combined into one commit (the old
+        // `onMove`). A combined op can't be per-path-reversed, so `revert`
+        // restores the pre-move document (the rare optimistic-move-then-fail).
+        const sourcePath = path
+        const { path: destPath, position } = request.to
+        const preMove = data
+        const { newData: deletedData, currentValue } = updateDataObject(data, sourcePath, '', 'delete')
+        const originalKey = sourcePath.slice(-1)[0]
+        const targetPath = destPath.slice(0, -1)
+        const insertPos = destPath.slice(-1)[0]
+        let targetKey =
+          typeof insertPos === 'number'
+            ? position === 'above'
+              ? insertPos
+              : insertPos + 1
+            : typeof originalKey === 'number'
+            ? `arr_${originalKey}`
+            : originalKey
+        const sourceBase = sourcePath.slice(0, -1).join('.')
+        const destBase = destPath.slice(0, -1).join('.')
+        if (
+          sourceBase === destBase &&
+          typeof originalKey === 'number' &&
+          typeof targetKey === 'number' &&
+          originalKey < targetKey
+        ) {
+          targetKey -= 1
+        }
+        const insertOptions =
+          typeof targetKey === 'number'
+            ? { insert: true }
+            : position === 'above'
+            ? { insertBefore: insertPos }
+            : { insertAfter: insertPos }
+        const landingPath = [...targetPath, targetKey]
+        const { newData } = updateDataObject(
+          deletedData,
+          landingPath,
+          currentValue,
+          'add',
+          insertOptions as UpdateOptions
+        )
+        const nodeData = buildNodeData(data, sourcePath, rootName, sort)
+        return {
+          input: { ...nodeData, newData, event: 'move', newPath: landingPath } as UpdateFunctionProps,
+          nodeData,
+          isNoOp: false,
+          apply: () => commitData(newData),
+          revert: () => commitData(preMove),
+        }
+      }
     }
+  }, [commitDocument])
 
-    const returnTuple = isUpdateReturnTuple(result) ? result : ['error', result]
-    const [type, resultValue] = returnTuple
-
-    if (type === 'error') {
-      setData(input.currentData)
-      return resultValue === false ? translate('ERROR_UPDATE', nodeData) : String(resultValue)
-    }
-
-    setData(resultValue)
-  }
-
-  const onEdit: InternalUpdateFunction = async (value, path) => {
-    const { currentData, newData, currentValue, newValue } = updateDataObject(
-      data,
-      path,
-      value,
-      'update'
-    )
-    if (currentValue === newValue) return
-
-    return await handleEdit(srcEdit, {
-      currentData,
-      newData,
-      currentValue,
-      newValue,
-      name: path.slice(-1)[0],
-      path,
-    })
-  }
-
-  const onDelete: InternalUpdateFunction = async (value, path) => {
-    const { currentData, newData, currentValue, newValue } = updateDataObject(
-      data,
-      path,
-      value,
-      'delete'
-    )
-
-    return await handleEdit(srcDelete, {
-      currentData,
-      newData,
-      currentValue,
-      newValue,
-      name: path.slice(-1)[0],
-      path,
-    })
-  }
-
-  const onAdd: InternalUpdateFunction = async (value, path, options) => {
-    const { currentData, newData, currentValue, newValue } = updateDataObject(
-      data,
-      path,
-      value,
-      'add',
-      options
-    )
-
-    return await handleEdit(srcAdd, {
-      currentData,
-      newData,
-      currentValue,
-      newValue,
-      name: path.slice(-1)[0],
-      path,
-    })
-  }
-
-  // "onMove" is just a "Delete" followed by an "Add", but we combine into a
-  // single "action" and only run one "onUpdate", which also means it'll be
-  // registered as a single event in the "Undo" queue.
-  // If either action returns an error, we reset the data the same way we do
-  // when a single action returns error.
-  const onMove = async (
-    sourcePath: CollectionKey[] | null,
-    destPath: CollectionKey[],
-    position: 'above' | 'below'
-  ) => {
-    if (sourcePath === null) return
-    const { currentData, newData, currentValue } = updateDataObject(data, sourcePath, '', 'delete')
-
-    // Immediate key of the item being moved
-    const originalKey = sourcePath.slice(-1)[0]
-    // Where it's going
-    const targetPath = destPath.slice(0, -1)
-    // The key in the target path to insert before or after
-    const insertPos = destPath.slice(-1)[0]
-
-    let targetKey =
-      typeof insertPos === 'number' // Moving TO an array
-        ? position === 'above'
-          ? insertPos
-          : insertPos + 1
-        : typeof originalKey === 'number'
-        ? `arr_${originalKey}` // Moving FROM an array, so needs a key
-        : originalKey // Moving from object to object
-
-    const sourceBase = sourcePath.slice(0, -1).join('.')
-    const destBase = destPath.slice(0, -1).join('.')
-
-    if (
-      sourceBase === destBase &&
-      typeof originalKey === 'number' &&
-      typeof targetKey === 'number' &&
-      originalKey < targetKey
-    ) {
-      targetKey -= 1
-    }
-
-    const insertOptions =
-      typeof targetKey === 'number'
-        ? { insert: true }
-        : position === 'above'
-        ? { insertBefore: insertPos }
-        : { insertAfter: insertPos }
-
-    const { newData: addedData, newValue: addedValue } = updateDataObject(
-      newData,
-      [...targetPath, targetKey],
-      currentValue,
-      'add',
-      insertOptions as UpdateOptions
-    )
-
-    return await handleEdit(srcEdit, {
-      currentData,
-      newData: addedData,
-      currentValue,
-      newValue: addedValue,
-      name: destPath.slice(-1)[0],
-      path: destPath,
-    })
-  }
-
-  const restrictEditFilter = useMemo(
-    () => getFilterFunction(restrictEdit, viewOnly),
-    [restrictEdit, viewOnly]
+  // Runs the consumer's `onUpdate` and normalises its raw return to the
+  // canonical outcome the commit engine acts on — including the localised,
+  // event-specific reject message (so it matches the `onError` code the node
+  // surfaces). This is the old synchronous result-protocol, minus `setData`
+  // (now the engine's job).
+  const runUpdate = useCallback(
+    async (input: UpdateFunctionProps, control: UpdateControl): Promise<UpdateOutcome> => {
+      const code = ERROR_CODE[input.event]
+      const defaultMessage = () =>
+        translateRef.current(ERROR_MESSAGE_KEY[input.event], rootNodeDataRef.current)
+      let result
+      try {
+        result = await onUpdateRef.current(input, control)
+      } catch (err) {
+        // Rejected promise → treat as a reject; surface the thrown message if
+        // present (also stops it escaping as an unhandled rejection).
+        const message =
+          err instanceof Error && err.message
+            ? err.message
+            : typeof err === 'string' && err
+            ? err
+            : defaultMessage()
+        return { status: 'error', error: { code, message } }
+      }
+      if (result === false) return { status: 'error', error: { code, message: defaultMessage() } }
+      if (result === null) return { status: 'cancel' }
+      if (result && typeof result === 'object') {
+        if (result.error !== undefined)
+          return typeof result.error === 'string'
+            ? { status: 'error', error: { code, message: result.error } }
+            : { status: 'error', error: result.error }
+        // A key set to `undefined` counts as "no override for this key" (not
+        // "override to undefined") — consistent with the protocol's top-level
+        // "undefined/void = proceed" and the `error` check above. Overriding a
+        // node *to* undefined isn't supported here; `null` overrides work.
+        const hasData = result.data !== undefined
+        const hasValue = result.value !== undefined
+        // Returning both is a mistake — `data` (whole-document) wins, `value` is
+        // ignored. Warn so it's caught at dev time.
+        if (hasData && hasValue)
+          console.warn(
+            'json-edit-react: onUpdate returned both { value } and { data }; ' +
+              '{ data } (whole-document) takes precedence and { value } is ignored.'
+          )
+        // `{ data }` replaces the whole document — apply at the root path.
+        if (hasData) return { status: 'override', value: result.data as JsonData, path: [] }
+        // `{ value }` is the edited node's value — apply at its path. Only
+        // meaningful for `edit`/`add` (the node has a value); for
+        // `rename`/`move`/`delete` it has no target, so ignore it and commit
+        // normally. For `add`, `input.path` is the new child's full path.
+        if (hasValue && (input.event === 'edit' || input.event === 'add'))
+          return { status: 'override', value: result.value as JsonData, path: input.path }
+      }
+      return { status: 'commit' }
+    },
+    []
   )
-  const restrictDeleteFilter = useMemo(
-    () => getFilterFunction(restrictDelete, viewOnly),
-    [restrictDelete, viewOnly]
+
+  // The commit primitives handed to the EditingProvider via `commitRef`.
+  // Assigned every render (same bridge pattern as `buildNodeDataFromPathRef`);
+  // the store reads it only at event time.
+  const commitPrimitives = useMemo<CommitPrimitives>(
+    () => ({
+      // `undefined` when the consumer supplied no `onUpdate` (it defaulted to
+      // NOOP) — the engine then skips the settlement phase (no `update*`).
+      runUpdate: onUpdate === NOOP ? undefined : runUpdate,
+      buildCommit,
+      applyValue,
+    }),
+    [runUpdate, buildCommit, applyValue, onUpdate]
   )
-  const restrictAddFilter = useMemo(
-    () => getFilterFunction(restrictAdd, viewOnly),
-    [restrictAdd, viewOnly]
-  )
-  const restrictDragFilter = useMemo(
-    () => getFilterFunction(restrictDrag, viewOnly),
-    [restrictDrag, viewOnly]
-  )
+  commitRef.current = commitPrimitives
+
+  const allowEditFilter = useMemo(() => getFilterFunction(allowEdit), [allowEdit])
+  const allowDeleteFilter = useMemo(() => getFilterFunction(allowDelete), [allowDelete])
+  const allowAddFilter = useMemo(() => getFilterFunction(allowAdd), [allowAdd])
+  const allowDragFilter = useMemo(() => getFilterFunction(allowDrag), [allowDrag])
   const searchFilter = useMemo(() => getSearchFilter(searchFilterInput), [searchFilterInput])
+
+  // Whole-tree visibility + per-collection visible-child counts, computed
+  // once per (data, debouncedSearchText, searchFilter) change. Surfaced to
+  // nodes via FilterStateProvider — see src/contexts/FilterStateProvider.tsx.
+  // `null` when no filter is active (the consumer hooks fast-path).
+  const filterState = useMemo(
+    () => computeFilterState(nodeData, searchFilter, debouncedSearchText),
+    // `nodeData` is rebuilt every render from `data`/`rootName`, but the walk
+    // only depends on the underlying `data` reference. Listing `nodeData`
+    // would recompute on every render; we want it tied to actual inputs.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data, debouncedSearchText, searchFilter, rootName]
+  )
 
   const fullKeyboardControls = useMemo(
     () => getFullKeyboardControlMap(keyboardControls),
@@ -315,10 +562,10 @@ const Editor: React.FC<JsonEditorProps> = ({
     }
   }, [customNodeDefinitions, jsonParse])
 
-  const editConfirmRef = useRef<HTMLDivElement>(null)
-  useTriggers(externalTriggers, editConfirmRef)
+  const editConfirmRef = useRef<HTMLButtonElement>(null)
+  const { setCollapseState } = useCollapse()
 
-  // Common "sort" method for ordering nodes, based on the `keySort` prop
+  // Common "sort" method for ordering nodes, based on the `sortKeys` prop
   // - If it's false (the default), we do nothing
   // - If true, use default array sort on the node's key
   // - Otherwise sort via the defined comparison function
@@ -328,10 +575,10 @@ const Editor: React.FC<JsonEditorProps> = ({
   //   expected by the comparison function
   const sort = useCallback(
     <T,>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => {
-      if (keySort === false) return
+      if (sortKeys === false) return
 
-      if (typeof keySort === 'function') {
-        arr.sort((a, b) => keySort(nodeMap(a), nodeMap(b)))
+      if (typeof sortKeys === 'function') {
+        arr.sort((a, b) => sortKeys(nodeMap(a), nodeMap(b)))
         return
       }
 
@@ -343,45 +590,130 @@ const Editor: React.FC<JsonEditorProps> = ({
         return 0
       })
     },
-    [keySort]
+    [sortKeys]
+  )
+  // Late-assigned (see the ref declaration above): the stable update handlers
+  // read the live comparator from here when building a node's `NodeData`.
+  sortRef.current = sort
+
+  // Populate the bridge the editing/collapse providers read at event time to
+  // build a node's flat `NodeData` from just a path (they're ancestors of
+  // this component, so they can't reach `getLatestData`/`sort` directly).
+  // Stable over `getLatestData`; reads `rootName`/`sort` from refs so the
+  // identity holds.
+  const buildNodeDataFromPath = useCallback<BuildNodeDataFromPath>(
+    (path) => buildNodeData(getLatestData(), path, rootNameRef.current, sortRef.current),
+    [getLatestData]
+  )
+  buildNodeDataFromPathRef.current = buildNodeDataFromPath
+
+  // Imperative handle (`editorRef` prop). UI-interactions only (§17): open a
+  // value-edit session, commit/cancel it, or collapse nodes — never mutates
+  // data directly (the consumer owns `data`/`setData`). Every method reads
+  // the LIVE tree at call time, never a frozen render closure (per
+  // PERF-ARCHITECTURE). Declared after `sort` because `startEdit`'s
+  // restriction pre-check rebuilds the target's NodeData via it.
+  useImperativeHandle(
+    editorRef,
+    () => {
+      // A sentinel lets us detect a gone path (`extract` returns it instead
+      // of throwing), so a stale target reports `PATH_NOT_FOUND` rather than
+      // crashing.
+      const SENTINEL = Symbol('path-missing')
+      return {
+        collapse: (state) => setCollapseState(state),
+
+        // Open a value-edit session, or report why it couldn't:
+        // `'PATH_NOT_FOUND'` if the target is gone, `'RESTRICTED'` if
+        // `allowEdit` blocks it (unless `overrideRestrictions`). `force: true`
+        // skips the node's own re-check and auto-reveals a target collapsed
+        // below the mount frontier.
+        startEdit: ({ path, overrideRestrictions = false }) => {
+          if (extract(getLatestData(), path, SENTINEL) === SENTINEL) return 'PATH_NOT_FOUND'
+          if (
+            !overrideRestrictions &&
+            !allowEditFilter(buildNodeData(getLatestData(), path, rootName, sort))
+          )
+            return 'RESTRICTED'
+          openEditSession(path, { force: true })
+          return true
+        },
+
+        // Commit the open session by clicking the live confirm button, then
+        // exit. No-op when there's no live confirm control to click (no
+        // session, or a session whose confirm control isn't mounted/tracked
+        // here): the unconditional `cancelEditSession()` would otherwise tear
+        // down a session we never committed (e.g. silently cancelling a
+        // key-rename).
+        confirm: () => {
+          if (!editConfirmRef.current) return
+          editConfirmRef.current.click()
+          // A rejected confirm (invalid JSON on a collection, a throwing
+          // `fromStandardType` on a custom node) leaves its session in 'editing'
+          // phase with an inline error — keep it open rather than tearing it
+          // down. A committed session leaves no active entry, and a held one
+          // is inert against cancel, so the trailing cancel only ever
+          // affected rejected sessions.
+          if (getEditingSnapshot().active?.phase === 'editing') return
+          cancelEditSession()
+        },
+
+        cancel: () => cancelEditSession(),
+      }
+    },
+    [
+      setCollapseState,
+      openEditSession,
+      cancelEditSession,
+      getEditingSnapshot,
+      allowEditFilter,
+      getLatestData,
+      rootName,
+      sort,
+    ]
   )
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
+
+  // Stable object so it doesn't churn the node prop comparison every render.
+  const insertAtTopOption = useMemo(
+    () => ({
+      object: insertAtTop === true || insertAtTop === 'object',
+      array: insertAtTop === true || insertAtTop === 'array',
+    }),
+    [insertAtTop]
+  )
 
   const otherProps = {
     mainContainerRef: mainContainerRef as React.MutableRefObject<Element>,
     name: rootName,
     nodeData,
-    onEdit,
-    onDelete,
-    onAdd,
-    onChange,
-    onError,
-    onEditEvent,
+    getLatestData,
+    onChange: onChangeStable,
+    onError: onErrorStable,
+    onEditEvent: onEditEventStable,
     showErrorMessages,
-    onMove,
     showCollectionCount,
     collapseFilter,
     collapseAnimationTime,
-    restrictEditFilter,
-    restrictDeleteFilter,
-    restrictAddFilter,
-    restrictTypeSelection,
-    restrictDragFilter,
+    allowEditFilter,
+    allowDeleteFilter,
+    allowAddFilter,
+    allowTypeSelection,
+    allowDragFilter,
     canDragOnto: false, // can't drag onto outermost container
-    searchFilter,
-    searchText: debouncedSearchText,
-    enableClipboard,
-    keySort,
+    showClipboardButton,
+    onCopy: onCopyStable,
+    sortKeys,
     sort,
-    showArrayIndices,
-    arrayIndexFromOne,
+    showArrayIndexes,
+    arrayIndexStart,
     showStringQuotes,
     showIconTooltips,
     indent,
     defaultValue,
     newKeyOptions,
-    stringTruncate,
+    stringTruncateLength,
     translate,
     customNodeDefinitions,
     customNodeData,
@@ -390,25 +722,23 @@ const Editor: React.FC<JsonEditorProps> = ({
     jsonParse: jsonParseReplacement,
     jsonStringify: jsonStringifyReplacement,
     TextEditor,
-    errorMessageTimeout,
+    Select,
+    errorDisplayTime,
     handleKeyboard: handleKeyboardCallback,
     keyboardControls: fullKeyboardControls,
-    insertAtTop: {
-      object: insertAtTop === true || insertAtTop === 'object',
-      array: insertAtTop === true || insertAtTop === 'array',
-    },
-    onCollapse,
+    insertAtTop: insertAtTopOption,
+    onCollapse: onCollapseStable,
     editConfirmRef,
     collapseClickZones,
   }
 
-  const mainContainerStyles = { ...getStyles('container', nodeData), minWidth, maxWidth }
+  const mainContainerStyles = { ...getStyles('container', nodeData), ...cssVars, minWidth, maxWidth }
 
   // Props fontSize takes priority over theme, but we fall back on a default of
   // 16 (from CSS sheet) if neither are provided. Having a defined base size
   // ensures the component doesn't have its fontSize affected from the parent
   // environment
-  mainContainerStyles.fontSize = rootFontSize ?? mainContainerStyles.fontSize
+  mainContainerStyles.fontSize = baseFontSize ?? mainContainerStyles.fontSize
 
   return (
     <div
@@ -417,33 +747,51 @@ const Editor: React.FC<JsonEditorProps> = ({
       className={`jer-editor-container ${className ?? ''}`}
       style={mainContainerStyles}
     >
-      {isCollection(data) && !customNodeData.renderCollectionAsValue ? (
-        <CollectionNode data={data} {...otherProps} />
-      ) : (
-        <ValueNodeWrapper data={data as ValueData} showLabel {...otherProps} />
-      )}
+      <FilterStateProvider value={filterState}>
+        {isCollection(data) && !customNodeData.renderCollectionAsValue ? (
+          <CollectionNode data={data} {...otherProps} />
+        ) : (
+          <ValueNodeWrapper data={data as ValueData} showLabel {...otherProps} />
+        )}
+      </FilterStateProvider>
     </div>
   )
 }
 
-export const JsonEditor: React.FC<JsonEditorProps> = (props) => {
-  const [docRoot, setDocRoot] = useState<HTMLElement>()
+export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.ReactElement {
+  // Shared bridge (load-bearing, by design — not a leak). The §16 perf work
+  // put the editing store and collapse state in ancestor providers so nodes
+  // can subscribe to slivers via `useSyncExternalStore` without re-rendering
+  // the tree. Those providers fire some observer events imperatively —
+  // `onEditEvent` start/cancel (EditingProvider) and the once-per-command
+  // `onCollapse` broadcast (CollapseProvider) — but they sit ABOVE `Editor`,
+  // which owns the data, so they can't build a node's `NodeData` themselves.
+  // `Editor` writes this ref each render (below); the providers read it at
+  // event time to turn a path into flat `NodeData`. (The node-driven events —
+  // confirm*/delete/move, user-click collapse — fire straight from the node
+  // and never touch this.)
+  const buildNodeDataFromPathRef = useRef<BuildNodeDataFromPath | undefined>(undefined)
+  // Same bridge pattern: the inner `Editor` (data owner) populates this with
+  // the commit primitives the EditingProvider's engine calls at event time.
+  const commitRef = useRef<CommitPrimitives | undefined>(undefined)
 
-  // We want access to the global document.documentElement object, but can't
-  // access it directly when used with SSR. So we set it inside a `useEffect`,
-  // which won't run server-side (it'll just be undefined) until client
-  // hydration
-  useEffect(() => {
-    const root = document.documentElement
-    setDocRoot(root)
-  }, [])
-
-  if (!docRoot) return null
+  // Cast at the boundary — the internal Editor and tree operate on `JsonData`,
+  // generics only flow to the public surface for consumer typing.
+  const innerProps = props as unknown as JsonEditorProps<JsonData>
 
   return (
-    <ThemeProvider theme={props.theme ?? defaultTheme} icons={props.icons} docRoot={docRoot}>
-      <TreeStateProvider onEditEvent={props.onEditEvent} onCollapse={props.onCollapse}>
-        <Editor {...props} />
+    <ThemeProvider theme={innerProps.theme ?? defaultTheme}>
+      <TreeStateProvider
+        onEditEvent={innerProps.onEditEvent}
+        onCollapse={innerProps.onCollapse}
+        buildNodeDataFromPathRef={buildNodeDataFromPathRef}
+        commitRef={commitRef}
+      >
+        <Editor
+          {...innerProps}
+          buildNodeDataFromPathRef={buildNodeDataFromPathRef}
+          commitRef={commitRef}
+        />
       </TreeStateProvider>
     </ThemeProvider>
   )
@@ -489,10 +837,8 @@ const updateDataObject = (
 }
 
 const getFilterFunction = (
-  propValue: boolean | number | FilterFunction,
-  viewOnly?: boolean
+  propValue: boolean | number | FilterFunction
 ): FilterFunction => {
-  if (viewOnly) return () => true
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
   return propValue
@@ -513,12 +859,6 @@ const getSearchFilter = (
       matchNode(inputData, searchText) || matchNodeKey(inputData, searchText)
   }
   return searchFilterInput
-}
-
-const isUpdateReturnTuple = (
-  input: UpdateFunctionReturn | string | boolean | undefined
-): input is UpdateFunctionReturn => {
-  return Array.isArray(input) && input.length === 2 && ['error', 'value'].includes(input[0])
 }
 
 // Combines all the replacer or reviver functions from the Custom node

@@ -28,5 +28,4 @@
     "noUncheckedSideEffectImports": true
   },
   "include": ["vite.config.ts"]
-  // "exclude": ["src/json-edit-react/**/*"]
 }
