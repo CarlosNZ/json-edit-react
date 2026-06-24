@@ -1,6 +1,6 @@
 {
   "name": "@json-edit-react/themes",
-  "version": "0.1.0",
+  "version": "0.9.0-beta.0",
   "description": "Pre-built themes for json-edit-react",
   "license": "MIT",
   "repository": {

@@ -1,6 +1,6 @@
 {
   "name": "@json-edit-react/utils",
-  "version": "0.0.0",
+  "version": "0.9.0-beta.0",
   "description": "Utility hooks and helpers for json-edit-react",
   "license": "MIT",
   "repository": {
