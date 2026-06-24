@@ -83,7 +83,15 @@ interface SplitPaneProps {
   // Identifies the page so each example persists its own layout (usually the
   // example slug). Required — different examples have different ideal splits.
   storageId: string
+  // Opt-in: keep the right pane pinned in view (position: sticky) as the page
+  // scrolls past a tall left pane. For examples whose right pane is a control
+  // panel rather than a code block. No effect in the stacked (narrow) layout.
+  stickyRight?: boolean
 }
+
+// When stickyRight is set, the pinned pane sits this far below the viewport top
+// (a small gap, since the page has no fixed header to clear).
+const STICKY_TOP_PX = 16
 
 // Two resizable panes inside a wider track. By default the band is centred at
 // the header's width with empty margins either side. Three handles — the band's
@@ -92,7 +100,7 @@ interface SplitPaneProps {
 // code to reduce wrapping). The chosen layout persists across pages and visits.
 // Below `lg` the panes stack and the handles disappear (no room to split). The
 // grip colour is read from the example palette so it reads on any theme.
-export const SplitPane = ({ left, right, storageId }: SplitPaneProps) => {
+export const SplitPane = ({ left, right, storageId, stickyRight = false }: SplitPaneProps) => {
   const palette = useExamplePalette()
   const color = palette.itemCount ?? 'gray.400'
   const storageKey = storageKeyFor(storageId)
@@ -250,8 +258,20 @@ export const SplitPane = ({ left, right, storageId }: SplitPaneProps) => {
         {left}
       </Box>
       {handle('x2', 'Resize editor and code')}
-      <Box flex={`0 0 ${codeW}px`} minW={0}>
-        {right}
+      <Box
+        flex={`0 0 ${codeW}px`}
+        minW={0}
+        // Stretch the column to the full row height (matching a tall left pane)
+        // so the sticky child has room to travel; otherwise hug the content.
+        alignSelf={stickyRight ? 'stretch' : undefined}
+      >
+        {stickyRight ? (
+          <Box position="sticky" top={`${STICKY_TOP_PX}px`}>
+            {right}
+          </Box>
+        ) : (
+          right
+        )}
       </Box>
       {handle('x3', 'Resize right edge')}
       <Box flex="1 1 0" aria-hidden />

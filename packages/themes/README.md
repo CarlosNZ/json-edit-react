@@ -1,9 +1,9 @@
 # @json-edit-react/themes
 
-Pre-built themes for [json-edit-react](https://github.com/CarlosNZ/json-edit-react).
+Pre-built themes for **[json-edit-react](https://github.com/CarlosNZ/json-edit-react)**.
 
 > [!IMPORTANT]
-> Required **json-edit-react** version 2.x
+> Requires **json-edit-react** version 2.x
 
 ## Install
 

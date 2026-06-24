@@ -185,6 +185,8 @@ export default function FilterToolkit() {
   return (
     <SplitPane
       storageId="filter-toolkit"
+      // The control panel stays pinned while you scroll the (tall) tree.
+      stickyRight
       left={
         <Box className="block-shadow" borderRadius="md">
           <JsonEditor
@@ -203,6 +205,7 @@ export default function FilterToolkit() {
             searchFilter={searchText ? activeSearch.filter : undefined}
             // Bind the active predicate to allowEdit when the toggle is on.
             allowEdit={lockNonMatching && activeRecipe ? activeRecipe.predicate : undefined}
+            collapse={false}
           />
         </Box>
       }
