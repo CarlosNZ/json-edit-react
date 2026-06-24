@@ -62,6 +62,25 @@ pnpm publish --tag beta --no-git-checks
 
 There's no one-shot "publish all betas" command by design (Rule 1 rules out `changeset publish` for beta) — run the sequence above.
 
+## Incremental beta — tweak one package, ship a new beta
+
+The quick inner loop. No changeset, no `pnpm install`, no separate build (publish reruns `prepack`). The only requirement is a fresh version number — npm rejects republishing the same one.
+
+```sh
+# Sub-package: bump the prerelease (0.9.0-beta.0 -> 0.9.0-beta.1), then publish.
+(cd packages/<name> && npm version prerelease --preid=beta --no-git-tag-version)
+(cd packages/<name> && \
+  node ../../scripts/with-npm-readme.mjs . -- \
+  pnpm publish --tag beta --access public --no-git-checks)
+
+# Core: bump the root version, then build + stage + publish from root.
+npm version prerelease --preid=beta --no-git-tag-version
+pnpm build-package && pnpm publish --tag beta --no-git-checks
+#   SKIP_TESTS=1 pnpm build-package skips the jest suite (lint still runs).
+```
+
+A sub-package doesn't need core touched — it re-freezes its `json-edit-react` peer range to core's current `version` field, already a valid beta. Committing is optional for a code-only tweak (the wrapper's clean-check looks at the README only; `--no-git-checks` allows a dirty tree) — but commit if the tweak touched that package's README, and ideally so each published beta maps to a commit.
+
 ## Full release → `latest` (Changesets, all together)
 
 ```sh
@@ -110,4 +129,6 @@ npm install react react-dom \
 - **`pnpm -C <dir> publish` is broken** on pnpm 10.8.x (leaks the dir + command word into npm → `EUSAGE`). Use the `(cd <dir> && pnpm publish …)` subshell form. `-C`/`--filter` are fine for `build` and `pack`.
 - **The wrapper needs each target README committed and clean** — it restores via `git checkout`, so an uncommitted edit would either abort the run or be clobbered. Commit/stash README edits before publishing.
 - **`pnpm pack-all` swaps the READMEs**, so `pack-output/<name>/package/README.md` mirrors what publishes — the easiest place to inspect the final READMEs. It needs the sub-package READMEs committed (clean); pass `SKIP_NPM_README_SWAP=1` to pack without the swap.
+- **A README-only change still needs a new published version** — npm has no in-place README edit; the README is baked into each version. Bump the beta number and re-publish (betas are cheap). To inspect locally without publishing, use `preview-publish` or `pack-all` and read the tarball / `pack-output/`.
+- **The default npm page shows the `latest`-tagged version's README, not `beta`.** Sub-packages have no stable release, so their `latest` *is* the beta → the default page shows the converted beta README. But core's `latest` is `1.30.1`, so `npmjs.com/package/json-edit-react` shows the **v1** README until `2.0.0` ships to `latest`; the v2-beta README lives at `npmjs.com/package/json-edit-react/v/2.0.0-beta.x`. Republishing a core beta won't change the main page.
 - **Never run `pnpm release` / `pnpm publish` / `pnpm changeset publish` unless explicitly intended** — there's no `changeset publish --dry-run`; preview with `pnpm preview-publish` per package and `pnpm changeset status`.
