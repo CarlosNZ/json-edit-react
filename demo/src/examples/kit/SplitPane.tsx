@@ -84,9 +84,14 @@ interface SplitPaneProps {
   // example slug). Required — different examples have different ideal splits.
   storageId: string
   // Opt-in: keep the right pane pinned in view (position: sticky) as the page
-  // scrolls past a tall left pane. For examples whose right pane is a control
-  // panel rather than a code block. No effect in the stacked (narrow) layout.
-  stickyRight?: boolean
+  // scrolls past a tall left pane. No effect in the stacked (narrow) layout.
+  //  - `true`  — sticky positioning only; the pane sizes itself (e.g. a code
+  //    block that caps its own height and scrolls its body).
+  //  - `'scroll'` — also cap the pane at the viewport and scroll it internally
+  //    when it's taller. For "dumb" content like a control panel that won't
+  //    size itself. (Such content must portal any popovers so this pane's
+  //    overflow doesn't clip them.)
+  stickyRight?: boolean | 'scroll'
 }
 
 // When stickyRight is set, the pinned pane sits this far below the viewport top
@@ -266,7 +271,15 @@ export const SplitPane = ({ left, right, storageId, stickyRight = false }: Split
         alignSelf={stickyRight ? 'stretch' : undefined}
       >
         {stickyRight ? (
-          <Box position="sticky" top={`${STICKY_TOP_PX}px`}>
+          <Box
+            position="sticky"
+            top={`${STICKY_TOP_PX}px`}
+            // 'scroll' panes cap at the viewport and scroll their own overflow;
+            // `true` panes size themselves, so leave them unconstrained.
+            {...(stickyRight === 'scroll'
+              ? { maxH: `calc(100vh - ${2 * STICKY_TOP_PX}px)`, overflowY: 'auto' }
+              : {})}
+          >
             {right}
           </Box>
         ) : (

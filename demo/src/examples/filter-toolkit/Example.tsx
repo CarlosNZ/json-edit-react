@@ -19,6 +19,7 @@ import {
   PopoverContent,
   PopoverHeader,
   PopoverTrigger,
+  Portal,
   Select,
   Switch,
   Text,
@@ -85,28 +86,32 @@ const FilterCode = ({ code, longhand, ...rest }: { code: string; longhand: strin
           Without the kit
         </Button>
       </PopoverTrigger>
-      <PopoverContent w="auto" maxW="min(92vw, 460px)">
-        <PopoverArrow />
-        <PopoverCloseButton />
-        <PopoverHeader fontWeight="bold" fontSize="sm">
-          Without the kit
-        </PopoverHeader>
-        <PopoverBody>
-          <Text fontSize="xs" mb={2} color="gray.600">
-            What you'd write instead:
-          </Text>
-          <Code
-            display="block"
-            whiteSpace="pre-wrap"
-            wordBreak="break-word"
-            p={3}
-            borderRadius="md"
-            fontSize="sm"
-          >
-            {longhand}
-          </Code>
-        </PopoverBody>
-      </PopoverContent>
+      {/* Portalled so the sticky control panel's overflow (it scrolls
+          internally when taller than the viewport) can't clip the popover. */}
+      <Portal>
+        <PopoverContent w="auto" maxW="min(92vw, 460px)">
+          <PopoverArrow />
+          <PopoverCloseButton />
+          <PopoverHeader fontWeight="bold" fontSize="sm">
+            Without the kit
+          </PopoverHeader>
+          <PopoverBody>
+            <Text fontSize="xs" mb={2} color="gray.600">
+              What you'd write instead:
+            </Text>
+            <Code
+              display="block"
+              whiteSpace="pre-wrap"
+              wordBreak="break-word"
+              p={3}
+              borderRadius="md"
+              fontSize="sm"
+            >
+              {longhand}
+            </Code>
+          </PopoverBody>
+        </PopoverContent>
+      </Portal>
     </Popover>
     <Code
       display="block"
@@ -185,8 +190,9 @@ export default function FilterToolkit() {
   return (
     <SplitPane
       storageId="filter-toolkit"
-      // The control panel stays pinned while you scroll the (tall) tree.
-      stickyRight
+      // The control panel stays pinned while you scroll the (tall) tree, and
+      // scrolls internally when it's taller than the viewport.
+      stickyRight="scroll"
       left={
         <Box className="block-shadow" borderRadius="md">
           <JsonEditor
