@@ -36,18 +36,19 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 
 <img width="392" alt="screenshot" src="image/screenshot.png">
 
-## Optional Companion Packages  <!-- omit in toc -->
-
-- **THEMES**: [@json-edit-react/themes](https://www.npmjs.com/package/@json-edit-react/themes) — curated, ready-made [themes] (#themes)
-- **COMPONENTS**: [@json-edit-react/components](https://www.npmjs.com/package/@json-edit-react/components) - custom node components (links, date picker, etc.)
-- **UTILITIES**: [@json-edit-react/themes](https://www.npmjs.com/package/@json-edit-react/themes) — a collection of helpers and tools for extending and streamlining your **json-edit-react** experience
-
 > [!IMPORTANT]
 > This documentation is for V2 of **json-edit-react**, which is currently in beta. V1 docs are [here](https://github.com/CarlosNZ/json-edit-react).
 > 
 > If you're upgrading from V1, be sure to read the [migration guide](https://github.com/CarlosNZ/json-edit-react/blob/main/migration-guide.md).
 > 
 > 🎤️ Got feedback? [Open an issue](https://github.com/CarlosNZ/json-edit-react/issues), or [join the discussion](https://github.com/CarlosNZ/json-edit-react/discussions/198).
+
+## Optional Companion Packages  <!-- omit in toc -->
+
+- **THEMES**: [@json-edit-react/themes](https://www.npmjs.com/package/@json-edit-react/themes) — curated, ready-made [themes] (#themes)
+- **COMPONENTS**: [@json-edit-react/components](https://www.npmjs.com/package/@json-edit-react/components) - custom node components (links, date picker, etc.)
+- **UTILITIES**: [@json-edit-react/themes](https://www.npmjs.com/package/@json-edit-react/themes) — a collection of helpers and tools for extending and streamlining your **json-edit-react** experience
+
 
 <!-- NPM INTRO -->
 
@@ -1487,134 +1488,8 @@ This component is heavily inspired by [react-json-view](https://github.com/mac-s
 
 ## Changelog
 
-- **1.30.0**:
-  - New [`customKey`](#customising-the-key--keycomponent) slot on `CustomNodeDefinition` — a definition can now render its own component in the key position, for both value and collection nodes ([#235](https://github.com/CarlosNZ/json-edit-react/pull/235), originally suggested by [@drahoslove](https://github.com/drahoslove) in [#233](https://github.com/CarlosNZ/json-edit-react/pull/233))
-  - Internalise `extract` and `assign` utilities — package now has zero runtime dependencies ([#237](https://github.com/CarlosNZ/json-edit-react/pull/237))
-- **1.29.1**: Squashed a bug where a parent re-render would revert data mid-edit when editing a whole collection as text ([#234](https://github.com/CarlosNZ/json-edit-react/pull/234))
-- **1.29.0**: Option to display array indexes starting at "1" ([#62](https://github.com/CarlosNZ/json-edit-react/issues/62))
-- **1.28.2**: When switching data type, only keep editing if new type is primitive ([#216](https://github.com/CarlosNZ/json-edit-react/issues/216))
-- **1.28.1**: Fix left padding of root node when value is primitive ([#214](https://github.com/CarlosNZ/json-edit-react/issues/214))
-- **1.28.0**:
-  - (Optional) tooltips for icons ([#211](https://github.com/CarlosNZ/json-edit-react/pull/211))
-  - Call `onEditEvent` when starting/stopping editing of a *new* key ([#208](https://github.com/CarlosNZ/json-edit-react/issues/208))
-- **1.27.2**:
-  - Bug fix for ":" not rendering when key is `0`
-  - Slightly better detection of data type when copying value to clipboard text
-- **1.27.0**: 
-  - Option to handle custom collections as "Value" nodes ([#203](https://github.com/CarlosNZ/json-edit-react/issues/203))
-  - Put `EMPTY_STRING: "<empty string>"` into translations
-- **1.26.1**: Fix bug when submitting with keyboard after switching to `null` type ([#194](https://github.com/CarlosNZ/json-edit-react/pull/194))
-- **1.26.0**:
-  - Handle non-standard data types (e.g. `undefined`, `BigInt`) when stringifying/parsing JSON
-  - More custom components (now published as [`@json-edit-react/components`](https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components))
-- **1.25.6**:
-  - Expose a few more components and props to custom components
-  - Start building Custom Component library (separate to main package)
-- **1.25.4**: Don't treat Date objects as collections, so they can be handled by custom components (#187)[https://github.com/CarlosNZ/json-edit-react/issues/187]
-- **1.25.1**: Small bug fix for incorrect resetting of cancelled edits (#184)[https://github.com/CarlosNZ/json-edit-react/issues/184]
-- **1.25.0**:
-  - Implement [External control](#programmatic-control) via event callbacks and triggers ([#138](https://github.com/CarlosNZ/json-edit-react/issues/138), [#145](https://github.com/CarlosNZ/json-edit-react/issues/145))
-  - Define [enum](#enums) types ([#109](https://github.com/CarlosNZ/json-edit-react/issues/109))
-  - Define [`newKeyOptions`](#new-key-restrictions--default-values) to restrict adding new properties to a pre-defined list ([#95](https://github.com/CarlosNZ/json-edit-react/issues/95))
-- **1.24.0**:
-  - Option to access (and render) the original node (and its key) within a [Custom Node](#custom-nodes--components) ([#180](https://github.com/CarlosNZ/json-edit-react/issues/180))
-  - Cancelling edit after changing type correctly reverts to previous value ([#122](https://github.com/CarlosNZ/json-edit-react/issues/122))
-- **1.23.1**: Fix bug where you could collapse a node by clicking inside a "new key" input field [#175](https://github.com/CarlosNZ/json-edit-react/issues/175)
-- **1.23.0**:
-  - Add `viewOnly` prop as a shorthand for restricting all editing [#168](https://github.com/CarlosNZ/json-edit-react/issues/168)
-  - Add a toggle on the "..." of long strings so they can be expanded to full length in the UI [#172](https://github.com/CarlosNZ/json-edit-react/issues/172)
-- **1.22.5**: Fix for crash when trying to switch to object type if new data is rejected by `onUpdate` function [#169](https://github.com/CarlosNZ/json-edit-react/issues/169) (thanks @kyaw-t) [#170](https://github.com/CarlosNZ/json-edit-react/pulls/170)
-- **1.22.2**: Make `collapseAnimationTime` use local value rather than global CSS variable [#163](https://github.com/CarlosNZ/json-edit-react/issues/163)
-- **1.22.1**: Fix custom nodes not re-calculating condition when `data` changes
-- **1.22.0**:
-  - Option for [custom text/code editor](#replacing-the-textcode-editor--texteditor-codeeditor) when editing full JSON object [#157](https://github.com/CarlosNZ/json-edit-react/issues/157)
-  - Handle clipboard copy errors [#159](https://github.com/CarlosNZ/json-edit-react/pull/159) (thanks @dm-xai) [#160](https://github.com/CarlosNZ/json-edit-react/issues/160)
-- **1.21.1**: Users can now navigate between nodes using "Tab"/"Shift-Tab" key
-- **1.20.0**: Refactor out direct access of global `document` object, which allows component to work with server-side rendering
-- **1.19.2**:
-  - Boolean toggle key can be customised [#150](https://github.com/CarlosNZ/json-edit-react/issues/150)
-  - Pass `nodeData` to [custom buttons](#custom-buttons) [#146](https://github.com/CarlosNZ/json-edit-react/issues/146)
-- **1.19.0**: Built-in [themes](#using-a-prebuilt-theme-json-edit-reactthemes) must now be imported separately -- this improves tree-shaking to prevent unused themes being bundled with your build
-- **1.18.0**:
-  - Ability to [customise keyboard controls](#keyboard-control)
-  - Option to insert new values at the top
-- **1.17.0**: `defaultValue` function takes the new `key` as second parameter
-- **1.16.0**: Extend the "click" zone for collapsing nodes to the header bar and left margin (not just the collapse icon)
-- **1.15.12**:
-  - [Custom buttons](#custom-buttons)
-  - Misc small bug fixes
-- **1.15.7**:
-  - Small bug fix for `overflow: clip` setting based on animating
-  state
-  - Small tweak to outer bracket positioning
-- **1.15.5**: Bug fix for collapse icon being clipped when indent is low #104
-- **1.15.3**:
-  - Allow [UpdateFunction](#onupdate--accept-reject-transform) to return `true` to represent success
-  - Refactor collapse animation to improve lag and accuracy
-- **1.15.2**:
-  - Collapse animation timing is configurable (#96)
-  - Bug fix for non-responsive keyboard submit for boolean values (#97)
-- **1.15.0**: Remove ([JSON5](https://json5.org/)) from the package, and provided props for passing in *any* alternative JSON parsing and stringifying methods.
-- **1.14.0**:
-  - Allow [UpdateFunction](#onupdate--accept-reject-transform) to return a modified value, not just an error
-  - Add `setData` prop to discourage reliance on internal data [state management](#managing-state)
-  - Refactor state/event management to use less `useEffect` hooks
-- **1.13.3**: Bug fix for when root data value is `null` [#90](https://github.com/CarlosNZ/json-edit-react/issues/90)
-- **1.13.2**: Slightly better error handling when validating [JSON schema](#json-schema-validation)
-- **1.13.0**:
-  - [Drag-n-drop](#drag-and-drop-reordering) editing!
-  - Remove unnecessary dependency
-  - Refactor some duplicate code into common hook
-- **1.12.0**:
-  - Preserve editing mode when changing Data Type
-  - [`onError` callback](#onerror) available for custom error handling
-- **1.11.8**: Fix regression for empty data root name introduces in 1.11.7
-- **1.11.7**: Handle \<empty-string\> object keys / prevent duplicate keys
-- **1.11.3**: Bug fix for invalid state when changing type to Collection node
-- **1.11.0**:
-  - Improve CSS definitions to prevent properties from being overridden by the host environment's CSS
-  - Add `rootFontSize` prop to set the "base" size for the component
-- **1.10.2**:
-  - Fixes for text wrapping and content overlaps when values and inputs contain very long strings (#57, #58)
-  - Only allow one element to be edited at a time, and prevent collapsing when an inner element is being edited.
-- **1.9.0**:
-  - Increment number input using up/down arrow keys
-  - Option to display string values without "quotes"
-  - Add [`onChange` prop](#onchange--validating-each-keystroke) to allow validation/restriction of user input as they type
-  - Don't update `data` if user hasn't actually changed a value (prevents Undo from being unnecessarily triggered)
-  - Misc HTML warnings, React compatibility fixes
-- **1.8.0**: Further improvements/fixes to collection custom nodes, including additional  `wrapperElement` [prop](#collection-nodes)
-  - Add optional `id` prop
-- **1.7.2**:
-  - Fix and improve Custom nodes in *collections*
-  - Include `index` in Filter (and other) function input
-- **1.7.0**: Implement [Search/filtering](#search--filtering) of data visibility
-- **1.6.1**: Revert data state on Update Function error
-- **1.6.0**: Allow a function for `defaultValue` prop
-- **1.5.0**:
-  - Open/close all descendant nodes by holding "Alt"/"Option" while opening/closing a node
-- **1.4.0**:
-  - [Style functions](#customising-styles--the-theme-object) for context-dependent styling
-  - Handle "loose" ([JSON5](https://json5.org/)) JSON text input(e.g. non-quoted keys, trailing commas, etc.)
-- **1.3.0**:
-  - [Custom (dynamic) text](#dynamic-text--customtext)
-  - Add [hyperlink](#custom-nodes--components) Custom component to bundle
-  - Better indentation of collection nodes (property name lines up with non-collection nodes, not the collapse icon)
-- **1.2.2**: Allow editing of Custom nodes
-- **1.1.0**: Don't manage data state within component
-- **1.0.0**:
-  - [Custom nodes](#custom-nodes--components)
-  - Allow editing of keys
-  - Option to define restrictions on data type selection
-  - Option to hide array/object item counts
-  - Improve keyboard interaction
-- **0.9.6**: Performance improvement by not processing child elements if not visible
-- **0.9.4**:
-  - Layout improvements
-  - Better internal handling of functions in data
-- **0.9.3**: Bundle as ES6 module
-- **0.9.1**: Export more Types from the package
-- **0.9.0**: Initial release
+- [V2 changelog](./CHANGELOG.md)
+- [V1 changelog](./README.md#changelog)
 
 <div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
