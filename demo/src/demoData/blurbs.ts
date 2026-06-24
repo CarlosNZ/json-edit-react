@@ -13,10 +13,8 @@ export const blurbs = {
   Incorporate into your own React project:
 
   \`\`\`js
-    npm i json-edit-react
-      // or
-    yarn add json-edit-react
-      // or
+    npm i json-edit-react     // or
+    yarn add json-edit-react  // or
     pnpm add json-edit-react
   \`\`\``,
   starWars: `A massive chunk of *Star Wars* data scraped from [The Star Wars API](https://swapi.info/).
