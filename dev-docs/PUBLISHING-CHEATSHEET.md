@@ -1,0 +1,113 @@
+# Publishing cheat sheet
+
+Quick command reference for building, packing, and publishing the four packages — core (`json-edit-react`) and the three scoped sub-packages (`@json-edit-react/utils`, `@json-edit-react/themes`, `@json-edit-react/components`).
+
+Two release modes:
+
+- **Beta** → published by hand, per package, to the **`beta`** dist-tag. `changeset publish` with no `--tag` and no pre-mode ships to `latest`, so beta deliberately avoids it.
+- **Full / latest** → driven by Changesets via `pnpm release`, all packages at once.
+
+Two safety rules carry over from [v2-beta-publish-runbook.md](v2-beta-publish-runbook.md) — read it for the full first-publish procedure:
+
+1. **Everything beta goes to `beta`, never `latest`** — always pass `--tag beta`.
+2. **Core's `version` field must be the beta version before packing any sub-package** — each sub-package freezes `"json-edit-react": "workspace:^"` into `^<core's current version>` at pack time.
+
+Sub-package npm READMEs are produced by [scripts/with-npm-readme.mjs](../scripts/with-npm-readme.mjs): it swaps the committed README for its admonition-converted form during pack/publish, then restores it via `git checkout`. **Each target README must be committed (clean) first**, independent of `--no-git-checks`. The blessed scripts (`preview-publish`, `release`) route through it; a bare `pnpm publish` does not — so beta publishes below invoke the wrapper explicitly.
+
+---
+
+## Build
+
+```sh
+pnpm build                                   # core only (runs lint + tests via prebuild)
+pnpm --filter @json-edit-react/themes build  # one sub-package (or -C packages/themes build)
+pnpm -r build                                # all (alias: pnpm build-all)
+```
+
+## Pack / preview (inspect a real .tgz — publishes nothing)
+
+```sh
+pnpm preview-publish                                   # core: build + stage build_package/ + pack at repo root
+pnpm --filter @json-edit-react/themes preview-publish  # one sub-package (build + README swap + pack)
+pnpm pack-all                                          # all four → pack-output/ (swaps READMEs — mirrors publish; needs them committed)
+```
+
+Inspect any tarball:
+
+```sh
+tar -tzf <pkg>-*.tgz                                   # file list
+tar -xzO -f <pkg>-*.tgz package/package.json           # peer ranges, version, fields
+tar -xzO -f <pkg>-*.tgz package/README.md | head       # confirm bold-label blockquotes, not raw [!NOTE]
+```
+
+## Beta publish → `beta` tag (manual, per package)
+
+Publish order: **utils → themes → components → core** (core last). Each sub-package goes through the wrapper so its npm README is converted; core publishes from its staging dir (already converted), so no wrapper.
+
+```sh
+# Sub-package (run per package, swapping the dir). The subshell + plain
+# `pnpm publish` avoids the pnpm 10.8.x `-C ... publish` EUSAGE bug; publish
+# reruns the prepack build. --no-git-checks because the branch/tree may not
+# match pnpm's default publish-branch expectation.
+(cd packages/utils && \
+  node ../../scripts/with-npm-readme.mjs . -- \
+  pnpm publish --tag beta --access public --no-git-checks)
+
+# ...repeat for packages/themes, then packages/components.
+
+# Core (from repo root — pnpm ships the staged build_package/ dir).
+pnpm build-package
+pnpm publish --tag beta --no-git-checks
+```
+
+There's no one-shot "publish all betas" command by design (Rule 1 rules out `changeset publish` for beta) — run the sequence above.
+
+## Full release → `latest` (Changesets, all together)
+
+```sh
+# 1. Consume changesets: bump versions + write CHANGELOGs, delete .changeset/*.md.
+pnpm changeset status --verbose     # preview first (writes nothing)
+pnpm changeset version
+git diff                            # review, especially core's shipped CHANGELOG.md
+
+# 2. Relink the workspace to the new versions and re-validate.
+pnpm install
+pnpm compile && pnpm test
+git add -A && git commit -m "Version packages"
+
+# 3. Publish everything ahead of npm to `latest`. `release` = build-package
+#    (core staging) + the with-npm-readme wrapper around `changeset publish`,
+#    so every sub-package README is converted and restored automatically.
+pnpm release
+```
+
+Single package to `latest` by hand (no `--tag` = latest):
+
+```sh
+(cd packages/themes && \
+  node ../../scripts/with-npm-readme.mjs . -- \
+  pnpm publish --access public --no-git-checks)
+```
+
+## Verify after publishing
+
+```sh
+npm view @json-edit-react/utils version dist-tags    # sub-package version + tags
+npm dist-tags ls json-edit-react                      # core: latest must stay 1.30.1, beta = 2.0.0-beta.x
+```
+
+End-to-end co-install smoke test (catches peer-range mistakes the per-package checks miss):
+
+```sh
+cd "$(mktemp -d)" && npm init -y >/dev/null
+npm install react react-dom \
+  json-edit-react@beta \
+  @json-edit-react/utils@beta @json-edit-react/themes@beta @json-edit-react/components@beta
+```
+
+## Gotchas
+
+- **`pnpm -C <dir> publish` is broken** on pnpm 10.8.x (leaks the dir + command word into npm → `EUSAGE`). Use the `(cd <dir> && pnpm publish …)` subshell form. `-C`/`--filter` are fine for `build` and `pack`.
+- **The wrapper needs each target README committed and clean** — it restores via `git checkout`, so an uncommitted edit would either abort the run or be clobbered. Commit/stash README edits before publishing.
+- **`pnpm pack-all` swaps the READMEs**, so `pack-output/<name>/package/README.md` mirrors what publishes — the easiest place to inspect the final READMEs. It needs the sub-package READMEs committed (clean); pass `SKIP_NPM_README_SWAP=1` to pack without the swap.
+- **Never run `pnpm release` / `pnpm publish` / `pnpm changeset publish` unless explicitly intended** — there's no `changeset publish --dry-run`; preview with `pnpm preview-publish` per package and `pnpm changeset status`.

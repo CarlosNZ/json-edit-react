@@ -73,7 +73,11 @@ for (const target of targets) {
   for (const tgz of findStaleTarballs(target)) unlinkSync(tgz)
 }
 
-// 2. Pack each package via its preview-publish script
+// 2. Pack each package via its preview-publish script. The sub-package scripts
+// swap in their npm-friendly READMEs (GitHub admonitions converted), so
+// pack-output/ faithfully mirrors what publishes — the easiest place to inspect
+// the final READMEs. This needs the sub-package READMEs committed + clean; set
+// SKIP_NPM_README_SWAP=1 (inherited by the child) to pack without the swap.
 for (const target of targets) {
   console.log(`\n→ Packing ${target.label}...`)
   execSync('pnpm preview-publish', {

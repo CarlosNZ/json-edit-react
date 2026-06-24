@@ -85,8 +85,11 @@ git commit -m "Stamp v2.0.0-beta.0 / 0.9.0-beta.0 and consume changesets"
 pnpm -C packages/utils build
 
 # 1.2  Dry pack into a scratch dir and inspect — do NOT publish yet.
+#      Route through with-npm-readme.mjs so the packed README matches what
+#      publish ships (admonitions converted), then restored via git.
 rm -rf /tmp/jre-pack && mkdir -p /tmp/jre-pack
-pnpm -C packages/utils pack --pack-destination /tmp/jre-pack
+(cd packages/utils && node ../../scripts/with-npm-readme.mjs . -- \
+  pnpm pack --pack-destination /tmp/jre-pack)
 tar -tzf /tmp/jre-pack/*.tgz                       # file list
 tar -xzf /tmp/jre-pack/*.tgz -C /tmp/jre-pack
 cat /tmp/jre-pack/package/package.json             # see below
@@ -96,15 +99,20 @@ In that packed `package.json`, confirm:
 - `"version": "0.9.0-beta.0"`
 - `"peerDependencies"."json-edit-react": "^2.0.0-beta.0"` ← **this is Rule 2 paying off**; if it reads `^2.0.0-dev`, stop — core's version field wasn't set before packing.
 - `files` / contents are what you expect (no stray source, tests, or `node_modules`).
+- `README.md` is the npm form — bold-label blockquotes, not raw `[!IMPORTANT]` (`cat /tmp/jre-pack/package/README.md`).
 
 ```sh
 # 1.3  Publish to the beta tag — run from INSIDE the package dir via a
-#      subshell. Do NOT use `pnpm -C packages/utils publish`: pnpm 10.8.x
-#      leaks the -C dir and the command word into the npm call, so npm
-#      sees multiple package-specs and fails with EUSAGE. (publish reruns
-#      the prepack build — fine. --no-git-checks because the tree/branch
-#      may not match pnpm's default publish-branch expectation.)
-(cd packages/utils && pnpm publish --tag beta --access public --no-git-checks)
+#      subshell, through with-npm-readme.mjs so the published README is the
+#      npm form (admonitions -> bold-label blockquotes), restored after.
+#      Do NOT use `pnpm -C packages/utils publish`: pnpm 10.8.x leaks the -C
+#      dir and the command word into the npm call, so npm sees multiple
+#      package-specs and fails with EUSAGE. (publish reruns the prepack
+#      build — fine. --no-git-checks because the tree/branch may not match
+#      pnpm's default publish-branch expectation; the wrapper still needs
+#      this package's README committed + clean to restore it.)
+(cd packages/utils && node ../../scripts/with-npm-readme.mjs . -- \
+  pnpm publish --tag beta --access public --no-git-checks)
 ```
 
 ```sh
@@ -125,10 +133,12 @@ Identical shape to Phase 1, swapping `packages/themes`:
 ```sh
 pnpm -C packages/themes build
 rm -rf /tmp/jre-pack && mkdir -p /tmp/jre-pack
-pnpm -C packages/themes pack --pack-destination /tmp/jre-pack
+(cd packages/themes && node ../../scripts/with-npm-readme.mjs . -- \
+  pnpm pack --pack-destination /tmp/jre-pack)
 tar -tzf /tmp/jre-pack/*.tgz
 tar -xzf /tmp/jre-pack/*.tgz -C /tmp/jre-pack && cat /tmp/jre-pack/package/package.json
-(cd packages/themes && pnpm publish --tag beta --access public --no-git-checks)
+(cd packages/themes && node ../../scripts/with-npm-readme.mjs . -- \
+  pnpm publish --tag beta --access public --no-git-checks)
 npm view @json-edit-react/themes version dist-tags
 ```
 
@@ -143,10 +153,12 @@ Same shape, `packages/components`:
 ```sh
 pnpm -C packages/components build
 rm -rf /tmp/jre-pack && mkdir -p /tmp/jre-pack
-pnpm -C packages/components pack --pack-destination /tmp/jre-pack
+(cd packages/components && node ../../scripts/with-npm-readme.mjs . -- \
+  pnpm pack --pack-destination /tmp/jre-pack)
 tar -tzf /tmp/jre-pack/*.tgz
 tar -xzf /tmp/jre-pack/*.tgz -C /tmp/jre-pack && cat /tmp/jre-pack/package/package.json
-(cd packages/components && pnpm publish --tag beta --access public --no-git-checks)
+(cd packages/components && node ../../scripts/with-npm-readme.mjs . -- \
+  pnpm publish --tag beta --access public --no-git-checks)
 npm view @json-edit-react/components version dist-tags
 ```
 

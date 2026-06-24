@@ -31,7 +31,7 @@
     "clean": "rm -rf build",
     "compile": "tsc --noEmit",
     "prepack": "pnpm build",
-    "preview-publish": "pnpm pack"
+    "preview-publish": "node ../../scripts/with-npm-readme.mjs . -- pnpm pack"
   },
   "peerDependencies": {
     "json-edit-react": "workspace:^",

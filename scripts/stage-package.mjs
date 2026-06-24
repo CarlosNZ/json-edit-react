@@ -97,9 +97,18 @@ function copyRootFile(name, { required = true } = {}) {
 }
 
 function generateReadme() {
+  // Source is README_V2.md during the v2 beta; flip to README.md when v2 ships.
   execFileSync(
     'python3',
-    [join(repoRoot, 'scripts', 'build_npm_readme.py'), '--output', join(stagingDir, 'README.md')],
+    [
+      join(repoRoot, 'scripts', 'build_npm_readme.py'),
+      '--template',
+      join(repoRoot, '.README_npm.md'),
+      '--source',
+      join(repoRoot, 'README_V2.md'),
+      '--output',
+      join(stagingDir, 'README.md'),
+    ],
     { stdio: 'inherit', cwd: repoRoot }
   )
 }
