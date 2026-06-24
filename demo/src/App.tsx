@@ -42,6 +42,7 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 import logoSVG from './image/logo.svg'
+import { Banner } from './Banner'
 import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
 import { demoDataDefinitions } from './demoData'
 import { useDatabase } from './useDatabase'
@@ -320,6 +321,7 @@ function App() {
 
   return (
     <div className="App">
+      <Banner />
       <Flex
         px={8}
         pt={4}
