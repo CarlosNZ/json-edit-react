@@ -202,6 +202,9 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
             // `lg`.
             <SplitPane
               storageId={slug}
+              // The code panel stays pinned (and scrolls internally) while you
+              // scroll a tall editor — see CodeBlock's viewport-fit sizing.
+              stickyRight
               left={
                 // Shadow hugs the editor's own rounded container (like the main
                 // demo, which puts `.block-shadow` on the JsonEditor). Examples

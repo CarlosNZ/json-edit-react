@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Box, Flex, Text, IconButton, Tooltip, useClipboard } from '@chakra-ui/react'
 import { CopyIcon, CheckIcon } from '@chakra-ui/icons'
 import { createHighlighterCore, type HighlighterCore } from 'shiki/core'
@@ -77,9 +77,75 @@ interface CodeBlockProps {
 // Read-only source display. Shiki is dynamically imported on first render so
 // its grammar/theme/engine stay in their own lazy chunk. The header bar adopts
 // the Shiki theme's own bg/fg so the whole block reads as one themed panel.
+// Breathing room between the pinned panel and the viewport edges (matches the
+// sticky `top` offset the example layout pins it at).
+const VIEWPORT_GAP_PX = 16
+
+// When the space below the undocked panel is no more than this, it's just the
+// page's bottom chrome (its padding) — so the fill snaps to make the page fit
+// exactly rather than overflow by those few px and raise a scrollbar. More than
+// this means a tall data pane sits below the fold, so the page scrolls anyway.
+const PAGE_FIT_SLACK_PX = 64
+
 export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
   const [{ html, bg, fg }, setResult] = useState<Highlighted>({ html: '', bg: '#fff', fg: '#000' })
   const { hasCopied, onCopy } = useClipboard(code)
+
+  // The panel docks like a sticky sidebar (see SplitPane's stickyRight). Two
+  // discrete states — the height changes only at the crossover, never every
+  // scroll frame (that per-frame resize was the slow part):
+  //  - UNDOCKED: a fixed height filling from its flow position (below the
+  //    header) to the viewport bottom; scrolls up with the whole page.
+  //  - DOCKED: once its top reaches the sticky offset (header gone), the bottom
+  //    jumps down to the viewport bottom and it stays put.
+  // The reverse on the way back up. The code body scrolls internally in BOTH
+  // states, so a short-data page (whose page never scrolls) can still scroll a
+  // long snippet. Capture-phase listening catches scrolls from any container,
+  // not just the window.
+  const panelRef = useRef<HTMLDivElement>(null)
+  // Document offset of the panel's flow position (below the header), kept fresh
+  // while undocked (it shifts with theme/resize and can't be read while docked).
+  const flowTopRef = useRef(0)
+  const dockedRef = useRef(false)
+  const [docked, setDocked] = useState(false)
+  // Fill height while undocked. Null until measured, so the first paint hugs
+  // content rather than flashing a guessed height.
+  const [fillHeight, setFillHeight] = useState<number | null>(null)
+
+  useLayoutEffect(() => {
+    const el = panelRef.current
+    if (!el) return
+    let raf = 0
+    const measure = () => {
+      raf = 0
+      const rect = el.getBoundingClientRect()
+      const isDocked = rect.top <= VIEWPORT_GAP_PX + 0.5
+      if (!isDocked) flowTopRef.current = rect.top + window.scrollY
+      // Subtract the space below the panel when that's just the page's bottom
+      // chrome (so a short data pane fits without a stray scrollbar); otherwise
+      // a tall pane is below the fold and the plain gap is right.
+      const below = document.documentElement.scrollHeight - (rect.bottom + window.scrollY)
+      const inset = below > 0 && below <= PAGE_FIT_SLACK_PX ? below : VIEWPORT_GAP_PX
+      // No-op re-render while this is unchanged (numbers compare by value), so a
+      // plain scroll within one state doesn't re-render — only the crossover.
+      setFillHeight(Math.max(0, window.innerHeight - flowTopRef.current - inset))
+      if (isDocked !== dockedRef.current) {
+        dockedRef.current = isDocked
+        setDocked(isDocked)
+      }
+    }
+    const onScrollOrResize = () => {
+      if (!raf) raf = requestAnimationFrame(measure)
+    }
+    measure()
+    window.addEventListener('scroll', onScrollOrResize, { capture: true, passive: true })
+    window.addEventListener('resize', onScrollOrResize)
+    return () => {
+      if (raf) cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', onScrollOrResize, { capture: true })
+      window.removeEventListener('resize', onScrollOrResize)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -91,8 +157,26 @@ export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
     }
   }, [code, themeName])
 
+  // Docked: fill the viewport (top at the sticky offset, bottom near its edge).
+  // Undocked: the fixed fill height, scrolling with the page. A flex column:
+  // header pinned, body below it scrolls internally in both states.
+  const panelMaxH = docked
+    ? `calc(100vh - ${2 * VIEWPORT_GAP_PX}px)`
+    : fillHeight != null
+      ? `${fillHeight}px`
+      : undefined
+
   return (
-    <Box borderRadius="md" overflow="hidden" className="block-shadow" bg={bg}>
+    <Box
+      ref={panelRef}
+      borderRadius="md"
+      overflow="hidden"
+      className="block-shadow"
+      bg={bg}
+      display="flex"
+      flexDirection="column"
+      maxH={panelMaxH}
+    >
       <Flex
         align="center"
         justify="space-between"
@@ -100,6 +184,7 @@ export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
         py={1.5}
         borderBottom="1px solid"
         borderColor="blackAlpha.200"
+        flexShrink={0}
       >
         <Text fontSize="xs" fontFamily="mono" color={fg} opacity={0.65}>
           {filename}
@@ -120,7 +205,11 @@ export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
         <Box
           fontSize="sm"
           overflow="auto"
-          maxH="70vh"
+          // Fill the remaining height below the header and scroll within it
+          // (minH:0 lets a flex child shrink below its content so it actually
+          // scrolls rather than overflowing the panel).
+          flex="1 1 auto"
+          minH={0}
           // Soft-wrap long lines instead of scrolling horizontally. `pre-wrap`
           // keeps indentation/newlines; `overflow-wrap` handles unbreakable
           // tokens.
@@ -130,7 +219,16 @@ export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
           dangerouslySetInnerHTML={{ __html: html }}
         />
       ) : (
-        <Box as="pre" fontSize="sm" fontFamily="mono" overflow="auto" maxH="70vh" m={0} p="1em">
+        <Box
+          as="pre"
+          fontSize="sm"
+          fontFamily="mono"
+          overflow="auto"
+          flex="1 1 auto"
+          minH={0}
+          m={0}
+          p="1em"
+        >
           {code}
         </Box>
       )}
