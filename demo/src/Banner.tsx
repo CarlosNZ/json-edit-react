@@ -1,6 +1,6 @@
 import { Alert, AlertIcon, Box, CloseButton, Link, useDisclosure } from '@chakra-ui/react'
 
-const DISMISS_KEY = 'v2BannerDismissedAt'
+const DISMISS_KEY = 'v2_2BannerDismissedAt'
 const DISMISS_LIFETIME = 3 * 7 * 24 * 60 * 60 * 1000 // 3 weeks, in ms
 
 // Banner is dismissable, but reappears once the dismissal is older than
