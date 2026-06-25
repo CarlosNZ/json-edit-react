@@ -47,7 +47,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 
 - **THEMES**: [@json-edit-react/themes](https://www.npmjs.com/package/@json-edit-react/themes) — curated, ready-made [themes] (#themes)
 - **COMPONENTS**: [@json-edit-react/components](https://www.npmjs.com/package/@json-edit-react/components) - custom node components (links, date picker, etc.)
-- **UTILITIES**: [@json-edit-react/themes](https://www.npmjs.com/package/@json-edit-react/themes) — a collection of helpers and tools for extending and streamlining your **json-edit-react** experience
+- **UTILITIES**: [@json-edit-react/utils](https://www.npmjs.com/package/@json-edit-react/themes) — a collection of helpers and tools for extending and streamlining your **json-edit-react** experience
 
 
 <!-- NPM INTRO -->
