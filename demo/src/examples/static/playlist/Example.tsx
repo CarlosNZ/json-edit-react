@@ -5,6 +5,7 @@ import {
   type CustomNodeDefinition,
   type JsonData,
 } from '@json-edit-react'
+import { byPath } from '@json-edit-react/utils/filters'
 import { useEditorDefaults } from '@example-resources'
 
 // A custom COLLECTION node that owns its own editor (`showOnEdit:
@@ -24,6 +25,13 @@ import { useEditorDefaults } from '@example-resources'
 // single active edit session) doing so just displaces the header's
 // session. `showCollectionWrapper: false` drops the array's
 // brackets/chevron so the header stands in for them.
+//
+// Editing is constrained with the filter-function toolkit
+// (`@json-edit-react/utils/filters`): `byPath('tracks.*')` matches
+// whole track items (not their fields, the playlist title, or the
+// array itself), so only whole tracks can be deleted and dragged.
+// Type changes are off entirely. The header's "Add track" button
+// (view mode) appends a new track via `setValue`.
 
 interface Track {
   title: string
@@ -80,6 +88,10 @@ const TrackList = ({
   // action is one-shot (re-open "Reorder…" to run another).
   const reorder = (next: Track[]) => setValue(next as unknown as JsonData)
 
+  // Append a fresh track to the end of the list.
+  const addTrack = () =>
+    setValue([...tracks, { title: 'New track', artist: '', seconds: 0 }] as unknown as JsonData)
+
   const button = {
     background: PANEL,
     border: `1px solid ${BORDER}`,
@@ -131,15 +143,26 @@ const TrackList = ({
             </button>
           </div>
         ) : (
-          <button style={button} onClick={() => setIsEditing(true)}>
-            Reorder…
-          </button>
+          <div style={{ display: 'flex', gap: '0.4em' }}>
+            <button style={button} onClick={addTrack}>
+              + Add track
+            </button>
+            <button style={button} onClick={() => setIsEditing(true)}>
+              Reorder…
+            </button>
+          </div>
         )}
       </div>
       {children}
     </div>
   )
 }
+
+// A whole track item — a direct child of the `tracks` array. `*`
+// matches one path segment, so this excludes the track's own
+// fields (`tracks.0.title`), the playlist title, and the array
+// itself. Used for both the delete and drag restrictions.
+const isTrackItem = byPath('tracks.*')
 
 const customNodeDefinitions: CustomNodeDefinition[] = [
   {
@@ -161,6 +184,9 @@ export default function Playlist() {
       {...useEditorDefaults()}
       rootName="playlist"
       customNodeDefinitions={customNodeDefinitions}
+      allowDelete={isTrackItem} // only whole tracks
+      allowDrag={isTrackItem} // drag whole tracks to reorder
+      allowTypeSelection={false} // no type changes anywhere
     />
   )
 }
