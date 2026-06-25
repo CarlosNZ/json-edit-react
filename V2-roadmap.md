@@ -152,8 +152,8 @@ Move out of core entirely. Themes can grow (variants, contrast modes, images) wi
 Repo restructure that came with this:
 
 - pnpm workspace at root covers `.`, `packages/themes`, `packages/components`. [demo/](demo/) and [custom-component-library/](custom-component-library/) stay independent yarn-1 projects (validation harnesses with arms-length view of published artefacts). The `VITE_JRE_SOURCE` toggle was extended to cover the two new packages.
-- [Changesets](https://github.com/changesets/changesets) for independent version bumps and changelogs across the three packages.
-- New maintainer cheat sheet: [package-management-guide.md](package-management-guide.md).
+- Manual, ship-as-you-go versioning (`pnpm bump:*` / `pnpm pub:*`, hand-written CHANGELOGs); the repo briefly used Changesets during the v2 restructure but moved off it. See [dev-docs/package-management-guide.md](dev-docs/package-management-guide.md).
+- New maintainer cheat sheet: [package-management-guide.md](dev-docs/package-management-guide.md).
 - v1 → v2 migration notes for consumers: [migration-guide.md](migration-guide.md).
 
 ## 14. Terminology — "node", not "component"

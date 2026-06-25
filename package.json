@@ -1,6 +1,6 @@
 {
   "name": "json-edit-react",
-  "version": "2.0.0-beta.3",
+  "version": "2.0.0-beta.4",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
@@ -42,7 +42,16 @@
     "compile": "tsc --noEmit && ts-prune",
     "preview-publish": "pnpm build-package && cd build_package && pnpm pack --pack-destination ..",
     "pack-all": "node scripts/pack-all.mjs",
-    "release": "pnpm build-package && node scripts/with-npm-readme.mjs packages/themes packages/components packages/utils -- pnpm changeset publish",
+    "bump:core:beta": "npm version prerelease --preid=beta --no-git-tag-version",
+    "bump:utils:beta": "cd packages/utils      && npm version prerelease --preid=beta --no-git-tag-version",
+    "bump:themes:beta": "cd packages/themes     && npm version prerelease --preid=beta --no-git-tag-version",
+    "bump:components:beta": "cd packages/components && npm version prerelease --preid=beta --no-git-tag-version",
+    "pub:core:beta": "pnpm build-package && pnpm publish --tag beta --no-git-checks",
+    "pub:core:latest": "pnpm build-package && pnpm publish --no-git-checks",
+    "pub:utils": "cd packages/utils      && node ../../scripts/with-npm-readme.mjs . -- pnpm publish --access public --no-git-checks",
+    "pub:themes": "cd packages/themes     && node ../../scripts/with-npm-readme.mjs . -- pnpm publish --access public --no-git-checks",
+    "pub:components": "cd packages/components && node ../../scripts/with-npm-readme.mjs . -- pnpm publish --access public --no-git-checks",
+    "versions": "node scripts/versions.mjs",
     "release-demo": "cd demo && yarn deploy",
     "sync-demos": "node scripts/installLatestPackage.mjs"
   },
@@ -50,7 +59,6 @@
     "react": ">=18.0.0"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.31.0",
     "@eslint/js": "^9.24.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@rollup/plugin-terser": "^0.4.4",

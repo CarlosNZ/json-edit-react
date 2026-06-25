@@ -80,6 +80,6 @@ Output: `build/index.cjs.js`, `build/index.esm.js`, `build/index.d.ts`.
    implementation and an `index.ts` barrel.
 2. Re-export it from [src/index.ts](src/index.ts).
 3. Check the dependency policy above — prefer zero runtime deps.
-4. Add a changeset: `pnpm changeset` at the repo root, pick
-   `@json-edit-react/utils`.
+4. Add a `CHANGELOG.md` entry (releases are manual, ship-as-you-go — see
+   [dev-docs/package-management-guide.md](../../dev-docs/package-management-guide.md#quick-reference)).
 5. Document it in [README.md](README.md) (present tense).

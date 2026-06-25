@@ -1,5 +1,10 @@
 # json-edit-react
 
+## 2.0.0-beta.4
+
+- Collection custom components with `showOnEdit` now receive live child rows while editing (#384).
+- Restore the `collectionInner` themeable element (#383).
+
 ## 2.0.0-beta.0
 
 ### Major Changes

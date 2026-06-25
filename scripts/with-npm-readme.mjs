@@ -24,8 +24,8 @@
  * Examples:
  *   # Preview one package's tarball (run from the package dir):
  *   node ../../scripts/with-npm-readme.mjs . -- pnpm pack
- *   # Publish everything (run from the repo root):
- *   node scripts/with-npm-readme.mjs packages/themes packages/components packages/utils -- pnpm changeset publish
+ *   # Publish a sub-package to npm (run from the repo root):
+ *   node scripts/with-npm-readme.mjs packages/themes -- pnpm publish --access public --no-git-checks
  */
 
 import { execFileSync, spawnSync } from 'node:child_process'

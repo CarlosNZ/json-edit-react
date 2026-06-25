@@ -40,7 +40,7 @@ If legacy CJS consumers report bundle bloat (their bundler doesn't tree-shake ES
 2. Update [rollup.config.mjs](rollup.config.mjs) to a multi-entry build with one entry per component.
 3. **Non-breaking** — the root `.` entry stays, so existing `import { Hyperlink } from '@json-edit-react/components'` keeps working.
 
-This isn't worth doing pre-emptively. Wait for a real consumer report. See `package-management-guide.md` in the repo root for the bundle-size test scaffolding plan.
+This isn't worth doing pre-emptively. Wait for a real consumer report. See `dev-docs/package-management-guide.md` for the bundle-size test scaffolding plan.
 
 ### What NOT to do
 
@@ -62,7 +62,7 @@ Output: `build/index.cjs.js`, `build/index.esm.js`, `build/index.d.ts`.
 2. Add `export * from './MyComponent'` to [src/index.ts](src/index.ts).
 3. If the component imports a heavy third-party lib, add it as a regular dep in [package.json](package.json) and lazy-load it via `React.lazy`. Add the package name to the rollup `external` list.
 4. Document the new component in [README.md](README.md)'s "Available components" table.
-5. Add a changeset: `pnpm changeset` at the repo root, pick `@json-edit-react/components`, minor bump.
+5. Add a `CHANGELOG.md` entry for the new component (releases are manual, ship-as-you-go — see [dev-docs/package-management-guide.md](../../dev-docs/package-management-guide.md#quick-reference)).
 
 ## Relationship to core
 
@@ -71,4 +71,4 @@ Components import the following from `json-edit-react`:
 - Types: `CustomComponentProps`, `CustomNodeDefinition`, `ValueNodeProps`, `NodeData`, `JsonData` etc. (compile-time only, erased at build)
 - Runtime primitives: `StringDisplay`, `StringEdit`, `toPathString`, `AutogrowTextArea` — these were promoted to public API in core v2 specifically so this package can compose on top of them.
 
-The core peer-dep range is `workspace:^` during dev; at publish, Changesets/pnpm rewrites it to the actual semver.
+The core peer-dep range is `workspace:^` during dev; at publish, pnpm freezes it to `^<core's current version>`.

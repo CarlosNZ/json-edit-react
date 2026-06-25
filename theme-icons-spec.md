@@ -271,6 +271,6 @@ The work spans core, utils, and themes with hard dependencies (types before cons
 4. **Core tests.** Replacement via `theme.icons`; `currentColor` glyph adopts theme colour; fixed-`fill` glyph resists it; `scale` changes rendered size; `collection` (ex-`chevron`) keyed correctly.
 5. **`iconFromSvg` (utils).** Regex parse (string → `IconDefinition`), passthrough, interning by input string. Tests in `packages/utils/test/` (parse correctness + reference stability).
 6. **Themes package build.** Confirm `react/jsx-runtime` / TSX handling in the rollup config so a theme can ship `icons`.
-7. **Docs + changeset.** README (present tense: `Theme.icons`, `IconDefinition`, `currentColor` rule, `scale`; drop the `icons` prop row); migration guide (prop removed → `theme.icons`; `JSX.Element` → `IconDefinition`/`iconFromSvg`; `chevron` → `collection`); `pnpm changeset` for core + utils (+ themes if its build changes).
+7. **Docs + CHANGELOG.** README (present tense: `Theme.icons`, `IconDefinition`, `currentColor` rule, `scale`; drop the `icons` prop row); migration guide (prop removed → `theme.icons`; `JSX.Element` → `IconDefinition`/`iconFromSvg`; `chevron` → `collection`); `CHANGELOG.md` entries for core + utils (+ themes if its build changes).
 
 Steps 1–4 are one core PR; 5 is a utils PR; 6–7 fold into whichever PR touches the surface. Each step leaves the tree compiling.
