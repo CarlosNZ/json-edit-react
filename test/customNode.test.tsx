@@ -194,6 +194,66 @@ describe('CustomNode — view/edit visibility', () => {
   })
 })
 
+describe('CustomNode — collection editor keeps live children (#384)', () => {
+  // A collection custom component that renders its own header above the live
+  // child rows (`children`). The header marker opens this node's own edit
+  // session via `setIsEditing`, mirroring a real toolbar/header node.
+  const CollectionEditor = ({ children, isEditing, setIsEditing }: CustomComponentProps) => (
+    <div>
+      <span data-testid="open" onDoubleClick={() => setIsEditing(true)}>
+        {isEditing ? 'EDITING' : 'VIEW'}
+      </span>
+      {children}
+    </div>
+  )
+
+  const collectionDef = (overrides: Partial<CustomNodeDefinition> = {}): CustomNodeDefinition => ({
+    condition: ({ key }) => key === 'group',
+    component: CollectionEditor,
+    ...overrides,
+  })
+
+  test('showOnEdit true → children stay the live child rows while editing (not the JSON textarea)', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <JsonEditor
+        data={{ group: { a: 'alpha', b: 'beta' } }}
+        setData={noop}
+        customNodeDefinitions={[collectionDef({ showOnEdit: true })]}
+      />
+    )
+    // View: the custom header sits above the live child rows.
+    expect(screen.getByText('VIEW')).toBeInTheDocument()
+    expect(screen.getByText('"alpha"')).toBeInTheDocument()
+    expect(screen.getByText('"beta"')).toBeInTheDocument()
+
+    await user.dblClick(screen.getByTestId('open'))
+
+    // The component owns the edit state — and its `children` is STILL the live
+    // child rows, never the built-in raw-JSON textarea.
+    expect(screen.getByText('EDITING')).toBeInTheDocument()
+    expect(screen.getByText('"alpha"')).toBeInTheDocument()
+    expect(screen.getByText('"beta"')).toBeInTheDocument()
+    expect(container.querySelector('.jer-collection-text-area')).toBeNull()
+  })
+
+  test('showOnEdit false → standard collection editing still yields the JSON textarea', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <JsonEditor
+        data={{ group: { a: 'alpha' } }}
+        setData={noop}
+        customNodeDefinitions={[collectionDef()]}
+      />
+    )
+    await user.dblClick(screen.getByTestId('open'))
+    // The custom component doesn't render the edit state, so the built-in
+    // textarea takes over — unaffected by the showOnEdit-true change.
+    expect(container.querySelector('.jer-collection-text-area')).not.toBeNull()
+    expect(screen.queryByTestId('open')).toBeNull()
+  })
+})
+
 describe('CustomNode — chrome flags', () => {
   test('showKey default true → the key is rendered alongside the custom component', () => {
     render(

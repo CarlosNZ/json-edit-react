@@ -394,7 +394,16 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   if (collectionType === 'object') sort<[string | number, ValueData]>(keyValueArray, (_) => _)
 
-  const CollectionChildren = !hasBeenOpened.current ? null : !isEditing ? (
+  // A custom component with `showOnEdit` owns this node's editor, so it
+  // receives the live child rows as `children` in edit mode too (same as
+  // view) — never the built-in JSON textarea. The textarea only renders for
+  // standard collection editing (no custom editor for the editing state); its
+  // buffer/parse plumbing (`editBufferValue`/`handleEdit`) simply goes unused
+  // for these nodes.
+  const customOwnsEdit = !!CustomComponent && showOnEdit
+  const showChildRows = !isEditing || customOwnsEdit
+
+  const CollectionChildren = !hasBeenOpened.current ? null : showChildRows ? (
     keyValueArray.map(([key, value], index) => {
       const childNodeData = {
         key,
