@@ -678,6 +678,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           overflowY: isCollapsed || isAnimating ? 'clip' : 'visible',
           // Prevent collapse if this node or any children are being edited
           maxHeight: childrenEditing ? undefined : maxHeight,
+          ...getStyles('collectionInner', nodeData),
           transition: cssTransitionValue,
         }}
         ref={contentRef}

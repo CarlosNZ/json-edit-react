@@ -55,6 +55,10 @@ describe('compileStyles — shorthand & merge over default', () => {
     // other structural elements.
     expect(compileStyles({ headerRow: '#eee' }).headerRow).toEqual({ backgroundColor: '#eee' })
     expect(compileStyles({ valueRow: '#eee' }).valueRow).toEqual({ backgroundColor: '#eee' })
+    // The children-body wrapper does too.
+    expect(compileStyles({ collectionInner: '#eee' }).collectionInner).toEqual({
+      backgroundColor: '#eee',
+    })
   })
 
   it('merges an object value over the default, keeping unspecified props', () => {

@@ -94,6 +94,7 @@ export const defaultTheme: Theme = {
       fontFamily: 'monospace',
     },
     // collection: {},
+    // collectionInner: {},
     // collectionElement: {},
     // headerRow: {},
     // valueRow: {},

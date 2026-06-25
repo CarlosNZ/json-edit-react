@@ -16,6 +16,7 @@ import { toArray } from '../../utils/misc'
 const DEFAULT_PROP: Partial<Record<ThemeableElement, keyof CSSProperties>> = {
   container: 'backgroundColor',
   collection: 'backgroundColor',
+  collectionInner: 'backgroundColor',
   collectionElement: 'backgroundColor',
   headerRow: 'backgroundColor',
   valueRow: 'backgroundColor',

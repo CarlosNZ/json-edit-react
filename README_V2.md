@@ -657,6 +657,7 @@ However, you can pass in your own theme object, or part thereof. A theme object 
       fontFamily: 'monospace',
     },
     // collection: {},
+    // collectionInner: {},
     // collectionElement: {},
     // headerRow: {},
     // valueRow: {},
