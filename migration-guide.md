@@ -595,6 +595,10 @@ If your v1 component **called** the error reporter to reject invalid input, that
 + }
 ```
 
+### Collection `component` with `showOnEdit: true` receives the live child rows while editing
+
+If a **collection** custom `component` set `showOnEdit: true`, it was handed the built-in raw-JSON `<textarea>` editor as its `children` while editing. It now receives the live child rows instead — the same `children` as in view — so it can keep the rows visible and editable beneath its own header/toolbar. The component supplies its own commit affordance (`setIsEditing` / `handleEdit` / `handleCancel`) and edits the collection via `setValue`. Only act if you relied on the old behaviour: to edit the whole subtree as raw JSON inside your component, render your own editor and commit a parsed value through `setValue` (the public `AutogrowTextArea` is exported if you want the built-in textarea's look). Custom collection components with `showOnEdit` falsy are unaffected — they still fall through to the built-in JSON editor.
+
 ---
 
 ## 12. `externalTriggers` prop replaced by the `editorRef` imperative handle

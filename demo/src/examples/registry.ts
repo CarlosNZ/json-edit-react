@@ -285,6 +285,16 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/custom-collection-nodes/Example'),
     code: () => import('./static/custom-collection-nodes/Example.tsx?raw'),
   },
+  playlist: {
+    kind: 'static',
+    title: 'Playlist',
+    blurb:
+      'A custom **collection** node that owns its editor (`showOnEdit: true`) keeps the live child rows as its `children` *while editing*, just as in view — so it can place an editable header or toolbar **above** the rows and keep them interactive the whole time, instead of being handed the built-in JSON textarea.\n\n' +
+      "Here `tracks` is the custom node: its header shows the track count and total runtime, and **Reorder…** opens the node's own edit session, swapping the header for a Shuffle / Sort / Reverse toolbar — each commits a reordered array through `setValue`, no special editor prop required.\n\n" +
+      'Try it while the toolbar is open: the track rows stay fully editable. Change a title or `seconds` inline and, because there is a single active edit session, doing so simply displaces the header’s session.',
+    load: () => import('./static/playlist/Example'),
+    code: () => import('./static/playlist/Example.tsx?raw'),
+  },
   'student-cards': {
     kind: 'static',
     title: 'Student ID cards',
