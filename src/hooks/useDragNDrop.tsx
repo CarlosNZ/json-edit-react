@@ -113,7 +113,11 @@ export const useDragNDrop = ({
       return {
         onDragOver: (e: React.DragEvent) => {
           e.stopPropagation()
-          e.preventDefault()
+          // `preventDefault` is what marks an element droppable (sets the drop
+          // cursor and lets `drop` fire). Gate it on the same predicate as the
+          // highlight, so an illegal target shows the "no-drop" cursor and
+          // doesn't fire a drop that `handleDrop` would only no-op.
+          if (dropAllowed()) e.preventDefault()
         },
         onDrop: (e: React.DragEvent) => {
           e.stopPropagation()

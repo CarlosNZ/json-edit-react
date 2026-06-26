@@ -297,6 +297,17 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/playlist/Example'),
     code: () => import('./static/playlist/Example.tsx?raw'),
   },
+  'drag-drop-rules': {
+    kind: 'static',
+    title: 'Drag & drop rules',
+    blurb:
+      'Drag-and-drop obeys the same per-node permissions as the rest of the editor — this page gathers all of them in one place to play with. Moving an item **within its own list** (a *reorder*) and moving it **to another list** (a *relocate*) are allowed separately, so a list can be one you’re free to shuffle but can’t add to, or one you can drop into but can’t rearrange.\n\n' +
+      'Every list holds the same three items: **🟢 free** can be reordered *and* moved to another list; **🟡 no-exit** can be reordered in place but never leaves its list; **🔴 pinned** can’t be picked up at all.\n\n' +
+      'The four lists differ in what they allow: **open** — reorder ✓, accepts drops ✓; **reorderOnly** — reorder ✓, accepts drops ✗; **dropZone** — reorder ✗, accepts drops ✓; **locked** — neither.\n\n' +
+      'To move an item *into* a list, drop it onto an item already in that list. Try dragging a **🟢 free** from *open* into *dropZone* (works) or into *reorderOnly* (refused — it won’t take drops); reorder inside *open* (works) vs inside *locked* (refused); or grab a **🟡 no-exit** and try to drag it out of its list (refused). A row only highlights when the drop is actually allowed.',
+    load: () => import('./static/drag-drop-rules/Example'),
+    code: () => import('./static/drag-drop-rules/Example.tsx?raw'),
+  },
   'student-cards': {
     kind: 'static',
     title: 'Student ID cards',
