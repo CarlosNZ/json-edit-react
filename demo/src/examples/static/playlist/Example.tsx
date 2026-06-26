@@ -30,8 +30,9 @@ import { useEditorDefaults } from '@example-resources'
 // (`@json-edit-react/utils/filters`): `byPath('tracks.*')` matches
 // whole track items (not their fields, the playlist title, or the
 // array itself), so only whole tracks can be deleted and dragged.
-// Type changes are off entirely. The header's "Add track" button
-// (view mode) appends a new track via `setValue`.
+// Adds are off everywhere (`allowAdd: false`), so the header's
+// "Add track" button — a `setValue` edit, not an add op — is the
+// only way to add one. Type changes are off too.
 
 interface Track {
   title: string
@@ -84,9 +85,14 @@ const TrackList = ({
     tracks.reduce((sum, track) => sum + (Number(track?.seconds) || 0), 0)
   )
 
-  // Commit a reordered list; this closes the session, so each
-  // action is one-shot (re-open "Reorder…" to run another).
-  const reorder = (next: Track[]) => setValue(next as unknown as JsonData)
+  // Commit a reordered list. Committing the array closes this
+  // node's edit session, so re-open it: the toolbar stays until
+  // "Done" (or until an edit starts elsewhere, which displaces it
+  // via the single active session).
+  const reorder = (next: Track[]) => {
+    setValue(next as unknown as JsonData)
+    setIsEditing(true)
+  }
 
   // Append a fresh track to the end of the list.
   const addTrack = () =>
@@ -185,6 +191,7 @@ export default function Playlist() {
       rootName="playlist"
       customNodeDefinitions={customNodeDefinitions}
       allowDelete={isTrackItem} // only whole tracks
+      allowAdd={false} // add tracks only via the header button
       allowDrag={isTrackItem} // drag whole tracks to reorder
       allowTypeSelection={false} // no type changes anywhere
     />
