@@ -24,7 +24,7 @@ const stubBuildNodeDataFromPathRef: BuildNodeDataFromPathRef = { current: undefi
 // tests.
 const stubCommitRef = { current: undefined }
 
-type DragSourceValue = { path: CollectionKey[] | null }
+type DragSourceValue = { path: CollectionKey[] | null; canDelete: boolean }
 
 // Mutable refs the tests poke at to drive each slice. All three setters are
 // useCallback-stable in their respective providers — re-assigning per-render
@@ -90,7 +90,7 @@ describe('Tree-state providers — slice isolation', () => {
     const before = { ...renderCounts }
 
     act(() => {
-      setters.setDrag!({ path: ['foo'] })
+      setters.setDrag!({ path: ['foo'], canDelete: true })
     })
 
     expect(renderCounts.drag).toBeGreaterThan(before.drag)

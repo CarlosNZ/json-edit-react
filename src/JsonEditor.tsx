@@ -702,6 +702,7 @@ const Editor: React.FC<
     allowTypeSelection,
     allowDragFilter,
     canDragOnto: false, // can't drag onto outermost container
+    canAddHere: false, // ...nor relocate into it
     showClipboardButton,
     onCopy: onCopyStable,
     sortKeys,

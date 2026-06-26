@@ -450,7 +450,13 @@ interface BaseNodeProps {
   allowDeleteFilter: FilterFunction
   allowAddFilter: FilterFunction
   allowDragFilter: FilterFunction
+  // The parent collection's permissions, as seen by a child that's a drop
+  // target. `canDragOnto` = parent is editable → a same-collection REORDER may
+  // land here. `canAddHere` = parent accepts adds → a cross-collection RELOCATE
+  // may land here. A relocate additionally needs the dragged node's own
+  // delete-permission (carried on `dragSource`). See useDragNDrop.
   canDragOnto: boolean
+  canAddHere: boolean
   allowTypeSelection: boolean | TypeOptions | TypeFilterFunction
   stringTruncateLength: number
   indent: number

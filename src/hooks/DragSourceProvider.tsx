@@ -11,6 +11,11 @@ import { type CollectionKey } from '../types'
 
 interface DragSource {
   path: CollectionKey[] | null
+  // The source node's delete-permission, stashed at pickup so any drop target
+  // can decide a relocate (move OUT of the source collection) without
+  // re-deriving the source's `NodeData`. Irrelevant to a same-collection
+  // reorder. `false` while idle.
+  canDelete: boolean
 }
 
 interface DragSourceContext {
@@ -31,7 +36,7 @@ interface DragSourceProps {
 }
 
 export const DragSourceProvider = ({ children }: DragSourceProps) => {
-  const [dragSource, setDragSource] = useState<DragSource>({ path: null })
+  const [dragSource, setDragSource] = useState<DragSource>({ path: null, canDelete: false })
   const armed = useRef(false)
   // `setDragSource` is React's setState ref (stable for the provider's
   // lifetime), and `armed` is a stable ref. The value object's identity flips

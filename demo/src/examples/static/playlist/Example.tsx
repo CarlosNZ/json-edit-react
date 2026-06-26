@@ -33,6 +33,12 @@ import { useEditorDefaults } from '@example-resources'
 // Adds are off everywhere (`allowAdd: false`), so the header's
 // "Add track" button — a `setValue` edit, not an add op — is the
 // only way to add one. Type changes are off too.
+//
+// Drag-and-drop is confined to the list for free: a drop into a
+// different collection is a relocate, which needs delete on the
+// source AND add on the destination — and `allowAdd: false` denies
+// that everywhere. So tracks reorder within the list but can't be
+// dragged out (onto the title, or into another track).
 
 interface Track {
   title: string

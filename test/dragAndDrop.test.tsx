@@ -212,17 +212,112 @@ describe('Drag-and-drop: allowDrag', () => {
     expect(Object.keys(result)).toEqual(['locked', 'other', 'free'])
   })
 
-  test('allowDelete={false} gates allowDrag — `canDrag = allowDrag && canDelete`', () => {
-    // useCommon: `canDrag = allowDragFilter(nodeData) && canDelete`.
-    // So with `allowDelete={false}` the row stays non-draggable even when
-    // `allowDrag` is set explicitly — that's the interaction this pins
-    // (distinct from the plain default-false case covered elsewhere).
+  test('allowDelete={false} no longer blocks pickup — the row is still draggable', () => {
+    // Pickup is now `allowDrag` alone (decoupled from delete). `allowDelete`
+    // only gates a relocate OUT of the collection, enforced at the drop — so a
+    // non-deletable row stays draggable (it can still be reordered in place).
     const { container } = render(
       <JsonEditor data={{ a: 1, b: 2 }} setData={() => {}} allowDelete={false} allowDrag />
     )
 
-    expect(rowFor(container, 'a').getAttribute('draggable')).toBe('false')
-    expect(rowFor(container, 'b').getAttribute('draggable')).toBe('false')
+    expect(rowFor(container, 'a').getAttribute('draggable')).toBe('true')
+    expect(rowFor(container, 'b').getAttribute('draggable')).toBe('true')
+  })
+})
+
+describe('Drag-and-drop: relocate vs reorder permissions', () => {
+  // A drop inserts the dragged node as a sibling of the target, into the
+  // target's parent collection. Reorder (same collection) needs the collection
+  // editable; relocate (different collection) needs the source deletable AND the
+  // destination collection accepting adds. See `dropAllowed` in useDragNDrop.
+
+  test('reorder within a collection works without delete-permission (needs only edit)', async () => {
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} allowDelete={false} allowDrag />
+    )
+    await dragAndDrop(rowFor(container, 'a'), rowFor(container, 'b'), 'below')
+    expect(setData).toHaveBeenCalledTimes(1)
+    expect(Object.keys(lastCall(setData) as Record<string, number>)).toEqual(['b', 'a', 'c'])
+  })
+
+  test('reorder is blocked when the collection is not editable', async () => {
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} allowEdit={false} allowDrag />
+    )
+    // Still pickable (pickup = allowDrag), but no legal landing in-place.
+    expect(rowFor(container, 'a').getAttribute('draggable')).toBe('true')
+    await dragAndDrop(rowFor(container, 'a'), rowFor(container, 'b'), 'above')
+    expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('relocate is blocked when the source is not deletable', async () => {
+    const setData = jest.fn()
+    const data = { src: { x: 1 }, dst: { z: 9 } }
+    const { container } = render(
+      <JsonEditor data={data} setData={setData} allowDelete={({ key }) => key !== 'x'} allowDrag />
+    )
+    // 'x' is still draggable, but can't be moved OUT of `src` (no delete).
+    expect(rowFor(rowFor(container, 'src'), 'x').getAttribute('draggable')).toBe('true')
+    await dragAndDrop(
+      rowFor(rowFor(container, 'src'), 'x'),
+      rowFor(rowFor(container, 'dst'), 'z'),
+      'above'
+    )
+    expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('relocate is blocked when the destination collection rejects adds', async () => {
+    const setData = jest.fn()
+    const data = { src: { x: 1 }, dst: { z: 9 } }
+    const { container } = render(
+      <JsonEditor data={data} setData={setData} allowAdd={false} allowDrag />
+    )
+    await dragAndDrop(
+      rowFor(rowFor(container, 'src'), 'x'),
+      rowFor(rowFor(container, 'dst'), 'z'),
+      'above'
+    )
+    expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('relocate works when source is deletable and destination accepts adds', async () => {
+    // Default permissions — pinned next to the blocked cases for contrast.
+    const setData = jest.fn()
+    const data = { src: { x: 1 }, dst: { z: 9 } }
+    const { container } = render(<JsonEditor data={data} setData={setData} allowDrag />)
+    await dragAndDrop(
+      rowFor(rowFor(container, 'src'), 'x'),
+      rowFor(rowFor(container, 'dst'), 'z'),
+      'below'
+    )
+    expect(setData).toHaveBeenCalledTimes(1)
+    const result = lastCall(setData) as typeof data
+    expect(result.src).toEqual({})
+    expect(result.dst).toEqual({ z: 9, x: 1 })
+  })
+
+  test('Playlist-shaped: allowAdd={false} confines drags to reorder-within-list', async () => {
+    // The shape the Playlist example relies on: adds disabled globally, items
+    // deletable (default). Reorder within the list works; relocating an item
+    // OUT (an add into another collection) is rejected.
+    const setData = jest.fn()
+    const data = { items: [10, 20, 30], other: 99 }
+    const { container } = render(
+      <JsonEditor data={data} setData={setData} allowAdd={false} allowDrag />
+    )
+
+    // Reorder within `items` — allowed (collection is editable).
+    await dragAndDrop(rowFor(container, 0), rowFor(container, 2), 'below')
+    expect(setData).toHaveBeenCalledTimes(1)
+    expect((lastCall(setData) as typeof data).items).toEqual([20, 30, 10])
+
+    setData.mockClear()
+
+    // Relocate an item OUT onto `other` at the root — rejected (root rejects adds).
+    await dragAndDrop(rowFor(container, 0), rowFor(container, 'other'), 'above')
+    expect(setData).not.toHaveBeenCalled()
   })
 })
 

@@ -39,6 +39,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     parentData,
     showCollectionCount,
     canDragOnto,
+    canAddHere,
     collapseFilter,
     collapseAnimationTime,
     showClipboardButton,
@@ -99,7 +100,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   } = useCommon({ props, collapsed })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
-    { canDrag, canDragOnto, path, nodeData, onError, translate }
+    { canDrag, canDelete, canDragOnto, canAddHere, path, nodeData, onError, translate }
   )
 
   // This allows us to not render the children on load if they're hidden (which
@@ -432,6 +433,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
               parentData={data}
               nodeData={childNodeData}
               canDragOnto={canEdit}
+              canAddHere={canAdd}
               customNodeData={childCustomNodeData}
             />
           ) : (
@@ -442,6 +444,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
               parentData={data}
               nodeData={childNodeData}
               canDragOnto={canEdit}
+              canAddHere={canAdd}
               showLabel={collectionType === 'object' ? true : showArrayIndexes}
               customNodeData={childCustomNodeData}
             />
@@ -528,6 +531,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       : NOOP,
     getStyles,
     canDragOnto: canEdit,
+    canAddHere: canAdd,
     canEdit,
     keyboardCommon: {},
   })
