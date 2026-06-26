@@ -43,6 +43,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     showClipboardButton,
     onCopy,
     canDragOnto,
+    canAddHere,
     allowTypeSelection,
     showLabel,
     stringTruncateLength,
@@ -87,7 +88,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   } = useCommon({ props })
 
   const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
-    { canDrag, canDragOnto, path, nodeData, onError, translate }
+    { canDrag, canDelete, canDragOnto, canAddHere, path, nodeData, onError, translate }
   )
 
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))

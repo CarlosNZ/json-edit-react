@@ -1,5 +1,9 @@
 # json-edit-react
 
+## 2.0.0-beta.5
+
+- Drag-and-drop now respects the `allow*` permissions consistently: reordering within a collection needs its `allowEdit`, while relocating into a different collection needs `allowDelete` on the source **and** `allowAdd` on the destination. Picking a node up needs only `allowDrag` (no longer `allowDelete` too). See the [migration guide](migration-guide.md#5-restrict-props-renamed-to-allow-semantics-inverted).
+
 ## 2.0.0-beta.4
 
 - Collection custom components with `showOnEdit` now receive live child rows while editing (#384).

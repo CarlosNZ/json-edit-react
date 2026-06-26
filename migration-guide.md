@@ -268,6 +268,16 @@ Negate the whole predicate. For guard-style functions with early returns, flip e
 
 The **array** form (a whitelist of available types) is unchanged — it always meant "these types are available". Only the **boolean** form (and a function *returning* a boolean) flips: under `allowTypeSelection`, `true` means "all types available", `false` means "no type change". So a function that returned `false` to mean "no restriction" should now return `true`, and one that returned `true` to lock the type should now return `false`.
 
+### Drag-and-drop now respects `allowAdd` / `allowDelete` / `allowEdit`
+
+Drag-and-drop permissions are now consistent with the rest of the permission model, distinguishing a **reorder** (drop within the same collection) from a **relocate** (drop into a different one):
+
+- **Pickup** needs only `allowDrag` — it no longer also requires `allowDelete`. A node that can't be deleted can still be picked up and reordered in place; it just can't be moved *out* of its collection.
+- **Reorder** (same collection) requires that collection's `allowEdit`.
+- **Relocate** (different collection) requires `allowDelete` on the source **and** `allowAdd` on the destination collection.
+
+Previously a drop was allowed wherever the destination was *editable*, and `allowAdd` had no effect on it — so a node could be dragged into a collection that forbade adds. If you relied on that, a restricted destination (`allowAdd:false`) now rejects incoming drags; conversely, if you set `allowDelete:false` purely to stop a node being dragged, it's now draggable-for-reorder again (set `allowDrag:false` to stop drag entirely).
+
 ---
 
 ## 6. `enableClipboard` split into `showClipboardButton` + `onCopy`

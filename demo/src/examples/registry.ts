@@ -292,9 +292,21 @@ const allExamples: Record<string, ExampleDef> = {
       'A custom **collection** node that owns its editor (`showOnEdit: true`) keeps the live child rows as its `children` *while editing*, just as in view — so it can place an editable header or toolbar **above** the rows and keep them interactive the whole time, instead of being handed the built-in JSON textarea.\n\n' +
       "Here `tracks` is the custom node: its header shows the track count and total runtime, and **Reorder…** opens the node's own edit session, swapping the header for a Shuffle / Sort / Reverse toolbar — each commits a reordered array through `setValue`, no special editor prop required.\n\n" +
       'Try it while the toolbar is open: the track rows stay fully editable. Change a title or `seconds` inline and, because there is a single active edit session, doing so simply displaces the header’s session.\n\n' +
-      'Editing is fenced with the filter-function toolkit (`@json-edit-react/utils/filters`): `byPath(\'tracks.*\')` allows only whole tracks to be **deleted** and **dragged** — never their fields, the playlist title, or the list itself — and type changes are off everywhere. Adding is disabled (`allowAdd: false`), so the header’s **Add track** button — a `setValue` edit — is the only way to add one.',
+      'Editing is fenced with the filter-function toolkit (`@json-edit-react/utils/filters`): `byPath(\'tracks.*\')` allows only whole tracks to be **deleted** and **dragged** — never their fields, the playlist title, or the list itself — and type changes are off everywhere. Adding is disabled (`allowAdd: false`), so the header’s **Add track** button — a `setValue` edit — is the only way to add one.\n\n' +
+      'That `allowAdd: false` also confines the drag-and-drop: moving a track into a *different* collection is a relocate, which needs add-permission at the destination — so tracks reorder within the list but can’t be dragged out onto the title or into another track.',
     load: () => import('./static/playlist/Example'),
     code: () => import('./static/playlist/Example.tsx?raw'),
+  },
+  'drag-drop-rules': {
+    kind: 'static',
+    title: 'Drag & drop rules',
+    blurb:
+      'Drag-and-drop obeys the same per-node permissions as the rest of the editor — this page gathers all of them in one place to play with. Moving an item **within its own list** (a *reorder*) and moving it **to another list** (a *relocate*) are allowed separately, so a list can be one you’re free to shuffle but can’t add to, or one you can drop into but can’t rearrange.\n\n' +
+      'Every list holds the same three items: **🟢 free** can be reordered *and* moved to another list; **🟡 no-exit** can be reordered in place but never leaves its list; **🔴 pinned** can’t be picked up at all.\n\n' +
+      'The four lists differ in what they allow: **open** — reorder ✓, accepts drops ✓; **reorderOnly** — reorder ✓, accepts drops ✗; **dropZone** — reorder ✗, accepts drops ✓; **locked** — neither.\n\n' +
+      'To move an item *into* a list, drop it onto an item already in that list. Try dragging a **🟢 free** from *open* into *dropZone* (works) or into *reorderOnly* (refused — it won’t take drops); reorder inside *open* (works) vs inside *locked* (refused); or grab a **🟡 no-exit** and try to drag it out of its list (refused). A row only highlights when the drop is actually allowed.',
+    load: () => import('./static/drag-drop-rules/Example'),
+    code: () => import('./static/drag-drop-rules/Example.tsx?raw'),
   },
   'student-cards': {
     kind: 'static',

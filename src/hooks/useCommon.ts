@@ -79,11 +79,14 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   const canEdit = allowEditFilter(nodeData)
   const canDelete = allowDeleteFilter(nodeData)
   const canAdd = allowAddFilter(nodeData)
-  // Drag permission no longer depends on global editing state (which would
-  // re-render every node when editing starts/ends). "Don't drag while editing"
-  // is enforced at drag-start instead (see useDragNDrop), reading the store
-  // imperatively.
-  const canDrag = allowDragFilter(nodeData) && canDelete
+  // Drag permission is just "can this node be picked up". It no longer depends
+  // on delete-permission: `canDelete` only gates moving a node OUT of its
+  // collection (a relocate), which is checked at the drop instead (see
+  // useDragNDrop). Reordering within a collection needs no delete. Nor does it
+  // depend on global editing state (which would re-render every node when
+  // editing starts/ends) — "don't drag while editing" is enforced at drag-start
+  // instead, reading the store imperatively.
+  const canDrag = allowDragFilter(nodeData)
 
   const showError = (errorString: ErrorString) => {
     if (showErrorMessages) {

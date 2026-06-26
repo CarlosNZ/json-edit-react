@@ -477,9 +477,15 @@ The `allowDrag` property controls which items (if any) can be dragged into new p
 > 1. you're sure object keys will always be simple strings (i.e. not digits or non-standard characters)
 > 2. you're saving the data in a serialisation format that preserves key order. For example, storing in a Postgres database using the `jsonb` (binary JSON) type, key order is meaningless, so the next time the object is loaded, the keys will be listed alphabetically.
 
-- The `allowDrag` filter applies to the *source* element (i.e. the node being dragged), not the destination.
-- To be draggable, the node must *also* be delete-able (via the `allowDelete` prop), as dragging a node to a new destination is essentially just deleting it and adding it back elsewhere.
-- Similarly, the destination collection must be editable in order to drop it in there. This ensures that if you've gone to the trouble of configuring restrictive editing constraints using Filter functions, you can be confident that they can't be circumvented via drag-n-drop.
+- The `allowDrag` filter applies to the *source* node (the one being dragged) — it controls whether a node can be **picked up** at all.
+- What a drop is allowed to do then depends on where it lands, and reuses your existing permission filters — so if you've configured restrictive editing constraints with Filter functions, they can't be circumvented via drag-n-drop:
+
+| Drop | Is a… | Requires |
+| --- | --- | --- |
+| Within the same collection | **reorder** | `allowEdit` on that collection |
+| Into a *different* collection | **relocate** | `allowDelete` on the source **and** `allowAdd` on the destination collection |
+
+A relocate is a delete-then-add across collections, so it needs both halves; a reorder changes nothing's membership, so it needs neither — only that the collection itself is editable.
 
 <div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 

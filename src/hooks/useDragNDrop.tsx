@@ -13,7 +13,14 @@ import { type TranslateFunction } from '../localisation'
 
 interface DnDProps {
   canDrag: boolean
+  // This node's own delete-permission — stashed on `dragSource` at pickup so a
+  // relocate (move OUT of its collection) can be gated at the drop.
+  canDelete: boolean
+  // The parent collection's permissions, used when THIS node is a drop target:
+  // `canDragOnto` = parent editable → a same-collection reorder may land here;
+  // `canAddHere` = parent accepts adds → a cross-collection relocate may.
   canDragOnto: boolean
+  canAddHere: boolean
   path: CollectionKey[]
   nodeData: NodeData
   onError: (error: JerError, errorValue: CollectionData | string) => unknown
@@ -22,7 +29,9 @@ interface DnDProps {
 
 export const useDragNDrop = ({
   canDrag,
+  canDelete,
   canDragOnto,
+  canAddHere,
   path,
   nodeData,
   onError,
@@ -32,6 +41,22 @@ export const useDragNDrop = ({
   const { dragSource, setDragSource, armed } = useDragSource()
   const editingStore = useEditingStore()
   const [isDragTarget, setIsDragTarget] = useState<Position | false>(false)
+
+  // Whether the in-flight drag may legally land on THIS node. A drop inserts
+  // the dragged item as a sibling of this node, into this node's parent
+  // collection, so:
+  //   - same collection (source's parent === this node's parent) → REORDER,
+  //     allowed when the parent is editable (`canDragOnto`);
+  //   - different collection → RELOCATE, allowed when the source is deletable
+  //     (`dragSource.canDelete`) AND this collection accepts adds (`canAddHere`).
+  // A drop onto the source itself or a descendant is never allowed. The drag
+  // highlight and `handleDrop` share this predicate, so a highlighted target
+  // always accepts the drop.
+  const dropAllowed = (): boolean => {
+    if (dragSource.path === null || isDescendantOf(path, dragSource.path)) return false
+    const sameCollection = pathsEqual(dragSource.path.slice(0, -1), path.slice(0, -1))
+    return sameCollection ? canDragOnto : dragSource.canDelete && canAddHere
+  }
 
   // Props added to items being dragged
   const dragSourceProps = useMemo(() => {
@@ -67,39 +92,44 @@ export const useDragNDrop = ({
         // it.
         armed.current = false
         e.stopPropagation()
-        setDragSource({ path })
+        setDragSource({ path, canDelete })
       },
       onDragEnd: (e: React.DragEvent) => {
         armed.current = false
         e.stopPropagation()
-        setDragSource({ path: null })
+        setDragSource({ path: null, canDelete: false })
       },
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canDrag, path])
+  }, [canDrag, canDelete, path])
 
   // Props for the items being dropped onto
   const getDropTargetProps = useMemo(
     () => (position: Position) => {
-      if (!canDragOnto) return {}
+      // Never a drop target if neither a reorder nor a relocate could ever land
+      // here. Whether a given in-flight drag actually may is decided live by
+      // `dropAllowed()` in the handlers below.
+      if (!canDragOnto && !canAddHere) return {}
       return {
         onDragOver: (e: React.DragEvent) => {
           e.stopPropagation()
-          e.preventDefault()
+          // `preventDefault` is what marks an element droppable (sets the drop
+          // cursor and lets `drop` fire). Gate it on the same predicate as the
+          // highlight, so an illegal target shows the "no-drop" cursor and
+          // doesn't fire a drop that `handleDrop` would only no-op.
+          if (dropAllowed()) e.preventDefault()
         },
         onDrop: (e: React.DragEvent) => {
           e.stopPropagation()
           handleDrop(position)
-          setDragSource({ path: null })
+          setDragSource({ path: null, canDelete: false })
           setIsDragTarget(false)
         },
         onDragEnter: (e: React.DragEvent) => {
           e.stopPropagation()
-          // Block highlighting when dragging onto self or any descendant of the
-          // drag source (reflexive descendant check)
-          if (dragSource.path === null || !isDescendantOf(path, dragSource.path)) {
-            setIsDragTarget(position)
-          }
+          // Highlight only a target this drag may legally land on (also blocks
+          // self/descendant — see `dropAllowed`).
+          if (dropAllowed()) setIsDragTarget(position)
         },
         onDragExit: (e: React.DragEvent) => {
           e.stopPropagation()
@@ -108,7 +138,7 @@ export const useDragNDrop = ({
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dragSource, canDragOnto, path]
+    [dragSource, canDragOnto, canAddHere, path]
   )
 
   // A dummy component to allow us to detect when dragging onto the *bottom*
@@ -116,7 +146,7 @@ export const useDragNDrop = ({
   // locked to the bottom.
   const BottomDropTarget = useMemo(
     () =>
-      canDragOnto && dragSource.path !== null ? (
+      dragSource.path !== null && dropAllowed() ? (
         <div
           className="jer-drop-target-bottom"
           style={{
@@ -131,7 +161,7 @@ export const useDragNDrop = ({
         ></div>
       ) : null,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dragSource, canDragOnto, path.length]
+    [dragSource, canDragOnto, canAddHere, path.length]
   )
 
   // "Padding" element displayed either above or below a node to indicate
@@ -147,14 +177,13 @@ export const useDragNDrop = ({
 
   const handleDrop = (position: Position) => {
     if (dragSource.path === null) return
-    // A node can't be moved inside itself: bail if the drop target is
-    // the source or any descendant (reflexive, like `onDragEnter`). The
-    // drop fires independently of the drag-over highlight, so this gate
-    // is needed on the move too — otherwise the `move` op deletes the
-    // source then re-creates it under itself (`createNew`), nesting the
-    // collection in a copy of itself. (Firefox fires this drop; Chrome
-    // and Safari suppress it, but the guard fixes it everywhere.)
-    if (isDescendantOf(path, dragSource.path)) return
+    // The same predicate the highlight uses, re-checked here because the drop
+    // fires independently of the drag-over highlight. It enforces the
+    // reorder/relocate permission rules AND the self/descendant guard — without
+    // the latter the `move` op would delete the source then re-create it under
+    // itself (`createNew`), nesting the collection in a copy of itself. (Firefox
+    // fires such a drop; Chrome and Safari suppress it, but this covers all.)
+    if (!dropAllowed()) return
     const sourceKey = dragSource.path.slice(-1)[0]
     const sourceParent = dragSource.path.slice(0, -1)
     const thisParent = path.slice(0, -1)
