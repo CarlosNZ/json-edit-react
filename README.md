@@ -23,7 +23,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
  - ✅ **Easy inline editing** of individual values or whole blocks of JSON text 
  - 🔒 **Granular control** – restrict edits, deletions, or additions per element
  - 📏 **[JSON Schema](https://json-schema.org/) validation** (using 3rd-party validation library)
- - 🎨 **Customisable UI** — built-in or custom [themes](#themes--styles), CSS overrides or targeted classes
+ - 🎨 **Customisable UI** — full [theme](#themes--styles) replacement, or granular overrides 
  - 📦 **Self-contained** — plain HTML/CSS, no external UI library dependencies, and *zero runtime dependencies*
  - 🔍 **Search & filter** — find data by key, value or custom function
  - 🚧 **[Custom components](#custom-nodes)** — replace keys and/or values with specialised components (e.g. date picker, links, images, `undefined`, `BigInt`, `Symbol`)
