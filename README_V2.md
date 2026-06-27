@@ -398,7 +398,7 @@ These each take a `boolean` value, or a [`FilterFunction`](#filter-functions) ca
 [![▶ Live example: Edit restrictions](https://img.shields.io/badge/▶_Live_example-Edit_restrictions-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/edit-restrictions)
 
 > [!NOTE]
-> There is no specific permission function for editing object **property names**. Since renaming a property is equivalent to deleting it and adding it back under a new name, a node's key is only editable when it returns `true` for **all three** of `allowEdit`, `allowDelete` *and* `allowAdd` (and the node isn't the root or an array index).
+> There is no specific permission for editing object **property names**. Renaming a property is equivalent to deleting it and re-adding it under a new name in its parent collection, so a key is editable when the node returns `true` for `allowDelete` **and** its parent collection returns `true` for `allowAdd` (and the node isn't the root or an array index). `allowEdit` plays no part — a key can be renamed even where its value can't. This mirrors a drag-and-drop [relocate](#drag-and-drop-reordering): a delete here, an add there.
 
 
 ### Restricting data types — `allowTypeSelection`
