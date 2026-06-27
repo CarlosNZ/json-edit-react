@@ -12,7 +12,11 @@ export function JsonViewer<T = JsonData>(props: JsonViewerProps<T>): React.React
   // bypass the read-only contract through the ref. Keeping them on the private
   // `innerRef` makes them genuinely unreachable, not merely type-hidden.
   const innerRef = useRef<JsonEditorHandle>(null)
-  useImperativeHandle(editorRef, () => ({ collapse: (state) => innerRef.current?.collapse(state) }), [])
+  useImperativeHandle(
+    editorRef,
+    () => ({ collapse: (state) => innerRef.current?.collapse(state) }),
+    []
+  )
 
   return (
     <JsonEditor<T>

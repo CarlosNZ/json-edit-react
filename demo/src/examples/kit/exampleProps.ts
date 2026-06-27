@@ -31,5 +31,4 @@ export const useExampleProps = (): ExampleEditorProps => useContext(ExampleEdito
 // with it (or read `displayName` for a sibling component like CodeMirror) can
 // do so without repeating the cast. The shell always initialises `theme` to a
 // real `Theme` (`defaultTheme`), so the cast is safe in this context.
-export const useExampleTheme = (): Theme =>
-  useContext(ExampleEditorContext).theme as Theme
+export const useExampleTheme = (): Theme => useContext(ExampleEditorContext).theme as Theme

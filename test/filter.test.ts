@@ -136,8 +136,7 @@ describe('computeFilterState', () => {
     level: 0,
     index: 0,
     value: data,
-    size:
-      typeof data === 'object' && data !== null ? Object.keys(data as object).length : null,
+    size: typeof data === 'object' && data !== null ? Object.keys(data as object).length : null,
     parentData: null,
     fullData: data,
   })
@@ -235,4 +234,3 @@ describe('computeFilterState', () => {
     expect(fs.visibleChildCounts.get(toPathString(['fruits']))).toBe(1)
   })
 })
-

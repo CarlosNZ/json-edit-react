@@ -37,8 +37,7 @@ export type ConfirmMessage<T = JsonData> = string | ((input: UpdateFunctionProps
  * When to confirm: a list of event names, or a predicate over the update input.
  */
 export type ConfirmOn<T = JsonData> =
-  | JsonEditorEventName[]
-  | ((input: UpdateFunctionProps<T>) => boolean)
+  JsonEditorEventName[] | ((input: UpdateFunctionProps<T>) => boolean)
 
 export interface UseConfirmOnUpdateOptions<T = JsonData> {
   /**

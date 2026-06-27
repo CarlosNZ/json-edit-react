@@ -68,7 +68,9 @@ footer {
 .jer-markdown-block h1,
 h2,
 h3 {
-  font-family: Work Sans, sans-serif;
+  font-family:
+    Work Sans,
+    sans-serif;
   font-weight: bold;
   line-height: 1.4em;
   /* color: #ea3788; */

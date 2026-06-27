@@ -9,8 +9,7 @@ import { errorIndicatorDefinition } from '../packages/components/src/ErrorIndica
 import { useValidationState, type Validate } from '../packages/utils/src'
 
 const errorGlyph = () => screen.queryByRole('img', { name: 'error' })
-const wrapperOf = (text: string) =>
-  screen.getByText(text).closest('.jer-error-indicator-wrapper')
+const wrapperOf = (text: string) => screen.getByText(text).closest('.jer-error-indicator-wrapper')
 
 describe('errorIndicatorDefinition', () => {
   it('flags nothing by default (no condition → no-op)', () => {
@@ -29,9 +28,7 @@ describe('errorIndicatorDefinition', () => {
       <JsonEditor
         data={{ good: 'x', bad: 'y' }}
         setData={() => {}}
-        customNodeDefinitions={[
-          errorIndicatorDefinition({ condition: (nd) => nd.key === 'bad' }),
-        ]}
+        customNodeDefinitions={[errorIndicatorDefinition({ condition: (nd) => nd.key === 'bad' })]}
       />
     )
     expect(screen.getAllByRole('img', { name: 'error' })).toHaveLength(1)
@@ -124,7 +121,9 @@ describe('cross-branch flagging via useValidationState', () => {
       () => [errorIndicatorDefinition({ condition: (nd) => validation.hasErrorAt(nd.path) })],
       [validation]
     )
-    return <JsonEditor data={data} setData={setData} customNodeDefinitions={customNodeDefinitions} />
+    return (
+      <JsonEditor data={data} setData={setData} customNodeDefinitions={customNodeDefinitions} />
+    )
   }
 
   it('clears the glyph on a cross-branch node when the edit makes it valid', async () => {

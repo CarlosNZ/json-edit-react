@@ -468,7 +468,9 @@ describe('JsonEditor — edit flow', () => {
     await user.type(input, '123')
     expect(container.querySelector('input.jer-input-number')).not.toBeNull()
     expect(container.querySelector('textarea.jer-input-text')).toBeNull()
-    expect((container.querySelector('input.jer-input-number') as HTMLInputElement).value).toBe('123')
+    expect((container.querySelector('input.jer-input-number') as HTMLInputElement).value).toBe(
+      '123'
+    )
 
     await user.keyboard('{Enter}')
     expect(setData).toHaveBeenCalledWith({ count: 123 })
@@ -667,9 +669,7 @@ describe('JsonEditor — edit flow', () => {
   })
 
   test('allowDrag defaults to false — nodes are not draggable without it', () => {
-    const { container } = render(
-      <JsonEditor data={{ outer: { inner: 'hello' } }} setData={noop} />
-    )
+    const { container } = render(<JsonEditor data={{ outer: { inner: 'hello' } }} setData={noop} />)
     const leaf = container.querySelector('.jer-value-component') as HTMLElement
     expect(leaf).toHaveAttribute('draggable', 'false')
   })
@@ -747,7 +747,9 @@ describe('JsonEditor — edit flow', () => {
     const user = userEvent.setup()
     const onChange: OnChangeFunction = ({ newValue }) =>
       (newValue as string).replace(/[^a-zA-Z\s]/g, '')
-    render(<JsonEditor data={{ name: 'Mrs. Dennis Schulist' }} setData={noop} onChange={onChange} />)
+    render(
+      <JsonEditor data={{ name: 'Mrs. Dennis Schulist' }} setData={noop} onChange={onChange} />
+    )
 
     await user.dblClick(screen.getByText('"Mrs. Dennis Schulist"'))
     const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
@@ -859,7 +861,8 @@ describe('JsonEditor — structural mutations', () => {
   test('switching the value type renders the matching input, not the committed type', async () => {
     const user = userEvent.setup()
     const { container } = render(<JsonEditor data={{ x: 'hello' }} setData={noop} />)
-    const typeSelect = () => container.querySelector('select[name="x-type-select"]') as HTMLSelectElement
+    const typeSelect = () =>
+      container.querySelector('select[name="x-type-select"]') as HTMLSelectElement
 
     await user.dblClick(screen.getByText('"hello"'))
     // String value → the string textarea editor.
@@ -908,7 +911,10 @@ describe('JsonEditor — structural mutations', () => {
     const { container } = render(<JsonEditor data={{ x: 'hello' }} setData={setData} />)
 
     await user.dblClick(screen.getByText('"hello"'))
-    await user.selectOptions(container.querySelector('select[name="x-type-select"]') as HTMLSelectElement, 'null')
+    await user.selectOptions(
+      container.querySelector('select[name="x-type-select"]') as HTMLSelectElement,
+      'null'
+    )
 
     // `null` has no value to edit, so selecting it commits straight away — no
     // OK/Enter needed — and the editor closes (the type selector disappears).
@@ -1015,7 +1021,12 @@ describe('JsonEditor — §17 onUpdate event discriminant', () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn(() => true as const)
     render(
-      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onUpdate={onUpdate} showIconTooltips />
+      <JsonEditor
+        data={{ x: 'hi', y: 'bye' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        showIconTooltips
+      />
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
@@ -1031,7 +1042,12 @@ describe('JsonEditor — §17 onUpdate event discriminant', () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn(() => true as const)
     const { container } = render(
-      <JsonEditor data={{ existing: 'value' }} setData={noop} onUpdate={onUpdate} showIconTooltips />
+      <JsonEditor
+        data={{ existing: 'value' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        showIconTooltips
+      />
     )
 
     await user.click(screen.getByTitle('Add'))
@@ -1155,7 +1171,12 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     const { container } = render(
-      <JsonEditor data={{ existing: 'value' }} setData={noop} onEditEvent={onEditEvent} showIconTooltips />
+      <JsonEditor
+        data={{ existing: 'value' }}
+        setData={noop}
+        onEditEvent={onEditEvent}
+        showIconTooltips
+      />
     )
 
     // Open + confirm
@@ -1163,7 +1184,11 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
     await user.clear(newKeyInput)
     await user.type(newKeyInput, 'fresh{Enter}')
-    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startAdd', 'submitAdd', 'commitAdd'])
+    expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual([
+      'startAdd',
+      'submitAdd',
+      'commitAdd',
+    ])
 
     // Open + cancel
     onEditEvent.mockClear()
@@ -1208,7 +1233,12 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     render(
-      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onEditEvent={onEditEvent} showIconTooltips />
+      <JsonEditor
+        data={{ x: 'hi', y: 'bye' }}
+        setData={noop}
+        onEditEvent={onEditEvent}
+        showIconTooltips
+      />
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
@@ -1265,12 +1295,7 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     const onEditEvent = jest.fn<void, [EditEvent]>()
     const ref = createRef<JsonEditorHandle>()
     render(
-      <JsonEditor
-        data={{ x: 'hello' }}
-        setData={noop}
-        onEditEvent={onEditEvent}
-        editorRef={ref}
-      />
+      <JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} editorRef={ref} />
     )
 
     await user.dblClick(screen.getByText('"hello"'))
@@ -1337,7 +1362,9 @@ describe('JsonEditor — commit-on-displace (clicking another node while editing
     // is the first within its component subtree).
     const objComponent = screen.getByText('obj').closest('.jer-component') as HTMLElement
     await user.click(objComponent.querySelector('[title="Edit"]') as HTMLElement)
-    const textarea = container.querySelector('textarea.jer-collection-text-area') as HTMLTextAreaElement
+    const textarea = container.querySelector(
+      'textarea.jer-collection-text-area'
+    ) as HTMLTextAreaElement
     await user.clear(textarea)
     await user.type(textarea, 'abc') // not valid JSON
 
@@ -1421,7 +1448,12 @@ describe('JsonEditor — commit-on-displace (clicking another node while editing
     const setData = jest.fn()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     const { container } = render(
-      <JsonEditor data={{ existing: 'value' }} setData={setData} onEditEvent={onEditEvent} showIconTooltips />
+      <JsonEditor
+        data={{ existing: 'value' }}
+        setData={setData}
+        onEditEvent={onEditEvent}
+        showIconTooltips
+      />
     )
 
     await user.click(screen.getByTitle('Add'))
@@ -1633,7 +1665,12 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
       () => deferred.promise as ReturnType<UpdateFunction>
     )
     render(
-      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} onUpdate={onUpdate} showIconTooltips />
+      <JsonEditor
+        data={{ a: 1, b: 2, c: 3 }}
+        setData={setData}
+        onUpdate={onUpdate}
+        showIconTooltips
+      />
     )
 
     // Delete the MIDDLE key 'b'. The slow onUpdate hasn't settled, so it
@@ -1658,7 +1695,9 @@ describe('JsonEditor — restrictions and callbacks', () => {
   test('allowEdit={false} hides the edit button and blocks dblClick', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    render(<JsonEditor data={{ x: 'hello' }} setData={setData} allowEdit={false} showIconTooltips />)
+    render(
+      <JsonEditor data={{ x: 'hello' }} setData={setData} allowEdit={false} showIconTooltips />
+    )
 
     expect(screen.queryByTitle('Edit')).toBeNull()
     await user.dblClick(screen.getByText('"hello"'))
@@ -1707,7 +1746,12 @@ describe('JsonEditor — restrictions and callbacks', () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn(() => false as const)
     render(
-      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onUpdate={onUpdate} showIconTooltips />
+      <JsonEditor
+        data={{ x: 'hi', y: 'bye' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        showIconTooltips
+      />
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
@@ -1721,7 +1765,12 @@ describe('JsonEditor — restrictions and callbacks', () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn(() => false as const)
     const { container } = render(
-      <JsonEditor data={{ existing: 'value' }} setData={noop} onUpdate={onUpdate} showIconTooltips />
+      <JsonEditor
+        data={{ existing: 'value' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        showIconTooltips
+      />
     )
 
     await user.click(screen.getByTitle('Add'))
@@ -1770,7 +1819,8 @@ describe('JsonEditor — restrictions and callbacks', () => {
         allowTypeSelection={['string', { enum: 'Color', values: ['red', 'green', 'blue'] }]}
       />
     )
-    const typeSelect = () => container.querySelector('select[name="x-type-select"]') as HTMLSelectElement
+    const typeSelect = () =>
+      container.querySelector('select[name="x-type-select"]') as HTMLSelectElement
 
     // Enter edit mode on the value — the type <select> appears
     await user.dblClick(screen.getByText('"hello"'))
@@ -1866,9 +1916,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     // `{ value }` is the edited NODE's value: applied at its path (`x`), leaving
     // the sibling untouched. A whole-document override would instead collapse
     // the doc to the bare string 'OVERRIDDEN'.
-    await waitFor(() =>
-      expect(setData).toHaveBeenLastCalledWith({ x: 'OVERRIDDEN', y: 'world' })
-    )
+    await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ x: 'OVERRIDDEN', y: 'world' }))
   })
 
   test('onUpdate returning { data } replaces the whole document', async () => {
@@ -1914,7 +1962,12 @@ describe('JsonEditor — restrictions and callbacks', () => {
     const setData = jest.fn()
     const onUpdate = jest.fn(() => ({ value: 'ignored' }))
     render(
-      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={setData} onUpdate={onUpdate} showIconTooltips />
+      <JsonEditor
+        data={{ x: 'hi', y: 'bye' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        showIconTooltips
+      />
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
@@ -1930,7 +1983,12 @@ describe('JsonEditor — restrictions and callbacks', () => {
     const setData = jest.fn()
     const onUpdate = jest.fn(() => ({ data: { replaced: true } }))
     render(
-      <JsonEditor data={{ x: 'hi', y: 'bye' }} setData={setData} onUpdate={onUpdate} showIconTooltips />
+      <JsonEditor
+        data={{ x: 'hi', y: 'bye' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        showIconTooltips
+      />
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
@@ -2285,9 +2343,7 @@ describe('JsonEditor — search and filter', () => {
         // Pass any non-empty searchText to activate filtering — the function
         // ignores it
         searchText="x"
-        searchFilter={(nodeData) =>
-          typeof nodeData.value === 'number' && nodeData.value >= 5
-        }
+        searchFilter={(nodeData) => typeof nodeData.value === 'number' && nodeData.value >= 5}
       />
     )
 
@@ -2455,8 +2511,7 @@ describe('JsonEditor — search and filter', () => {
         searchText="apple"
         showCollectionCount
         customText={{
-          ITEMS_FILTERED: ({ size, visibleSize }) =>
-            `[${visibleSize}/${size}] match`,
+          ITEMS_FILTERED: ({ size, visibleSize }) => `[${visibleSize}/${size}] match`,
         }}
       />
     )
@@ -2537,12 +2592,7 @@ describe('JsonEditor — search and filter', () => {
     // No event ever references `b` — Tab walked past it without opening it.
     expect(seq.some((e) => e.key === 'b')).toBe(false)
     // The transition lands directly on `c`.
-    expect(seq.map((e) => e.event)).toEqual([
-      'startEdit',
-      'submitEdit',
-      'commitEdit',
-      'startEdit',
-    ])
+    expect(seq.map((e) => e.event)).toEqual(['startEdit', 'submitEdit', 'commitEdit', 'startEdit'])
     expect(seq[seq.length - 1].key).toBe('c')
   })
 
@@ -2556,9 +2606,7 @@ describe('JsonEditor — search and filter', () => {
     const user = userEvent.setup()
     const data = { apple: 'red-fruit', banana: 'yellow-fruit' }
     // `searchDebounceTime={0}` so the rerender's filter applies immediately.
-    const { rerender } = render(
-      <JsonEditor data={data} setData={noop} searchDebounceTime={0} />
-    )
+    const { rerender } = render(<JsonEditor data={data} setData={noop} searchDebounceTime={0} />)
     // Open an edit on `apple`.
     await user.dblClick(screen.getByText('"red-fruit"'))
     expect((screen.getByRole('textbox') as HTMLTextAreaElement).value).toBe('red-fruit')
@@ -2566,9 +2614,7 @@ describe('JsonEditor — search and filter', () => {
     // The debounced setSearchText still uses a setTimeout(0), so let the
     // microtask flush via `waitFor`.
     expect(() => {
-      rerender(
-        <JsonEditor data={data} setData={noop} searchText="yellow" searchDebounceTime={0} />
-      )
+      rerender(<JsonEditor data={data} setData={noop} searchText="yellow" searchDebounceTime={0} />)
     }).not.toThrow()
     await waitFor(() => expect(screen.queryByText('"red-fruit"')).toBeNull())
     // No input is rendered, and the matching sibling is still on screen.

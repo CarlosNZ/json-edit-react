@@ -335,12 +335,7 @@ describe('editorRef handle — confirm with custom-node fromStandardType', () =>
     const setData = jest.fn()
     const ref = createRef<JsonEditorHandle>()
     render(
-      <JsonEditor
-        data={{ obj: { a: 1 } }}
-        setData={setData}
-        editorRef={ref}
-        showIconTooltips
-      />
+      <JsonEditor data={{ obj: { a: 1 } }} setData={setData} editorRef={ref} showIconTooltips />
     )
     const row = screen.getByText('obj').closest('.jer-component') as HTMLElement
     await user.click(within(row).getAllByTitle('Edit')[0])

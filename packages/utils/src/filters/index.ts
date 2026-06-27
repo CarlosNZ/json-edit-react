@@ -45,10 +45,12 @@ const bounds = (range: Range): { min: number; max: number } =>
     : { min: range.min ?? -Infinity, max: range.max ?? Infinity }
 
 /** Matches when the node's depth is within `range` (root = level 0). */
-export const byLevel: (range: Range) => FilterPredicate = intern((range: Range): FilterPredicate => {
-  const { min, max } = bounds(range)
-  return ({ level }) => level >= min && level <= max
-})
+export const byLevel: (range: Range) => FilterPredicate = intern(
+  (range: Range): FilterPredicate => {
+    const { min, max } = bounds(range)
+    return ({ level }) => level >= min && level <= max
+  }
+)
 
 /** Matches when a collection's child count is within `range`. Leaves (no size)
  * never match. */

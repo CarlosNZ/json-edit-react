@@ -152,16 +152,29 @@ describe('render-cost: regular vs all-custom-node tree', () => {
         setup?: (user: BenchUser) => Promise<void>
       }
       const interactions: Interaction[] = [
-        { name: 'enter-edit', action: async (user) => { await user.dblClick(target()) } },
+        {
+          name: 'enter-edit',
+          action: async (user) => {
+            await user.dblClick(target())
+          },
+        },
         {
           name: 'commit',
-          setup: async (user) => { await user.dblClick(target()) },
-          action: async (user) => { await user.keyboard('x{Enter}') },
+          setup: async (user) => {
+            await user.dblClick(target())
+          },
+          action: async (user) => {
+            await user.keyboard('x{Enter}')
+          },
         },
         {
           name: 'tab-move',
-          setup: async (user) => { await user.dblClick(target()) },
-          action: async (user) => { await user.keyboard('{Tab}') },
+          setup: async (user) => {
+            await user.dblClick(target())
+          },
+          action: async (user) => {
+            await user.keyboard('{Tab}')
+          },
         },
       ]
 

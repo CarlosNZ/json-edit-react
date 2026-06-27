@@ -251,10 +251,7 @@ describe('byPath', () => {
   })
 
   it('accepts a RegExp, tested against the stringified path', () => {
-    expect(select(byPath(/\.geo$/))).toEqual([
-      'users[0].address.geo',
-      'users[1].address.geo',
-    ])
+    expect(select(byPath(/\.geo$/))).toEqual(['users[0].address.geo', 'users[1].address.geo'])
   })
 })
 

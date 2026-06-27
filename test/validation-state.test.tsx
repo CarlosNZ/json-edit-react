@@ -60,9 +60,7 @@ describe('useValidationState — query surface', () => {
 
 describe('useValidationState — identity stability (the §16 invariant)', () => {
   const byFlag: Validate = (data) =>
-    (data as { flag: boolean }).flag
-      ? [{ path: ['a'], message: 'bad', keyword: 'type' }]
-      : []
+    (data as { flag: boolean }).flag ? [{ path: ['a'], message: 'bad', keyword: 'type' }] : []
 
   it('keeps a stable reference while the error set is unchanged, flips when it changes', () => {
     const { result, rerender } = renderHook(
@@ -89,7 +87,9 @@ describe('ajvAdapter', () => {
 
   it('parses instancePath JSON-Pointers into canonical paths', () => {
     const issues = ajvAdapter(
-      makeValidate([{ instancePath: '/payment/method', message: 'must be string', keyword: 'type' }])
+      makeValidate([
+        { instancePath: '/payment/method', message: 'must be string', keyword: 'type' },
+      ])
     )({})
     expect(issues[0].path).toEqual(['payment', 'method'])
     expect(issues[0].keyword).toBe('type')
@@ -97,11 +97,12 @@ describe('ajvAdapter', () => {
   })
 
   it('coerces numeric segments to numbers and maps the empty pointer to root', () => {
-    expect(ajvAdapter(makeValidate([{ instancePath: '/items/0', keyword: 'type' }]))({})[0].path).toEqual([
-      'items',
-      0,
-    ])
-    expect(ajvAdapter(makeValidate([{ instancePath: '', keyword: 'type' }]))({})[0].path).toEqual([])
+    expect(
+      ajvAdapter(makeValidate([{ instancePath: '/items/0', keyword: 'type' }]))({})[0].path
+    ).toEqual(['items', 0])
+    expect(ajvAdapter(makeValidate([{ instancePath: '', keyword: 'type' }]))({})[0].path).toEqual(
+      []
+    )
   })
 
   it('decodes JSON-Pointer escapes (~1 → /, ~0 → ~)', () => {

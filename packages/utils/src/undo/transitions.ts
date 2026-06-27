@@ -21,7 +21,7 @@ export interface UndoQueues<T = JsonData> {
  */
 
 /** `set`: record `current` as a snapshot and drop the redo stack. */
-export const pushSnapshot = <T,>(queues: UndoQueues<T>, current: T): UndoQueues<T> => ({
+export const pushSnapshot = <T>(queues: UndoQueues<T>, current: T): UndoQueues<T> => ({
   past: [current, ...queues.past],
   future: [],
 })
@@ -30,7 +30,7 @@ export const pushSnapshot = <T,>(queues: UndoQueues<T>, current: T): UndoQueues<
  * `undo`: surface the most-recent past snapshot and push `current` onto the
  * redo stack. `null` when there's nothing to undo (empty `past`).
  */
-export const applyUndo = <T,>(
+export const applyUndo = <T>(
   queues: UndoQueues<T>,
   current: T
 ): { queues: UndoQueues<T>; value: T } | null => {
@@ -42,7 +42,7 @@ export const applyUndo = <T,>(
 /**
  * `redo`: the mirror of {@link applyUndo}. `null` when there's nothing to redo.
  */
-export const applyRedo = <T,>(
+export const applyRedo = <T>(
   queues: UndoQueues<T>,
   current: T
 ): { queues: UndoQueues<T>; value: T } | null => {

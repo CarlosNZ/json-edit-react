@@ -1,10 +1,5 @@
 import React, { createContext, useCallback, useContext, useMemo } from 'react'
-import {
-  type ThemeableElement,
-  type ThemeInput,
-  type ThemeIcons,
-  type NodeData,
-} from '../../types'
+import { type ThemeableElement, type ThemeInput, type ThemeIcons, type NodeData } from '../../types'
 import {
   compileStyles,
   mergeIcons,

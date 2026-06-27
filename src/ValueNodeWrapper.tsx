@@ -279,8 +279,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     }
 
     const enumDef = allowedDataTypes.find((dt) => dt instanceof Object && dt.enum === type) as
-      | EnumDefinition
-      | undefined
+      EnumDefinition | undefined
     if (enumDef) {
       // Enum stays a value node — local only: coerce the buffer to a valid
       // option and keep the editor open. Committed on the next real submit.

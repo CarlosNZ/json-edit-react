@@ -80,10 +80,7 @@ export const measureMount = (element: React.ReactElement): number => {
  *  `after` to bust the per-node memo for every node (see memoNode.ts — `data`
  *  is compared by reference). The mount cost is excluded (reset between the
  *  two). */
-export const measureUpdate = (
-  before: React.ReactElement,
-  after: React.ReactElement
-): number => {
+export const measureUpdate = (before: React.ReactElement, after: React.ReactElement): number => {
   const acc = makeAccumulator()
   const { rerender, unmount } = render(<Profiled acc={acc}>{before}</Profiled>)
   reset(acc)

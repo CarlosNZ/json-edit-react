@@ -187,4 +187,3 @@ describe('isDescendantOf', () => {
     expect(isDescendantOf(['foo'], ['foobar'])).toBe(false)
   })
 })
-

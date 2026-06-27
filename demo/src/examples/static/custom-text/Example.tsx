@@ -60,8 +60,7 @@ const formatDuration = (seconds: number) => {
   return `${Math.floor(mins / 60)}h ${mins % 60}m`
 }
 
-const sumSeconds = (tracks: Track[]) =>
-  tracks.reduce((total, track) => total + track.seconds, 0)
+const sumSeconds = (tracks: Track[]) => tracks.reduce((total, track) => total + track.seconds, 0)
 
 // Drives ITEM_SINGLE + ITEMS_MULTIPLE: the item count becomes a
 // summary of what the node holds.
@@ -128,8 +127,7 @@ const allowDelete: FilterFunction = ({ level }) => level !== 4
 // Initial expansion: empty collections start closed; otherwise
 // only nodes deeper than level 2 collapse — so genres and
 // albums stay open and each song folds up inside its album.
-const startCollapsed: FilterFunction = ({ level, size }) =>
-  size === 0 ? true : level > 2
+const startCollapsed: FilterFunction = ({ level, size }) => (size === 0 ? true : level > 2)
 
 export default function CustomText() {
   const [data, setData] = useState<JsonData>(initialData)

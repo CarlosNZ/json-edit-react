@@ -44,9 +44,7 @@ describe('Drag-and-drop: rearranging within a single collection', () => {
 
   test('reorders elements within an array', async () => {
     const setData = jest.fn()
-    const { container } = render(
-      <JsonEditor data={[10, 20, 30, 40]} setData={setData} allowDrag />
-    )
+    const { container } = render(<JsonEditor data={[10, 20, 30, 40]} setData={setData} allowDrag />)
 
     // Move index 0 (value 10) to the bottom-half of index 2 (value 30).
     await dragAndDrop(rowFor(container, 0), rowFor(container, 2), 'below')
@@ -174,9 +172,7 @@ describe('Drag-and-drop: edge cases', () => {
 describe('Drag-and-drop: allowDrag', () => {
   test('allowDrag={true} enables reordering', async () => {
     const setData = jest.fn()
-    const { container } = render(
-      <JsonEditor data={{ a: 1, b: 2 }} setData={setData} allowDrag />
-    )
+    const { container } = render(<JsonEditor data={{ a: 1, b: 2 }} setData={setData} allowDrag />)
 
     expect(rowFor(container, 'a').getAttribute('draggable')).toBe('true')
 
@@ -190,11 +186,7 @@ describe('Drag-and-drop: allowDrag', () => {
     const allowDrag = ({ key }: { key: string | number }) => key !== 'locked'
 
     const { container } = render(
-      <JsonEditor
-        data={{ free: 1, locked: 2, other: 3 }}
-        setData={setData}
-        allowDrag={allowDrag}
-      />
+      <JsonEditor data={{ free: 1, locked: 2, other: 3 }} setData={setData} allowDrag={allowDrag} />
     )
 
     // The non-draggable assertion below is the primary guard: in real
@@ -333,9 +325,7 @@ describe('Drag-and-drop: interaction with active edit', () => {
 
     expect(rowFor(container, 'a').getAttribute('draggable')).toBe('true')
 
-    const editBtn = rowFor(container, 'a').querySelector(
-      'button[aria-label="Edit"]'
-    ) as HTMLElement
+    const editBtn = rowFor(container, 'a').querySelector('button[aria-label="Edit"]') as HTMLElement
     expect(editBtn).not.toBeNull()
     act(() => {
       fireEvent.click(editBtn)
@@ -366,9 +356,7 @@ describe('Drag-and-drop: interaction with active edit', () => {
     })
 
     // 2. Open edit on 'a' (sets `active !== null`).
-    const editBtn = rowFor(container, 'a').querySelector(
-      'button[aria-label="Edit"]'
-    ) as HTMLElement
+    const editBtn = rowFor(container, 'a').querySelector('button[aria-label="Edit"]') as HTMLElement
     act(() => {
       fireEvent.click(editBtn)
     })

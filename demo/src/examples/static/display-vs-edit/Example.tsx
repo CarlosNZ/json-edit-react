@@ -96,7 +96,13 @@ const kelvinToColor = (k: number) => {
 }
 
 // (2) Edit-only. A slider that only appears while editing.
-const WarmthSlider = ({ value, setValue, onKeyDown, getStyles, nodeData }: CustomComponentProps) => {
+const WarmthSlider = ({
+  value,
+  setValue,
+  onKeyDown,
+  getStyles,
+  nodeData,
+}: CustomComponentProps) => {
   const kelvin = Number(value) || 2700
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6em' }}>

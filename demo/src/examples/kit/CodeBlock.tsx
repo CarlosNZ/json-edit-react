@@ -252,7 +252,12 @@ export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
           // keeps indentation/newlines; `overflow-wrap` handles unbreakable
           // tokens.
           sx={{
-            '& pre': { margin: 0, padding: '1em', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' },
+            '& pre': {
+              margin: 0,
+              padding: '1em',
+              whiteSpace: 'pre-wrap',
+              overflowWrap: 'anywhere',
+            },
           }}
           dangerouslySetInnerHTML={{ __html: html }}
         />

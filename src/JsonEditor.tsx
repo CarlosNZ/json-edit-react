@@ -287,160 +287,181 @@ const Editor: React.FC<
   // doc so a late failure restores the right node without clobbering concurrent
   // commits to other paths (an edit re-sets the old value; add/delete invert;
   // move restores the pre-move doc — see the `move` case).
-  const buildCommit = useCallback((request: CommitRequest): BuiltCommit | null => {
-    const data = dataRef.current
-    const rootName = rootNameRef.current
-    const sort = sortRef.current
-    const commitData = commitDocument
-    const { op, path } = request
+  const buildCommit = useCallback(
+    (request: CommitRequest): BuiltCommit | null => {
+      const data = dataRef.current
+      const rootName = rootNameRef.current
+      const sort = sortRef.current
+      const commitData = commitDocument
+      const { op, path } = request
 
-    switch (op) {
-      case 'edit': {
-        const { newData, currentValue, newValue } = updateDataObject(data, path, request.value, 'update')
-        const nodeData = buildNodeData(data, path, rootName, sort)
-        return {
-          input: { ...nodeData, newData, event: 'edit', newValue } as UpdateFunctionProps,
-          nodeData,
-          isNoOp: currentValue === newValue,
-          apply: () => commitData(newData),
-          revert: () =>
-            commitData(updateDataObject(dataRef.current, path, currentValue, 'update').newData),
+      switch (op) {
+        case 'edit': {
+          const { newData, currentValue, newValue } = updateDataObject(
+            data,
+            path,
+            request.value,
+            'update'
+          )
+          const nodeData = buildNodeData(data, path, rootName, sort)
+          return {
+            input: { ...nodeData, newData, event: 'edit', newValue } as UpdateFunctionProps,
+            nodeData,
+            isNoOp: currentValue === newValue,
+            apply: () => commitData(newData),
+            revert: () =>
+              commitData(updateDataObject(dataRef.current, path, currentValue, 'update').newData),
+          }
+        }
+        case 'delete': {
+          const { newData, currentValue } = updateDataObject(data, path, '', 'delete')
+          const nodeData = buildNodeData(data, path, rootName, sort)
+          return {
+            input: { ...nodeData, newData, event: 'delete' } as UpdateFunctionProps,
+            nodeData,
+            isNoOp: false,
+            apply: () => commitData(newData),
+            // Re-insert the removed value at its ORIGINAL position (a plain `add`
+            // appends the key to the end of the object). `nodeData.index` is the
+            // node's position in its parent. `insertBefore` is read for an object
+            // parent, `insert` for an array — passing both is harmless (each path
+            // ignores the other).
+            revert: () =>
+              commitData(
+                updateDataObject(dataRef.current, path, currentValue, 'add', {
+                  insert: true,
+                  insertBefore: nodeData.index,
+                }).newData
+              ),
+          }
+        }
+        case 'add': {
+          // `path` is the collection; the new child lands at `[...path, key]`.
+          const childPath = [...path, request.key]
+          const { newData, newValue } = updateDataObject(
+            data,
+            childPath,
+            request.value,
+            'add',
+            request.options
+          )
+          // Event payload describes the committed child (post-add
+          // position/value).
+          const nodeData = buildNodeData(newData, childPath, rootName, sort)
+          return {
+            // The new node doesn't exist in `data` yet for the `onUpdate` input —
+            // build its position from `newData`, but describe the PRE-add state
+            // otherwise (value unset, size null, current parent + document).
+            input: {
+              ...nodeData,
+              value: undefined,
+              size: null,
+              parentData: (extract(data, path) ?? null) as object | null,
+              fullData: data,
+              newData,
+              event: 'add',
+              newValue,
+            } as UpdateFunctionProps,
+            nodeData,
+            isNoOp: false,
+            apply: () => commitData(newData),
+            revert: () =>
+              commitData(updateDataObject(dataRef.current, childPath, '', 'delete').newData),
+          }
+        }
+        case 'rename': {
+          const parentPath = path.slice(0, -1)
+          const oldKey = path[path.length - 1]
+          const { newKey } = request
+          const parentData = extract(data, parentPath) as Record<string, unknown>
+          const renamedParent = Object.fromEntries(
+            Object.entries(parentData).map(([k, v]) => (k === oldKey ? [newKey, v] : [k, v]))
+          )
+          // `updateDataObject` handles the root case (`parentPath === []`).
+          const { newData } = updateDataObject(data, parentPath, renamedParent, 'update')
+          const nodeData = buildNodeData(data, path, rootName, sort)
+          return {
+            input: { ...nodeData, newData, event: 'rename', newKey } as UpdateFunctionProps,
+            nodeData,
+            // A same-key rename (unchanged) is a no-op: the engine fires
+            // `commitRename` and skips `onUpdate`, matching how an unchanged value
+            // edit closes via `commitEdit`.
+            isNoOp: oldKey === newKey,
+            apply: () => commitData(newData),
+            // Restore the parent with its original key order.
+            revert: () =>
+              commitData(
+                updateDataObject(dataRef.current, parentPath, parentData, 'update').newData
+              ),
+            extra: { oldKey, newKey },
+          }
+        }
+        case 'move': {
+          // Delete source + add at target, combined into one commit (the old
+          // `onMove`). A combined op can't be per-path-reversed, so `revert`
+          // restores the pre-move document (the rare optimistic-move-then-fail).
+          const sourcePath = path
+          const { path: destPath, position } = request.to
+          const preMove = data
+          const { newData: deletedData, currentValue } = updateDataObject(
+            data,
+            sourcePath,
+            '',
+            'delete'
+          )
+          const originalKey = sourcePath.slice(-1)[0]
+          const targetPath = destPath.slice(0, -1)
+          const insertPos = destPath.slice(-1)[0]
+          let targetKey =
+            typeof insertPos === 'number'
+              ? position === 'above'
+                ? insertPos
+                : insertPos + 1
+              : typeof originalKey === 'number'
+                ? `arr_${originalKey}`
+                : originalKey
+          const sourceBase = sourcePath.slice(0, -1).join('.')
+          const destBase = destPath.slice(0, -1).join('.')
+          if (
+            sourceBase === destBase &&
+            typeof originalKey === 'number' &&
+            typeof targetKey === 'number' &&
+            originalKey < targetKey
+          ) {
+            targetKey -= 1
+          }
+          const insertOptions =
+            typeof targetKey === 'number'
+              ? { insert: true }
+              : position === 'above'
+                ? { insertBefore: insertPos }
+                : { insertAfter: insertPos }
+          const landingPath = [...targetPath, targetKey]
+          const { newData } = updateDataObject(
+            deletedData,
+            landingPath,
+            currentValue,
+            'add',
+            insertOptions as UpdateOptions
+          )
+          const nodeData = buildNodeData(data, sourcePath, rootName, sort)
+          return {
+            input: {
+              ...nodeData,
+              newData,
+              event: 'move',
+              newPath: landingPath,
+            } as UpdateFunctionProps,
+            nodeData,
+            isNoOp: false,
+            apply: () => commitData(newData),
+            revert: () => commitData(preMove),
+          }
         }
       }
-      case 'delete': {
-        const { newData, currentValue } = updateDataObject(data, path, '', 'delete')
-        const nodeData = buildNodeData(data, path, rootName, sort)
-        return {
-          input: { ...nodeData, newData, event: 'delete' } as UpdateFunctionProps,
-          nodeData,
-          isNoOp: false,
-          apply: () => commitData(newData),
-          // Re-insert the removed value at its ORIGINAL position (a plain `add`
-          // appends the key to the end of the object). `nodeData.index` is the
-          // node's position in its parent. `insertBefore` is read for an object
-          // parent, `insert` for an array — passing both is harmless (each path
-          // ignores the other).
-          revert: () =>
-            commitData(
-              updateDataObject(dataRef.current, path, currentValue, 'add', {
-                insert: true,
-                insertBefore: nodeData.index,
-              }).newData
-            ),
-        }
-      }
-      case 'add': {
-        // `path` is the collection; the new child lands at `[...path, key]`.
-        const childPath = [...path, request.key]
-        const { newData, newValue } = updateDataObject(
-          data,
-          childPath,
-          request.value,
-          'add',
-          request.options
-        )
-        // Event payload describes the committed child (post-add
-        // position/value).
-        const nodeData = buildNodeData(newData, childPath, rootName, sort)
-        return {
-          // The new node doesn't exist in `data` yet for the `onUpdate` input —
-          // build its position from `newData`, but describe the PRE-add state
-          // otherwise (value unset, size null, current parent + document).
-          input: {
-            ...nodeData,
-            value: undefined,
-            size: null,
-            parentData: (extract(data, path) ?? null) as object | null,
-            fullData: data,
-            newData,
-            event: 'add',
-            newValue,
-          } as UpdateFunctionProps,
-          nodeData,
-          isNoOp: false,
-          apply: () => commitData(newData),
-          revert: () => commitData(updateDataObject(dataRef.current, childPath, '', 'delete').newData),
-        }
-      }
-      case 'rename': {
-        const parentPath = path.slice(0, -1)
-        const oldKey = path[path.length - 1]
-        const { newKey } = request
-        const parentData = extract(data, parentPath) as Record<string, unknown>
-        const renamedParent = Object.fromEntries(
-          Object.entries(parentData).map(([k, v]) => (k === oldKey ? [newKey, v] : [k, v]))
-        )
-        // `updateDataObject` handles the root case (`parentPath === []`).
-        const { newData } = updateDataObject(data, parentPath, renamedParent, 'update')
-        const nodeData = buildNodeData(data, path, rootName, sort)
-        return {
-          input: { ...nodeData, newData, event: 'rename', newKey } as UpdateFunctionProps,
-          nodeData,
-          // A same-key rename (unchanged) is a no-op: the engine fires
-          // `commitRename` and skips `onUpdate`, matching how an unchanged value
-          // edit closes via `commitEdit`.
-          isNoOp: oldKey === newKey,
-          apply: () => commitData(newData),
-          // Restore the parent with its original key order.
-          revert: () =>
-            commitData(updateDataObject(dataRef.current, parentPath, parentData, 'update').newData),
-          extra: { oldKey, newKey },
-        }
-      }
-      case 'move': {
-        // Delete source + add at target, combined into one commit (the old
-        // `onMove`). A combined op can't be per-path-reversed, so `revert`
-        // restores the pre-move document (the rare optimistic-move-then-fail).
-        const sourcePath = path
-        const { path: destPath, position } = request.to
-        const preMove = data
-        const { newData: deletedData, currentValue } = updateDataObject(data, sourcePath, '', 'delete')
-        const originalKey = sourcePath.slice(-1)[0]
-        const targetPath = destPath.slice(0, -1)
-        const insertPos = destPath.slice(-1)[0]
-        let targetKey =
-          typeof insertPos === 'number'
-            ? position === 'above'
-              ? insertPos
-              : insertPos + 1
-            : typeof originalKey === 'number'
-            ? `arr_${originalKey}`
-            : originalKey
-        const sourceBase = sourcePath.slice(0, -1).join('.')
-        const destBase = destPath.slice(0, -1).join('.')
-        if (
-          sourceBase === destBase &&
-          typeof originalKey === 'number' &&
-          typeof targetKey === 'number' &&
-          originalKey < targetKey
-        ) {
-          targetKey -= 1
-        }
-        const insertOptions =
-          typeof targetKey === 'number'
-            ? { insert: true }
-            : position === 'above'
-            ? { insertBefore: insertPos }
-            : { insertAfter: insertPos }
-        const landingPath = [...targetPath, targetKey]
-        const { newData } = updateDataObject(
-          deletedData,
-          landingPath,
-          currentValue,
-          'add',
-          insertOptions as UpdateOptions
-        )
-        const nodeData = buildNodeData(data, sourcePath, rootName, sort)
-        return {
-          input: { ...nodeData, newData, event: 'move', newPath: landingPath } as UpdateFunctionProps,
-          nodeData,
-          isNoOp: false,
-          apply: () => commitData(newData),
-          revert: () => commitData(preMove),
-        }
-      }
-    }
-  }, [commitDocument])
+    },
+    [commitDocument]
+  )
 
   // Runs the consumer's `onUpdate` and normalises its raw return to the
   // canonical outcome the commit engine acts on — including the localised,
@@ -462,8 +483,8 @@ const Editor: React.FC<
           err instanceof Error && err.message
             ? err.message
             : typeof err === 'string' && err
-            ? err
-            : defaultMessage()
+              ? err
+              : defaultMessage()
         return { status: 'error', error: { code, message } }
       }
       if (result === false) return { status: 'error', error: { code, message: defaultMessage() } }
@@ -613,65 +634,61 @@ const Editor: React.FC<
   // the LIVE tree at call time, never a frozen render closure (per
   // PERF-ARCHITECTURE). Declared after `sort` because `startEdit`'s
   // restriction pre-check rebuilds the target's NodeData via it.
-  useImperativeHandle(
-    editorRef,
-    () => {
-      // A sentinel lets us detect a gone path (`extract` returns it instead
-      // of throwing), so a stale target reports `PATH_NOT_FOUND` rather than
-      // crashing.
-      const SENTINEL = Symbol('path-missing')
-      return {
-        collapse: (state) => setCollapseState(state),
+  useImperativeHandle(editorRef, () => {
+    // A sentinel lets us detect a gone path (`extract` returns it instead
+    // of throwing), so a stale target reports `PATH_NOT_FOUND` rather than
+    // crashing.
+    const SENTINEL = Symbol('path-missing')
+    return {
+      collapse: (state) => setCollapseState(state),
 
-        // Open a value-edit session, or report why it couldn't:
-        // `'PATH_NOT_FOUND'` if the target is gone, `'RESTRICTED'` if
-        // `allowEdit` blocks it (unless `overrideRestrictions`). `force: true`
-        // skips the node's own re-check and auto-reveals a target collapsed
-        // below the mount frontier.
-        startEdit: ({ path, overrideRestrictions = false }) => {
-          if (extract(getLatestData(), path, SENTINEL) === SENTINEL) return 'PATH_NOT_FOUND'
-          if (
-            !overrideRestrictions &&
-            !allowEditFilter(buildNodeData(getLatestData(), path, rootName, sort))
-          )
-            return 'RESTRICTED'
-          openEditSession(path, { force: true })
-          return true
-        },
+      // Open a value-edit session, or report why it couldn't:
+      // `'PATH_NOT_FOUND'` if the target is gone, `'RESTRICTED'` if
+      // `allowEdit` blocks it (unless `overrideRestrictions`). `force: true`
+      // skips the node's own re-check and auto-reveals a target collapsed
+      // below the mount frontier.
+      startEdit: ({ path, overrideRestrictions = false }) => {
+        if (extract(getLatestData(), path, SENTINEL) === SENTINEL) return 'PATH_NOT_FOUND'
+        if (
+          !overrideRestrictions &&
+          !allowEditFilter(buildNodeData(getLatestData(), path, rootName, sort))
+        )
+          return 'RESTRICTED'
+        openEditSession(path, { force: true })
+        return true
+      },
 
-        // Commit the open session by clicking the live confirm button, then
-        // exit. No-op when there's no live confirm control to click (no
-        // session, or a session whose confirm control isn't mounted/tracked
-        // here): the unconditional `cancelEditSession()` would otherwise tear
-        // down a session we never committed (e.g. silently cancelling a
-        // key-rename).
-        confirm: () => {
-          if (!editConfirmRef.current) return
-          editConfirmRef.current.click()
-          // A rejected confirm (invalid JSON on a collection, a throwing
-          // `fromStandardType` on a custom node) leaves its session in 'editing'
-          // phase with an inline error — keep it open rather than tearing it
-          // down. A committed session leaves no active entry, and a held one
-          // is inert against cancel, so the trailing cancel only ever
-          // affected rejected sessions.
-          if (getEditingSnapshot().active?.phase === 'editing') return
-          cancelEditSession()
-        },
+      // Commit the open session by clicking the live confirm button, then
+      // exit. No-op when there's no live confirm control to click (no
+      // session, or a session whose confirm control isn't mounted/tracked
+      // here): the unconditional `cancelEditSession()` would otherwise tear
+      // down a session we never committed (e.g. silently cancelling a
+      // key-rename).
+      confirm: () => {
+        if (!editConfirmRef.current) return
+        editConfirmRef.current.click()
+        // A rejected confirm (invalid JSON on a collection, a throwing
+        // `fromStandardType` on a custom node) leaves its session in 'editing'
+        // phase with an inline error — keep it open rather than tearing it
+        // down. A committed session leaves no active entry, and a held one
+        // is inert against cancel, so the trailing cancel only ever
+        // affected rejected sessions.
+        if (getEditingSnapshot().active?.phase === 'editing') return
+        cancelEditSession()
+      },
 
-        cancel: () => cancelEditSession(),
-      }
-    },
-    [
-      setCollapseState,
-      openEditSession,
-      cancelEditSession,
-      getEditingSnapshot,
-      allowEditFilter,
-      getLatestData,
-      rootName,
-      sort,
-    ]
-  )
+      cancel: () => cancelEditSession(),
+    }
+  }, [
+    setCollapseState,
+    openEditSession,
+    cancelEditSession,
+    getEditingSnapshot,
+    allowEditFilter,
+    getLatestData,
+    rootName,
+    sort,
+  ])
 
   const customNodeData = getCustomNode(customNodeDefinitions, nodeData)
 
@@ -733,7 +750,12 @@ const Editor: React.FC<
     collapseClickZones,
   }
 
-  const mainContainerStyles = { ...getStyles('container', nodeData), ...cssVars, minWidth, maxWidth }
+  const mainContainerStyles = {
+    ...getStyles('container', nodeData),
+    ...cssVars,
+    minWidth,
+    maxWidth,
+  }
 
   // Props fontSize takes priority over theme, but we fall back on a default of
   // 16 (from CSS sheet) if neither are provided. Having a defined base size
@@ -837,9 +859,7 @@ const updateDataObject = (
   }
 }
 
-const getFilterFunction = (
-  propValue: boolean | number | FilterFunction
-): FilterFunction => {
+const getFilterFunction = (propValue: boolean | number | FilterFunction): FilterFunction => {
   if (typeof propValue === 'boolean') return () => propValue
   if (typeof propValue === 'number') return ({ level }) => level >= propValue
   return propValue

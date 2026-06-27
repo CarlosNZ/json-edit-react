@@ -38,8 +38,7 @@ const onUpdate: UpdateFunction<Account> = (props) => {
         return { value: newValue.toLowerCase() }
       if (key === 'email' && typeof newValue === 'string') {
         // CUSTOM ERROR: reject with your own message.
-        if (!newValue.includes('@'))
-          return { error: 'Not a valid email address' }
+        if (!newValue.includes('@')) return { error: 'Not a valid email address' }
         // WHOLE-DOCUMENT `{ data }`: rewrite the whole document —
         // here, stamp a top-level `lastEdited` alongside the edit.
         return { data: { ...newData, lastEdited: new Date().toLocaleTimeString() } }

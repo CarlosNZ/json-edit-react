@@ -129,9 +129,7 @@ const noindexPlugin: Plugin = {
   name: 'noindex-preview',
   transformIndexHtml() {
     if (!isPreviewDeploy) return
-    return [
-      { tag: 'meta', attrs: { name: 'robots', content: 'noindex' }, injectTo: 'head' },
-    ]
+    return [{ tag: 'meta', attrs: { name: 'robots', content: 'noindex' }, injectTo: 'head' }]
   },
 }
 
@@ -175,7 +173,10 @@ export default defineConfig({
         replacement: path.resolve(__dirname, 'src/examples/kit/resources.ts'),
       },
       { find: /^@json-edit-react\/themes$/, replacement: themesSrcMap[provider] },
-      { find: /^@json-edit-react\/components\/widgets$/, replacement: componentsWidgetsSrcMap[provider] },
+      {
+        find: /^@json-edit-react\/components\/widgets$/,
+        replacement: componentsWidgetsSrcMap[provider],
+      },
       { find: /^@json-edit-react\/components$/, replacement: componentsSrcMap[provider] },
       { find: /^@json-edit-react\/utils\/filters$/, replacement: utilsFiltersSrcMap[provider] },
       { find: /^@json-edit-react\/utils$/, replacement: utilsSrcMap[provider] },
@@ -184,7 +185,10 @@ export default defineConfig({
       // `$1` so callers can ask Vite for the stylesheet as a string rather than
       // having it auto-injected — the anchored find would otherwise reject the
       // query suffix.
-      { find: /^json-edit-react\/style\.css(\?.*)?$/, replacement: coreStyleSrcMap[provider] + '$1' },
+      {
+        find: /^json-edit-react\/style\.css(\?.*)?$/,
+        replacement: coreStyleSrcMap[provider] + '$1',
+      },
       { find: /^json-edit-react$/, replacement: jsonEditReactPath },
     ],
     // In `pack` and `build` modes the packed/built sub-packages live outside

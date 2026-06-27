@@ -91,14 +91,7 @@ export const customNodeDefinitions: CustomNodeDefinition<Record<string, any>>[] 
     condition: ({ key }) =>
       typeof key === 'string' && key in (codenameGlossary as Record<string, string>),
     componentProps: { glossary: codenameGlossary },
-    keyComponent: ({
-      name,
-      canEditKey,
-      styles,
-      handleClick,
-      startEditingKey,
-      componentProps,
-    }) => {
+    keyComponent: ({ name, canEditKey, styles, handleClick, startEditingKey, componentProps }) => {
       const glossary = (componentProps as { glossary: Record<string, string> } | undefined)
         ?.glossary
       return (

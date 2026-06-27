@@ -1,10 +1,5 @@
 import { useMemo, useState } from 'react'
-import {
-  JsonEditor,
-  standardDataTypes,
-  type SelectProps,
-  type TypeOptions,
-} from '@json-edit-react'
+import { JsonEditor, standardDataTypes, type SelectProps, type TypeOptions } from '@json-edit-react'
 import { CodeEditor, ReactSelect } from '@json-edit-react/components/widgets'
 import { buildSelectStyles } from './utils'
 import { useEditorDefaults, useEditorTheme, useEditorPalette } from '@example-resources'

@@ -1,9 +1,5 @@
 import { useState } from 'react'
-import {
-  JsonEditor,
-  type DefaultValueFunction,
-  type NewKeyOptionsFunction,
-} from '@json-edit-react'
+import { JsonEditor, type DefaultValueFunction, type NewKeyOptionsFunction } from '@json-edit-react'
 import { useEditorDefaults } from '@example-resources'
 
 // Two ways to shape how NEW keys get added to a collection:

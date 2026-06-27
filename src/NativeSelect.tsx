@@ -48,8 +48,7 @@ export const NativeSelect = ({
 }: SelectProps) => {
   // React warns if both `value` and `defaultValue` are passed —
   // only spread whichever the caller supplied.
-  const valueProps =
-    value !== undefined ? { value } : { defaultValue: defaultValue ?? '' }
+  const valueProps = value !== undefined ? { value } : { defaultValue: defaultValue ?? '' }
 
   return (
     <div className="jer-select">

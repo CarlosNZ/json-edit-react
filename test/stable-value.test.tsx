@@ -32,7 +32,12 @@ describe('useStableValue', () => {
   it('honors a custom isEqual comparator', () => {
     // Always-equal: the identity should never change however the input moves.
     const { result, rerender } = renderHook(
-      ({ value }: { value: number }) => useStableValue(() => ({ value }), [value], () => true),
+      ({ value }: { value: number }) =>
+        useStableValue(
+          () => ({ value }),
+          [value],
+          () => true
+        ),
       { initialProps: { value: 1 } }
     )
 

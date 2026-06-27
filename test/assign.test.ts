@@ -610,23 +610,25 @@ describe('assign', () => {
 
   // Positional insertions
   test('Insert as middle position in array', () => {
-    expect(assign(testObj1, 'b.inner3.innerArray[1]', 'NEW VALUE', { insert: true })).toStrictEqual({
-      ...testObj1_original,
-      b: {
-        inner: 'this',
-        inner2: 45,
-        inner3: {
-          innerDeep: 2.4,
-          innerDeep2: [1, 2, 3],
-          innerBool: false,
-          innerArray: [
-            { one: 1, two: 'two', three: true, four: null, five: true },
-            'NEW VALUE',
-            { one: 'one', two: 2, three: 3, four: { one: 1 } },
-          ],
+    expect(assign(testObj1, 'b.inner3.innerArray[1]', 'NEW VALUE', { insert: true })).toStrictEqual(
+      {
+        ...testObj1_original,
+        b: {
+          inner: 'this',
+          inner2: 45,
+          inner3: {
+            innerDeep: 2.4,
+            innerDeep2: [1, 2, 3],
+            innerBool: false,
+            innerArray: [
+              { one: 1, two: 'two', three: true, four: null, five: true },
+              'NEW VALUE',
+              { one: 'one', two: 2, three: 3, four: { one: 1 } },
+            ],
+          },
         },
-      },
-    })
+      }
+    )
     // Ensure original hasn't been modified
     expect(testObj1).toStrictEqual(testObj1_original)
   })

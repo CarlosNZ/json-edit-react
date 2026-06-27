@@ -99,9 +99,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
   // static branch can choose whether to wrap it in the shell's drop-shadow.
   const exampleContent = (
     <ExampleEditorProvider value={editorProps}>
-      <Suspense fallback={<Loading />}>
-        {ExampleComponent && <ExampleComponent />}
-      </Suspense>
+      <Suspense fallback={<Loading />}>{ExampleComponent && <ExampleComponent />}</Suspense>
     </ExampleEditorProvider>
   )
 
@@ -176,9 +174,7 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
             >
               Go to Demo site
             </Button>
-            {showPicker && (
-              <ThemePicker value={theme} onChange={setTheme} size="sm" maxW={220} />
-            )}
+            {showPicker && <ThemePicker value={theme} onChange={setTheme} size="sm" maxW={220} />}
           </Flex>
         </Box>
       </Box>

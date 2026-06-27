@@ -54,9 +54,8 @@ export const customNodeDefinitions = (currentData: JsonData) => {
         // The `unit` defaults to 'auto', so the seconds
         // and millisecond fields are each detected by
         // magnitude.
-        displayAs: (libraryData?.['Date & Time']?.['Show Unix as raw number?'] ?? true)
-          ? 'number'
-          : 'date',
+        displayAs:
+          (libraryData?.['Date & Time']?.['Show Unix as raw number?'] ?? true) ? 'number' : 'date',
       },
     }),
     imageDefinition({

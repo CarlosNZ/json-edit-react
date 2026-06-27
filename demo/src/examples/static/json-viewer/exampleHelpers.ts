@@ -39,7 +39,8 @@ export const solarSystem = {
       notableMoons: ['Phobos', 'Deimos'],
       globalMagneticField: null,
       tallestMountain: { name: 'Olympus Mons', heightKm: 21.9 },
-      funFact: 'Home to the tallest volcano in the solar system — about 2.5× the height of Everest.',
+      funFact:
+        'Home to the tallest volcano in the solar system — about 2.5× the height of Everest.',
     },
     Jupiter: {
       nickname: 'The Gas Giant',

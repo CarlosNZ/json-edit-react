@@ -238,9 +238,10 @@ describe('getThemeCssVars', () => {
     // `iconCopy` (still function-capable) stands in here: a per-node function
     // can't collapse to one container-level value, so no var is emitted.
     // `inputHighlight` can't reach this branch — it's typed as a colour string.
-    const vars = getThemeCssVars(
-      compileStyles({ iconCopy: () => ({ color: 'red' }) })
-    ) as Record<string, string>
+    const vars = getThemeCssVars(compileStyles({ iconCopy: () => ({ color: 'red' }) })) as Record<
+      string,
+      string
+    >
     expect(vars['--jer-icon-copy-color']).toBeUndefined()
   })
 

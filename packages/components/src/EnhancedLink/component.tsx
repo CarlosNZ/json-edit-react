@@ -22,8 +22,15 @@ type EnhancedLink = {
 export const EnhancedLinkCustomComponent: React.FC<CustomComponentProps<EnhancedLinkProps>> = (
   props
 ) => {
-  const { setIsEditing, getStyles, nodeData, componentProps = {}, isEditing, value, setValue } =
-    props
+  const {
+    setIsEditing,
+    getStyles,
+    nodeData,
+    componentProps = {},
+    isEditing,
+    value,
+    setValue,
+  } = props
   const {
     linkStyles = { fontWeight: 'bold', textDecoration: 'underline' },
     propertyStyles = {},
@@ -54,8 +61,7 @@ export const EnhancedLinkCustomComponent: React.FC<CustomComponentProps<Enhanced
               {...props}
               value={text}
               setValue={
-                ((val: string) =>
-                  setValue({ ...linkData, [textField]: val })) as React.Dispatch<
+                ((val: string) => setValue({ ...linkData, [textField]: val })) as React.Dispatch<
                   React.SetStateAction<string>
                 >
               }
@@ -69,8 +75,7 @@ export const EnhancedLinkCustomComponent: React.FC<CustomComponentProps<Enhanced
               {...props}
               value={url}
               setValue={
-                ((val: string) =>
-                  setValue({ ...linkData, [urlField]: val })) as React.Dispatch<
+                ((val: string) => setValue({ ...linkData, [urlField]: val })) as React.Dispatch<
                   React.SetStateAction<string>
                 >
               }

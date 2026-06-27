@@ -1,9 +1,5 @@
 import { useState } from 'react'
-import {
-  JsonEditor,
-  type CustomNodeDefinition,
-  type CustomComponentProps,
-} from '@json-edit-react'
+import { JsonEditor, type CustomNodeDefinition, type CustomComponentProps } from '@json-edit-react'
 import { useEditorDefaults } from '@example-resources'
 
 const initialData = {

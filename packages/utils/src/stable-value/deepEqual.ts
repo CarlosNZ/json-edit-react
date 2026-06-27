@@ -10,8 +10,7 @@
 export const deepEqual = (a: unknown, b: unknown): boolean => {
   if (Object.is(a, b)) return true
 
-  if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null)
-    return false
+  if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) return false
 
   const aIsArray = Array.isArray(a)
   if (aIsArray !== Array.isArray(b)) return false

@@ -87,9 +87,7 @@ export const EventViewer = ({ log, onClear }: EventViewerProps) => {
       {open && (
         <Box overflowY="auto" px={3} py={2} fontFamily="mono" fontSize="11px" lineHeight={1.5}>
           {log.length === 0 ? (
-            <Box color="gray.500">
-              Edit, rename, add or delete a node to see the event stream…
-            </Box>
+            <Box color="gray.500">Edit, rename, add or delete a node to see the event stream…</Box>
           ) : (
             log.map((e) => (
               <Box key={e.id} whiteSpace="pre-wrap" mb={0.5}>

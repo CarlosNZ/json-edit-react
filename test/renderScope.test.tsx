@@ -58,11 +58,7 @@ describe('render-scope harness — sanity', () => {
     const spy = makeRenderSpy({ a: ['a'] })
     const setData = jest.fn()
     render(
-      <JsonEditor
-        data={{ a: 'aval' }}
-        setData={setData}
-        customNodeDefinitions={spy.definitions}
-      />
+      <JsonEditor data={{ a: 'aval' }} setData={setData} customNodeDefinitions={spy.definitions} />
     )
 
     await user.dblClick(screen.getByText('"aval"'))

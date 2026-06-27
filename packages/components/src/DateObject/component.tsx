@@ -6,7 +6,9 @@ export interface DateObjectProps {
   invalidDateError?: string
 }
 
-export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObjectProps>> = (props) => {
+export const DateObjectCustomComponent: React.FC<CustomComponentProps<DateObjectProps>> = (
+  props
+) => {
   const { nodeData, isEditing, setValue, getStyles, canEdit, value, componentProps = {} } = props
 
   const { showTime = true } = componentProps

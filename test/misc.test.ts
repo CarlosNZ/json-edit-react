@@ -78,4 +78,3 @@ describe('restoreUndefined', () => {
     expect(restoreUndefined(frozen)).toBe(frozen)
   })
 })
-

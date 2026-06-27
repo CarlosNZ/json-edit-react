@@ -22,7 +22,7 @@ export const SymbolComponent: React.FC<CustomComponentProps<SymbolProps>> = (pro
   const { style = { color: '#006291', fontSize: '90%' }, descriptionStyle = { color: '#ff9300' } } =
     componentProps
 
-  const editDisplayValue = typeof value === 'symbol' ? value.description ?? '' : (value as string)
+  const editDisplayValue = typeof value === 'symbol' ? (value.description ?? '') : (value as string)
 
   // Every confirm path funnels through core's no-arg `handleEdit`; the
   // definition's `fromStandardType` converts the buffer string to a Symbol.

@@ -89,7 +89,12 @@ const defsFor = (strategy: Strategy) => (strategy === 'custom' ? customDefinitio
 /** Uncontrolled editor element (for mount/update — `setData` is a no-op; the
  *  update benchmark re-renders with a fresh `data` clone itself). */
 export const editorElement = (strategy: Strategy, data: JsonData): React.ReactElement => (
-  <JsonEditor data={data} setData={noop} collapse={false} customNodeDefinitions={defsFor(strategy)} />
+  <JsonEditor
+    data={data}
+    setData={noop}
+    collapse={false}
+    customNodeDefinitions={defsFor(strategy)}
+  />
 )
 
 /** Controlled editor (for interactions) — owns `data` state so a committed edit
@@ -109,10 +114,9 @@ const ControlledEditor: React.FC<{ strategy: Strategy; initialData: JsonData }> 
   )
 }
 
-export const controlledEditorElement = (
-  strategy: Strategy,
-  data: JsonData
-): React.ReactElement => <ControlledEditor strategy={strategy} initialData={data} />
+export const controlledEditorElement = (strategy: Strategy, data: JsonData): React.ReactElement => (
+  <ControlledEditor strategy={strategy} initialData={data} />
+)
 
 /** Deep clone via JSON round-trip (data is plain JSON) — used as the `after`
  *  tree for the update benchmark: every node gets a new `data` reference, so

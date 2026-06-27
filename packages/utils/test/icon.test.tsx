@@ -48,7 +48,9 @@ describe('iconFromSvg — string parsing', () => {
   })
 
   it('strips width/height so core controls the size', () => {
-    const def = iconFromSvg('<svg width="48" height="48" viewBox="0 0 24 24"><path d="M0 0"/></svg>')
+    const def = iconFromSvg(
+      '<svg width="48" height="48" viewBox="0 0 24 24"><path d="M0 0"/></svg>'
+    )
     expect(def.svgProps).toBeUndefined()
   })
 

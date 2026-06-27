@@ -160,7 +160,12 @@ const assignProperty = (
         return newData
       }
     }
-    newData[property] = assignProperty(newData[property] as AssignInput, newPathArray, newValue, options)
+    newData[property] = assignProperty(
+      newData[property] as AssignInput,
+      newPathArray,
+      newValue,
+      options
+    )
 
     return newData
   }

@@ -21,7 +21,12 @@ describe('showClipboardButton', () => {
 
   test('showClipboardButton={false} hides the copy button', () => {
     render(
-      <JsonEditor data={{ x: 'hello' }} setData={noop} showClipboardButton={false} showIconTooltips />
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={noop}
+        showClipboardButton={false}
+        showIconTooltips
+      />
     )
     expect(screen.queryByTitle('Copy to clipboard')).toBeNull()
   })
@@ -62,7 +67,9 @@ describe('onCopy', () => {
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
 
     const onCopy = jest.fn()
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} onCopy={onCopy} showIconTooltips />)
+    render(
+      <JsonEditor data={{ greeting: 'hello' }} setData={noop} onCopy={onCopy} showIconTooltips />
+    )
 
     const row = screen.getByText('"hello"').closest('.jer-component') as HTMLElement
     await user.click(row.querySelector('[title="Copy to clipboard"]') as HTMLElement)

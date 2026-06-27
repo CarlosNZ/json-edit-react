@@ -199,7 +199,10 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     handleClick,
   }: {
     handleCancel: () => void
-    getStyles: (component: ThemeableElement, nodeData: typeof incomingNodeData) => React.CSSProperties
+    getStyles: (
+      component: ThemeableElement,
+      nodeData: typeof incomingNodeData
+    ) => React.CSSProperties
     keyValueArray?: Array<[string | number, ValueData]>
     handleClick?: (e: React.MouseEvent) => void
   }) => ({

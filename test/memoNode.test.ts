@@ -80,7 +80,11 @@ describe('areNodePropsEqual', () => {
 
   test('re-renders when a render-affecting nodeData field changes', () => {
     const a = makeProps()
-    const b = makeProps({ data: a.data, parentData: a.parentData, nodeData: makeNodeData({ index: 3 }) })
+    const b = makeProps({
+      data: a.data,
+      parentData: a.parentData,
+      nodeData: makeNodeData({ index: 3 }),
+    })
     expect(areNodePropsEqual(a, b)).toBe(false)
   })
 

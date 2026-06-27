@@ -27,10 +27,17 @@ const noop = () => {}
 describe('CustomNode — slots & matching', () => {
   test('a matching condition renders the custom component in the value slot', () => {
     const defs: CustomNodeDefinition[] = [
-      { condition: ({ key }) => key === 'greeting', component: () => <span data-testid="cv">CUSTOM</span> },
+      {
+        condition: ({ key }) => key === 'greeting',
+        component: () => <span data-testid="cv">CUSTOM</span>,
+      },
     ]
     render(
-      <JsonEditor data={{ greeting: 'hello', other: 'world' }} setData={noop} customNodeDefinitions={defs} />
+      <JsonEditor
+        data={{ greeting: 'hello', other: 'world' }}
+        setData={noop}
+        customNodeDefinitions={defs}
+      />
     )
     expect(screen.getByTestId('cv')).toBeInTheDocument()
     // the matched node's standard value is replaced; the unmatched node is
@@ -41,7 +48,10 @@ describe('CustomNode — slots & matching', () => {
 
   test('a non-matching condition leaves the standard rendering', () => {
     const defs: CustomNodeDefinition[] = [
-      { condition: ({ key }) => key === 'nope', component: () => <span data-testid="cv">CUSTOM</span> },
+      {
+        condition: ({ key }) => key === 'nope',
+        component: () => <span data-testid="cv">CUSTOM</span>,
+      },
     ]
     render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} customNodeDefinitions={defs} />)
     expect(screen.queryByTestId('cv')).toBeNull()
@@ -64,7 +74,9 @@ describe('CustomNode — slots & matching', () => {
     const defs: CustomNodeDefinition[] = [
       {
         condition: ({ key }) => key === 'obj',
-        wrapperComponent: ({ children }: CustomWrapperProps) => <div data-testid="w">{children}</div>,
+        wrapperComponent: ({ children }: CustomWrapperProps) => (
+          <div data-testid="w">{children}</div>
+        ),
       },
     ]
     render(<JsonEditor data={{ obj: { a: 1 } }} setData={noop} customNodeDefinitions={defs} />)
@@ -149,7 +161,13 @@ describe('CustomNode — view/edit visibility', () => {
   })
 
   test('showOnView default true → custom shown in view mode', () => {
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} customNodeDefinitions={[valueDef({})]} />)
+    render(
+      <JsonEditor
+        data={{ greeting: 'hello' }}
+        setData={noop}
+        customNodeDefinitions={[valueDef({})]}
+      />
+    )
     expect(screen.getByTestId('cv')).toBeInTheDocument()
   })
 
@@ -261,7 +279,10 @@ describe('CustomNode — chrome flags', () => {
         data={{ greeting: 'hello' }}
         setData={noop}
         customNodeDefinitions={[
-          { condition: ({ key }) => key === 'greeting', component: () => <span data-testid="cv">C</span> },
+          {
+            condition: ({ key }) => key === 'greeting',
+            component: () => <span data-testid="cv">C</span>,
+          },
         ]}
       />
     )
@@ -294,7 +315,10 @@ describe('CustomNode — chrome flags', () => {
         data={{ greeting: 'hello' }}
         setData={noop}
         customNodeDefinitions={[
-          { condition: ({ key }) => key === 'greeting', component: () => <span data-testid="cv">C</span> },
+          {
+            condition: ({ key }) => key === 'greeting',
+            component: () => <span data-testid="cv">C</span>,
+          },
         ]}
       />
     )
@@ -333,7 +357,13 @@ describe('CustomNode — type selector & defaultValue', () => {
 
   test('showInTypeSelector + name → the type appears as an option while editing', async () => {
     const user = userEvent.setup()
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} customNodeDefinitions={[customType()]} />)
+    render(
+      <JsonEditor
+        data={{ greeting: 'hello' }}
+        setData={noop}
+        customNodeDefinitions={[customType()]}
+      />
+    )
     await user.dblClick(screen.getByText('"hello"'))
     expect(screen.getByRole('option', { name: 'MyType' })).toBeInTheDocument()
   })
@@ -354,7 +384,13 @@ describe('CustomNode — type selector & defaultValue', () => {
   test('selecting the custom type inserts its defaultValue', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    render(<JsonEditor data={{ greeting: 'hello' }} setData={setData} customNodeDefinitions={[customType()]} />)
+    render(
+      <JsonEditor
+        data={{ greeting: 'hello' }}
+        setData={setData}
+        customNodeDefinitions={[customType()]}
+      />
+    )
     await user.dblClick(screen.getByText('"hello"'))
     await user.selectOptions(screen.getByRole('combobox'), 'MyType')
     await waitFor(() => expect(setData).toHaveBeenCalledWith({ greeting: 'CUSTOMVAL' }))
@@ -389,7 +425,7 @@ describe('CustomNode — switching type away mid-edit', () => {
   const symbolDefWithHook: CustomNodeDefinition = {
     ...symbolDef,
     toStandardType: (value) =>
-      typeof value === 'symbol' ? value.description ?? '' : String(value),
+      typeof value === 'symbol' ? (value.description ?? '') : String(value),
   }
 
   const startEdit = async (user: ReturnType<typeof userEvent.setup>) => {
@@ -535,7 +571,11 @@ describe('CustomNode — toStandardType seeds the type-switch buffer', () => {
 
   test('switching to string seeds the buffer from toStandardType, not the raw value', async () => {
     const user = userEvent.setup()
-    const def = hookDef(({ value }) => typeof value === 'symbol', 'Symbol', () => 'SEED')
+    const def = hookDef(
+      ({ value }) => typeof value === 'symbol',
+      'Symbol',
+      () => 'SEED'
+    )
     const { container } = render(
       <JsonEditor
         data={{ x: Symbol('my description') }}
@@ -556,8 +596,7 @@ describe('CustomNode — toStandardType seeds the type-switch buffer', () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const def = hookDef(
-      ({ value }) =>
-        value instanceof Object && 'text' in value && 'url' in value,
+      ({ value }) => value instanceof Object && 'text' in value && 'url' in value,
       'Link',
       (value) => (value as { url: string }).url,
       { renderCollectionAsValue: true }
@@ -583,8 +622,10 @@ describe('CustomNode — toStandardType seeds the type-switch buffer', () => {
 
   test('the hook seed coerces per target type (number)', async () => {
     const user = userEvent.setup()
-    const def = hookDef(({ value }) => typeof value === 'bigint', 'BigInt', (value) =>
-      typeof value === 'bigint' ? '456' : ''
+    const def = hookDef(
+      ({ value }) => typeof value === 'bigint',
+      'BigInt',
+      (value) => (typeof value === 'bigint' ? '456' : '')
     )
     const { container } = render(
       <JsonEditor
@@ -604,8 +645,10 @@ describe('CustomNode — toStandardType seeds the type-switch buffer', () => {
 
   test('the hook applies only while the buffer holds the custom value (not on a second in-session switch)', async () => {
     const user = userEvent.setup()
-    const def = hookDef(({ value }) => typeof value === 'symbol', 'Symbol', (value) =>
-      typeof value === 'symbol' ? '42' : 'WRONG'
+    const def = hookDef(
+      ({ value }) => typeof value === 'symbol',
+      'Symbol',
+      (value) => (typeof value === 'symbol' ? '42' : 'WRONG')
     )
     const { container } = render(
       <JsonEditor
@@ -828,8 +871,15 @@ describe('CustomNode — fromStandardType commit transform', () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const TabbingEditor = (props: CustomComponentProps) => {
-      const { value, setValue, isEditing, setIsEditing, handleEdit, handleKeyboard, keyboardCommon } =
-        props
+      const {
+        value,
+        setValue,
+        isEditing,
+        setIsEditing,
+        handleEdit,
+        handleKeyboard,
+        keyboardCommon,
+      } = props
       return isEditing ? (
         <input
           data-testid="custom-input"
@@ -992,7 +1042,11 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     render(
-      <JsonEditor data={{ x: 'hello' }} setData={setData} customNodeDefinitions={[bigintTarget()]} />
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={setData}
+        customNodeDefinitions={[bigintTarget()]}
+      />
     )
     await user.dblClick(screen.getByText('"hello"'))
     await switchTo(user, 'BigInt')
@@ -1250,7 +1304,9 @@ describe('CustomNode — passOriginalNode', () => {
       {
         condition: ({ key }) => key === 'greeting',
         passOriginalNode: true,
-        component: ({ originalNode }: CustomComponentProps) => <div data-testid="cv">{originalNode ?? 'NONE'}</div>,
+        component: ({ originalNode }: CustomComponentProps) => (
+          <div data-testid="cv">{originalNode ?? 'NONE'}</div>
+        ),
       },
     ]
     render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} customNodeDefinitions={defs} />)
@@ -1263,7 +1319,9 @@ describe('CustomNode — passOriginalNode', () => {
     const defs: CustomNodeDefinition[] = [
       {
         condition: ({ key }) => key === 'greeting',
-        component: ({ originalNode }: CustomComponentProps) => <div data-testid="cv">{originalNode ?? 'NONE'}</div>,
+        component: ({ originalNode }: CustomComponentProps) => (
+          <div data-testid="cv">{originalNode ?? 'NONE'}</div>
+        ),
       },
     ]
     render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} customNodeDefinitions={defs} />)
@@ -1275,15 +1333,17 @@ describe('CustomNode — passOriginalNode', () => {
 describe('CustomNode — collection flags', () => {
   test('showCollectionWrapper false removes the collection’s collapse control', () => {
     const data = { obj: { a: 1 } }
-    const withWrapper = render(<JsonEditor data={data} setData={noop} />).container.querySelectorAll(
-      '.jer-collapse-icon'
-    ).length
+    const withWrapper = render(
+      <JsonEditor data={data} setData={noop} />
+    ).container.querySelectorAll('.jer-collapse-icon').length
     cleanup()
     const withoutWrapper = render(
       <JsonEditor
         data={data}
         setData={noop}
-        customNodeDefinitions={[{ condition: ({ key }) => key === 'obj', showCollectionWrapper: false }]}
+        customNodeDefinitions={[
+          { condition: ({ key }) => key === 'obj', showCollectionWrapper: false },
+        ]}
       />
     ).container.querySelectorAll('.jer-collapse-icon').length
     expect(withoutWrapper).toBe(withWrapper - 1)
@@ -1297,7 +1357,9 @@ describe('CustomNode — collection flags', () => {
         component: () => <span data-testid="leaf">LEAF</span>,
       },
     ]
-    render(<JsonEditor data={{ obj: { a: 1, b: 2 } }} setData={noop} customNodeDefinitions={defs} />)
+    render(
+      <JsonEditor data={{ obj: { a: 1, b: 2 } }} setData={noop} customNodeDefinitions={defs} />
+    )
     expect(screen.getByTestId('leaf')).toBeInTheDocument()
     // children are not recursed into the tree
     expect(screen.queryByText('1')).toBeNull()
@@ -1311,10 +1373,18 @@ describe('CustomNode — JSON serialization hooks', () => {
     const writeText = jest.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })
     const defs: CustomNodeDefinition[] = [
-      { condition: () => false, stringifyReplacer: (value) => (value === 'SECRET' ? 'REDACTED' : value) },
+      {
+        condition: () => false,
+        stringifyReplacer: (value) => (value === 'SECRET' ? 'REDACTED' : value),
+      },
     ]
     render(
-      <JsonEditor data={{ obj: { token: 'SECRET' } }} setData={noop} customNodeDefinitions={defs} showIconTooltips />
+      <JsonEditor
+        data={{ obj: { token: 'SECRET' } }}
+        setData={noop}
+        customNodeDefinitions={defs}
+        showIconTooltips
+      />
     )
     // copy the root object → serialized through jsonStringify with the replacer
     await user.click(screen.getAllByTitle('Copy to clipboard')[0])
@@ -1329,10 +1399,18 @@ describe('CustomNode — JSON serialization hooks', () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const defs: CustomNodeDefinition[] = [
-      { condition: () => false, parseReviver: (value) => (value === 'PLACEHOLDER' ? 'REVIVED' : value) },
+      {
+        condition: () => false,
+        parseReviver: (value) => (value === 'PLACEHOLDER' ? 'REVIVED' : value),
+      },
     ]
     const { container } = render(
-      <JsonEditor data={{ x: 'old' }} setData={setData} customNodeDefinitions={defs} showIconTooltips />
+      <JsonEditor
+        data={{ x: 'old' }}
+        setData={setData}
+        customNodeDefinitions={defs}
+        showIconTooltips
+      />
     )
     // edit the root object as raw JSON text
     await user.click(screen.getAllByTitle('Edit')[0])

@@ -113,7 +113,8 @@ export const RECIPES: Recipe[] = [
     label: 'array items',
     code: 'inArray',
     longhand: '({ parentData }) => Array.isArray(parentData)',
-    description: 'Nodes whose parent is an array — department, team and member records, plus tags/skills.',
+    description:
+      'Nodes whose parent is an array — department, team and member records, plus tags/skills.',
     predicate: inArray,
   },
   {
@@ -161,7 +162,8 @@ export const RECIPES: Recipe[] = [
     label: 'booleans & nulls',
     code: "byType('boolean', 'null')",
     longhand: "({ value }) => typeof value === 'boolean' || value === null",
-    description: 'Boolean and null values — flags like `active` / `remote`, and empty `manager` / `parentCompany`.',
+    description:
+      'Boolean and null values — flags like `active` / `remote`, and empty `manager` / `parentCompany`.',
     predicate: byType('boolean', 'null'),
   },
   {
@@ -208,7 +210,8 @@ export const RECIPES: Recipe[] = [
     label: 'not collections',
     code: 'not(collections)',
     longhand: "({ value }) => !(value !== null && typeof value === 'object')",
-    description: 'The negation of `collections` — the same set as `primitives`, the long way round.',
+    description:
+      'The negation of `collections` — the same set as `primitives`, the long way round.',
     predicate: not(collections),
   },
   {

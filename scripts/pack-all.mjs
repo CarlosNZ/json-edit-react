@@ -114,8 +114,14 @@ for (const target of targets) {
   // the node_modules tree for things like `react-datepicker`. Peers come from
   // the consumer (the demo); dev deps aren't needed at all at this stage.
   let mutated = false
-  if (pkg.peerDependencies) { delete pkg.peerDependencies; mutated = true }
-  if (pkg.devDependencies) { delete pkg.devDependencies; mutated = true }
+  if (pkg.peerDependencies) {
+    delete pkg.peerDependencies
+    mutated = true
+  }
+  if (pkg.devDependencies) {
+    delete pkg.devDependencies
+    mutated = true
+  }
   if (mutated) writeFileSync(pkgJsonPath, JSON.stringify(pkg, null, 2) + '\n')
   if (pkg.dependencies && Object.keys(pkg.dependencies).length > 0) {
     console.log(`  installing runtime deps for ${target.label}...`)
@@ -125,16 +131,20 @@ for (const target of targets) {
     //   Vite's walk-up resolution would find that copy first, giving the demo
     //   two React instances and breaking hooks. The consumer (the demo)
     //   already provides React, so skip peer installation here.
-    execSync(
-      'npm install --omit=peer --no-package-lock --no-audit --no-fund --silent',
-      { cwd: pkgDir, stdio: 'inherit' }
-    )
+    execSync('npm install --omit=peer --no-package-lock --no-audit --no-fund --silent', {
+      cwd: pkgDir,
+      stdio: 'inherit',
+    })
   }
   console.log(`✓ ${target.label} → pack-output/${target.destName}/package/`)
 }
 
 if (!existsSync(join(outputDir, 'json-edit-react', 'package', 'package.json'))) {
-  throw new Error('pack-all completed but pack-output/json-edit-react/package/package.json is missing')
+  throw new Error(
+    'pack-all completed but pack-output/json-edit-react/package/package.json is missing'
+  )
 }
 
-console.log('\nAll four packages packed and extracted. Run `yarn start:pack` or `yarn build:pack` in demo.')
+console.log(
+  '\nAll four packages packed and extracted. Run `yarn start:pack` or `yarn build:pack` in demo.'
+)

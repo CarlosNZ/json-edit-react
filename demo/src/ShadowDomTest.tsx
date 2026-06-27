@@ -66,17 +66,13 @@ export const ShadowDomTest = () => {
         Inject <code>style.css</code> into the shadow root
       </label>
       <p style={{ maxWidth: 520, color: '#555' }}>
-        Unchecked: the editor below renders <strong>unstyled</strong> (head-injected
-        styles can't reach the shadow root). Checked: it renders fully styled —
-        including the dropdown arrow and other custom-property-driven bits, which is
-        what confirms the <code>:host</code> fix.
+        Unchecked: the editor below renders <strong>unstyled</strong> (head-injected styles can't
+        reach the shadow root). Checked: it renders fully styled — including the dropdown arrow and
+        other custom-property-driven bits, which is what confirms the <code>:host</code> fix.
       </p>
       <div ref={hostRef} style={{ border: '1px solid #ccc', padding: 12, borderRadius: 6 }} />
       {mountNode &&
-        createPortal(
-          <JsonEditor data={data} setData={(d) => setData(d as object)} />,
-          mountNode
-        )}
+        createPortal(<JsonEditor data={data} setData={(d) => setData(d as object)} />, mountNode)}
     </div>
   )
 }
