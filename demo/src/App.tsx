@@ -1,285 +1,85 @@
-import { useEffect, useRef, lazy, Suspense, useMemo, useCallback } from 'react'
-import { useSearch, useLocation, Link as RouterLink } from 'wouter'
+import { lazy, Suspense } from 'react'
 import JSON5 from 'json5'
-import {
-  Theme,
-  FilterFunction,
-  JsonData,
-  defaultTheme,
-  splitPropertyString,
-  extract,
-  isCollection,
-  type JsonEditorHandle,
-} from '@json-edit-react'
-// DEMO (Intro dataset): confirm-before-update via @json-edit-react/utils.
-// Comment out this import + the wiring below to disable. Swap the commented
-// import to demo the Layer-1 primitive instead.
-import { useUndo } from '@json-edit-react/utils'
-import { FaNpm, FaExternalLinkAlt, FaGithub } from 'react-icons/fa'
+import { Theme } from '@json-edit-react'
 import { BiReset } from 'react-icons/bi'
 import { AiOutlineCloudUpload } from 'react-icons/ai'
-import { useState } from 'react'
 import {
   Box,
   Flex,
   Heading,
   Text,
   Button,
-  Checkbox,
-  Select,
   HStack,
   VStack,
   Link,
-  Icon,
-  CheckboxGroup,
   Spacer,
-  FormControl,
-  FormLabel,
   Input,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   useToast,
-  Tooltip,
   Spinner,
 } from '@chakra-ui/react'
-import logoSVG from './image/logo.svg'
-import { ArrowBackIcon, ArrowForwardIcon, InfoIcon } from '@chakra-ui/icons'
-import { demoDataDefinitions, type DemoPayload } from './demoData'
-import { exampleSlugByDataSet } from './examples/registry'
-import { useDatabase } from './useDatabase'
+import { ArrowBackIcon, ArrowForwardIcon } from '@chakra-ui/icons'
 import './style.css'
-import { getLineHeight, truncate } from './helpers'
+import { getLineHeight } from './helpers'
 import { RenderProfiler } from './RenderProfiler'
 import { Loading } from '../../packages/components/src/_common/Loading'
 import { CodeEditor } from '@json-edit-react/components/widgets'
 import { Banner } from './Banner'
-const SourceIndicator = lazy(() => import('./SourceIndicator'))
+import { DemoHeader } from './DemoHeader'
+import { OptionsPanel } from './OptionsPanel'
+import { ExternalControlPanel } from './ExternalControlPanel'
+import { useDemoState } from './useDemoState'
 const JsonEditor = lazy(() =>
   import('@json-edit-react').then((m) => ({ default: m.JsonEditor }))
 ) as typeof import('@json-edit-react').JsonEditor
-
-interface AppState {
-  rootName: string
-  indent: number
-  collapseLevel: number | FilterFunction
-  collapseTime: number
-  showCount: 'Yes' | 'No' | 'When collapsed' | 'When collapsed or filtered'
-  theme: Theme
-  allowEdit: boolean
-  allowDelete: boolean
-  allowAdd: boolean
-  allowCopy: boolean
-  sortKeys: boolean
-  showIndexes: boolean
-  arraysFromOne: boolean
-  showStringQuotes: boolean
-  defaultNewValue: string
-  searchText: string
-  customTextEditor: boolean
-}
-
-// Additional themes are loaded dynamically when needed
-
-const themeNames = [
-  'Default',
-  'Github Dark',
-  'Github Light',
-  'White & Black',
-  'Black & White',
-  'Candy Wrapper',
-  'Psychedelic',
-  'Solarized Dark',
-  'Solarized Light',
-  'Dracula',
-  'Monokai',
-  'Tokyo Night',
-  'r18jv',
-  'TMF',
-]
-
-// Persisted theme choice (stored as the display name), so the selection
-// survives reloads. Mirrors the Example pages' ThemePicker.
-const THEME_STORAGE_KEY = 'jer-demo-theme'
-
-// Only default theme is loaded initially
-const themes = [defaultTheme]
-
-// Resolve a theme display-name to its `Theme`, lazy-loading the themes chunk on
-// demand and caching the result in `themes`. The getter-name convention
-// (`get<Name>Theme`, spaces/ampersands stripped) matches `themeGetters` in
-// LazyThemes.ts.
-const loadThemeByName = async (themeName: string): Promise<Theme | undefined> => {
-  const existing = themes.find((th) => th.displayName === themeName)
-  if (existing) return existing
-  if (themeName === 'Default') return defaultTheme
-  try {
-    const functionName = `get${themeName.replace(/\s+&\s+|\s+/g, '')}Theme`
-    const lazyThemesModule = await import('./LazyThemes')
-    const getter = lazyThemesModule.themeGetters[functionName]
-    if (getter) {
-      const newTheme = getter()
-      if (newTheme) {
-        themes.push(newTheme)
-        return newTheme
-      }
-    }
-  } catch (error) {
-    console.error('Failed to load theme:', error)
-  }
-  return undefined
-}
 
 console.log(`json-edit-react v${__VERSION__}`)
 console.log(`Site built: ${__BUILD_TIME__}`)
 
 function App() {
-  const navigate = useLocation()[1]
-  const searchString = useSearch()
-  const queryParams = new URLSearchParams(searchString)
-  const selectedDataSet = queryParams.get('data') ?? 'intro'
-  const dataDefinition = demoDataDefinitions[selectedDataSet]
-  // If this data set has a mirrored example page, link to its source.
-  const exampleSlug = exampleSlugByDataSet[selectedDataSet]
-
-  const [state, setState] = useState<AppState>({
-    rootName: dataDefinition.rootName ?? 'data',
-    indent: 2,
-    collapseLevel: dataDefinition.collapse ?? 2,
-    collapseTime: 300,
-    showCount: 'When collapsed or filtered',
-    theme: defaultTheme,
-    allowEdit: true,
-    allowDelete: true,
-    allowAdd: true,
-    allowCopy: true,
-    sortKeys: false,
-    showIndexes: true,
-    arraysFromOne: false,
-    showStringQuotes: true,
-    defaultNewValue: 'New data!',
-    searchText: '',
-    customTextEditor: false,
-  })
-
-  // Imperative handle for driving collapse/edit actions from outside the tree.
-  const editorRef = useRef<JsonEditorHandle>(null)
-  // Imperative-handle test panel: visibility toggle + target path/options.
-  // Kept in local state (not AppState) so it survives demo-data changes.
-  const [showImperativeHandle, setShowImperativeHandle] = useState(false)
-  const [handlePath, setHandlePath] = useState('')
-  const [handleIncludeChildren, setHandleIncludeChildren] = useState(true)
-  // const [handleOverrideRestrictions, setHandleOverrideRestrictions] = useState(false)
-  // Tracks whether a node is currently being edited (via `onEditEvent`), so
-  // the External Control panel can show Confirm/Cancel only while an edit is
-  // active.
-  const [isEditing, setIsEditing] = useState(false)
-
-  const [isSaving, setIsSaving] = useState(false)
-  // Used when resetting after theme editing
-  const previousTheme = useRef<Theme>(null)
-  const toast = useToast()
-
-  const [isSearchFocused, setIsSearchFocused] = useState(false)
-
-  const { liveData, loading, updateLiveData } = useDatabase()
-
-  // The consumer owns the data state; `useUndo` (controlled) layers undo/redo
-  // on top, recording snapshots and committing through `setRawData`. Switch
-  // datasets with `reset(newData)` (see `handleChangeData`) — never a raw
-  // `setRawData` — so history is cleared rather than left pointing at the
-  // previous dataset.
-  const [rawData, setRawData] = useState<JsonData>(
-    selectedDataSet === 'editTheme' ? defaultTheme : (dataDefinition.data ?? {})
-  )
-  const { data, set: setData, reset, undo, redo, canUndo, canRedo } = useUndo(rawData, setRawData)
-
-  // Lazy (example-backed) datasets resolve their payload from a chunk; eager
-  // datasets carry it inline. `loadedPayload` holds the resolved chunk for the
-  // active lazy dataset; for an eager dataset the payload IS the definition,
-  // read synchronously so there's no stale frame on switch. It's `null` while a
-  // lazy chunk is in flight — the editor shows a spinner until it lands.
-  const [loadedPayload, setLoadedPayload] = useState<DemoPayload | null>(null)
-  const activePayload: Partial<DemoPayload> | null = dataDefinition.load
-    ? loadedPayload
-    : dataDefinition
-  const isLoadingDataset = !!dataDefinition.load && !loadedPayload
-
-  useEffect(() => {
-    const def = demoDataDefinitions[selectedDataSet]
-    // Eager datasets need no resolution; just clear any stale lazy payload.
-    if (!def.load) {
-      setLoadedPayload(null)
-      return
-    }
-    // Lazy: load the chunk, then seed the document from its data.
-    let cancelled = false
-    setLoadedPayload(null)
-    def.load().then((payload) => {
-      if (cancelled) return
-      setLoadedPayload(payload)
-      reset(payload.data)
-    })
-    return () => {
-      cancelled = true
-    }
-  }, [selectedDataSet, reset])
-
-  useEffect(() => {
-    if (selectedDataSet === 'liveData' && !loading && liveData) reset(liveData)
-  }, [loading, liveData, reset, selectedDataSet])
-
-  // Restore the persisted theme on mount so the selection survives reloads
-  // (mirrors the Example pages' ThemePicker). Stored as a display name; resolve
-  // it back to the `Theme` via the same lazy loader the picker uses. Functional
-  // setState so a late-resolving lazy chunk doesn't clobber other state.
-  useEffect(() => {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY)
-    if (!stored || stored === 'Default') return
-    loadThemeByName(stored).then((theme) => {
-      if (!theme) return
-      setState((s) => ({ ...s, theme }))
-      // On the theme editor the document IS the theme (the editor styles from
-      // `data`, not `state.theme`), so seed the editor too — otherwise it shows
-      // the default while the selector shows the restored choice. Mirrors the
-      // editTheme case in handleChangeData.
-      if (selectedDataSet === 'editTheme') {
-        previousTheme.current = theme
-        reset(theme)
-      }
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- mount only
-  }, [])
-
-  // useEffect(() => {
-  //   const localStorageState = localStorage.getItem('collapseState')
-  //   if (localStorageState) {
-  //     setTimeout(() => {
-  //       const data = JSON.parse(localStorageState) as Record<string, CollapseState>
-  //       collapseState.current = data
-  //       const collapseArray = Object.values(data)
-  //       setCollapseData(collapseArray)
-  //       // console.log('collapseArray', collapseArray)
-  //     }, 500)
-  //   }
-  // }, [])
-
-  // Data sets whose definitions are configured by the data itself declare
-  // them as a function; rebuild when the data changes. Static lists pass
-  // through with their module-scope identity intact.
-  const customNodeDefinitions = useMemo(
-    () =>
-      typeof activePayload?.customNodeDefinitions === 'function'
-        ? activePayload.customNodeDefinitions(data)
-        : activePayload?.customNodeDefinitions,
-    [activePayload, data]
-  )
-
-  const updateState = (patch: Partial<AppState>) => setState({ ...state, ...patch })
-
-  const toggleState = (field: keyof AppState) => updateState({ [field]: !state[field] })
+  // The whole demo model — state, the edited document, dataset/theme
+  // resolution, and the External Control wiring — lives in `useDemoState`.
+  // `App` is the view: it reads from the hook and threads values into the
+  // panels, keeping only the editor's own event callbacks inline (where the
+  // `JsonEditor` props type them).
+  const {
+    selectedDataSet,
+    dataDefinition,
+    exampleSlug,
+    state,
+    updateState,
+    toggleState,
+    data,
+    setData,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    activePayload,
+    isLoadingDataset,
+    customNodeDefinitions,
+    editorTheme,
+    allowEdit,
+    allowDelete,
+    allowAdd,
+    onCopy,
+    editorRef,
+    externalControlEnabled,
+    showExternalControl,
+    setShowImperativeHandle,
+    handlePath,
+    setHandlePath,
+    handleIncludeChildren,
+    setHandleIncludeChildren,
+    isEditing,
+    setIsEditing,
+    handleExternalCollapse,
+    isSaving,
+    isSearchFocused,
+    setIsSearchFocused,
+    handleChangeData,
+    handleThemeChange,
+    handleReset,
+  } = useDemoState()
 
   const {
     searchText,
@@ -295,185 +95,10 @@ function App() {
     showStringQuotes,
     allowCopy,
     defaultNewValue,
-    allowEdit: allowEditEnabled,
-    allowDelete: allowDeleteEnabled,
-    allowAdd: allowAddEnabled,
     customTextEditor,
   } = state
 
-  // Compose the global toggle (the "Allow editing" checkbox) with any per-node
-  // filter the data set defines: a node is permitted only if the toggle is on
-  // AND the data set's own filter permits it.
-  const allowEdit: FilterFunction | boolean = (() => {
-    const customAllow = activePayload?.allowEdit
-    if (typeof customAllow === 'function') return (input) => allowEditEnabled && customAllow(input)
-    if (customAllow !== undefined) return customAllow
-    return allowEditEnabled
-  })()
-
-  const allowDelete: FilterFunction | boolean = (() => {
-    const customAllow = activePayload?.allowDelete
-    if (typeof customAllow === 'function')
-      return (input) => allowDeleteEnabled && customAllow(input)
-    if (customAllow !== undefined) return customAllow
-    return allowDeleteEnabled
-  })()
-
-  const allowAdd: FilterFunction | boolean = (() => {
-    const customAllow = activePayload?.allowAdd
-    if (typeof customAllow === 'function') return (input) => allowAddEnabled && customAllow(input)
-    if (customAllow !== undefined) return customAllow
-    return allowAddEnabled
-  })()
-
-  // The "Show External Control" toggle is disabled on the custom-nodes data
-  // set, where path-based editing doesn't map cleanly onto the custom
-  // renderers. When unavailable it stays off and the panel is hidden.
-  const externalControlEnabled = selectedDataSet !== 'customNodes'
-  const showExternalControl = showImperativeHandle && externalControlEnabled
-
-  // External Control panel: collapse/expand the node at the entered path. We
-  // pre-check that the target is a collection (a leaf has nothing to collapse)
-  // and warn instead of firing a no-op — `collapse` itself returns nothing, so
-  // the host detects this with the exported `extract` + `isCollection` helpers.
-  // A successful collapse/expand is reported by the `onCollapse` callback
-  // below.
-  const handleExternalCollapse = (collapsed: boolean) => {
-    const path = splitPropertyString(handlePath)
-    if (!isCollection(extract(data, path))) {
-      toast({
-        title: `Can't ${collapsed ? 'collapse' : 'expand'} — not a collection node`,
-        status: 'warning',
-        duration: 2000,
-        isClosable: true,
-      })
-      return
-    }
-    editorRef.current?.collapse({ path, collapsed, includeChildren: handleIncludeChildren })
-  }
-
-  // Stable references so the JsonEditor's memoized nodes can bail out: an
-  // inline `theme` array would churn the theme context (re-rendering every
-  // node), and an inline `onCopy` would churn the per-node prop comparison. For
-  // the editTheme dataset the document IS the theme, so style the editor from
-  // `data` directly — a pure derivation, no second copy of the theme to keep in
-  // sync. Every other dataset styles from the chosen `theme`.
-  const editorTheme = useMemo(
-    () => [
-      selectedDataSet === 'editTheme' ? (data as Theme) : theme,
-      activePayload?.styles ?? {},
-      { container: { paddingTop: '1em' } },
-    ],
-    [selectedDataSet, data, theme, activePayload]
-  )
-
-  const onCopy = useCallback(
-    ({
-      stringValue,
-      type,
-      success,
-      error,
-    }: {
-      stringValue: string
-      type: 'value' | 'path'
-      success: boolean
-      error?: { message: string }
-    }) =>
-      success
-        ? toast({
-            title: `${type === 'value' ? 'Value' : 'Path'} copied to clipboard:`,
-            description: truncate(String(stringValue)),
-            status: 'success',
-            duration: 5000,
-            isClosable: true,
-          })
-        : toast({
-            title: 'Problem copying to clipboard',
-            description: error?.message,
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-          }),
-    [toast]
-  )
-
-  const handleChangeData = (selected: string) => {
-    const newDataDefinition = demoDataDefinitions[selected]
-
-    setState({
-      ...state,
-      searchText: '',
-      collapseLevel: newDataDefinition.collapse ?? state.collapseLevel,
-      rootName: newDataDefinition.rootName ?? 'data',
-      customTextEditor: false,
-      // Leaving the theme editor: persist the live-edited theme (the `data`)
-      // into `state.theme` so the other datasets are styled with the theme
-      // you built.
-      // The editTheme view derives its styling from `data`, so this is the one
-      // point where that work needs writing back to the standing theme.
-      ...(selectedDataSet === 'editTheme' ? { theme: data as Theme } : {}),
-    })
-
-    switch (selected) {
-      case 'editTheme':
-        previousTheme.current = theme
-        reset(theme)
-        break
-      case 'liveData':
-        if (!liveData) reset({ 'Oops!': "We couldn't load this data, sorry " })
-        else reset(liveData)
-        break
-      default:
-        // Eager datasets seed synchronously; lazy ones are seeded by the
-        // load effect once their chunk resolves (see above).
-        if (!newDataDefinition.load) reset(newDataDefinition.data ?? {})
-    }
-
-    if (selected === 'intro') navigate('/')
-    else navigate(`/?data=${selected}`)
-  }
-
-  const handleThemeChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const themeName = e.target.value
-    const theme = await loadThemeByName(themeName)
-    if (!theme) return
-
-    localStorage.setItem(THEME_STORAGE_KEY, themeName)
-    updateState({ theme })
-    if (selectedDataSet === 'editTheme') {
-      setData(theme)
-      previousTheme.current = theme
-    }
-  }
-
-  const handleReset = async () => {
-    const newState = { ...state }
-    newState.searchText = ''
-
-    switch (selectedDataSet) {
-      case 'editTheme':
-        reset(previousTheme.current ?? defaultTheme)
-        newState.theme = previousTheme.current ?? defaultTheme
-        break
-      case 'liveData':
-        setIsSaving(true)
-        await updateLiveData(data)
-        setIsSaving(false)
-        toast({
-          title: 'Whoosh!',
-          description: 'Data saved!',
-          status: 'success',
-          duration: 5000,
-          isClosable: true,
-        })
-        reset(data)
-        break
-      default:
-        reset(activePayload?.data ?? {})
-    }
-
-    setState(newState)
-  }
+  const toast = useToast()
 
   return (
     <div className="App">
@@ -488,52 +113,7 @@ function App() {
         gap={4}
         minH="100%"
       >
-        <HStack w="100%" justify="space-between" align="flex-start">
-          <Suspense fallback={null}>
-            <SourceIndicator />
-          </Suspense>
-
-          <VStack align="flex-start" gap={3}>
-            <HStack align="flex-end" mt={2} gap={4} flexWrap="wrap">
-              <Flex gap={4} align="center">
-                {/* <img src={logo} alt="logo" style={{ maxHeight: '3.5em' }} /> */}
-                <img src={logoSVG} alt="logo" style={{ maxHeight: '3.5em' }} />
-                <Heading as="h1" size="3xl" variant="other">
-                  json-edit-<span style={{ color: '#EA3788' }}>react</span>
-                </Heading>
-              </Flex>
-              <Text pb={0.5} variant="primary">
-                by{' '}
-                <Link href="https://github.com/CarlosNZ" isExternal>
-                  <strong>@CarlosNZ</strong>
-                </Link>
-              </Text>
-            </HStack>
-            <Heading variant="sub">
-              A <span style={{ color: '#011C27' }}>React</span> component for editing or viewing
-              JSON/object data •{' '}
-              <Link
-                href="https://github.com/CarlosNZ/json-edit-react#readme"
-                isExternal
-                color="accent"
-              >
-                Docs <Icon boxSize={4} as={FaExternalLinkAlt} />
-              </Link>
-            </Heading>
-          </VStack>
-          <Flex align="center" gap={5}>
-            <a href="https://github.com/CarlosNZ/json-edit-react" target="_blank" rel="noreferrer">
-              <Icon boxSize="2em" as={FaGithub} color="secondary" />
-            </a>
-            <a
-              href="https://www.npmjs.com/package/json-edit-react"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Icon boxSize="3em" as={FaNpm} color="secondary" />
-            </a>
-          </Flex>
-        </HStack>
+        <DemoHeader />
         <VStack minW={400}>
           <Heading size="lg" variant="accent">
             Demo
@@ -580,9 +160,6 @@ function App() {
                     theme={editorTheme}
                     indent={indent}
                     onUpdate={async (nodeData) => {
-                      // §17: one `onUpdate`. The datasets' per-operation helpers
-                      // (onEdit/onAdd) are dispatched by `event`, with `onUpdate`
-                      // as the catch-all (delete/rename/move).
                       const runDemoUpdate = () => {
                         if (nodeData.event === 'edit' && activePayload?.onEdit)
                           return activePayload.onEdit(nodeData)
@@ -825,364 +402,32 @@ function App() {
             </HStack>
           </VStack>
         </VStack>
-        <VStack flexBasis={500}>
-          <Heading size="lg" variant="accent">
-            Options
-          </Heading>
-          <VStack backgroundColor="#f6f6f6" borderRadius={10} className="block-shadow">
-            <FormControl>
-              <VStack align="flex-start" m={4}>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Demo data
-                  </FormLabel>
-                  <div className="inputWidth" style={{ flexGrow: 1 }}>
-                    <Select
-                      id="dataSelect"
-                      onChange={(e) => handleChangeData(e.target.value)}
-                      value={selectedDataSet}
-                    >
-                      {Object.entries(demoDataDefinitions).map(([key, { name }]) => (
-                        <option value={key} key={key}>
-                          {name}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Theme
-                  </FormLabel>
-                  <div className="inputWidth" style={{ flexGrow: 1 }}>
-                    <Select id="themeSelect" onChange={handleThemeChange} value={theme.displayName}>
-                      {themeNames.map((themeName) => (
-                        <option value={themeName} key={themeName}>
-                          {themeName}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Data root name
-                  </FormLabel>
-                  <Input
-                    id="dataNameInput"
-                    className="inputWidth"
-                    type="text"
-                    value={rootName}
-                    onChange={(e) => updateState({ rootName: e.target.value })}
-                  />
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Collapse level
-                  </FormLabel>
-                  <NumberInput
-                    id="collapseInput"
-                    className="inputWidth"
-                    min={0}
-                    isDisabled={typeof collapseLevel !== 'number'}
-                    value={typeof collapseLevel === 'number' ? collapseLevel : 'Custom function'}
-                    onChange={(value) => updateState({ collapseLevel: Number(value) })}
-                  >
-                    <NumberInputField />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Collapse animation time
-                  </FormLabel>
-                  <NumberInput
-                    id="collapseTime"
-                    className="inputWidth"
-                    min={0}
-                    value={collapseTime}
-                    onChange={(value) => updateState({ collapseTime: Number(value) })}
-                  >
-                    <NumberInputField />
-                  </NumberInput>
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Indent level
-                  </FormLabel>
-                  <NumberInput
-                    id="indentInput"
-                    className="inputWidth"
-                    max={12}
-                    min={0}
-                    value={indent}
-                    onChange={(value) => updateState({ indent: Number(value) })}
-                  >
-                    <NumberInputField />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Show counts
-                  </FormLabel>
-                  <div className="inputWidth" style={{ flexGrow: 1, maxWidth: 'max-content' }}>
-                    <Select
-                      id="showCountSelect"
-                      onChange={(e) =>
-                        updateState({
-                          showCount: e.target.value as
-                            | 'Yes'
-                            | 'No'
-                            | 'When collapsed'
-                            | 'When collapsed or filtered',
-                        })
-                      }
-                      value={showCount}
-                      fontSize="sm"
-                    >
-                      <option value="Yes" key={0}>
-                        Yes
-                      </option>
-                      <option value="No" key={1}>
-                        No
-                      </option>
-                      <option value="When collapsed" key={2}>
-                        When collapsed
-                      </option>
-                      <option value="When collapsed or filtered" key={3}>
-                        When collapsed or filtered
-                      </option>
-                    </Select>
-                  </div>
-                </HStack>
-                <HStack className="inputRow">
-                  <FormLabel className="labelWidth" textAlign="right">
-                    Default new value
-                  </FormLabel>
-                  <Input
-                    className="inputWidth"
-                    disabled={activePayload?.defaultValue !== undefined}
-                    type="text"
-                    value={defaultNewValue}
-                    onChange={(e) => updateState({ defaultNewValue: e.target.value })}
-                  />
-                </HStack>
-                <CheckboxGroup colorScheme="primaryScheme">
-                  <Flex w="100%" justify="flex-start">
-                    <Checkbox
-                      id="allowEditCheckbox"
-                      isChecked={allowEditEnabled}
-                      disabled={activePayload?.allowEdit !== undefined}
-                      onChange={() => toggleState('allowEdit')}
-                      w="50%"
-                    >
-                      Allow Edit
-                    </Checkbox>
-                    <Checkbox
-                      id="allowDeleteCheckbox"
-                      isChecked={allowDeleteEnabled}
-                      disabled={activePayload?.allowDelete !== undefined}
-                      onChange={() => toggleState('allowDelete')}
-                      w="50%"
-                    >
-                      Allow Delete
-                    </Checkbox>
-                  </Flex>
-                  <Flex w="100%" justify="flex-start">
-                    <Checkbox
-                      id="allowAddCheckbox"
-                      isChecked={allowAddEnabled}
-                      disabled={activePayload?.allowAdd !== undefined}
-                      onChange={() => toggleState('allowAdd')}
-                      w="50%"
-                    >
-                      Allow Add
-                    </Checkbox>
-                    <Checkbox
-                      id="allowCopyCheckbox"
-                      isChecked={allowCopy}
-                      onChange={() => toggleState('allowCopy')}
-                      w="50%"
-                    >
-                      Enable clipboard
-                    </Checkbox>
-                  </Flex>
-                  <Flex w="100%" justify="flex-start">
-                    <Checkbox
-                      id="showStringQuotesCheckbox"
-                      isChecked={showStringQuotes}
-                      onChange={() => toggleState('showStringQuotes')}
-                      w="50%"
-                    >
-                      Show String quotes
-                    </Checkbox>
-                    <Checkbox
-                      id="sortKeysCheckbox"
-                      isChecked={sortKeys}
-                      onChange={() => toggleState('sortKeys')}
-                      w="50%"
-                    >
-                      Sort Object keys
-                    </Checkbox>
-                  </Flex>
-                  <Flex w="100%" justify="flex-start">
-                    <Checkbox
-                      id="showIndexesCheckbox"
-                      isChecked={showIndexes}
-                      onChange={() => toggleState('showIndexes')}
-                      w="50%"
-                    >
-                      Show Array indexes
-                    </Checkbox>
-                    <Checkbox
-                      id="arraysFromOneCheckbox"
-                      isChecked={arraysFromOne}
-                      onChange={() => toggleState('arraysFromOne')}
-                      w="50%"
-                    >
-                      Arrays index from 1
-                    </Checkbox>
-                  </Flex>
-                  <Flex w="100%" justify="flex-start">
-                    <Checkbox
-                      id="showImperativeHandleCheckbox"
-                      isChecked={showExternalControl}
-                      disabled={!externalControlEnabled}
-                      onChange={() => setShowImperativeHandle((v) => !v)}
-                      w="50%"
-                    >
-                      Show External Control
-                    </Checkbox>
-                    <HStack w="50%">
-                      <Checkbox
-                        id="customEditorCheckbox"
-                        isChecked={customTextEditor}
-                        onChange={() => toggleState('customTextEditor')}
-                        disabled={!activePayload?.customTextEditorAvailable}
-                      >
-                        Custom Text Editor
-                      </Checkbox>
-                      <Tooltip label="When in full JSON object edit">
-                        <InfoIcon color="primaryScheme.500" />
-                      </Tooltip>
-                    </HStack>
-                  </Flex>
-                </CheckboxGroup>
-                {showExternalControl && (
-                  // Test panel for the `editorRef` imperative handle. Enter a
-                  // dot-separated path (e.g. "user.name" or "items.0"); empty =
-                  // root. Actions operate on that path.
-                  <VStack w="100%" align="stretch" gap={2} pt={2} mt={2}>
-                    <Text as="h3">External Control</Text>
-                    <Input
-                      size="sm"
-                      placeholder="path, e.g. user.name or items[0] (empty = root)"
-                      value={handlePath}
-                      onChange={(e) => setHandlePath(e.target.value)}
-                    />
-                    <HStack gap={2} flexWrap="wrap" w="100%" justify="space-between">
-                      <Flex justify="space-between">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            const result = editorRef.current?.startEdit({
-                              path: splitPropertyString(handlePath),
-                              // overrideRestrictions: handleOverrideRestrictions,
-                            })
-                            if (result && result !== true)
-                              toast({
-                                title: "Can't edit that node",
-                                description:
-                                  result === 'RESTRICTED'
-                                    ? 'That node is restricted from editing'
-                                    : 'No node found at that path',
-                                status: 'warning',
-                                duration: 2000,
-                                isClosable: true,
-                              })
-                          }}
-                          colorScheme="primaryScheme"
-                          variant="outline"
-                        >
-                          Start edit
-                        </Button>
-                      </Flex>
-                      {/* Confirm/Cancel only make sense while an edit is
-                          active; `isEditing` is tracked via `onEditEvent`. */}
-                      {isEditing && (
-                        <Flex gap={2}>
-                          <Button
-                            size="sm"
-                            onClick={() => editorRef.current?.confirm()}
-                            colorScheme="primaryScheme"
-                            variant="outline"
-                          >
-                            Confirm
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => editorRef.current?.cancel()}
-                            colorScheme="primaryScheme"
-                            variant="outline"
-                          >
-                            Cancel
-                          </Button>
-                        </Flex>
-                      )}
-                      {/* <Checkbox
-                        isChecked={handleOverrideRestrictions}
-                        onChange={(e) => setHandleOverrideRestrictions(e.target.checked)}
-                        whiteSpace="nowrap"
-                      >
-                        Override restrictions
-                      </Checkbox> */}
-                    </HStack>
-                    <HStack gap={2} flexWrap="wrap">
-                      <Button
-                        size="sm"
-                        onClick={() => handleExternalCollapse(true)}
-                        colorScheme="primaryScheme"
-                        variant="outline"
-                      >
-                        Collapse
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleExternalCollapse(false)}
-                        colorScheme="primaryScheme"
-                        variant="outline"
-                      >
-                        Expand
-                      </Button>
-                      <Checkbox
-                        isChecked={handleIncludeChildren}
-                        onChange={(e) => setHandleIncludeChildren(e.target.checked)}
-                        whiteSpace="nowrap"
-                      >
-                        Include children
-                      </Checkbox>
-                    </HStack>
-                  </VStack>
-                )}
-              </VStack>
-            </FormControl>
-          </VStack>
-          <Box maxW={350} pt={4}>
-            {dataDefinition.description}
-          </Box>
-          {exampleSlug && (
-            <Link as={RouterLink} href={`/examples/${exampleSlug}`} color="accent" fontSize="sm">
-              View the source code for this example
-            </Link>
+        <OptionsPanel
+          state={state}
+          updateState={updateState}
+          toggleState={toggleState}
+          selectedDataSet={selectedDataSet}
+          activePayload={activePayload}
+          handleChangeData={handleChangeData}
+          handleThemeChange={handleThemeChange}
+          externalControlEnabled={externalControlEnabled}
+          showExternalControl={showExternalControl}
+          setShowImperativeHandle={setShowImperativeHandle}
+          description={dataDefinition.description}
+          exampleSlug={exampleSlug}
+        >
+          {showExternalControl && (
+            <ExternalControlPanel
+              editorRef={editorRef}
+              handlePath={handlePath}
+              setHandlePath={setHandlePath}
+              handleIncludeChildren={handleIncludeChildren}
+              setHandleIncludeChildren={setHandleIncludeChildren}
+              isEditing={isEditing}
+              onCollapse={handleExternalCollapse}
+            />
           )}
-        </VStack>
+        </OptionsPanel>
       </Flex>
       <Box h={50} />
       <footer>
