@@ -1,0 +1,27 @@
+# Dependencies (node_modules is ignored by default, listed for clarity)
+node_modules/
+
+# Claude Code worktrees (git-ignored mirror of the repo)
+.claude/
+
+# Large perf-test data fixtures
+data/
+
+# Build / publish output
+build/
+build_package/
+pack-output/
+packages/*/build/
+demo/build/
+
+# Lockfiles
+pnpm-lock.yaml
+demo/yarn.lock
+
+# Local, git-ignored config stub
+demo/src/firebaseConfig.json
+
+# Hand-authored Markdown (READMEs, migration guide, dev-docs, CHANGELOGs):
+# managed manually, with deliberate badges/admonitions/TOC and code-example
+# wrapping that Prettier would disrupt. Format these by hand.
+*.md

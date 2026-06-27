@@ -63,6 +63,9 @@ importers:
       jest-environment-jsdom:
         specifier: ^29.7.0
         version: 29.7.0
+      prettier:
+        specifier: 3.9.0
+        version: 3.9.0
       react:
         specifier: ^19.1.0
         version: 19.2.6
@@ -3121,6 +3124,11 @@ packages:
   presentable-error@0.0.1:
     resolution: {integrity: sha512-E6rsNU1QNJgB3sjj7OANinGncFKuK+164sLXw1/CqBjj/EkXSoSdHCtWQGBNlREIGLnL7IEUEGa08YFVUbrhVg==}
     engines: {node: '>=16'}
+
+  prettier@3.9.0:
+    resolution: {integrity: sha512-LjIqSIC5VYLzs9WedVmJ2ljNAGnU+DteIClbahu4L/DBeWjZ6iT/k1lAYyu9JUh+1xINxWadaPw/Pl63y/agAw==}
+    engines: {node: '>=14'}
+    hasBin: true
 
   pretty-bytes@3.0.1:
     resolution: {integrity: sha512-eb7ZAeUTgfh294cElcu51w+OTRp/6ItW758LjwJSK72LDevcuJn0P4eD71PLMDGPwwatXmAmYHTkzvpKlJE3ow==}
@@ -7462,6 +7470,8 @@ snapshots:
   prelude-ls@1.2.1: {}
 
   presentable-error@0.0.1: {}
+
+  prettier@3.9.0: {}
 
   pretty-bytes@3.0.1:
     dependencies:

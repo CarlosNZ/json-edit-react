@@ -194,10 +194,7 @@ export const OptionsPanel = ({
                 onChange={(e) =>
                   updateState({
                     showCount: e.target.value as
-                      | 'Yes'
-                      | 'No'
-                      | 'When collapsed'
-                      | 'When collapsed or filtered',
+                      'Yes' | 'No' | 'When collapsed' | 'When collapsed or filtered',
                   })
                 }
                 value={state.showCount}
