@@ -1,4 +1,4 @@
-import { type JSX, type SVGProps } from 'react'
+import { type SVGProps } from 'react'
 import { useTheme } from './contexts'
 import { type NodeData, type ThemeableElement, type ThemeIcons } from './types'
 
@@ -23,7 +23,7 @@ export const IconSvg = ({
   ...props
   // `scale` is our size multiplier — omit SVG's own (rarely-used) `scale`
   // attribute so spreading a definition's `svgProps` can't shadow it.
-}: { scale?: number } & Omit<SVGProps<SVGSVGElement>, 'scale'>): JSX.Element => {
+}: { scale?: number } & Omit<SVGProps<SVGSVGElement>, 'scale'>): React.JSX.Element => {
   const size = `${ICON_TEXT_SIZE_RATIO * scale}em`
   return (
     <svg viewBox={viewBox} fill={fill} width={size} height={size} {...props}>
@@ -42,7 +42,7 @@ export const Icon = ({
 }: {
   name: keyof ThemeIcons
   nodeData: NodeData
-}): JSX.Element => {
+}): React.JSX.Element => {
   const { getStyles, icons } = useTheme()
   const def = icons[name]
   const styleKey = `icon${name[0].toUpperCase()}${name.slice(1)}` as ThemeableElement

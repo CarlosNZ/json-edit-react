@@ -1,4 +1,3 @@
-import { type JSX } from 'react'
 import { type LocalisedStrings, type TranslateFunction } from './localisation'
 import { CustomNodeData } from './CustomNode'
 import { type SelectProps } from './NativeSelect'
@@ -553,9 +552,9 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   isPending: boolean
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
-  children?: JSX.Element | JSX.Element[] | null
-  originalNode?: JSX.Element
-  originalNodeKey?: JSX.Element
+  children?: React.JSX.Element | React.JSX.Element[] | null
+  originalNode?: React.JSX.Element
+  originalNodeKey?: React.JSX.Element
   canEdit: boolean
   keyboardCommon: Partial<Record<keyof KeyboardControlsFull, () => void>>
   // No error-reporter prop: a custom component rejects invalid input by
