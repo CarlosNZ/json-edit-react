@@ -13,7 +13,19 @@ import { useDebouncedCallback } from 'use-debounce'
 import { StringEdit, toPathString, type CustomComponentProps } from 'json-edit-react'
 import { Loading } from '../_common/Loading'
 
-extend([namesPlugin])
+// colord parses named colours ('red', 'rebeccapurple', …) only once its
+// `names` plugin is registered via `extend`. Register it lazily on first use
+// rather than at module top level: a top-level `extend(...)` is a real side
+// effect, which both violates the package's `sideEffects: false` (a bundler
+// trusting that flag could drop the call and silently break named-colour
+// parsing) and keeps colord in the bundle of anyone importing a sibling
+// component. `extend` is idempotent; the flag just skips the repeat call.
+let namesPluginRegistered = false
+const ensureColordPlugins = () => {
+  if (namesPluginRegistered) return
+  extend([namesPlugin])
+  namesPluginRegistered = true
+}
 
 const HsvaColorPicker = lazy(() =>
   import('react-colorful').then((m) => ({ default: m.HsvaColorPicker }))
@@ -53,6 +65,9 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
   handleEdit,
   ...props
 }) => {
+  // Register colord's named-colour plugin before the first colord() call below
+  ensureColordPlugins()
+
   const { loadingText, swatchStyles, alpha = false } = componentProps
 
   const text = value as string

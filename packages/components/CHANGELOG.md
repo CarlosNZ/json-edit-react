@@ -1,5 +1,11 @@
 # @json-edit-react/components
 
+## 0.9.0-beta.2
+
+### Patch Changes
+
+- ColorPicker: register colord's named-colour plugin lazily (on first render) instead of at module top level. The top-level `extend(...)` was a real side effect that contradicted the package's `sideEffects: false`, so a bundler trusting that flag could drop it and silently break named-colour parsing ('red', 'rebeccapurple', …). No behavioural change — the plugin still registers before any colour is parsed.
+
 ## 0.9.0-beta.0
 
 ### Major Changes
