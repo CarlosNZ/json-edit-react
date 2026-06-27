@@ -88,7 +88,7 @@ pnpm run versions
 
 ## Graduate the v2 beta to stable
 
-The one-time moment core leaves beta and `latest` moves off `1.30.1`.
+The one-time moment core leaves beta and `latest` moves off `1.30.2`.
 
 ```sh
 #    finalise CHANGELOGs + commit — tree must be clean
@@ -113,13 +113,13 @@ pnpm pub:themes                           # sub-packages already publish to `lat
 git push --follow-tags                    # push the commit + scoped tag
 ```
 
-Don't do this for **core** while `1.30.1` is the intended `latest` — use `pub:core:beta` for betas and [Graduate to stable](#graduate-the-v2-beta-to-stable) for the cutover.
+Don't do this for **core** while `1.30.2` is the intended `latest` — use `pub:core:beta` for betas and [Graduate to stable](#graduate-the-v2-beta-to-stable) for the cutover.
 
 ## Verify after publishing
 
 ```sh
 pnpm run versions                                     # all four at a glance
-npm dist-tags ls json-edit-react                       # core: latest must stay 1.30.1, beta = 2.0.0-beta.x
+npm dist-tags ls json-edit-react                       # core: latest must stay 1.30.2, beta = 2.0.0-beta.x
 pnpm publish --dry-run --tag beta --no-git-checks      # (optional) ask npm what it would do, without doing it
 ```
 
@@ -148,7 +148,7 @@ npm install react react-dom \
 - **`pnpm -C <dir> publish` is broken** on pnpm 10.8.x (leaks the dir + command word into npm → `EUSAGE`). The `pub:<sub>` scripts use the `(cd <dir> && pnpm publish …)` subshell form. `-C`/`--filter` are fine for `build` and `pack`.
 - **The README wrapper needs each target README committed and clean** — it restores via `git checkout`, so an uncommitted edit gets clobbered.
 - **A README-only change still needs a new published version** — npm has no in-place README edit. Bump the beta number and re-publish (betas are cheap).
-- **The default npm page shows the `latest`-tagged version's README.** Sub-packages publish each beta to `latest`, so their page shows the newest beta README. Core's `latest` is `1.30.1`, so `npmjs.com/package/json-edit-react` shows the **v1** README until `2.0.0` ships; the v2-beta README is at `…/json-edit-react/v/2.0.0-beta.x`.
+- **The default npm page shows the `latest`-tagged version's README.** Sub-packages publish each beta to `latest`, so their page shows the newest beta README. Core's `latest` is `1.30.2`, so `npmjs.com/package/json-edit-react` shows the **v1** README until `2.0.0` ships; the v2-beta README is at `…/json-edit-react/v/2.0.0-beta.x`.
 
 ---
 
@@ -360,7 +360,7 @@ Tags are annotated and created **locally** — nothing is pushed automatically. 
 
 ### Two dist-tag rules
 
-- **Core betas → `--tag beta`** (baked into `pub:core:beta`), because core's `latest` is the stable `1.30.1` and must not move. Only `pub:core:latest` touches `latest`.
+- **Core betas → `--tag beta`** (baked into `pub:core:beta`), because core's `latest` is the stable `1.30.2` and must not move. Only `pub:core:latest` touches `latest`.
 - **Sub-package betas → `latest`** (no `--tag`), because they have no stable release — each beta *is* their `latest`, which is what `npm install @json-edit-react/<name>` resolves to and what their npm page shows. (npm points `latest` at a package's first published version regardless of `--tag`; publishing every subsequent beta to `latest` keeps it advancing, which is the only sensible value pre-1.0 and carries straight into the eventual stable release. If an early publish left a redundant `beta` dist-tag on a sub-package, remove it: `npm dist-tag rm @json-edit-react/<name> beta`.)
 - **Rule 2 — bump core before packing any sub-package.** Each sub-package declares `"json-edit-react": "workspace:^"`, and pnpm freezes that into the published peer-dep as `^<core's current version field>` at pack time. So core's `version` must already be the new beta before you pack a sub-package, or you ship a peer range your own core beta can't satisfy. Confirm it in the packed `package.json`: the peer dep should read `^<core's current beta>`.
 
@@ -394,7 +394,7 @@ npm dist-tags advertise published versions: `latest` is what `npm install <pkg>`
 
 ```sh
 pnpm run versions                          # all four packages at a glance
-npm dist-tag ls json-edit-react            # latest: 1.30.1, beta: 2.0.0-beta.x
+npm dist-tag ls json-edit-react            # latest: 1.30.2, beta: 2.0.0-beta.x
 
 # Promote/demote without re-publishing:
 npm dist-tag add json-edit-react@2.0.0-beta.4 next
