@@ -35,9 +35,9 @@ export const ErrorIndicatorComponent = ({
     </span>
   )
 
-  // inline-flex keeps the glyph on the same line as the value (originalNode is a
-  // block-level node) and vertically centred; `gap` spaces it without per-side
-  // margins.
+  // inline-flex keeps the glyph on the same line as the value (originalNode is
+  // a block-level node) and vertically centred; `gap` spaces it without
+  // per-side margins.
   return (
     <span
       className="jer-error-indicator-wrapper"
