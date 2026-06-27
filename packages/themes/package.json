@@ -27,7 +27,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "rollup -c && rm -rf build/dts",
+    "build": "rollup -c && rm -rf build/dts && node scripts/verify-treeshake.mjs",
     "clean": "rm -rf build",
     "compile": "tsc --noEmit",
     "prepack": "pnpm build",

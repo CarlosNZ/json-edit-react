@@ -1,5 +1,11 @@
 # @json-edit-react/themes
 
+## 0.9.0-beta.2
+
+### Patch Changes
+
+- Fix per-theme tree-shaking (#382). Importing a single theme no longer pulls every theme's icon glyphs: an icon-less theme now shakes down to a few hundred bytes (was ~8.4 kB gzip), and an icon theme costs only its own glyphs. The build now stamps `/*#__PURE__*/` onto the eager `react/jsx-runtime` calls that construct theme glyphs, so bundlers can prove unused themes are droppable. No change to how themes or glyphs are authored, and no change to import paths.
+
 ## 0.9.0-beta.0
 
 ### Minor Changes
