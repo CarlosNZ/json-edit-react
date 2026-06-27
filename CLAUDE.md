@@ -69,7 +69,7 @@ pnpm build            # rollup → build/ (core only); prebuild runs lint + test
 SKIP_TESTS=1 pnpm build  # build, skipping tests (lint still runs)
 pnpm -r build         # build all three packages
 pnpm run versions     # one-glance: local (next publish) vs what's on npm, all four packages
-pnpm bump:core:beta   # bump core's beta number (2.0.0-beta.3 -> -beta.4); bump:<sub>:beta for sub-packages
+pnpm bump:core:beta   # bump + commit + tag core's beta (v2.0.0-beta.4); bump:<sub>:beta tags scoped. Needs a clean tree
 pnpm pub:core:beta    # build + stage + publish core to the `beta` tag — DON'T run unless explicitly asked
 pnpm pub:themes       # publish a sub-package to `latest` (pub:utils / pub:components) — DON'T run unless asked
 ```

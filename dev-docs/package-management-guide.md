@@ -40,14 +40,16 @@ tar -xzO -f <pkg>-*.tgz package/package.json  # check version + peer ranges
 
 ```sh
 pnpm run versions                         # 1. glance
-pnpm bump:core:beta                       # 2. 2.0.0-beta.3 -> 2.0.0-beta.4 (printed)
-#    add the entry to CHANGELOG.md, then commit the bump + changelog
+#    edit CHANGELOG.md + commit your work — the tree must be CLEAN
+#    (npm version refuses to run on a dirty tree)
+pnpm bump:core:beta                       # 2. version commit + annotated tag v2.0.0-beta.4
 pnpm preview-publish && tar -tzf json-edit-react-*.tgz   # 3. inspect what ships
 pnpm pub:core:beta                        # 4. publish to the `beta` tag
-pnpm run versions                         # 5. confirm npm shows the new beta
+git push --follow-tags                    # 5. push the version commit + its tag
+pnpm run versions                         # 6. confirm npm shows the new beta
 ```
 
-For an exact number instead of the prerelease tick: `npm version 2.0.0-beta.7 --no-git-tag-version`, then continue from the changelog step.
+`bump:core:beta` makes the `v2.0.0-beta.4` commit + tag for you (npm-native, matching the existing `v…` tags) and leaves it local until you push. For an exact number: `npm version 2.0.0-beta.7` (it still commits + tags).
 
 ## Ship a sub-package beta
 
@@ -55,30 +57,32 @@ No core changes needed — the sub-package re-freezes its peer range to core's c
 
 ```sh
 pnpm run versions
-pnpm bump:themes:beta                     # 0.9.0-beta.1 -> 0.9.0-beta.2  (swap themes→utils/components)
-#    edit packages/themes/CHANGELOG.md, commit
+#    edit packages/themes/CHANGELOG.md + commit — the tree must be clean
+pnpm bump:themes:beta                     # 0.9.0-beta.1 -> 0.9.0-beta.2 + tag (swap themes→utils/components)
 pnpm --filter @json-edit-react/themes preview-publish   # inspect the .tgz
 pnpm pub:themes                           # publishes to `latest` (no --tag)
+git push --follow-tags                    # push the commit + its scoped tag
 pnpm run versions
 ```
 
-Committing is optional for a code-only tweak (`--no-git-checks` allows a dirty tree), **except** the package's README must be committed and clean — the wrapper restores it with `git checkout`.
+The tag is scoped — `@json-edit-react/themes@0.9.0-beta.2` — since plain `v…` tags would collide across packages. The package's README must also be committed and clean (the publish wrapper restores it with `git checkout`).
 
 ## Ship everything together (a compat break)
 
-When a core change actually breaks the sub-packages. **Order matters:** bump core's version *before* packing any sub-package so they freeze the correct `^<new core>` peer range.
+When a core change actually breaks the sub-packages. **Order matters:** bump core *before* the sub-packages, so each freezes the correct `^<new core>` peer range at pack time.
 
 ```sh
 pnpm run versions
-pnpm bump:core:beta                       # bump core FIRST (or `npm version <exact>`)
+#    update all four CHANGELOGs + commit your work — tree must be clean
+pnpm bump:core:beta                       # core FIRST; each bump makes its own commit + tag
 pnpm bump:utils:beta
 pnpm bump:themes:beta
 pnpm bump:components:beta
-#    update all four CHANGELOGs, commit
 pnpm pack-all                             # all four .tgz in pack-output/, READMEs swapped
 #    inspect pack-output/<name>/package/package.json peer ranges (Rule 2 — see below)
 pnpm pub:utils && pnpm pub:themes && pnpm pub:components   # sub-packages first
 pnpm pub:core:beta                        # core last
+git push --follow-tags                    # push all four version commits + tags
 pnpm run versions
 ```
 
@@ -87,11 +91,12 @@ pnpm run versions
 The one-time moment core leaves beta and `latest` moves off `1.30.1`.
 
 ```sh
-npm version 2.0.0 --no-git-tag-version    # drop the -beta suffix on core
-#    bump any sub-packages to their stable numbers too if shipping them
-#    finalise CHANGELOGs, commit
+#    finalise CHANGELOGs + commit — tree must be clean
+npm version 2.0.0                         # core 2.0.0-beta.N -> 2.0.0, commit + tag v2.0.0
+#    (bump any sub-packages to their stable numbers too if shipping them)
 pnpm preview-publish                      # inspect
 pnpm pub:core:latest                      # core to `latest`
+git push --follow-tags                    # push the v2.0.0 commit + tag
 pnpm run versions
 ```
 
@@ -102,9 +107,10 @@ See the [V2 release plan](#v2-release-plan) for the surrounding decisions.
 One package to `latest` by hand, no beta suffix:
 
 ```sh
-(cd packages/themes && npm version patch --no-git-tag-version)   # or minor/major/<exact>
-#    edit packages/themes/CHANGELOG.md, commit
+#    edit packages/themes/CHANGELOG.md + commit — tree must be clean
+(cd packages/themes && npm version patch --tag-version-prefix=@json-edit-react/themes@)  # or minor/major/<exact>
 pnpm pub:themes                           # sub-packages already publish to `latest`
+git push --follow-tags                    # push the commit + scoped tag
 ```
 
 Don't do this for **core** while `1.30.1` is the intended `latest` — use `pub:core:beta` for betas and [Graduate to stable](#graduate-the-v2-beta-to-stable) for the cutover.
@@ -137,7 +143,8 @@ npm install react react-dom \
 
 - **`pnpm run versions` before and after** every release is your before/after snapshot. If "after" doesn't show the number you bumped to, something didn't publish.
 - **Preview is mandatory, not optional.** There's no undo on npm (only an `unpublish` within 72 hours — a hassle). Inspect a real tarball before `pub:*`.
-- **Core can't accidentally hit `latest`.** The tag lives in the script name: `pub:core:beta` vs `pub:core:latest`.
+- **Core can't accidentally hit `latest`.** The dist-tag lives in the script name: `pub:core:beta` vs `pub:core:latest`.
+- **`bump:*` needs a clean tree and makes a commit + tag.** `npm version` refuses a dirty tree, so commit your CHANGELOG/work first; the bump then lands a version commit + annotated tag (core `v<version>`, sub-packages scoped `@json-edit-react/<name>@<version>`). Tags stay local — push with `git push --follow-tags`.
 - **`pnpm -C <dir> publish` is broken** on pnpm 10.8.x (leaks the dir + command word into npm → `EUSAGE`). The `pub:<sub>` scripts use the `(cd <dir> && pnpm publish …)` subshell form. `-C`/`--filter` are fine for `build` and `pack`.
 - **The README wrapper needs each target README committed and clean** — it restores via `git checkout`, so an uncommitted edit gets clobbered.
 - **A README-only change still needs a new published version** — npm has no in-place README edit. Bump the beta number and re-publish (betas are cheap).
@@ -327,20 +334,29 @@ Releases are **manual and ship-as-you-go** — implement, document (including th
 | Script | Does |
 | --- | --- |
 | `pnpm run versions` | one-glance: local (next publish) vs what's on npm, all four packages |
-| `pnpm bump:core:beta` | tick core's beta number (`2.0.0-beta.3` → `-beta.4`) |
-| `pnpm bump:<sub>:beta` | same for `utils` / `themes` / `components` |
+| `pnpm bump:core:beta` | tick core's beta number, then commit + tag it `v2.0.0-beta.4` |
+| `pnpm bump:<sub>:beta` | same for `utils` / `themes` / `components` (scoped tag, e.g. `@json-edit-react/themes@0.9.0-beta.2`) |
 | `pnpm pub:core:beta` | build + stage + publish core to the `beta` tag |
 | `pnpm pub:core:latest` | publish core to `latest` (the only thing that moves it) |
 | `pnpm pub:<sub>` | publish a sub-package to `latest` (via the README wrapper) |
 
-For an exact number, skip the script: `npm version 2.0.0-beta.7 --no-git-tag-version` (or `npm version major|minor|patch`). `npm version` only touches the package you're in.
+For an exact number, skip the script: `npm version 2.0.0-beta.7` (or `npm version major|minor|patch`) — for a sub-package add `--tag-version-prefix=@json-edit-react/<name>@` so the tag is scoped. `npm version` only touches the package you're in, and commits + tags it.
 
 ### Before you publish
 
 - `npm whoami` succeeds (logged in to the right account).
-- Working tree is clean enough that the README wrapper can restore via `git checkout` (the target package's README must be committed).
+- Working tree is **clean** — `npm version` (the `bump:*` scripts) refuses to run otherwise, and the README wrapper restores via `git checkout`. Commit your CHANGELOG/work first.
 - `pnpm install` has been run at the repo root.
 - *First scoped publish only:* the `@json-edit-react` npm **org** exists and you have publish rights, or the first `pub:<sub>` fails.
+
+### Release tags
+
+`bump:*` (and the release `npm version` commands) tag every release — npm's native tagging, restored; core's `v…` tags go back ~140 releases.
+
+- **Core** → `v<version>` (e.g. `v2.0.0-beta.4`), npm's default prefix.
+- **Sub-packages** → scoped, via `--tag-version-prefix` baked into `bump:<sub>:beta` (e.g. `@json-edit-react/themes@0.9.0-beta.2`), so the four packages' tags never collide.
+
+Tags are annotated and created **locally** — nothing is pushed automatically. Push the release commit and its tag together with `git push --follow-tags`. Since `npm version` won't run on a dirty tree, commit your work (including the CHANGELOG entry) *before* bumping; the bump lands as its own version commit on top.
 
 ### Two dist-tag rules
 
