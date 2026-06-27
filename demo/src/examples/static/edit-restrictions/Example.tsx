@@ -4,7 +4,7 @@ import { byKey, byValue, or } from '@json-edit-react/utils/filters'
 import { useEditorDefaults } from '@example-resources'
 
 // Every permission that governs *editing* in one place
-// (drag-and-drop has its own page). Each rule is a filter
+// (not including drag-n-drop). Each rule is a filter
 // function: it runs per node and returns a boolean.
 //
 // Three boxes, differing in what they allow:
