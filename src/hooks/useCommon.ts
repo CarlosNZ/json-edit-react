@@ -39,6 +39,7 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
     allowDeleteFilter,
     allowAddFilter,
     allowDragFilter,
+    canAddHere,
     translate,
     errorDisplayTime,
     sort,
@@ -176,7 +177,12 @@ export const useCommon = ({ props, collapsed }: CommonProps) => {
   // Common DERIVED VALUES (this makes the JSX logic less messy). `isEditing` /
   // `isEditingKey` are the per-node selector subscriptions computed above.
   const isArray = typeof path.slice(-1)[0] === 'number'
-  const canEditKey = parentData !== null && canEdit && canAdd && canDelete && !isArray
+  // A rename is a delete of the old key + an add of the new one to the PARENT
+  // collection, so it's gated as exactly that: this node is deletable, and the
+  // parent accepts a new property (`canAddHere` = the parent's `allowAdd`,
+  // threaded down). `allowEdit` plays no part — a value-locked key still
+  // renames. Never the root, never an array index.
+  const canEditKey = parentData !== null && !isArray && canDelete && canAddHere
 
   const derivedValues = { isEditing, isEditingKey, isPending, isArray, canEditKey }
 

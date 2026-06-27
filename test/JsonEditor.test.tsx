@@ -2182,6 +2182,83 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(closedCollection.querySelector('[title="Add"]')).toBeNull()
     expect(openCollection.querySelector('[title="Add"]')).not.toBeNull()
   })
+
+  // A key-rename is a delete of the old key + an add of the new one to the
+  // PARENT collection, so it's gated on the node's `allowDelete` AND the
+  // parent's `allowAdd` — never the node's own `allowAdd`, and never
+  // `allowEdit`.
+  test('key-rename add-half checks the PARENT collection, not the node', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    // `allowAdd` is true only for the `parent` collection. The `child`
+    // leaf's OWN allowAdd is false, but its parent accepts adds, so its key
+    // is renamable.
+    render(
+      <JsonEditor
+        data={{ parent: { child: 'v' } }}
+        setData={setData}
+        allowAdd={({ key }) => key === 'parent'}
+      />
+    )
+
+    await user.dblClick(screen.getByText('child'))
+    const keyInput = screen.getByDisplayValue('child') as HTMLInputElement
+    await user.clear(keyInput)
+    await user.type(keyInput, 'renamed{Enter}')
+
+    expect(setData).toHaveBeenCalledTimes(1)
+    expect(setData).toHaveBeenCalledWith({ parent: { renamed: 'v' } })
+  })
+
+  test('key-rename is blocked when the PARENT forbids adds, even if the node allows them', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    // The `child` leaf's OWN allowAdd is true, but its parent `sealed`
+    // refuses adds — so the key can't be renamed (the add-half lands on the
+    // parent).
+    render(
+      <JsonEditor
+        data={{ sealed: { child: 'v' } }}
+        setData={setData}
+        allowAdd={({ key }) => key === 'child'}
+      />
+    )
+
+    await user.dblClick(screen.getByText('child'))
+    expect(screen.queryByDisplayValue('child')).toBeNull()
+    expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('allowEdit={false} no longer blocks a key rename (a rename ignores allowEdit)', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    render(<JsonEditor data={{ parent: { child: 'v' } }} setData={setData} allowEdit={false} />)
+
+    // The value can't be edited...
+    await user.dblClick(screen.getByText('"v"'))
+    expect(screen.queryByRole('textbox')).toBeNull()
+
+    // ...but the key still renames: deletable + parent accepts adds (both
+    // default true), and allowEdit plays no part.
+    await user.dblClick(screen.getByText('child'))
+    const keyInput = screen.getByDisplayValue('child') as HTMLInputElement
+    await user.clear(keyInput)
+    await user.type(keyInput, 'renamed{Enter}')
+
+    expect(setData).toHaveBeenCalledTimes(1)
+    expect(setData).toHaveBeenCalledWith({ parent: { renamed: 'v' } })
+  })
+
+  test('array indices are never renamable', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    render(<JsonEditor data={{ list: ['a', 'b'] }} setData={setData} />)
+
+    // The index label isn't a renamable key, regardless of permissions.
+    await user.dblClick(screen.getByText('0'))
+    expect(screen.queryByDisplayValue('0')).toBeNull()
+    expect(setData).not.toHaveBeenCalled()
+  })
 })
 
 describe('JsonEditor — search and filter', () => {

@@ -287,6 +287,10 @@ Drag-and-drop permissions are now consistent with the rest of the permission mod
 
 Previously a drop was allowed wherever the destination was *editable*, and `allowAdd` had no effect on it — so a node could be dragged into a collection that forbade adds. If you relied on that, a restricted destination (`allowAdd:false`) now rejects incoming drags; conversely, if you set `allowDelete:false` purely to stop a node being dragged, it's now draggable-for-reorder again (set `allowDrag:false` to stop drag entirely).
 
+### Renaming a key now checks the parent's `allowAdd`
+
+A key-rename is a delete of the old key plus an add of the new one to the **parent** collection, and is now gated as exactly that: a key is renamable when the node returns `true` for `allowDelete` **and** its parent collection returns `true` for `allowAdd`. `allowEdit` no longer takes part. Previously a rename required all three of `allowEdit`, `allowDelete` and `allowAdd` evaluated on the node itself — so restricting `allowAdd` to a few collections silently locked every key in the tree. Defaults are `true`, so most consumers are unaffected; only those with restrictive `allowEdit` / `allowAdd` filters will see key-rename availability shift.
+
 ---
 
 ## 6. `enableClipboard` split into `showClipboardButton` + `onCopy`
