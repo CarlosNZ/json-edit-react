@@ -33,7 +33,7 @@ export const ExternalControlPanel = ({
   // commented checkbox below).
   // const [handleOverrideRestrictions, setHandleOverrideRestrictions] = useState(false)
   return (
-    <VStack w="100%" align="stretch" gap={2} pt={2} mt={2}>
+    <VStack w="100%" align="stretch" gap={2} mt={1}>
       <Text as="h3">External Control</Text>
       <Input
         size="sm"
@@ -68,6 +68,13 @@ export const ExternalControlPanel = ({
             Start edit
           </Button>
         </Flex>
+        {/* When not editing, surface a quick tip in the space the
+            Confirm/Cancel buttons will occupy. */}
+        {!isEditing && (
+          <Text fontSize="xs" color="gray.600" textAlign="right">
+            Tip: Ctrl/Cmd-click the "Clipboard" icon to copy the <em>path</em>
+          </Text>
+        )}
         {/* Confirm/Cancel only make sense while an edit is active;
             `isEditing` is tracked via `onEditEvent`. */}
         {isEditing && (
