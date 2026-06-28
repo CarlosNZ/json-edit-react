@@ -1,5 +1,9 @@
 # json-edit-react
 
+## 2.0.0-beta.7
+
+- A custom node definition's `defaultValue` can now be a function `(nodeData) => value`, called each time a node is switched to that type — the same callback form the editor-level `defaultValue` prop already supports. Use it for a fresh value (e.g. `() => new Date()`) instead of one fixed when the module loads. Plain values keep working unchanged.
+
 ## 2.0.0-beta.6
 
 - Renaming a property key now requires `allowDelete` on the node and `allowAdd` on its **parent** collection — no longer the node's own `allowAdd`, and `allowEdit` no longer applies; consistent with how a drag relocate is gated (#374). See the [migration guide](migration-guide.md#5-restrict-props-renamed-to-allow-semantics-inverted).

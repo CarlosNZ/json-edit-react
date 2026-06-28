@@ -1017,7 +1017,7 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
 
   componentProps,       // object (optional) — props shared by `keyComponent` and `component`
   showKey,              // boolean (optional), default true
-  defaultValue,         // value for a new instance of your component
+  defaultValue,         // value (or a () => value function) for a new instance
   
   // Components are "display only" by default (falls back to core UI for editing)
   showOnEdit            // boolean, default false
@@ -1102,7 +1102,7 @@ If your component edits a value whose committed form isn't the raw text in the e
 To let users turn a node _into_ your custom type from the Type selector, set **`showInTypeSelector: true`** and provide:
 
 - **`name`** — the label shown in the selector.
-- **`defaultValue`** — the value inserted when the type is chosen. It must satisfy your `condition` (so the new node immediately renders as your component).
+- **`defaultValue`** — the value inserted when the type is chosen. It must satisfy your `condition` (so the new node immediately renders as your component). It can also be a function `(nodeData) => value`, called each time the type is chosen — use this for a fresh value like `() => new Date()` rather than one fixed when your module first loads.
 
 By default, choosing the type commits `defaultValue` and closes the editor. For types the user will almost always want to edit straight away (date, colour, BigInt), set **`editOnTypeSwitch: true`** (requires `component` + `showOnEdit`): the edit buffer is seeded by your `fromStandardType` (so a string→Symbol switch carries the string into the description), falling back to `defaultValue`; your component opens in its edit state, one commit happens on confirm, and <kbd>Esc</kbd> cancels the whole switch.
 

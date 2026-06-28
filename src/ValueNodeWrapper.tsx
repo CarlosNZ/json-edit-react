@@ -13,6 +13,7 @@ import {
   valueDataTypes,
   type CustomNodeDefinition,
   type DataType,
+  type DefaultValueFunction,
   type ValueNodeProps,
   type InputProps,
   type CollectionData,
@@ -248,6 +249,15 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
 
     const customNode = customNodeDefinitions.find((customNode) => customNode.name === type)
     if (customNode) {
+      // `defaultValue` may be a value or a function returning one, called here
+      // per switch (like the editor-level `defaultValue`). A function lets a
+      // definition produce a fresh default — e.g. `() => new Date()` — rather
+      // than one fixed when the module first loads.
+      const customDefault =
+        typeof customNode.defaultValue === 'function'
+          ? (customNode.defaultValue as DefaultValueFunction)(nodeData)
+          : customNode.defaultValue
+
       if (canDeferSwitch(customNode)) {
         // Deferred (`editOnTypeSwitch`): a local switch like any primitive
         // type change — reseed the buffer and keep the session open. The
@@ -256,7 +266,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
         // throw HERE isn't a reject — an unconvertible value falls back to
         // the `defaultValue` seed, the same as switching with no hook. (The
         // original value stays recoverable via Esc.)
-        let seed: unknown = customNode.defaultValue
+        let seed: unknown = customDefault
         if (customNode.fromStandardType) {
           try {
             seed = customNode.fromStandardType(source, nodeData, customNode.componentProps)
@@ -271,8 +281,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       }
       // To a custom node: a structural change — commit + remount (editor
       // closes).
-      submit({ op: 'edit', path, value: customNode.defaultValue }).then(
-        settleEdit(customNode.defaultValue as JsonData)
+      submit({ op: 'edit', path, value: customDefault }).then(
+        settleEdit(customDefault as JsonData)
       )
       setCollapseState({ path, collapsed: false, includeChildren: false })
       return

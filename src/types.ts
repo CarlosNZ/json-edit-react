@@ -581,6 +581,11 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   name?: string // appears in "Type" selector
   componentProps?: T // shared by `component` and `keyComponent`
   showKey?: boolean // default true
+  // Seeds the node's value when switching TO this type. May be a value, or a
+  // function `(nodeData) => value` called on each switch — use the function
+  // form for a fresh or lazy default (e.g. `() => new Date()`) rather than one
+  // fixed when the module loads. Typed `unknown` because a custom type's value
+  // needn't be JSON (e.g. `bigint`, `symbol`, `Date`).
   defaultValue?: unknown
   showInTypeSelector?: boolean // default false
   // `showOnView`/`showOnEdit` default to rendering the custom node in view mode

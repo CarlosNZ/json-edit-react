@@ -395,6 +395,25 @@ describe('CustomNode — type selector & defaultValue', () => {
     await user.selectOptions(screen.getByRole('combobox'), 'MyType')
     await waitFor(() => expect(setData).toHaveBeenCalledWith({ greeting: 'CUSTOMVAL' }))
   })
+
+  test('a function defaultValue is called (with nodeData) and its result inserted', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const defaultValue = jest.fn(() => 'FRESH')
+    render(
+      <JsonEditor
+        data={{ greeting: 'hello' }}
+        setData={setData}
+        customNodeDefinitions={[customType({ defaultValue })]}
+      />
+    )
+    await user.dblClick(screen.getByText('"hello"'))
+    await user.selectOptions(screen.getByRole('combobox'), 'MyType')
+    // The RESULT is inserted, not the function itself, and it's computed at
+    // switch time (so a lazy/fresh default isn't frozen at module load).
+    await waitFor(() => expect(setData).toHaveBeenCalledWith({ greeting: 'FRESH' }))
+    expect(defaultValue).toHaveBeenCalledWith(expect.objectContaining({ key: 'greeting' }))
+  })
 })
 
 describe('CustomNode — switching type away mid-edit', () => {
