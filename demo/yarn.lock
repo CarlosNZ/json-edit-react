@@ -1244,10 +1244,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@json-edit-react/components@0.9.0-beta.1":
-  version "0.9.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@json-edit-react/components/-/components-0.9.0-beta.1.tgz#024f4db6b33fc7d7da21f78d7a47d5dd3828e06e"
-  integrity sha512-NKw7QwJrTu1E4xYKHtlEnYY4HrHbBP2/LMIl53Ka3Lc1uN50L5rELrJQ3qzZcchQp/F4FWvva0skqr0AqLV0bg==
+"@json-edit-react/components@0.9.0-beta.2":
+  version "0.9.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@json-edit-react/components/-/components-0.9.0-beta.2.tgz#71609086b16b3a4e89e4a41c7bab7ead1a9b0d7d"
+  integrity sha512-aI7AhWLlxaN7bjveQ9uom5Ac0l021F8nxqkKbrsUT16bnGenvSchjVhzBwXgNYeyvLkhaPkJ+v0nZQhx3ngQLQ==
   dependencies:
     "@codemirror/lang-json" "^6.0.1"
     "@uiw/codemirror-theme-console" "^4.23.13"
@@ -1265,10 +1265,10 @@
     react-select "^5.10.0"
     use-debounce "^10.0.5"
 
-"@json-edit-react/themes@0.9.0-beta.1":
-  version "0.9.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@json-edit-react/themes/-/themes-0.9.0-beta.1.tgz#d0168299dbde33147175abc9ffb73cd125626ae4"
-  integrity sha512-0ODnPV+HDjC0G68v2rskdaGgNeC75Uuv9s1kv56gainXtPCGkXHSKhww77kr89YZcwxpQG0cyvlLOoi8q2YCcQ==
+"@json-edit-react/themes@0.9.0-beta.2":
+  version "0.9.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@json-edit-react/themes/-/themes-0.9.0-beta.2.tgz#1bb755073ab3a3dda5038b549aeece6400eb9464"
+  integrity sha512-smdCjQhphIjaaWf1Dkk+buRsN9EUw1OOQige5u/GnqL+ueur/8EmjeuLJFmTl4J2iv+UwPTc/gmh1qkWkUPPWg==
 
 "@json-edit-react/utils@0.9.0-beta.1":
   version "0.9.0-beta.1"
@@ -2965,10 +2965,10 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@2.0.0-beta.6:
-  version "2.0.0-beta.6"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-2.0.0-beta.6.tgz#8e29dce19ba5008bde59d65e6a6a1ca3ebae21e5"
-  integrity sha512-H48lkt/VZ3e9US2zafQR5VV3ozFOS2wis1f81jBOAHmnOMQuwVP5VHbH1f2Nr4p/MH8n6kYwWtAHWF2y/Rcs/w==
+json-edit-react@2.0.0-beta.7:
+  version "2.0.0-beta.7"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-2.0.0-beta.7.tgz#bd4b11312cb17f1d6bba68fc805f0e8b64c5ceb8"
+  integrity sha512-Q0V635s1M82OQR6b3UIBJvP1X1mYHN5rYblP56W74ENyuxdCBova2ppwo6fY+4lDLBuqNpDXfDxuUKSVGqvPmA==
 
 json-parse-even-better-errors@^2.3.0:
   version "2.3.1"
