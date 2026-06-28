@@ -24,8 +24,9 @@ const DatePickerDefinition: CustomNodeDefinition<DatePickerCustomProps> = {
   name: 'Date (ISO)', // shown in the Type selector menu
   showInTypeSelector: true,
   editOnTypeSwitch: true,
-  // when instantiated, default to the current date/time
-  defaultValue: new Date().toISOString(),
+  // A function so each new node defaults to the current date/time, not one
+  // fixed at module load (also keeps the definition tree-shakeable).
+  defaultValue: () => new Date().toISOString(),
   // ISO strings pass through unchanged (a confirm's buffer is always one, and
   // normalizing would alter date-only values); other parseable values convert,
   // and unparseable input falls back to the current date/time — the picker

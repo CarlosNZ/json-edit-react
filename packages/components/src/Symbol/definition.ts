@@ -14,7 +14,9 @@ const SymbolDefinition: CustomNodeDefinition<SymbolProps> = {
   name: 'Symbol', // shown in the Type selector menu
   showInTypeSelector: true,
   editOnTypeSwitch: true,
-  defaultValue: Symbol('New symbol'),
+  // A function so each new node gets its own unique symbol, and so it isn't
+  // built at module load (keeps the definition tree-shakeable).
+  defaultValue: () => Symbol('New symbol'),
   // The editable text of a symbol is its description
   toStandardType: (value) =>
     typeof value === 'symbol' ? (value.description ?? '') : String(value),

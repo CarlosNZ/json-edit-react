@@ -13,7 +13,9 @@ const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   name: 'Date Object', // shown in the Type selector menu
   showInTypeSelector: true,
   editOnTypeSwitch: true,
-  defaultValue: new Date(),
+  // A function so each new node gets the current date, not one fixed at module
+  // load (also keeps the definition tree-shakeable).
+  defaultValue: () => new Date(),
   renderCollectionAsValue: true,
   toStandardType: (value) => (value instanceof Date ? value.toISOString() : String(value)),
   fromStandardType: (value, _, componentProps) => {

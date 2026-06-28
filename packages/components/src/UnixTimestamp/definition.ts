@@ -33,8 +33,10 @@ const UnixTimestampDefinition: CustomNodeDefinition<UnixTimestampCustomProps> = 
   showInTypeSelector: true,
   editOnTypeSwitch: true,
   // Seed a new value as the current time. Seconds is the common "unix
-  // timestamp" meaning; a forced ms unit re-seeds via `fromStandardType`.
-  defaultValue: Math.floor(Date.now() / 1000),
+  // timestamp" meaning; a forced ms unit re-seeds via `fromStandardType`. A
+  // function so each new node gets the current time, not one fixed at module
+  // load (also keeps the definition tree-shakeable).
+  defaultValue: () => Math.floor(Date.now() / 1000),
   // Coerce the committed buffer to a number (the standard number editor already
   // yields one; a type-switch may hand us anything). Unparseable input seeds
   // 'now' in the configured unit.

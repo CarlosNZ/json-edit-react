@@ -14,7 +14,10 @@ const BigIntDefinition: CustomNodeDefinition<BigIntProps> = {
   name: 'BigInt', // shown in the Type selector menu
   showInTypeSelector: true,
   editOnTypeSwitch: true,
-  defaultValue: BigInt(9007199254740992),
+  // One past the largest integer a JS `number` can safely hold — the smallest
+  // value that actually needs a BigInt. A function so it isn't built at module
+  // load (keeps the definition tree-shakeable).
+  defaultValue: () => BigInt(Number.MAX_SAFE_INTEGER) + 1n,
   // A digit string coerces correctly to both string and number targets
   toStandardType: (value) => String(value),
   fromStandardType: (value, _, componentProps) => {
