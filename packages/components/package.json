@@ -39,7 +39,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "rollup -c && rm -rf build/dts",
+    "build": "rollup -c && rm -rf build/dts && node scripts/verify-treeshake.mjs",
     "clean": "rm -rf build",
     "compile": "tsc --noEmit",
     "prepack": "pnpm build",
@@ -71,6 +71,7 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/react": "19.1.1",
+    "esbuild": "^0.25.0",
     "json-edit-react": "workspace:*",
     "react": "^19.1.0",
     "rollup": "^4.10.0",

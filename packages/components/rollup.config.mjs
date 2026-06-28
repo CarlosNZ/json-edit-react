@@ -7,6 +7,44 @@ import nodeResolve from '@rollup/plugin-node-resolve'
 import bundleSize from 'rollup-plugin-bundle-size'
 import sizes from 'rollup-plugin-sizes'
 
+// Mark every side-effect-free factory call with a /*#__PURE__*/ annotation so
+// consumers' bundlers can tree-shake unused components. Each component is built
+// from eager top-level calls — `jsx(...)`/`jsxs(...)` for its markup,
+// `lazy(() => import(...))` for a heavy dep, and `createDefinitionFactory(...)`
+// for its definition — and an unannotated external call can't be proven
+// side-effect-free, so importing one component drags in every other component's
+// code AND their heavy deps (issue #388). Runs before terser, which is set to
+// preserve the annotations through minification. CJS chunks (no ESM jsx import)
+// pass through, and react's `lazy`/`memo`/etc. and our `createDefinitionFactory`
+// are all pure by construction. The end-to-end guard is scripts/verify-treeshake.mjs.
+const pureAnnotations = (extraPureNames = []) => ({
+  name: 'pure-annotations',
+  renderChunk(code) {
+    const names = new Set(extraPureNames)
+    const jsxImport = code.match(/import\s*\{([^}]*)\}\s*from\s*["']react\/jsx-runtime["']/)
+    if (jsxImport)
+      for (const part of jsxImport[1].split(','))
+        names.add(part.split(/\s+as\s+/).pop().trim())
+    if (!names.size) return null
+    let count = 0
+    let out = code
+    for (const name of names) {
+      if (!name) continue
+      // `name(` not preceded by an identifier char or `.`, so member accesses
+      // and longer identifiers ending in `name` are left alone.
+      out = out.replace(new RegExp(`([^\\w$.])(${name})\\(`, 'g'), (_m, pre, fn) => {
+        count++
+        return `${pre}/*#__PURE__*/${fn}(`
+      })
+    }
+    // JSX present means there must be jsx calls to annotate; zero means the match
+    // broke and the chunk would silently stop tree-shaking.
+    if (jsxImport && !count)
+      this.error('pure-annotations: react/jsx-runtime imported but no calls annotated')
+    return count ? { code: out, map: null } : null
+  },
+})
+
 // Mark all dependencies (peer + regular) as external so they aren't bundled.
 // Consumers' bundlers (Vite, Webpack 4+, etc.) then tree-shake unused
 // components AND skip pulling in transitive deps of components they don't
@@ -50,7 +88,8 @@ const jsBundle = (input, name) => ({
       declaration: true,
       declarationDir: 'build/dts',
     }),
-    terser(),
+    pureAnnotations(['lazy', 'memo', 'forwardRef', 'createContext', 'createDefinitionFactory']),
+    terser({ format: { preserve_annotations: true } }),
     bundleSize(),
     sizes(),
   ],

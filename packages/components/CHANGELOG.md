@@ -4,6 +4,7 @@
 
 ### Patch Changes
 
+- Fix per-component tree-shaking (#388). Importing a single definition no longer pulls every component and its heavy deps: e.g. `import { hyperlinkDefinition }` drops from ~50 kB gzip to ~1–2 kB, with react-markdown / react-colorful / colord no longer reachable. The build now stamps `/*#__PURE__*/` onto the eager `jsx`/`lazy`/`createDefinitionFactory` calls so bundlers can drop unused components. No change to how components are authored or imported. (A few exotic-type definitions still ride along until their eager `defaultValue` calls are de-eagered — tracked in #388.)
 - ColorPicker: register colord's named-colour plugin lazily (on first render) instead of at module top level. The top-level `extend(...)` was a real side effect that contradicted the package's `sideEffects: false`, so a bundler trusting that flag could drop it and silently break named-colour parsing ('red', 'rebeccapurple', …). No behavioural change — the plugin still registers before any colour is parsed.
 
 ## 0.9.0-beta.0
