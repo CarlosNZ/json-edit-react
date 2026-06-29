@@ -159,7 +159,7 @@ function App() {
                     rootName={rootName}
                     theme={editorTheme}
                     indent={indent}
-                    onUpdate={async (nodeData) => {
+                    onUpdate={(nodeData) => {
                       const runDemoUpdate = () => {
                         if (nodeData.event === 'edit' && activePayload?.onEdit)
                           return activePayload.onEdit(nodeData)
@@ -170,18 +170,28 @@ function App() {
                           toast as (options: unknown) => void
                         )
                       }
-                      const result = await runDemoUpdate()
-                      // Reject (false) or silent cancel (null): pass straight
-                      // through, no commit and no post-commit side effect.
-                      if (result === false || result === null) return result
-                      // Object result (error / { value } override): pass
-                      // through to the library. `true` is a plain commit — fall
-                      // through to the side effect like void/undefined.
-                      if (result && result !== true) return result
-                      // Commit (true | void | undefined): run the post-commit
-                      // demo side effect.
-                      const { newData } = nodeData
-                      if (selectedDataSet === 'editTheme') updateState({ theme: newData as Theme })
+                      const settle = (result: Awaited<ReturnType<typeof runDemoUpdate>>) => {
+                        // Reject (false) or silent cancel (null): pass straight
+                        // through, no commit and no post-commit side effect.
+                        if (result === false || result === null) return result
+                        // Object result (error / { value } override): pass
+                        // through to the library. `true` is a plain commit —
+                        // fall through to the side effect like void/undefined.
+                        if (result && result !== true) return result
+                        // Commit (true | void | undefined): run the post-commit
+                        // demo side effect.
+                        const { newData } = nodeData
+                        if (selectedDataSet === 'editTheme')
+                          updateState({ theme: newData as Theme })
+                        return undefined
+                      }
+                      // Return SYNCHRONOUSLY when the demo handler is sync —
+                      // wrapping this in `async` would make every validation
+                      // (even a sync schema check) look async to the editor,
+                      // defeating its sync-reject handling and leaving dud undo
+                      // entries.
+                      const result = runDemoUpdate()
+                      return result instanceof Promise ? result.then(settle) : settle(result)
                     }}
                     onError={
                       activePayload?.onError

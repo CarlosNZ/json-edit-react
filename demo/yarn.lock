@@ -1244,10 +1244,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@json-edit-react/components@0.9.0-beta.2":
-  version "0.9.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@json-edit-react/components/-/components-0.9.0-beta.2.tgz#71609086b16b3a4e89e4a41c7bab7ead1a9b0d7d"
-  integrity sha512-aI7AhWLlxaN7bjveQ9uom5Ac0l021F8nxqkKbrsUT16bnGenvSchjVhzBwXgNYeyvLkhaPkJ+v0nZQhx3ngQLQ==
+"@json-edit-react/components@0.9.0-beta.3":
+  version "0.9.0-beta.3"
+  resolved "https://registry.yarnpkg.com/@json-edit-react/components/-/components-0.9.0-beta.3.tgz#b09a618ff64cc9b92f1a605a2cd4073b93e7bf10"
+  integrity sha512-aAuNU/srK4hsM5OqPUSXahgSGO42wCMaBYeJTuD6O4O6Xu1sTk8KEaGeky6PA/w1xxpZz3N5s6Rtykw7awuNMA==
   dependencies:
     "@codemirror/lang-json" "^6.0.1"
     "@uiw/codemirror-theme-console" "^4.23.13"

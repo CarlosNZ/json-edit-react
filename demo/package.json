@@ -30,7 +30,7 @@
     "@codemirror/lang-json": "^6.0.1",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
-    "@json-edit-react/components": "0.9.0-beta.2",
+    "@json-edit-react/components": "0.9.0-beta.3",
     "@json-edit-react/themes": "0.9.0-beta.2",
     "@json-edit-react/utils": "0.9.0-beta.2",
     "@uiw/codemirror-theme-console": "^4.23.13",
