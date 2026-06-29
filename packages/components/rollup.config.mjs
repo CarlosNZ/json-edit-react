@@ -7,28 +7,28 @@ import nodeResolve from '@rollup/plugin-node-resolve'
 import bundleSize from 'rollup-plugin-bundle-size'
 import sizes from 'rollup-plugin-sizes'
 
-// Mark every side-effect-free factory call with a /*#__PURE__*/ annotation so
-// consumers' bundlers can tree-shake unused components. Each component is built
-// from eager top-level calls — `jsx(...)`/`jsxs(...)` for its markup,
-// `lazy(() => import(...))` for a heavy dep, and `createDefinitionFactory(...)`
-// for its definition — and an unannotated external call can't be proven
-// side-effect-free, so importing one component drags in every other component's
-// code AND their heavy deps (issue #388). Runs before terser, which is set to
-// preserve the annotations through minification. CJS chunks (no ESM jsx import)
-// pass through, and react's `lazy`/`memo`/etc. and our `createDefinitionFactory`
-// are all pure by construction. The end-to-end guard is scripts/verify-treeshake.mjs.
-const pureAnnotations = (extraPureNames = []) => ({
+// Mark every side-effect-free top-level factory call with a /*#__PURE__*/
+// annotation so consumers' bundlers can tree-shake unused components. Each
+// definition is an eager `createDefinitionFactory(...)` call and each heavy
+// component a top-level `lazy(() => import(...))`; an unannotated call can't be
+// proven side-effect-free, so importing one component would otherwise drag in
+// every other component AND its heavy deps (issue #388). These calls all sit in
+// `const X = …` initializers, so the annotation lands in a valid spot. Runs
+// before terser, which preserves the annotations through minification.
+//
+// We deliberately do NOT annotate `jsx`/`jsxs`: in this package all JSX is
+// inside component render bodies (`return jsx(...)`), where annotating it does
+// nothing for tree-shaking (the whole component drops as a unit) — and terser
+// moves a /*#__PURE__*/ off a `return <call>` to before the keyword, an invalid
+// position that makes consumers' bundlers warn and discard it. (Themes is the
+// opposite case — its JSX is in top-level theme objects, so it annotates jsx.)
+// The end-to-end guard is scripts/verify-treeshake.mjs.
+const pureAnnotations = (pureNames = []) => ({
   name: 'pure-annotations',
   renderChunk(code) {
-    const names = new Set(extraPureNames)
-    const jsxImport = code.match(/import\s*\{([^}]*)\}\s*from\s*["']react\/jsx-runtime["']/)
-    if (jsxImport)
-      for (const part of jsxImport[1].split(','))
-        names.add(part.split(/\s+as\s+/).pop().trim())
-    if (!names.size) return null
     let count = 0
     let out = code
-    for (const name of names) {
+    for (const name of pureNames) {
       if (!name) continue
       // `name(` not preceded by an identifier char or `.`, so member accesses
       // and longer identifiers ending in `name` are left alone.
@@ -37,10 +37,6 @@ const pureAnnotations = (extraPureNames = []) => ({
         return `${pre}/*#__PURE__*/${fn}(`
       })
     }
-    // JSX present means there must be jsx calls to annotate; zero means the match
-    // broke and the chunk would silently stop tree-shaking.
-    if (jsxImport && !count)
-      this.error('pure-annotations: react/jsx-runtime imported but no calls annotated')
     return count ? { code: out, map: null } : null
   },
 })

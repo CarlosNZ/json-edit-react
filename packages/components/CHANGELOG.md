@@ -1,5 +1,11 @@
 # @json-edit-react/components
 
+## 0.9.0-beta.3
+
+### Patch Changes
+
+- Stop annotating component render JSX with `/*#__PURE__*/`. Those annotations did nothing for tree-shaking (a component's `return jsx(...)` is inside its function and drops with it), and terser repositioned them onto the `return` keyword — an invalid spot that made consumers' bundlers warn ("annotation that Rollup cannot interpret due to the position of the comment") and discard them. The annotations that actually drive per-component shaking (on the `createDefinitionFactory` / `lazy` calls) are unchanged, so bundle output and tree-shaking are identical — this only quiets the build warnings.
+
 ## 0.9.0-beta.2
 
 ### Patch Changes
