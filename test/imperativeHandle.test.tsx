@@ -189,9 +189,10 @@ describe('editorRef handle — confirm / cancel', () => {
         error: expect.objectContaining({ code: 'UPDATE_ERROR', message: 'nope' }),
       })
     )
-    // Optimistic model: the value applies then the veto reverts it — the LAST
-    // write restores the original, so the edit nets out uncommitted.
-    expect(setData).toHaveBeenLastCalledWith({ greeting: 'hello' })
+    // Synchronous veto: the reject is known before the optimistic apply, so
+    // the apply is skipped and `setData` is never called — the edit nets out
+    // uncommitted with no transient write.
+    expect(setData).not.toHaveBeenCalled()
   })
 
   test('confirm() is a no-op with no value-edit control (does not cancel a key rename)', async () => {

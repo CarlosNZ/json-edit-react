@@ -13,7 +13,7 @@ import { CollectionNode } from './CollectionNode'
 import { NativeSelect } from './NativeSelect'
 import { getFullKeyboardControlMap, handleKeyPress } from './utils/keyboard'
 import { computeFilterState, matchNode, matchNodeKey } from './utils/filter'
-import { isCollection, NOOP, restoreUndefined, UNDEFINED } from './utils/misc'
+import { isCollection, isThenable, NOOP, restoreUndefined, UNDEFINED } from './utils/misc'
 import {
   type CollectionData,
   type JsonEditorProps,
@@ -22,6 +22,7 @@ import {
   type SearchFilterFunction,
   type CollectionKey,
   type UpdateFunctionProps,
+  type UpdateResult,
   type UpdateControl,
   type JerErrorCode,
   type SortFunction,
@@ -470,17 +471,25 @@ const Editor: React.FC<
   // event-specific reject message (so it matches the `onError` code the node
   // surfaces). This is the old synchronous result-protocol, minus `setData`
   // (now the engine's job).
+  //
+  // Returns the outcome SYNCHRONOUSLY when `onUpdate` does (a non-thenable
+  // return), and a promise only when it's genuinely async. The engine uses
+  // that distinction to skip the optimistic apply for a synchronous verdict —
+  // so a sync reject never writes to `setData`. (We call `onUpdate` directly
+  // rather than `await`-ing it; an `async` wrapper would force even a sync
+  // return into a microtask, after the optimistic apply has already fired.)
   const runUpdate = useCallback(
-    async (input: UpdateFunctionProps, control: UpdateControl): Promise<UpdateOutcome> => {
+    (
+      input: UpdateFunctionProps,
+      control: UpdateControl
+    ): UpdateOutcome | Promise<UpdateOutcome> => {
       const code = ERROR_CODE[input.event]
       const defaultMessage = () =>
         translateRef.current(ERROR_MESSAGE_KEY[input.event], rootNodeDataRef.current)
-      let result
-      try {
-        result = await onUpdateRef.current(input, control)
-      } catch (err) {
-        // Rejected promise → treat as a reject; surface the thrown message if
-        // present (also stops it escaping as an unhandled rejection).
+
+      // Thrown sync error / rejected promise → a reject, surfacing the message
+      // if present (also stops a rejection escaping as unhandled).
+      const toError = (err: unknown): UpdateOutcome => {
         const message =
           err instanceof Error && err.message
             ? err.message
@@ -489,36 +498,48 @@ const Editor: React.FC<
               : defaultMessage()
         return { status: 'error', error: { code, message } }
       }
-      if (result === false) return { status: 'error', error: { code, message: defaultMessage() } }
-      if (result === null) return { status: 'cancel' }
-      if (result && typeof result === 'object') {
-        if (result.error !== undefined)
-          return typeof result.error === 'string'
-            ? { status: 'error', error: { code, message: result.error } }
-            : { status: 'error', error: result.error }
-        // A key set to `undefined` counts as "no override for this key" (not
-        // "override to undefined") — consistent with the protocol's top-level
-        // "undefined/void = proceed" and the `error` check above. Overriding a
-        // node *to* undefined isn't supported here; `null` overrides work.
-        const hasData = result.data !== undefined
-        const hasValue = result.value !== undefined
-        // Returning both is a mistake — `data` (whole-document) wins, `value`
-        // is ignored. Warn so it's caught at dev time.
-        if (hasData && hasValue)
-          console.warn(
-            'json-edit-react: onUpdate returned both { value } and { data }; ' +
-              '{ data } (whole-document) takes precedence and { value } is ignored.'
-          )
-        // `{ data }` replaces the whole document — apply at the root path.
-        if (hasData) return { status: 'override', value: result.data as JsonData, path: [] }
-        // `{ value }` is the edited node's value — apply at its path. Only
-        // meaningful for `edit`/`add` (the node has a value); for
-        // `rename`/`move`/`delete` it has no target, so ignore it and commit
-        // normally. For `add`, `input.path` is the new child's full path.
-        if (hasValue && (input.event === 'edit' || input.event === 'add'))
-          return { status: 'override', value: result.value as JsonData, path: input.path }
+
+      const normalise = (result: UpdateResult): UpdateOutcome => {
+        if (result === false) return { status: 'error', error: { code, message: defaultMessage() } }
+        if (result === null) return { status: 'cancel' }
+        if (result && typeof result === 'object') {
+          if (result.error !== undefined)
+            return typeof result.error === 'string'
+              ? { status: 'error', error: { code, message: result.error } }
+              : { status: 'error', error: result.error }
+          // A key set to `undefined` counts as "no override for this key"
+          // (not "override to undefined") — consistent with the protocol's
+          // top-level "undefined/void = proceed" and the `error` check above.
+          // Overriding a node *to* undefined isn't supported here; `null`
+          // overrides work.
+          const hasData = result.data !== undefined
+          const hasValue = result.value !== undefined
+          // Returning both is a mistake — `data` (whole-document) wins, `value`
+          // is ignored. Warn so it's caught at dev time.
+          if (hasData && hasValue)
+            console.warn(
+              'json-edit-react: onUpdate returned both { value } and { data }; ' +
+                '{ data } (whole-document) takes precedence and { value } is ignored.'
+            )
+          // `{ data }` replaces the whole document — apply at the root path.
+          if (hasData) return { status: 'override', value: result.data as JsonData, path: [] }
+          // `{ value }` is the edited node's value — apply at its path. Only
+          // meaningful for `edit`/`add` (the node has a value); for
+          // `rename`/`move`/`delete` it has no target, so ignore it and commit
+          // normally. For `add`, `input.path` is the new child's full path.
+          if (hasValue && (input.event === 'edit' || input.event === 'add'))
+            return { status: 'override', value: result.value as JsonData, path: input.path }
+        }
+        return { status: 'commit' }
       }
-      return { status: 'commit' }
+
+      let raw
+      try {
+        raw = onUpdateRef.current(input, control)
+      } catch (err) {
+        return toError(err)
+      }
+      return isThenable(raw) ? raw.then(normalise, toError) : normalise(raw as UpdateResult)
     },
     []
   )

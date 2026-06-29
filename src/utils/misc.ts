@@ -21,6 +21,14 @@ export const isCollection = (value: unknown): value is Record<string, unknown> |
 export const isObject = (input: unknown): input is Record<string, unknown> =>
   typeof input === 'object' && input !== null && !Array.isArray(input)
 
+// Distinguishes a Promise (or any thenable) from a synchronous value, so the
+// commit engine can tell a synchronous `onUpdate` verdict from an async one
+// and resolve the sync case in place (no optimistic apply).
+export const isThenable = (value: unknown): value is PromiseLike<unknown> =>
+  value != null &&
+  (typeof value === 'object' || typeof value === 'function') &&
+  typeof (value as { then?: unknown }).then === 'function'
+
 export const isJsEvent = (value: unknown) => {
   return (
     value &&
