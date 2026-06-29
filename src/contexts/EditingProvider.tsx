@@ -48,6 +48,7 @@ import {
 } from '../types'
 import { type AssignOptions } from '../utils/assign'
 import { isDescendantOf, pathsEqual, toPathString } from '../utils/pathTools'
+import { isThenable } from '../utils/misc'
 
 type Token = number
 type PathString = string
@@ -129,9 +130,14 @@ export interface BuiltCommit {
  */
 export interface CommitPrimitives {
   /** Run the consumer's `onUpdate` and normalise its result to an outcome.
-   *  `undefined` when no `onUpdate` was supplied (the engine then skips the
-   *  settlement phase — no `update*`). */
-  runUpdate?: (input: UpdateFunctionProps, control: UpdateControl) => Promise<UpdateOutcome>
+   *  Returns the outcome SYNCHRONOUSLY when `onUpdate` does, a promise only
+   *  when it's async — the engine skips the optimistic apply for a synchronous
+   *  verdict. `undefined` when no `onUpdate` was supplied (the engine then
+   *  skips the settlement phase — no `update*`). */
+  runUpdate?: (
+    input: UpdateFunctionProps,
+    control: UpdateControl
+  ) => UpdateOutcome | Promise<UpdateOutcome>
   /** Prepare a commit (compute `newData`, the input, and apply/revert). `null`
    *  if the target path no longer exists. */
   buildCommit: (request: CommitRequest) => BuiltCommit | null
@@ -478,7 +484,21 @@ const createEditingStore = (
       return Promise.resolve(undefined)
     }
 
-    const promise = prims!.runUpdate!(input, control)
+    const result = prims!.runUpdate!(input, control)
+    const isAsync = isThenable(result)
+
+    // Synchronous verdict on an editor op: we know the outcome in this tick, so
+    // skip the optimistic apply entirely. `reconcile` applies for commit/
+    // override and stays put for error/cancel — so a synchronous reject never
+    // writes to `setData` (no value-flash, clean undo history). Held + instant
+    // ops keep the optimistic/timer path below: instant ops already pre-empt a
+    // sync reject via the timer, and a `hold()` gate is async by design.
+    if (!held && !instant && !isAsync) {
+      return Promise.resolve(
+        reconcile(path, op, token, result, apply, revert, () => applied, nodeData, extra)
+      )
+    }
+
     // Editor ops (edit/rename/object-add) apply immediately: the node survives
     // a later revert (so a rejection's inline error still shows) and Tab/close
     // must feel instant. INSTANT ops (delete/move/array-add) defer the
@@ -487,6 +507,7 @@ const createEditingStore = (
     // rejection's inline error renders on it (a V1 behaviour the
     // always-optimistic path lost). A slow `onUpdate` still applies
     // optimistically once the timer fires.
+    const promise = isAsync ? result : Promise.resolve(result)
     let optimisticTimer: ReturnType<typeof setTimeout> | undefined
     if (!held) {
       if (instant) optimisticTimer = setTimeout(apply, OPTIMISTIC_DELAY_MS)
@@ -515,11 +536,20 @@ const createEditingStore = (
   ): UpdateOutcome | undefined => {
     const pathStr = toPathString(path)
 
-    // Held-without-release: this resolve IS the apply/close moment.
+    // Pre-apply: this resolve IS the apply/close moment. Two ways to land here
+    // without an optimistic apply — a held gate releasing, or a synchronous
+    // editor-op verdict (the sync fast-path in `submit`).
     if (!applied()) {
       if (outcome.status === 'cancel' || outcome.status === 'error') {
-        // Gate declined (or rejected) before applying → cancel the session.
-        if (state.active?.phase === 'held' && pathsEqual(state.active.path, path)) {
+        // Declined/rejected before applying → close the still-open session: a
+        // 'held' gate, OR a non-held 'editing' session left open by the sync
+        // fast-path. Closing it lets the node revert + report the error
+        // (`settleEdit` sees `active === null`), like the post-apply revert.
+        if (
+          state.active &&
+          pathsEqual(state.active.path, path) &&
+          (state.active.phase === 'held' || state.active.phase === 'editing')
+        ) {
           commit({ ...state, active: null })
           cancelOp = null
           commitOp = null
