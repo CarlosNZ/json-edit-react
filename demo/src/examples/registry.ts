@@ -416,6 +416,15 @@ const allExamples: Record<string, ExampleDef> = {
     code: () => import('./static/validation-staleness/Example.tsx?raw'),
     devOnly: true,
   },
+  'undo-async-reject': {
+    kind: 'static',
+    title: 'Undo & async reject (dev)',
+    blurb:
+      "Scratchpad: `useUndo`'s optional `onEditEvent` corrector (`@json-edit-react/utils`). An async `onUpdate` that rejects commits optimistically then reverts, so both writes reach `set` and the reverted value would otherwise be reachable via undo. Toggle **Correct history** to wire (or unwire) `onEditEvent`: off reproduces the gap (Undo brings the rejected value back), on erases it. Edit `age` to something over 150 to trigger a rejection.",
+    load: () => import('./static/undo-async-reject/Example'),
+    code: () => import('./static/undo-async-reject/Example.tsx?raw'),
+    devOnly: true,
+  },
 }
 
 // `devOnly` entries are private scratchpads: present on the dev server,
