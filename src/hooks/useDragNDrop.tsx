@@ -48,7 +48,8 @@ export const useDragNDrop = ({
   //   - same collection (source's parent === this node's parent) → REORDER,
   //     allowed when the parent is editable (`canDragOnto`);
   //   - different collection → RELOCATE, allowed when the source is deletable
-  //     (`dragSource.canDelete`) AND this collection accepts adds (`canAddHere`).
+  //     (`dragSource.canDelete`) AND this collection accepts adds
+  //     (`canAddHere`).
   // A drop onto the source itself or a descendant is never allowed. The drag
   // highlight and `handleDrop` share this predicate, so a highlighted target
   // always accepts the drop.
@@ -181,8 +182,9 @@ export const useDragNDrop = ({
     // fires independently of the drag-over highlight. It enforces the
     // reorder/relocate permission rules AND the self/descendant guard — without
     // the latter the `move` op would delete the source then re-create it under
-    // itself (`createNew`), nesting the collection in a copy of itself. (Firefox
-    // fires such a drop; Chrome and Safari suppress it, but this covers all.)
+    // itself (`createNew`), nesting the collection in a copy of itself.
+    // (Firefox fires such a drop; Chrome and Safari suppress it, but this
+    // covers all.)
     if (!dropAllowed()) return
     const sourceKey = dragSource.path.slice(-1)[0]
     const sourceParent = dragSource.path.slice(0, -1)

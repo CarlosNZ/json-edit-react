@@ -28,11 +28,13 @@ export default {
     '<rootDir>/build_package',
     '<rootDir>/demo',
     '<rootDir>/pack-output',
-    // Per-package Rollup output — bundled copies would collide in the haste map.
+    // Per-package Rollup output — bundled copies would collide in the haste
+    // map.
     '<rootDir>/packages/[^/]+/build',
     // Claude Code creates git worktrees here — each is a full repo copy, so its
-    // `package.json` collides with this one in Jest's haste map ("json-edit-react
-    // looked up in the Haste module map ... several different files").
+    // `package.json` collides with this one in Jest's haste map
+    // ("json-edit-react looked up in the Haste module map ... several different
+    // files").
     '<rootDir>/.claude',
   ],
 }

@@ -220,8 +220,9 @@ describe('Drag-and-drop: allowDrag', () => {
 describe('Drag-and-drop: relocate vs reorder permissions', () => {
   // A drop inserts the dragged node as a sibling of the target, into the
   // target's parent collection. Reorder (same collection) needs the collection
-  // editable; relocate (different collection) needs the source deletable AND the
-  // destination collection accepting adds. See `dropAllowed` in useDragNDrop.
+  // editable; relocate (different collection) needs the source deletable AND
+  // the destination collection accepting adds. See `dropAllowed` in
+  // useDragNDrop.
 
   test('reorder within a collection works without delete-permission (needs only edit)', async () => {
     const setData = jest.fn()
@@ -307,7 +308,8 @@ describe('Drag-and-drop: relocate vs reorder permissions', () => {
 
     setData.mockClear()
 
-    // Relocate an item OUT onto `other` at the root — rejected (root rejects adds).
+    // Relocate an item OUT onto `other` at the root — rejected (root rejects
+    // adds).
     await dragAndDrop(rowFor(container, 0), rowFor(container, 'other'), 'above')
     expect(setData).not.toHaveBeenCalled()
   })

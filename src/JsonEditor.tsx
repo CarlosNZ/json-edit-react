@@ -321,11 +321,11 @@ const Editor: React.FC<
             nodeData,
             isNoOp: false,
             apply: () => commitData(newData),
-            // Re-insert the removed value at its ORIGINAL position (a plain `add`
-            // appends the key to the end of the object). `nodeData.index` is the
-            // node's position in its parent. `insertBefore` is read for an object
-            // parent, `insert` for an array — passing both is harmless (each path
-            // ignores the other).
+            // Re-insert the removed value at its ORIGINAL position (a plain
+            // `add` appends the key to the end of the object). `nodeData.index`
+            // is the node's position in its parent. `insertBefore` is read for
+            // an object parent, `insert` for an array — passing both is
+            // harmless (each path ignores the other).
             revert: () =>
               commitData(
                 updateDataObject(dataRef.current, path, currentValue, 'add', {
@@ -349,9 +349,10 @@ const Editor: React.FC<
           // position/value).
           const nodeData = buildNodeData(newData, childPath, rootName, sort)
           return {
-            // The new node doesn't exist in `data` yet for the `onUpdate` input —
-            // build its position from `newData`, but describe the PRE-add state
-            // otherwise (value unset, size null, current parent + document).
+            // The new node doesn't exist in `data` yet for the `onUpdate` input
+            // — build its position from `newData`, but describe the PRE-add
+            // state otherwise (value unset, size null, current parent +
+            // document).
             input: {
               ...nodeData,
               value: undefined,
@@ -384,8 +385,8 @@ const Editor: React.FC<
             input: { ...nodeData, newData, event: 'rename', newKey } as UpdateFunctionProps,
             nodeData,
             // A same-key rename (unchanged) is a no-op: the engine fires
-            // `commitRename` and skips `onUpdate`, matching how an unchanged value
-            // edit closes via `commitEdit`.
+            // `commitRename` and skips `onUpdate`, matching how an unchanged
+            // value edit closes via `commitEdit`.
             isNoOp: oldKey === newKey,
             apply: () => commitData(newData),
             // Restore the parent with its original key order.
@@ -399,7 +400,8 @@ const Editor: React.FC<
         case 'move': {
           // Delete source + add at target, combined into one commit (the old
           // `onMove`). A combined op can't be per-path-reversed, so `revert`
-          // restores the pre-move document (the rare optimistic-move-then-fail).
+          // restores the pre-move document (the rare
+          // optimistic-move-then-fail).
           const sourcePath = path
           const { path: destPath, position } = request.to
           const preMove = data
@@ -500,8 +502,8 @@ const Editor: React.FC<
         // node *to* undefined isn't supported here; `null` overrides work.
         const hasData = result.data !== undefined
         const hasValue = result.value !== undefined
-        // Returning both is a mistake — `data` (whole-document) wins, `value` is
-        // ignored. Warn so it's caught at dev time.
+        // Returning both is a mistake — `data` (whole-document) wins, `value`
+        // is ignored. Warn so it's caught at dev time.
         if (hasData && hasValue)
           console.warn(
             'json-edit-react: onUpdate returned both { value } and { data }; ' +

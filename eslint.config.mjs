@@ -2,6 +2,7 @@ import js from '@eslint/js'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactPlugin from 'eslint-plugin-react'
+import stylistic from '@stylistic/eslint-plugin'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
@@ -23,6 +24,30 @@ export default tseslint.config(
       // Root eslint only covers core (src/).
       'packages',
     ],
+  },
+  // Line-length enforcement (all linted files). Code tracks Prettier's
+  // printWidth of 100; comments are held to 80 (the source-comment wrap
+  // convention) since Prettier doesn't reflow comment text. URLs and
+  // string/template/regex literals are exempt because Prettier can't break
+  // them either.
+  {
+    plugins: {
+      '@stylistic': stylistic,
+    },
+    rules: {
+      '@stylistic/max-len': [
+        'error',
+        {
+          code: 100,
+          comments: 80,
+          tabWidth: 2,
+          ignoreUrls: true,
+          ignoreStrings: true,
+          ignoreTemplateLiterals: true,
+          ignoreRegExpLiterals: true,
+        },
+      ],
+    },
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],

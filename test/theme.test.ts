@@ -246,8 +246,9 @@ describe('getThemeCssVars', () => {
   })
 
   it('emits the default-theme colours when the theme overrides neither', () => {
-    // `defaultTheme` is merge layer 0 and defines both, so the fragment is never
-    // empty — the un-themed editor still gets its highlight + copy-glow colours.
+    // `defaultTheme` is merge layer 0 and defines both, so the fragment is
+    // never empty — the un-themed editor still gets its highlight + copy-glow
+    // colours.
     expect(getThemeCssVars(compileStyles({}))).toEqual({
       '--jer-highlight-color': '#b3d8ff',
       '--jer-icon-copy-color': '#268bd2',

@@ -41,7 +41,8 @@ describe('mergeIcons', () => {
   it('is always complete — every glyph resolves from the default theme', () => {
     const merged = mergeIcons({})
     allNames.forEach((name) => expect(merged[name]).toBeDefined())
-    // Built-in detail carried through (the chevron glyph + its size correction).
+    // Built-in detail carried through (the chevron glyph + its size
+    // correction).
     expect(merged.collection.viewBox).toBe('0 0 512 512')
     expect(merged.collection.scale).toBe(0.7)
   })

@@ -1913,9 +1913,9 @@ describe('JsonEditor — restrictions and callbacks', () => {
     await user.clear(input)
     await user.type(input, 'whatever{Enter}')
 
-    // `{ value }` is the edited NODE's value: applied at its path (`x`), leaving
-    // the sibling untouched. A whole-document override would instead collapse
-    // the doc to the bare string 'OVERRIDDEN'.
+    // `{ value }` is the edited NODE's value: applied at its path (`x`),
+    // leaving the sibling untouched. A whole-document override would instead
+    // collapse the doc to the bare string 'OVERRIDDEN'.
     await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ x: 'OVERRIDDEN', y: 'world' }))
   })
 

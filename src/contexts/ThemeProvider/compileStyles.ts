@@ -71,9 +71,9 @@ export const compileStyles = (themeInput: ThemeInput): CompiledStyles => {
 }
 
 // Merge each theme's `icons` in array order (defaultTheme first), later wins
-// per glyph key — exactly parallel to how `styles` compose. defaultTheme defines
-// all seven glyphs, so the result is always complete and the renderer can index
-// it without a fallback path.
+// per glyph key — exactly parallel to how `styles` compose. defaultTheme
+// defines all seven glyphs, so the result is always complete and the renderer
+// can index it without a fallback path.
 export const mergeIcons = (themeInput: ThemeInput): Required<ThemeIcons> => {
   const merged = {} as ThemeIcons
   for (const { icons } of resolveThemeStack(themeInput)) if (icons) Object.assign(merged, icons)

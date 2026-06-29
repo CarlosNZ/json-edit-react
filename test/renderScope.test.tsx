@@ -204,10 +204,11 @@ describe('Stage B — lazy jsonStringify', () => {
     // valid change (like Tab), then opens `b`.
     await user.dblClick(screen.getByText('"leafB"'))
 
-    // Re-open `a`'s JSON editor (its Edit button is index 1; `b` shows OK/Cancel
-    // while editing, not an Edit pencil). The change committed (so `a` is now
-    // { inner: 2 }) and the buffer was cleared — it shows the committed value
-    // freshly serialized (pretty-printed), NOT the stale compact `{"inner":2}`.
+    // Re-open `a`'s JSON editor (its Edit button is index 1; `b` shows
+    // OK/Cancel while editing, not an Edit pencil). The change committed (so
+    // `a` is now { inner: 2 }) and the buffer was cleared — it shows the
+    // committed value freshly serialized (pretty-printed), NOT the stale
+    // compact `{"inner":2}`.
     await user.click(screen.getAllByTitle('Edit')[1])
     const reopened = (screen.getByRole('textbox') as HTMLTextAreaElement).value
     expect(reopened).toContain('"inner": 2')

@@ -295,7 +295,8 @@ export type NewKeyOptionsFunction<T = JsonData> = (input: NodeData<T>) => string
 export type CopyType = 'path' | 'value'
 
 // Observer (Cat 3): fires after a copy-to-clipboard. Enablement is the
-// `showClipboardButton` boolean (Cat 1). A failed copy carries a `CLIPBOARD_ERROR`.
+// `showClipboardButton` boolean (Cat 1). A failed copy carries a
+// `CLIPBOARD_ERROR`.
 export type OnCopyFunction<T = JsonData> = (
   props: NodeData<T> & {
     success: boolean
@@ -747,11 +748,14 @@ export interface IconDefinition {
    * minus its outer `<svg>` tag.
    */
   content: React.ReactNode
-  /** From the source `<svg>`. Defaults to '0 0 24 24' (by far the most common). */
+  /**
+   * From the source `<svg>`. Defaults to '0 0 24 24' (by far the most common).
+   */
   viewBox?: string
   /**
    * Pass-through `<svg>` attributes — only needed for stroke-based icons
-   * (Lucide/Feather/…): `{ fill: 'none', stroke: 'currentColor', strokeWidth: 2 }`.
+   * (Lucide/Feather/…):
+   * `{ fill: 'none', stroke: 'currentColor', strokeWidth: 2 }`.
    * Colour flows in from the theme via `currentColor`; don't set size here —
    * use `scale` (below).
    */

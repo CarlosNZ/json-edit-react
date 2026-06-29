@@ -293,10 +293,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     }
     setError(null)
     // `onCommit` is a real callback only from commit-on-displace/Tab; the ✓/OK
-    // button (`onOk={handleEdit}`) calls it with a click event, which we ignore.
+    // button (`onOk={handleEdit}`) calls it with a click event, which we
+    // ignore.
     const advance = typeof onCommit === 'function' ? (onCommit as () => void) : undefined
-    // The buffer clears at the commit moment (so a `hold()` keeps the typed JSON
-    // visible until then), then `advance` opens any displace/Tab target.
+    // The buffer clears at the commit moment (so a `hold()` keeps the typed
+    // JSON visible until then), then `advance` opens any displace/Tab target.
     submit({
       op: 'edit',
       path,
@@ -503,10 +504,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // A getter, not an object, so a plain collection with no custom component or
   // wrapper never allocates these props — only the two custom-node sites below
   // call it.
-  // The flat consumer `onError` rides along in `...props` — harmless, since it's
-  // omitted from `CustomComponentProps` (type-hidden) and this function-result
-  // spread isn't excess-checked. A custom component reports errors by throwing
-  // from `fromStandardType`, not via a prop.
+  // The flat consumer `onError` rides along in `...props` — harmless, since
+  // it's omitted from `CustomComponentProps` (type-hidden) and this
+  // function-result spread isn't excess-checked. A custom component reports
+  // errors by throwing from `fromStandardType`, not via a prop.
   const getCustomNodeAllProps = () => ({
     ...props,
     data,

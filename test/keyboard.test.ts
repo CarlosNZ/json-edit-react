@@ -183,7 +183,8 @@ describe('getNextOrPrevious', () => {
   // Tests in this block exercise the pure STRUCTURAL walk — pass an
   // always-true `isViable` predicate so every candidate is accepted and
   // the result reflects raw document order. The viability-skipping
-  // behaviour itself is tested separately under `describe('isViable predicate')` below.
+  // behaviour itself is tested separately under `describe('isViable
+  // predicate')` below.
   const acceptAll = () => true
   const getNext = (data: object, path: (string | number)[]) =>
     getNextOrPrevious(data, path, 'next', () => {}, acceptAll)

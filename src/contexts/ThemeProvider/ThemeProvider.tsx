@@ -10,7 +10,8 @@ import { defaultTheme } from './defaultTheme'
 
 interface ThemeContext {
   getStyles: (element: ThemeableElement, nodeData: NodeData) => React.CSSProperties
-  // Always complete — `defaultTheme` defines all seven glyphs and is merge layer 0.
+  // Always complete — `defaultTheme` defines all seven glyphs and is merge
+  // layer 0.
   icons: Required<ThemeIcons>
   // The non-inlineable theme colours as a custom-property fragment, spread onto
   // the editor container by `Editor`.

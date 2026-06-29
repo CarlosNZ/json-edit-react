@@ -93,7 +93,8 @@ export type UpdateOutcome =
   | { status: 'commit' }
   // `path` is where the override applies: `[]` for a whole-document `{ data }`
   // override, or the edited node's path for a node-level `{ value }` override.
-  // `runUpdate` resolves it (it knows the event + node); `reconcile` just applies.
+  // `runUpdate` resolves it (it knows the event + node); `reconcile` just
+  // applies.
   | { status: 'override'; value: JsonData; path: CollectionKey[] }
   | { status: 'cancel' }
   | { status: 'error'; error: JerError }
@@ -552,8 +553,8 @@ const createEditingStore = (
         break
       case 'override':
         // An override applies `value` at `outcome.path`: `[]` for a whole-
-        // document `{ data }` return, or the edited node's path for a node-level
-        // `{ value }` return. `runUpdate` resolved which.
+        // document `{ data }` return, or the edited node's path for a
+        // node-level `{ value }` return. `runUpdate` resolved which.
         commitRef.current?.applyValue(outcome.path, outcome.value)
         emitEvent(nodeData, 'updateSuccess', { operation: op, ...extra })
         break
