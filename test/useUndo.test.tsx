@@ -285,10 +285,10 @@ describe('useUndo — async-reject correction (unit)', () => {
 
     // An async edit: submitted, optimistically applied, then reverted on a
     // reject.
-    act(() => result.current.onEditEvent(ev({ event: 'submitEdit' })))
+    act(() => result.current.onEditEvent!(ev({ event: 'submitEdit' })))
     act(() => result.current.set({ v: 99 })) // optimistic apply
     act(() => result.current.set({ v: 1 })) // revert
-    act(() => result.current.onEditEvent(ev({ event: 'updateError', operation: 'edit' })))
+    act(() => result.current.onEditEvent!(ev({ event: 'updateError', operation: 'edit' })))
 
     // The apply+revert pair is erased; only the prior legit step remains.
     expect(result.current.data).toEqual({ v: 1 })
@@ -300,17 +300,17 @@ describe('useUndo — async-reject correction (unit)', () => {
 
   it("a delete/move updateError does not consume an edit's marker", () => {
     const { result } = renderUndo({ v: 0 })
-    act(() => result.current.onEditEvent(ev({ event: 'submitEdit' })))
+    act(() => result.current.onEditEvent!(ev({ event: 'submitEdit' })))
     act(() => result.current.set({ v: 1 })) // optimistic apply, still in flight
 
     // A concurrent instant-op rejection (different operation) must be ignored,
     // leaving the edit's marker intact.
-    act(() => result.current.onEditEvent(ev({ event: 'updateError', operation: 'delete' })))
+    act(() => result.current.onEditEvent!(ev({ event: 'updateError', operation: 'delete' })))
     expect(result.current.canUndo).toBe(true)
 
     // The edit's own rejection still corrects.
     act(() => result.current.set({ v: 0 })) // revert
-    act(() => result.current.onEditEvent(ev({ event: 'updateError', operation: 'edit' })))
+    act(() => result.current.onEditEvent!(ev({ event: 'updateError', operation: 'edit' })))
     expect(result.current.canUndo).toBe(false)
   })
 })

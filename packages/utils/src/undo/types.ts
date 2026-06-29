@@ -37,6 +37,9 @@ export interface UseUndoResult<T = JsonData> {
    * this lets the hook discard that reverted commit so "Undo" never steps back
    * to it. Omit it and the hook works exactly as before — synchronous rejects
    * never reach `set`, so they need no correction. See the README.
+   *
+   * The hook always returns it; it's declared optional so a typed mock/stub of
+   * `UseUndoResult` needn't supply it.
    */
-  onEditEvent: OnEditEventFunction<T>
+  onEditEvent?: OnEditEventFunction<T>
 }
