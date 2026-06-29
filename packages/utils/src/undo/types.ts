@@ -1,4 +1,4 @@
-import type { JsonData } from 'json-edit-react'
+import type { JsonData, OnEditEventFunction } from 'json-edit-react'
 
 export interface UseUndoResult<T = JsonData> {
   /** The current data — a passthrough of the value you pass in. */
@@ -29,4 +29,14 @@ export interface UseUndoResult<T = JsonData> {
   canUndo: boolean
   /** Whether there's a snapshot to redo to. */
   canRedo: boolean
+  /**
+   * OPTIONAL editor wiring — pass as the editor's `onEditEvent`. Only needed
+   * for one specific case: an **asynchronous** `onUpdate` that *rejects*. Such a
+   * rejection commits optimistically then reverts, so both writes reach `set`
+   * and the reverted (invalid) value would otherwise land in history. Wiring
+   * this lets the hook discard that reverted commit so "Undo" never steps back
+   * to it. Omit it and the hook works exactly as before — synchronous rejects
+   * never reach `set`, so they need no correction. See the README.
+   */
+  onEditEvent: OnEditEventFunction<T>
 }
