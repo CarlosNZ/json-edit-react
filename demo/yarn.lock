@@ -1270,10 +1270,10 @@
   resolved "https://registry.yarnpkg.com/@json-edit-react/themes/-/themes-0.9.0-beta.2.tgz#1bb755073ab3a3dda5038b549aeece6400eb9464"
   integrity sha512-smdCjQhphIjaaWf1Dkk+buRsN9EUw1OOQige5u/GnqL+ueur/8EmjeuLJFmTl4J2iv+UwPTc/gmh1qkWkUPPWg==
 
-"@json-edit-react/utils@0.9.0-beta.1":
-  version "0.9.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@json-edit-react/utils/-/utils-0.9.0-beta.1.tgz#7beae8f53633d62f2d89abfd6414b0eb1644dcf3"
-  integrity sha512-Vp6KR6Jrb58JfasVwEfgVEifwgl6GMs/e3dszY0UDJe5rqvsPITrfIG54b1b6j1NiYM7er/1iDBhVwVLFA82PQ==
+"@json-edit-react/utils@0.9.0-beta.2":
+  version "0.9.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@json-edit-react/utils/-/utils-0.9.0-beta.2.tgz#c6812c2b5ea26b3cc5322dbfcbc63dfce6740ca8"
+  integrity sha512-tYADe8NZ326KychobKQNiYss8/LxITd11I+HxTL7PRbBVgbaQKWd8H9lzglSCcX9+d/nYaGYCeIjK8OD/q/VVQ==
 
 "@lezer/common@^1.0.0", "@lezer/common@^1.1.0", "@lezer/common@^1.2.0", "@lezer/common@^1.3.0", "@lezer/common@^1.5.0":
   version "1.5.2"
