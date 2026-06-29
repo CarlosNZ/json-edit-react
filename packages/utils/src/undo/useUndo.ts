@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react'
-import type { JsonData } from 'json-edit-react'
+import { useCallback, useRef, useState } from 'react'
+import type { JsonData, OnEditEventFunction } from 'json-edit-react'
 import { applyRedo, applyUndo, pushSnapshot, type UndoQueues } from './transitions'
 import type { UseUndoResult } from './types'
 
@@ -32,6 +32,14 @@ import type { UseUndoResult } from './types'
 export const useUndo = <T = JsonData>(data: T, setData: (data: T) => void): UseUndoResult<T> => {
   const [queues, setQueues] = useState<UndoQueues<T>>({ past: [], future: [] })
 
+  // For the optional async-reject correction (see `onEditEvent` below): the
+  // stacks as they were when the in-flight editor op was submitted, tagged with
+  // its operation. A single slot — one in-flight op is corrected (the realistic
+  // case). `null` when no edit/rename/add is awaiting settlement.
+  const markerRef = useRef<{ queues: UndoQueues<T>; operation: 'edit' | 'rename' | 'add' } | null>(
+    null
+  )
+
   const set = useCallback(
     (next: T | ((prev: T) => T)) => {
       const value = typeof next === 'function' ? (next as (prev: T) => T)(data) : next
@@ -63,6 +71,44 @@ export const useUndo = <T = JsonData>(data: T, setData: (data: T) => void): UseU
     [setData]
   )
 
+  // Optional editor wiring that corrects history for an ASYNC `onUpdate`
+  // rejection. Such a rejection commits optimistically (one `set`) then reverts
+  // (another `set`), so both writes record snapshots and the reverted value
+  // would otherwise be reachable via undo. On submit we remember the stacks
+  // (tagged with the operation); on a matching `updateError` we restore them,
+  // erasing the apply+revert pair; on success we drop the marker. A SYNCHRONOUS
+  // reject never reaches `set` (the editor resolves it in place), so its
+  // `updateError` restores stacks that never moved — a harmless no-op. Reads
+  // `queues` from the render closure, so it captures the pre-submit stacks.
+  const onEditEvent = useCallback<OnEditEventFunction<T>>(
+    (event) => {
+      switch (event.event) {
+        case 'submitEdit':
+          markerRef.current = { queues, operation: 'edit' }
+          break
+        case 'submitRename':
+          markerRef.current = { queues, operation: 'rename' }
+          break
+        case 'submitAdd':
+          markerRef.current = { queues, operation: 'add' }
+          break
+        case 'updateError':
+          // Only roll back the op this marker belongs to — a `delete`/`move`
+          // (no `submit*`, different operation) must not consume an edit's
+          // marker.
+          if (markerRef.current?.operation === event.operation) {
+            setQueues(markerRef.current.queues)
+            markerRef.current = null
+          }
+          break
+        case 'updateSuccess':
+          if (markerRef.current?.operation === event.operation) markerRef.current = null
+          break
+      }
+    },
+    [queues]
+  )
+
   return {
     data,
     set,
@@ -72,5 +118,6 @@ export const useUndo = <T = JsonData>(data: T, setData: (data: T) => void): UseU
     reset,
     canUndo: queues.past.length > 0,
     canRedo: queues.future.length > 0,
+    onEditEvent,
   }
 }
