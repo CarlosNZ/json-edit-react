@@ -1198,14 +1198,15 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual(['startAdd', 'cancelAdd'])
   })
 
-  test('add (object): a rejected confirm commits optimistically then reverts with updateError', async () => {
+  test('add (object): a SYNC rejected confirm closes the add without committing (cancelAdd, no write)', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
+    const setData = jest.fn()
     const onUpdate = jest.fn(() => false as const)
     const { container } = render(
       <JsonEditor
         data={{ existing: 'value' }}
-        setData={noop}
+        setData={setData}
         onUpdate={onUpdate}
         onEditEvent={onEditEvent}
         showIconTooltips
@@ -1217,8 +1218,56 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     await user.clear(newKeyInput)
     await user.type(newKeyInput, 'fresh{Enter}')
 
-    // Optimistic add (§ new model): the session commits (commitAdd), then the
-    // rejected settlement reverts the node and reports updateError.
+    // A synchronous reject is known before the optimistic apply, so the add
+    // never commits: the session closes (cancelAdd, not commitAdd) and
+    // updateError reports the rejection — `setData` is never called, so the new
+    // key never flashes into the document. (Contrast the async path below,
+    // which DOES commit optimistically then revert.)
+    await waitFor(() =>
+      expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual([
+        'startAdd',
+        'submitAdd',
+        'cancelAdd',
+        'updateError',
+      ])
+    )
+    expect(setData).not.toHaveBeenCalled()
+  })
+
+  test('add (object): an ASYNC rejected confirm commits optimistically then reverts with updateError', async () => {
+    const user = userEvent.setup()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const setData = jest.fn()
+    const deferred = makeDeferred<false>()
+    const onUpdate = jest.fn(() => deferred.promise)
+    const { container } = render(
+      <JsonEditor
+        data={{ existing: 'value' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        onEditEvent={onEditEvent}
+        showIconTooltips
+      />
+    )
+
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.clear(newKeyInput)
+    await user.type(newKeyInput, 'fresh{Enter}')
+
+    // Async verdict can't be known in time, so the add applies optimistically
+    // (commitAdd) to keep the UI instant; the later rejection reverts it.
+    await waitFor(() =>
+      expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual([
+        'startAdd',
+        'submitAdd',
+        'commitAdd',
+      ])
+    )
+    expect(setData).toHaveBeenCalledTimes(1)
+    await act(async () => {
+      deferred.resolve(false)
+    })
     await waitFor(() =>
       expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual([
         'startAdd',
@@ -1227,6 +1276,8 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
         'updateError',
       ])
     )
+    // Optimistic add then revert: two writes, netting back to the original.
+    expect(setData).toHaveBeenCalledTimes(2)
   })
 
   test('delete fires a single "delete" event', async () => {
@@ -1730,16 +1781,49 @@ describe('JsonEditor — restrictions and callbacks', () => {
 
     // onUpdate ran with the attempted new value
     expect(onUpdate).toHaveBeenCalledTimes(1)
-    // Optimistic model: the edit applies immediately, then the rejection
-    // reverts it — so the LAST write restores the original and external state
-    // nets out unchanged. (The per-commit token ensures a late rejection
-    // reverts only its own node, never clobbering a newer commit that landed
-    // while it was settling.)
-    expect(setData).toHaveBeenLastCalledWith({ x: 'hello' })
+    // A synchronous reject is known before the optimistic apply, so the engine
+    // skips the apply entirely — `setData` is never called (no optimistic
+    // write, no revert). The end-state is unchanged from the optimistic path,
+    // but nothing for a history/undo wrapper or autosave downstream of
+    // `setData` is left to record.
+    expect(setData).not.toHaveBeenCalled()
     // The node reverts its own display, and the default error shows.
     expect(screen.getByText('"hello"')).toBeInTheDocument()
     expect(screen.queryByText('"rejected"')).toBeNull()
     expect(screen.getByText('Update unsuccessful')).toBeInTheDocument()
+  })
+
+  test('a valid synchronous onUpdate commits once and reports updateSuccess', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    const onUpdate = jest.fn(() => undefined) // approve
+    render(
+      <JsonEditor
+        data={{ x: 'hello' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        onEditEvent={onEditEvent}
+      />
+    )
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'world{Enter}')
+
+    // The sync fast-path must still COMMIT a valid edit (no over-suppression):
+    // a single write, and the standard commitEdit → updateSuccess settlement.
+    await waitFor(() => expect(setData).toHaveBeenCalledWith({ x: 'world' }))
+    expect(setData).toHaveBeenCalledTimes(1)
+    await waitFor(() =>
+      expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual([
+        'startEdit',
+        'submitEdit',
+        'commitEdit',
+        'updateSuccess',
+      ])
+    )
   })
 
   test('onUpdate returning false on a delete shows the delete-specific message', async () => {
@@ -1784,10 +1868,18 @@ describe('JsonEditor — restrictions and callbacks', () => {
 
   test('onUpdate returning false on a rename shows the rename-specific message and code', async () => {
     const user = userEvent.setup()
+    const setData = jest.fn()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
     const onUpdate = jest.fn(() => false as const)
     const onError = jest.fn()
     render(
-      <JsonEditor data={{ oldName: 2 }} setData={noop} onUpdate={onUpdate} onError={onError} />
+      <JsonEditor
+        data={{ oldName: 2 }}
+        setData={setData}
+        onUpdate={onUpdate}
+        onError={onError}
+        onEditEvent={onEditEvent}
+      />
     )
 
     await user.dblClick(screen.getByText('oldName'))
@@ -1801,6 +1893,17 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({ error: expect.objectContaining({ code: 'RENAME_ERROR' }) })
     )
+    // Synchronous reject: no optimistic apply, so the rename closes via
+    // cancelRename (not commitRename) and `setData` is never called.
+    await waitFor(() =>
+      expect(onEditEvent.mock.calls.map(([e]) => e.event)).toEqual([
+        'startRename',
+        'submitRename',
+        'cancelRename',
+        'updateError',
+      ])
+    )
+    expect(setData).not.toHaveBeenCalled()
   })
 
   // A rejected move would surface 'Move unsuccessful' (code MOVE_ERROR), but
@@ -1890,9 +1993,9 @@ describe('JsonEditor — restrictions and callbacks', () => {
     await user.type(input, 'rejected{Enter}')
 
     // An empty error string is a rejection, not a silent success: the
-    // optimistic apply is reverted (last write restores the original), the
-    // display reverts, and onError fires (with the empty message).
-    expect(setData).toHaveBeenLastCalledWith({ x: 'hello' })
+    // synchronous reject skips the optimistic apply (`setData` never called),
+    // the display reverts, and onError fires (with the empty message).
+    expect(setData).not.toHaveBeenCalled()
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({
         error: expect.objectContaining({ code: 'UPDATE_ERROR', message: '' }),
@@ -2029,9 +2132,9 @@ describe('JsonEditor — restrictions and callbacks', () => {
     await user.type(input, 'discarded{Enter}')
 
     expect(onUpdate).toHaveBeenCalledTimes(1)
-    // Silent abort after an optimistic apply: the last write reverts to the
-    // original (net no change)...
-    expect(setData).toHaveBeenLastCalledWith({ x: 'hello' })
+    // Silent abort: a synchronous cancel is known before the optimistic apply,
+    // so the apply is skipped and `setData` is never called (net no change)...
+    expect(setData).not.toHaveBeenCalled()
     // ...no error message...
     expect(screen.queryByText('Update unsuccessful')).toBeNull()
     // ...and the input reverts to the original (not the typed-but-cancelled

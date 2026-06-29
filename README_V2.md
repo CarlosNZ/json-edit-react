@@ -272,7 +272,9 @@ More detail [below](#programmatic-control)
 
 ### Controlled component — `data` + `setData`
 
-You manage the `data` state yourself outside this component and pass in a `setData` method, which is called internally to update your `data`. 
+You manage the `data` state yourself outside this component and pass in a `setData` method, which is called internally to update your `data`.
+
+Keep the two channels distinct: **`data`/`setData` are your local UI state** (the document the editor renders and the setter it calls), while **`onUpdate` is for *external* writes and side effects** — persisting to a server, validation, notifications, mutating-before-save. Don't reach for `onUpdate` to drive local state (that's `setData`'s job), and don't treat raw `setData` calls as "saves": under the [optimistic model](#async-updates--gating--hold) an *asynchronous* `onUpdate` lets `setData` fire for a value that's still in flight or about to be reverted, so anything that must react only to *settled* changes (autosave, an undo stack, a dirty flag) should key off `onUpdate` or the [`updateSuccess`/`updateError`](#listening-to-the-lifecycle--oneditevent) events, not raw `setData`.
 
 ### Read-only display — `JsonViewer`
 
@@ -539,9 +541,9 @@ The function can return nothing (the change proceeds as normal), or a value to a
 
 ### Async updates & gating — `hold()`
 
-By default, commits are **optimistic**: when the user submits an edit the input closes and the data updates immediately, then `onUpdate` runs in the background. If it rejects (`false`, `{ error }`, a thrown error, or a rejected promise), the change is automatically reverted and the error surfaced. A slow `onUpdate` — say a network save — therefore never blocks the editor, and the user can keep working. Each in-flight commit is tracked independently, so a late failure reverts only its own node and can't clobber a newer edit.
+Whether a commit is **optimistic** depends on your `onUpdate`. A **synchronous** `onUpdate` — the typical case for local or [JSON-Schema](#json-schema-validation) validation — is resolved *in place*: a valid edit commits, and a rejected one (`false`, `{ error }`, or a thrown error) is simply never applied, so the input reverts and the error shows with no transient write to your `data`. An **asynchronous** `onUpdate` (e.g. a network save) can't be known in time, so the commit is **optimistic**: the input closes and the data updates immediately, then `onUpdate` runs in the background and a rejection (including a rejected promise) is automatically reverted and the error surfaced. A slow `onUpdate` therefore never blocks the editor, and the user can keep working. Each in-flight commit is tracked independently, so a late failure reverts only its own node and can't clobber a newer edit.
 
-Structural changes — **delete**, drag-and-drop **move**, and adding an **array** item — settle a little differently. With no open input to keep responsive, they wait a brief moment (~100ms) for `onUpdate`: a fast result (e.g. synchronous schema validation) applies or rejects *in place*, so a rejected delete keeps the node and shows its error immediately; only a slow `onUpdate` falls back to the optimistic path (apply, then revert on failure). A rejected **move** has no settled position to anchor an inline message to, so it reports through the [`onEditEvent`](#listening-to-the-lifecycle--oneditevent) `updateError` event rather than an inline error.
+Structural changes — **delete**, drag-and-drop **move**, and adding an **array** item — have no open input to keep responsive, so an *asynchronous* `onUpdate` waits a brief moment (~100ms) before applying optimistically: a result that arrives inside that window settles *in place* (the node is never removed/relocated, so a rejected delete keeps the node and shows its error immediately), and only a slower one falls back to apply-then-revert. A rejected **move** has no settled position to anchor an inline message to, so it reports through the [`onEditEvent`](#listening-to-the-lifecycle--oneditevent) `updateError` event rather than an inline error.
 
 If instead you want to **hold the editor open** until a decision resolves — e.g. to show a confirmation dialog, or to validate before the value is committed — call `hold()` on the second argument:
 
@@ -1304,7 +1306,7 @@ The `onEditEvent` callback streams the complete **interaction lifecycle**. It re
 | Save settled          | `updateSuccess` *or* `updateError`                                  | Only fired when an `onUpdate` ran; carries the `operation` (and, on error, the `error`) |
 
 A few things worth knowing:
-- A session ends with **exactly one** of `commit*` (applied) or `cancel*` (closed without applying) — and `cancel*` also fires when `onUpdate` returns `null`, not only on an explicit cancel.
+- A session ends with **exactly one** of `commit*` (applied) or `cancel*` (closed without applying). `cancel*` also fires when `onUpdate` returns `null`, and when a **synchronous** `onUpdate` rejects (`false` / `{ error }` / throw) — a sync verdict is known before the optimistic apply, so the session closes via `cancel*` (+ `updateError`) rather than `commit*`. An *asynchronous* reject still emits `commit*` first (the optimistic apply), then `updateError`.
 - A [`hold()` gate](#async-updates--gating--hold), if you've set one, runs in the `submit*` window.
 - **Add events describe the parent collection** (the node you're adding *into*); `commitAdd` is where the add lands.
 - **Array adds are instant** — they emit only `commitAdd` (no `startAdd`/`submitAdd`/`cancelAdd`, since there's no key-entry step).

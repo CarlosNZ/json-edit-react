@@ -1,5 +1,8 @@
 import { useState } from 'react'
-import { act, renderHook } from '@testing-library/react'
+import { act, render, renderHook, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { JsonEditor } from '../src/JsonEditor'
+import { type JsonData, type UpdateFunction } from '../src/types'
 import { useUndo } from '../packages/utils/src'
 // Pure transitions are package-internal (not re-exported from the barrel), so
 // the queue-maths unit tests reach for them directly.
@@ -109,6 +112,55 @@ describe('useUndo — behaviour', () => {
     act(() => result.current.set((prev) => ({ v: prev.v + 1 })))
     expect(result.current.data).toEqual({ v: 6 })
     expect(result.current.canUndo).toBe(true)
+  })
+})
+
+// Drives a real editor through `useUndo` (as a consumer would: `set` is the
+// editor's `setData`), surfacing `canUndo` so the test can read the stack.
+const UndoEditor = ({ initial, onUpdate }: { initial: JsonData; onUpdate?: UpdateFunction }) => {
+  const [data, setData] = useState<JsonData>(initial)
+  const undo = useUndo<JsonData>(data, setData)
+  return (
+    <>
+      <span data-testid="can-undo">{String(undo.canUndo)}</span>
+      <JsonEditor<JsonData> data={undo.data} setData={undo.set} onUpdate={onUpdate} />
+    </>
+  )
+}
+
+describe('useUndo + JsonEditor (synchronous-reject integration)', () => {
+  it('a synchronously rejected edit leaves the undo stack clean', async () => {
+    const user = userEvent.setup()
+    // A synchronous validator that rejects the edit.
+    const onUpdate: UpdateFunction = () => false
+    render(<UndoEditor initial={{ x: 'hello' }} onUpdate={onUpdate} />)
+    expect(screen.getByTestId('can-undo')).toHaveTextContent('false')
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'rejected{Enter}')
+
+    await waitFor(() => expect(screen.getByText('Update unsuccessful')).toBeInTheDocument())
+    // The reject never wrote through `set`, so there is no snapshot to undo —
+    // no phantom step that would step back to the rejected value (the original
+    // #issue this fix addresses).
+    expect(screen.getByTestId('can-undo')).toHaveTextContent('false')
+    expect(screen.getByText('"hello"')).toBeInTheDocument()
+  })
+
+  it('a valid edit records exactly one undoable step', async () => {
+    const user = userEvent.setup()
+    render(<UndoEditor initial={{ x: 'hello' }} />)
+    expect(screen.getByTestId('can-undo')).toHaveTextContent('false')
+
+    await user.dblClick(screen.getByText('"hello"'))
+    const input = screen.getByRole('textbox')
+    await user.clear(input)
+    await user.type(input, 'world{Enter}')
+
+    await waitFor(() => expect(screen.getByText('"world"')).toBeInTheDocument())
+    expect(screen.getByTestId('can-undo')).toHaveTextContent('true')
   })
 })
 

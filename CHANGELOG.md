@@ -1,5 +1,10 @@
 # json-edit-react
 
+## 2.0.0-beta.8
+
+- A **synchronous** `onUpdate` rejection (`false`, `{ error }`, or a thrown error) now resolves in place rather than applying optimistically and then reverting. The rejected value is never written through `setData`, so it no longer flashes in the editor and leaves nothing transient for downstream state (an undo history, autosave, a dirty flag) to pick up. Asynchronous rejections are unchanged — they still commit optimistically and revert when the promise settles (#391).
+- As a result, the `onEditEvent` lifecycle for a synchronously-rejected edit / rename / add is now `submit* → cancel* → updateError` (no `commit*`), matching how the instant operations (delete, move) already report a fast rejection.
+
 ## 2.0.0-beta.7
 
 - A custom node definition's `defaultValue` can now be a function `(nodeData) => value`, called each time a node is switched to that type — the same callback form the editor-level `defaultValue` prop already supports. Use it for a fresh value (e.g. `() => new Date()`) instead of one fixed when the module loads. Plain values keep working unchanged.
