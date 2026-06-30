@@ -5,13 +5,14 @@
  * channel
  */
 
-import React, { lazy, Suspense, useRef } from 'react'
+import React, { lazy, Suspense } from 'react'
 import { HsvColor } from 'react-colorful'
 import { colord, extend, getFormat, HsvaColor } from 'colord'
 import namesPlugin from 'colord/plugins/names'
 import { useDebouncedCallback } from 'use-debounce'
 import { StringEdit, toPathString, type CustomComponentProps } from 'json-edit-react'
 import { Loading } from '../_common/Loading'
+import { finiteHsv } from './colorUtils'
 
 // colord parses named colours ('red', 'rebeccapurple', …) only once its
 // `names` plugin is registered via `extend`. Register it lazily on first use
@@ -72,16 +73,15 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
 
   const text = value as string
 
-  // The current internal state of the color picker
-  const [hsvValue, setHsvValue] = React.useState(colord(text).toHsv())
-
-  const isUpdatingFromPicker = useRef(false)
+  // The picker's current colour. react-colorful is self-controlled: it caches
+  // the colour it last emitted and compares the incoming `color` prop to it
+  // with `===`. We keep this in sync so external edits (typing) drive the
+  // picker, and so the picker's own changes feed straight back without churn —
+  // see the `onChange` note below.
+  const [hsvValue, setHsvValue] = React.useState<HsvaColor>(colord(text).toHsv())
 
   // Debounced setValue to avoid excessive updates while dragging the picker
-  const debouncedSetValue = useDebouncedCallback((value: string) => {
-    isUpdatingFromPicker.current = true
-    setValue(value)
-  }, 150)
+  const debouncedSetValue = useDebouncedCallback((value: string) => setValue(value), 150)
 
   const stringStyle = getStyles('string', nodeData)
 
@@ -105,20 +105,14 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
             {...props}
             value={text}
             setValue={
-              ((value: string) => {
-                // Prevent infinite loop when update is coming from color picker
-                if (isUpdatingFromPicker.current) {
-                  isUpdatingFromPicker.current = false // Reset immediately
-                  return
-                }
-
-                // Only update the color picker display if the input text is a
-                // valid color
-                const parsed = colord(value)
-                if (parsed.isValid()) {
-                  setHsvValue(parsed.toHsv())
-                }
-                setValue(value)
+              ((newText: string) => {
+                // Drive the picker only from external (typed) edits. The
+                // picker's own changes never re-enter here: a controlled
+                // textarea doesn't fire onChange when its `value` prop is set
+                // programmatically.
+                const parsed = colord(newText)
+                if (parsed.isValid()) setHsvValue(parsed.toHsv())
+                setValue(newText)
               }) as React.Dispatch<React.SetStateAction<string>>
             }
             // Every confirm path funnels through core's no-arg `handleEdit`;
@@ -134,9 +128,17 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
               boxShadow: 'rgba(0, 0, 0, 0.35) 0px 5px 15px',
               borderRadius: '8px',
             }}
-            color={hsvValue}
+            color={finiteHsv(hsvValue)}
             onChange={(newColor) => {
-              setHsvValue(colord(newColor).toHsv())
+              // Echo the picker's own output straight back into `color`.
+              // Re-deriving it through colord re-rounds it and re-adds the `a`
+              // key the non-alpha picker strips, so react-colorful's `===`
+              // cache check fails every time and forces a redundant re-sync
+              // (and colord collapses the hue at the grey axis, yanking the
+              // slider). Feeding the raw object back keeps reference identity,
+              // so the check short-circuits. colord stays only for the
+              // text-format conversion below.
+              setHsvValue(newColor as HsvaColor)
               debouncedSetValue(getFormattedColorText(newColor, text))
             }}
             onKeyDown={onKeyDown}
