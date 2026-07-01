@@ -39,6 +39,7 @@ Each component ships a React component plus a definition factory that produces a
 | `Symbol`         | `Symbol` value display ([details](#symbol--javascript-symbols))                                                                                                   | —                                          |
 | `Undefined`      | `undefined` value display ([details](#undefined--the-undefined-value))                                                                                            | —                                          |
 | `ErrorIndicator` | Wraps a node with a glyph (default ⚠️) to flag the nodes you target via `condition` — e.g. validation errors ([details](#errorindicator--flag-nodes-with-a-glyph)) | —                                          |
+| `AutoType`       | Edit-only text input on every value node that infers the type from what you type — `12.3` → number, `true` → boolean, `{…}`/`[…]` → object/array, otherwise a string ([details](#autotype--type-follows-the-input)) | —                                          |
 
 ### Editor slot widgets
 
@@ -276,6 +277,28 @@ const customNodeDefinitions = useMemo(
 Memoizing on `validation` re-renders the tree exactly when validity changes, so the marker appears/clears correctly even when an edit on one node flips the validity of a node on another branch. Options, via `componentProps`: `errorGlyph` (any `ReactNode`, default `⚠️`) and `position` (`'before' | 'after'`, default `'after'`). With no `condition` it flags nothing (its default targeting is a deliberate no-op).
 
 It guards to value (leaf) nodes, so a `condition` that also matches a collection (e.g. an AJV `if`/`then` error reported at a parent object's path) never decorates that collection — only the leaf where the value is wrong. For collection-level marking, tint the subtree with `validationStyles({ within })` from `@json-edit-react/utils` instead.
+
+### `AutoType` — type follows the input
+
+An edit-only node that replaces the Type selector with a single plain text input and infers the value's type from what you type. `12.3` becomes a number, `true`/`false` a boolean, `null` the null value, `{"a":1}` or `[1,2,3]` an object or array, and anything that doesn't parse stays a string. It applies to every value (non-collection) node.
+
+[![▶ Live example: Auto-type](https://img.shields.io/badge/▶_Live_example-Auto--type-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/auto-type)
+
+```tsx
+autoTypeDefinition()
+```
+
+Pair it with `allowTypeSelection={false}` on the editor: the typed text already chooses the type, so the dropdown is redundant.
+
+The text is read with `JSON.parse` by default. Pass a more lenient parser via `componentProps.jsonParse` — for example [`JSON5`](https://json5.org)'s `parse`, the same function you'd give `<JsonEditor jsonParse={…} />` — to accept unquoted keys, single quotes and trailing commas:
+
+```tsx
+autoTypeDefinition({ componentProps: { jsonParse: JSON5.parse } })
+```
+
+A string that merely *looks* like another type (the string `"12.3"`) is shown without quotes, but it only re-types if you actually change it — opening and confirming an untouched value leaves it exactly as it was, so a stringy number won't silently become a real one. The one thing auto-typing can't round-trip is a string whose content is itself quoted (`"\"quoted\""`): editing it parses the quotes away. Collections aren't matched — they keep their built-in "Edit as JSON" editor — so the conversion still works both ways: type `{…}` into a leaf to grow a collection, or edit a collection's JSON down to a primitive.
+
+**Saving to JSON:** every value it produces is already standard JSON, so there's nothing special to serialise.
 
 ## Tree-shaking
 

@@ -111,6 +111,14 @@ const allExamples: Record<string, ExampleDef> = {
     load: () => import('./static/type-restrictions/Example'),
     code: () => import('./static/type-restrictions/Example.tsx?raw'),
   },
+  'auto-type': {
+    kind: 'static',
+    title: 'Auto-type',
+    blurb:
+      'Drop the Type selector entirely: the `AutoType` component (from `@json-edit-react/components`) edits every value through one plain text input and infers the type from what you type — `12.3` → number, `true` → boolean, `{…}` / `[…]` → object / array, and anything else a string. Type an object literal into a leaf to grow a whole collection. Here the text is read with JSON5 (via the component\'s `jsonParse` prop), so unquoted keys, single quotes and trailing commas all work. Anything that isn\'t valid JSON5 stays a string — including `"0077"`, whose leading zeros aren\'t valid number syntax. Paired with `allowTypeSelection={false}`.',
+    load: () => import('./static/auto-type/Example'),
+    code: () => import('./static/auto-type/Example.tsx?raw'),
+  },
   enums: {
     kind: 'static',
     title: 'Enums',

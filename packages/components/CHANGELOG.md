@@ -2,6 +2,10 @@
 
 ## 0.9.0-beta.4
 
+### Minor Changes
+
+- New `AutoType` component (#393): an edit-only node that replaces the Type selector with a single text input and infers the value's type from what you type — `12.3` → number, `true` → boolean, `null` → null, `{…}`/`[…]` → object/array, and anything else a string. It applies to every value node (pair it with `allowTypeSelection={false}`); collections aren't matched, so they keep their built-in "Edit as JSON" editor. Confirming an unchanged value keeps the original, so a string that merely looks like a number won't silently re-type. Accepts an optional `jsonParse` component prop (default `JSON.parse`) for a lenient parser such as `JSON5.parse`.
+
 ### Patch Changes
 
 - ColorPicker: fix an occasional infinite re-render / feedback loop between the picker and the text input (#390). The picker's own output is now echoed straight back into react-colorful's `color` prop instead of being re-derived through colord: that round-trip re-rounded the value and re-added the alpha key the non-alpha picker strips, defeating react-colorful's `===` identity check and forcing a redundant re-sync on every change (and collapsing the hue at the grey axis). A finiteness guard also ensures react-colorful never receives a non-finite colour — a `NaN` (which its pointer math can produce for a zero-size picker) would otherwise permanently defeat that same identity check and spin an infinite render. colord is still used to format the text value, and the ineffective `isUpdatingFromPicker` guard is removed.
