@@ -1,5 +1,11 @@
 # @json-edit-react/components
 
+## 0.9.0-beta.5
+
+### Minor Changes
+
+- New `NumberFormatter` component (#355): a display-only node that formats number values via `Intl.NumberFormat` (thousands separators, currency, percent, …), edited as the raw number. Zero dependencies. See the README for usage.
+
 ## 0.9.0-beta.4
 
 ### Minor Changes

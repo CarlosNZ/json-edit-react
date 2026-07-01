@@ -40,6 +40,7 @@ Each component ships a React component plus a definition factory that produces a
 | `Undefined`      | `undefined` value display ([details](#undefined--the-undefined-value))                                                                                            | —                                          |
 | `ErrorIndicator` | Wraps a node with a glyph (default ⚠️) to flag the nodes you target via `condition` — e.g. validation errors ([details](#errorindicator--flag-nodes-with-a-glyph)) | —                                          |
 | `AutoType`       | Edit-only text input on every value node that infers the type from what you type — `12.3` → number, `true` → boolean, `{…}`/`[…]` → object/array, otherwise a string ([details](#autotype--type-follows-the-input)) | —                                          |
+| `NumberFormatter` | Numbers formatted via `Intl.NumberFormat` (thousands separators, currency, percent, …), edited as the raw number ([details](#numberformatter--locale-aware-number-formatting)) | —                                          |
 
 ### Editor slot widgets
 
@@ -299,6 +300,43 @@ autoTypeDefinition({ componentProps: { jsonParse: JSON5.parse } })
 A string that merely *looks* like another type (the string `"12.3"`) is shown without quotes, but it only re-types if you actually change it — opening and confirming an untouched value leaves it exactly as it was, so a stringy number won't silently become a real one. The one thing auto-typing can't round-trip is a string whose content is itself quoted (`"\"quoted\""`): editing it parses the quotes away. Collections aren't matched — they keep their built-in "Edit as JSON" editor — so the conversion still works both ways: type `{…}` into a leaf to grow a collection, or edit a collection's JSON down to a primitive.
 
 **Saving to JSON:** every value it produces is already standard JSON, so there's nothing special to serialise.
+
+### `NumberFormatter` — locale-aware number formatting
+
+`NumberFormatter` renders number values through [`Intl.NumberFormat`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat) — thousands separators, currency, percent, compact and scientific notation, units, sign display, and rounding — while leaving the stored value untouched. It's display-only: double-clicking (or the usual edit affordance) drops back to the node's ordinary number editor, so the raw, unformatted number is always what you edit. Zero dependencies, since `Intl` is built into the platform.
+
+Pass `Intl.NumberFormat` options through `componentProps.options`, and an optional BCP-47 `componentProps.locale` (omit it to use the runtime's locale):
+
+```jsx
+import { numberFormatterDefinition } from '@json-edit-react/components'
+
+// Currency
+numberFormatterDefinition({
+  componentProps: {
+    locale: 'en-US',
+    options: { style: 'currency', currency: 'USD' },
+  },
+})
+
+// Percent — a stored 0.5 displays as "50%"
+numberFormatterDefinition({
+  componentProps: { options: { style: 'percent' } },
+})
+```
+
+The guard matches **every** number and the default targeting is "everywhere the guard passes", so dropping the definition in unchanged reformats every number in the tree — years, IDs and ports included. That's rarely what you want, so narrow it with a `condition` (ANDed with the guard) that targets the fields you mean:
+
+```jsx
+import { numberFormatterDefinition } from '@json-edit-react/components'
+import { byKey } from '@json-edit-react/utils'
+
+numberFormatterDefinition({
+  condition: byKey(/price|amount|total|cost/i),
+  componentProps: { options: { style: 'currency', currency: 'USD' } },
+})
+```
+
+Because it's display-only, the value your data holds never changes: a `percent` style shows `0.5` as "50%" and a `currency` style rounds the *display* to the currency's fraction digits, but the underlying number keeps its full precision. A malformed `options` (for example `style: 'currency'` with no `currency` code) throws when the formatter is built — deliberately loud, so the misconfiguration surfaces in development rather than silently showing a raw number.
 
 ## Tree-shaking
 

@@ -13,6 +13,7 @@ export * from './Image'
 export * from './ColorPicker'
 export * from './ErrorIndicator'
 export * from './AutoType'
+export * from './NumberFormatter'
 
 // The definition factories' override surface; the factory builder itself
 // (`createDefinitionFactory`) stays internal
