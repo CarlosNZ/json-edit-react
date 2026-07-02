@@ -423,6 +423,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       return {
         data: m.initialData,
         customNodeDefinitions: m.customNodeDefinitions,
+        allowTypeSelection: m.allowTypeSelection,
         customTextEditorAvailable: true,
       }
     },
