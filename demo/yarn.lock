@@ -1244,10 +1244,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@json-edit-react/components@0.9.0-beta.4":
-  version "0.9.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@json-edit-react/components/-/components-0.9.0-beta.4.tgz#3800953e9922355151808039554f09f7ead6c9be"
-  integrity sha512-dd5hB3gAHT4vWxxXU4lTGpk0vxof+/IfkrfDqcM3qsC+ZWW7fELLcwH8taaXiDSJjoqyNH/03HlZfBdykS21AQ==
+"@json-edit-react/components@0.9.0-beta.5":
+  version "0.9.0-beta.5"
+  resolved "https://registry.yarnpkg.com/@json-edit-react/components/-/components-0.9.0-beta.5.tgz#95ac55e59e01f239d3ae331ce622c628bf4f45eb"
+  integrity sha512-40W8/6SloCWzzQsQuyT24zsVQnAa4rF8Vm5hGQcdtuR3gIPG0ikVoTaCpaglo62GFxn46f/ithtFtUYbVsT4yQ==
   dependencies:
     "@codemirror/lang-json" "^6.0.1"
     "@uiw/codemirror-theme-console" "^4.23.13"
@@ -2965,10 +2965,10 @@ json-buffer@3.0.1:
   resolved "https://registry.yarnpkg.com/json-buffer/-/json-buffer-3.0.1.tgz#9338802a30d3b6605fbe0613e094008ca8c05a13"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
-json-edit-react@2.0.0-beta.8:
-  version "2.0.0-beta.8"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-2.0.0-beta.8.tgz#0744cda02d8743a20559bd2e0127bf60247bcbd4"
-  integrity sha512-/5mJGYyFQpFstr0LcgJ3UhKIWc9DRlH/7hNhYjqVjIL1OIhrFXg8MT3zmg6A+7+WRPCaec7ps+dCvmzeO1hRfA==
+json-edit-react@2.0.0-beta.9:
+  version "2.0.0-beta.9"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-2.0.0-beta.9.tgz#ec4c5dffe566003ff535b67c5f09e5531b0b3084"
+  integrity sha512-+n74iNHc9B2OnJpgNdTVbGncYYSdet0Bfa5I/iUd/UHTBkyYvMr2ezwcotXbvVjR+VFv2R/NeeKCFGU5AIIfyQ==
 
 json-parse-even-better-errors@^2.3.0:
   version "2.3.1"
