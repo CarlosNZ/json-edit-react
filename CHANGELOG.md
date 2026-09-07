@@ -1,5 +1,9 @@
 # json-edit-react
 
+## 2.0.0-beta.9
+
+- Fix core's tree-shaking (#389). Importing a single utility no longer pulls the whole library: `import { toPathString }` drops from ~15 kB gzip to ~2.5 kB, and the editor's own bundle is unchanged. The build stamps `/*#__PURE__*/` onto the eager `React.memo` / `createContext` calls and the default theme's glyph construction, so bundlers can prove the render path is droppable. Downstream, `@json-edit-react/utils/filters` falls from ~16 kB gzip to ~4 kB with no change to that package. The residual ~2 kB is the stylesheet, which is still injected at import time — making that lazy is tracked separately in #396. No change to import paths or authoring.
+
 ## 2.0.0-beta.8
 
 - A **synchronous** `onUpdate` rejection (`false`, `{ error }`, or a thrown error) now resolves in place rather than applying optimistically and then reverting. The rejected value is never written through `setData`, so it no longer flashes in the editor and leaves nothing transient for downstream state (an undo history, autosave, a dirty flag) to pick up. Asynchronous rejections are unchanged — they still commit optimistically and revert when the promise settles (#391).
