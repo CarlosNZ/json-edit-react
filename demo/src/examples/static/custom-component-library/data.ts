@@ -13,6 +13,7 @@ export const initialData = {
   - DatePicker
   - DateObject
   - UNIX Timestamp
+  - NumberFormatter
   - Undefined
   - Markdown
   - BigInt
@@ -42,6 +43,18 @@ export const initialData = {
     'Unix Timestamp (ms)': Date.now(),
     'Show Unix as raw number?': true,
     // info: 'Inserted in App.tsx',
+  },
+
+  'Number Formatting': {
+    locale: 'en-US',
+    millions: 1234989,
+    currency: 1789.89,
+    percent: 0.8756,
+    units: 2789.88,
+    compact: 1200000,
+    // Stored at full precision — NumberFormatter only
+    // rounds the *display* (to 1.33).
+    rounded: 1.3333333,
   },
 
   'Non-JSON types': {
