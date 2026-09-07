@@ -4,6 +4,8 @@ The single reference for this repo's multi-package toolchain — installing, bui
 
 Releases are **manual and ship-as-you-go** — no Changesets (see [Versioning and releasing](#versioning-and-releasing) for why).
 
+> Just need the publish commands for one package? [publishing-cheat-sheet.md](publishing-cheat-sheet.md) is the condensed per-package one-pager.
+
 ---
 
 # Quick reference
