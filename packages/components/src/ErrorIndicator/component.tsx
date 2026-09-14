@@ -14,7 +14,8 @@
 
 import { type ReactNode } from 'react'
 import { type CustomComponentProps } from 'json-edit-react'
-import './style.css'
+import css from './style.css?inline'
+import { useStyles } from '../_common/useStyles'
 
 export interface ErrorIndicatorProps {
   /** The glyph shown beside a flagged node. Default `'⚠️'`. */
@@ -27,6 +28,7 @@ export const ErrorIndicatorComponent = ({
   originalNode,
   componentProps,
 }: CustomComponentProps<ErrorIndicatorProps>) => {
+  useStyles('jer-error-indicator', css)
   const { errorGlyph = '⚠️', position = 'after' } = componentProps ?? {}
 
   const glyph = (

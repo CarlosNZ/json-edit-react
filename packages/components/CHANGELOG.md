@@ -1,5 +1,11 @@
 # @json-edit-react/components
 
+## 0.9.0-beta.6
+
+### Patch Changes
+
+- Fix every stylesheet being stripped from the published bundles (#398). The package shipped with none of its CSS, leaving the loading placeholder, the `UnixTimestamp` badge, the `ErrorIndicator` layout and the `ReactDatePicker` chrome unstyled. Each component now injects its own stylesheet on first render, so a component's CSS travels with it and nothing else.
+
 ## 0.9.0-beta.5
 
 ### Minor Changes
