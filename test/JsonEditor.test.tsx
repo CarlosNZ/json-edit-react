@@ -1,5 +1,5 @@
 import { createRef, useState } from 'react'
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 import { JsonViewer } from '../src/JsonViewer'
@@ -627,12 +627,15 @@ describe('JsonEditor — edit flow', () => {
   })
 
   test('edit/delete icon controls are labelled <button>s kept out of the Tab order', () => {
-    const { container } = render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} />)
+    render(<JsonEditor data={{ greeting: 'hello' }} setData={noop} />)
 
-    const editButton = container.querySelector('[aria-label="Edit"]') as HTMLElement
-    const deleteButton = container.querySelector('[aria-label="Delete"]') as HTMLElement
-    ;[editButton, deleteButton].forEach((btn) => {
-      expect(btn).not.toBeNull()
+    // Every edit/delete control in the tree, found by accessible name alone.
+    const buttons = [
+      ...screen.getAllByRole('button', { name: 'Edit' }),
+      ...screen.getAllByRole('button', { name: 'Delete' }),
+    ]
+    expect(buttons.length).toBeGreaterThan(0)
+    buttons.forEach((btn) => {
       expect(btn.tagName).toBe('BUTTON')
       expect(btn).toHaveAttribute('type', 'button')
       expect(btn).toHaveAttribute('tabindex', '-1')
@@ -776,7 +779,7 @@ describe('JsonEditor — structural mutations', () => {
     // Scope to the 'x' row to pick the right delete button (multiple rows have
     // one)
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
-    const deleteBtn = xRow.querySelector('[title="Delete"]') as HTMLElement
+    const deleteBtn = within(xRow).getByRole('button', { name: 'Delete' })
     await user.click(deleteBtn)
 
     expect(setData).toHaveBeenCalledTimes(1)
@@ -838,7 +841,7 @@ describe('JsonEditor — structural mutations', () => {
   test("changing a value's type fires setData with the converted default", async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    const { container } = render(<JsonEditor data={{ x: 'hello' }} setData={setData} />)
+    render(<JsonEditor data={{ x: 'hello' }} setData={setData} />)
 
     await user.dblClick(screen.getByText('"hello"'))
     // The type selector is a native <select>, role=combobox
@@ -851,9 +854,8 @@ describe('JsonEditor — structural mutations', () => {
     expect(setData).not.toHaveBeenCalled()
 
     // Commit (OK button) writes the converted default. 'hello' → number is NaN,
-    // which the editor falls back to 0. .jer-confirm-buttons holds [OK,
-    // Cancel].
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    // which the editor falls back to 0.
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(setData).toHaveBeenCalledTimes(1)
     expect(setData).toHaveBeenCalledWith({ x: 0 })
   })
@@ -1030,7 +1032,7 @@ describe('JsonEditor — §17 onUpdate event discriminant', () => {
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
-    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+    await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
 
     expect(onUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ event: 'delete', key: 'x', path: ['x'], newData: { y: 'bye' } }),
@@ -1293,7 +1295,7 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
-    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+    await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
 
     const seq = onEditEvent.mock.calls.map(([e]) => e.event)
     expect(seq).toEqual(['delete'])
@@ -1412,7 +1414,7 @@ describe('JsonEditor — commit-on-displace (clicking another node while editing
     // Open the raw-JSON editor on the `obj` collection (its header Edit pencil
     // is the first within its component subtree).
     const objComponent = screen.getByText('obj').closest('.jer-component') as HTMLElement
-    await user.click(objComponent.querySelector('[title="Edit"]') as HTMLElement)
+    await user.click(within(objComponent).getAllByRole('button', { name: 'Edit' })[0])
     const textarea = container.querySelector(
       'textarea.jer-collection-text-area'
     ) as HTMLTextAreaElement
@@ -1656,7 +1658,7 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
-    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+    await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
 
     // Gated: the delete hasn't applied (no setData) and no 'delete' event yet.
     expect(onUpdate).toHaveBeenCalledTimes(1)
@@ -1697,7 +1699,7 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
     render(<Controlled />)
 
     const bRow = screen.getByText('2').closest('.jer-component') as HTMLElement
-    await user.click(bRow.querySelector('[title="Delete"]') as HTMLElement)
+    await user.click(within(bRow).getByRole('button', { name: 'Delete' }))
 
     // Sync validation rejects before the optimistic-apply timer fires, so the
     // node is never removed: the inline error renders on it (V1-like) and
@@ -1727,7 +1729,7 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
     // Delete the MIDDLE key 'b'. The slow onUpdate hasn't settled, so it
     // applies optimistically once the timer fires (b removed).
     const bRow = screen.getByText('2').closest('.jer-component') as HTMLElement
-    await user.click(bRow.querySelector('[title="Delete"]') as HTMLElement)
+    await user.click(within(bRow).getByRole('button', { name: 'Delete' }))
     await waitFor(() => expect(setData).toHaveBeenLastCalledWith({ a: 1, c: 3 }))
 
     // Now it rejects: the revert must put 'b' back in its original slot, so key
@@ -1839,7 +1841,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
-    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+    await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
 
     // Event-specific message, matching the DELETE_ERROR code routed to onError
     expect(screen.getByText('Delete unsuccessful')).toBeInTheDocument()
@@ -1936,8 +1938,8 @@ describe('JsonEditor — restrictions and callbacks', () => {
     expect(typeSelect().value).toBe('Color')
 
     // Committing (the OK button) submits the coerced value, which onUpdate
-    // rejects. .jer-confirm-buttons holds [OK, Cancel] in DOM order.
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    // rejects.
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(onUpdate).toHaveBeenCalled()
 
     // The rejection reverts the value and closes the edit session.
@@ -2074,7 +2076,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
-    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+    await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
 
     // `{ value }` has no meaning for a delete: it's discarded (no override) and
     // the node is removed as normal. `rename`/`move` share this gated branch.
@@ -2095,7 +2097,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     )
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
-    await user.click(xRow.querySelector('[title="Delete"]') as HTMLElement)
+    await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
 
     // `{ data }` is not gated by event — it replaces the whole document even on
     // a structural change.

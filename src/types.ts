@@ -639,6 +639,12 @@ export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: C
 export interface CustomButtonDefinition {
   Element: React.FC<{ nodeData: NodeData }>
   onClick: (nodeData: NodeData, e: React.MouseEvent) => void
+  // Accessible name for the button. Supplying it renders the wrapper as a real
+  // <button aria-label={label}>, matching the built-in icon controls — and, as
+  // with those, it doubles as the hover tooltip when `showIconTooltips` is on.
+  // Omit it when `Element` provides its own interactive element (a <button>,
+  // <a>...) — the wrapper then stays a plain <div>, so the two don't nest.
+  label?: string
 }
 
 export interface InputProps {
@@ -651,6 +657,7 @@ export interface InputProps {
   path: CollectionKey[]
   stringTruncateLength: number
   showStringQuotes: boolean
+  showIconTooltips: boolean
   nodeData: NodeData
   translate: TranslateFunction
   handleKeyboard: (

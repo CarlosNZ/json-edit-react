@@ -238,14 +238,29 @@ export const EditButtons: React.FC<EditButtonProps> = ({
           <Icon name="add" nodeData={nodeData} />
         </button>
       )}
-      {customButtons?.map(({ Element, onClick }, i) => (
-        // Custom buttons stay <div>s: the inner `Element` is consumer-owned and
-        // may itself be interactive, so wrapping it in a <button> risks nested
-        // interactive content.
-        <div key={i} onClick={(e) => onClick && onClick(nodeData, e)}>
-          <Element nodeData={nodeData} />
-        </div>
-      ))}
+      {customButtons?.map(({ Element, onClick, label }, i) => {
+        // A `label` opts the wrapper into real button semantics, matching the
+        // built-in icon controls. Without one it stays a <div>: `Element` is
+        // consumer-owned and may itself be interactive, and a <button> wrapper
+        // would then nest interactive content.
+        const handleClick = (e: React.MouseEvent) => onClick && onClick(nodeData, e)
+        return label ? (
+          <button
+            key={i}
+            type="button"
+            tabIndex={-1}
+            onClick={handleClick}
+            aria-label={label}
+            title={showIconTooltips ? label : ''}
+          >
+            <Element nodeData={nodeData} />
+          </button>
+        ) : (
+          <div key={i} onClick={handleClick}>
+            <Element nodeData={nodeData} />
+          </div>
+        )
+      })}
       {isAddingHere && handleAdd && type === 'object' && (
         <>
           {hasKeyOptionsList ? (

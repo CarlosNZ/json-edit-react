@@ -7,7 +7,7 @@
  *    `{ success, stringValue, type, ...NodeData }`.
  */
 
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
 
@@ -45,7 +45,7 @@ describe('onCopy', () => {
     )
 
     const row = screen.getByText('"hello"').closest('.jer-component') as HTMLElement
-    await user.click(row.querySelector('[title="Copy to clipboard"]') as HTMLElement)
+    await user.click(within(row).getByRole('button', { name: 'Copy to clipboard' }))
 
     await waitFor(() => expect(writeText).toHaveBeenCalledWith('hello'))
     await waitFor(() =>
@@ -72,7 +72,7 @@ describe('onCopy', () => {
     )
 
     const row = screen.getByText('"hello"').closest('.jer-component') as HTMLElement
-    await user.click(row.querySelector('[title="Copy to clipboard"]') as HTMLElement)
+    await user.click(within(row).getByRole('button', { name: 'Copy to clipboard' }))
 
     await waitFor(() =>
       expect(onCopy).toHaveBeenCalledWith(

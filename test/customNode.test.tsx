@@ -476,7 +476,7 @@ describe('CustomNode — switching type away mid-edit', () => {
     expect(input.value).toBe('')
 
     await user.type(input, 'hello')
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(setData).toHaveBeenCalledWith({ x: 'hello' })
   })
 
@@ -499,7 +499,7 @@ describe('CustomNode — switching type away mid-edit', () => {
     expect(input).not.toBeNull()
     expect(input.value).toBe('0')
 
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(setData).toHaveBeenCalledWith({ x: 0 })
   })
 
@@ -635,7 +635,7 @@ describe('CustomNode — toStandardType seeds the type-switch buffer', () => {
     expect(input).not.toBeNull()
     expect(input.value).toBe('https://example.com')
 
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(setData).toHaveBeenCalledWith({ x: 'https://example.com' })
   })
 
@@ -754,12 +754,12 @@ describe('CustomNode — fromStandardType commit transform', () => {
   test('✓ commits the fromStandardType-transformed value, not the raw buffer', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    const { container } = render(
+    render(
       <JsonEditor data={{ x: BigInt(5) }} setData={setData} customNodeDefinitions={[bigintDef()]} />
     )
     const input = await startEdit(user)
     setBuffer(input, '123')
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
   })
 
@@ -789,7 +789,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
     )
     const input = await startEdit(user)
     setBuffer(input, 'abc')
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
 
     expect(setData).not.toHaveBeenCalled()
     expect(screen.getByTestId('custom-input')).toBeInTheDocument()
@@ -799,7 +799,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
     expect(container.querySelector('.jer-error-slug')).toHaveTextContent('Invalid BigInt')
 
     setBuffer(input, '42')
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(setData).toHaveBeenCalledWith({ x: BigInt(42) })
     expect(container.querySelector('.jer-error-slug')).toBeNull()
   })
@@ -807,12 +807,12 @@ describe('CustomNode — fromStandardType commit transform', () => {
   test('Esc still cancels a rejected session', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    const { container } = render(
+    render(
       <JsonEditor data={{ x: BigInt(5) }} setData={setData} customNodeDefinitions={[bigintDef()]} />
     )
     const input = await startEdit(user)
     setBuffer(input, 'abc')
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     fireEvent.keyDown(screen.getByTestId('custom-input'), { key: 'Escape' })
 
     expect(setData).not.toHaveBeenCalled()
@@ -845,7 +845,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
   test('confirming the unchanged buffer is a no-op (tolerant pass-through)', async () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn() as jest.MockedFunction<UpdateFunction>
-    const { container } = render(
+    render(
       <JsonEditor
         data={{ x: BigInt(5) }}
         setData={noop}
@@ -854,7 +854,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
       />
     )
     await startEdit(user)
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(onUpdate).not.toHaveBeenCalled()
     expect(screen.queryByTestId('custom-input')).toBeNull()
   })
@@ -958,7 +958,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
       showOnEdit: true,
       renderCollectionAsValue: true,
     }
-    const { container } = render(
+    render(
       <JsonEditor
         data={{ x: { text: 'old text', url: 'old url' } }}
         setData={setData}
@@ -968,7 +968,7 @@ describe('CustomNode — fromStandardType commit transform', () => {
     await user.dblClick(screen.getByTestId('custom'))
     fireEvent.change(screen.getByTestId('field-text'), { target: { value: 'new text' } })
     fireEvent.change(screen.getByTestId('field-url'), { target: { value: 'new url' } })
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(setData).toHaveBeenCalledWith({ x: { text: 'new text', url: 'new url' } })
   })
 })
@@ -1039,7 +1039,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const onUpdate = jest.fn() as jest.MockedFunction<UpdateFunction>
-    const { container } = render(
+    render(
       <JsonEditor
         data={{ x: 'hello' }}
         setData={setData}
@@ -1050,7 +1050,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     await user.dblClick(screen.getByText('"hello"'))
     await switchTo(user, 'BigInt')
     fireEvent.change(screen.getByTestId('custom-input'), { target: { value: '123' } })
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
 
     expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
     expect(onUpdate).toHaveBeenCalledTimes(1)
@@ -1125,7 +1125,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
       editOnTypeSwitch: true,
       defaultValue: 'MARK',
     }
-    const { container } = render(
+    render(
       <JsonEditor
         data={{ x: 'hello' }}
         setData={setData}
@@ -1139,7 +1139,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     expect((screen.getByTestId('custom-input') as HTMLInputElement).value).toBe('MARK')
     expect(setData).not.toHaveBeenCalled()
 
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(setData).toHaveBeenCalledWith({ x: 'MARK' })
   })
 
@@ -1171,12 +1171,12 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
         />
       )
     }
-    const { container } = render(<Harness />)
+    render(<Harness />)
     await user.dblClick(screen.getByText('"hello"'))
     await switchTo(user, 'Obj')
     expect(setDataSpy).not.toHaveBeenCalled()
 
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(setDataSpy).toHaveBeenCalledWith({ x: { a: 1, b: 2 } })
     // `collapse={1}` would normally hide the new collection's contents — the
     // switch-commit launches it expanded, matching the instant-commit path.
@@ -1221,7 +1221,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
   test('the hook seeds the switch from a convertible current value, and ✓ commits through the same hook', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    const { container } = render(
+    render(
       <JsonEditor data={{ x: 42 }} setData={setData} customNodeDefinitions={[bigintTarget()]} />
     )
     await user.dblClick(screen.getByText('42'))
@@ -1232,7 +1232,7 @@ describe('CustomNode — editOnTypeSwitch (deferred to-custom switch)', () => {
     expect(setData).not.toHaveBeenCalled()
 
     fireEvent.change(screen.getByTestId('custom-input'), { target: { value: '123' } })
-    await user.click(container.querySelectorAll('.jer-confirm-buttons > button')[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     expect(setData).toHaveBeenCalledWith({ x: BigInt(123) })
   })
 
@@ -1423,7 +1423,7 @@ describe('CustomNode — JSON serialization hooks', () => {
         parseReviver: (value) => (value === 'PLACEHOLDER' ? 'REVIVED' : value),
       },
     ]
-    const { container } = render(
+    render(
       <JsonEditor
         data={{ x: 'old' }}
         setData={setData}
@@ -1434,7 +1434,7 @@ describe('CustomNode — JSON serialization hooks', () => {
     // edit the root object as raw JSON text
     await user.click(screen.getAllByTitle('Edit')[0])
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '{"x":"PLACEHOLDER"}' } })
-    await user.click(container.querySelector('.jer-confirm-buttons > button') as HTMLElement)
+    await user.click(screen.getByRole('button', { name: 'OK' }))
     await waitFor(() => expect(setData).toHaveBeenCalledWith({ x: 'REVIVED' }))
   })
 })

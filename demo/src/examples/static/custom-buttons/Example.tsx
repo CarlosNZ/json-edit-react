@@ -97,12 +97,19 @@ export default function CustomButtons() {
     () => [
       {
         Element: OpenLinkButton,
+        // `label` makes the wrapper a real <button> with this
+        // as its accessible name, so screen readers announce
+        // it like the built-in controls. Add it whenever
+        // `Element` is a bare glyph; leave it off when your
+        // component renders its own <button> or <a>.
+        label: 'Open link in new tab',
         onClick: (nodeData) => {
           window.open(nodeData.value as string, '_blank', 'noopener,noreferrer')
         },
       },
       {
         Element: DuplicateButton,
+        label: 'Duplicate this item',
         onClick: (nodeData) => {
           const index = nodeData.key as number
           // `assign` is json-edit-react's own immutable

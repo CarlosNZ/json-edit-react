@@ -480,6 +480,10 @@ v2 adds several localisation keys. None require action — a `translations` obje
 
 - `ERROR_RENAME` / `ERROR_MOVE` — rejected `rename` and `move` operations now show operation-specific messages (`'Rename unsuccessful'` / `'Move unsuccessful'`) instead of the generic `'Update unsuccessful'`, mirroring `ERROR_ADD` / `ERROR_DELETE`. (Their `onError` codes are likewise `RENAME_ERROR` / `MOVE_ERROR` — additive members of `JerErrorCode`.)
 - `TOOLTIP_OK` / `TOOLTIP_CANCEL` — labels for the ✓ / ✗ confirm and cancel controls, now that those are real `<button>`s. Always applied as `aria-label`s, and shown as visible tooltips when `showIconTooltips` is enabled.
+- `TOOLTIP_COLLAPSE` / `TOOLTIP_EXPAND` — the collapse chevron's accessible name, which names its action and so follows the node's current state (the chevron also carries `aria-expanded`).
+- `SHOW_MORE` — the accessible name for the `...` control that expands a truncated string. Its counterpart `SHOW_LESS` is unchanged and is announced from its visible text.
+
+Like the other `TOOLTIP_*` keys, these are always applied as `aria-label`s and additionally shown as visible hover tooltips when `showIconTooltips` is enabled — that prop now covers every labelled control, the chevron and `...` included.
 
 ```diff
   translations={{
@@ -488,6 +492,9 @@ v2 adds several localisation keys. None require action — a `translations` obje
 +   ERROR_MOVE: '…',
 +   TOOLTIP_OK: '…',
 +   TOOLTIP_CANCEL: '…',
++   TOOLTIP_COLLAPSE: '…',
++   TOOLTIP_EXPAND: '…',
++   SHOW_MORE: '…',
   }}
 ```
 
@@ -740,7 +747,11 @@ The only thing to act on is **custom CSS that targets these controls by tag name
 .jer-confirm-buttons > button { … }
 ```
 
-Selectors that target the wrapper classes (`.jer-confirm-buttons`, `.jer-edit-buttons`) or the icons themselves are unaffected. Consumer-supplied custom buttons (`customButtons`) remain wrapped in a `<div>`, so their markup is unchanged.
+Selectors that target the wrapper classes (`.jer-confirm-buttons`, `.jer-edit-buttons`) or the icons themselves are unaffected.
+
+The same applies to the two string-truncation controls, `.jer-string-expansion` (the `...` and `(Show less)` affordances) — also `<button>`s rather than `<span>`s now. Retarget any tag-name selector the same way.
+
+Consumer-supplied custom buttons (`customButtons`) still default to a `<div>` wrapper, so their markup is unchanged unless you opt in: give a definition the new optional `label` and its wrapper becomes a `<button aria-label={label}>` instead. Add it when your `Element` is just a glyph, and leave it off when your `Element` renders its own `<button>` or `<a>`.
 
 ### Stylesheet injection timing
 

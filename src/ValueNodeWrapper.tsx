@@ -452,6 +452,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     path,
     stringTruncateLength,
     showStringQuotes,
+    showIconTooltips,
     nodeData,
     enumType,
     translate,

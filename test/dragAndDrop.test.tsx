@@ -1,4 +1,4 @@
-import { act, fireEvent, render, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, waitFor, within } from '@testing-library/react'
 import { JsonEditor } from '../src'
 import type { EditEvent, UpdateFunction } from '../src'
 import { dragAndDrop, rowFor } from './dndHelper'
@@ -327,7 +327,7 @@ describe('Drag-and-drop: interaction with active edit', () => {
 
     expect(rowFor(container, 'a').getAttribute('draggable')).toBe('true')
 
-    const editBtn = rowFor(container, 'a').querySelector('button[aria-label="Edit"]') as HTMLElement
+    const editBtn = within(rowFor(container, 'a')).getByRole('button', { name: 'Edit' })
     expect(editBtn).not.toBeNull()
     act(() => {
       fireEvent.click(editBtn)
@@ -358,7 +358,7 @@ describe('Drag-and-drop: interaction with active edit', () => {
     })
 
     // 2. Open edit on 'a' (sets `active !== null`).
-    const editBtn = rowFor(container, 'a').querySelector('button[aria-label="Edit"]') as HTMLElement
+    const editBtn = within(rowFor(container, 'a')).getByRole('button', { name: 'Edit' })
     act(() => {
       fireEvent.click(editBtn)
     })

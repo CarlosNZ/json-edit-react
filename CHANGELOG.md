@@ -2,6 +2,8 @@
 
 ## 2.0.0-beta.10
 
+- The collapse chevron and the string show-more/show-less controls now carry button semantics and translatable accessible names, so screen readers announce and can activate them (#268). Adds the `TOOLTIP_COLLAPSE`, `TOOLTIP_EXPAND` and `SHOW_MORE` [localisation keys](README.md#localisation), and `showIconTooltips` now covers every labelled control rather than just the icon buttons.
+- A `customButtons` definition takes an optional `label`, which turns its wrapper into a real labelled `<button>` — see [Custom buttons](README.md#custom-buttons).
 - The bundled stylesheet is injected when the first editor mounts rather than when the module loads, so importing a helper on its own no longer pulls the CSS along with it: `import { toPathString }` drops from ~2.5 kB gzip to ~0.5 kB, and `@json-edit-react/utils/filters` from ~4 kB to ~2 kB (#396). Styling is unchanged — the rules are in place before the editor's first paint — and `sideEffects: false` is now true of the package rather than merely harmless.
 
 ## 2.0.0-beta.9
