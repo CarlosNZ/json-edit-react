@@ -742,6 +742,20 @@ The only thing to act on is **custom CSS that targets these controls by tag name
 
 Selectors that target the wrapper classes (`.jer-confirm-buttons`, `.jer-edit-buttons`) or the icons themselves are unaffected. Consumer-supplied custom buttons (`customButtons`) remain wrapped in a `<div>`, so their markup is unchanged.
 
+### Stylesheet injection timing
+
+The bundled stylesheet is injected into `<head>` when the first editor mounts, rather than at import time. There's still nothing to import, and the rules are in place before the editor's first paint.
+
+This affects one narrow case. The `<style>` element still lands at the **end** of `<head>`, so nothing changes relative to a `<link>` or build-extracted CSS. But CSS your app injects *at runtime* — CSS-in-JS, or a `.css` file going through a dev server's style injection — now lands before the editor's stylesheet rather than after it, so such a rule overriding a `.jer-*` rule at **equal specificity** stops winning. Make the selector more specific and source order stops mattering:
+
+```css
+/* Can lose, if injected before the editor mounts */
+.jer-editor-container { padding: 0 }
+
+/* Wins on specificity, whatever the source order */
+#app .jer-editor-container { padding: 0 }
+```
+
 ### Closing-bracket alignment
 
 The closing bracket of an expanded object/array now aligns with the key (the start of the opening line) at every depth, rather than carrying a depth-dependent offset toward the collapse chevron. The only thing to act on is **custom CSS that positioned the outside closing bracket** via `.jer-bracket-outside`: that class no longer sets `padding-left`, so if you added a rule to compensate for the old offset, remove it.
