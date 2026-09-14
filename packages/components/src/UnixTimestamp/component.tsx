@@ -18,7 +18,8 @@ import React from 'react'
 import { type CustomComponentProps } from 'json-edit-react'
 import { type DatePickerWidgetProps } from '../_common/DatePickerWidget'
 import { epochToDate, dateToEpoch, type UnixTimeUnit } from './epoch'
-import './style.css'
+import css from './style.css?inline'
+import { useStyles } from '../_common/useStyles'
 
 export interface UnixTimestampCustomProps {
   // The picker rendered while editing. The definition enables edit rendering
@@ -38,6 +39,7 @@ export interface UnixTimestampCustomProps {
 }
 
 export const UnixTimestamp = (props: CustomComponentProps<UnixTimestampCustomProps>) => {
+  useStyles('jer-unix-timestamp', css)
   const {
     value,
     setValue,

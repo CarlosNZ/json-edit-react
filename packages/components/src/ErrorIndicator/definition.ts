@@ -1,9 +1,6 @@
 import { type CustomNodeDefinition } from 'json-edit-react'
 import { createDefinitionFactory } from '../_common/createDefinitionFactory'
 import { ErrorIndicatorComponent, type ErrorIndicatorProps } from './component'
-// Imported here too (as in DatePicker) so `sideEffects: false` can't tree-shake
-// the styles out for consumers who only reach the factory.
-import './style.css'
 
 const ErrorIndicatorDefinition: CustomNodeDefinition<ErrorIndicatorProps> = {
   // Guard to value (leaf) nodes — the glyph sits beside a scalar, not wrapped

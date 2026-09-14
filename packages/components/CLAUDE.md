@@ -60,7 +60,29 @@ Output: `build/index.cjs.js`, `build/index.esm.js`, `build/index.d.ts`.
 
 The whole package bundles into one ESM file, so per-component tree-shaking depends on the consumer's bundler proving each unused component's top-level calls are side-effect-free. The rollup config's `pureAnnotations` plugin stamps `/*#__PURE__*/` onto every such call — `jsx`/`jsxs` (markup), `lazy` (heavy-dep loaders), and our internal `createDefinitionFactory` (definitions) — running before terser, which is set to `preserve_annotations` so they survive into the shipped ESM. Without them, importing one definition drags in every component and its deps (~6 kB → ~160 kB).
 
-[scripts/verify-treeshake.mjs](scripts/verify-treeshake.mjs) runs after the build (and at `prepack`): it esbuild-bundles a single `import { hyperlinkDefinition }` against the shipped ESM with deps bundled and fails if the result balloons past ~20 kB or reaches a heavy dep. It uses **esbuild, not rollup** — rollup analyses our local `createDefinitionFactory` for purity on its own and would shake the definitions even with the annotations broken, hiding a regression; esbuild (like webpack and most consumer bundlers) relies on the annotations, so it actually catches it.
+[scripts/verify-treeshake.mjs](scripts/verify-treeshake.mjs) runs after the build (and at `prepack`): it esbuild-bundles a single `import { hyperlinkDefinition }` against the shipped ESM with deps bundled and fails if the result balloons past ~20 kB or reaches a heavy dep. It uses **esbuild, not rollup** — rollup analyses our local `createDefinitionFactory` for purity on its own and would shake the definitions even with the annotations broken, hiding a regression; esbuild (like webpack and most consumer bundlers) relies on the annotations, so it actually catches it. The same script also guards the stylesheets (below), in both directions: they're present in the build, and each is carried only by its own component.
+
+### Stylesheets (issue #398)
+
+**A component's `style.css` is imported as a string and injected at first render — never as a bare `import './style.css'`.** The pattern, in the component (not the definition):
+
+```tsx
+import css from './style.css?inline'
+import { useStyles } from '../_common/useStyles'
+
+export const MyComponent = (props: CustomComponentProps) => {
+  useStyles('jer-my-component', css)
+  ...
+}
+```
+
+Two things force this. `@rollup/plugin-node-resolve` honours our own `sideEffects: false` for our own source files, so a plain `import './style.css'` is treated as droppable and gets shaken out of the build — that's how the package came to publish with none of its CSS. And because everything bundles into one file per entry, an import-time injection would be a bare statement no consumer's bundler can drop, so every consumer would pay for every stylesheet in the entry point regardless of which component they use. Injecting from the component solves both: the CSS is an ordinary constant reachable only from the component that renders it.
+
+The wiring is `stripCssQuery` plus the `styles` plugin's `mode: ['inject', () => '']` in [rollup.config.mjs](rollup.config.mjs), and the ambient `*.css?inline` declaration in [src/css.d.ts](src/css.d.ts) (listed in `tsconfig.json`'s `files`, since ambient declarations must be program roots). `?inline` is Vite's convention, which is what lets the demo's `local` mode consume `src/` directly; rollup has no query convention, so the build strips it. Core does the same thing for its one stylesheet — see `src/injectStyles.ts` there and issue #396.
+
+The one exception is `react-datepicker`'s own stylesheet in the widgets entry: the library is external, so that import survives as an `import` statement for the consumer's bundler and there's no text to inline. It's the one place `sideEffects: false` misdescribes the package; harmless in practice, and commented at the import.
+
+**Check CSS changes with `pnpm demo:pack`, not `pnpm dev`.** `local` mode resolves the sub-packages to their source, where Vite injects the CSS itself, so it can't see a build-level regression — which is exactly why #398 went unnoticed through a beta release.
 
 ## Adding a new component
 
@@ -69,7 +91,8 @@ The whole package bundles into one ESM file, so per-component tree-shaking depen
 3. If the component imports a heavy third-party lib, add it as a regular dep in [package.json](package.json) and lazy-load it via `React.lazy`. Add the package name to the rollup `external` list.
 4. Document the new component in [README.md](README.md)'s "Available components" table.
 5. Add a `CHANGELOG.md` entry for the new component (releases are manual, ship-as-you-go — see [dev-docs/package-management-guide.md](../../dev-docs/package-management-guide.md#quick-reference)).
-6. Keep it tree-shakeable (see Build): no **module-level side effects** (register plugins/etc. lazily on first render, as ColorPicker does with colord — not at module top level), and no **eager calls in the definition's fields** (`defaultValue: BigInt(…)` / `new Date()` pin the definition even when unused, since `/*#__PURE__*/` only covers the `createDefinitionFactory` call, not calls nested in its argument). The `verify-treeshake` step catches the heavy-dep cases; the eager-`defaultValue` ones are the residue tracked in #388.
+6. If it needs styles, add `style.css` to its folder and inject it with `useStyles` from the component — see [Stylesheets](#stylesheets-issue-398). A bare `import './style.css'` gets silently dropped from the build.
+7. Keep it tree-shakeable (see Build): no **module-level side effects** (register plugins/etc. lazily on first render, as ColorPicker does with colord — not at module top level), and no **eager calls in the definition's fields** (`defaultValue: BigInt(…)` / `new Date()` pin the definition even when unused, since `/*#__PURE__*/` only covers the `createDefinitionFactory` call, not calls nested in its argument). The `verify-treeshake` step catches the heavy-dep cases; the eager-`defaultValue` ones are the residue tracked in #388.
 
 ## Relationship to core
 

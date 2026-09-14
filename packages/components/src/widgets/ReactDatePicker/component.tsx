@@ -21,10 +21,20 @@ import { type DatePickerProps } from 'react-datepicker'
 import { type DatePickerWidgetProps } from '../../_common/DatePickerWidget'
 import { Loading } from '../../_common/Loading'
 
-// Styles
+// react-datepicker's own stylesheet. It stays a bare side-effecting import:
+// the library is external, so this survives into the bundle as an `import`
+// statement for the consumer's bundler to handle, and there's no text for us
+// to inline the way our own stylesheets are. That makes it the one thing in
+// the package the `sideEffects: false` flag misdescribes — a bundler is
+// entitled to drop a side-effect-free module, taking the import with it. In
+// practice it can't bite: dropping requires every export of the module to be
+// unused, and anyone loading this entry point is using `ReactDatePicker`.
 import 'react-datepicker/dist/react-datepicker.css'
-// For better matching with Chakra-UI
-import './style.css'
+// Our overrides, for better matching with Chakra-UI. Injected at first render
+// (see useStyles), so they land in <head> after the import above and win on
+// equal specificity.
+import css from './style.css?inline'
+import { useStyles } from '../../_common/useStyles'
 
 // react-datepicker's props are a large discriminated union (selectsRange /
 // selectsMultiple variants), so neither it nor a `Partial` of it accepts a
@@ -60,6 +70,7 @@ export const ReactDatePicker = ({
   loadingText = 'Loading Date Picker',
   datePickerProps,
 }: DatePickerWidgetProps & ReactDatePickerExtraProps) => {
+  useStyles('jer-react-datepicker', css)
   return (
     <Suspense fallback={<Loading text={loadingText} />}>
       <DatePicker

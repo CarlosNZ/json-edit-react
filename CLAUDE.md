@@ -96,6 +96,7 @@ The demo can resolve `json-edit-react`, `@json-edit-react/themes`, and `@json-ed
 ### Custom components
 - Pre-built custom node components ship in [`@json-edit-react/components`](packages/components/). 12 components, each in its own folder with `component.tsx + definition.ts + index.ts`.
 - Heavy components (`DatePicker`, `Markdown`, `ColorPicker`) use `React.lazy` for their third-party libs so the bundled cost is deferred to first render.
+- **Component stylesheets are imported as strings (`./style.css?inline`) and injected from a `useStyles` call in the component**, the same shape as core's [injectStyles.ts](src/injectStyles.ts). A bare `import './style.css'` is dropped from the build outright — `@rollup/plugin-node-resolve` reads the package's own `sideEffects: false` and shakes it out — which is how the package published with none of its CSS (issue #398). Injecting per component also keeps each stylesheet reachable only from the component that renders it, so the #388 per-component shaking still means something. Verify CSS changes with `pnpm demo:pack`, never `pnpm dev`: `local` mode resolves to source, where Vite injects the CSS itself and hides the problem.
 - Single ESM entry with `sideEffects: false` (Option B+). Sub-path exports are documented as the escape hatch if legacy CJS consumers report bundle bloat — see [packages/components/CLAUDE.md](packages/components/CLAUDE.md).
 
 ### React compatibility
