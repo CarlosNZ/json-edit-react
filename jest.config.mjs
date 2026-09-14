@@ -17,7 +17,7 @@ export default {
     '^.+\\.tsx?$': ['ts-jest', { tsconfig: '<rootDir>/test/tsconfig.json' }],
   },
   moduleNameMapper: {
-    '\\.css$': '<rootDir>/test/style-mock.js',
+    '\\.css(\\?inline)?$': '<rootDir>/test/style-mock.js',
     // The `/utils` package imports core by its package name (`json-edit-react`,
     // a peer dep). In tests, resolve that to core's live source so helpers are
     // exercised against the current `src/`, not a stale `build/`.

@@ -810,7 +810,7 @@ theme={[githubDarkTheme, { icons: { add: iconFromSvg('<svg…>') } }]}
 
 ### The bundled stylesheet (Shadow DOM)
 
-The component's base stylesheet is bundled in and injected into the document `<head>` automatically, so in the normal case there's nothing to import — styling works out of the box.
+The component's base stylesheet is bundled in and injected into the document `<head>` automatically when the first editor mounts, so in the normal case there's nothing to import — styling works out of the box.
 
 The exception is when the editor renders inside a [Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM): styles injected into the document `<head>` don't cross the shadow boundary, so the component renders unstyled. For this case the stylesheet is also published as a standalone file you can import and inject into the shadow root yourself:
 

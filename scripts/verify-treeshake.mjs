@@ -5,10 +5,12 @@
 // isn't small. The package is one bundled ESM file, so `sideEffects: false`
 // (which is module-granular) can't drop the unused parts of it; only the
 // `/*#__PURE__*/` annotations stamped in rollup.config.mjs enable that
-// within-module DCE. If that pipeline regresses (the annotation regexes stop
-// matching after a rename, terser stops preserving them, or something gains a
-// top-level side effect), one string helper drags in the whole render path and
-// this trips.
+// within-module DCE. The stylesheet is a second, separate mechanism: the
+// `styles` plugin emits it as a plain string constant rather than an
+// injector call, so it drops with the editor path that references it. If
+// either regresses (the annotation regexes stop matching after a rename,
+// terser stops preserving them, or something gains a top-level side effect),
+// one string helper drags in the whole render path and this trips.
 //
 // Uses esbuild, NOT rollup: rollup analyses our local functions for purity on
 // its own and shakes some of this with or without the annotations, so a
@@ -25,17 +27,18 @@ const repoRoot = path.join(here, '..')
 const esm = path.join(repoRoot, 'build', 'index.esm.js')
 
 const HELPER = 'toPathString'
-// A correct shake is ~7 kB — almost entirely the stylesheet, which is injected
-// by a genuine top-level side effect and so rides along with any import until
-// that injection becomes lazy. A broken one is ~41 kB (the whole library). The
-// gap is wide, so this only trips on a real regression.
-const THRESHOLD = 15_000
-// Distinctive in-code markers — never CSS class names, which live in the
-// injected stylesheet and so are present either way — for a clearer message
-// about what leaked.
+// A correct shake is ~1 kB: the helper plus a little glue. A broken one is
+// ~41 kB (the whole library), or ~7 kB if only the stylesheet leaks. The gap is
+// wide, so this only trips on a real regression.
+const THRESHOLD = 2_000
+// Distinctive markers for a clearer message about what leaked. The stylesheet
+// is referenced only from `injectStyles`, which only the editor path reaches
+// (issue #396), so a CSS class name is a valid marker: its presence means the
+// CSS constant is being retained by something a helper-only import can see.
 const MARKERS = {
   'the editor tree': 'Adding node unsuccessful',
   'the default theme': 'M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4z',
+  'the stylesheet': 'jer-editor-container',
 }
 
 const result = await build({
@@ -64,7 +67,7 @@ if (size > THRESHOLD || leaked.length) {
     `✗ tree-shake regression: importing { ${HELPER} } bundles to ${(size / 1000).toFixed(1)} kB` +
       (leaked.length ? ` and reaches ${leaked.join(' and ')}` : '') +
       ` (threshold ${THRESHOLD / 1000} kB). The pure-annotation pipeline is broken — ` +
-      `see issue #389 and rollup.config.mjs.`
+      `see issues #389 / #396 and rollup.config.mjs.`
   )
   process.exit(1)
 }

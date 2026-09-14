@@ -36,6 +36,18 @@ const emitStandaloneCss = () => ({
 // The end-to-end guard is scripts/verify-treeshake.mjs, which also covers the
 // internal names in this list: rename `mergeIcons` without updating it here and
 // the guard fails rather than the bundle silently regressing.
+// `src/injectStyles.ts` imports the stylesheet with Vite's `?inline` query, so
+// that consuming `src/` directly (the demo's `local` mode) yields the CSS text
+// instead of a Vite-injected side effect. Rollup has no query convention, so
+// resolve it back to the plain file and let `styles` handle it.
+const stripCssQuery = () => ({
+  name: 'strip-css-query',
+  async resolveId(source, importer) {
+    if (!source.endsWith('.css?inline')) return null
+    return await this.resolve(source.replace(/\?inline$/, ''), importer, { skipSelf: true })
+  },
+})
+
 const pureAnnotations = (pureNames = []) => ({
   name: 'pure-annotations',
   renderChunk(code) {
@@ -104,7 +116,21 @@ export default [
     ],
     plugins: [
       del({ targets: 'build/*' }),
-      styles({ minimize: true }),
+      stripCssQuery(),
+      // Inline the stylesheet as a plain string with no injector call: the
+      // function form of `mode: ['inject', fn]` substitutes fn's return value
+      // for the injection statement, so returning '' leaves the CSS module as
+      // just `export default '<minified css>'`. That makes the stylesheet an
+      // ordinary constant which only the editor path references, so a consumer
+      // importing one helper can shake it out; src/injectStyles.ts does the
+      // injection at runtime instead (issue #396).
+      //
+      // `inject.treeshakeable` is NOT the equivalent built-in: it only wires an
+      // `inject()` method onto the default export when CSS-modules support is
+      // on. With `modules` off (correct for a global stylesheet) the default
+      // export stays the raw string and the injector is never called at all —
+      // the styles would silently never load.
+      styles({ minimize: true, mode: ['inject', () => ''] }),
       peerDepsExternal({ includeDependencies: true }),
       typescript({
         module: 'ESNext',

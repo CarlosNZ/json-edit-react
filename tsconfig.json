@@ -20,6 +20,9 @@
     "noFallthroughCasesInSwitch": true
   },
   // "include": ["src"]
-  "files": ["src/index.ts"]
+  // `src/css.d.ts` declares the `*.css` modules; ambient declarations are
+  // only in the program if they're root files, and there's no `include` glob
+  // here to pick it up.
+  "files": ["src/index.ts", "src/css.d.ts"]
   // "include": ["src/types.ts"]
 }
