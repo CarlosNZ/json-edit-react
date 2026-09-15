@@ -26,9 +26,15 @@ import { Loading } from '../../_common/Loading'
 // statement for the consumer's bundler to handle, and there's no text for us
 // to inline the way our own stylesheets are. That makes it the one thing in
 // the package the `sideEffects: false` flag misdescribes — a bundler is
-// entitled to drop a side-effect-free module, taking the import with it. In
-// practice it can't bite: dropping requires every export of the module to be
-// unused, and anyone loading this entry point is using `ReactDatePicker`.
+// entitled to drop a side-effect-free module, taking the import with it.
+//
+// It is also the one stylesheet that isn't per-component: the widgets entry
+// exports `ReactSelect` and `CodeEditor` too, so a consumer of either still
+// loads this CSS (~24 kB raw / ~3.3 kB gzip). Deferring it into the lazy
+// chunk below would fix that and break something worse — the overrides in
+// ./style.css beat the library's rules only by cascade order at equal
+// specificity, so a sheet that arrives after the `useStyles` call wins.
+// Per-widget sub-path entries are the way out, tracked in issue #404.
 import 'react-datepicker/dist/react-datepicker.css'
 // Our overrides, for better matching with Chakra-UI. Injected at first render
 // (see useStyles), so they land in <head> after the import above and win on

@@ -4,7 +4,7 @@ How to make `json-edit-react` usable inside a Shadow DOM, and what the trade-off
 
 ## The problem
 
-The component's CSS is inlined into the JS bundle and injected into `document.head` at runtime (`rollup-plugin-styles` running in its default `inject` mode). Styles in `document.head` do not cross the shadow boundary, so when the editor is rendered inside a shadow root it renders **completely unstyled**. Because the sheet is inlined and never shipped as a standalone file, a consumer also has no way to grab the CSS and inject it into the shadow root themselves.
+The component's CSS is inlined into the JS bundle as a string and appended to `document.head` as a `<style>` element when the first editor mounts (`src/injectStyles.ts`, called from a `useInsertionEffect` in `JsonEditor`). Styles in `document.head` do not cross the shadow boundary, so when the editor is rendered inside a shadow root it renders **completely unstyled**. Because the sheet is inlined and never shipped as a standalone file, a consumer also has no way to grab the CSS and inject it into the shadow root themselves.
 
 This affects anyone embedding the editor in a web component, micro-frontend, browser-extension UI, or any other shadow-root context. It's niche but a genuine functional gap.
 
@@ -14,7 +14,7 @@ Ship `style.css` as a standalone artifact that consumers can import and inject w
 
 ### 1. Emit a standalone `build/style.css`
 
-Keep the main bundle inlining + injecting CSS as it does today. Add a separate extract pass (or a separate output) so the build *also* writes an un-injected `build/style.css`. The two paths are independent: the `.` entry inlines its own copy, and `build/style.css` is reached only through the explicit subpath import below.
+Keep the main bundle inlining the CSS and injecting it on mount. Add a separate copy step (`emitStandaloneCss` in `rollup.config.mjs`) so the build *also* writes an un-injected `build/style.css`. The two paths are independent: the `.` entry inlines its own copy, and `build/style.css` is reached only through the explicit subpath import below.
 
 ### 2. Add the subpath export
 
@@ -33,6 +33,8 @@ v2's `package.json` has an `exports` map, which locks the package down — any s
 ```
 
 `style.css` is already covered by `files: ["build/**/*"]`, so no change is needed there.
+
+`sideEffects` in `package.json` has to list `./build/style.css`. A bare `"sideEffects": false` covers every module in the package, this file included, and webpack then drops the side-effect-only `import 'json-edit-react/style.css'` as unused — the editor renders unstyled in the shadow root with no warning.
 
 ### 3. Change `:root` to `:root, :host` in `src/style.css`
 

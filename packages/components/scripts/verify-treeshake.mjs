@@ -18,23 +18,36 @@
 // and `/*#__PURE__*/` is honoured identically across them. The heavy libs are
 // regular deps, so they're installed and resolvable when this runs.
 //
-// The CSS checks are the inverse of the JS ones, and the reason they exist is
-// that the failure is silent: `@rollup/plugin-node-resolve` honours our own
-// `sideEffects: false` for our own source files, so every `import './style.css'`
-// was treated as droppable and shaken out — the package published with none of
-// its CSS and only looked slightly off. `src/_common/useStyles.ts` explains the
-// fix. Nothing in the type system or the test suite notices if it breaks again,
-// so it's asserted here.
+// The CSS checks are the inverse of the JS ones, and they exist because that
+// failure is silent: `@rollup/plugin-node-resolve` honours our own
+// `sideEffects: false` for our own source files, so a plain
+// `import './style.css'` counts as droppable and gets shaken out, publishing
+// the package with none of its CSS and only looking slightly off.
+// `src/_common/useStyles.ts` explains the arrangement that avoids it. Nothing
+// in the type system or the test suite notices if it breaks, so it's asserted
+// here (issue #398).
 
 import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const pkgRoot = path.join(here, '..')
+// The two shipped entries. Both get shaken against below — the root for the
+// definitions, `widgets` for the swappable widgets.
 const esm = path.join(pkgRoot, 'build', 'index.esm.js')
 const widgetsEsm = path.join(pkgRoot, 'build', 'widgets.esm.js')
+// Every shipped bundle, for the stylesheet-presence check. Both formats of
+// each entry: `exports.require` ships the CJS ones, and while a dropped
+// stylesheet would be an input-stage failure that hits both, the check costs
+// a `readFileSync` and this is the list of files that actually publish.
+const BUNDLES = {
+  'index.esm.js': ['loader', 'unix', 'errorIndicator'],
+  'index.cjs.js': ['loader', 'unix', 'errorIndicator'],
+  'widgets.esm.js': ['loader', 'datePicker', 'datePickerLib'],
+  'widgets.cjs.js': ['loader', 'datePicker', 'datePickerLib'],
+}
 
 // A correct shake is ~1 kB of glue; a broken one inlines react-markdown &
 // friends (~160 kB). The gap is enormous, so this only trips on a real
@@ -50,19 +63,54 @@ const HEAVY_DEPS = {
 // Minified-CSS markers: a selector plus its opening brace, which survives
 // minification unchanged (property order does not, so don't match on that) and
 // can't collide with the bare `className` strings in the compiled JSX.
+//
+// `datePickerLib` is the odd one out — react-datepicker's own sheet is the one
+// stylesheet we don't inline, so what reaches the bundle is the import
+// specifier rather than any rule text. Asserted here for the same reason as
+// the rest: `sideEffects: false` entitles a bundler to drop it, and the
+// DatePicker would render unstyled with nothing else complaining.
 const STYLES = {
   loader: '.jer-simple-loader{',
   unix: '.jer-unix-badge{',
   errorIndicator: '.jer-error-indicator-wrapper{',
-  datePicker: '.react-datepicker-popper',
+  datePicker: '.react-datepicker-popper{',
+  datePickerLib: 'react-datepicker/dist/react-datepicker.css',
+}
+// Each of our own stylesheets, keyed to the marker that stands for it. Only
+// `datePickerLib` has no file of ours behind it.
+const STYLE_SOURCES = {
+  loader: 'src/_common/style.css',
+  unix: 'src/UnixTimestamp/style.css',
+  errorIndicator: 'src/ErrorIndicator/style.css',
+  datePicker: 'src/widgets/ReactDatePicker/style.css',
 }
 
 const failures = []
 
-const bundleDefinition = async (name) => {
+// 0. The marker table covers every stylesheet in `src`, and every marker still
+//    has a file behind it. `STYLES` and `BUNDLES` are hand-maintained, so
+//    without this a new component's stylesheet is simply never checked — the
+//    guard stays green while the CSS it was built to protect goes unwatched.
+const onDisk = readdirSync(path.join(pkgRoot, 'src'), { recursive: true })
+  .map((p) => `src/${p.split(path.sep).join('/')}`)
+  .filter((p) => p.endsWith('/style.css'))
+const tracked = Object.values(STYLE_SOURCES)
+const untracked = onDisk.filter((p) => !tracked.includes(p))
+const vanished = tracked.filter((p) => !onDisk.includes(p))
+if (untracked.length || vanished.length) {
+  failures.push(
+    `the stylesheet marker table is out of date:` +
+      (untracked.length ? ` not checked by this script [${untracked.join(', ')}]` : '') +
+      (vanished.length ? ` listed but absent from src [${vanished.join(', ')}]` : '') +
+      `. Add a marker to \`STYLES\` + \`STYLE_SOURCES\` and list it against the ` +
+      `bundles that should carry it in \`BUNDLES\`.`
+  )
+}
+
+const bundleExport = async (name, entry = esm) => {
   const result = await build({
     stdin: {
-      contents: `export { ${name} } from ${JSON.stringify(esm)}`,
+      contents: `export { ${name} } from ${JSON.stringify(entry)}`,
       resolveDir: pkgRoot,
       loader: 'js',
     },
@@ -70,8 +118,12 @@ const bundleDefinition = async (name) => {
     format: 'esm',
     minify: true,
     write: false,
-    // Peer deps a consumer supplies; everything else (the heavy libs) is bundled.
-    external: ['react', 'react-dom', 'react/jsx-runtime', 'json-edit-react'],
+    // Peer deps a consumer supplies; everything else (the heavy libs) is
+    // bundled. `*.css` is external so react-datepicker's bare import stays an
+    // import, which is both what a consumer's bundler does with it and what
+    // makes it visible to the checks below — bundling it would need an output
+    // path on disk, and we only want the text.
+    external: ['react', 'react-dom', 'react/jsx-runtime', 'json-edit-react', '*.css'],
     logLevel: 'silent',
   })
   return result.outputFiles[0].text
@@ -82,21 +134,32 @@ const stylesIn = (code) =>
     .filter(([, marker]) => code.includes(marker))
     .map(([name]) => name)
 
-// 1. Every stylesheet reaches the shipped bundles. Without this the package
-//    publishes unstyled and nothing else complains.
-const indexCode = readFileSync(esm, 'utf8')
-const widgetsCode = readFileSync(widgetsEsm, 'utf8')
-const missingFromIndex = ['loader', 'unix', 'errorIndicator'].filter(
-  (name) => !indexCode.includes(STYLES[name])
+// 1. Every stylesheet reaches every shipped bundle. Without this the package
+//    publishes unstyled and nothing else complains. A bundle that isn't on
+//    disk is reported as such rather than thrown as an ENOENT, since an entry
+//    point disappearing from the rollup config is its own kind of regression
+//    and the stack trace says nothing useful about it.
+const absentBundles = Object.keys(BUNDLES).filter(
+  (file) => !existsSync(path.join(pkgRoot, 'build', file))
 )
-const missingFromWidgets = ['loader', 'datePicker'].filter(
-  (name) => !widgetsCode.includes(STYLES[name])
-)
-if (missingFromIndex.length || missingFromWidgets.length) {
+const missing = Object.entries(BUNDLES)
+  .filter(([file]) => !absentBundles.includes(file))
+  .map(([file, expected]) => {
+    const code = readFileSync(path.join(pkgRoot, 'build', file), 'utf8')
+    const absent = expected.filter((name) => !code.includes(STYLES[name]))
+    return absent.length ? `${file} [${absent.join(', ')}]` : null
+  })
+  .filter(Boolean)
+if (absentBundles.length) {
   failures.push(
-    `stylesheets missing from the build:` +
-      (missingFromIndex.length ? ` index.esm.js [${missingFromIndex.join(', ')}]` : '') +
-      (missingFromWidgets.length ? ` widgets.esm.js [${missingFromWidgets.join(', ')}]` : '') +
+    `shipped bundles missing from build/: [${absentBundles.join(', ')}]. Either the ` +
+      `build didn't run, or an entry point or output format was dropped from ` +
+      `rollup.config.mjs while \`package.json\`'s \`exports\` still points at it.`
+  )
+}
+if (missing.length) {
+  failures.push(
+    `stylesheets missing from the build: ${missing.join(' ')}` +
       `. The CSS is being dropped before it reaches the bundle — check ` +
       `\`stripCssQuery\` and the \`styles\` plugin's \`mode\` in rollup.config.mjs, ` +
       `and that the components still import their \`./style.css?inline\`.`
@@ -108,7 +171,7 @@ if (missingFromIndex.length || missingFromWidgets.length) {
 //    with an import-time side effect instead, every consumer pays for every
 //    stylesheet in the entry point.
 const LEAN = 'hyperlinkDefinition'
-const leanCode = await bundleDefinition(LEAN)
+const leanCode = await bundleExport(LEAN)
 const leanSize = Buffer.byteLength(leanCode, 'utf8')
 const leakedDeps = Object.entries(HEAVY_DEPS)
   .filter(([, marker]) => leanCode.includes(marker))
@@ -135,12 +198,37 @@ if (leakedStyles.length) {
 //    opposite failure: CSS that shakes out along with the component's own code
 //    because nothing in the retained graph references it.
 const STYLED = 'unixTimestampDefinition'
-const styledCode = await bundleDefinition(STYLED)
+const styledCode = await bundleExport(STYLED)
 if (!styledCode.includes(STYLES.unix)) {
   failures.push(
     `importing { ${STYLED} } doesn't carry its own stylesheet. The component ` +
       `renders markup it has no rules for — check its \`useStyles\` call in ` +
       `src/UnixTimestamp/component.tsx.`
+  )
+}
+
+// 4. The same isolation inside the `widgets` entry, which checks 2 and 3 never
+//    reach — they shake against the root entry only. `ReactSelect`,
+//    `CodeEditor` and `ReactDatePicker` share one bundle, so a DatePicker
+//    stylesheet that regained an import-time injection would ride along with
+//    the other two: the #398 failure, one entry over.
+//
+//    Two sheets legitimately come along and are allowed for. `_common`'s
+//    loader, because every widget renders it as its Suspense fallback. And
+//    react-datepicker's own sheet, the single bare import in the package: it's
+//    the library's file, so there's no text to inline and no component of ours
+//    to inject it from. That one IS an entry-wide cost, knowingly accepted —
+//    src/widgets/ReactDatePicker/component.tsx has the reasoning.
+const WIDGET = 'ReactSelect'
+const ALLOWED_IN_WIDGET = ['loader', 'datePickerLib']
+const widgetCode = await bundleExport(WIDGET, widgetsEsm)
+const leakedIntoWidget = stylesIn(widgetCode).filter((name) => !ALLOWED_IN_WIDGET.includes(name))
+if (leakedIntoWidget.length) {
+  failures.push(
+    `importing { ${WIDGET} } from the widgets entry drags in unrelated ` +
+      `stylesheets [${leakedIntoWidget.join(', ')}]. A widget's stylesheet is ` +
+      `being injected at import time rather than from its \`useStyles\` call — ` +
+      `see issue #398 and src/_common/useStyles.ts.`
   )
 }
 
@@ -151,5 +239,6 @@ if (failures.length) {
 
 console.log(
   `✓ tree-shake OK: { ${LEAN} } → ${(leanSize / 1000).toFixed(1)} kB, no heavy deps, no CSS\n` +
-    `✓ stylesheets OK: all present in the build, each carried only by its own component`
+    `✓ stylesheets OK: all present in both formats of both entries, each carried\n` +
+    `  only by its own component — in the widgets entry too`
 )
