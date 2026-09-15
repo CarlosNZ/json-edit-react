@@ -23,6 +23,19 @@ describe('errorIndicatorDefinition', () => {
     expect(errorGlyph()).not.toBeInTheDocument()
   })
 
+  it('carries its layout in the stylesheet, not inline, so a consumer can override it', () => {
+    render(
+      <JsonEditor
+        data={{ bad: 'y' }}
+        setData={() => {}}
+        customNodeDefinitions={[errorIndicatorDefinition({ condition: () => true })]}
+      />
+    )
+    // An inline `style` would beat any author stylesheet short of
+    // `!important`, defeating the reason the wrapper has a class at all.
+    expect(wrapperOf('"y"')).not.toHaveAttribute('style')
+  })
+
   it('decorates only the nodes its condition selects', () => {
     render(
       <JsonEditor

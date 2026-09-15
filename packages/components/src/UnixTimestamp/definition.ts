@@ -11,10 +11,6 @@ import {
 } from '../_common/createDefinitionFactory'
 import { UnixTimestamp, type UnixTimestampCustomProps } from './component'
 import { isPlausibleEpoch } from './epoch'
-// Imported here too (as in DatePicker / ErrorIndicator) so `sideEffects: false`
-// can't tree-shake the badge styles out for consumers who only reach the
-// factory.
-import './style.css'
 
 const UnixTimestampDefinition: CustomNodeDefinition<UnixTimestampCustomProps> = {
   // The condition doubles as the guard: a number in the plausible epoch window
