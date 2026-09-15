@@ -34,7 +34,7 @@ import { Loading } from '../../_common/Loading'
 // chunk below would fix that and break something worse — the overrides in
 // ./style.css beat the library's rules only by cascade order at equal
 // specificity, so a sheet that arrives after the `useStyles` call wins.
-// Per-widget sub-path entries are the way out if this ever matters.
+// Per-widget sub-path entries are the way out, tracked in issue #404.
 import 'react-datepicker/dist/react-datepicker.css'
 // Our overrides, for better matching with Chakra-UI. Injected at first render
 // (see useStyles), so they land in <head> after the import above and win on
