@@ -820,6 +820,8 @@ import 'json-edit-react/style.css'
 
 How that import resolves depends on your bundler — most will inline or extract it so you can attach it where you need it (for example via a `<style>` element inside the shadow root, or by adding a constructed stylesheet to `shadowRoot.adoptedStyleSheets`). The stylesheet defines its custom properties on both `:root` and `:host`, so it applies correctly whether it lives in the document or in a shadow root.
 
+The same import covers one other rare case: rendering the exported building blocks (`StringDisplay`, `StringEdit`, `AutogrowTextArea`) with no editor or viewer mounted anywhere on the page. The stylesheet is injected when an editor mounts, so on their own they render unstyled.
+
 <div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 
 ## Initial expansion — `collapse`

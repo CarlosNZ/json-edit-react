@@ -14,6 +14,11 @@ import css from './style.css?inline'
 // browser can paint, so the rules are in place the first time the editor's
 // markup is on screen.
 //
+// Dedupe is keyed on the `<style>` element rather than on module state, so it
+// survives module re-evaluation: when Vite's HMR reloads this module after a
+// stylesheet edit, the text is swapped in place instead of a second sheet
+// being appended behind which the stale rules would keep applying.
+//
 // `?inline` is Vite's convention for "give me the text, don't inject it"; a
 // plain `.css` specifier gets injected by Vite and exports nothing, which
 // breaks this module when `src/` is consumed directly (the demo's `local`
@@ -21,13 +26,17 @@ import css from './style.css?inline'
 // `stripCssQuery` in rollup.config.mjs. The upshot is that the dev harness
 // runs the same injection path as the published bundle.
 
-let injected = false
+const MARKER = 'data-jer-styles'
 
 export const injectStyles = () => {
-  if (injected || typeof document === 'undefined') return
-  injected = true
+  if (typeof document === 'undefined') return
+  const existing = document.head.querySelector(`style[${MARKER}]`)
+  if (existing) {
+    if (existing.textContent !== css) existing.textContent = css
+    return
+  }
   const style = document.createElement('style')
-  style.setAttribute('type', 'text/css')
-  style.appendChild(document.createTextNode(css))
+  style.setAttribute(MARKER, '')
+  style.textContent = css
   document.head.appendChild(style)
 }

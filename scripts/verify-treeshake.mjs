@@ -33,12 +33,13 @@ const HELPER = 'toPathString'
 const THRESHOLD = 2_000
 // Distinctive markers for a clearer message about what leaked. The stylesheet
 // is referenced only from `injectStyles`, which only the editor path reaches
-// (issue #396), so a CSS class name is a valid marker: its presence means the
-// CSS constant is being retained by something a helper-only import can see.
+// (issue #396), so a token from the CSS is a valid marker — but a custom
+// property name rather than a class, since class names also appear as JSX
+// `className` literals in the editor tree and would misattribute the leak.
 const MARKERS = {
   'the editor tree': 'Adding node unsuccessful',
   'the default theme': 'M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4z',
-  'the stylesheet': 'jer-editor-container',
+  'the stylesheet': '--jer-form-border',
 }
 
 const result = await build({
