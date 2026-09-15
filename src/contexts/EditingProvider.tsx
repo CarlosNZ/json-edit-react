@@ -331,8 +331,8 @@ const createEditingStore = (
     commitOp = null
     if (op0) op0()
 
-    // Only if the cleanup didn't already tear the session down by routing
-    // through `cancel()`; `state.active` still pointing at `prev` means it
+    // Fire cancel* unless the cleanup already tore the session down by routing
+    // through `cancel()` — `state.active` still pointing at `prev` means it
     // didn't. A displaced session is always `editing`-phase here (a `held` one
     // returns above), so it was never committed and discarding it is correct.
     if (isSwitch && sameSession(state.active, prev)) {

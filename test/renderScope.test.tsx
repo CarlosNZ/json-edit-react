@@ -5,13 +5,14 @@
  * interaction, using the sentinel-custom-node harness in
  * `test/helpers/renderSpy.tsx` (zero changes to the shipped library).
  *
- * This file is the measurement baseline (Stage A). It currently documents the
- * pre-optimization behaviour: starting an edit on one node fans out and
- * re-renders the whole tree. Later stages tighten these assertions:
- *   - Stage C (selectable editing store) flips the editing-fan-out test so a
- *     sibling's count stays at 0 when an unrelated node is edited.
- *   - Stage D (React.memo boundary) adds a commit-cascade test so an untouched
- *     sibling subtree doesn't re-render when a value elsewhere is committed.
+ * The assertions are grouped by the mechanism each one pins:
+ *   - the lazy `jsonStringify`, so a collection never serialises its subtree
+ *     until it's actually edited.
+ *   - the selectable editing store, so moving an active edit between siblings
+ *     re-renders only the two nodes involved.
+ *   - the `React.memo` boundary, so an untouched sibling subtree bails out both
+ *     when an edit starts elsewhere and when a value elsewhere is committed,
+ *     while consumer callbacks still see the live document through it.
  */
 
 import { useState } from 'react'
@@ -477,7 +478,7 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     await user.type(screen.getByRole('textbox'), 'aval2{Enter}')
     await screen.findByText('"aval2"')
 
-    // Edit `x` (in the bailed subtree) and confirm — confirmEdit must carry the
+    // Edit `x` (in the bailed subtree) and confirm — commitEdit must carry the
     // live document (`a: 'aval2'`), not the stale snapshot (`a: 'aval'`).
     await user.dblClick(screen.getByText('1'))
     await user.clear(screen.getByRole('textbox'))

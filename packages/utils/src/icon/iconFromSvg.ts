@@ -76,8 +76,8 @@ const fromString = intern((svg: string): IconDefinition => parse(svg))
 /**
  * Build an `IconDefinition` (for `Theme.icons`) from raw SVG. Accepts:
  *  - a raw SVG string — a full `<svg>…</svg>` or bare inner markup.
- * **Interned**, so an inline `iconFromSvg('<svg…>')` keeps a stable identity
- * across renders.
+ *    **Interned**, so an inline `iconFromSvg('<svg…>')` keeps a stable
+ *    identity across renders.
  *  - a React `<svg>` element — unwrapped via its props/children. A non-`<svg>`
  *    element (a `<path>`, fragment, custom component) becomes the glyph content
  *    directly.

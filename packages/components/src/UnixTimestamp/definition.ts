@@ -15,7 +15,7 @@ import { isPlausibleEpoch } from './epoch'
 const UnixTimestampDefinition: CustomNodeDefinition<UnixTimestampCustomProps> = {
   // The condition doubles as the guard: a number in the plausible epoch window
   // (1990–2100), as seconds or ms. It's a heuristic, and a consumer `condition`
-  // override is targeting ANDed with this, so narrow by key (`createdAt`,
+  // override is targeting, ANDed with this, so narrow by key (`createdAt`,
   // `updatedAt`, …) to avoid matching unrelated numbers. Replacing the guard
   // needs the explicit `guard` override.
   condition: ({ value }) => isPlausibleEpoch(value),

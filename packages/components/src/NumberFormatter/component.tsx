@@ -21,8 +21,8 @@ export const NumberFormatter = (props: CustomComponentProps<NumberFormatterProps
   const { value, setIsEditing, canEdit, getStyles, nodeData, componentProps } = props
   const { options, locale } = componentProps ?? {}
 
-  // Stable across renders while `componentProps` is, which it is, being fixed
-  // in the definition, so the formatter isn't rebuilt per node per render. A
+  // Stable across renders while `componentProps` is — it's fixed in the
+  // definition — so the formatter isn't rebuilt per node per render. A
   // malformed `options` (`style: 'currency'` with no `currency`, say) throws
   // here, deliberately loudly, so the misconfiguration surfaces in
   // development.

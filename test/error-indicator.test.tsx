@@ -116,9 +116,9 @@ describe('errorIndicatorDefinition', () => {
 
 // The headline: editing one node flips the validity of a node on another
 // branch, and the glyph appears/clears there. That node bails on the commit via
-// the memo boundary, so only the customNodeDefinitions identity (memoized
-// on `validation`) piercing the memo can re-render it. Mirrors the #359 cross-
-// branch test, proven here through the component.
+// the memo boundary, so only the customNodeDefinitions identity (memoized on
+// `validation`) piercing the memo can re-render it. Mirrors the #359
+// cross-branch test, proven here through the component.
 describe('cross-branch flagging via useValidationState', () => {
   const crossBranch: Validate = (data) => {
     const d = data as { method?: string; cardNumber?: unknown }

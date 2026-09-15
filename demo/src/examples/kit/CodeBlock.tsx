@@ -74,9 +74,6 @@ interface CodeBlockProps {
   themeName?: string
 }
 
-// Read-only source display. Shiki is dynamically imported on first render, so
-// its grammar, theme and engine stay in their own lazy chunk. The header bar
-// adopts the Shiki theme's own bg/fg, so the block reads as one themed panel.
 // Breathing room between the pinned panel and the viewport edges (matches the
 // sticky `top` offset the example layout pins it at).
 const VIEWPORT_GAP_PX = 16
@@ -93,6 +90,9 @@ const PAGE_FIT_SLACK_PX = 64
 // and the panel would otherwise sit short.
 const SCROLL_SETTLE_MS = 500
 
+// Read-only source display. Shiki is dynamically imported on first render, so
+// its grammar, theme and engine stay in their own lazy chunk. The header bar
+// adopts the Shiki theme's own bg/fg, so the block reads as one themed panel.
 export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
   const [{ html, bg, fg }, setResult] = useState<Highlighted>({ html: '', bg: '#fff', fg: '#000' })
   const { hasCopied, onCopy } = useClipboard(code)

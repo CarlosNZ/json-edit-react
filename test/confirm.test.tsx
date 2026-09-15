@@ -32,7 +32,7 @@ const makeControl = () => {
   return { control: { hold }, hold, release }
 }
 
-describe('useJsonEditorConfirm (Layer 1)', () => {
+describe('useJsonEditorConfirm', () => {
   it('opens the dialog with the supplied request and resolves true on confirm', async () => {
     const { result } = renderHook(() => useJsonEditorConfirm())
 
@@ -111,7 +111,7 @@ describe('useJsonEditorConfirm (Layer 1)', () => {
   })
 })
 
-describe('useConfirmOnUpdate (Layer 2)', () => {
+describe('useConfirmOnUpdate', () => {
   it('holds the gate and returns null when the user cancels a gated event', async () => {
     const { result } = renderHook(() =>
       useConfirmOnUpdate<JsonData>({ confirmOn: ['delete'], message: 'sure?' })

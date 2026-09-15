@@ -12,7 +12,7 @@ export interface AjvErrorLike {
   params?: { missingProperty?: string }
 }
 
-/** A compiled AJV validate function, typed structurally — see `AjvErrorLike`. */
+/** A compiled AJV validate function, typed structurally. See `AjvErrorLike`. */
 export interface AjvValidateFunction {
   (data: unknown): boolean
   errors?: AjvErrorLike[] | null

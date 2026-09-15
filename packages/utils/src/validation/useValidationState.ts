@@ -70,16 +70,19 @@ const buildValidationState = (issues: ValidationIssue[]): ValidationState => {
  *   unchanged**. Memoise a `theme`/`customNodeDefinitions`/`allow*` value on it
  *   (`useMemo(() => …, [validation])`) and the node-memo boundary stays intact
  *   across valid→valid commits. When validity actually changes, the new
- * identity pierces `React.memo` through that channel and the tree re-renders
- * once, restyling cross-branch nodes correctly.
+ *   identity pierces `React.memo` through that channel and the tree re-renders
+ *   once, restyling cross-branch nodes correctly.
  *
  * Lookups are O(1): `hasErrorAt(path)` for a node, `errorsAt(path)` for its
  * messages, `hasErrorWithin(path)` for "this node or anything inside it".
  *
  * ```tsx
  * const validation = useValidationState(data, ajvAdapter(ajv.compile(schema)))
- * const theme = useMemo(() => [base, validationStyles(validation)],
- * [validation]) // <JsonEditor data={data} setData={setData} theme={theme} />
+ * const theme = useMemo(
+ *   () => [base, validationStyles(validation)],
+ *   [validation]
+ * )
+ * // <JsonEditor data={data} setData={setData} theme={theme} />
  * ```
  */
 export const useValidationState = (data: unknown, validate: Validate): ValidationState => {

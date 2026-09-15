@@ -62,8 +62,8 @@ export const buildCustomNodeData = (definition: CustomNodeDefinition): CustomNod
   }
 }
 
-// Returns the component and props of the first definition whose `condition`
-// matches
+// The `CustomNodeData` of the first definition whose `condition` matches, or
+// `{}` when none does
 export const getCustomNode = (
   customNodeDefinitions: CustomNodeDefinition[] = [],
   nodeData: NodeData

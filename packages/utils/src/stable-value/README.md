@@ -10,7 +10,7 @@ useStableValue<T>(compute: () => T, deps: DependencyList, isEqual?: (prev: T, ne
 
 ## Why it exists
 
-json-edit-react re-renders the tree when a memo-piercing prop changes identity — `theme`, `customNodeDefinitions`, an `allow*` filter. To drive that channel from a value derived off the whole document (validation errors, duplicate detection, a doc-wide total), you want to recompute per `data` change but hand the editor the *same* reference until the derived value actually differs: a stable identity keeps the §16 node-memo boundary intact across no-op commits, and the identity flips — re-rendering the tree once — exactly when the value changes (including cross-branch effects no single node would re-render for).
+json-edit-react re-renders the tree when a memo-piercing prop changes identity — `theme`, `customNodeDefinitions`, an `allow*` filter. To drive that channel from a value derived off the whole document (validation errors, duplicate detection, a doc-wide total), you want to recompute per `data` change but hand the editor the *same* reference until the derived value actually differs: a stable identity keeps the node-memo boundary intact across no-op commits, and the identity flips — re-rendering the tree once — exactly when the value changes (including cross-branch effects no single node would re-render for).
 
 Plain `useMemo(() => derive(data), [data])` can't do this: `data` changes every commit, so the memo yields a fresh identity every commit, re-rendering the whole tree on every keystroke.
 

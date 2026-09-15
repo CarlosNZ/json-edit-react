@@ -1105,9 +1105,9 @@ describe('JsonEditor — onUpdate event discriminant', () => {
 })
 
 describe('JsonEditor — onEditEvent lifecycle stream', () => {
-  // A session ends in confirm* (committed) or cancel* (closed without a
+  // A session ends in commit* (committed) or cancel* (closed without a
   // commit).
-  test('value edit: startEdit → confirmEdit on a real change', async () => {
+  test('value edit: startEdit → commitEdit on a real change', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     render(<JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} />)
@@ -1147,7 +1147,7 @@ describe('JsonEditor — onEditEvent lifecycle stream', () => {
     expect(seq).toEqual(['startEdit', 'cancelEdit'])
   })
 
-  test('key rename: startRename → confirmRename with old + new keys', async () => {
+  test('key rename: startRename → commitRename with old + new keys', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     render(<JsonEditor data={{ a: 1, oldName: 2 }} setData={noop} onEditEvent={onEditEvent} />)
@@ -1169,7 +1169,7 @@ describe('JsonEditor — onEditEvent lifecycle stream', () => {
     })
   })
 
-  test('add (object): startAdd → confirmAdd; and startAdd → cancelAdd on Escape', async () => {
+  test('add (object): startAdd → commitAdd; and startAdd → cancelAdd on Escape', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     const { container } = render(
@@ -1302,7 +1302,7 @@ describe('JsonEditor — onEditEvent lifecycle stream', () => {
     expect(onEditEvent.mock.calls[0][0]).toMatchObject({ event: 'delete', key: 'x', path: ['x'] })
   })
 
-  test('Tab-commit fires confirmEdit then startEdit(next) — no stray cancelEdit', async () => {
+  test('Tab-commit fires commitEdit then startEdit(next) — no stray cancelEdit', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     render(<JsonEditor data={{ a: 'x', b: 'y' }} setData={noop} onEditEvent={onEditEvent} />)

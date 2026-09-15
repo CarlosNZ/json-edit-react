@@ -77,10 +77,10 @@ export interface DemoPayload {
 
 // A registry entry. The metadata (name, description, rootName, collapse,
 // searchPlaceholder) is always synchronous: the picker lists `name`, and
-// switching seeds `rootName`/`collapse` before any payload resolves. The payload
-// is either inline (eager) or behind `load` (lazy, example-backed). Exactly
-// one applies, but both are optional here so either shape assigns cleanly,
-// with App.tsx branching on `load`.
+// switching seeds `rootName`/`collapse` before any payload resolves. The
+// payload is either inline (eager) or behind `load` (lazy, example-backed).
+// Exactly one applies, but both are optional here so either shape assigns
+// cleanly, with App.tsx branching on `load`.
 export interface DemoData extends Partial<DemoPayload> {
   name: string
   description: React.JSX.Element

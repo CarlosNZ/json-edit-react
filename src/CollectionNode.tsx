@@ -154,8 +154,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // entering edit through any path — toolbar button, Tab,
   // `editorRef.startEdit`, a custom node's `setIsEditing` — serialises once on
   // entry rather than on every re-render until the first keystroke. Once the
-  // user types,
-  // `stringifiedValue` is non-null and the `??` short-circuits.
+  // user types, `stringifiedValue` is non-null and the `??` short-circuits.
   const editBufferValue = useMemo(() => {
     if (!isEditing) return null
     return stringifiedValue ?? jsonStringify(data)

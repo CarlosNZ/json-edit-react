@@ -62,8 +62,9 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   Select,
 }) => {
   const { getStyles } = useTheme()
-  // Actions only, beyond the `isAddingHere` selector below. Aliased, since
-  // `startEdit` is also an EditButtons prop (the value-edit icon).
+  // Actions only — no subscription beyond the `isAddingHere` selector below.
+  // Aliased, since `startEdit` is also an EditButtons prop (the value-edit
+  // icon).
   const { open, cancel } = useEditingStore()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)

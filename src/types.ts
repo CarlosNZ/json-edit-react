@@ -206,10 +206,10 @@ export interface JerError {
 }
 
 /**
- * The one canonical update result. `void`/`undefined`/`true`
- * commit; `false` rejects with a generic error; `null` is a silent abort (no
- * commit, no error); the object form overrides what gets committed, or rejects
- * with a custom `error` (a bare `string` is wrapped into a `JerError`).
+ * The one canonical update result. `void`/`undefined`/`true` commit; `false`
+ * rejects with a generic error; `null` is a silent abort (no commit, no
+ * error); the object form overrides what gets committed, or rejects with a
+ * custom `error` (a bare `string` is wrapped into a `JerError`).
  *
  * The two override keys differ in scope:
  * - `value` — the edited node's value, applied at its path. Mirrors the
@@ -313,15 +313,15 @@ export type CompareFunction = (
 export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
 
 /**
- * Observer: the complete interaction-lifecycle stream. Value-edit,
- * key-rename and add sessions open with a `start*`, then `submit*` (the user
- * committed; a `hold()` gate may run), then terminate with `commit*` (applied —
- * editor closed) or `cancel*` (closed without applying — Esc/✗, or a `null`
- * gate). `delete`/`move` are instant (one event at commit). When `onUpdate`
- * runs, the background settlement reports `updateSuccess` / `updateError`
- * after the `commit*`/`delete`/`move`. `commitRename` carries `{ oldKey, newKey
- * }`; `updateError` carries the `error`. Both settlement events carry the
- * `operation` so interleaved background settlements can be correlated.
+ * Observer: the complete interaction-lifecycle stream. Value-edit, key-rename
+ * and add sessions open with a `start*`, then `submit*` (the user committed; a
+ * `hold()` gate may run), then terminate with `commit*` (applied — editor
+ * closed) or `cancel*` (closed without applying — Esc/✗, or a `null` gate).
+ * `delete`/`move` are instant (one event at commit). When `onUpdate` runs, the
+ * background settlement reports `updateSuccess` / `updateError` after the
+ * `commit*`/`delete`/`move`. `commitRename` carries `{ oldKey, newKey }` and
+ * `updateError` the `error`; both settlement events carry the `operation`, so
+ * interleaved background settlements can be correlated.
  */
 export type EditEvent<T = JsonData> = NodeData<T> &
   (

@@ -18,8 +18,8 @@ export const defaultTheme: Theme = {
   // `scale` is a per-glyph size correction, multiplied onto core's
   // ICON_TEXT_SIZE_RATIO, compensating for source art that under- or
   // over-fills its viewBox: the set is drawn by several icon families
-  // (Boxicons, Lucide, Feather, Typicons, FontAwesome), which look uneven at an
-  // identical em box.
+  // (Boxicons, Lucide, Feather, Typicons, FontAwesome), which would look uneven
+  // at an identical em box.
   icons: {
     // icon:bx-plus-circle | Boxicons https://boxicons.com/ | Atisa
     add: {
