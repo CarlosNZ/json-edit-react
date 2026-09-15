@@ -33,8 +33,18 @@ import path from 'node:path'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const pkgRoot = path.join(here, '..')
+// The root entry, which the definition-bundling checks below shake against.
 const esm = path.join(pkgRoot, 'build', 'index.esm.js')
-const widgetsEsm = path.join(pkgRoot, 'build', 'widgets.esm.js')
+// Every shipped bundle, for the stylesheet-presence check. Both formats of
+// each entry: `exports.require` ships the CJS ones, and while a dropped
+// stylesheet would be an input-stage failure that hits both, the check costs
+// a `readFileSync` and this is the list of files that actually publish.
+const BUNDLES = {
+  'index.esm.js': ['loader', 'unix', 'errorIndicator'],
+  'index.cjs.js': ['loader', 'unix', 'errorIndicator'],
+  'widgets.esm.js': ['loader', 'datePicker'],
+  'widgets.cjs.js': ['loader', 'datePicker'],
+}
 
 // A correct shake is ~1 kB of glue; a broken one inlines react-markdown &
 // friends (~160 kB). The gap is enormous, so this only trips on a real
@@ -82,21 +92,18 @@ const stylesIn = (code) =>
     .filter(([, marker]) => code.includes(marker))
     .map(([name]) => name)
 
-// 1. Every stylesheet reaches the shipped bundles. Without this the package
+// 1. Every stylesheet reaches every shipped bundle. Without this the package
 //    publishes unstyled and nothing else complains.
-const indexCode = readFileSync(esm, 'utf8')
-const widgetsCode = readFileSync(widgetsEsm, 'utf8')
-const missingFromIndex = ['loader', 'unix', 'errorIndicator'].filter(
-  (name) => !indexCode.includes(STYLES[name])
-)
-const missingFromWidgets = ['loader', 'datePicker'].filter(
-  (name) => !widgetsCode.includes(STYLES[name])
-)
-if (missingFromIndex.length || missingFromWidgets.length) {
+const missing = Object.entries(BUNDLES)
+  .map(([file, expected]) => {
+    const code = readFileSync(path.join(pkgRoot, 'build', file), 'utf8')
+    const absent = expected.filter((name) => !code.includes(STYLES[name]))
+    return absent.length ? `${file} [${absent.join(', ')}]` : null
+  })
+  .filter(Boolean)
+if (missing.length) {
   failures.push(
-    `stylesheets missing from the build:` +
-      (missingFromIndex.length ? ` index.esm.js [${missingFromIndex.join(', ')}]` : '') +
-      (missingFromWidgets.length ? ` widgets.esm.js [${missingFromWidgets.join(', ')}]` : '') +
+    `stylesheets missing from the build: ${missing.join(' ')}` +
       `. The CSS is being dropped before it reaches the bundle — check ` +
       `\`stripCssQuery\` and the \`styles\` plugin's \`mode\` in rollup.config.mjs, ` +
       `and that the components still import their \`./style.css?inline\`.`
