@@ -88,9 +88,17 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     buildKeyDisplayProps,
   } = useCommon({ props })
 
-  const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
-    { canDrag, canDelete, canDragOnto, canAddHere, path, nodeData, onError, translate }
-  )
+  const { dragSourceProps, dropTargetProps, bottomDropTarget, dropPaddingAbove, dropPaddingBelow } =
+    useDragNDrop({
+      canDrag,
+      canDelete,
+      canDragOnto,
+      canAddHere,
+      path,
+      nodeData,
+      onError,
+      translate,
+    })
 
   const [dataType, setDataType] = useState<DataType | string>(getDataType(data, customNodeData))
 
@@ -281,9 +289,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       }
       // To a custom node: a structural change — commit + remount (editor
       // closes).
-      submit({ op: 'edit', path, value: customDefault }).then(
-        settleEdit(customDefault as JsonData)
-      )
+      submit({ op: 'edit', path, value: customDefault }).then(settleEdit(customDefault as JsonData))
       setCollapseState({ path, collapsed: false, includeChildren: false })
       return
     }
@@ -529,10 +535,10 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
       // that re-rendered every draggable node (§16).
       draggable={canDrag && !isEditing && !isEditingKey}
       {...dragSourceProps}
-      {...getDropTargetProps('above')}
+      {...dropTargetProps}
     >
-      {BottomDropTarget}
-      <DropTargetPadding position="above" nodeData={nodeData} />
+      {bottomDropTarget}
+      {dropPaddingAbove}
       <div
         className="jer-value-main-row"
         style={{
@@ -588,7 +594,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
           )}
         </div>
       </div>
-      <DropTargetPadding position="below" nodeData={nodeData} />
+      {dropPaddingBelow}
     </div>
   )
 }

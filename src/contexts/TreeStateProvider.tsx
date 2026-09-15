@@ -30,6 +30,9 @@ interface TreeStateProps {
   buildNodeDataFromPathRef: BuildNodeDataFromPathRef
   // The commit primitives the inner `Editor` supplies to the EditingProvider.
   commitRef: React.RefObject<CommitPrimitives | undefined>
+  // Whether drag is enabled at all (any truthy `allowDrag`) — tells the
+  // DragSourceProvider to load the drag-and-drop engine.
+  allowDrag?: boolean
 }
 
 export const TreeStateProvider = ({
@@ -38,6 +41,7 @@ export const TreeStateProvider = ({
   onCollapse,
   buildNodeDataFromPathRef,
   commitRef,
+  allowDrag,
 }: TreeStateProps) => (
   <EditingProvider
     onEditEvent={onEditEvent}
@@ -45,7 +49,7 @@ export const TreeStateProvider = ({
     commitRef={commitRef}
   >
     <CollapseProvider onCollapse={onCollapse} buildNodeDataFromPathRef={buildNodeDataFromPathRef}>
-      <DragSourceProvider>{children}</DragSourceProvider>
+      <DragSourceProvider allowDrag={allowDrag}>{children}</DragSourceProvider>
     </CollapseProvider>
   </EditingProvider>
 )

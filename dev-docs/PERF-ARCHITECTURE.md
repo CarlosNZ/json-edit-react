@@ -79,7 +79,7 @@ edited node) via `{...data}` / `[...data]`; every untouched sibling subtree keep
    and one-shot reads come from the non-subscribing `useEditingStore()` (`startEdit`,
    `cancelEdit`, `getSnapshot`, `areChildrenBeingEdited`). Examples that get this right:
    - Drag gating reads `editingStore.getSnapshot().currentlyEditingElement` at dragstart
-     ([useDragNDrop.tsx](../src/hooks/useDragNDrop.tsx)) — so NO node subscribes to a global
+     ([dragAndDrop.tsx](../src/hooks/dragAndDrop.tsx)) — so NO node subscribes to a global
      "is anything editing" boolean, and there is no whole-tree re-render on edit-start.
    - External triggers read `getSnapshot()` ([useTriggers.ts](../src/hooks/useTriggers.ts)).
    - Collapse-on-edit reads `areChildrenBeingEdited(path)` imperatively in `handleCollapse`.

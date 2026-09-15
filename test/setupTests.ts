@@ -10,3 +10,12 @@ console.warn = (...args: Parameters<typeof console.warn>) => {
   if (typeof args[0] === 'string' && args[0] === 'Error') return
   realWarn.apply(console, args)
 }
+
+// The drag-and-drop engine is loaded on demand — `DragSourceProvider` pulls it
+// in with a dynamic `import()` when `allowDrag` is set (see
+// src/hooks/dragAndDrop.tsx). Evaluating it here registers it up front, so
+// every editor in the suite mounts with drag wired synchronously (as in a
+// browser once the chunk is cached) and tests can fire drag events straight
+// after `render()`. The on-demand path itself is covered by
+// test/dragAndDropLazy.test.tsx.
+import '../src/hooks/dragAndDrop'

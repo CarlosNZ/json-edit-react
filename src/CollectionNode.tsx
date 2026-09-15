@@ -99,9 +99,17 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     buildKeyDisplayProps,
   } = useCommon({ props, collapsed })
 
-  const { dragSourceProps, getDropTargetProps, BottomDropTarget, DropTargetPadding } = useDragNDrop(
-    { canDrag, canDelete, canDragOnto, canAddHere, path, nodeData, onError, translate }
-  )
+  const { dragSourceProps, dropTargetProps, bottomDropTarget, dropPaddingAbove, dropPaddingBelow } =
+    useDragNDrop({
+      canDrag,
+      canDelete,
+      canDragOnto,
+      canAddHere,
+      path,
+      nodeData,
+      onError,
+      translate,
+    })
 
   // This allows us to not render the children on load if they're hidden (which
   // gives a big performance improvement with large data sets), but still keep
@@ -613,7 +621,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       // that re-rendered every draggable node in the tree (§16).
       draggable={canDrag && !isEditing && !isEditingKey && !childrenEditing}
       {...dragSourceProps}
-      {...getDropTargetProps('above')}
+      {...dropTargetProps}
     >
       <div
         className="jer-clickzone"
@@ -623,8 +631,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
         }}
         onClick={collapseClickZones.includes('left') ? handleCollapse : undefined}
       />
-      {!isEditing && BottomDropTarget}
-      <DropTargetPadding position="above" nodeData={nodeData} />
+      {!isEditing && bottomDropTarget}
+      {dropPaddingAbove}
       {showCollectionWrapper ? (
         <div
           className="jer-collection-header-row"
@@ -726,7 +734,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           </div>
         )}
       </div>
-      <DropTargetPadding position="below" nodeData={nodeData} />
+      {dropPaddingBelow}
     </div>
   )
 

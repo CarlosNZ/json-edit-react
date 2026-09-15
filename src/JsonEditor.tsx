@@ -841,6 +841,7 @@ export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.React
         onCollapse={innerProps.onCollapse}
         buildNodeDataFromPathRef={buildNodeDataFromPathRef}
         commitRef={commitRef}
+        allowDrag={!!innerProps.allowDrag}
       >
         <Editor
           {...innerProps}

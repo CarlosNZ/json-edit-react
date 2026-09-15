@@ -20,6 +20,7 @@
 
 import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -73,3 +74,26 @@ if (size > THRESHOLD || leaked.length) {
 }
 
 console.log(`✓ tree-shake OK: { ${HELPER} } → ${(size / 1000).toFixed(1)} kB`)
+
+// The drag-and-drop engine ships as its own chunk, reached only through the
+// dynamic `import()` in DragSourceProvider (issue #327). A static value import
+// of src/hooks/dragAndDrop.tsx from anywhere on the editor path would fold it
+// back into the entry — silently, since everything would still work — so
+// check the entry is free of it and the chunk exists, for both formats.
+const DND_MARKER = 'jer-drop-target-bottom'
+for (const format of ['esm', 'cjs']) {
+  const entry = path.join(repoRoot, 'build', `index.${format}.js`)
+  const chunk = path.join(repoRoot, 'build', `dragAndDrop.${format}.js`)
+  if (readFileSync(entry, 'utf8').includes(DND_MARKER)) {
+    console.error(
+      `✗ the drag-and-drop engine is bundled into index.${format}.js — a static import folded ` +
+        `the lazy chunk back into the entry (see src/hooks/dragAndDrop.tsx, issue #327).`
+    )
+    process.exit(1)
+  }
+  if (!existsSync(chunk) || !readFileSync(chunk, 'utf8').includes(DND_MARKER)) {
+    console.error(`✗ expected the drag-and-drop engine chunk at build/dragAndDrop.${format}.js`)
+    process.exit(1)
+  }
+}
+console.log('✓ drag-and-drop engine split into its own chunk (esm + cjs)')

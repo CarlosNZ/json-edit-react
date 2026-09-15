@@ -4,9 +4,9 @@ import peerDepsExternal from 'rollup-plugin-peer-deps-external'
 import styles from 'rollup-plugin-styles'
 import terser from '@rollup/plugin-terser'
 import del from 'rollup-plugin-delete'
-import bundleSize from 'rollup-plugin-bundle-size'
 import sizes from 'rollup-plugin-sizes'
 import { copyFileSync } from 'fs'
+import { gzipSync } from 'zlib'
 
 // Emit a standalone copy of the stylesheet alongside the bundle. The CSS is
 // still inlined + injected into the bundle for the zero-config case; this file
@@ -17,6 +17,23 @@ const emitStandaloneCss = () => ({
   name: 'emit-standalone-css',
   writeBundle() {
     copyFileSync('src/style.css', 'build/style.css')
+  },
+})
+
+// Per-chunk size readout (raw → gzip). `rollup-plugin-bundle-size` only
+// understands single-`file` output, and the build emits a directory now that
+// the drag-and-drop engine is a separate chunk.
+const reportChunkSizes = () => ({
+  name: 'report-chunk-sizes',
+  generateBundle(_options, bundle) {
+    for (const chunk of Object.values(bundle)) {
+      if (chunk.type !== 'chunk') continue
+      const raw = Buffer.byteLength(chunk.code)
+      const gz = gzipSync(chunk.code, { level: 9 }).length
+      console.log(
+        `Created chunk ${chunk.fileName}: ${(raw / 1000).toFixed(2)} kB → ${(gz / 1000).toFixed(2)} kB (gzip)`
+      )
+    }
   },
 })
 
@@ -100,18 +117,45 @@ const pureJsxIn = (pattern) => ({
   },
 })
 
+// Shared by both formats now that the build emits more than one chunk.
+// - `hoistTransitiveImports: false`: the dynamic chunk otherwise gains a bare
+//   `import "react"` so a browser could fetch it in parallel — pointless for a
+//   library that is always consumed through a bundler.
+// - `minifyInternalExports: true`: the entry's extra exports for internals the
+//   chunk shares with it (see `preserveEntrySignatures`) get single-letter
+//   names in both formats, not just ESM, so they don't read as public API to a
+//   CJS consumer poking at `require('json-edit-react')`.
+const chunkOutputOptions = {
+  hoistTransitiveImports: false,
+  minifyInternalExports: true,
+}
+
 export default [
   // Main Package
   {
     input: 'src/index.ts',
+    // The drag-and-drop engine (src/hooks/dragAndDrop.tsx) is reached only via
+    // a dynamic `import()`, so rollup emits it as a second chunk beside each
+    // entry (issue #327) — which needs `dir` output rather than `file`. The
+    // entry keeps its public exports and may gain a few extra, minified ones
+    // for internals the chunk shares with it; without `allow-extension`
+    // rollup would instead turn `index.esm.js` into a re-export facade over a
+    // third, hashed file.
+    preserveEntrySignatures: 'allow-extension',
     output: [
       {
-        file: 'build/index.cjs.js',
+        dir: 'build',
         format: 'cjs',
+        entryFileNames: 'index.cjs.js',
+        chunkFileNames: '[name].cjs.js',
+        ...chunkOutputOptions,
       },
       {
-        file: 'build/index.esm.js',
+        dir: 'build',
         format: 'esm',
+        entryFileNames: 'index.esm.js',
+        chunkFileNames: '[name].esm.js',
+        ...chunkOutputOptions,
       },
     ],
     plugins: [
@@ -152,7 +196,7 @@ export default [
         format: { preserve_annotations: true },
       }),
       emitStandaloneCss(),
-      bundleSize(),
+      reportChunkSizes(),
       sizes(),
     ],
   },
