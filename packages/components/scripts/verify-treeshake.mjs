@@ -33,8 +33,10 @@ import path from 'node:path'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const pkgRoot = path.join(here, '..')
-// The root entry, which the definition-bundling checks below shake against.
+// The two shipped entries. Both get shaken against below — the root for the
+// definitions, `widgets` for the swappable widgets.
 const esm = path.join(pkgRoot, 'build', 'index.esm.js')
+const widgetsEsm = path.join(pkgRoot, 'build', 'widgets.esm.js')
 // Every shipped bundle, for the stylesheet-presence check. Both formats of
 // each entry: `exports.require` ships the CJS ones, and while a dropped
 // stylesheet would be an input-stage failure that hits both, the check costs
@@ -42,8 +44,8 @@ const esm = path.join(pkgRoot, 'build', 'index.esm.js')
 const BUNDLES = {
   'index.esm.js': ['loader', 'unix', 'errorIndicator'],
   'index.cjs.js': ['loader', 'unix', 'errorIndicator'],
-  'widgets.esm.js': ['loader', 'datePicker'],
-  'widgets.cjs.js': ['loader', 'datePicker'],
+  'widgets.esm.js': ['loader', 'datePicker', 'datePickerLib'],
+  'widgets.cjs.js': ['loader', 'datePicker', 'datePickerLib'],
 }
 
 // A correct shake is ~1 kB of glue; a broken one inlines react-markdown &
@@ -60,19 +62,26 @@ const HEAVY_DEPS = {
 // Minified-CSS markers: a selector plus its opening brace, which survives
 // minification unchanged (property order does not, so don't match on that) and
 // can't collide with the bare `className` strings in the compiled JSX.
+//
+// `datePickerLib` is the odd one out — react-datepicker's own sheet is the one
+// stylesheet we don't inline, so what reaches the bundle is the import
+// specifier rather than any rule text. Asserted here for the same reason as
+// the rest: `sideEffects: false` entitles a bundler to drop it, and the
+// DatePicker would render unstyled with nothing else complaining.
 const STYLES = {
   loader: '.jer-simple-loader{',
   unix: '.jer-unix-badge{',
   errorIndicator: '.jer-error-indicator-wrapper{',
   datePicker: '.react-datepicker-popper',
+  datePickerLib: 'react-datepicker/dist/react-datepicker.css',
 }
 
 const failures = []
 
-const bundleDefinition = async (name) => {
+const bundleExport = async (name, entry = esm) => {
   const result = await build({
     stdin: {
-      contents: `export { ${name} } from ${JSON.stringify(esm)}`,
+      contents: `export { ${name} } from ${JSON.stringify(entry)}`,
       resolveDir: pkgRoot,
       loader: 'js',
     },
@@ -80,8 +89,12 @@ const bundleDefinition = async (name) => {
     format: 'esm',
     minify: true,
     write: false,
-    // Peer deps a consumer supplies; everything else (the heavy libs) is bundled.
-    external: ['react', 'react-dom', 'react/jsx-runtime', 'json-edit-react'],
+    // Peer deps a consumer supplies; everything else (the heavy libs) is
+    // bundled. `*.css` is external so react-datepicker's bare import stays an
+    // import, which is both what a consumer's bundler does with it and what
+    // makes it visible to the checks below — bundling it would need an output
+    // path on disk, and we only want the text.
+    external: ['react', 'react-dom', 'react/jsx-runtime', 'json-edit-react', '*.css'],
     logLevel: 'silent',
   })
   return result.outputFiles[0].text
@@ -115,7 +128,7 @@ if (missing.length) {
 //    with an import-time side effect instead, every consumer pays for every
 //    stylesheet in the entry point.
 const LEAN = 'hyperlinkDefinition'
-const leanCode = await bundleDefinition(LEAN)
+const leanCode = await bundleExport(LEAN)
 const leanSize = Buffer.byteLength(leanCode, 'utf8')
 const leakedDeps = Object.entries(HEAVY_DEPS)
   .filter(([, marker]) => leanCode.includes(marker))
@@ -142,12 +155,37 @@ if (leakedStyles.length) {
 //    opposite failure: CSS that shakes out along with the component's own code
 //    because nothing in the retained graph references it.
 const STYLED = 'unixTimestampDefinition'
-const styledCode = await bundleDefinition(STYLED)
+const styledCode = await bundleExport(STYLED)
 if (!styledCode.includes(STYLES.unix)) {
   failures.push(
     `importing { ${STYLED} } doesn't carry its own stylesheet. The component ` +
       `renders markup it has no rules for — check its \`useStyles\` call in ` +
       `src/UnixTimestamp/component.tsx.`
+  )
+}
+
+// 4. The same isolation inside the `widgets` entry, which checks 2 and 3 never
+//    reach — they shake against the root entry only. `ReactSelect`,
+//    `CodeEditor` and `ReactDatePicker` share one bundle, so a DatePicker
+//    stylesheet that regained an import-time injection would ride along with
+//    the other two: the #398 failure, one entry over.
+//
+//    Two sheets legitimately come along and are allowed for. `_common`'s
+//    loader, because every widget renders it as its Suspense fallback. And
+//    react-datepicker's own sheet, the single bare import in the package: it's
+//    the library's file, so there's no text to inline and no component of ours
+//    to inject it from. That one IS an entry-wide cost, knowingly accepted —
+//    src/widgets/ReactDatePicker/component.tsx has the reasoning.
+const WIDGET = 'ReactSelect'
+const ALLOWED_IN_WIDGET = ['loader', 'datePickerLib']
+const widgetCode = await bundleExport(WIDGET, widgetsEsm)
+const leakedIntoWidget = stylesIn(widgetCode).filter((name) => !ALLOWED_IN_WIDGET.includes(name))
+if (leakedIntoWidget.length) {
+  failures.push(
+    `importing { ${WIDGET} } from the widgets entry drags in unrelated ` +
+      `stylesheets [${leakedIntoWidget.join(', ')}]. A widget's stylesheet is ` +
+      `being injected at import time rather than from its \`useStyles\` call — ` +
+      `see issue #398 and src/_common/useStyles.ts.`
   )
 }
 
@@ -158,5 +196,6 @@ if (failures.length) {
 
 console.log(
   `✓ tree-shake OK: { ${LEAN} } → ${(leanSize / 1000).toFixed(1)} kB, no heavy deps, no CSS\n` +
-    `✓ stylesheets OK: all present in the build, each carried only by its own component`
+    `✓ stylesheets OK: all present in both formats of both entries, each carried\n` +
+    `  only by its own component — in the widgets entry too`
 )
