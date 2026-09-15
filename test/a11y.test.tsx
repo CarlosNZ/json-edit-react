@@ -22,14 +22,19 @@ const noop = () => {}
 // ─── A — the collapse chevron ────────────────────────────────────────────────
 
 describe('collapse chevron', () => {
-  it('exposes a button role, a state-matched name and aria-expanded', async () => {
+  it('is a real <button> with a state-matched name and aria-expanded', async () => {
     const user = userEvent.setup()
     render(<JsonEditor data={{ obj: { a: 1 } }} setData={noop} />)
 
     // Root + `obj`, both expanded.
     const expanded = screen.getAllByRole('button', { name: 'Collapse' })
     expect(expanded).toHaveLength(2)
-    expanded.forEach((chevron) => expect(chevron).toHaveAttribute('aria-expanded', 'true'))
+    expanded.forEach((chevron) => {
+      // The element itself, not a `role` on a div — activation semantics come
+      // free, which is what the keyboard-navigation follow-up will build on.
+      expect(chevron.tagName).toBe('BUTTON')
+      expect(chevron).toHaveAttribute('aria-expanded', 'true')
+    })
 
     await user.click(
       within(screen.getByText('obj').closest('.jer-component') as HTMLElement).getAllByRole(

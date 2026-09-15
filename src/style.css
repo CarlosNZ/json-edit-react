@@ -376,21 +376,22 @@ select:focus + .focus {
   margin-right: 0.2em;
 }
 
-/* The icon controls and the string show-more/show-less affordances are real
-   <button>s for accessibility. This neutralises the user-agent button chrome so
-   they render identically to surrounding elements. Only properties a <button>
-   won't otherwise take from context are listed: background/border/margin/
-   padding/appearance don't inherit, and form controls are UA-special-cased so
-   `font`/`color` must be re-asserted (`font: inherit` is load-bearing — the
-   icons are sized in `em`, and it carries line-height, which keeps the inline
-   expansion buttons on the text baseline). `cursor` inherits from the wrapper
-   rule above, whose flexbox also centres the button, so neither is needed here.
-   The `>` scoping covers the built-in controls and a labelled custom button
-   (both direct children of the wrapper) without reaching inside custom-button
-   content; the expansion buttons sit in the text flow, so they're matched on
-   their own class instead. */
+/* The icon controls, the collapse chevron and the string show-more/show-less
+   affordances are real <button>s for accessibility. This neutralises the
+   user-agent button chrome so they render identically to surrounding elements.
+   Only properties a <button> won't otherwise take from context are listed:
+   background/border/margin/padding/appearance don't inherit, and form controls
+   are UA-special-cased so `font`/`color` must be re-asserted (`font: inherit`
+   is load-bearing — the icons are sized in `em`, and it carries line-height,
+   which keeps the inline expansion buttons on the text baseline). `cursor`
+   inherits from the wrapper rule above, whose flexbox also centres the button,
+   so neither is needed here. The `>` scoping covers the built-in controls and a
+   labelled custom button (both direct children of the wrapper) without reaching
+   inside custom-button content; the chevron and the expansion buttons sit
+   outside those wrappers, so they're matched on their own classes instead. */
 .jer-edit-buttons > button,
 .jer-confirm-buttons > button,
+button.jer-collapse-icon,
 button.jer-string-expansion {
   appearance: none;
   background: none;

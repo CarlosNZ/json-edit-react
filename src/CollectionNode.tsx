@@ -633,22 +633,24 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
         >
           <div className="jer-collection-name">
             {/* The chevron is the only affordance that collapses a single
-                node, so it carries button semantics for assistive tech:
-                `aria-expanded` announces the state and the name flips with it.
-                `tabIndex={-1}` keeps it out of the editor's field-to-field Tab
-                flow — one stop per node would swamp a large tree. */}
-            <div
+                node, so it's a real <button>: `aria-expanded` announces the
+                state, the name flips with it, and Enter/Space activation comes
+                from the element. `tabIndex={-1}` keeps it out of the editor's
+                field-to-field Tab flow — one stop per node would swamp a large
+                tree. A theme's `collection` icon must not itself be
+                interactive, or it nests inside this button. */}
+            <button
+              type="button"
               className={`jer-collapse-icon jer-accordion-icon${collapsed ? ' jer-rotate-90' : ''}`}
               style={{ zIndex: 11 + nodeData.level * 2, transition: cssTransitionValue }}
               onClick={handleCollapse}
-              role="button"
               tabIndex={-1}
               aria-expanded={!collapsed}
               aria-label={collapseLabel}
               title={showIconTooltips ? collapseLabel : ''}
             >
               <Icon name="collection" nodeData={nodeData} />
-            </div>
+            </button>
             {shouldShowKey && <KeyDisplay {...keyDisplayProps} />}
             {!isEditing && (
               <span
