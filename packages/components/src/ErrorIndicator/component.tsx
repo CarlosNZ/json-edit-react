@@ -38,14 +38,11 @@ export const ErrorIndicatorComponent = ({
     </span>
   )
 
-  // inline-flex keeps the glyph on the same line as the value, `originalNode`
-  // being block-level, and vertically centred; `gap` spaces it without per-side
-  // margins.
+  // Layout lives entirely in ./style.css, keyed on the wrapper class, so a
+  // consumer can restyle it with an ordinary rule. An inline `style` here
+  // would win over any author stylesheet short of `!important`.
   return (
-    <span
-      className="jer-error-indicator-wrapper"
-      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4em' }}
-    >
+    <span className="jer-error-indicator-wrapper">
       {position === 'before' && glyph}
       {originalNode}
       {position === 'after' && glyph}

@@ -5,7 +5,7 @@
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
   "types": "build/index.d.ts",
-  "sideEffects": false,
+  "sideEffects": ["./build/style.css"],
   "exports": {
     ".": {
       "types": "./build/index.d.ts",

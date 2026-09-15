@@ -4,7 +4,8 @@
 
 ### Patch Changes
 
-- Fix every stylesheet being stripped from the published bundles (#398). The package shipped with none of its CSS, leaving the loading placeholder, the `UnixTimestamp` badge, the `ErrorIndicator` layout and the `ReactDatePicker` chrome unstyled. Each component now injects its own stylesheet on first render, so a component's CSS travels with it and nothing else.
+- Fix every stylesheet being stripped from the published bundles (#398). The package shipped with none of its CSS, leaving the loading placeholder, the `UnixTimestamp` badge and the `ReactDatePicker` chrome unstyled. Each component now injects its own stylesheet on first render, so a component's CSS travels with it and nothing else.
+- `ErrorIndicator` takes its layout from its stylesheet rather than an inline `style`, so the wrapper class can be restyled with an ordinary CSS rule instead of needing `!important`.
 
 ## 0.9.0-beta.5
 

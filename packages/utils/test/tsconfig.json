@@ -18,5 +18,13 @@
       "json-edit-react/*": ["../../../src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", "../src/**/*.ts", "../src/**/*.tsx"]
+  // Core's `?inline` stylesheet import is reached through the path mapping
+  // above, so its ambient module declaration has to be in this program too.
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "../src/**/*.ts",
+    "../src/**/*.tsx",
+    "../../../src/css.d.ts"
+  ]
 }

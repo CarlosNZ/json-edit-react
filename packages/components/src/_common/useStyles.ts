@@ -23,13 +23,26 @@ import { useInsertionEffect } from 'react'
 // paint, so the rules are in place the first time the markup is on screen.
 // Core injects its stylesheet the same way — see src/injectStyles.ts there.
 //
+// One consequence to design around: React runs insertion effects bottom-up, so
+// a child's sheet lands in `<head>` before its parent's, and a component's
+// before core's (every component is a descendant of `JsonEditor`). Cascade
+// order therefore favours core, and a rule here cannot outrank a core rule of
+// equal specificity. Keep these stylesheets to selectors core doesn't define —
+// they all use component-specific class names — rather than relying on order.
+//
+// Dedupe is keyed on the `<style>` element rather than on module state, so it
+// survives module re-evaluation: when Vite's HMR reloads a component after a
+// stylesheet edit, the text is swapped in place instead of the edit being
+// swallowed by a module-level flag this module never gets to clear. It also
+// means the sheet is restored if something tears `<head>` down.
+//
 // `?inline` is Vite's convention for "give me the text, don't inject it". A
 // plain `.css` specifier is injected by Vite and exports nothing, which breaks
 // direct consumers of `src/`, such as the demo's `local` mode. Rollup has no
 // such convention, so the build strips the query — see `stripCssQuery` in
 // rollup.config.mjs.
 
-const injected = new Set<string>()
+const MARKER = 'data-jer-component-styles'
 
 /**
  * Inject a component's stylesheet into `<head>` on first render.
@@ -52,11 +65,15 @@ const injected = new Set<string>()
  */
 export const useStyles = (id: string, css: string) => {
   useInsertionEffect(() => {
-    if (injected.has(id) || typeof document === 'undefined') return
-    injected.add(id)
+    if (typeof document === 'undefined') return
+    const existing = document.head.querySelector(`style[${MARKER}="${id}"]`)
+    if (existing) {
+      if (existing.textContent !== css) existing.textContent = css
+      return
+    }
     const style = document.createElement('style')
-    style.setAttribute('type', 'text/css')
-    style.appendChild(document.createTextNode(css))
+    style.setAttribute(MARKER, id)
+    style.textContent = css
     document.head.appendChild(style)
   }, [id, css])
 }

@@ -15,12 +15,6 @@
   overflow: hidden;
 }
 
-react-datepicker__navigation--next--with-time:not(
-  .react-datepicker__navigation--next--with-today-button
-) {
-  right: 90px;
-}
-
 .react-datepicker__navigation--previous {
   border-right-color: #cbd5e0;
 
