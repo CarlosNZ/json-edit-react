@@ -501,6 +501,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const isCollapsed = !showCollectionWrapper ? false : collapsed && !childrenEditing
   if (!isCollapsed) hasBeenOpened.current = true
 
+  // Names the chevron's action, so it follows the node's current state. Serves
+  // both the accessible name and the (opt-in) hover tooltip, matching how the
+  // icon controls pair `aria-label` with a `showIconTooltips`-gated `title`.
+  const collapseLabel = translate(collapsed ? 'TOOLTIP_EXPAND' : 'TOOLTIP_COLLAPSE', nodeData)
+
   // A getter, not an object, so a plain collection with no custom component or
   // wrapper never allocates these props — only the two custom-node sites below
   // call it.
@@ -627,13 +632,25 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           onClick={collapseClickZones.includes('header') ? handleCollapse : undefined}
         >
           <div className="jer-collection-name">
-            <div
+            {/* The chevron is the only affordance that collapses a single
+                node, so it's a real <button>: `aria-expanded` announces the
+                state, the name flips with it, and Enter/Space activation comes
+                from the element. `tabIndex={-1}` keeps it out of the editor's
+                field-to-field Tab flow — one stop per node would swamp a large
+                tree. A theme's `collection` icon must not itself be
+                interactive, or it nests inside this button. */}
+            <button
+              type="button"
               className={`jer-collapse-icon jer-accordion-icon${collapsed ? ' jer-rotate-90' : ''}`}
               style={{ zIndex: 11 + nodeData.level * 2, transition: cssTransitionValue }}
               onClick={handleCollapse}
+              tabIndex={-1}
+              aria-expanded={!collapsed}
+              aria-label={collapseLabel}
+              title={showIconTooltips ? collapseLabel : ''}
             >
               <Icon name="collection" nodeData={nodeData} />
-            </div>
+            </button>
             {shouldShowKey && <KeyDisplay {...keyDisplayProps} />}
             {!isEditing && (
               <span

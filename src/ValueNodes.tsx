@@ -22,6 +22,10 @@ interface StringDisplayProps {
   canEdit: boolean
   setIsEditing: (value: React.SetStateAction<boolean>) => void
   translate: TranslateFunction
+  // Gates the "Show more" hover tooltip, the same way it gates the icon
+  // controls'. Optional so a custom component composing `StringDisplay` can
+  // leave it out; the accessible name is present either way.
+  showIconTooltips?: boolean
   // Can override nodeDate.value if we need to modify it for specific display
   // purposes
   value?: string
@@ -37,6 +41,7 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
   setIsEditing,
   styles,
   translate,
+  showIconTooltips = false,
   value: displayValue,
   TextWrapper = ({ children }) => children,
 }) => {
@@ -51,6 +56,8 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
     if (canEdit) setIsEditing(true)
     else setIsExpanded(!isExpanded)
   }
+
+  const showMoreLabel = translate('SHOW_MORE', nodeData)
 
   return (
     <div
@@ -72,20 +79,35 @@ export const StringDisplay: React.FC<StringDisplayProps> = ({
               {value}
               {quoteChar}
             </span>
-          </TextWrapper>
-          <span className="jer-string-expansion jer-show-less" onClick={() => setIsExpanded(false)}>
-            {' '}
+          </TextWrapper>{' '}
+          <button
+            type="button"
+            tabIndex={-1}
+            className="jer-string-expansion jer-show-less"
+            onClick={() => setIsExpanded(false)}
+          >
             {translate('SHOW_LESS', nodeData)}
-          </span>
+          </button>
         </>
       ) : (
         <>
           <TextWrapper>
             <span>{value.slice(0, stringTruncateLength - 2).trimEnd()}</span>{' '}
           </TextWrapper>
-          <span className="jer-string-expansion jer-ellipsis" onClick={() => setIsExpanded(true)}>
+          {/* The visible affordance is an ellipsis, so both the accessible
+              name and the hover tooltip have to come from the label rather
+              than the text content. Its "(Show less)" counterpart needs
+              neither — its own visible text already says what it does. */}
+          <button
+            type="button"
+            tabIndex={-1}
+            className="jer-string-expansion jer-ellipsis"
+            onClick={() => setIsExpanded(true)}
+            aria-label={showMoreLabel}
+            title={showIconTooltips ? showMoreLabel : ''}
+          >
             ...
-          </span>
+          </button>
           {quoteChar}
         </>
       )}

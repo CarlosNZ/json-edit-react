@@ -17,6 +17,7 @@ const localisedStrings = {
   ERROR_MOVE: 'Move unsuccessful',
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
+  SHOW_MORE: 'Show more',
   EMPTY_STRING: '<empty string>',
   TOOLTIP_COPY: 'Copy to clipboard',
   TOOLTIP_EDIT: 'Edit',
@@ -24,6 +25,8 @@ const localisedStrings = {
   TOOLTIP_ADD: 'Add',
   TOOLTIP_OK: 'OK',
   TOOLTIP_CANCEL: 'Cancel',
+  TOOLTIP_COLLAPSE: 'Collapse',
+  TOOLTIP_EXPAND: 'Expand',
 }
 
 export type LocalisedStrings = typeof localisedStrings

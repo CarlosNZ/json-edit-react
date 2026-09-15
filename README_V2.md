@@ -185,7 +185,7 @@ This is a reference list of *all* possible props, divided into related sections.
 | Prop                    | Type                                                      | Default                        | Description                                                                                                                                                                                                                                                                                                                                                                                               |
 | ----------------------- | --------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `theme`                 | `ThemeInput`                                              | `defaultTheme`                 | Either one of the built-in themes (imported separately), or an object specifying some or all theme properties — see [Themes](#appearance--theming).                                                                                                                                                                                                                                                       |
-| `showIconTooltips`      | `boolean`                                                 | false                          | Display icon tooltips when hovering.                                                                                                                                                                                                                                                                                                                                                                      |  |
+| `showIconTooltips`      | `boolean`                                                 | false                          | Display tooltips on the icon controls and the other labelled controls when hovering.                                                                                                                                                                                                                                                                                                                      |
 | `indent`                | `number`                                                  | `3`                            | Specify the amount of indentation for each level of nesting in the displayed data.                                                                                                                                                                                                                                                                                                                        |
 | `collapse`              | `boolean\|number\|FilterFunction`                         | `3`                            | Defines which depth level of the data tree will be displayed "expanded" in the UI on initial load — see [Collapse](#initial-expansion--collapse).                                                                                                                                                                                                                                                         |
 | `collapseAnimationTime` | `number`                                                  | `300`                          | Time (in ms) for the transition animation when collapsing collection nodes.                                                                                                                                                                                                                                                                                                                               |
@@ -884,16 +884,22 @@ Localise your implementation (or just customise the default messages) by passing
   ERROR_MOVE: 'Move unsuccessful',
   DEFAULT_NEW_KEY: 'key',
   SHOW_LESS: '(Show less)',
+  // Names the "..." control that expands a truncated string. Its `SHOW_LESS`
+  // counterpart needs no separate label — its visible text is already one.
+  SHOW_MORE: 'Show more',
   EMPTY_STRING: '<empty string>' // Displayed when property key is ""
-  // These label the icon controls (which are <button>s) for assistive tech via
-  // `aria-label`, and also show as visible tooltips when the `showIconTooltips`
-  // prop is enabled.
+  // Every label below names an actionable control (all of them <button>s, bar
+  // the chevron) for assistive tech via `aria-label`, and also shows as a
+  // visible hover tooltip when the `showIconTooltips` prop is enabled.
   TOOLTIP_COPY: 'Copy to clipboard',
   TOOLTIP_EDIT: 'Edit',
   TOOLTIP_DELETE: 'Delete',
   TOOLTIP_ADD: 'Add',
   TOOLTIP_OK: 'OK',
   TOOLTIP_CANCEL: 'Cancel',
+  // The collapse chevron names its action, so it follows the node's state.
+  TOOLTIP_COLLAPSE: 'Collapse',
+  TOOLTIP_EXPAND: 'Expand',
 }
 ```
 
@@ -1274,7 +1280,8 @@ In addition to the "Copy", "Edit" and "Delete" buttons that appear by each value
 customButtons = [
   {
     Element: React.FC<{ nodeData: NodeData }>,
-    onClick?: (nodeData: NodeData, e: React.MouseEvent) => void
+    onClick?: (nodeData: NodeData, e: React.MouseEvent) => void,
+    label?: string
   }
 ]
 ```
@@ -1283,6 +1290,8 @@ customButtons = [
 
 > [!NOTE]
 > Unlike [custom node definitions](#custom-nodes--components), custom buttons don't have a `condition` property. However, you can still make them conditional as they have full access to each node's `nodeData` — just return `null` from the component when they shouldn't appear.
+
+The optional `label` is the button's **accessible name**. Supply it and the wrapper around your `Element` becomes a real `<button aria-label={label}>`, so assistive tech announces it the same way it announces the built-in Copy/Edit/Delete controls — and, when [`showIconTooltips`](#props-reference) is enabled, it shows as the hover tooltip too. Leave it out when your `Element` is already interactive (it renders its own `<button>` or `<a>`) — the wrapper then stays a plain `<div>`, so the two don't nest and your own element supplies the accessible name.
 
 
 [![▶ Live example: Custom buttons](https://img.shields.io/badge/▶_Live_example-Custom_buttons-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/custom-buttons)
