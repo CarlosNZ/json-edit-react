@@ -1,11 +1,13 @@
 {
   "name": "json-edit-react",
-  "version": "2.0.0-beta.9",
+  "version": "2.0.0-beta.10",
   "description": "React component for editing or viewing JSON/object data",
   "main": "build/index.cjs.js",
   "module": "build/index.esm.js",
   "types": "build/index.d.ts",
-  "sideEffects": ["./build/style.css"],
+  "sideEffects": [
+    "./build/style.css"
+  ],
   "exports": {
     ".": {
       "types": "./build/index.d.ts",
