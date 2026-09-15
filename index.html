@@ -1,101 +1,91 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JSON•Edit•React</title>
 
-    <meta
-      name="description"
-      content="A highly-configurable React component for editing or viewing JSON/object data"
-    />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JSON•Edit•React</title>
 
-    <!-- Standard favicon -->
-    <link rel="icon" type="image/x-icon" href="/json-edit-react/favicon.ico" />
+  <meta name="description" content="A highly-configurable React component for editing or viewing JSON/object data">
 
-    <!-- PNG favicons for modern browsers -->
-    <link rel="icon" type="image/png" sizes="16x16" href="/json-edit-react/image/favicon_16.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/json-edit-react/image/favicon_32.png" />
-    <link rel="icon" type="image/png" sizes="96x96" href="/json-edit-react/image/favicon_96.png" />
 
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/json-edit-react/image/apple_touch_icon_180.png" />
-    <link rel="apple-touch-icon" href="/json-edit-react/image/logo192.png" />
+  <!-- Standard favicon -->
+  <link rel="icon" type="image/x-icon" href="https://carlosnz.github.io/json-edit-react/favicon.ico">
 
-    <!-- Open Graph Tags -->
-    <meta property="og:title" content="JSON•Edit•React" />
-    <meta
-      property="og:description"
-      content="A highly-configurable React component for editing or viewing JSON/object data"
-    />
-    <meta
-      property="og:image"
-      content="https://carlosnz.github.io/json-edit-react/image/social_banner.png"
-    />
-    <meta property="og:url" content="https://carlosnz.github.io/json-edit-react/" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="JSON•Edit•React" />
+  <!-- PNG favicons for modern browsers -->
+  <link rel="icon" type="image/png" sizes="16x16" href="https://carlosnz.github.io/json-edit-react/image/favicon_16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://carlosnz.github.io/json-edit-react/image/favicon_32.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="https://carlosnz.github.io/json-edit-react/image/favicon_96.png">
 
-    <!-- Twitter Card Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <!-- <meta name="twitter:site" content="@YourTwitterHandle"> -->
-    <meta name="twitter:title" content="JSON•Edit•React" />
-    <meta
-      name="twitter:description"
-      content="A highly-configurable React component for editing or viewing JSON/object data"
-    />
-    <meta
-      name="twitter:image"
-      content="https://carlosnz.github.io/json-edit-react/image/social_banner.png"
-    />
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="https://carlosnz.github.io/json-edit-react/image/apple_touch_icon_180.png">
+  <link rel="apple-touch-icon" href="https://carlosnz.github.io/json-edit-react/image/logo192.png" />
 
-    <!-- Schema.org Structured Data -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "applicationCategory": "DeveloperApplication",
-        "name": "JSON Edit React",
-        "url": "https://carlosnz.github.io/json-edit-react",
-        "description": "A highly-configurable React component for editing or viewing JSON/object data",
-        "image": "https://carlosnz.github.io/json-edit-react/image/social_banner.png",
-        "featureList": ["JSON editing, JSON viewing, validation, formatting, tree view"],
-        "keywords": [
-          "react",
-          "component",
-          "interactive",
-          "interactive-json",
-          "json",
-          "json-component",
-          "json-display",
-          "json-tree",
-          "json-view",
-          "json-viewer",
-          "json-inspector",
-          "json-schema",
-          "react-component",
-          "react-json",
-          "react18-json-view",
-          "react-json-view",
-          "theme",
-          "tree",
-          "tree-view",
-          "treeview"
-        ]
-      }
+  <!-- Open Graph Tags -->
+  <meta property="og:title" content="JSON•Edit•React">
+  <meta property="og:description" content="A highly-configurable React component for editing or viewing JSON/object data">
+  <meta property="og:image" content="https://carlosnz.github.io/json-edit-react/image/social_banner.png">
+  <meta property="og:url" content="https://carlosnz.github.io/json-edit-react/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="JSON•Edit•React">
+
+  <!-- Twitter Card Tags -->
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- <meta name="twitter:site" content="@YourTwitterHandle"> -->
+  <meta name="twitter:title" content="JSON•Edit•React">
+  <meta name="twitter:description" content="A highly-configurable React component for editing or viewing JSON/object data">
+  <meta name="twitter:image" content="https://carlosnz.github.io/json-edit-react/image/social_banner.png">
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "applicationCategory": "DeveloperApplication",
+      "name": "JSON Edit React",
+      "url": "https://carlosnz.github.io/json-edit-react",
+      "description": "A highly-configurable React component for editing or viewing JSON/object data",
+      "image": "https://carlosnz.github.io/json-edit-react/image/social_banner.png",
+      "featureList": [
+        "JSON editing, JSON viewing, validation, formatting, tree view"
+      ],
+      "keywords": [
+        "react",
+        "component",
+        "interactive",
+        "interactive-json",
+        "json",
+        "json-component",
+        "json-display",
+        "json-tree",
+        "json-view",
+        "json-viewer",
+        "json-inspector",
+        "json-schema",
+        "react-component",
+        "react-json",
+        "react18-json-view",
+        "react-json-view",
+        "theme",
+        "tree",
+        "tree-view",
+        "treeview"
+      ]
+    }
     </script>
-    <script async data-id="101479166" src="//static.getclicky.com/js"></script>
-    <script type="module" crossorigin src="/json-edit-react/assets/index-aYdl1AyE.js"></script>
-    <link rel="modulepreload" crossorigin href="/json-edit-react/assets/chakra-Dl1FrsFn.js">
-    <link rel="modulepreload" crossorigin href="/json-edit-react/assets/vendor-DBypWwXm.js">
-    <link rel="modulepreload" crossorigin href="/json-edit-react/assets/json-DWwgcHY5.js">
-    <link rel="modulepreload" crossorigin href="/json-edit-react/assets/icons-CihU7ERl.js">
-    <link rel="modulepreload" crossorigin href="/json-edit-react/assets/jsonEditReact-BAZEFNzX.js">
-    <link rel="stylesheet" crossorigin href="/json-edit-react/assets/index-C79r_Umt.css">
-  </head>
+  <script async data-id="101479166" src="//static.getclicky.com/js"></script>
+  <script type="module" crossorigin src="https://carlosnz.github.io/json-edit-react/assets/index-BzgOPDMs.js"></script>
+  <link rel="modulepreload" crossorigin href="https://carlosnz.github.io/json-edit-react/assets/chakra-BUkYiEis.js">
+  <link rel="modulepreload" crossorigin href="https://carlosnz.github.io/json-edit-react/assets/vendor-Eb3eYLGE.js">
+  <link rel="modulepreload" crossorigin href="https://carlosnz.github.io/json-edit-react/assets/json-DWwgcHY5.js">
+  <link rel="modulepreload" crossorigin href="https://carlosnz.github.io/json-edit-react/assets/jsonEditReact-TTC3eOoP.js">
+  <link rel="modulepreload" crossorigin href="https://carlosnz.github.io/json-edit-react/assets/icons-B8tvCZ0A.js">
+  <link rel="stylesheet" crossorigin href="https://carlosnz.github.io/json-edit-react/assets/index-CcAEUZ-d.css">
+</head>
 
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-  </body>
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+</body>
+
 </html>
