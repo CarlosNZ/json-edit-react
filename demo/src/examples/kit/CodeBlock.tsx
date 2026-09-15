@@ -23,8 +23,8 @@ const SHIKI_FOR_JER: Record<string, string> = {
 }
 const DEFAULT_SHIKI = 'github-light'
 
-// Explicit per-theme imports (not a dynamic template) so only the themes we map
-// to get bundled — each lands in its own small lazy chunk.
+// Explicit per-theme imports rather than a dynamic template, so only the mapped
+// themes are bundled — each in its own small lazy chunk.
 const themeLoaders: Record<string, () => Promise<unknown>> = {
   'github-light': () => import('@shikijs/themes/github-light'),
   'github-dark': () => import('@shikijs/themes/github-dark'),
@@ -35,8 +35,8 @@ const themeLoaders: Record<string, () => Promise<unknown>> = {
   'tokyo-night': () => import('@shikijs/themes/tokyo-night'),
 }
 
-// Fine-grained Shiki: only the tsx grammar + the JS regex engine up front (no
-// bundled-language explosion, no oniguruma WASM). Themes load on demand.
+// Fine-grained Shiki: only the tsx grammar and the JS regex engine up front, so
+// no bundled-language explosion and no oniguruma WASM. Themes load on demand.
 let highlighterPromise: Promise<HighlighterCore> | null = null
 const loaded = new Set<string>([DEFAULT_SHIKI])
 const getHighlighter = () => {
@@ -74,17 +74,14 @@ interface CodeBlockProps {
   themeName?: string
 }
 
-// Read-only source display. Shiki is dynamically imported on first render so
-// its grammar/theme/engine stay in their own lazy chunk. The header bar adopts
-// the Shiki theme's own bg/fg so the whole block reads as one themed panel.
 // Breathing room between the pinned panel and the viewport edges (matches the
 // sticky `top` offset the example layout pins it at).
 const VIEWPORT_GAP_PX = 16
 
 // When the space below the undocked panel is no more than this, it's just the
-// page's bottom chrome (its padding) — so the fill snaps to make the page fit
-// exactly rather than overflow by those few px and raise a scrollbar. More than
-// this means a tall data pane sits below the fold, so the page scrolls anyway.
+// page's bottom chrome (its padding), so the fill snaps to make the page fit
+// exactly rather than overflow by a few px and raise a scrollbar. More than
+// this means a tall data pane sits below the fold and the page scrolls anyway.
 const PAGE_FIT_SLACK_PX = 64
 
 // Second snap trigger: this long after the last scroll, an undocked panel
@@ -93,15 +90,18 @@ const PAGE_FIT_SLACK_PX = 64
 // and the panel would otherwise sit short.
 const SCROLL_SETTLE_MS = 500
 
+// Read-only source display. Shiki is dynamically imported on first render, so
+// its grammar, theme and engine stay in their own lazy chunk. The header bar
+// adopts the Shiki theme's own bg/fg, so the block reads as one themed panel.
 export const CodeBlock = ({ code, filename, themeName }: CodeBlockProps) => {
   const [{ html, bg, fg }, setResult] = useState<Highlighted>({ html: '', bg: '#fff', fg: '#000' })
   const { hasCopied, onCopy } = useClipboard(code)
 
-  // The panel docks like a sticky sidebar (see SplitPane's stickyRight). Two
-  // discrete states; the height changes only at a snap point, never every
-  // scroll frame (that per-frame resize was the slow part):
+  // The panel docks like a sticky sidebar (see SplitPane's stickyRight), in two
+  // discrete states. The height changes only at a snap point, never on every
+  // scroll frame, which is what keeps it cheap:
   //  - UNDOCKED: a fixed pixel height. It HOLDS that height as the page
-  //    scrolls — riding up with it — so scrolling never yanks it around.
+  //    scrolls, riding up with it, so scrolling never yanks it around.
   //  - DOCKED: once its top reaches the sticky offset (header gone), maxH flips
   //    to fill the viewport and it stays pinned there.
   // Two triggers re-snap the undocked bottom to the viewport edge: the dock

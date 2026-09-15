@@ -36,11 +36,11 @@ console.log(`json-edit-react v${__VERSION__}`)
 console.log(`Site built: ${__BUILD_TIME__}`)
 
 function App() {
-  // The whole demo model — state, the edited document, dataset/theme
+  // The whole demo model — state, the edited document, dataset and theme
   // resolution, and the External Control wiring — lives in `useDemoState`.
   // `App` is the view: it reads from the hook and threads values into the
-  // panels, keeping only the editor's own event callbacks inline (where the
-  // `JsonEditor` props type them).
+  // panels, keeping only the editor's own event callbacks inline, where the
+  // `JsonEditor` props type them.
   const {
     selectedDataSet,
     dataDefinition,
@@ -171,25 +171,26 @@ function App() {
                         )
                       }
                       const settle = (result: Awaited<ReturnType<typeof runDemoUpdate>>) => {
-                        // Reject (false) or silent cancel (null): pass straight
-                        // through, no commit and no post-commit side effect.
+                        // Reject (false) or silent cancel (null) passes
+                        // straight through: no commit, no side effect.
                         if (result === false || result === null) return result
-                        // Object result (error / { value } override): pass
-                        // through to the library. `true` is a plain commit —
-                        // fall through to the side effect like void/undefined.
+                        // An object result (an error or a `{ value }`
+                        // override) passes through to the library. `true` is a
+                        // plain commit, so it falls through to the side effect
+                        // like void/undefined.
                         if (result && result !== true) return result
-                        // Commit (true | void | undefined): run the post-commit
-                        // demo side effect.
+                        // A commit (true | void | undefined) runs the
+                        // post-commit demo side effect.
                         const { newData } = nodeData
                         if (selectedDataSet === 'editTheme')
                           updateState({ theme: newData as Theme })
                         return undefined
                       }
-                      // Return SYNCHRONOUSLY when the demo handler is sync —
-                      // wrapping this in `async` would make every validation
-                      // (even a sync schema check) look async to the editor,
-                      // defeating its sync-reject handling and leaving dud undo
-                      // entries.
+                      // Return SYNCHRONOUSLY when the demo handler is sync.
+                      // Wrapping this in `async` would make every validation,
+                      // even a sync schema check, look async to the editor,
+                      // defeating its sync-reject handling and leaving dud
+                      // undo entries.
                       const result = runDemoUpdate()
                       return result instanceof Promise ? result.then(settle) : settle(result)
                     }}

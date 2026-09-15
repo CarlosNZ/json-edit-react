@@ -206,10 +206,10 @@ export interface JerError {
 }
 
 /**
- * The one canonical update result (§17, Category 2). `void`/`undefined`/`true`
- * commit; `false` rejects with a generic error; `null` is a silent abort (no
- * commit, no error); the object form overrides what gets committed, or rejects
- * with a custom `error` (a bare `string` is wrapped into a `JerError`).
+ * The one canonical update result. `void`/`undefined`/`true` commit; `false`
+ * rejects with a generic error; `null` is a silent abort (no commit, no
+ * error); the object form overrides what gets committed, or rejects with a
+ * custom `error` (a bare `string` is wrapped into a `JerError`).
  *
  * The two override keys differ in scope:
  * - `value` — the edited node's value, applied at its path. Mirrors the
@@ -239,7 +239,7 @@ export type UpdateResult<T = JsonData> =
  * `move` are first-class events even though both are delete+add under the
  * hood — they arrive via distinct user interactions and carry distinct deltas.
  * For `add`, `NodeData` describes the new node's *position* (`path`/`key`);
- * `value` is unset until commit (matches V1).
+ * `value` is unset until commit.
  */
 export type UpdateFunctionProps<T = JsonData> = NodeData<T> & { newData: T } & (
     | { event: 'edit'; newValue: unknown } // value changes (incl. type change)
@@ -270,13 +270,13 @@ export type UpdateFunction<T = JsonData> = (
   control: UpdateControl
 ) => UpdateResult<T> | Promise<UpdateResult<T>>
 
-/** Transform (distinct contract — returns the value, not a result). */
+/** Transform: returns the value itself, not an `UpdateResult`. */
 export type OnChangeFunction<T = JsonData> = (
   props: NodeData<T> & { newValue: ValueData }
 ) => ValueData
 
 /**
- * Observer (Cat 3): after any error condition (Group A codes). Flat `NodeData`.
+ * Observer: fires after any error condition.
  */
 export type OnErrorFunction<T = JsonData> = (
   props: NodeData<T> & { error: JerError; errorValue: JsonData }
@@ -294,8 +294,7 @@ export type NewKeyOptionsFunction<T = JsonData> = (input: NodeData<T>) => string
 
 export type CopyType = 'path' | 'value'
 
-// Observer (Cat 3): fires after a copy-to-clipboard. Enablement is the
-// `showClipboardButton` boolean (Cat 1). A failed copy carries a
+// Observer: fires after a copy-to-clipboard. A failed copy carries a
 // `CLIPBOARD_ERROR`.
 export type OnCopyFunction<T = JsonData> = (
   props: NodeData<T> & {
@@ -314,16 +313,15 @@ export type CompareFunction = (
 export type SortFunction = <T>(arr: T[], nodeMap: (input: T) => [string | number, unknown]) => void
 
 /**
- * Observer (Cat 3): the complete interaction-lifecycle stream. Value-edit,
- * key-rename and add sessions open with a `start*`, then `submit*` (the user
- * committed; a `hold()` gate may run), then terminate with `commit*` (applied —
- * editor closed) or `cancel*` (closed without applying — Esc/✗, or a `null`
- * gate). `delete`/`move` are instant (one event at commit). When `onUpdate`
- * runs, the background settlement reports `updateSuccess` / `updateError`
- * after the `commit*`/`delete`/`move`. `commitRename` carries `{ oldKey, newKey
- * }`; `updateError` carries the `error`. Both settlement events carry the
- * `operation` so interleaved background settlements can be correlated. Absorbs
- * the old `onRenameProperty` (§12).
+ * Observer: the complete interaction-lifecycle stream. Value-edit, key-rename
+ * and add sessions open with a `start*`, then `submit*` (the user committed; a
+ * `hold()` gate may run), then terminate with `commit*` (applied — editor
+ * closed) or `cancel*` (closed without applying — Esc/✗, or a `null` gate).
+ * `delete`/`move` are instant (one event at commit). When `onUpdate` runs, the
+ * background settlement reports `updateSuccess` / `updateError` after the
+ * `commit*`/`delete`/`move`. `commitRename` carries `{ oldKey, newKey }` and
+ * `updateError` the `error`; both settlement events carry the `operation`, so
+ * interleaved background settlements can be correlated.
  */
 export type EditEvent<T = JsonData> = NodeData<T> &
   (
@@ -347,8 +345,8 @@ export type EditEvent<T = JsonData> = NodeData<T> &
 
 export type OnEditEventFunction<T = JsonData> = (e: EditEvent<T>) => void
 
-// Definition to externally set Collapse state -- the `editorRef.collapse`
-// command input (NOT the OnCollapse observer payload, which is flat NodeData).
+// The `editorRef.collapse` command input. Distinct from the `onCollapse`
+// observer payload, which is flat `NodeData`.
 export interface CollapseState {
   path: CollectionKey[]
   collapsed: boolean
@@ -356,7 +354,8 @@ export interface CollapseState {
 }
 
 /**
- * Observer (Cat 3): on collapse/expand (user click or `editorRef.collapse`).
+ * Observer: fires on collapse/expand, from a user click or
+ * `editorRef.collapse`.
  */
 export type OnCollapseFunction<T = JsonData> = (
   props: NodeData<T> & { collapsed: boolean; includeChildren: boolean }
@@ -367,9 +366,9 @@ export type OnCollapseFunction<T = JsonData> = (
 // (its ancestors), so observer events fired from those contexts (`onEditEvent`
 // start*/cancel*, `onCollapse` broadcast) can carry a flat `NodeData`.
 export type BuildNodeDataFromPath = (path: CollectionKey[]) => NodeData
-// `.current` is assigned in JsonEditor; that's fine — under the pinned
-// @types/react 19, `RefObject.current` is mutable (and `MutableRefObject` is
-// deprecated), so `RefObject` is the correct, non-deprecated type here.
+// `.current` is assigned in JsonEditor. Under the pinned @types/react 19,
+// `RefObject.current` is mutable and `MutableRefObject` is deprecated, so
+// `RefObject` is the right type here.
 export type BuildNodeDataFromPathRef = React.RefObject<BuildNodeDataFromPath | undefined>
 
 // For drag-n-drop
@@ -418,14 +417,13 @@ export interface NodeData<T = JsonData> {
   index: number
   value: JsonData
   size: number | null
-  // Visible direct-child count under the current search filter. `number` on
-  // tracked collections while a filter is active; `null` on render-path
-  // NodeData when either no filter is active or this isn't a tracked
-  // collection (e.g. a leaf). `undefined` only when the NodeData wasn't
-  // built by the render path — i.e. the `searchFilter` callback (which the
-  // visibility walk invokes before counts are known) or NodeData built via
-  // `buildNodeData` for the editorRef handle / onCollapse / onEditEvent
-  // bridges. Consumers can use `!= null` to gate on "has a real count".
+  // Visible direct-child count under the current search filter: a `number` on
+  // tracked collections while a filter is active, and `null` on render-path
+  // `NodeData` when no filter is active or this isn't a tracked collection
+  // (a leaf, say). `undefined` only when the `NodeData` wasn't built by the
+  // render path — the `searchFilter` callback, which the visibility walk
+  // invokes before counts are known, or the `editorRef`/`onCollapse`/
+  // `onEditEvent` bridges. Use `!= null` to gate on "has a real count".
   visibleSize?: number | null
   parentData: object | null
   fullData: T
@@ -435,10 +433,10 @@ interface BaseNodeProps {
   data: unknown
   parentData: CollectionData | null
   nodeData: NodeData
-  // Reads the latest whole document at call time — for event-time reads
-  // (onChange `currentData`, Tab `getNextOrPrevious`) that need the live tree,
-  // not the `nodeData.fullData` prop a memoized sibling keeps stale after a
-  // commit elsewhere. Stable identity, so it doesn't weaken the node memo.
+  // Reads the latest whole document at call time, for event-time reads that
+  // need the live tree rather than the `nodeData.fullData` prop, which a
+  // memoised sibling keeps stale after a commit elsewhere. Stable identity, so
+  // it doesn't weaken the node memo.
   getLatestData: () => JsonData
   onError?: OnErrorFunction
   showErrorMessages: boolean
@@ -451,10 +449,10 @@ interface BaseNodeProps {
   allowAddFilter: FilterFunction
   allowDragFilter: FilterFunction
   // The parent collection's permissions, as seen by a child that's a drop
-  // target. `canDragOnto` = parent is editable → a same-collection REORDER may
-  // land here. `canAddHere` = parent accepts adds → a cross-collection RELOCATE
-  // may land here. A relocate additionally needs the dragged node's own
-  // delete-permission (carried on `dragSource`). See useDragNDrop.
+  // target: `canDragOnto` (parent editable) admits a same-collection REORDER,
+  // and `canAddHere` (parent accepts adds) a cross-collection RELOCATE. A
+  // relocate also needs the dragged node's own delete-permission, carried on
+  // `dragSource`. See useDragNDrop.
   canDragOnto: boolean
   canAddHere: boolean
   allowTypeSelection: boolean | TypeOptions | TypeFilterFunction

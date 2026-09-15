@@ -15,13 +15,13 @@ export * from './ErrorIndicator'
 export * from './AutoType'
 export * from './NumberFormatter'
 
-// The definition factories' override surface; the factory builder itself
-// (`createDefinitionFactory`) stays internal
+// The definition factories' override surface. The factory builder itself,
+// `createDefinitionFactory`, stays internal.
 export { type DefinitionOverrides } from './_common/createDefinitionFactory'
 
-// The date-picker widget contract, so consumers can type their own picker (or
-// the supplied `ReactDatePicker` from the `/widgets` subpath) — mirrors core
-// exporting `SelectProps` for `ReactSelect`
+// The date-picker widget contract, so consumers can type their own picker, or
+// the supplied `ReactDatePicker` from the `/widgets` subpath. Mirrors core
+// exporting `SelectProps` for `ReactSelect`.
 export { type DatePickerWidgetProps } from './_common/DatePickerWidget'
 
 // Editor-slot widgets (`ReactSelect`, `CodeEditor`) are NOT re-exported here.

@@ -28,8 +28,8 @@ import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
 const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
-  // Actions + imperative reads from the (stable) store — no subscription, so
-  // editing transitions elsewhere don't re-render this node.
+  // Actions and imperative reads from the stable store, with no subscription,
+  // so editing transitions elsewhere don't re-render this node.
   const { open, cancel, submit, areChildrenBeingEdited } = useEditingStore()
   const { setCollapseState } = useCollapse()
   const {
@@ -65,10 +65,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     collapseClickZones,
     getLatestData,
   } = props
-  // Holds the raw-JSON edit buffer once the user types into it. Stays `null`
-  // until then — while editing, the displayed value is derived lazily by
-  // `editBufferValue` (below), rather than eagerly serializing every
-  // collection's whole subtree on mount. `null` means "not yet typed into".
+  // The raw-JSON edit buffer, `null` until the user types into it. Until then
+  // the displayed value is derived lazily by `editBufferValue` below, rather
+  // than eagerly serialising every collection's whole subtree on mount.
   const [stringifiedValue, setStringifiedValue] = useState<string | null>(null)
 
   const startCollapsed = collapseFilter(incomingNodeData)
@@ -103,46 +102,39 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     { canDrag, canDelete, canDragOnto, canAddHere, path, nodeData, onError, translate }
   )
 
-  // This allows us to not render the children on load if they're hidden (which
-  // gives a big performance improvement with large data sets), but still keep
-  // the animation transition when opening and closing the accordion
+  // Lets hidden children go unrendered on load — a big performance win on
+  // large data sets — while keeping the accordion's open/close transition
   const hasBeenOpened = useRef(!startCollapsed)
 
   // DERIVED VALUES (this makes the JSX conditional logic easier to follow
   // further down)
   const { isEditing, isEditingKey, isPending, isArray } = derivedValues
 
-  // No eager `jsonStringify(data)` sync here: the edit buffer is computed on
-  // demand when the node enters JSON-edit mode. A non-editing node never needs
-  // it, and serializing every collection's subtree on every parent re-render
-  // was a major cost on large trees (and risked clobbering in-progress edits).
-
-  // Contract #2: prop-change retires broadcast. See CollapseProvider
-  // top-of-file doc.
+  // A changed `collapse` prop is fresher consumer intent than a pending
+  // collapse broadcast, so it retires one. See CollapseProvider's top-of-file
+  // doc.
   const collapseFilterChanged = useReferenceChanged(collapseFilter)
   useEffect(() => {
     const shouldBeCollapsed = collapseFilter(nodeData) && !isEditing
     hasBeenOpened.current = !shouldBeCollapsed
     animateCollapse(shouldBeCollapsed)
     if (collapseFilterChanged) setCollapseState(null)
-    // Only re-fire when `collapseFilter` itself changes — `animateCollapse`
-    // depends on this node's own collapsed state, so listing it would make
-    // the effect fight every user-driven expand/collapse.
+    // Only re-fire when `collapseFilter` itself changes. `animateCollapse`
+    // depends on this node's own collapsed state, so listing it would make the
+    // effect fight every user-driven expand/collapse.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [collapseFilter])
 
-  // Contract #1: apply broadcast commands targeting this node. See
-  // CollapseProvider top-of-file doc.
+  // Apply broadcast commands targeting this node. See CollapseProvider.
   useAppliedBroadcast(path, hasBeenOpened, animateCollapse)
 
   // For JSON-editing TextArea
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
 
   // Lets the `string | null` edit buffer back a textarea whose `setValue` is
-  // typed `Dispatch<SetStateAction<string>>`. Resolves the functional-updater
-  // form against the displayed value and always writes a string, so a user
-  // edit never sets the buffer back to null. (It starts null until the first
-  // change — until then the textarea shows the derived `editBufferValue`.)
+  // typed `Dispatch<SetStateAction<string>>`. It resolves the
+  // functional-updater form against the displayed value and always writes a
+  // string, so a user edit never sets the buffer back to null.
   const setEditBuffer = useCallback<React.Dispatch<React.SetStateAction<string>>>(
     (update) =>
       setStringifiedValue((prev) =>
@@ -151,19 +143,18 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     [data, jsonStringify]
   )
 
-  // Reset the JSON-edit buffer. Used on the exits this node controls — confirm
-  // and cancel (below) — and registered as the store `cancelOp`, which fires
-  // when the edit moves to another node, on the entries we own (Edit button +
-  // custom `setIsEditing`). Keeps a stale buffer from showing on the next
-  // entry, without a per-node effect.
+  // Reset the JSON-edit buffer, on the exits this node controls (confirm and
+  // cancel below) and as the store `cancelOp`, which fires when the edit moves
+  // to another node. Keeps a stale buffer from showing on the next entry,
+  // without needing a per-node effect.
   const clearEditBuffer = useCallback(() => setStringifiedValue(null), [])
 
-  // The raw-JSON buffer shown in the editor. Gated on `isEditing` so a
-  // non-editing node never serializes its subtree, and memoized so entering
-  // edit through ANY path — toolbar button, Tab, `editorRef.startEdit`, a
-  // custom node's `setIsEditing` — serializes once on entry rather than on
-  // every re-render until the first keystroke. Once the user types,
-  // `stringifiedValue` is non-null and the `??` short-circuits (no serialize).
+  // The raw-JSON buffer shown in the editor. Gated on `isEditing`, so a
+  // non-editing node never serialises its subtree, and memoised so that
+  // entering edit through any path — toolbar button, Tab,
+  // `editorRef.startEdit`, a custom node's `setIsEditing` — serialises once on
+  // entry rather than on every re-render until the first keystroke. Once the
+  // user types, `stringifiedValue` is non-null and the `??` short-circuits.
   const editBufferValue = useMemo(() => {
     if (!isEditing) return null
     return stringifiedValue ?? jsonStringify(data)
@@ -199,9 +190,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     showCollectionWrapper = true,
   } = customNodeData
 
-  // Subscribe to "is an edit happening anywhere in my subtree" as a boolean —
-  // re-renders this node only when an edit enters or leaves its subtree (keeps
-  // it expanded while a descendant is edited via Tab).
+  // "Is an edit happening anywhere in my subtree", as a boolean, so this node
+  // re-renders only when an edit enters or leaves its subtree. Keeps it
+  // expanded while a descendant is edited via Tab.
   const childrenEditing = useEditingSelector(
     (s) => s.active !== null && isDescendantOf(s.active.path, path)
   )
@@ -209,19 +200,19 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // For when children are accessed via Tab
   if (childrenEditing && collapsed) animateCollapse(false)
 
-  // Early return if this node is filtered out. Root (level 0) is always kept
-  // — the editor's outer container still needs to render even when nothing
-  // matches, so the user sees an "empty" tree rather than nothing at all.
+  // Early return if this node is filtered out. Root (level 0) is always kept:
+  // the editor's outer container still renders when nothing matches, so the
+  // user sees an empty tree rather than nothing at all.
   const isVisible = useNodeVisible(path) || nodeData.level === 0
   // Holds the latest `handleEdit` for the store's commit-on-displace callback.
-  // Declared ABOVE the early-return so the hook runs on every render; assigned
-  // once `handleEdit` exists below.
+  // Declared ABOVE the early-return so the hook runs on every render, and
+  // assigned once `handleEdit` exists below.
   const handleEditRef = useRef<(onCommit?: unknown) => void>(NOOP)
   if (!isVisible && !childrenEditing) return null
 
-  // `visibleSize` is a number on tracked collections while a filter is
-  // active; `null` on leaves under a filter; `undefined` otherwise. Use
-  // `!= null` to check "has a real count". Drives the n-of-m display.
+  // `visibleSize` is a number on tracked collections while a filter is active,
+  // `null` on leaves under a filter, and `undefined` otherwise, so `!= null`
+  // means "has a real count". Drives the n-of-m display.
   const { visibleSize } = nodeData
 
   const collectionType = Array.isArray(data) ? 'array' : 'object'
@@ -229,9 +220,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     collectionType === 'array' ? { open: '[', close: ']' } : { open: '{', close: '}' }
 
   const onKeyDownEdit = (e: React.KeyboardEvent) => {
-    // Normal "Tab" key functionality in TextArea
-    // Defined here explicitly rather than in handleKeyboard as we *don't* want
-    // to override the normal Tab key with the custom "Tab" key value
+    // Normal "Tab" key behaviour in the TextArea. Defined here rather than in
+    // `handleKeyboard`, which would override the normal Tab key with the
+    // custom "Tab" key value.
     if (e.key === 'Tab' && !e.getModifierState('Shift')) {
       e.preventDefault()
       const newValue = insertCharInTextArea(
@@ -257,12 +248,12 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     }
     if (!areChildrenBeingEdited(path)) {
       hasBeenOpened.current = true
-      // Flat NodeData (§17): explicit `collapsed` (post-toggle) must come after
-      // `...nodeData` (whose `collapsed` is the pre-toggle value).
+      // The explicit post-toggle `collapsed` must come after `...nodeData`,
+      // whose own `collapsed` is the pre-toggle value.
       if (onCollapse)
         onCollapse({
           ...nodeData,
-          // Live `fullData` (a bailed node's `nodeData.fullData` is stale).
+          // Live `fullData`: a bailed node's `nodeData.fullData` is stale.
           fullData: getLatestData(),
           collapsed: !collapsed,
           includeChildren: false,
@@ -272,14 +263,14 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   }
 
   // Commits the raw-JSON edit of this collection through the store's commit
-  // engine. Parse failure keeps the session open (only the error fires).
+  // engine. A parse failure keeps the session open and fires only the error.
   // `onCommit` lets a commit-on-displace open the next node at the commit
-  // moment (a parse failure returns first, so it never runs → switch blocked).
+  // moment; a parse failure returns first, so it never runs and the switch is
+  // blocked.
   const handleEdit = (onCommit?: unknown) => {
     // Parse exactly the text shown: `editBufferValue` reuses the string the
-    // memo already serialized, so the parsed input and the INVALID_JSON
-    // payload match the textarea. The `?? jsonStringify(data)` is a type
-    // guard.
+    // memo already serialised, so the parsed input and the INVALID_JSON payload
+    // both match the textarea. The `?? jsonStringify(data)` is a type guard.
     const textToParse = editBufferValue ?? jsonStringify(data)
     let value: CollectionData
     try {
@@ -292,12 +283,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       return
     }
     setError(null)
-    // `onCommit` is a real callback only from commit-on-displace/Tab; the ✓/OK
-    // button (`onOk={handleEdit}`) calls it with a click event, which we
-    // ignore.
+    // `onCommit` is a real callback only from commit-on-displace or Tab. The
+    // ✓/OK button (`onOk={handleEdit}`) passes a click event, which is ignored.
     const advance = typeof onCommit === 'function' ? (onCommit as () => void) : undefined
-    // The buffer clears at the commit moment (so a `hold()` keeps the typed
-    // JSON visible until then), then `advance` opens any displace/Tab target.
+    // The buffer clears at the commit moment, so a `hold()` keeps the typed
+    // JSON visible until then; `advance` then opens any displace/Tab target.
     submit({
       op: 'edit',
       path,
@@ -311,23 +301,21 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     })
   }
 
-  // Point the commit-on-displace ref (declared above the visibility
-  // early-return) at the LIVE `handleEdit` — it closes over the current edit
-  // buffer, so a frozen closure would commit the stale one (see
-  // ValueNodeWrapper for the rationale).
+  // Point the commit-on-displace ref at the LIVE `handleEdit`: it closes over
+  // the current edit buffer, so a frozen closure would commit the stale one.
   handleEditRef.current = handleEdit
 
   // Commits an add and fires `commitAdd` (or the error observer).
   const handleAdd = (key: string) => {
-    // Contract #3: user-action clears broadcast. See CollapseProvider
-    // top-of-file doc.
+    // A user action clears any pending collapse broadcast, so the new node
+    // doesn't inherit it. See CollapseProvider's top-of-file doc.
     setCollapseState(null)
     animateCollapse(false)
     const newValue = getDefaultNewValue(nodeData, key)
 
     if (collectionType === 'array') {
-      // Array adds are instant — no key-entry session. The engine fires
-      // `commitAdd` and settles; a rejected add surfaces the error here.
+      // Array adds are instant, with no key-entry session: the engine fires
+      // `commitAdd` and settles, and a rejected add surfaces the error here.
       const index = insertAtTop.array ? 0 : (data as unknown[]).length
       const options = insertAtTop.array ? { insert: true } : {}
       submit({ op: 'add', path, key: index, value: newValue, options, instant: true }).then(
@@ -339,8 +327,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     }
 
     // Object add: a key-entry session is open on this collection. A duplicate
-    // key cancels it; otherwise commit (the engine fires
-    // submitAdd → commitAdd).
+    // key cancels it; otherwise the engine fires submitAdd → commitAdd.
     if (key in data) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, key)
       cancel()
@@ -369,10 +356,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   const showLabel = showArrayIndexes || !isArray
   // `'when-collapsed-or-filtered'` surfaces the count whenever the filter is
-  // currently subsetting this collection's children — useCommon sets
-  // `visibleSize` to a number on tracked collections while a filter is
-  // active (and `null` on leaves), so `!= null` catches "filter active
-  // AND we have a real count for this node".
+  // subsetting this collection's children, which `visibleSize != null` detects
+  // (see its declaration above).
   const showCount =
     showCollectionCount === 'when-collapsed'
       ? collapsed
@@ -384,11 +369,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const showCustomNodeContents =
     CustomComponent && ((isEditing && showOnEdit) || (!isEditing && showOnView))
 
-  // Deliberately NOT memoized: the early `return null` above (filtered-out
-  // nodes) means a `useMemo` here would break the Rules of Hooks, and hoisting
-  // it above that return would force filtered-out nodes to pay for this
-  // entries-map + sort they currently skip. Cheap enough to recompute for the
-  // nodes that actually render.
+  // Deliberately NOT memoised: the early `return null` above means a `useMemo`
+  // here would break the Rules of Hooks, and hoisting it above that return
+  // would make filtered-out nodes pay for an entries-map and sort they skip.
+  // Cheap enough to recompute for the nodes that do render.
   const keyValueArray = Object.entries(data).map(
     ([key, value]) =>
       [collectionType === 'array' ? Number(key) : key, value] as [string | number, ValueData]
@@ -397,11 +381,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   if (collectionType === 'object') sort<[string | number, ValueData]>(keyValueArray, (_) => _)
 
   // A custom component with `showOnEdit` owns this node's editor, so it
-  // receives the live child rows as `children` in edit mode too (same as
-  // view) — never the built-in JSON textarea. The textarea only renders for
-  // standard collection editing (no custom editor for the editing state); its
-  // buffer/parse plumbing (`editBufferValue`/`handleEdit`) simply goes unused
-  // for these nodes.
+  // receives the live child rows as `children` in edit mode as well as view
+  // mode, never the built-in JSON textarea. The textarea renders only for
+  // standard collection editing, and its `editBufferValue`/`handleEdit`
+  // plumbing goes unused for these nodes.
   const customOwnsEdit = !!CustomComponent && showOnEdit
   const showChildRows = !isEditing || customOwnsEdit
 
@@ -454,8 +437,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       )
     })
   ) : (
-    // -custom variant for Custom TextEditor so it remains full width and not
-    // fit to content like the default textarea
+    // The -custom variant keeps a custom TextEditor full width, rather than
+    // fitting content like the default textarea
     <div className={`jer-collection-text-edit${TextEditor ? '-custom' : ''}`}>
       {TextEditor ? (
         <TextEditor
@@ -492,25 +475,22 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     </div>
   )
 
-  // If the collection wrapper (expand icon, brackets, etc) is hidden, there's
-  // no way to open a collapsed custom node, so this ensures it will stay open.
-  // It can still be displayed collapsed by handling it internally if this is
-  // desired.
-  // Also, if the node is editing via "Tab" key, it's parent must be opened,
-  // hence `childrenEditing` check
+  // With the collection wrapper (expand icon, brackets, etc.) hidden there's no
+  // way to open a collapsed custom node, so it stays open here; a custom node
+  // wanting a collapsed display can handle that internally. A node reached by
+  // Tab also needs its parent open, hence the `childrenEditing` check.
   const isCollapsed = !showCollectionWrapper ? false : collapsed && !childrenEditing
   if (!isCollapsed) hasBeenOpened.current = true
 
   // Names the chevron's action, so it follows the node's current state. Serves
-  // both the accessible name and the (opt-in) hover tooltip, matching how the
-  // icon controls pair `aria-label` with a `showIconTooltips`-gated `title`.
+  // as both the accessible name and the opt-in hover tooltip, as the icon
+  // controls pair `aria-label` with a `showIconTooltips`-gated `title`.
   const collapseLabel = translate(collapsed ? 'TOOLTIP_EXPAND' : 'TOOLTIP_COLLAPSE', nodeData)
 
-  // A getter, not an object, so a plain collection with no custom component or
-  // wrapper never allocates these props — only the two custom-node sites below
-  // call it.
-  // The flat consumer `onError` rides along in `...props` — harmless, since
-  // it's omitted from `CustomComponentProps` (type-hidden) and this
+  // A getter rather than an object, so a plain collection with no custom
+  // component or wrapper never allocates these props — only the two custom-node
+  // sites below call it. The consumer `onError` rides along in `...props`,
+  // which is harmless: it's omitted from `CustomComponentProps` and a
   // function-result spread isn't excess-checked. A custom component reports
   // errors by throwing from `fromStandardType`, not via a prop.
   const getCustomNodeAllProps = () => ({
@@ -525,9 +505,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     onKeyDown: onKeyDownEdit,
     isEditing,
     isPending,
-    // Gated on `canEdit`: custom components call `setIsEditing` unconditionally
-    // (e.g. on double-click), so a read-only node must hand them a no-op rather
-    // than an opener.
+    // Gated on `canEdit`: custom components call `setIsEditing`
+    // unconditionally (e.g. on double-click), so a read-only node hands them a
+    // no-op rather than an opener.
     setIsEditing: canEdit
       ? () =>
           open(path, {
@@ -601,16 +581,14 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
         ...getStyles('collection', nodeData),
         position: 'relative',
       }}
-      // ANY `draggable` ancestor (not just the immediate parent) suppresses
-      // native mouse text-selection / cursor-positioning inside a nested input
-      // — Chromium hijacks `mousedown` to start a drag. So the whole ancestor
-      // chain above an open input must drop `draggable`, not just the editing
-      // node itself: `childrenEditing` (already computed for collapse) is true
-      // for this node and every ancestor of the editing node, so reading it
-      // here adds no extra re-renders. `isEditing`/`isEditingKey` cover this
-      // node's own value/key edit. Together they keep every node from the open
-      // input up to the root non-draggable, without the old global editing flag
-      // that re-rendered every draggable node in the tree (§16).
+      // ANY `draggable` ancestor, not just the immediate parent, suppresses
+      // native mouse text-selection and cursor-positioning inside a nested
+      // input, since Chromium hijacks `mousedown` to start a drag. So the whole
+      // ancestor chain above an open input must drop `draggable`.
+      // `childrenEditing`, already computed for collapse, is true for this node
+      // and every ancestor of the editing node, so reading it here adds no
+      // re-renders; `isEditing`/`isEditingKey` cover this node's own value or
+      // key edit.
       draggable={canDrag && !isEditing && !isEditingKey && !childrenEditing}
       {...dragSourceProps}
       {...getDropTargetProps('above')}
@@ -667,10 +645,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
               style={{
                 ...getStyles('itemCount', nodeData),
                 transition: cssTransitionValue,
-                // `allow-discrete` lets the `all` transition animate `display`
-                // too, so the count fades (not pops) as it shows/hides. The
-                // `display` toggle itself lives in
-                // `.jer-collection-item-count`.
+                // `allow-discrete` lets the `all` transition animate
+                // `display` too, so the count fades rather than pops. The
+                // `display` toggle lives in `.jer-collection-item-count`.
                 transitionBehavior: 'allow-discrete',
               }}
             >
@@ -741,7 +718,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   )
 }
 
-// Memoized boundary: an untouched subtree (same `data` ref via structural
-// sharing) bails out instead of re-rendering when a parent re-renders. The
-// recursive `<CollectionNode>` usages above resolve to this memoized export.
+// Memoised boundary: an untouched subtree — same `data` reference, via
+// structural sharing — bails out instead of re-rendering when a parent does.
+// The recursive `<CollectionNode>` usages above resolve to this export.
 export const CollectionNode = React.memo(CollectionNodeBase, areNodePropsEqual)

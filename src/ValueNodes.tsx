@@ -22,12 +22,11 @@ interface StringDisplayProps {
   canEdit: boolean
   setIsEditing: (value: React.SetStateAction<boolean>) => void
   translate: TranslateFunction
-  // Gates the "Show more" hover tooltip, the same way it gates the icon
-  // controls'. Optional so a custom component composing `StringDisplay` can
-  // leave it out; the accessible name is present either way.
+  // Gates the "Show more" hover tooltip, as it does the icon controls'.
+  // Optional, so a custom component composing `StringDisplay` can leave it out;
+  // the accessible name is present either way.
   showIconTooltips?: boolean
-  // Can override nodeDate.value if we need to modify it for specific display
-  // purposes
+  // Overrides `nodeData.value` for display purposes
   value?: string
   // For use in Custom components, e.g. Hyperlink
   TextWrapper?: React.ComponentType<{ children: React.ReactNode }>
@@ -149,9 +148,9 @@ export const StringEdit: React.FC<StringEditProps> = ({
         handleKeyboard(e, {
           stringConfirm: handleEdit,
           stringLineBreak: () => {
-            // Simulates standard text-area line break behaviour. Only
-            // required when control key is not "standard" text-area
-            // behaviour ("Shift-Enter" or "Enter")
+            // Simulates standard text-area line-break behaviour, needed
+            // only when the control key isn't the text area's own
+            // ("Shift-Enter" or "Enter")
             const newValue = insertCharInTextArea(
               textAreaRef as React.RefObject<HTMLTextAreaElement>,
               '\n'
@@ -278,8 +277,8 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
       checked={value}
       onChange={() => setValue(!value)}
       onKeyDown={(e) => {
-        // If we don't explicitly suppress normal checkbox keyboard behaviour,
-        // the default key (Space) will continue to work even if re-defined
+        // Without suppressing the checkbox's native keyboard behaviour, Space
+        // keeps working even when the control is re-defined
         if (e.key === ' ') e.preventDefault()
         handleKeyboard(e, {
           booleanConfirm: handleEdit,
@@ -300,39 +299,37 @@ export const BooleanValue: React.FC<InputProps & { value: boolean }> = ({
   )
 }
 
-// A custom hook to add a keyboard listener to a component that doesn't have
-// standard DOM keyboard behaviour (like inputs). Only used for the `null`
-// component here, but is exported for re-use with Custom Components if required
+// Adds a keyboard listener to a component without standard DOM keyboard
+// behaviour. Used here for the `null` component, and exported for re-use in
+// custom components.
 export const useKeyboardListener = (isEditing: boolean, listener: (e: unknown) => void) => {
   const timer = useRef<number | undefined>(undefined)
   const currentListener = useRef(listener)
 
-  // Always update the ref to point to the latest listener
+  // Keep the ref pointing at the latest listener
   useEffect(() => {
     currentListener.current = listener
   }, [listener])
 
-  // Define our stable event handler function
+  // A stable event handler
   const eventHandler = (e: unknown) => {
     currentListener.current(e)
   }
 
   useEffect(() => {
-    // The listener messes with other elements when switching rapidly (e.g. when
-    // "getNext" is called repeatedly on inaccessible elements), so we cancel
-    // the listener load before it even happens if this node gets switched from
-    // isEditing to not in less than 100ms
+    // The listener interferes with other elements when switching rapidly (e.g.
+    // repeated "getNext" calls over inaccessible elements), so a node that
+    // leaves `isEditing` within 100ms cancels the pending load
     window.clearTimeout(timer.current)
 
     if (!isEditing) return
 
-    // Small delay to prevent registering keyboard input from previous element
-    // if switched using "Tab"
+    // A small delay stops keyboard input from the previous element registering
+    // here after a Tab
     timer.current = window.setTimeout(() => {
       window.addEventListener('keydown', eventHandler)
     }, 100)
 
-    // Cleanup function
     return () => {
       window.clearTimeout(timer.current)
       window.removeEventListener('keydown', eventHandler)

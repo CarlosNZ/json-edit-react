@@ -1,12 +1,12 @@
-// Structural deep-equality with early-exit on the first difference. The default
-// comparator for `useStableValue`. Hand-rolled to keep the package free of
-// runtime dependencies (core has none and neither does this package).
+// Structural deep-equality with early exit on the first difference, and the
+// default comparator for `useStableValue`. Hand-rolled to keep the package free
+// of runtime dependencies.
 //
-// It handles the JSON-shaped values these helpers compare: primitives (via
-// `Object.is`, so `NaN` equals `NaN` and `+0`/`-0` differ), arrays (length then
-// element-wise), and plain objects (same own-key set, then value-wise). It is
-// deliberately not structural-clone-grade — Map/Set/Date/RegExp/typed arrays
-// aren't special-cased because they don't appear in the values it compares.
+// It covers the JSON-shaped values these helpers compare: primitives via
+// `Object.is` (so `NaN` equals `NaN` and `+0`/`-0` differ), arrays by length
+// then element-wise, and plain objects by own-key set then value-wise.
+// Deliberately not structural-clone-grade — Map/Set/Date/RegExp/typed arrays
+// don't appear in the values it compares.
 export const deepEqual = (a: unknown, b: unknown): boolean => {
   if (Object.is(a, b)) return true
 

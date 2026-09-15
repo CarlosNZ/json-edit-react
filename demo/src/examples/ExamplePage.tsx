@@ -48,10 +48,10 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
   const probeRef = useRef<HTMLDivElement>(null)
   const palette = useThemePalette(probeRef, theme)
 
-  // Standard props the shell injects into every static example's editor (spread
-  // via `useExampleProps()` on a `// ---cut---` line, so they stay out of the
-  // displayed source). Add shared presentation props here — e.g. className,
-  // showCollectionCount. Memoised so the editor's prop comparison stays stable.
+  // Standard props the shell injects into every static example's editor, spread
+  // via `useExampleProps()` on a `// ---cut---` line so they stay out of the
+  // displayed source. Shared presentation props go here (className,
+  // showCollectionCount). Memoised, so the editor's props compare stably.
   const editorProps = useMemo<ExampleEditorProps>(
     () => ({ theme, maxWidth: '100%', showCollectionCount: 'when-collapsed' }),
     [theme]
@@ -70,8 +70,8 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
     setSource(null)
     def.code().then((mod) => {
       if (cancelled) return
-      // Static: strip demo-only scaffolding for a clean snippet. Live: the code
-      // is the editable starting point, shown verbatim.
+      // Static examples strip demo-only scaffolding for a clean snippet; a live
+      // example's code is the editable starting point, shown verbatim.
       setSource(def.kind === 'static' ? prepareExampleSource(mod.default) : mod.default)
     })
     return () => {
@@ -91,12 +91,12 @@ export const ExamplePage = ({ slug }: { slug: string }) => {
   }
 
   const showPicker = def.theme !== false
-  // Examples that mirror a demo data set deep-link to it; others go to the
-  // demo's default view. (Both resolve to `<App />` via the catch-all route.)
+  // Examples mirroring a demo data set deep-link to it; others go to the demo's
+  // default view. Both resolve to `<App />` via the catch-all route.
   const demoUrl = def.demoDataSet ? `/?data=${def.demoDataSet}` : '/'
 
-  // The rendered example (static + custom both ship a component). Shared so the
-  // static branch can choose whether to wrap it in the shell's drop-shadow.
+  // The rendered example; static and custom both ship a component. Shared so
+  // the static branch can choose whether to wrap it in the shell's drop-shadow.
   const exampleContent = (
     <ExampleEditorProvider value={editorProps}>
       <Suspense fallback={<Loading />}>{ExampleComponent && <ExampleComponent />}</Suspense>

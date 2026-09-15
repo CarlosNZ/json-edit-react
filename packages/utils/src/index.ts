@@ -23,7 +23,7 @@
 //   - Ready-made `searchFilter` helpers for common search use cases [planned]
 //     https://github.com/CarlosNZ/json-edit-react/issues/319
 
-// Cross-utility shared pieces (the event-name vocabulary). Internal `_common`,
+// Cross-utility shared pieces (the event-name vocabulary): internal `_common`,
 // surfaced here as public API.
 export * from './_common/events'
 
@@ -36,8 +36,8 @@ export * from './validation'
 // <svg> element. https://github.com/CarlosNZ/json-edit-react/issues/369
 export * from './icon'
 
-// NOTE: the filter-function toolkit (`./filters`) is deliberately NOT
-// re-exported here. It ships under its own subpath —
-// `@json-edit-react/utils/filters` — so its generic builder names (`and`, `or`,
-// `not`, `root`, `collections`, `primitives`, …) stay off the package root. See
-// package.json `exports` and rollup.config.mjs.
+// The filter-function toolkit (`./filters`) is deliberately NOT re-exported
+// here: it ships under its own subpath, `@json-edit-react/utils/filters`, so
+// its generic builder names (`and`, `or`, `not`, `root`, `collections`,
+// `primitives`, …) stay off the package root. See package.json `exports` and
+// rollup.config.mjs.

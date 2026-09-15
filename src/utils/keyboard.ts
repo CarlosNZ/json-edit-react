@@ -13,9 +13,8 @@ import { buildNodeData } from './buildNodeData'
 import { extract } from './extract'
 import { isCollection, toArray } from './misc'
 
-// A general keyboard handler. Matches keyboard events against the predefined
-// keyboard controls (defaults, or user-defined), and maps them to specific
-// actions, provided via the "eventMap"
+// Matches a keyboard event against the keyboard controls (default or
+// user-defined) and runs the matching action from `eventMap`
 export const handleKeyPress = (
   controls: KeyboardControlsFull,
   eventMap: Partial<Record<keyof KeyboardControls, () => void>>,
@@ -30,8 +29,7 @@ export const handleKeyPress = (
   }
 }
 
-// Returns the currently pressed modifier key. Only returns one, so the first
-// match in the list is returned
+// The currently pressed modifier key — only ever one, the first match
 export const getModifier = (
   e: React.KeyboardEvent | React.MouseEvent
 ): React.ModifierKey | undefined => {
@@ -48,8 +46,8 @@ const eventMatch = (
   keyEvent: KeyEvent | React.ModifierKey[] | null,
   definition: string
 ) => {
-  // A `null` control means the binding is disabled — never match it, so the
-  // key falls through to native browser behaviour (e.g. Tab moves focus).
+  // A `null` control is a disabled binding: never match it, so the key falls
+  // through to native browser behaviour (e.g. Tab moves focus).
   if (!keyEvent) return false
   const eventKey = e.key
   const eventModifier = getModifier(e)
@@ -57,9 +55,8 @@ const eventMatch = (
   const { key, modifier } = keyEvent
 
   if (
-    // If the stringLineBreak control is the default (Shift-Enter), don't do
-    // anything, just let normal text-area behaviour occur. This allows normal
-    // "Undo" behaviour for the text area to continue as normal
+    // With `stringLineBreak` at its default (Shift-Enter), let normal
+    // text-area behaviour happen, which keeps its native Undo working
     definition === 'stringLineBreak' &&
     eventKey === 'Enter' &&
     eventModifier === 'Shift' &&
@@ -116,9 +113,9 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
 
     // `null` disables the binding. The modifier-array controls
     // (`clipboardModifier`/`collapseModifier`) are consumed via `.includes()`,
-    // which is always false for `[]`, so we store an empty array and they stay
-    // non-null. Every other (`KeyEvent`) control is stored as `null`, which
-    // `eventMatch` treats as "never matches".
+    // which is always false for `[]`, so they're stored as an empty array and
+    // stay non-null. Every other (`KeyEvent`) control is stored as `null`,
+    // which `eventMatch` treats as "never matches".
     if (value === null) {
       controls[typedKey] = (isModifierKey ? [] : null) as unknown as KeyEvent & React.ModifierKey[]
       continue
@@ -133,12 +130,11 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
     controls[typedKey] = definition
   }
 
-  // Apply the generic "confirm" fallback once, after the loop has fully
-  // resolved any user-supplied "confirm" control. A per-type confirm inherits
-  // the generic confirm whenever `confirm` is explicitly provided — including
-  // `null`, so `confirm: null` disables all of them. An explicitly set
-  // per-type confirm (value or `null`) always wins, and an unset generic
-  // confirm leaves the per-type defaults untouched.
+  // Apply the generic "confirm" fallback once the loop has resolved any
+  // user-supplied "confirm" control. A per-type confirm inherits the generic
+  // one whenever `confirm` is explicitly provided, `null` included — so
+  // `confirm: null` disables them all. An explicitly set per-type confirm wins,
+  // and an unset generic confirm leaves the per-type defaults alone.
   confirmFallbackKeys.forEach((key) => {
     if (userControls[key] === undefined && userControls.confirm !== undefined)
       controls[key] = controls.confirm as KeyEvent & React.ModifierKey[]
@@ -147,9 +143,8 @@ export const getFullKeyboardControlMap = (userControls: KeyboardControls): Keybo
   return controls
 }
 
-// Manipulates a TextArea (ref) directly by inserting a string at the current
-// cursor/selection position. Used to insert Line break and Tab characters via
-// keyboard control.
+// Inserts a string into a TextArea (by ref) at the current cursor/selection
+// position, for the line-break and Tab keyboard controls
 export const insertCharInTextArea = (
   textAreaRef: React.MutableRefObject<HTMLTextAreaElement>,
   insertionString: string

@@ -13,7 +13,7 @@ import { type TranslateFunction } from '../localisation'
 
 interface DnDProps {
   canDrag: boolean
-  // This node's own delete-permission — stashed on `dragSource` at pickup so a
+  // This node's own delete-permission, stashed on `dragSource` at pickup so a
   // relocate (move OUT of its collection) can be gated at the drop.
   canDelete: boolean
   // The parent collection's permissions, used when THIS node is a drop target:
@@ -45,8 +45,8 @@ export const useDragNDrop = ({
   // Whether the in-flight drag may legally land on THIS node. A drop inserts
   // the dragged item as a sibling of this node, into this node's parent
   // collection, so:
-  //   - same collection (source's parent === this node's parent) → REORDER,
-  //     allowed when the parent is editable (`canDragOnto`);
+  //   - same collection → REORDER, allowed when the parent is editable
+  //     (`canDragOnto`);
   //   - different collection → RELOCATE, allowed when the source is deletable
   //     (`dragSource.canDelete`) AND this collection accepts adds
   //     (`canAddHere`).
@@ -65,31 +65,31 @@ export const useDragNDrop = ({
     return {
       // Arm a drag only on a genuine grab: a primary-button mousedown made
       // while nothing is being edited. Firefox fires a phantom `dragstart` on a
-      // node that became `draggable` when an editor closed (e.g. a type-change
-      // to object/array/null) — that has no real grab behind it, so it stays
-      // disarmed and `onDragStart` rejects it. The editing `<select>`'s own
-      // mousedown fires while editing, so it never arms either.
+      // node that becomes `draggable` as an editor closes (e.g. a type change
+      // to object/array/null); with no real grab behind it, that stays disarmed
+      // and `onDragStart` rejects it. The editing `<select>`'s own mousedown
+      // fires while editing, so it never arms either.
       onMouseDown: (e: React.MouseEvent) => {
         if (e.button === 0 && editingStore.getSnapshot().active === null) armed.current = true
       },
-      // A click with no drag: disarm, so a later phantom dragstart can't reuse
-      // it. (A real drag fires `dragstart` before any mouseup, so this never
-      // races a legitimate grab.)
+      // A click with no drag disarms, so a later phantom dragstart can't reuse
+      // it. A real drag fires `dragstart` before any mouseup, so this never
+      // races a legitimate grab.
       onMouseUp: () => {
         armed.current = false
       },
       onDragStart: (e: React.DragEvent) => {
-        // Reject an unarmed drag (the Firefox phantom) and — as before — any
-        // drag while a node is being edited. Reading the store imperatively
-        // (not a render-time flag) keeps edit transitions from re-rendering
-        // every draggable node in the tree.
+        // Reject an unarmed drag (the Firefox phantom), and any drag while a
+        // node is being edited. Reading the store imperatively rather than from
+        // a render-time flag keeps edit transitions from re-rendering every
+        // draggable node in the tree.
         if (!armed.current || editingStore.getSnapshot().active !== null) {
           e.preventDefault()
           e.stopPropagation()
           return
         }
-        // Consume immediately — a drag source can unmount mid-drag (a
-        // structural edit remounts it), so `dragend` may never fire to clear
+        // Consume immediately: a drag source can unmount mid-drag, when a
+        // structural edit remounts it, so `dragend` may never fire to clear
         // it.
         armed.current = false
         e.stopPropagation()
@@ -107,17 +107,17 @@ export const useDragNDrop = ({
   // Props for the items being dropped onto
   const getDropTargetProps = useMemo(
     () => (position: Position) => {
-      // Never a drop target if neither a reorder nor a relocate could ever land
-      // here. Whether a given in-flight drag actually may is decided live by
-      // `dropAllowed()` in the handlers below.
+      // Never a drop target if neither a reorder nor a relocate could ever
+      // land here. Whether a given in-flight drag actually may is decided live
+      // by `dropAllowed()` in the handlers below.
       if (!canDragOnto && !canAddHere) return {}
       return {
         onDragOver: (e: React.DragEvent) => {
           e.stopPropagation()
-          // `preventDefault` is what marks an element droppable (sets the drop
-          // cursor and lets `drop` fire). Gate it on the same predicate as the
-          // highlight, so an illegal target shows the "no-drop" cursor and
-          // doesn't fire a drop that `handleDrop` would only no-op.
+          // `preventDefault` is what marks an element droppable: it sets the
+          // drop cursor and lets `drop` fire. Gating it on the same predicate
+          // as the highlight makes an illegal target show the "no-drop" cursor
+          // rather than firing a drop that `handleDrop` would no-op.
           if (dropAllowed()) e.preventDefault()
         },
         onDrop: (e: React.DragEvent) => {
@@ -128,8 +128,8 @@ export const useDragNDrop = ({
         },
         onDragEnter: (e: React.DragEvent) => {
           e.stopPropagation()
-          // Highlight only a target this drag may legally land on (also blocks
-          // self/descendant — see `dropAllowed`).
+          // Highlight only a target this drag may legally land on, which also
+          // blocks self and descendants — see `dropAllowed`.
           if (dropAllowed()) setIsDragTarget(position)
         },
         onDragExit: (e: React.DragEvent) => {
@@ -142,9 +142,8 @@ export const useDragNDrop = ({
     [dragSource, canDragOnto, canAddHere, path]
   )
 
-  // A dummy component to allow us to detect when dragging onto the *bottom*
-  // half of an element -- takes up exactly 50% its container height and is
-  // locked to the bottom.
+  // Detects a drag onto the *bottom* half of an element: exactly 50% of its
+  // container's height, locked to the bottom.
   const BottomDropTarget = useMemo(
     () =>
       dragSource.path !== null && dropAllowed() ? (
@@ -165,8 +164,8 @@ export const useDragNDrop = ({
     [dragSource, canDragOnto, canAddHere, path.length]
   )
 
-  // "Padding" element displayed either above or below a node to indicate
-  // current drop target position
+  // "Padding" element shown above or below a node to indicate the current drop
+  // target position
   const DropTargetPadding: React.FC<{ position: Position; nodeData: NodeData }> = ({
     position,
     nodeData,
@@ -178,13 +177,12 @@ export const useDragNDrop = ({
 
   const handleDrop = (position: Position) => {
     if (dragSource.path === null) return
-    // The same predicate the highlight uses, re-checked here because the drop
-    // fires independently of the drag-over highlight. It enforces the
-    // reorder/relocate permission rules AND the self/descendant guard — without
-    // the latter the `move` op would delete the source then re-create it under
-    // itself (`createNew`), nesting the collection in a copy of itself.
-    // (Firefox fires such a drop; Chrome and Safari suppress it, but this
-    // covers all.)
+    // The same predicate the highlight uses, re-checked because the drop fires
+    // independently of the drag-over highlight. It enforces the
+    // reorder/relocate permission rules AND the self/descendant guard, without
+    // which the `move` op would delete the source then re-create it under
+    // itself, nesting the collection in a copy of itself. Firefox fires such a
+    // drop; Chrome and Safari suppress it, but this covers all three.
     if (!dropAllowed()) return
     const sourceKey = dragSource.path.slice(-1)[0]
     const sourceParent = dragSource.path.slice(0, -1)
@@ -200,12 +198,12 @@ export const useDragNDrop = ({
     ) {
       onError({ code: 'KEY_EXISTS', message: translate('ERROR_KEY_EXISTS', nodeData) }, sourceKey)
     } else {
-      // Move is an instant op: the engine fires `move` (with the SOURCE node)
-      // and settles. A rejected move reverts and reports via the `updateError`
-      // event (which carries the correct SOURCE identity) — NOT a node-local
-      // `onError` here, since this handler runs on the DESTINATION node, so
-      // its error would show on the wrong place once the node reverts to its
-      // origin.
+      // Move is an instant op: the engine fires `move` with the SOURCE node,
+      // then settles. A rejected move reverts and reports via the
+      // `updateError` event, which carries the correct SOURCE identity —
+      // deliberately not a node-local `onError`, since this handler runs on the
+      // DESTINATION node and its error would show in the wrong place once the
+      // node reverts to its origin.
       editingStore.submit({
         op: 'move',
         path: dragSource.path,

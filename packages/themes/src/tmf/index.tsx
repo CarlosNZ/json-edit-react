@@ -6,14 +6,14 @@ import { type Theme, type ThemeIcons } from 'json-edit-react'
 // weight so the linear gradients actually show.
 //
 // OK/Cancel are NOT from the set — they're self-coloured "button" glyphs: a
-// white tick on a blue disc, and its reverse (blue ✕ on a white disc with a
-// blue ring so it reads on the light canvas). They paint with explicit colours,
-// so the `iconOk`/`iconCancel` style colours don't apply to them.
+// white tick on a blue disc, and its reverse (a blue ✕ on a white disc with a
+// blue ring, so it reads on the light canvas). They paint with explicit
+// colours, so the `iconOk`/`iconCancel` style colours don't apply to them.
 const BRAND_BLUE = 'rgb(62, 123, 250)'
 
-// Larger-than-normal action/button glyphs (the collapse caret stays smaller —
-// enlarging it crowds the key, which core's `.jer-collapse-icon` offset is
-// tuned around).
+// Larger-than-normal action and button glyphs. The collapse caret stays
+// smaller: enlarging it crowds the key, which core's `.jer-collapse-icon`
+// offset is tuned around.
 const actionScale = 1.2
 
 const tmfIcons: ThemeIcons = {
@@ -37,8 +37,8 @@ const tmfIcons: ThemeIcons = {
     scale: actionScale,
   },
   // Feather edit-2 pencil (feathericons.com, MIT) — the conventional pencil the
-  // mSupply app uses. Stroke-based, so the gradient paints the stroke (subtler
-  // than on a fill); `userSpaceOnUse` keeps one ramp along the whole path.
+  // mSupply app uses. Stroke-based, so the gradient paints the stroke, which is
+  // subtler than on a fill; `userSpaceOnUse` keeps one ramp along the path.
   edit: {
     content: (
       <>
@@ -68,8 +68,8 @@ const tmfIcons: ThemeIcons = {
     viewBox: '0 0 24 24',
     scale: actionScale * 0.9,
   },
-  // --- Previous edit glyph (ph:syringe-fill, gradient-filled). Uncomment this
-  //     and comment out the Feather block above to switch back: ---
+  // --- Alternative edit glyph (ph:syringe-fill, gradient-filled). Uncomment
+  //     this and comment out the Feather block above to use it: ---
   /* edit: {
     content: (
       <>
@@ -88,8 +88,8 @@ const tmfIcons: ThemeIcons = {
     viewBox: '0 0 256 256',
     scale: actionScale,
   }, */
-  // ph:trash-fill — clear "delete" affordance. Swap the d for ph:biohazard-fill
-  // (commented below) if you want the explicit medical-waste read instead.
+  // ph:trash-fill — a clear "delete" affordance. Swap the d for
+  // ph:biohazard-fill (commented below) for the explicit medical-waste read.
   delete: {
     content: (
       <>
@@ -110,9 +110,9 @@ const tmfIcons: ThemeIcons = {
     viewBox: '0 0 256 256',
     scale: actionScale,
   },
-  // Feather copy (feathericons.com, MIT) — the conventional two-sheets copy the
-  // mSupply app uses. Stroke-based; gradient paints the stroke. `userSpaceOnUse`
-  // gives one continuous ramp across both sub-paths.
+  // Feather copy (feathericons.com, MIT) — the conventional two-sheets copy
+  // the mSupply app uses. Stroke-based, so the gradient paints the stroke;
+  // `userSpaceOnUse` gives one continuous ramp across both sub-paths.
   copy: {
     content: (
       <>
@@ -143,8 +143,8 @@ const tmfIcons: ThemeIcons = {
     viewBox: '0 0 24 24',
     scale: actionScale * 0.9,
   },
-  // --- Previous copy glyph (ph:clipboard-text-fill, gradient-filled). Uncomment
-  //     this and comment out the Feather block above to switch back: ---
+  // --- Alternative copy glyph (ph:clipboard-text-fill, gradient-filled).
+  //     Uncomment this and comment out the Feather block above to use it: ---
   /* copy: {
     content: (
       <>
@@ -181,7 +181,7 @@ const tmfIcons: ThemeIcons = {
     viewBox: '0 0 24 24',
     scale: actionScale,
   },
-  // Custom "button": reversed — blue ✕ on a white disc with a blue ring.
+  // Custom "button": the reverse — a blue ✕ on a white disc with a blue ring.
   cancel: {
     content: (
       <>
@@ -198,8 +198,8 @@ const tmfIcons: ThemeIcons = {
     viewBox: '0 0 24 24',
     scale: actionScale,
   },
-  // ph:caret-down-fill — rotated -90deg by core CSS when collapsed. Kept at the
-  // smaller scale (see actionScale note) to avoid crowding the key.
+  // ph:caret-down-fill — rotated -90deg by core CSS when collapsed. Kept at
+  // the smaller scale (see the actionScale note) to avoid crowding the key.
   // collection: {
   //   content: (
   //     <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,48,88H208a8,8,0,0,1,5.66,13.66Z" />

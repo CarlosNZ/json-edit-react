@@ -1,44 +1,32 @@
 /**
- * Hook to handle the logic for collapsing and expanding collection nodes, and
- * holding the current collapsed state of a collection node
+ * Collapse/expand logic for collection nodes, and the node's collapsed state.
  *
- * The main problem we need to solve is that it's not possible to use a CSS
- * transition for `height` when it is set to `auto`, which it needs to be in
- * this case as we don't know the state or size of the inner nodes.
- *
- * We can, however, set a `max-height` and, as long as the maximum is larger
- * than the actual height, we can transition `max-height`, a technique which is
- * summarised here:
+ * A CSS transition can't animate `height: auto`, which is what a collection
+ * needs — the size of the inner nodes isn't known. `max-height` can be
+ * transitioned instead, as long as the maximum exceeds the actual height:
  * https://dev.to/sarah_chima/using-css-transitions-on-the-height-property-al0
  *
- * The difficulty is choosing an appropriate value for the `max-height` -- if
- * it's too small, the node contents gets truncated, but if it's too large,
- * there is a noticeable "lag" as the invisible "unused" part of the height is
- * collapsed. Just setting a really high value works, but the delay is annoying.
+ * The difficulty is choosing that `max-height`. Too small truncates the node's
+ * contents; too large produces a noticeable lag while the unused height
+ * collapses. Once a node has been opened its height can be queried from a ref;
+ * before that it's estimated from the number of text lines the full content
+ * would occupy, which is crude but adequate in nearly every case.
  *
- * So we can try and get the `max-height` from the height of the node itself.
- * This is easy once the node has been opened -- just query the element height
- * (using a ref). But if the node hasn't been opened, then we have to estimate
- * it. I'm doing this with fairly crude method based on the number of text lines
- * the full content of the node would take up. This is adequate in almost all
- * cases, although I'm open to refining this further.
- *
- * Basically, the logic is:
+ * The resulting logic:
  *
  * On first load:
  * - if closed, set max-height to 0
- * - if open, set no max-height (undefined) and let it automatically resize
+ * - if open, set no max-height (undefined) and let it resize automatically
  *
  * When collapsing an open node:
- * - store the current height in "prevHeight"
- * - set the max-height to the current height
- * - immediately after, set max-height to 0 and transition will occur
+ * - store the current height in `prevHeight`
+ * - set max-height to the current height
+ * - immediately after, set max-height to 0, and the transition runs
  *
  * When opening a closed node:
- * - set max-height to the previously stored height if available; otherwise use
- *   the crudely calculated estimate.
- * - once transition is complete, unset `max-height` (undefined) so it can
- *   change height automatically based on its changing contents
+ * - set max-height to the stored height if there is one, otherwise the estimate
+ * - once the transition completes, unset `max-height` so the node can resize
+ *   automatically with its contents
  */
 
 import { useCallback, useRef, useState } from 'react'
@@ -60,8 +48,8 @@ export const useCollapseTransition = (
   )
   const [collapsed, setCollapsed] = useState<boolean>(startCollapsed)
 
-  // Allows us to wait for animation to complete before setting the overflow
-  // visibility of the collapsed node, and the max-height
+  // Lets the collapsed node's overflow visibility and max-height wait for the
+  // animation to complete
   const isAnimating = useRef(false)
   const contentRef = useRef<HTMLDivElement>(null)
   const prevHeight = useRef<string | number>(0)
@@ -69,7 +57,7 @@ export const useCollapseTransition = (
 
   const cssTransitionValue = `${collapseAnimationTime / 1000}s`
 
-  // Method to change the collapse state and manage the animated transition
+  // Change the collapse state, managing the animated transition
   const animateCollapse = useCallback(
     (collapse: boolean) => {
       if (collapsed === collapse) return
@@ -114,10 +102,9 @@ export const useCollapseTransition = (
   }
 }
 
-// A crude measure to estimate the approximate height of the block before it has
-// been opened. Essentially, it estimates how many lines of text the full JSON
-// would take up, and converts that to a pixel value based on the current
-// fontSize
+// A crude estimate of a block's height before it has been opened: how many
+// lines of text the full JSON would take up, converted to pixels via the
+// current font size
 const estimateHeight = (
   data: JsonData,
   contentRef: React.RefObject<HTMLDivElement | null>,
@@ -140,8 +127,8 @@ const estimateHeight = (
   const charsPerLine = width / (baseFontSize * 0.5)
 
   const lines = jsonStringify(data)
-    // The Regexp replacement is to parse escaped line breaks
-    // *within* the JSON into *actual* line breaks before splitting
+    // Turn line breaks escaped *within* the JSON into *actual* line breaks
+    // before splitting
     .replace(/\\n/g, '\n')
     .split('\n')
     // Account for long lines being wrapped (very crudely)

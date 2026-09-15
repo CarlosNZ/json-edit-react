@@ -18,9 +18,9 @@ import type { UseUndoResult } from './types'
  * // <JsonEditor data={data} setData={set} />
  * ```
  *
- * Each operation reads the live `data`/stacks, so the returned callbacks are
- * recreated per render. That's harmless to the editor — core reads `setData`
- * through a ref-to-latest, so a churning `set` never defeats node memoization.
+ * Each operation reads the live `data` and stacks, so the returned callbacks
+ * are recreated per render. That's harmless to the editor: core reads `setData`
+ * through a ref-to-latest, so a churning `set` never defeats node memoisation.
  *
  * The hook only sees changes that go through its own API. To load a new
  * baseline (e.g. a different dataset) call `reset(newData)`, which clears
@@ -34,8 +34,8 @@ export const useUndo = <T = JsonData>(data: T, setData: (data: T) => void): UseU
 
   // For the optional async-reject correction (see `onEditEvent` below): the
   // stacks as they were when the in-flight editor op was submitted, tagged with
-  // its operation. A single slot — one in-flight op is corrected (the realistic
-  // case). `null` when no edit/rename/add is awaiting settlement.
+  // its operation. A single slot, so one in-flight op is corrected. `null` when
+  // no edit/rename/add is awaiting settlement.
   const markerRef = useRef<{ queues: UndoQueues<T>; operation: 'edit' | 'rename' | 'add' } | null>(
     null
   )
@@ -74,11 +74,11 @@ export const useUndo = <T = JsonData>(data: T, setData: (data: T) => void): UseU
   // Optional editor wiring that corrects history for an ASYNC `onUpdate`
   // rejection. Such a rejection commits optimistically (one `set`) then reverts
   // (another `set`), so both writes record snapshots and the reverted value
-  // would otherwise be reachable via undo. On submit we remember the stacks
-  // (tagged with the operation); on a matching `updateError` we restore them,
-  // erasing the apply+revert pair; on success we drop the marker. A SYNCHRONOUS
-  // reject never reaches `set` (the editor resolves it in place), so its
-  // `updateError` restores stacks that never moved — a harmless no-op. Reads
+  // would otherwise be reachable via undo. Submit remembers the stacks tagged
+  // with the operation, a matching `updateError` restores them — erasing the
+  // apply+revert pair — and success drops the marker. A SYNCHRONOUS reject
+  // never reaches `set`, since the editor resolves it in place, so its
+  // `updateError` restores stacks that never moved: a harmless no-op. Reads
   // `queues` from the render closure, so it captures the pre-submit stacks.
   const onEditEvent = useCallback<OnEditEventFunction<T>>(
     (event) => {
@@ -93,9 +93,9 @@ export const useUndo = <T = JsonData>(data: T, setData: (data: T) => void): UseU
           markerRef.current = { queues, operation: 'add' }
           break
         case 'updateError':
-          // Only roll back the op this marker belongs to — a `delete`/`move`
-          // (no `submit*`, different operation) must not consume an edit's
-          // marker.
+          // Only roll back the op this marker belongs to: a `delete`/`move`
+          // has no `submit*` and a different operation, so it must not consume
+          // an edit's marker.
           if (markerRef.current?.operation === event.operation) {
             setQueues(markerRef.current.queues)
             markerRef.current = null

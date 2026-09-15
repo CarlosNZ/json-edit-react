@@ -3,15 +3,15 @@ import { useInsertionEffect } from 'react'
 // Per-component stylesheet injection.
 //
 // The package ships as one bundled file per entry point, so a top-level
-// `import './style.css'` would be a bare side-effecting statement nothing can
-// drop: `sideEffects: false` is module-granular (there is only one module) and
-// no `/*#__PURE__*/` annotation applies to a bare statement. That same flag
-// also tells `@rollup/plugin-node-resolve` such an import is droppable while
-// the build runs, which takes the CSS out of the published bundles entirely
-// and silently (issue #398).
+// `import './style.css'` would be a bare side-effecting statement that nothing
+// can drop: `sideEffects: false` is module-granular, and there's only one
+// module, while no `/*#__PURE__*/` annotation applies to a bare statement.
+// That same flag also tells `@rollup/plugin-node-resolve` the import is
+// droppable while the build runs, which shakes the CSS out of the published
+// bundles altogether (issue #398).
 //
-// Importing each stylesheet as a string and injecting it from here fixes both
-// halves. The CSS becomes an ordinary constant reachable only from the
+// Importing each stylesheet as a string and injecting it from here avoids both
+// halves of that. The CSS becomes an ordinary constant reachable only from the
 // component that renders it, so a consumer importing one definition carries
 // that component's CSS and no other's — which is what keeps the per-component
 // tree-shaking of #388 meaningful. `scripts/verify-treeshake.mjs` guards both
@@ -36,9 +36,9 @@ import { useInsertionEffect } from 'react'
 // swallowed by a module-level flag this module never gets to clear. It also
 // means the sheet is restored if something tears `<head>` down.
 //
-// `?inline` is Vite's convention for "give me the text, don't inject it"; a
-// plain `.css` specifier gets injected by Vite and exports nothing, which
-// breaks direct consumers of `src/` (the demo's `local` mode). Rollup has no
+// `?inline` is Vite's convention for "give me the text, don't inject it". A
+// plain `.css` specifier is injected by Vite and exports nothing, which breaks
+// direct consumers of `src/`, such as the demo's `local` mode. Rollup has no
 // such convention, so the build strips the query — see `stripCssQuery` in
 // rollup.config.mjs.
 

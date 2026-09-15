@@ -172,7 +172,7 @@ describe('Collapse broadcasts via editorRef handle', () => {
     act(() => ref.current!.collapse(command))
 
     expect(onCollapse).toHaveBeenCalledTimes(1)
-    // Flat NodeData payload (§17) built from the command's path, plus the
+    // Flat NodeData payload built from the command's path, plus the
     // flags.
     expect(onCollapse).toHaveBeenCalledWith(
       expect.objectContaining({ key: 'a', path: ['a'], collapsed: true, includeChildren: false })

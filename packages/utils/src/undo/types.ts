@@ -30,16 +30,16 @@ export interface UseUndoResult<T = JsonData> {
   /** Whether there's a snapshot to redo to. */
   canRedo: boolean
   /**
-   * OPTIONAL editor wiring — pass as the editor's `onEditEvent`. Only needed
-   * for one specific case: an **asynchronous** `onUpdate` that *rejects*. Such a
-   * rejection commits optimistically then reverts, so both writes reach `set`
-   * and the reverted (invalid) value would otherwise land in history. Wiring
-   * this lets the hook discard that reverted commit so "Undo" never steps back
-   * to it. Omit it and the hook works exactly as before — synchronous rejects
-   * never reach `set`, so they need no correction. See the README.
+   * OPTIONAL editor wiring — pass as the editor's `onEditEvent`. Needed for one
+   * case only: an **asynchronous** `onUpdate` that *rejects*. Such a rejection
+   * commits optimistically then reverts, so both writes reach `set` and the
+   * reverted (invalid) value would otherwise land in history; wiring this lets
+   * the hook discard that reverted commit, so "Undo" never steps back to it.
+   * Omitting it costs nothing otherwise — a synchronous reject never reaches
+   * `set`, so it needs no correction. See the README.
    *
-   * The hook always returns it; it's declared optional so a typed mock/stub of
-   * `UseUndoResult` needn't supply it.
+   * The hook always returns it, and it's declared optional only so a typed
+   * mock or stub of `UseUndoResult` needn't supply it.
    */
   onEditEvent?: OnEditEventFunction<T>
 }

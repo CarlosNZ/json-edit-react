@@ -1,15 +1,11 @@
 /**
- * This uses a cheeky hack to make the text-area input resize automatically
- * based on the content. It seemed necessary, as the text inputs (String or raw
- * JSON) could reasonably be anything from a single character to several hundred
- * lines.
+ * A text area that resizes to fit its content, which the text inputs (string or
+ * raw JSON) need — they can hold anything from a single character to several
+ * hundred lines. The technique is described at
+ * https://css-tricks.com/the-cleanest-trick-for-autogrowing-textareas
  *
- * See https://css-tricks.com/the-cleanest-trick-for-autogrowing-textareas for
- * the basic idea of how it works.
- *
- * This will eventually be replace by CSS property `field-sizing: content` once
- * browser support and uptake is more widespread. See branch `test/field-sizing`
- * for an implementation using that approach.
+ * TO-DO: replace with the CSS `field-sizing: content` property once browser
+ * support is widespread. Branch `test/field-sizing` has an implementation.
  */
 
 import React, { useRef } from 'react'
@@ -35,11 +31,11 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
   textAreaRef,
 }) => {
   // This textarea is controlled, so `setValue` can hand back a TRANSFORMED
-  // value (e.g. a consumer `onChange` that strips illegal characters). React
-  // then rewrites the DOM value to the transformed string, and that write
-  // natively drops the caret at the END — so a mid-string edit gets yanked to
-  // the end on every transformed keystroke. Remember the caret (and the length
-  // it sat in) at the keystroke, then re-place it once the new value commits.
+  // value — a consumer `onChange` that strips illegal characters, say. React
+  // rewrites the DOM value to the transformed string, and that write natively
+  // drops the caret at the END, yanking a mid-string edit to the end on every
+  // transformed keystroke. So the caret (and the length it sat in) is recorded
+  // at the keystroke and re-placed once the new value commits.
   const caretRef = useRef<{ start: number; sourceLength: number } | null>(null)
   useIsomorphicLayoutEffect(() => {
     const caret = caretRef.current
@@ -50,15 +46,15 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
     // it (the input-restriction norm) keeps it beside the same character.
     const target = caret.start + value.length - caret.sourceLength
     const next = Math.max(0, Math.min(target, value.length))
-    // Only when React actually moved the caret (a transform changed the value);
-    // the no-op skip leaves normal typing — and IME composition — untouched.
+    // Only when React actually moved the caret, i.e. a transform changed the
+    // value: the no-op skip leaves normal typing, and IME composition, alone.
     if (el.selectionStart !== next) el.setSelectionRange(next, next)
     // `textAreaRef` is a stable ref object, so listing it for exhaustive-deps
-    // adds no real re-runs (the caret only restores when `value` changes).
+    // adds no real re-runs.
   }, [value, textAreaRef])
 
-  // Adding extra (hidden) char when adding new lines to input prevents
-  // mis-alignment between real value and dummy value
+  // An extra hidden char on a trailing newline keeps the real and dummy values
+  // aligned
   if (typeof value !== 'string') return null
   const dummyValue = value.slice(-1) === '\n' ? value + '.' : value
 
@@ -80,10 +76,9 @@ export const AutogrowTextArea: React.FC<TextAreaProps> = ({
         name={`${name}_textarea`}
         value={value}
         onChange={(e) => {
-          // Only a mid-string edit can be yanked to the end, so record the
-          // caret for restoration only then. Appending at the end (the common
-          // case) needs nothing — an end caret stays correct through a
-          // transform — so the layout effect just bails on the null.
+          // Only a mid-string edit can be yanked to the end, so the caret is
+          // recorded only then. Appending at the end, the common case, needs
+          // nothing, and the layout effect bails on the null.
           const { value: nativeValue, selectionStart } = e.target
           caretRef.current =
             selectionStart !== null && selectionStart < nativeValue.length

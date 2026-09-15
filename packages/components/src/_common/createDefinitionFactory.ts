@@ -5,12 +5,12 @@ import { type CustomNodeDefinition, type FilterFunction } from 'json-edit-react'
  *
  * A pre-built definition's `condition` doubles as its guard — the check that
  * keeps its component safe to render (Markdown's `typeof value === 'string'`,
- * DatePicker's ISO regex). Consumers customizing a definition almost always
- * want to narrow *where* it applies, not loosen *what* it can render, so the
- * factory re-interprets a consumer-supplied `condition` as targeting and ANDs
- * it with the guard: narrowing can never expose the component to data it
- * can't handle. Replacing the guard itself requires the explicit `guard`
- * override — a deliberate, named act rather than the default spelling.
+ * DatePicker's ISO regex). A consumer customising a definition almost always
+ * wants to narrow *where* it applies, not loosen *what* it can render, so the
+ * factory reads a consumer-supplied `condition` as targeting and ANDs it with
+ * the guard: narrowing can never expose the component to data it can't handle.
+ * Replacing the guard itself takes the explicit `guard` override, a deliberate
+ * named act rather than the default spelling.
  *
  * The base definition objects are deliberately not exported from the package:
  * spreading one and overriding `condition` silently drops the guard, and the
@@ -45,10 +45,10 @@ export const createDefinitionFactory =
       ...rest,
       condition: (nodeData) => guard(nodeData) && targeting(nodeData),
     }
-    // Shallow-merged rather than override-wins, so a consumer can add one
-    // prop without re-stating the base's defaults (e.g. DatePicker's
-    // `{ showTime: true }`). Conditional so definitions without
-    // componentProps don't gain an empty object.
+    // Shallow-merged rather than override-wins, so a consumer can add one prop
+    // without re-stating the base's defaults — DatePicker's
+    // `{ showTime: true }`, say. Conditional, so a definition without
+    // `componentProps` doesn't gain an empty object.
     if (base.componentProps || componentProps)
       definition.componentProps = { ...base.componentProps, ...componentProps } as T
     return definition

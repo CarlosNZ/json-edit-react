@@ -55,12 +55,12 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   customNodeData,
   getStyles,
 }) => {
-  // Actions only (no subscription) — `isEditingKey` arrives via props.
+  // Actions only, with no subscription: `isEditingKey` arrives via props.
   const { open, cancel } = useEditingStore()
 
-  // The rename `<input>` is uncontrolled (`defaultValue`), so its in-progress
-  // value lives in the DOM. `renameCommitOp` reads it live to commit on
-  // displace (the keyboard paths read `e.target.value` directly instead).
+  // The rename `<input>` is uncontrolled, so its in-progress value lives in the
+  // DOM. `renameCommitOp` reads it live to commit on displace; the keyboard
+  // paths read `e.target.value` directly instead.
   const keyInputRef = React.useRef<HTMLInputElement>(null)
   const renameCommitOp = (onCommit: () => void) =>
     handleEditKey(keyInputRef.current?.value ?? String(name), onCommit)
@@ -68,10 +68,9 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
   const displayKey = typeof name === 'number' ? String(name + arrayIndexStart) : name
 
   if (!isEditingKey) {
-    // Theme styles plus the same layout derivation the default key span
-    // uses, so custom-key renderers that spread `...styles` get
-    // default-consistent column alignment and wrap behaviour. Authors
-    // can override individual values.
+    // Theme styles plus the layout derivation the default key span uses, so a
+    // custom-key renderer that spreads `...styles` gets the same column
+    // alignment and wrap behaviour. Individual values can still be overridden.
     const derivedKeyStyles: React.CSSProperties = {
       ...styles,
       minWidth: `${Math.min(displayKey.length + 1, 5)}ch`,
@@ -125,8 +124,8 @@ export const KeyDisplay: React.FC<KeyDisplayProps> = ({
           stringConfirm: () => handleEditKey((e.target as HTMLInputElement).value),
           cancel: handleCancel,
           // Tab commits the rename, then opens the next node at the commit
-          // moment (via `onCommit`) — so an invalid (duplicate-key) rename
-          // blocks the move and stays open, matching value-edit Tab / displace.
+          // moment via `onCommit`, so an invalid (duplicate-key) rename blocks
+          // the move and stays open, as a value-edit Tab or displace does.
           tabForward: () => {
             const value = (e.target as HTMLInputElement).value
             handleEditKey(value, () => {

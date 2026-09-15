@@ -3,15 +3,15 @@ import type { FilterPredicate } from './types'
 // --- Reference-keyed interning, for the combinators -------------------------
 //
 // `and`/`or`/`not` take FUNCTION arguments (other predicates), which can't be
-// string-serialised — and shouldn't be (two predicates with identical source
-// can differ; only identity tells them apart). They intern on reference
-// identity via WeakMaps instead. Two upshots: it's correct (distinct closures
-// stay distinct), and it's leak-free (an entry is GC'd once its key predicate
-// is unreferenced). Because the kit's own builders already intern, a combinator
-// over them — `and(byKey('a'), byPath('b'))` — is itself inline-stable.
+// string-serialised, and shouldn't be: two predicates with identical source can
+// differ, so only identity tells them apart. They intern on reference identity
+// via WeakMaps instead, which keeps distinct closures distinct and stays
+// leak-free (an entry is GC'd once its key predicate is unreferenced). Since
+// the kit's own builders already intern, a combinator over them —
+// `and(byKey('a'), byPath('b'))` — is itself inline-stable.
 //
-// (The value-keyed `intern`, used by the value-argument builders, lives in the
-// shared `_common/intern.ts`.)
+// The value-keyed `intern`, used by the value-argument builders, lives in
+// `_common/intern.ts`.
 
 /** Memoise a unary combinator (`not`) on its single predicate's identity. */
 export const internRef = (

@@ -4,17 +4,17 @@
 
 import { type Theme, type ThemeIcons } from 'json-edit-react'
 
-// Phosphor Duotone icon set (https://phosphoricons.com/) for the Dracula theme.
-// Each glyph is two layers: a faint, reduced-opacity fill behind a solid
-// foreground. Both inherit `fill="currentColor"` (core's IconSvg defaults the
-// <svg> fill), so the whole two-tone glyph takes on each theme `icon*` colour —
-// no second colour is hardcoded, the duotone effect rides on the opacity alone.
-// Source viewBox is 256×256; no svgProps needed (fill defaults to currentColor).
+// Phosphor Duotone icon set (https://phosphoricons.com/) for the Dracula
+// theme. Each glyph is two layers: a faint, reduced-opacity fill behind a solid
+// foreground. Both inherit `fill="currentColor"` — core's IconSvg defaults the
+// <svg> fill — so the whole two-tone glyph takes on each theme `icon*` colour.
+// No second colour is hardcoded; the duotone effect rides on the opacity alone.
+// The source viewBox is 256×256, and no svgProps are needed.
 //
-// Secondary-layer opacities. The action glyphs (edit toolbar) are outline-style
+// Secondary-layer opacities: the action glyphs (edit toolbar) are outline-style
 // with small faint regions that wash out against Dracula's dark background, so
-// they take a stronger tint to keep the duotone legible. The circle/caret
-// glyphs have a large faint fill, so Phosphor's canonical 0.2 reads fine there.
+// they take a stronger tint to keep the duotone legible. The circle and caret
+// glyphs have a large faint fill, so Phosphor's canonical 0.2 reads fine.
 const strongFill = 0.4
 const softFill = 0.2
 
@@ -87,11 +87,11 @@ const phosphorDuotoneIcons: ThemeIcons = {
     viewBox: '0 0 256 256',
     scale: 1.1,
   },
-  // ph:caret-down-duotone — rotated -90deg by core CSS when collapsed (→ right).
-  // The caret fills its box wider than core's default chevron, so at full size
-  // it crowds the key — the `.jer-collapse-icon` left offset is tuned to the
+  // ph:caret-down-duotone — rotated -90deg by core CSS when collapsed. The
+  // caret fills its box wider than core's default chevron, so at full size it
+  // crowds the key, the `.jer-collapse-icon` left offset being tuned to the
   // default glyph's footprint. A small scale-down is the rotation-safe,
-  // theme-local lever that buys back the gap, trading a hair of size.
+  // theme-local lever that buys the gap back, trading a hair of size.
   collection: {
     content: (
       <>

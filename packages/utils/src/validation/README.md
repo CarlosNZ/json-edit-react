@@ -69,7 +69,7 @@ A `ValidationIssue` is `{ path, message, keyword?, raw? }`, where `path` is the 
 
 ## Performance
 
-`validate` runs once per `data` change (which, in json-edit-react, is per commit — not per keystroke), and every lookup after that is an O(1) map/set hit. The state object's reference is held stable while the error set is unchanged, so valid→valid commits keep the §16 node-memo boundary fully intact; only a genuine change in validity re-renders the tree, once.
+`validate` runs once per `data` change (which, in json-edit-react, is per commit — not per keystroke), and every lookup after that is an O(1) map/set hit. The state object's reference is held stable while the error set is unchanged, so valid→valid commits keep the node-memo boundary fully intact; only a genuine change in validity re-renders the tree, once.
 
 ## `useStableValue`
 

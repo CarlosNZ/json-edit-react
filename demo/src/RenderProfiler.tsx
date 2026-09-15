@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 
 /**
- * Dev-only render profiler for the JsonEditor tree (V2 §16 perf work).
+ * Dev-only render profiler for the JsonEditor tree.
  *
  * Wraps its children in a `<React.Profiler>` and shows a small fixed overlay
  * with the aggregate cost of the wrapped subtree:
@@ -11,20 +11,20 @@ import React, { useEffect, useRef, useState, useCallback } from 'react'
  *
  * Use it to answer "did this interaction cause one cheap commit or many
  * expensive ones?". For *which* nodes re-rendered, use the React DevTools
- * Profiler / "Highlight updates when components render" (per-node scope).
+ * Profiler, or "Highlight updates when components render".
  *
  * Only active in dev (`pnpm dev`); in a production build it renders children
  * untouched, so it never appears on the deployed demo.
  *
- * IMPORTANT — why the structure is the way it is: `DevProfiler` holds NO state
- * of its own, so nothing *internal* drives a re-render of the `<Profiler>`
- * boundary. (It will still re-render if its parent does — that's normal React
- * and harmless — but the measurement apparatus never feeds back into the thing
- * it measures.) The polling readout lives entirely in the sibling `Overlay`
- * component, so its 250ms `setState` re-renders only the overlay box — never
- * the Profiler boundary or the editor. (An earlier version polled in this
- * component, which re-rendered the Profiler and made its own ticks count as
- * commits — the counter measured itself.)
+ * IMPORTANT, and the reason for the structure: `DevProfiler` holds NO state of
+ * its own, so nothing *internal* drives a re-render of the `<Profiler>`
+ * boundary. It still re-renders when its parent does, which is normal React and
+ * harmless, but the measurement apparatus never feeds back into the thing it
+ * measures. The polling readout lives entirely in the sibling `Overlay`
+ * component, so its 250ms `setState` re-renders only the overlay box, never the
+ * Profiler boundary or the editor. Polling from inside this component instead
+ * would re-render the Profiler and count its own ticks as commits, leaving the
+ * counter measuring itself.
  */
 
 interface Stats {
@@ -35,11 +35,11 @@ interface Stats {
 
 const makeZero = (): Stats => ({ commits: 0, totalMs: 0, lastMs: 0 })
 
-// Opt-in, dev only. Enable either by adding `?profiler` to the URL, or by
-// setting `localStorage['jer-profiler'] = '1'` in the console. Reading these
-// never touches the demo's own `?data=…` param; the localStorage flag also
-// survives dataset switches (the dropdown rewrites the query string, which
-// would drop `?profiler`). Re-evaluated on every render, so toggling is live.
+// Opt-in, dev only: add `?profiler` to the URL, or set
+// `localStorage['jer-profiler'] = '1'` in the console. Reading these never
+// touches the demo's own `?data=…` param, and the localStorage flag survives
+// dataset switches, where the dropdown rewrites the query string and would drop
+// `?profiler`. Re-evaluated every render, so toggling is live.
 const profilerEnabled = (): boolean => {
   if (!import.meta.env.DEV) return false
   try {
@@ -56,9 +56,9 @@ export const RenderProfiler: React.FC<{ children: React.ReactNode }> = ({ childr
   profilerEnabled() ? <DevProfiler>{children}</DevProfiler> : <>{children}</>
 
 const DevProfiler: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Single source of truth for the accumulated stats. Mutated in `onRender`,
-  // read on an interval by `Overlay`. Lives in a ref so updating it never
-  // re-renders DevProfiler (which would churn the Profiler boundary).
+  // Single source of truth for the accumulated stats: mutated in `onRender`,
+  // read on an interval by `Overlay`. A ref, so updating it never re-renders
+  // DevProfiler and churns the Profiler boundary.
   const statsRef = useRef<Stats>(makeZero())
 
   const onRender = useCallback<React.ProfilerOnRenderCallback>((_id, _phase, actualDuration) => {

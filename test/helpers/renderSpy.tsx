@@ -1,5 +1,5 @@
 /**
- * Render-scope test harness (V2 §16 perf work).
+ * Render-scope test harness.
  *
  * Lets a test assert *which* tree nodes re-rendered, without adding any
  * instrumentation to the shipped library. It works by registering one

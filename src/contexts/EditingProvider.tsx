@@ -1,35 +1,29 @@
 /**
- * Editing + commit state for the tree. This store is the single control centre
- * for the whole edit lifecycle:
+ * Editing + commit state for the tree, and the single control centre for the
+ * edit lifecycle. The bundle holds:
  *
  * - `active`: the one open/held operation (only one node edits at a time).
- * - `settling`: the in-flight optimistic commits, keyed by path-string → token,
- *   so a node can show a "settling" state and a resolving commit can tell
- *   whether it's still the live one (latest-edit-wins).
- * - Tab-navigation bookkeeping (direction + previously-edited path).
+ * - `settling`: in-flight optimistic commits, keyed by path-string → token, so
+ *   a node can show a "settling" state and a resolving commit can tell whether
+ *   it's still the live one (latest-edit-wins).
  *
- * The Provider OWNS the commit pipeline: `submit()` runs the consumer's
+ * The provider owns the commit pipeline: `submit()` runs the consumer's
  * `onUpdate` (optimistic by default; `hold()` gates), `apply()` is the single
  * "apply value + close editor + fire commit*" moment, and `reconcile()` settles
- * the result (token-gated). It fires EVERY `onEditEvent`. The data-owner
- * (`JsonEditor`) supplies the actual document mutation via the
- * `CommitPrimitives` ref — this keeps the store free of
- * `setData`/`updateDataObject` while owning the lifecycle.
+ * the result (token-gated). It fires every `onEditEvent`. The data-owner
+ * (`JsonEditor`) performs the document mutation via the `CommitPrimitives` ref,
+ * which keeps `setData`/`updateDataObject` out of the store while the store
+ * owns the lifecycle.
  *
- * ## Why an external store (not useState + context value)
- *
- * Every node reads editing state, so with a plain context value any edit
- * transition re-rendered *every* consumer (`React.memo` can't stop a context
- * update). Instead the state lives in a tiny external store (a mutable bundle +
- * a listener `Set`), exposed through `useSyncExternalStore`. The context value
- * is the store object itself — a stable reference — so `useContext` alone never
- * re-renders. Components subscribe to a derived PRIMITIVE *slice* via
- * `useEditingSelector`; a node selecting `isEditing` for its own path
- * re-renders only when that boolean flips. Actions/imperative reads go
- * through the non-subscribing `useEditingStore`.
- *
- * `useEditing` remains as a whole-bundle compatibility hook (slice-isolation
- * test); it wakes on every change, so never use it on the per-node hot path.
+ * The state lives in a small external store (a mutable bundle plus a listener
+ * `Set`) exposed through `useSyncExternalStore`, rather than in a context
+ * value: every node reads editing state, and a context update re-renders every
+ * consumer regardless of `React.memo`. The context value is the store object
+ * itself — a stable reference — so `useContext` alone never re-renders.
+ * Components subscribe to a derived PRIMITIVE slice via `useEditingSelector`,
+ * so a node selecting `isEditing` for its own path re-renders only when that
+ * boolean flips. Actions and imperative reads go through the non-subscribing
+ * `useEditingStore`.
  */
 
 import React, { createContext, useContext, useMemo, useRef, useSyncExternalStore } from 'react'
@@ -54,10 +48,10 @@ type Token = number
 type PathString = string
 
 // How long an INSTANT op (delete/move/array-add) waits for `onUpdate` before
-// applying optimistically. A faster result (sync or sub-threshold) settles in
-// place, so the node is never removed/relocated and a rejection's inline error
-// renders on it. ~100ms is the "feels instant" perception threshold, so it
-// rarely needs tuning — kept a constant (not a prop) to hold the API flat.
+// applying optimistically. A faster result settles in place, so the node is
+// never removed or relocated and a rejection's inline error renders on it.
+// ~100ms is the "feels instant" perception threshold; a constant rather than a
+// prop, to keep the API flat.
 const OPTIMISTIC_DELAY_MS = 100
 
 export interface EditingStateBundle {
@@ -105,12 +99,11 @@ export type UpdateOutcome =
  */
 export interface BuiltCommit {
   input: UpdateFunctionProps
-  /** Flat `NodeData` snapshot for the
-   *  `commit*`/`updateSuccess`/`updateError` events, captured at build time
-   *  per-op (delete/rename describe the PRE-apply node, add the child). Frozen
-   *  so the event fires the committed identity even though the live document
-   *  has since mutated (or been reverted) — re-deriving from the live doc
-   *  would describe the wrong node or throw on a vanished path. */
+  /** Frozen `NodeData` snapshot for the
+   *  `commit*`/`updateSuccess`/`updateError` events, captured per-op at build
+   *  time (delete/rename describe the pre-apply node, add the child). The live
+   *  document mutates before those events fire, so re-deriving from it would
+   *  describe the wrong node or throw on a vanished path. */
   nodeData: NodeData
   /** True for an unchanged-value edit — skip `onUpdate`/settlement entirely. */
   isNoOp: boolean
@@ -130,19 +123,19 @@ export interface BuiltCommit {
  */
 export interface CommitPrimitives {
   /** Run the consumer's `onUpdate` and normalise its result to an outcome.
-   *  Returns the outcome SYNCHRONOUSLY when `onUpdate` does, a promise only
-   *  when it's async — the engine skips the optimistic apply for a synchronous
-   *  verdict. `undefined` when no `onUpdate` was supplied (the engine then
-   *  skips the settlement phase — no `update*`). */
+   *  Returns synchronously when `onUpdate` does, a promise only when it's
+   *  async — the engine skips the optimistic apply for a synchronous verdict.
+   *  `undefined` when no `onUpdate` was supplied, which also skips the
+   *  settlement phase (no `update*` events). */
   runUpdate?: (
     input: UpdateFunctionProps,
     control: UpdateControl
   ) => UpdateOutcome | Promise<UpdateOutcome>
-  /** Prepare a commit (compute `newData`, the input, and apply/revert). `null`
-   *  if the target path no longer exists. */
+  /** Prepare a commit (compute `newData`, the input, and apply/revert).
+   *  `null` if the target path doesn't exist. */
   buildCommit: (request: CommitRequest) => BuiltCommit | null
-  /** Apply an arbitrary value at `path` (used for `{ value }`/`{ data }`
-   *  overrides — node path or root `[]` respectively). */
+  /** Apply an arbitrary value at `path`, for `{ value }`/`{ data }` overrides
+   *  (node path or root `[]` respectively). */
   applyValue: (path: CollectionKey[], value: unknown) => void
 }
 
@@ -159,14 +152,14 @@ export type SubmitArgs = CommitRequest & {
 interface OpenOptions {
   op?: EditOperation
   cancelOp?: () => void
-  // Commit-on-displace: when this session is displaced by opening another node,
-  // commit its buffer (passing `onCommit` = "open the new node") instead of
-  // cancelling. The node forwards to its LIVE commit handler (a stale closure
-  // would commit the empty initial buffer); an invalid/blocked commit must not
-  // call `onCommit`, which leaves this session open and blocks the switch.
-  // Sessions that omit this (e.g. object-add) keep the cancel-on-displace path.
+  // Commit-on-displace: when this session is displaced by opening another
+  // node, commit its buffer instead of cancelling, with `onCommit` = "open the
+  // new node". The node must forward to its LIVE commit handler, since a stale
+  // closure would commit the empty initial buffer. An invalid or blocked
+  // commit must not call `onCommit`: that leaves this session open and blocks
+  // the switch. Sessions that omit this (e.g. object-add) cancel on displace.
   commitOp?: (onCommit: () => void) => void
-  // Imperative (handle-driven) edit — overrides `allowEdit`. See
+  // Imperative (handle-driven) edit, overriding `allowEdit`. See
   // `EditingState.force`.
   force?: boolean
 }
@@ -203,9 +196,9 @@ export interface EditingStore {
   /** Abort the active session — runs its cleanup and fires `cancel*`. */
   cancel: () => void
   /** Run the full commit pipeline (optimistic by default; `hold()` gates).
-   *  Resolves with the settlement outcome (or `undefined` for a no-op / no
-   *  `onUpdate`) so the calling node can report errors via its own `onError`.
-   */
+   *  Resolves with the settlement outcome, or `undefined` for a no-op or when
+   *  there's no `onUpdate`, so the calling node can report errors via its own
+   *  `onError`. */
   submit: (args: SubmitArgs) => Promise<UpdateOutcome | undefined>
   /** Imperative read for event handlers — does not subscribe. */
   areChildrenBeingEdited: (path: CollectionKey[]) => boolean
@@ -224,16 +217,14 @@ const createEditingStore = (
   let state = initialState
   const listeners = new Set<() => void>()
 
-  // Cleanup for the *editing*-phase session's local UI buffer, run when that
-  // session is displaced (a switch) or cancelled (Esc/✗/external). Held in a
-  // closure var (not state) so installing/clearing it never notifies.
+  // Cleanup for the editing-phase session's local UI buffer, run when that
+  // session is displaced (a switch) or cancelled (Esc/✗/external). A closure
+  // var rather than state, so installing or clearing it never notifies.
   let cancelOp: (() => void) | null = null
 
   // Commit-on-displace callback for the active editing session (see
   // `OpenOptions.commitOp`). Shares `cancelOp`'s lifecycle: registered by
-  // `installSession`, cleared on every session-ending transition. When a switch
-  // displaces a session that registered one, `open()` commits via this instead
-  // of cancelling.
+  // `installSession`, cleared on every session-ending transition.
   let commitOp: ((onCommit: () => void) => void) | null = null
 
   // Re-entrancy guard: a registered `cancelOp` may itself route back through
@@ -255,9 +246,8 @@ const createEditingStore = (
     emit()
   }
 
-  // Fire an `onEditEvent` from a prebuilt `NodeData` payload. No-op if there's
-  // no consumer. `extra` carries the rename keys / settlement
-  // `operation`/`error`.
+  // Fire an `onEditEvent` from a prebuilt `NodeData` payload. `extra` carries
+  // the rename keys, or the settlement `operation`/`error`.
   const emitEvent = (
     nodeData: NodeData,
     event: EditEvent['event'],
@@ -267,8 +257,8 @@ const createEditingStore = (
   }
 
   // Fire an `onEditEvent`, building `NodeData` from the LIVE document at
-  // `path`. For pre-apply events (start*/submit*/cancel*); committed ops use
-  // the frozen `BuiltCommit.nodeData` via `emitEvent` instead.
+  // `path`. For pre-apply events (start*/submit*/cancel*); committed ops go
+  // through `emitEvent` with the frozen `BuiltCommit.nodeData`.
   const fireEditEvent = (
     path: CollectionKey[],
     event: EditEvent['event'],
@@ -279,15 +269,13 @@ const createEditingStore = (
     try {
       nodeData = buildNodeDataFromPathRef.current?.(path)
     } catch {
-      // The path is gone from the live document — e.g. the consumer swapped the
-      // whole `data` out from under an open edit, unmounting its node (a
-      // search-filtered node only renders `null`, so it stays mounted and its
-      // path survives). `buildNodeData` → `extract` throws on the missing path,
-      // so there's no node to describe: skip the event and turn editing off.
-      // The latter is the load-bearing part — otherwise the now-dangling
-      // `active` makes the NEXT open()/cancel() rebuild this same vanished path
-      // and throw here again, wedging ALL further editing. (An edit can't
-      // survive its own node vanishing, so abandoning it is the right call.)
+      // The path is gone from the live document — e.g. the consumer swapped
+      // the whole `data` out from under an open edit, unmounting its node.
+      // `buildNodeData` → `extract` throws on the missing path, so there's no
+      // node to describe: skip the event and clear `active`. Clearing is the
+      // load-bearing part, since a dangling `active` makes the next
+      // open()/cancel() rebuild the same vanished path and throw here again,
+      // wedging all further editing.
       commit({ ...state, active: null })
       cancelOp = null
       commitOp = null
@@ -301,11 +289,11 @@ const createEditingStore = (
     commit({ ...state, active })
   }
 
-  // Install a new editing session: register its UI-cleanup + commit-on-displace
-  // callbacks, make it active, and fire `start*`. Factored out of `open()` so
-  // the commit-on-displace path can DEFER it into the outgoing commit's
-  // `onCommit` (open the new node only once the previous one has committed)
-  // without `open()` re-entering itself.
+  // Install a new editing session: register its UI-cleanup and
+  // commit-on-displace callbacks, make it active, and fire `start*`. Separate
+  // from `open()` so the commit-on-displace path can defer it into the
+  // outgoing commit's `onCommit` — opening the new node only once the previous
+  // one has committed — without `open()` re-entering itself.
   const installSession = (next: EditingState, options?: OpenOptions) => {
     cancelOp = options?.cancelOp ?? null
     commitOp = options?.commitOp ?? null
@@ -324,32 +312,29 @@ const createEditingStore = (
     const prev = state.active
     const isSwitch = prev !== null && !sameSession(prev, next)
 
-    // Commit-on-displace: a switch away from a session that registered a commit
-    // callback behaves like Tab — commit the outgoing buffer, then open the new
-    // node from inside the commit's `onCommit` (synchronous for editor ops, so
-    // it still feels instant). A blocked/invalid commit never calls `onCommit`,
-    // so the switch is blocked and the outgoing session stays open with its
-    // error; its `commitOp`/`cancelOp` are left registered for a retry (a
-    // genuine commit clears them in `apply()`/the no-op branch).
+    // Commit-on-displace behaves like Tab: commit the outgoing buffer, then
+    // open the new node from inside the commit's `onCommit` (synchronous for
+    // editor ops, so it still feels instant). A blocked or invalid commit never
+    // calls `onCommit`, so the switch is blocked and the outgoing session stays
+    // open with its error, keeping its `commitOp`/`cancelOp` registered for a
+    // retry — a genuine commit clears them in `apply()` or the no-op branch.
     if (isSwitch && commitOp) {
       commitOp(() => installSession(next, options))
       return
     }
 
-    // Otherwise (first open, same session, or a session that opted out of
-    // commit-on-displace — e.g. object-add): run the outgoing session's UI
-    // cleanup and fire cancel* for it, then install the new session. If that
-    // cleanup itself routed through `cancel()`, it cleared state + fired
-    // cancel* already — the post-check avoids a double-fire.
+    // Otherwise — first open, same session, or a session that opted out of
+    // commit-on-displace (e.g. object-add) — run the outgoing session's UI
+    // cleanup, fire cancel* for it, then install the new session.
     const op0 = cancelOp
     cancelOp = null
     commitOp = null
     if (op0) op0()
 
-    // Fire cancel* for the displaced session if its cleanup didn't already tear
-    // it down (state.active still pointing at `prev`). A displaced session is
-    // always `editing`-phase here (a `held` one blocked us above), so it was
-    // never committed — discarding it is correct.
+    // Fire cancel* unless the cleanup already tore the session down by routing
+    // through `cancel()` — `state.active` still pointing at `prev` means it
+    // didn't. A displaced session is always `editing`-phase here (a `held` one
+    // returns above), so it was never committed and discarding it is correct.
     if (isSwitch && sameSession(state.active, prev)) {
       const cancelEvent = eventForOp(prev.op, 'cancel')
       if (cancelEvent) fireEditEvent(prev.path, cancelEvent)
@@ -361,8 +346,8 @@ const createEditingStore = (
   // ── cancel: abort the active session (true user/external cancel) ──────────
   const cancel = () => {
     if (cancelling) return
-    // A held op resolves only through its gate (we can't abort the in-flight
-    // onUpdate promise), so external cancel is inert against it.
+    // A held op resolves only through its gate — the in-flight `onUpdate`
+    // promise can't be aborted — so an external cancel is inert against it.
     if (state.active?.phase === 'held') return
     const prev = state.active
     cancelling = true
@@ -399,12 +384,11 @@ const createEditingStore = (
     try {
       built = prims?.buildCommit(request) ?? null
     } catch {
-      // The target path vanished (e.g. a commit-on-displace fired for a session
-      // whose node unmounted because the consumer swapped `data`). There's
-      // nothing to commit and no node to describe — `buildCommit` → `extract`
-      // throws. Abandon the session quietly (no submit*/commit*) but still run
-      // `onCommit`, so a displace/Tab proceeds to open the next node rather
-      // than wedging on the gone path.
+      // The target path vanished — e.g. a commit-on-displace fired for a
+      // session whose node unmounted because the consumer swapped `data`.
+      // Nothing to commit and no node to describe, so abandon the session
+      // quietly (no submit*/commit*) but still run `onCommit`, so a displace or
+      // Tab opens the next node rather than wedging on the gone path.
       if (sameSession(state.active, { path, op, phase: 'editing' }))
         commit({ ...state, active: null })
       cancelOp = null
@@ -421,10 +405,9 @@ const createEditingStore = (
       if (submitEvent) fireEditEvent(path, submitEvent)
     }
 
-    // No-op edit (unchanged value): close the session, fire commit*, no
-    // onUpdate / settlement / update*. Still runs `onCommit` so a Tab off an
-    // untouched field advances to the next node (the value didn't change, but
-    // the session did close).
+    // No-op edit (unchanged value): close the session and fire commit*, with
+    // no `onUpdate`, settlement or update*. Still runs `onCommit`, so a Tab off
+    // an untouched field advances to the next node.
     if (!built || built.isNoOp) {
       if (sameSession(state.active, { path, op, phase: 'editing' }))
         commit({ ...state, active: null })
@@ -432,8 +415,8 @@ const createEditingStore = (
       commitOp = null
       const commitEvent = eventForOp(op, 'commit')
       if (commitEvent) {
-        // `built` present (genuine no-op) → fire its frozen snapshot; otherwise
-        // the target's gone, so best-effort rebuild from the live path.
+        // A genuine no-op has a `built` snapshot to fire; otherwise the target
+        // is gone, so rebuild from the live path on a best-effort basis.
         if (built) emitEvent(built.nodeData, commitEvent, extra)
         else fireEditEvent(path, commitEvent, extra)
       }
@@ -450,20 +433,20 @@ const createEditingStore = (
       if (applied) return
       applied = true
       applyDoc()
-      // Close the originating session — `sameSession` is phase-agnostic, so
-      // this matches both an `editing` submit and the release of a `held` op
-      // (same path + op). A Tab/onCommit may reopen the next node after.
-      // Clear both callbacks BEFORE `onCommit` runs: a commit-on-displace
-      // `onCommit` re-opens the next node and registers ITS callbacks.
+      // Close the originating session. `sameSession` is phase-agnostic, so it
+      // matches both an `editing` submit and the release of a `held` op. Both
+      // callbacks must be cleared BEFORE `onCommit` runs, since a
+      // commit-on-displace `onCommit` opens the next node and registers its
+      // own.
       cancelOp = null
       commitOp = null
       if (sameSession(state.active, { path, op, phase: 'editing' }))
         commit({ ...state, active: null })
       if (hasUpdate) addSettling(pathStr, token)
       const commitEvent = eventForOp(op, 'commit')
-      // Frozen snapshot: the live doc has just mutated (delete/rename destroy
-      // the node identity at `path`), so rebuilding from it would describe the
-      // wrong node or throw.
+      // Frozen snapshot: the live document has just mutated (delete/rename
+      // destroy the node identity at `path`), so rebuilding from it would
+      // describe the wrong node or throw.
       if (commitEvent) emitEvent(nodeData, commitEvent, extra)
       onCommit?.()
     }
@@ -471,7 +454,7 @@ const createEditingStore = (
     const control: UpdateControl = {
       hold: () => {
         held = true
-        // Mark the session held (blocks the tree). Instant ops have no prior
+        // Mark the session held, blocking the tree. Instant ops have no prior
         // session, so create one; editor ops flip their phase to 'held'.
         commit({ ...state, active: { path, op, phase: 'held', force: state.active?.force } })
         return () => apply()
@@ -479,7 +462,7 @@ const createEditingStore = (
     }
 
     if (!hasUpdate) {
-      // No consumer onUpdate — apply optimistically and we're done (no settle).
+      // No consumer `onUpdate`: apply optimistically, with no settlement.
       apply()
       return Promise.resolve(undefined)
     }
@@ -487,12 +470,13 @@ const createEditingStore = (
     const result = prims!.runUpdate!(input, control)
     const isAsync = isThenable(result)
 
-    // Synchronous verdict on an editor op: we know the outcome in this tick, so
-    // skip the optimistic apply entirely. `reconcile` applies for commit/
-    // override and stays put for error/cancel — so a synchronous reject never
-    // writes to `setData` (no value-flash, clean undo history). Held + instant
-    // ops keep the optimistic/timer path below: instant ops already pre-empt a
-    // sync reject via the timer, and a `hold()` gate is async by design.
+    // Synchronous verdict on an editor op: the outcome is known in this tick,
+    // so skip the optimistic apply entirely. `reconcile` applies for
+    // commit/override and stays put for error/cancel, so a synchronous reject
+    // never writes to `setData` — no value-flash, clean undo history. Held and
+    // instant ops take the optimistic/timer path below instead: instant ops
+    // pre-empt a sync reject via the timer, and a `hold()` gate is async by
+    // design.
     if (!held && !instant && !isAsync) {
       return Promise.resolve(
         reconcile(path, op, token, result, apply, revert, () => applied, nodeData, extra)
@@ -500,13 +484,11 @@ const createEditingStore = (
     }
 
     // Editor ops (edit/rename/object-add) apply immediately: the node survives
-    // a later revert (so a rejection's inline error still shows) and Tab/close
-    // must feel instant. INSTANT ops (delete/move/array-add) defer the
-    // optimistic apply by OPTIMISTIC_DELAY_MS — if `onUpdate` settles first
-    // (sync or fast validation), the node is never removed/relocated, so a
-    // rejection's inline error renders on it (a V1 behaviour the
-    // always-optimistic path lost). A slow `onUpdate` still applies
-    // optimistically once the timer fires.
+    // a later revert, so a rejection's inline error still shows, and Tab/close
+    // must feel instant. Instant ops (delete/move/array-add) defer the
+    // optimistic apply by OPTIMISTIC_DELAY_MS, so that an `onUpdate` settling
+    // within that window leaves the node in place to render its inline error.
+    // A slower `onUpdate` still applies optimistically once the timer fires.
     const promise = isAsync ? result : Promise.resolve(result)
     let optimisticTimer: ReturnType<typeof setTimeout> | undefined
     if (!held) {
@@ -521,8 +503,8 @@ const createEditingStore = (
   }
 
   // ── reconcile: settle the commit's outcome (token-gated) ──────────────────
-  // Positional args (not an options object): this is once-called internal
-  // plumbing, and object keys can't be minified whereas positional params can.
+  // Positional args rather than an options object: this is once-called internal
+  // plumbing, and positional params minify where object keys don't.
   const reconcile = (
     path: CollectionKey[],
     op: EditOperation,
@@ -536,15 +518,15 @@ const createEditingStore = (
   ): UpdateOutcome | undefined => {
     const pathStr = toPathString(path)
 
-    // Pre-apply: this resolve IS the apply/close moment. Two ways to land here
+    // Pre-apply: this resolve IS the apply/close moment. Two paths land here
     // without an optimistic apply — a held gate releasing, or a synchronous
     // editor-op verdict (the sync fast-path in `submit`).
     if (!applied()) {
       if (outcome.status === 'cancel' || outcome.status === 'error') {
-        // Declined/rejected before applying → close the still-open session: a
-        // 'held' gate, OR a non-held 'editing' session left open by the sync
-        // fast-path. Closing it lets the node revert + report the error
-        // (`settleEdit` sees `active === null`), like the post-apply revert.
+        // Declined or rejected before applying, so close the still-open
+        // session — a 'held' gate, or an 'editing' session left open by the
+        // sync fast-path. Closing lets the node revert and report the error
+        // (`settleEdit` sees `active === null`), as the post-apply revert does.
         if (
           state.active &&
           pathsEqual(state.active.path, path) &&
@@ -563,16 +545,15 @@ const createEditingStore = (
       apply()
     }
 
-    // Token gate: a newer commit for this path superseded us. Ignore silently
-    // AND report `undefined` so the originating node treats this stale resolve
-    // as a no-op (it must not revert its buffer or show an error — the live
-    // commit owns the node now).
+    // Token gate: a newer commit for this path has superseded this one. Ignore
+    // it silently and report `undefined`, so the originating node treats the
+    // stale resolve as a no-op — it must not revert its buffer or show an
+    // error, since the live commit owns the node.
     if (state.settling[pathStr] !== token) return undefined
     dropSettling(pathStr)
 
-    // Frozen snapshot for settlement events — a revert has just mutated the
-    // live doc (and an add's child path no longer exists), so don't rebuild
-    // from it.
+    // Settlement events use the frozen snapshot: a revert has just mutated the
+    // live document, and an add's child path doesn't exist there.
     switch (outcome.status) {
       case 'cancel':
         revert() // silent cancel after an optimistic apply
@@ -582,9 +563,9 @@ const createEditingStore = (
         emitEvent(nodeData, 'updateError', { operation: op, error: outcome.error })
         break
       case 'override':
-        // An override applies `value` at `outcome.path`: `[]` for a whole-
-        // document `{ data }` return, or the edited node's path for a
-        // node-level `{ value }` return. `runUpdate` resolved which.
+        // `outcome.path` is `[]` for a whole-document `{ data }` return, or
+        // the edited node's path for a node-level `{ value }` return;
+        // `runUpdate` has already resolved which.
         commitRef.current?.applyValue(outcome.path, outcome.value)
         emitEvent(nodeData, 'updateSuccess', { operation: op, ...extra })
         break
@@ -630,9 +611,8 @@ export const EditingProvider = ({
   const onEditEventRef = useRef(onEditEvent)
   onEditEventRef.current = onEditEvent
 
-  // The store is created once; its identity never changes, so the context value
-  // is stable. All three refs are read only at event time, after `Editor` has
-  // populated the accessors.
+  // Created once, so the context value is a stable reference. All three refs
+  // are read only at event time, after `Editor` has populated the accessors.
   const storeRef = useRef<EditingStore | null>(null)
   if (storeRef.current === null)
     storeRef.current = createEditingStore(onEditEventRef, buildNodeDataFromPathRef, commitRef)
@@ -652,16 +632,14 @@ export const useEditingStore = (): EditingStore => {
   return store
 }
 
-// The slice a selector may return: a primitive only. Primitives are
-// `Object.is`-stable, so a component re-renders only when the selected value
-// actually changes.
+// A selector may only return a primitive: primitives are `Object.is`-stable,
+// so a component re-renders only when the selected value actually changes.
 type EditingSelection = string | number | boolean | bigint | symbol | null | undefined
 
 /**
  * Subscribe to a derived PRIMITIVE slice of editing state. The `T extends
- * EditingSelection` bound enforces the primitive-only contract at compile time
- * (a selector returning a fresh object/array won't type-check, which would
- * re-render on every emit).
+ * EditingSelection` bound enforces that at compile time: a selector returning a
+ * fresh object or array won't type-check, and would re-render on every emit.
  */
 export const useEditingSelector = <T extends EditingSelection>(
   selector: (state: EditingStateBundle) => T
@@ -675,9 +653,9 @@ export const useEditingSelector = <T extends EditingSelection>(
 }
 
 /**
- * Whole-bundle compatibility hook: subscribes to every editing change and
- * returns the full state plus the (stable) actions. Do NOT use on the per-node
- * hot path — it wakes on every edit transition; use `useEditingSelector` there.
+ * Whole-bundle hook: the full state plus the (stable) actions. It wakes on
+ * every edit transition, so keep it off the per-node hot path — use
+ * `useEditingSelector` there.
  */
 export const useEditing = () => {
   const store = useEditingStore()

@@ -29,8 +29,7 @@ interface Bounds {
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi)
 
 // Force a set of boundaries to be ordered, within the track, and each pane at
-// least MIN_PANE_PX wide (used after a resize or when restoring a saved
-// layout).
+// least MIN_PANE_PX wide. Applied after a resize or when restoring a layout.
 const clampBounds = ({ x1, x2, x3 }: Bounds, width: number): Bounds => {
   x1 = clamp(x1, HALF, width)
   x2 = clamp(x2, x1 + MIN_PANE_PX + HANDLE_PX, width)
@@ -63,7 +62,7 @@ const loadFractions = (key: string): Fractions | null => {
     )
       return f as Fractions
   } catch {
-    // Malformed or unavailable storage — fall back to the default layout.
+    // Malformed or unavailable storage falls back to the default layout.
   }
   return null
 }
@@ -73,7 +72,8 @@ const saveFractions = (key: string, { x1, x2, x3 }: Bounds, width: number) => {
   try {
     localStorage.setItem(key, JSON.stringify([x1 / width, x2 / width, x3 / width]))
   } catch {
-    // Storage unavailable (private mode, quota) — persistence is best-effort.
+    // Storage may be unavailable (private mode, quota); persistence is
+    // best-effort.
   }
 }
 
@@ -89,8 +89,8 @@ interface SplitPaneProps {
   //    block that caps its own height and scrolls its body).
   //  - `'scroll'` — also cap the pane at the viewport and scroll it internally
   //    when it's taller. For "dumb" content like a control panel that won't
-  //    size itself. (Such content must portal any popovers so this pane's
-  //    overflow doesn't clip them.)
+  //    size itself; such content must portal any popovers, so this pane's
+  //    overflow doesn't clip them.
   stickyRight?: boolean | 'scroll'
 }
 

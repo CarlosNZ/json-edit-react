@@ -20,8 +20,7 @@ export const BooleanToggleComponent: React.FC<CustomComponentProps> = (props) =>
       name={toPathString(path)}
       checked={value as boolean}
       onChange={() => {
-        // In this case we submit the data value immediately, not just the local
-        // state
+        // Submits the data value immediately, not just the local state
         handleEdit(!nodeData.value)
         // setValue(!value)
       }}

@@ -4,11 +4,10 @@
  * `TextEditor` prop to replace the default plain <textarea> when editing
  * a JSON subtree as raw text.
  *
- * CodeMirror and its theme packages are loaded lazily — they're external in
- * rollup, so the dynamic imports below become runtime `import()` calls and
- * only land in the consumer's bundle when the editor actually opens. The
- * optional `theme` prop maps a JsonEditor theme display name to a matching
- * CodeMirror Extension.
+ * CodeMirror and its theme packages load lazily: they're external in rollup, so
+ * the dynamic imports below become runtime `import()` calls and only land in
+ * the consumer's bundle when the editor opens. The optional `theme` prop maps a
+ * JsonEditor theme display name to a matching CodeMirror Extension.
  */
 
 import React, { lazy, Suspense } from 'react'

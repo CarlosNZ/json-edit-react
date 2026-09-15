@@ -704,11 +704,11 @@ describe('JsonEditor — edit flow', () => {
   })
 
   // Regression: an open edit whose node then UNMOUNTS — e.g. the consumer swaps
-  // the entire `data` out from under it, so the edited path no longer exists —
-  // must not wedge editing. The session stays `active` pointing at the vanished
-  // path until the next editing action; previously that next `open()` threw
-  // while building `NodeData` for the gone path to fire `cancelEdit` (only with
-  // an `onEditEvent` consumer), so NO further node could ever be edited. A
+  // the entire `data` out from under it, so the edited path is gone — must not
+  // wedge editing. The session stays `active` pointing at the vanished path
+  // until the next editing action, and without the guard that next `open()`
+  // throws while building `NodeData` for the gone path to fire `cancelEdit`
+  // (only with an `onEditEvent` consumer), leaving NO node editable at all. A
   // search-filtered node keeps editing alive because it only renders `null`
   // (stays mounted, path survives) — this covers the true-unmount case.
   test('editing still works after the edited node unmounts (dataset swap)', async () => {
@@ -1018,7 +1018,7 @@ describe('JsonEditor — structural mutations', () => {
   })
 })
 
-describe('JsonEditor — §17 onUpdate event discriminant', () => {
+describe('JsonEditor — onUpdate event discriminant', () => {
   test('onUpdate receives event:"delete" with the node identity', async () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn(() => true as const)
@@ -1097,10 +1097,10 @@ describe('JsonEditor — §17 onUpdate event discriminant', () => {
   test.todo('onUpdate receives event:"move" on a drag-drop (needs DnD simulation — #270)')
 })
 
-describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
-  // A session ends in confirm* (committed) or cancel* (closed without a
+describe('JsonEditor — onEditEvent lifecycle stream', () => {
+  // A session ends in commit* (committed) or cancel* (closed without a
   // commit).
-  test('value edit: startEdit → confirmEdit on a real change', async () => {
+  test('value edit: startEdit → commitEdit on a real change', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     render(<JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} />)
@@ -1120,7 +1120,7 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     render(<JsonEditor data={{ x: 'hello' }} setData={noop} onEditEvent={onEditEvent} />)
 
     await user.dblClick(screen.getByText('"hello"'))
-    // Confirm without changing anything — a no-op commit (§5): commitEdit, no
+    // Confirm without changing anything — a no-op commit: commitEdit, no
     // update*.
     await user.type(screen.getByRole('textbox'), '{Enter}')
 
@@ -1140,7 +1140,7 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     expect(seq).toEqual(['startEdit', 'cancelEdit'])
   })
 
-  test('key rename: startRename → confirmRename with old + new keys', async () => {
+  test('key rename: startRename → commitRename with old + new keys', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     render(<JsonEditor data={{ a: 1, oldName: 2 }} setData={noop} onEditEvent={onEditEvent} />)
@@ -1162,7 +1162,7 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     })
   })
 
-  test('add (object): startAdd → confirmAdd; and startAdd → cancelAdd on Escape', async () => {
+  test('add (object): startAdd → commitAdd; and startAdd → cancelAdd on Escape', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     const { container } = render(
@@ -1288,7 +1288,7 @@ describe('JsonEditor — §17 onEditEvent lifecycle stream', () => {
     expect(onEditEvent.mock.calls[0][0]).toMatchObject({ event: 'delete', key: 'x', path: ['x'] })
   })
 
-  test('Tab-commit fires confirmEdit then startEdit(next) — no stray cancelEdit', async () => {
+  test('Tab-commit fires commitEdit then startEdit(next) — no stray cancelEdit', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
     render(<JsonEditor data={{ a: 'x', b: 'y' }} setData={noop} onEditEvent={onEditEvent} />)
@@ -2658,7 +2658,7 @@ describe('JsonEditor — search and filter', () => {
 
   test('Live search hiding the actively-edited node unmounts the input without error', async () => {
     // The redirect's secondary role (cancel-when-active-becomes-invisible)
-    // is intentionally dropped — see plan §"Reactive cancel deliberately
+    // is intentionally dropped — see the "Reactive cancel deliberately
     // omitted". A search keystroke that filters out the currently-editing
     // node leaves the editing record in the store; the node simply
     // returns null from its render (its `!isVisible` early-return path),

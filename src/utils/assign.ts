@@ -1,11 +1,9 @@
-// Internalised from https://github.com/CarlosNZ/object-property-assigner
-// (formerly published as the `object-property-assigner` npm package).
-// Kept in-source so this library has zero non-React runtime dependencies.
+// Internalised from https://github.com/CarlosNZ/object-property-assigner, so
+// this library has zero non-React runtime dependencies.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// `any` here covers the `newValue` parameter — assign accepts arbitrary
-// values (JSON, functions, etc.), and `unknown` would force callers to
-// narrow before passing.
+// `any` covers the `newValue` parameter: `assign` accepts arbitrary values
+// (JSON, functions, etc.), and `unknown` would force callers to narrow.
 
 import { isObject } from './misc'
 import { splitPropertyString, stringifyPath, type Path } from './pathTools'
@@ -74,9 +72,8 @@ export const assign = (
     : splitPropertyString(propertyPath)
 
   if (isArray(data) && remove && propertyPathArray.length === 1) {
-    // Special case for removing an array index that is at the root level. We'd
-    // normally have to do this from the parent (see below), but that's not
-    // possible here.
+    // Removing a root-level array index. Removal is normally done from the
+    // parent (see below), which isn't possible here.
     return removeFromArray(data, propertyPathArray[0] as number)
   }
 
@@ -102,9 +99,8 @@ const assignProperty = (
 
   const property = propertyPathArray[0]
 
-  // When a string key is used against an array, broadcast the assignment to
-  // every element — e.g. assign(data, 'users.email', value) updates `email`
-  // on each entry of `users`.
+  // A string key against an array broadcasts the assignment to every element:
+  // assign(data, 'users.email', value) updates `email` on each entry.
   if (arrayData && typeof property === 'string') {
     return arrayData.map((item) =>
       assignProperty(item as AssignInput, propertyPathArray, newValue, options)
@@ -131,9 +127,9 @@ const assignProperty = (
   const newData = (objectData || arrayData || []) as InputObject
 
   if (remove && propertyPathArray.length === 2 && typeof propertyPathArray[1] === 'number') {
-    // This is for removing an indexed element from an array -- it must
-    // be done from the parent, as an array can't have an element removed
-    // in-place, so we need to return a copy of the filtered array
+    // Removing an indexed element from an array has to be done from the
+    // parent: an array can't have an element removed in place, so this returns
+    // a copy of the filtered array
     const childArray = newData[property]
     const childArrayIndex = propertyPathArray[1]
     if (isArray(childArray)) newData[property] = removeFromArray(childArray, childArrayIndex)
@@ -151,8 +147,8 @@ const assignProperty = (
   const newPathArray = propertyPathArray.slice(1)
 
   if (property in data) {
-    // This is for the case where the current property exists, but it's not an
-    // object, so subsequent path elements can't be added
+    // The current property exists but isn't an object, so subsequent path
+    // elements can't be added to it
     if (isPrimitive(newData[property])) {
       if (createNew) newData[property] = {}
       else {

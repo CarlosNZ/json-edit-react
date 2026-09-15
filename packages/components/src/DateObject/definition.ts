@@ -13,8 +13,8 @@ const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
   name: 'Date Object', // shown in the Type selector menu
   showInTypeSelector: true,
   editOnTypeSwitch: true,
-  // A function so each new node gets the current date, not one fixed at module
-  // load (also keeps the definition tree-shakeable).
+  // A function, so each new node gets the current date rather than one fixed
+  // at module load, which also keeps the definition tree-shakeable.
   defaultValue: () => new Date(),
   renderCollectionAsValue: true,
   toStandardType: (value) => (value instanceof Date ? value.toISOString() : String(value)),
@@ -22,16 +22,15 @@ const DateObjectDefinition: CustomNodeDefinition<DateObjectProps> = {
     if (value instanceof Date) return value
     const date = new Date(String(value))
     if (isNaN(date.getTime()))
-      // Rejects the confirm; at switch time core seeds defaultValue instead
+      // Rejects the confirm; at switch time core seeds `defaultValue`
       throw new Error(componentProps?.invalidDateError ?? 'Invalid Date')
     return date
   },
-  // IMPORTANT: This component can't be used in conjunction with a ISO string
-  // matcher (such as the DatePicker in this repo) -- because JSON.stringify
-  // automatically serializes Date objects to ISO Strings, there's no way to
-  // distinguish between them when re-parsing back to object.
-  // There's also no point in providing a stringifyReplacer, as the
-  // auto-serialisation gets done before passing to the string replacer function
+  // IMPORTANT: this component can't be combined with an ISO-string matcher
+  // such as DatePicker. `JSON.stringify` serialises Date objects to ISO strings
+  // automatically, so the two are indistinguishable when re-parsed back to an
+  // object. A `stringifyReplacer` wouldn't help either, since that
+  // auto-serialisation happens before the replacer is called.
   parseReviver: (value) =>
     typeof value === 'string' &&
     /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:?\d{2})?)?$/.test(value)

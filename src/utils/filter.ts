@@ -3,18 +3,17 @@ import { isCollection } from './misc'
 import { toPathString } from './pathTools'
 
 /**
- * Pre-computed visibility state for the whole tree under a given search.
- * Produced once at the JsonEditor level (see `computeFilterState` below)
- * and surfaced to nodes via the `FilterStateProvider` context slice.
+ * Pre-computed visibility state for the whole tree under a given search,
+ * produced once at the JsonEditor level and surfaced to nodes via the
+ * `FilterStateProvider` context slice.
  *
- *  - `visiblePaths` — every node whose own match or whose descendant's
- *    match keeps it on screen (ancestors of a matching node stay visible).
- *  - `visibleChildCounts` — for every collection node, how many of its
- *    direct children are visible. Powers the "n of m" filtered-count
- *    display.
+ *  - `visiblePaths` — every node kept on screen by its own match or a
+ *    descendant's, ancestors of a matching node included.
+ *  - `visibleChildCounts` — how many direct children of each collection are
+ *    visible, powering the "n of m" filtered-count display.
  *
- * Keys are produced by `toPathString` so they're stable, collision-free,
- * and cheap to look up.
+ * Keys come from `toPathString`, so they're stable, collision-free and cheap to
+ * look up.
  */
 export interface FilterState {
   visiblePaths: Set<string>
@@ -22,10 +21,10 @@ export interface FilterState {
 }
 
 /**
- * Single post-order DFS that decides which nodes stay visible under the
- * current search, and counts the visible direct children of every
- * collection along the way. Returns `null` when no filter is active —
- * the caller fast-paths to "everything visible, use raw `size`".
+ * Single post-order DFS deciding which nodes stay visible under the current
+ * search, counting each collection's visible direct children along the way.
+ * Returns `null` when no filter is active, which the caller fast-paths to
+ * "everything visible, use raw `size`".
  */
 export const computeFilterState = (
   rootNodeData: NodeData,
@@ -36,9 +35,8 @@ export const computeFilterState = (
 
   const visiblePaths = new Set<string>()
   const visibleChildCounts = new Map<string, number>()
-  // Match the editor's default-matcher rule: when no searchFilter is
-  // given but searchText is set, fall back to the per-value matcher.
-  // Same as the old filterNode's value branch did.
+  // The editor's default-matcher rule: with no `searchFilter` but a
+  // `searchText`, fall back to the per-value matcher.
   const matcher = searchFilter ?? matchNode
   const text = searchText ?? ''
 
@@ -82,7 +80,7 @@ export const matchNode: (input: Partial<NodeData>, searchText: string) => boolea
 ) => {
   const { value } = nodeData
 
-  // Any partial completion of the input "null" will match null values
+  // Any partial completion of "null" matches a null value
   if (value === null && 'null'.includes(searchText.toLowerCase())) return true
 
   switch (typeof value) {
@@ -91,8 +89,7 @@ export const matchNode: (input: Partial<NodeData>, searchText: string) => boolea
     case 'number':
       return !!String(value).includes(searchText)
     case 'boolean':
-      // Will match partial completion of the inputs "true" and "false", as well
-      // as "1" or "0"
+      // Matches partial completions of "true" and "false", plus "1" and "0"
       if (value) {
         return 'true'.includes(searchText.toLowerCase()) || searchText === '1'
       } else {
