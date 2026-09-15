@@ -53,3 +53,6 @@ custom-component-library/components/package
 .original-readme.md
 .npm-readme.md
 demo/src/imports/import.ts
+
+# Extracted tarballs from `pnpm pack-all` (consumed by VITE_JRE_SOURCE=pack)
+pack-output/
