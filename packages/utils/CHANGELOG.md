@@ -1,5 +1,11 @@
 # @json-edit-react/utils
 
+## 0.9.0-beta.3
+
+### Patch Changes
+
+- Fix per-export tree-shaking of the [`/filters`](README.md#filter-function-toolkit) subpath (#406). Importing a single predicate no longer pulls most of the toolkit: `import { root }` drops from 2586 B to 119 B, and the heaviest builders (`byPath`, `matchRecord`) now carry only the glob engine they genuinely need. The build stamps `/*#__PURE__*/` onto the eager `intern(…)` calls behind each builder, so bundlers can prove the unused ones are droppable. No change to how the predicates are written, imported or interned.
+
 ## 0.9.0-beta.0
 
 ### Minor Changes
