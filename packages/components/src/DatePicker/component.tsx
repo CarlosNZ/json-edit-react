@@ -1,16 +1,12 @@
 /**
- * An example Custom Component:
- * https://github.com/CarlosNZ/json-edit-react#custom-nodes
- *
- * Shows when an ISO date/time string is present in the JSON data, presenting a
- * date-picker interface rather than requiring the user to edit the ISO string
- * directly.
+ * Renders an ISO date/time string as a date picker, so the user edits a
+ * calendar rather than the raw ISO string.
  *
  * The picker UI is a swappable widget: pass `ReactDatePicker` from
- * `@json-edit-react/components/widgets` (or any component satisfying
- * `DatePickerWidgetProps`) via `componentProps.DatePicker`. This keeps the
+ * `@json-edit-react/components/widgets`, or any component satisfying
+ * `DatePickerWidgetProps`, via `componentProps.DatePicker`. That keeps the
  * heavy `react-datepicker` dependency opt-in and lets a consumer drop in their
- * own picker. With no widget supplied the node falls back to editing the raw
+ * own picker. With no widget supplied, the node falls back to editing the raw
  * ISO string and shows a warning.
  */
 
@@ -25,8 +21,8 @@ export interface DatePickerCustomProps {
   // the raw ISO string and shows `noPickerWarning`.
   DatePicker?: React.ComponentType<DatePickerWidgetProps>
   showTime?: boolean
-  // Customises the read-only (non-editing) display. Defaults to
-  // `date.toLocaleString()` / `toLocaleDateString()` per `showTime`.
+  // Customises the read-only display. Defaults to `date.toLocaleString()` or
+  // `toLocaleDateString()`, per `showTime`.
   formatter?: (date: Date) => string
   // Inline warning shown in the fallback editor when no `DatePicker` is set.
   noPickerWarning?: React.ReactNode
@@ -81,9 +77,9 @@ export const DateTimePicker = (props: CustomComponentProps<DatePickerCustomProps
       <DatePicker
         value={isValidDate ? date : null}
         showTime={showTime}
-        // A selection updates the buffer; commit/cancel come from core's
-        // Ok/Cancel icons and Enter/Esc. onConfirm/onCancel are wired too, so a
-        // widget shipping its own buttons works without further setup.
+        // A selection updates the buffer, while commit and cancel come from
+        // core's Ok/Cancel icons and Enter/Esc. onConfirm/onCancel are wired
+        // too, so a widget shipping its own buttons needs no further setup.
         onChange={(newDate) => newDate && setValue(newDate.toISOString())}
         onConfirm={(newDate) =>
           handleEdit(newDate instanceof Date ? newDate.toISOString() : undefined)
@@ -94,8 +90,8 @@ export const DateTimePicker = (props: CustomComponentProps<DatePickerCustomProps
     )
   }
 
-  // View mode: a custom `formatter` wins; otherwise localised date/time. Falls
-  // back to the raw value if it doesn't parse (e.g. mid type-switch).
+  // View mode: a custom `formatter` wins, otherwise localised date/time,
+  // falling back to the raw value if it doesn't parse (mid type-switch, say).
   const displayValue = !isValidDate
     ? (value as string)
     : formatter

@@ -11,8 +11,8 @@ import {
 
 export const NOOP = () => {}
 
-// Wrap a value in an array unless it already is one — for the "accepts one or
-// many" inputs (theme layers, collapse states, keyboard modifiers).
+// Wrap a value in an array unless it already is one, for the "accepts one or
+// many" inputs: theme layers, collapse states, keyboard modifiers.
 export const toArray = <T>(value: T | T[]): T[] => (Array.isArray(value) ? value : [value])
 
 export const isCollection = (value: unknown): value is Record<string, unknown> | unknown[] =>
@@ -22,8 +22,8 @@ export const isObject = (input: unknown): input is Record<string, unknown> =>
   typeof input === 'object' && input !== null && !Array.isArray(input)
 
 // Distinguishes a Promise (or any thenable) from a synchronous value, so the
-// commit engine can tell a synchronous `onUpdate` verdict from an async one
-// and resolve the sync case in place (no optimistic apply).
+// commit engine can resolve a synchronous `onUpdate` verdict in place, with no
+// optimistic apply.
 export const isThenable = (value: unknown): value is PromiseLike<unknown> =>
   value != null &&
   (typeof value === 'object' || typeof value === 'function') &&
@@ -44,9 +44,8 @@ export const isJsEvent = (value: unknown) => {
  * JSON VALUE HANDLING
  */
 
-// Compares the current (string) data value against the possible data types to
-// see if it matches any Enum types, and returns the highest priority match if
-// so.
+// Matches the current (string) data value against the possible data types,
+// returning the highest-priority matching enum type.
 export const matchEnumType = (
   value: CollectionData | ValueData,
   dataTypes: TypeOptions
@@ -61,19 +60,16 @@ export const matchEnumType = (
   return candidates[0] ?? null
 }
 
-// When running JSON.parse, a standard "reviver" function, which we can use for
-// other non-serializable types, doesn't work for `undefined` (it throws the
-// whole property away if the reviver returns `undefined`). So we leave it as
-// the serialized "__undefined__" (created in stringify method), and the
-// post-process the parsed data here to replace these with actual `undefined`
-// values
+// A `JSON.parse` reviver handles the other non-serialisable types, but not
+// `undefined`: returning `undefined` from a reviver throws the whole property
+// away. So the serialised "__undefined__" sentinel survives the parse, and this
+// post-processes the result to put real `undefined` values back.
 export const restoreUndefined = (val: unknown): unknown => {
   if (val === UNDEFINED) return undefined
   if (val && typeof val === 'object') {
-    // Arrays and objects both: mutate in place. The input is always
-    // freshly produced by jsonParse, so there's no shared reference to
-    // corrupt. The change guard means an undefined-free tree does zero
-    // writes — only a genuine sentinel triggers a mutation.
+    // Arrays and objects alike are mutated in place: the input is always
+    // freshly produced by `jsonParse`, so there's no shared reference to
+    // corrupt. The change guard means an undefined-free tree does zero writes.
     for (const key in val) {
       const original = (val as Record<string, unknown>)[key]
       const restored = restoreUndefined(original)
@@ -83,6 +79,5 @@ export const restoreUndefined = (val: unknown): unknown => {
   return val
 }
 
-// Note additional hidden char included to distinguish it from actual string
-// value "__undefined__"
+// The hidden char distinguishes this from the literal string "__undefined__"
 export const UNDEFINED = '__\u200Bundefined__'

@@ -3,17 +3,17 @@
  * `DatePickerWidgetProps` contract, so it can be passed to the `DatePicker`
  * node component (via `componentProps.DatePicker`) to provide the calendar UI.
  *
- * Parallels `ReactSelect`: the heavy third-party library is lazy-loaded and the
- * widget is fully replaceable — a consumer can supply any component satisfying
- * `DatePickerWidgetProps` instead. To configure react-datepicker specifics,
- * wrap this widget: `DatePicker: (props) => <ReactDatePicker {...props}
+ * It parallels `ReactSelect`: the heavy third-party library is lazy-loaded and
+ * the widget is fully replaceable by any component satisfying
+ * `DatePickerWidgetProps`. To configure react-datepicker specifics, wrap this
+ * widget: `DatePicker: (props) => <ReactDatePicker {...props}
  * dateFormat="dd/MM/yyyy" datePickerProps={{ minDate, maxDate }} />`.
  *
- * react-datepicker fires `onChange` on every selection, so the calendar's
- * picks flow straight into the edit buffer; commit/cancel are handled by core's
+ * react-datepicker fires `onChange` on every selection, so the calendar's picks
+ * flow straight into the edit buffer, while commit and cancel come from core's
  * Ok/Cancel icons and Enter/Esc. The widget therefore needs no OK/Cancel
- * buttons of its own (the contract's `onConfirm`/`onCancel` exist for pickers
- * that do ship their own).
+ * buttons of its own; the contract's `onConfirm`/`onCancel` exist for pickers
+ * that ship their own.
  */
 
 import { lazy, Suspense, type ComponentType } from 'react'
@@ -21,41 +21,42 @@ import { type DatePickerProps } from 'react-datepicker'
 import { type DatePickerWidgetProps } from '../../_common/DatePickerWidget'
 import { Loading } from '../../_common/Loading'
 
-// react-datepicker's own stylesheet. It stays a bare side-effecting import:
+// react-datepicker's own stylesheet, which stays a bare side-effecting import:
 // the library is external, so this survives into the bundle as an `import`
-// statement for the consumer's bundler to handle, and there's no text for us
-// to inline the way our own stylesheets are. That makes it the one thing in
+// statement for the consumer's bundler to handle, and there's no text to inline
+// the way this package's own stylesheets are. That makes it the one thing in
 // the package the `sideEffects: false` flag misdescribes — a bundler is
 // entitled to drop a side-effect-free module, taking the import with it. In
 // practice it can't bite: dropping requires every export of the module to be
 // unused, and anyone loading this entry point is using `ReactDatePicker`.
 import 'react-datepicker/dist/react-datepicker.css'
-// Our overrides, for better matching with Chakra-UI. Injected at first render
+// Local overrides, for a closer match with Chakra-UI. Injected at first render
 // (see useStyles), so they land in <head> after the import above and win on
 // equal specificity.
 import css from './style.css?inline'
 import { useStyles } from '../../_common/useStyles'
 
-// react-datepicker's props are a large discriminated union (selectsRange /
-// selectsMultiple variants), so neither it nor a `Partial` of it accepts a
-// plain merged props object — the variant discriminants conflict. Re-narrow
-// the lazy component to a permissive bag for the internal wiring; the public
-// surface stays typed via `ReactDatePickerExtraProps['datePickerProps']`. Same
+// react-datepicker's props are a large discriminated union (the selectsRange
+// and selectsMultiple variants), so neither it nor a `Partial` of it accepts a
+// plain merged props object — the variant discriminants conflict. The lazy
+// component is re-narrowed to a permissive bag for the internal wiring, while
+// the public surface stays typed via
+// `ReactDatePickerExtraProps['datePickerProps']`. The same
 // cast-the-lazy-component tradeoff as `ReactSelect`.
 const DatePicker = lazy(() => import('react-datepicker')) as unknown as ComponentType<
   Record<string, unknown>
 >
 
 export interface ReactDatePickerExtraProps {
-  // react-datepicker `dateFormat`s, applied when `showTime` is false / true
+  // react-datepicker `dateFormat`s, applied when `showTime` is false and true
   // respectively. These format the calendar's input field, not the node's
-  // read-only display (that's the node's `formatter` / `toLocaleString`).
+  // read-only display, which is the node's `formatter`/`toLocaleString`.
   dateFormat?: string
   dateTimeFormat?: string
   loadingText?: string
   // Forwarded as-is to the underlying `react-datepicker` (minDate, maxDate,
-  // filterDate, locale, etc.). Anything this widget owns (selected, onChange,
-  // showTimeSelect, dateFormat) wins over what's passed here.
+  // filterDate, locale, etc.). Anything this widget owns — selected, onChange,
+  // showTimeSelect, dateFormat — wins over what's passed here.
   datePickerProps?: Partial<DatePickerProps>
 }
 

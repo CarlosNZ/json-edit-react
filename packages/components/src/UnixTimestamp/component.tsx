@@ -1,11 +1,11 @@
 /**
  * Renders Unix-epoch numbers (seconds or milliseconds) as a readable date.
  *
- * Editing reuses the same swappable picker as `DatePicker`: pass `ReactDatePicker`
- * (or any `DatePickerWidgetProps` component) via `componentProps.DatePicker`.
- * The definition enables editing-mode rendering only when a widget is supplied;
- * with none, the node's standard number editor handles edits (see
- * `definition.ts`).
+ * Editing reuses the same swappable picker as `DatePicker`: pass
+ * `ReactDatePicker`, or any `DatePickerWidgetProps` component, via
+ * `componentProps.DatePicker`. The definition enables editing-mode rendering
+ * only when a widget is supplied; with none, the node's standard number editor
+ * handles edits (see `definition.ts`).
  *
  * The read-only view has two modes (`componentProps.displayAs`):
  *   - `'number'` (default): the standard number node (`originalNode`) plus a
@@ -26,11 +26,11 @@ export interface UnixTimestampCustomProps {
   // only when this is supplied; otherwise core's standard number editor edits.
   DatePicker?: React.ComponentType<DatePickerWidgetProps>
   showTime?: boolean
-  // Whether stored values are epoch seconds or milliseconds. `'auto'` (default)
-  // detects per value from its magnitude.
+  // Whether stored values are epoch seconds or milliseconds. `'auto'`, the
+  // default, detects per value from its magnitude.
   unit?: UnixTimeUnit
-  // Read-only display mode. `'number'` (default) shows the raw number with a
-  // badge; `'date'` shows a formatted date.
+  // Read-only display mode: `'number'` (default) shows the raw number with a
+  // badge, `'date'` a formatted date.
   displayAs?: 'date' | 'number'
   // Badge text for the `'number'` display mode. Default `'UNIX'`.
   badgeLabel?: React.ReactNode
@@ -66,8 +66,8 @@ export const UnixTimestamp = (props: CustomComponentProps<UnixTimestampCustomPro
 
   const numericValue = typeof value === 'number' ? value : Number(value)
 
-  // Editing only reaches this component when a widget is supplied (the
-  // definition sets `showOnEdit` accordingly); without one, core's number
+  // Editing only reaches this component when a widget is supplied, the
+  // definition setting `showOnEdit` accordingly. Without one, core's number
   // editor handles edits and this branch never runs.
   if (isEditing && DatePicker) {
     const date = epochToDate(numericValue, unit)
@@ -85,7 +85,7 @@ export const UnixTimestamp = (props: CustomComponentProps<UnixTimestampCustomPro
     )
   }
 
-  // View mode — `'number'`: the standard number node plus a UNIX badge.
+  // View mode `'number'`: the standard number node plus a UNIX badge.
   if (displayAs === 'number')
     return (
       <span
@@ -99,7 +99,7 @@ export const UnixTimestamp = (props: CustomComponentProps<UnixTimestampCustomPro
       </span>
     )
 
-  // View mode — `'date'`: a formatted date (raw value if it doesn't parse).
+  // View mode `'date'`: a formatted date, or the raw value if it won't parse.
   const date = epochToDate(numericValue, unit)
   const isValidDate = !isNaN(date.getTime())
   const displayValue = !isValidDate
@@ -112,8 +112,8 @@ export const UnixTimestamp = (props: CustomComponentProps<UnixTimestampCustomPro
 
   return (
     <div
-      // Double-click to edit, like standard value nodes (enters the widget when
-      // supplied, else core's number editor).
+      // Double-click to edit, like standard value nodes: the widget when one
+      // is supplied, otherwise core's number editor.
       onDoubleClick={() => canEdit && setIsEditing(true)}
       className="jer-value-string"
       style={getStyles('string', nodeData)}

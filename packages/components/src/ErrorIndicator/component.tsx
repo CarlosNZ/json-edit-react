@@ -1,13 +1,14 @@
 /**
- * A view-mode decorator that wraps the built-in node and appends (or prepends)
+ * A view-mode decorator that wraps the built-in node and appends, or prepends,
  * a small glyph — typically an error marker (⚠️). It renders `originalNode`
  * unchanged and adds the glyph beside it, so it works on a value (leaf) node of
  * any type and inherits the node's normal styling and edit affordances. The
- * definition guards to value nodes (not collections — see `definition.ts`).
+ * definition guards to value nodes rather than collections — see
+ * `definition.ts`.
  *
- * The component is presentation-only: *which* nodes it decorates is the
- * definition's `condition` (see `errorIndicatorDefinition`), not anything this
- * component reads. Point that condition at your error nodes — e.g.
+ * The component is presentation-only: *which* nodes it decorates comes from the
+ * definition's `condition` (see `errorIndicatorDefinition`), not from anything
+ * this component reads. Point that condition at the error nodes, e.g.
  * `condition: (nd) => validation.hasErrorAt(nd.path)` with `useValidationState`
  * from `@json-edit-react/utils`.
  */
@@ -37,9 +38,9 @@ export const ErrorIndicatorComponent = ({
     </span>
   )
 
-  // inline-flex keeps the glyph on the same line as the value (originalNode is
-  // a block-level node) and vertically centred; `gap` spaces it without
-  // per-side margins.
+  // inline-flex keeps the glyph on the same line as the value, `originalNode`
+  // being block-level, and vertically centred; `gap` spaces it without per-side
+  // margins.
   return (
     <span
       className="jer-error-indicator-wrapper"

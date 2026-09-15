@@ -2,8 +2,7 @@ import { type SVGProps } from 'react'
 import { type Theme } from '../../types'
 
 // Shared presentation attributes for stroke-based glyphs (Lucide/Feather): the
-// art is drawn as outlines, so colour comes from `stroke` (via currentColor),
-// not `fill`.
+// art is outlines, so colour comes from `stroke` via currentColor, not `fill`.
 const strokeIconProps: SVGProps<SVGSVGElement> = {
   fill: 'none',
   stroke: 'currentColor',
@@ -16,11 +15,11 @@ export const defaultTheme: Theme = {
   displayName: 'Default',
   // The seven built-in glyphs. Core renders the wrapping <svg>; each definition
   // supplies only the inner markup plus the attributes core can't infer.
-  // `scale` is a per-glyph size correction (multiplied onto core's
-  // ICON_TEXT_SIZE_RATIO) that compensates for source art under/over-filling
-  // its viewBox — the set is drawn by different icon families (Boxicons,
-  // Lucide, Feather, Typicons, FontAwesome), so at an identical em box they'd
-  // otherwise look uneven.
+  // `scale` is a per-glyph size correction, multiplied onto core's
+  // ICON_TEXT_SIZE_RATIO, compensating for source art that under- or
+  // over-fills its viewBox: the set is drawn by several icon families
+  // (Boxicons, Lucide, Feather, Typicons, FontAwesome), which look uneven at an
+  // identical em box.
   icons: {
     // icon:bx-plus-circle | Boxicons https://boxicons.com/ | Atisa
     add: {

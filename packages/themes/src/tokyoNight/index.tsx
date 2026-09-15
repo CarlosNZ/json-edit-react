@@ -4,12 +4,12 @@
 
 import { type Theme, type ThemeIcons } from 'json-edit-react'
 
-// Phosphor Light set (https://phosphoricons.com/) for the Tokyo Night theme — a
-// fine, light-stroke look to suit its cool, muted palette. (Dracula carries the
+// Phosphor Light set (https://phosphoricons.com/) for the Tokyo Night theme: a
+// fine, light-stroke look suiting its cool, muted palette. Dracula carries the
 // chunky Phosphor Duotone weight, so the two themes sit at opposite ends of one
-// family.) Light glyphs are solid `fill="currentColor"` paths that *draw* a
+// family. Light glyphs are solid `fill="currentColor"` paths that *draw* a
 // ~6-unit stroke rather than being stroked, so they need no svgProps and adopt
-// each `icon*` colour directly. Source viewBox is 256×256.
+// each `icon*` colour directly. The source viewBox is 256×256.
 const phosphorLightIcons: ThemeIcons = {
   // ph:plus-light
   add: {
@@ -57,9 +57,9 @@ const phosphorLightIcons: ThemeIcons = {
     ),
     viewBox: '0 0 256 256',
   },
-  // ph:caret-down-light — rotated -90deg by core CSS when collapsed. Scaled down
-  // a touch so the wide chevron doesn't crowd the key (core's
-  // `.jer-collapse-icon` offset is tuned to the default chevron's footprint).
+  // ph:caret-down-light — rotated -90deg by core CSS when collapsed. Scaled
+  // down a touch so the wide chevron doesn't crowd the key; core's
+  // `.jer-collapse-icon` offset is tuned to the default chevron's footprint.
   collection: {
     content: (
       <path d="M212.24,100.24l-80,80a6,6,0,0,1-8.48,0l-80-80a6,6,0,0,1,8.48-8.48L128,167.51l75.76-75.75a6,6,0,0,1,8.48,8.48Z" />

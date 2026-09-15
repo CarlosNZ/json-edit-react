@@ -32,10 +32,10 @@ export interface CustomNodeData {
   ) => unknown
 }
 
-// Maps a definition to the renderable CustomNodeData shape, applying the
-// field defaults. Used for the committed-data condition match below, and for
-// the "effective" data of an in-session `editOnTypeSwitch` target (where the
-// definition is picked by name, not condition).
+// Maps a definition to the renderable `CustomNodeData` shape, applying the
+// field defaults. Serves both the committed-data condition match below and the
+// "effective" data of an in-session `editOnTypeSwitch` target, where the
+// definition is picked by name rather than condition.
 export const buildCustomNodeData = (definition: CustomNodeDefinition): CustomNodeData => {
   const {
     component,
@@ -62,13 +62,12 @@ export const buildCustomNodeData = (definition: CustomNodeDefinition): CustomNod
   }
 }
 
-// Fetches matching custom nodes (based on condition filter) from custom node
-// definitions and return the component and its props
+// Returns the component and props of the first definition whose `condition`
+// matches
 export const getCustomNode = (
   customNodeDefinitions: CustomNodeDefinition[] = [],
   nodeData: NodeData
 ): CustomNodeData => {
-  // Only take the first one that matches
   const matchingDefinition = customNodeDefinitions.find(({ condition }) => condition(nodeData))
   return matchingDefinition ? buildCustomNodeData(matchingDefinition) : {}
 }

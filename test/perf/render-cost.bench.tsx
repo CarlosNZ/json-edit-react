@@ -143,7 +143,7 @@ describe('render-cost: regular vs all-custom-node tree', () => {
 
     // ── Interactions: drive a real edit on the BENCH_TARGET leaf ────────────
     // Expected: ~parity between strategies — per-edit cost is O(edited node +
-    // spine) by §16, independent of how the rest of the tree is rendered.
+    // spine), independent of how the rest of the tree is rendered.
     if (METRICS.includes('interactions')) {
       const target = () => screen.getByText(TARGET_TEXT)
       interface Interaction {

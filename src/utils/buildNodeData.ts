@@ -3,19 +3,14 @@ import { extract } from './extract'
 import { isCollection } from './misc'
 
 /**
- * Builds a `NodeData` snapshot for an arbitrary path against `fullData`.
- *
- * Reused by:
- *   - `JsonEditor` (root and bridge construction — onCollapse / onEditEvent /
- *     editorRef handle reads).
- *   - `getNextOrPrevious` (synthesising the candidate `NodeData` the
- *     viability predicate is called with during Tab navigation).
+ * Builds a `NodeData` snapshot for an arbitrary path against `fullData`, for
+ * `JsonEditor` (root and bridge construction) and `getNextOrPrevious`
+ * (synthesising the candidate the Tab-viability predicate is called with).
  *
  * `index` derivation respects the same sort the renderer uses, so a custom
- * `searchFilter` / `allowEdit` callback sees the same `index` it would during
- * render. `rootName` is the editor's `rootName` prop value — only used when
- * `path` is empty; defaults to `''` for callers that never target the root
- * (Tab leaves, internal walk steps).
+ * `searchFilter`/`allowEdit` callback sees the same `index` it would during
+ * render. `rootName` is only used when `path` is empty, and defaults to `''`
+ * for callers that never target the root.
  */
 export const buildNodeData = (
   fullData: JsonData,

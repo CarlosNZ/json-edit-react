@@ -147,7 +147,8 @@ export const not: (pred: FilterPredicate) => FilterPredicate = internRef(
 
 /** Matches against the current `searchText` using core's own matchers:
  * `'value'` (the default — node values), `'key'` (keys + path segments), or
- * `'all'` (either). `searchText` is threaded in by the editor / a combinator. */
+ * `'all'` (either). `searchText` is threaded in by the editor or a
+ * combinator. */
 export const matchesSearch: (mode?: 'key' | 'value' | 'all') => FilterPredicate = intern(
   (mode: 'key' | 'value' | 'all' = 'value'): FilterPredicate => {
     if (mode === 'key') return (node, searchText = '') => matchNodeKey(node, searchText)

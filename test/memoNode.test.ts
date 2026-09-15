@@ -1,5 +1,5 @@
 /**
- * Unit tests for the node-prop memo comparator (V2 §16 Stage D). Pins the
+ * Unit tests for the node-prop memo comparator. Pins the
  * contract that makes the React.memo boundary both fast and correct:
  * - `data` (ref) and top-level `parentData` (ref) ARE compared — the latter is
  *   what keeps key-rename safe (adding/removing a sibling changes the parent

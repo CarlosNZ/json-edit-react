@@ -3,10 +3,10 @@
  * `SelectProps` contract, so it can be passed to JsonEditor's
  * `Select` prop to replace the built-in native <select>.
  *
- * Adapts the contract's `string[]` options + value-based onChange to
- * react-select's `{value, label}` option objects + option-based onChange.
- * Kept minimal on purpose — fork this for richer use cases (virtualization,
- * creatable, async, themed styles).
+ * It adapts the contract's `string[]` options and value-based onChange to
+ * react-select's `{value, label}` option objects and option-based onChange.
+ * Deliberately minimal — fork it for richer use cases: virtualisation,
+ * creatable, async, themed styles.
  */
 
 import React, { lazy, Suspense } from 'react'
@@ -19,16 +19,18 @@ interface Option {
   label: string
 }
 
-// `lazy()` drops the generic parameterization of the default export; re-narrow
-// to a non-multi Select<Option> so the props we pass through type-check.
+// `lazy()` drops the generic parameterisation of the default export, so this
+// re-narrows to a non-multi Select<Option> and the passed-through props
+// type-check.
 const Select = lazy(() => import('react-select')) as unknown as React.ComponentType<
   ReactSelectProps<Option, false>
 >
 
 export interface ReactSelectExtraProps {
   /** Forwarded as-is to the underlying `react-select` component (styles,
-   *  classNames, isSearchable, isClearable, components, etc.). Anything our
-   *  contract owns (options, value, onChange) wins over what's passed here. */
+   *  classNames, isSearchable, isClearable, components, etc.). Anything the
+   *  contract owns — options, value, onChange — wins over what's passed
+   *  here. */
   reactSelectProps?: Partial<ReactSelectProps<Option, false>>
 }
 
@@ -48,8 +50,8 @@ export const ReactSelect = ({
   const findOption = (v: string | undefined): Option | null =>
     v === undefined ? null : (optionObjects.find((o) => o.value === v) ?? null)
 
-  // Mirror NativeSelect: pass only one of value/defaultValue so we don't
-  // straddle controlled/uncontrolled.
+  // Mirrors NativeSelect: pass only one of value/defaultValue, rather than
+  // straddling controlled and uncontrolled.
   const valueProps =
     value !== undefined
       ? { value: findOption(value) }

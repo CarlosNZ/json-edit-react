@@ -25,10 +25,10 @@ import {
 import { and, byKey, not, root } from '@json-edit-react/utils/filters'
 import { blurbs } from './blurbs'
 import { Description } from './Description'
-// The `intro` data set is the landing view, so it's imported eagerly (its
-// example page is the source of truth, but we don't want a loading spinner on
-// first paint). Every other example-backed data set is loaded lazily via a
-// `load` thunk below, so its chunk stays out of the main bundle.
+// The `intro` data set is the landing view, so it's imported eagerly to avoid a
+// loading spinner on first paint, even though its example page is the source of
+// truth. Every other example-backed data set loads lazily via a `load` thunk
+// below, keeping its chunk out of the main bundle.
 import {
   initialData as introData,
   allowTypeSelection as introAllowTypeSelection,
@@ -38,12 +38,12 @@ import {
 // eslint-disable-next-line -- any is correct here
 type DemoNodeDefinitions = CustomNodeDefinition<Record<string, any>>[]
 
-// A dataset's runtime config — everything the editor needs once the dataset is
-// active. Eager datasets declare these fields inline on the registry entry;
-// lazy (example-backed) datasets return them from `DemoData.load`, so the whole
-// payload (data + logic + any heavy custom-node deps) lands in its own chunk
-// rather than the main bundle. See App.tsx for how the active payload is
-// resolved (and gated behind a spinner while a lazy chunk loads).
+// A dataset's runtime config: everything the editor needs once the dataset is
+// active. Eager datasets declare these fields inline on the registry entry,
+// while lazy (example-backed) datasets return them from `DemoData.load`, so the
+// whole payload — data, logic, and any heavy custom-node deps — lands in its
+// own chunk. See App.tsx for how the active payload is resolved and gated
+// behind a spinner while a lazy chunk loads.
 export interface DemoPayload {
   data: object
   allowEdit?: boolean | FilterFunction
@@ -56,31 +56,31 @@ export interface DemoPayload {
     toast: (options: unknown) => void
   ) => UpdateResult | Promise<UpdateResult>
   // `onAdd`/`onEdit` are dispatched *within* the editor's single `onUpdate`
-  // (see App.tsx), never passed as a prop — so they take the node props
+  // (see App.tsx) rather than passed as props, so they take the node props
   // only, not core's `control` gate.
   onAdd?: (props: UpdateFunctionProps) => UpdateResult | Promise<UpdateResult>
   onEdit?: (props: UpdateFunctionProps) => UpdateResult | Promise<UpdateResult>
   onChange?: OnChangeFunction
-  // Demo datasets return an error *string* to display in a toast; core's
-  // `OnErrorFunction` returns `void`, so we reuse only its input shape here.
+  // Demo datasets return an error *string* to display in a toast, whereas
+  // core's `OnErrorFunction` returns `void`, so only its input shape is reused.
   onError?: (props: Parameters<OnErrorFunction>[0]) => string
   showErrorMessages?: boolean
   defaultValue?: DefaultValueFunction
   newKeyOptions?: string[] | NewKeyOptionsFunction
-  // Either a static list, or — for data sets whose definitions are
-  // configured by values in the data itself — a function of the current data
+  // Either a static list, or a function of the current data, for data sets
+  // whose definitions are configured by values in the data itself
   customNodeDefinitions?: DemoNodeDefinitions | ((data: JsonData) => DemoNodeDefinitions)
   customTextDefinitions?: CustomTextDefinitions
   styles?: Partial<ThemeStyles>
   customTextEditorAvailable?: boolean
 }
 
-// A registry entry. The metadata (name/description/rootName/collapse/
-// searchPlaceholder) is always synchronous — the picker lists `name`, and
-// switching seeds `rootName`/`collapse` before any payload resolves. The
-// payload is either inline (eager) or behind `load` (lazy / example-backed);
-// exactly one applies, but they're kept optional here so both shapes assign
-// cleanly, with App.tsx branching on `load`.
+// A registry entry. The metadata (name, description, rootName, collapse,
+// searchPlaceholder) is always synchronous: the picker lists `name`, and
+// switching seeds `rootName`/`collapse` before any payload resolves. The payload
+// is either inline (eager) or behind `load` (lazy, example-backed). Exactly
+// one applies, but both are optional here so either shape assigns cleanly,
+// with App.tsx branching on `load`.
 export interface DemoData extends Partial<DemoPayload> {
   name: string
   description: React.JSX.Element
@@ -142,7 +142,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
     description: <Description>{blurbs.jsonSchemaValidation}</Description>,
     rootName: 'data',
     collapse: 2,
-    // Lazy: the example page owns the data + logic and ships as its own chunk.
+    // Lazy: the example page owns the data and logic, in its own chunk.
     load: async () => {
       const m = await import('../examples/static/json-schema-validation/Example')
       return {

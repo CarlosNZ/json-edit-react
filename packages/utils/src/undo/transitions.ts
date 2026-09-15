@@ -12,12 +12,13 @@ export interface UndoQueues<T = JsonData> {
 }
 
 /**
- * Pure history transitions — no React, so the queue maths can be unit-tested in
- * isolation and the hook stays a thin wrapper. None mutate their inputs.
+ * Pure history transitions, with no React, so the queue maths can be
+ * unit-tested in isolation and the hook stays a thin wrapper. None mutate
+ * their inputs.
  *
  * Each takes the current stacks plus the live `current` value. `undo`/`redo`
- * return both the new stacks and the `value` to commit (or `null` when there's
- * nothing to do), because the value to restore lives in the stack being read.
+ * return both the new stacks and the `value` to commit, or `null` when
+ * there's nothing to do, since the value to restore lives in the stack read.
  */
 
 /** `set`: record `current` as a snapshot and drop the redo stack. */

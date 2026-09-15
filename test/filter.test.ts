@@ -172,9 +172,8 @@ describe('computeFilterState', () => {
   })
 
   test('matchNodeKey: a matching key on an empty collection keeps ancestors visible', () => {
-    // This is the bug repro from filter-bug.test.tsx, now expressed against
-    // computeFilterState. The old filterCollection short-circuited to false
-    // on an empty body and silently hid the matching ancestor.
+    // A collection whose body is empty must not short-circuit to false, which
+    // would silently hide the matching ancestor.
     const data = { rootContainer: { interestingThing: {} } }
     const fs = computeFilterState(root(data), matchNodeKey, 'interestingThing')!
     expect(fs.visiblePaths.has(toPathString(['rootContainer', 'interestingThing']))).toBe(true)

@@ -16,8 +16,7 @@ export const splitPropertyString = (propertyPath: string): Path =>
     })
 
 // The inverse of `splitPropertyString`: renders a path as a dot/bracket string
-// (e.g. ["data", "users", 0, "name"] => "data.users[0].name"). Used for
-// human-readable error messages and the copy-path feature.
+// e.g. ["data", "users", 0, "name"] => "data.users[0].name"
 export const stringifyPath = (path: Path | string | number): string => {
   if (typeof path === 'string') return path
   if (typeof path === 'number') return String(path)
@@ -35,9 +34,9 @@ export const stringifyPath = (path: Path | string | number): string => {
  * keys, never inside one — so distinct paths always produce distinct strings.
  *
  * One edge case needs a sentinel: a single empty-string key `['']` would
- * otherwise produce `''` and collide with the root path `[]`. We map it to
- * `'\0'` instead — safe because `encodeURIComponent` never emits a literal
- * null char (it produces `'%00'` for the null byte).
+ * otherwise produce `''` and collide with the root path `[]`, so it maps to
+ * `'\0'` — safe, because `encodeURIComponent` never emits a literal null char
+ * (it produces `'%00'` for the null byte).
  */
 export const toPathString = (path: CollectionKey[]) => {
   if (path.length === 1 && path[0] === '') return '\0'
@@ -47,7 +46,7 @@ export const toPathString = (path: CollectionKey[]) => {
 export const pathsEqual = (a: CollectionKey[], b: CollectionKey[]): boolean =>
   a.length === b.length && a.every((k, i) => k === b[i])
 
-// Reflexive: a node is considered a (trivial) descendant of itself. Both
-// callers (areChildrenBeingEdited, drag-onto-self guard) want this behaviour.
+// Reflexive: a node counts as a descendant of itself, which is what both
+// callers (`areChildrenBeingEdited`, the drag-onto-self guard) want.
 export const isDescendantOf = (node: CollectionKey[], ancestor: CollectionKey[]): boolean =>
   node.length >= ancestor.length && ancestor.every((k, i) => k === node[i])

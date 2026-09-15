@@ -1,10 +1,9 @@
-// Internalised from https://github.com/CarlosNZ/object-property-extractor
-// (formerly published as the `object-property-extractor` npm package).
-// Kept in-source so this library has zero non-React runtime dependencies.
+// Internalised from https://github.com/CarlosNZ/object-property-extractor, so
+// this library has zero non-React runtime dependencies.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// `any` here covers `fallback` and the return type — extract walks
-// arbitrary nested data and returns whatever it finds at the path.
+// `any` covers `fallback` and the return type: `extract` walks arbitrary
+// nested data and returns whatever it finds at the path.
 
 import { splitPropertyString } from './pathTools'
 
@@ -31,9 +30,9 @@ export const extract = (
 
   const currentProperty = propertyPathArray[0]
 
-  // For arrays, if not targeting a specific index, try and extract the property
-  // from *each* item in the array and return an array of results. If the array
-  // is empty, we can't extract anything so should return fallback or error.
+  // For an array not targeting a specific index, extract the property from
+  // *each* item and return an array of results. An empty array has nothing to
+  // extract, so it falls through to the fallback or error.
   if (Array.isArray(inputObj) && typeof currentProperty !== 'number' && inputObj.length > 0)
     return inputObj.map((item) => extract(item, propertyPathArray, fallback))
 

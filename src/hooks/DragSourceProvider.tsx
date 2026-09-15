@@ -12,20 +12,21 @@ import { type CollectionKey } from '../types'
 interface DragSource {
   path: CollectionKey[] | null
   // The source node's delete-permission, stashed at pickup so any drop target
-  // can decide a relocate (move OUT of the source collection) without
+  // can decide a relocate (a move OUT of the source collection) without
   // re-deriving the source's `NodeData`. Irrelevant to a same-collection
-  // reorder. `false` while idle.
+  // reorder, and `false` while idle.
   canDelete: boolean
 }
 
 interface DragSourceContext {
   dragSource: DragSource
   setDragSource: (newState: DragSource) => void
-  // Whether a drag may start: armed by a genuine pointer grab (a primary-button
-  // mousedown made while nothing is being edited), consumed on dragstart,
-  // cleared on mouseup/dragend. A ref, not state — it flips on every pointer
-  // interaction and must never re-render. Guards against the phantom drag
-  // Firefox fires when a node becomes `draggable` as an editor closes.
+  // Whether a drag may start: armed by a genuine pointer grab (a
+  // primary-button mousedown made while nothing is being edited), consumed on
+  // dragstart, cleared on mouseup/dragend. A ref rather than state, since it
+  // flips on every pointer interaction and must never re-render. Guards against
+  // the phantom drag Firefox fires when a node becomes `draggable` as an editor
+  // closes.
   armed: { current: boolean }
 }
 
@@ -38,9 +39,9 @@ interface DragSourceProps {
 export const DragSourceProvider = ({ children }: DragSourceProps) => {
   const [dragSource, setDragSource] = useState<DragSource>({ path: null, canDelete: false })
   const armed = useRef(false)
-  // `setDragSource` is React's setState ref (stable for the provider's
-  // lifetime), and `armed` is a stable ref. The value object's identity flips
-  // only when `dragSource` itself changes — i.e. drag start/end.
+  // `setDragSource` is React's setState reference, stable for the provider's
+  // lifetime, and `armed` is a stable ref, so the value object's identity flips
+  // only on drag start and end.
   const value = useMemo(() => ({ dragSource, setDragSource, armed }), [dragSource])
   return (
     <DragSourceProviderContext.Provider value={value}>

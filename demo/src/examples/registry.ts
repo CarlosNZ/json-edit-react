@@ -2,12 +2,12 @@ import { type ExampleDef } from './types'
 import { blurbs } from '../demoData/blurbs'
 
 // One entry per targeted example. Adding a new example is one entry here plus
-// one file — the shell handles routing, theming, source display, and (for live)
-// the editable playground. Keys are the URL slug: `/examples/<slug>`.
+// one file; the shell handles routing, theming, source display and, for live
+// examples, the editable playground. Keys are the URL slug: `/examples/<slug>`.
 //
 // Examples that mirror a main-demo data set share that data set's blurb via the
-// `blurbs` map (single source of truth — see demoData/blurbs.ts), so the
-// example-page text and the demo description never drift.
+// `blurbs` map (see demoData/blurbs.ts), so the example-page text and the demo
+// description never drift.
 const allExamples: Record<string, ExampleDef> = {
   'delayed-settlement': {
     kind: 'static',
@@ -442,10 +442,10 @@ export const examples: Record<string, ExampleDef> = import.meta.env.DEV
   ? allExamples
   : Object.fromEntries(Object.entries(allExamples).filter(([, def]) => !def.devOnly))
 
-// Reverse lookup: a main-demo data-set key → the slug of the example page that
-// mirrors it, derived from each entry's `demoDataSet` so the registry stays the
-// single source of truth. The demo's "View source code" badge uses this to link
-// a data set to its example page.
+// Reverse lookup: a main-demo data-set key → the slug of the example page
+// mirroring it, derived from each entry's `demoDataSet` so the registry stays
+// the single source of truth. The demo's "View source code" badge uses it to
+// link a data set to its example page.
 export const exampleSlugByDataSet: Record<string, string> = Object.fromEntries(
   Object.entries(examples)
     .filter(([, def]) => def.demoDataSet)

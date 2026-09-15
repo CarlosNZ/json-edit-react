@@ -22,7 +22,7 @@ const EMPTY: ThemePalette = { headerBg: {}, pageBg: {} }
 
 // The shell publishes its computed palette here so custom examples can theme
 // their own chrome to match the header. The shell owns the only reader of the
-// editor styles; this just shares the result.
+// editor styles, and this shares the result.
 export const ExamplePaletteContext = createContext<ThemePalette>(EMPTY)
 
 export const useExamplePalette = (): ThemePalette => useContext(ExamplePaletteContext)
@@ -61,12 +61,12 @@ const same = (a: ThemePalette, b: ThemePalette): boolean =>
 // parsing the `Theme` object) handles fragment-strings, arrays, functions, and
 // gradients for free — the browser has already resolved them.
 //
-// `containerRef` must point at an element that is *always* mounted (not the
-// lazy editor itself), so the observer below is in place before the editor — or
+// `containerRef` must point at an element that is *always* mounted, not the
+// lazy editor itself, so the observer below is in place before the editor — or
 // the restored-from-localStorage theme — arrives. A MutationObserver re-reads
-// on any editor mount or style change, so there's no race with async
-// theme/chunk loads (the bug being: a fixed timeout could expire before a cold
-// first paint).
+// on any editor mount or style change, so there's no race with async theme or
+// chunk loads. A fixed timeout can't do the job: it may expire before a cold
+// first paint.
 export const useThemePalette = (
   containerRef: RefObject<HTMLElement | null>,
   theme: Theme
@@ -99,8 +99,8 @@ export const useThemePalette = (
       setPalette((prev) => (same(prev, next) ? prev : next))
     }
 
-    // Coalesce bursts of mutations (e.g. during editing) into one read per
-    // frame so we don't thrash getComputedStyle.
+    // Coalesce bursts of mutations (during editing, say) into one read per
+    // frame, rather than thrashing getComputedStyle.
     let scheduled = 0
     const schedule = () => {
       cancelAnimationFrame(scheduled)

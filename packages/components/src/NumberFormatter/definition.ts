@@ -9,19 +9,19 @@ import { type CustomNodeDefinition } from 'json-edit-react'
 import { createDefinitionFactory } from '../_common/createDefinitionFactory'
 import { NumberFormatter, type NumberFormatterProps } from './component'
 
-// The condition doubles as the guard: consumer `condition` overrides are
-// targeting, ANDed with this by the factory; replacing it requires the
-// explicit `guard` override. The guard matches *every* number, so narrow with
-// a `condition` (e.g. `byKey(/price|amount|total/i)` from
-// `@json-edit-react/utils`) or unrelated numbers — years, IDs, ports — get
+// The condition doubles as the guard: a consumer `condition` override is
+// targeting, ANDed with this by the factory, and replacing it requires the
+// explicit `guard` override. The guard matches *every* number, so narrow it
+// with a `condition` — `byKey(/price|amount|total/i)` from
+// `@json-edit-react/utils`, say — or unrelated numbers (years, IDs, ports) get
 // reformatted too.
 const NumberFormatterDefinition: CustomNodeDefinition<NumberFormatterProps> = {
   condition: ({ value }) => typeof value === 'number',
   component: NumberFormatter,
   showOnView: true,
   // A display decorator, not a new type: editing falls through to core's
-  // standard number editor (so the raw number is what you edit), and it stays
-  // out of the Type selector menu (`showInTypeSelector` defaults false).
+  // standard number editor, so the raw number is what's edited, and it stays
+  // out of the Type selector menu (`showInTypeSelector` defaults to false).
   showOnEdit: false,
 }
 

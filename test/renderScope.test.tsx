@@ -1,5 +1,5 @@
 /**
- * Render-scope tests (V2 §16 fine-grained re-rendering).
+ * Render-scope tests for fine-grained re-rendering.
  *
  * These pin *how far* a re-render propagates through the tree on a given
  * interaction, using the sentinel-custom-node harness in
@@ -389,7 +389,7 @@ describe('Stage D — consumer callbacks stay fresh through the memo boundary', 
     const user = userEvent.setup()
     const seen: Array<{ fullData: unknown; value: unknown }> = []
     const onChange: OnChangeFunction = (p) => {
-      // Flat NodeData (§17): `fullData` is the live document, `value` the
+      // Flat NodeData: `fullData` is the live document, `value` the
       // current value.
       seen.push({ fullData: p.fullData, value: p.value })
       return p.newValue

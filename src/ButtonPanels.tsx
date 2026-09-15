@@ -62,24 +62,22 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   Select,
 }) => {
   const { getStyles } = useTheme()
-  // Actions only (no subscription beyond the `isAddingHere` selector below).
-  // Aliased — `startEdit` is also an EditButtons prop (the value-edit icon).
+  // Actions only, beyond the `isAddingHere` selector below. Aliased, since
+  // `startEdit` is also an EditButtons prop (the value-edit icon).
   const { open, cancel } = useEditingStore()
   const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
   const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
 
-  // Holds the new-key options list (or `true` for a free-text add).
-  // Open/close is driven by the store (`mode: 'add'`) so the start/cancel
-  // events and the one-session-at-a-time invariant are shared with
-  // edit/rename; this just carries the options *content* (which the
-  // primitive-only store selector can't), synced by the effect below.
+  // The new-key options list, or `true` for a free-text add. Open/close is
+  // driven by the store, so this only carries the options *content*, which the
+  // primitive-only store selector can't, synced by the effect below.
   const [addingKeyState, setAddingKeyState] = useState<string[] | boolean>(false)
 
   const { path, value: data } = nodeData
 
   // Is an add session open on THIS collection? The session lives in the editing
-  // store (`mode: 'add'`, `path` = this collection), so the start/cancel events
-  // and the one-session-at-a-time invariant are shared with edit/rename.
+  // store, so the start/cancel events and the one-session-at-a-time invariant
+  // are shared with edit and rename.
   const isAddingHere = useEditingSelector((s) => {
     const e = s.active
     return e !== null && e.op === 'add' && pathsEqual(e.path, path)
@@ -87,17 +85,17 @@ export const EditButtons: React.FC<EditButtonProps> = ({
 
   const hasKeyOptionsList = Array.isArray(addingKeyState)
 
-  // Sync the local options/content state to the store session. On open
-  // compute the available keys; on close reset. `startAdd` / `cancelAdd` are
-  // fired by the store; `commitAdd` by CollectionNode's commit.
+  // Sync the local options state to the store session: compute the available
+  // keys on open, reset on close. The store fires `startAdd`/`cancelAdd`, and
+  // CollectionNode's commit fires `commitAdd`.
   useIsomorphicLayoutEffect(() => {
     if (!isAddingHere) {
       setAddingKeyState(false)
       setNewKey(NEW_KEY_PROMPT)
       return
     }
-    // Don't offer keys that already exist. Reads the node's OWN subtree (by
-    // `path`), kept consistent by structural sharing even if `fullData` is
+    // Don't offer keys that already exist. Reading the node's OWN subtree by
+    // `path` stays correct through structural sharing even if `fullData` is
     // stale.
     const existingKeys = Object.keys(extract(nodeData.fullData, path) as object)
     const options = getNewKeyOptions
@@ -105,19 +103,19 @@ export const EditButtons: React.FC<EditButtonProps> = ({
       : null
     if (options) setNewKey('')
     setAddingKeyState(options ?? true)
-    // Fire only on the open/close transition; the reads inside are
-    // intentionally captured at that moment, not re-subscribed.
+    // Fires only on the open/close transition: the reads inside are captured
+    // at that moment rather than re-subscribed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAddingHere])
 
   // Open an add session on this object collection (shows the new-key input).
   const openAdd = () => open(path, { op: 'add' })
 
-  // Commit the open add session (OK button / Enter). Delegates to `handleAdd`,
-  // which fires the `commitAdd` / error observer.
+  // Commit the open add session (OK button or Enter) via `handleAdd`, which
+  // fires the `commitAdd` or error observer.
   const commitAdd = () => {
     if (!handleAdd) return
-    // Options-list with nothing chosen yet — silent no-op.
+    // An options list with nothing chosen yet is a silent no-op.
     if (hasKeyOptionsList && !newKey) return
     handleAdd(type === 'array' ? '' : newKey)
   }
@@ -185,9 +183,9 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     >
       {showClipboardButton && (
         // tabIndex={-1} keeps the control out of the editor's field-to-field
-        // Tab flow (owned by `keyboardControls`) while keeping the native
-        // button role + the aria-label for assistive tech. `aria-label` is
-        // unconditional; `title` (the visible tooltip) stays gated on
+        // Tab flow, which `keyboardControls` owns, while keeping the native
+        // button role and the aria-label for assistive tech. `aria-label` is
+        // unconditional; the visible `title` tooltip is gated on
         // `showIconTooltips`.
         <button
           type="button"

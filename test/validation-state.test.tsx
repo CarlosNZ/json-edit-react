@@ -58,7 +58,7 @@ describe('useValidationState — query surface', () => {
   })
 })
 
-describe('useValidationState — identity stability (the §16 invariant)', () => {
+describe('useValidationState — identity stability', () => {
   const byFlag: Validate = (data) =>
     (data as { flag: boolean }).flag ? [{ path: ['a'], message: 'bad', keyword: 'type' }] : []
 
@@ -163,7 +163,7 @@ describe('validationStyles', () => {
 })
 
 // The headline end-to-end regression: editing one node changes the validity of
-// a node on a DIFFERENT branch. That other node bails on the commit (§16 memo
+// a node on a DIFFERENT branch. That other node bails on the commit (the memo
 // boundary — see test/renderScope.test.tsx), so only the theme-identity pierce
 // driven by useValidationState's stable-until-changed identity can restyle it.
 describe('cross-branch staleness (end-to-end)', () => {

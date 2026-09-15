@@ -18,14 +18,15 @@ const DEFAULT_ERROR: CSSProperties = { color: '#cb4b16' }
  * Build a partial theme that flags invalid nodes, to compose over your own:
  * `theme={[myTheme, validationStyles(validation)]}`.
  *
- * The leaf value slots (`string` / `number` / `boolean` / `null`) consult
- * `hasErrorAt` per node; with the `within` option the `collectionElement` slot
- * consults `hasErrorWithin` so a collapsed parent can show that something inside
- * it is invalid (same mount-frontier blindness as search — only mounted nodes
- * paint). Styles are inline, so this is colour/border/etc. only; for a glyph or
- * icon use a custom-node component that wraps `originalNode`.
+ * The leaf value slots (`string`/`number`/`boolean`/`null`) consult
+ * `hasErrorAt` per node. With the `within` option the `collectionElement` slot
+ * consults `hasErrorWithin`, so a collapsed parent can show that something
+ * inside it is invalid — with the same mount-frontier blindness as search,
+ * since only mounted nodes paint. Styles are inline, so this covers colour,
+ * borders and the like; for a glyph or icon, use a custom-node component that
+ * wraps `originalNode`.
  *
- * Memoize it on the validation state so the tree re-renders only when validity
+ * Memoise it on the validation state so the tree re-renders only when validity
  * changes: `useMemo(() => [base, validationStyles(v)], [v])`.
  */
 export const validationStyles = (

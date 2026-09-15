@@ -1,8 +1,6 @@
 /**
- * A Colour picker Custom Component
- *
- * Can handle named colours, Hex, RGB and HSL formats, with an optional alpha
- * channel
+ * A colour-picker custom component, handling named colours plus the Hex, RGB
+ * and HSL formats, with an optional alpha channel.
  */
 
 import React, { lazy, Suspense } from 'react'
@@ -15,12 +13,12 @@ import { Loading } from '../_common/Loading'
 import { finiteHsv } from './colorUtils'
 
 // colord parses named colours ('red', 'rebeccapurple', …) only once its
-// `names` plugin is registered via `extend`. Register it lazily on first use
-// rather than at module top level: a top-level `extend(...)` is a real side
-// effect, which both violates the package's `sideEffects: false` (a bundler
-// trusting that flag could drop the call and silently break named-colour
-// parsing) and keeps colord in the bundle of anyone importing a sibling
-// component. `extend` is idempotent; the flag just skips the repeat call.
+// `names` plugin is registered via `extend`. Registering lazily on first use
+// avoids a top-level `extend(...)`, which is a real side effect: it violates
+// the package's `sideEffects: false` — a bundler trusting that flag could drop
+// the call and silently break named-colour parsing — and keeps colord in the
+// bundle of anyone importing a sibling component. `extend` is idempotent, so
+// the flag only skips the repeat call.
 let namesPluginRegistered = false
 const ensureColordPlugins = () => {
   if (namesPluginRegistered) return
@@ -75,9 +73,9 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
 
   // The picker's current colour. react-colorful is self-controlled: it caches
   // the colour it last emitted and compares the incoming `color` prop to it
-  // with `===`. We keep this in sync so external edits (typing) drive the
-  // picker, and so the picker's own changes feed straight back without churn —
-  // see the `onChange` note below.
+  // with `===`. Keeping this in sync lets external edits (typing) drive the
+  // picker, and lets the picker's own changes feed straight back without churn
+  // — see the `onChange` note below.
   const [hsvValue, setHsvValue] = React.useState<HsvaColor>(colord(text).toHsv())
 
   // Debounced setValue to avoid excessive updates while dragging the picker
@@ -107,7 +105,7 @@ export const ColorPickerComponent: React.FC<CustomComponentProps<ColorPickerProp
             setValue={
               ((newText: string) => {
                 // Drive the picker only from external (typed) edits. The
-                // picker's own changes never re-enter here: a controlled
+                // picker's own changes never re-enter here, as a controlled
                 // textarea doesn't fire onChange when its `value` prop is set
                 // programmatically.
                 const parsed = colord(newText)

@@ -46,8 +46,8 @@ interface OptionsPanelProps {
   updateState: (patch: Partial<AppState>) => void
   toggleState: (field: keyof AppState) => void
   selectedDataSet: string
-  // The active data set's payload — used to disable controls the data set
-  // configures itself (e.g. its own `allowEdit`/`defaultValue`).
+  // The active data set's payload, used to disable controls the data set
+  // configures itself (its own `allowEdit`/`defaultValue`, say).
   activePayload: Partial<DemoPayload> | null
   handleChangeData: (selected: string) => void
   handleThemeChange: (e: ChangeEvent<HTMLSelectElement>) => void
@@ -56,7 +56,7 @@ interface OptionsPanelProps {
   setShowImperativeHandle: Dispatch<SetStateAction<boolean>>
   // The active data set's description, shown beneath the controls.
   description: ReactNode
-  // Slug of the matching example page, if any (renders a source-code link).
+  // Slug of the matching example page, if any; renders a source-code link.
   exampleSlug: string | undefined
   // The External Control panel is slotted in here so its cross-column state
   // (shared with the editor) stays owned by `App` rather than threaded

@@ -1,8 +1,8 @@
 import type { ValidationIssue, Validate } from '../types'
 
 /**
- * The slice of an AJV error object this adapter reads. Declared structurally so
- * the package needs no `ajv` dependency — not even a type-only one: a real
+ * The slice of an AJV error object this adapter reads, declared structurally so
+ * the package needs no `ajv` dependency, not even a type-only one: a real
  * compiled AJV validate function and its errors satisfy this shape.
  */
 export interface AjvErrorLike {
@@ -12,16 +12,16 @@ export interface AjvErrorLike {
   params?: { missingProperty?: string }
 }
 
-/** A compiled AJV validate function (structural — see `AjvErrorLike`). */
+/** A compiled AJV validate function, typed structurally — see `AjvErrorLike`. */
 export interface AjvValidateFunction {
   (data: unknown): boolean
   errors?: AjvErrorLike[] | null
 }
 
 // Parse an AJV `instancePath` — a JSON Pointer like `/payment/method` or
-// `/items/0` — into the canonical path array. Empty pointer → `[]` (root).
-// Decodes the JSON-Pointer escapes (`~1` → `/`, then `~0` → `~`, per RFC 6901)
-// and coerces all-digit segments to numbers (array indices).
+// `/items/0` — into the canonical path array, an empty pointer giving the root
+// `[]`. Decodes the JSON-Pointer escapes (`~1` → `/`, then `~0` → `~`, per
+// RFC 6901) and coerces all-digit segments to array indices.
 const pointerToPath = (pointer: string): (string | number)[] => {
   if (pointer === '') return []
   return pointer
@@ -44,9 +44,10 @@ const pointerToPath = (pointer: string): (string | number)[] => {
  * const validation = useValidationState(data, validate)
  * ```
  *
- * `required` errors are reported by AJV at the *parent* object's path with the
- * missing key in `params.missingProperty`. The parent path is kept (the missing
- * child has no node to style) and the property name is folded into the message.
+ * `required` errors are reported by AJV at the *parent* object's path, with the
+ * missing key in `params.missingProperty`. The parent path is kept — the
+ * missing child has no node to style — and the property name is folded into the
+ * message.
  */
 export const ajvAdapter =
   (validate: AjvValidateFunction): Validate =>

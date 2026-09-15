@@ -287,11 +287,10 @@ describe('getNextOrPrevious', () => {
   })
 
   describe('isViable predicate', () => {
-    // The predicate receives a synthesized NodeData per candidate leaf and
-    // returns true to accept that leaf, false to skip onward. This is how
-    // Tab navigation now skips filtered-out / non-editable nodes up front,
-    // replacing the redirect useLayoutEffect that previously bounced edits
-    // reactively in ValueNodeWrapper.
+    // The predicate receives a synthesised NodeData per candidate leaf and
+    // returns true to accept that leaf, false to skip onward. This is how Tab
+    // navigation skips filtered-out and non-editable nodes up front, rather
+    // than landing on them and bouncing.
     const sample = { a: 1, b: 2, c: 3, d: 4, e: 5 }
 
     test('skips a single non-viable leaf forward and back', () => {

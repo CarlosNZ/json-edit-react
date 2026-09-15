@@ -61,7 +61,7 @@ describe('onCopy', () => {
     )
   })
 
-  test('a failed copy reports a CLIPBOARD_ERROR (§17: error is a JerError)', async () => {
+  test('a failed copy reports a CLIPBOARD_ERROR (a JerError)', async () => {
     const user = userEvent.setup()
     const writeText = jest.fn().mockRejectedValue(new Error('denied'))
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true })

@@ -2,9 +2,9 @@ import type { PathPattern } from './types'
 
 // Compiles a path pattern into a matcher over a node's `path`. The three input
 // forms collapse to two strategies: a RegExp is tested against the stringified
-// path; a glob string or a segment array compiles to a sequence of per-segment
-// matchers plus the `**` globstar. Compilation happens once (at builder-call
-// time, behind `intern`); the returned matcher runs per node.
+// path, while a glob string or segment array compiles to a sequence of
+// per-segment matchers plus the `**` globstar. Compilation happens once, at
+// builder-call time behind `intern`; the returned matcher runs per node.
 //
 // Glob rules (anchored at both ends; segments split on `.`, with `[n]`
 // normalised to `.n`):
@@ -23,7 +23,7 @@ import type { PathPattern } from './types'
 const GLOBSTAR = Symbol('globstar')
 type Token = RegExp | typeof GLOBSTAR
 
-// Render a path the way the editor's copy-path / error strings do — dotted
+// Render a path the way the editor's copy-path and error strings do: dotted
 // keys, `[n]` for numeric indices. This is the string a RegExp pattern tests.
 const stringifyPath = (path: Array<string | number>): string =>
   path.reduce<string>(
@@ -33,7 +33,7 @@ const stringifyPath = (path: Array<string | number>): string =>
   )
 
 // Split a glob string into segments: bracket indices are normalised to dotted
-// (`users[0]` → `users.0`), then we split on `.`, dropping empty pieces (from a
+// (`users[0]` → `users.0`), then split on `.`, dropping empty pieces (from a
 // leading bracket or `..`). Dots are ALWAYS separators here — a key containing
 // a literal dot must use the segment-array form instead.
 const splitGlob = (pattern: string): string[] =>
@@ -42,13 +42,13 @@ const splitGlob = (pattern: string): string[] =>
     .split('.')
     .filter((seg) => seg !== '')
 
-// Regex metacharacters with no glob meaning — escaped to match literally.
-// (`* ? { } ,` are handled explicitly below, so they're absent here.)
+// Regex metacharacters with no glob meaning, escaped to match literally.
+// `* ? { } ,` are handled explicitly below, so they're absent here.
 const LITERAL_META = /[.+^$()|[\]\\]/
 
 // Compile one segment pattern to a RegExp anchored to a whole segment. Glob
 // tokens within a segment: `*` = any run of chars, `?` = one char, `{a,b}` =
-// alternation (comma splits only inside braces; depth tracked so it's robust).
+// alternation, where a comma splits only inside braces (depth-tracked).
 const compileSegment = (segment: string): RegExp => {
   let out = ''
   let depth = 0

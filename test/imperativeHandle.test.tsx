@@ -221,7 +221,7 @@ describe('editorRef handle — confirm / cancel', () => {
   })
 
   test('overrideRestrictions opens past the filter, but onUpdate still runs at confirm', async () => {
-    // The §17 invariant: `overrideRestrictions` skips ONLY the `allowEdit`
+    // The invariant: `overrideRestrictions` skips ONLY the `allowEdit`
     // filter; the consumer's `onUpdate` always runs and may reject.
     const user = userEvent.setup()
     const onUpdate = jest.fn<ReturnType<UpdateFunction>, Parameters<UpdateFunction>>(() => false)
