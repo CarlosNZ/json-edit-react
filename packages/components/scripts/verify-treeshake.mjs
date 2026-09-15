@@ -18,17 +18,18 @@
 // and `/*#__PURE__*/` is honoured identically across them. The heavy libs are
 // regular deps, so they're installed and resolvable when this runs.
 //
-// The CSS checks are the inverse of the JS ones, and the reason they exist is
-// that the failure is silent: `@rollup/plugin-node-resolve` honours our own
-// `sideEffects: false` for our own source files, so every `import './style.css'`
-// was treated as droppable and shaken out — the package published with none of
-// its CSS and only looked slightly off. `src/_common/useStyles.ts` explains the
-// fix. Nothing in the type system or the test suite notices if it breaks again,
-// so it's asserted here.
+// The CSS checks are the inverse of the JS ones, and they exist because that
+// failure is silent: `@rollup/plugin-node-resolve` honours our own
+// `sideEffects: false` for our own source files, so a plain
+// `import './style.css'` counts as droppable and gets shaken out, publishing
+// the package with none of its CSS and only looking slightly off.
+// `src/_common/useStyles.ts` explains the arrangement that avoids it. Nothing
+// in the type system or the test suite notices if it breaks, so it's asserted
+// here (issue #398).
 
 import { build } from 'esbuild'
 import { fileURLToPath } from 'node:url'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -72,11 +73,39 @@ const STYLES = {
   loader: '.jer-simple-loader{',
   unix: '.jer-unix-badge{',
   errorIndicator: '.jer-error-indicator-wrapper{',
-  datePicker: '.react-datepicker-popper',
+  datePicker: '.react-datepicker-popper{',
   datePickerLib: 'react-datepicker/dist/react-datepicker.css',
+}
+// Each of our own stylesheets, keyed to the marker that stands for it. Only
+// `datePickerLib` has no file of ours behind it.
+const STYLE_SOURCES = {
+  loader: 'src/_common/style.css',
+  unix: 'src/UnixTimestamp/style.css',
+  errorIndicator: 'src/ErrorIndicator/style.css',
+  datePicker: 'src/widgets/ReactDatePicker/style.css',
 }
 
 const failures = []
+
+// 0. The marker table covers every stylesheet in `src`, and every marker still
+//    has a file behind it. `STYLES` and `BUNDLES` are hand-maintained, so
+//    without this a new component's stylesheet is simply never checked — the
+//    guard stays green while the CSS it was built to protect goes unwatched.
+const onDisk = readdirSync(path.join(pkgRoot, 'src'), { recursive: true })
+  .map((p) => `src/${p.split(path.sep).join('/')}`)
+  .filter((p) => p.endsWith('/style.css'))
+const tracked = Object.values(STYLE_SOURCES)
+const untracked = onDisk.filter((p) => !tracked.includes(p))
+const vanished = tracked.filter((p) => !onDisk.includes(p))
+if (untracked.length || vanished.length) {
+  failures.push(
+    `the stylesheet marker table is out of date:` +
+      (untracked.length ? ` not checked by this script [${untracked.join(', ')}]` : '') +
+      (vanished.length ? ` listed but absent from src [${vanished.join(', ')}]` : '') +
+      `. Add a marker to \`STYLES\` + \`STYLE_SOURCES\` and list it against the ` +
+      `bundles that should carry it in \`BUNDLES\`.`
+  )
+}
 
 const bundleExport = async (name, entry = esm) => {
   const result = await build({
@@ -106,14 +135,28 @@ const stylesIn = (code) =>
     .map(([name]) => name)
 
 // 1. Every stylesheet reaches every shipped bundle. Without this the package
-//    publishes unstyled and nothing else complains.
+//    publishes unstyled and nothing else complains. A bundle that isn't on
+//    disk is reported as such rather than thrown as an ENOENT, since an entry
+//    point disappearing from the rollup config is its own kind of regression
+//    and the stack trace says nothing useful about it.
+const absentBundles = Object.keys(BUNDLES).filter(
+  (file) => !existsSync(path.join(pkgRoot, 'build', file))
+)
 const missing = Object.entries(BUNDLES)
+  .filter(([file]) => !absentBundles.includes(file))
   .map(([file, expected]) => {
     const code = readFileSync(path.join(pkgRoot, 'build', file), 'utf8')
     const absent = expected.filter((name) => !code.includes(STYLES[name]))
     return absent.length ? `${file} [${absent.join(', ')}]` : null
   })
   .filter(Boolean)
+if (absentBundles.length) {
+  failures.push(
+    `shipped bundles missing from build/: [${absentBundles.join(', ')}]. Either the ` +
+      `build didn't run, or an entry point or output format was dropped from ` +
+      `rollup.config.mjs while \`package.json\`'s \`exports\` still points at it.`
+  )
+}
 if (missing.length) {
   failures.push(
     `stylesheets missing from the build: ${missing.join(' ')}` +

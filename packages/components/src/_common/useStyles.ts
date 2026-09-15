@@ -3,12 +3,12 @@ import { useInsertionEffect } from 'react'
 // Per-component stylesheet injection.
 //
 // The package ships as one bundled file per entry point, so a top-level
-// `import './style.css'` becomes a bare side-effecting statement that nothing
-// can drop: `sideEffects: false` is module-granular (there is only one module)
-// and no `/*#__PURE__*/` annotation applies to a bare statement. Worse, that
-// same flag tells `@rollup/plugin-node-resolve` the import is droppable while
-// the build runs, so the CSS was shaken out of the published bundles entirely
-// (issue #398).
+// `import './style.css'` would be a bare side-effecting statement nothing can
+// drop: `sideEffects: false` is module-granular (there is only one module) and
+// no `/*#__PURE__*/` annotation applies to a bare statement. That same flag
+// also tells `@rollup/plugin-node-resolve` such an import is droppable while
+// the build runs, which takes the CSS out of the published bundles entirely
+// and silently (issue #398).
 //
 // Importing each stylesheet as a string and injecting it from here fixes both
 // halves. The CSS becomes an ordinary constant reachable only from the
@@ -22,6 +22,13 @@ import { useInsertionEffect } from 'react'
 // mutation phase, ahead of every layout effect and before the browser can
 // paint, so the rules are in place the first time the markup is on screen.
 // Core injects its stylesheet the same way — see src/injectStyles.ts there.
+//
+// One consequence to design around: React runs insertion effects bottom-up, so
+// a child's sheet lands in `<head>` before its parent's, and a component's
+// before core's (every component is a descendant of `JsonEditor`). Cascade
+// order therefore favours core, and a rule here cannot outrank a core rule of
+// equal specificity. Keep these stylesheets to selectors core doesn't define —
+// they all use component-specific class names — rather than relying on order.
 //
 // Dedupe is keyed on the `<style>` element rather than on module state, so it
 // survives module re-evaluation: when Vite's HMR reloads a component after a

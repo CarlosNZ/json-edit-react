@@ -99,9 +99,9 @@ const jsBundle = (input, name) => ({
     // it shakes out with that component; `useStyles` injects it at runtime
     // (issue #398).
     //
-    // This also sidesteps `nodeResolve` reading our own `sideEffects: false`
-    // and dropping the `import './style.css'` statements outright, which is
-    // how every stylesheet went missing from the published bundles.
+    // It also sidesteps `nodeResolve`, which reads our own `sideEffects: false`
+    // and would drop a plain `import './style.css'` statement outright, taking
+    // every stylesheet out of the published bundles.
     //
     // `inject.treeshakeable` is NOT the equivalent built-in: it only wires an
     // `inject()` method onto the default export when CSS-modules support is
