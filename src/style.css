@@ -293,7 +293,9 @@ select:focus + .focus {
   filter: saturate(50%);
 }
 
-.jer-show-less {
+/* Two classes, so this outweighs the `font: inherit` in the <button> chrome
+   reset below — a single class would lose to it on specificity. */
+.jer-string-expansion.jer-show-less {
   font-size: 80%;
 }
 
