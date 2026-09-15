@@ -14,6 +14,7 @@ import { useState, useLayoutEffect } from 'react'
 import { render } from '@testing-library/react'
 import { JsonEditor, type JsonData } from 'json-edit-react'
 import { Loading } from '../src/_common/Loading'
+import { useStyles } from '../src/_common/useStyles'
 import { unixTimestampDefinition } from '../src/UnixTimestamp'
 
 // The text test/style-mock.js stands in for every stylesheet's source.
@@ -25,10 +26,15 @@ const MARKER = 'data-jer-component-styles'
 const sheets = (id?: string) =>
   Array.from(document.head.querySelectorAll(id ? `style[${MARKER}="${id}"]` : `style[${MARKER}]`))
 
-// The injector dedupes against the DOM rather than module state, so removing
-// the elements is a complete reset between tests.
+// Every `<style>` in `<head>`, marked or not. Counting only the marked ones
+// would make a duplicate-injection assertion vacuous: an injector that appends
+// an unmarked element is exactly the failure mode being tested for.
+const allSheets = () => Array.from(document.head.querySelectorAll('style'))
+
+// The injector dedupes against the DOM, so clearing the elements is a complete
+// reset between tests.
 afterEach(() => {
-  sheets().forEach((el) => el.remove())
+  allSheets().forEach((el) => el.remove())
 })
 
 const Editor = ({ data }: { data: JsonData }) => {
@@ -79,6 +85,36 @@ describe('per-component stylesheet injection', () => {
     )
 
     expect(sheets('jer-loading')).toHaveLength(1)
+  })
+
+  test('a second bundled copy of the hook adds no second sheet', () => {
+    // `_common/style.css` is in BOTH shipped entries and each bundles its own
+    // copy of `useStyles`, so a consumer importing from the package root *and*
+    // from `/widgets` runs two instances sharing no module scope. That can't be
+    // staged through a component — two module registries means two copies of
+    // React and hooks stop working — so the hook is exercised directly, with
+    // the sheet the other copy would have appended already in place: identical
+    // id, identical text (both bundles minify the same source).
+    //
+    // The id is unique to this test. Reusing a component's id would let a
+    // module-scoped dedupe that had already seen it early-return and pass
+    // without ever looking at the DOM.
+    const id = 'jer-second-bundle-probe'
+    const Probe = () => {
+      useStyles(id, STUB)
+      return null
+    }
+
+    const fromOtherBundle = document.createElement('style')
+    fromOtherBundle.setAttribute(MARKER, id)
+    fromOtherBundle.textContent = STUB
+    document.head.appendChild(fromOtherBundle)
+
+    render(<Probe />)
+
+    // Asserted over every `<style>`, not just the marked ones, so an injector
+    // that appends a second unmarked element is caught rather than ignored.
+    expect(allSheets()).toEqual([fromOtherBundle])
   })
 
   test('a component carries its own stylesheet and no other', () => {
