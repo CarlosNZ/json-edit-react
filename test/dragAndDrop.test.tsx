@@ -322,7 +322,7 @@ describe('Drag-and-drop: interaction with active edit', () => {
     // JsonEditor.test.tsx).
     const setData = jest.fn()
     const { container } = render(
-      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} allowDrag showIconTooltips />
+      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} allowDrag />
     )
 
     expect(rowFor(container, 'a').getAttribute('draggable')).toBe('true')
@@ -345,7 +345,7 @@ describe('Drag-and-drop: interaction with active edit', () => {
     // The only thing left to reject the drag is the editing-active clause.
     const setData = jest.fn()
     const { container } = render(
-      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} allowDrag showIconTooltips />
+      <JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} allowDrag />
     )
 
     const bRow = rowFor(container, 'b')

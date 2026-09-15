@@ -774,7 +774,7 @@ describe('JsonEditor — structural mutations', () => {
   test('deleting a property removes it from setData', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
-    render(<JsonEditor data={{ x: 'hi', y: 'bye' }} setData={setData} showIconTooltips />)
+    render(<JsonEditor data={{ x: 'hi', y: 'bye' }} setData={setData} />)
 
     // Scope to the 'x' row to pick the right delete button (multiple rows have
     // one)
@@ -1022,14 +1022,7 @@ describe('JsonEditor — onUpdate event discriminant', () => {
   test('onUpdate receives event:"delete" with the node identity', async () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn(() => true as const)
-    render(
-      <JsonEditor
-        data={{ x: 'hi', y: 'bye' }}
-        setData={noop}
-        onUpdate={onUpdate}
-        showIconTooltips
-      />
-    )
+    render(<JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onUpdate={onUpdate} />)
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
     await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
@@ -1285,14 +1278,7 @@ describe('JsonEditor — onEditEvent lifecycle stream', () => {
   test('delete fires a single "delete" event', async () => {
     const user = userEvent.setup()
     const onEditEvent = jest.fn<void, [EditEvent]>()
-    render(
-      <JsonEditor
-        data={{ x: 'hi', y: 'bye' }}
-        setData={noop}
-        onEditEvent={onEditEvent}
-        showIconTooltips
-      />
-    )
+    render(<JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onEditEvent={onEditEvent} />)
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
     await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
@@ -1407,7 +1393,6 @@ describe('JsonEditor — commit-on-displace (clicking another node while editing
         data={{ obj: { x: 1 }, other: 'val' }}
         setData={setData}
         onEditEvent={onEditEvent}
-        showIconTooltips
       />
     )
 
@@ -1653,7 +1638,6 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
         setData={setData}
         onUpdate={onUpdate}
         onEditEvent={onEditEvent}
-        showIconTooltips
       />
     )
 
@@ -1692,7 +1676,6 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
             setLocal(d as Record<string, number>)
           }}
           onUpdate={onUpdate}
-          showIconTooltips
         />
       )
     }
@@ -1717,14 +1700,7 @@ describe('JsonEditor — optimistic commit + gate (v2 editing model)', () => {
       // Pending past the optimistic-apply timer.
       () => deferred.promise as ReturnType<UpdateFunction>
     )
-    render(
-      <JsonEditor
-        data={{ a: 1, b: 2, c: 3 }}
-        setData={setData}
-        onUpdate={onUpdate}
-        showIconTooltips
-      />
-    )
+    render(<JsonEditor data={{ a: 1, b: 2, c: 3 }} setData={setData} onUpdate={onUpdate} />)
 
     // Delete the MIDDLE key 'b'. The slow onUpdate hasn't settled, so it
     // applies optimistically once the timer fires (b removed).
@@ -1831,14 +1807,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
   test('onUpdate returning false on a delete shows the delete-specific message', async () => {
     const user = userEvent.setup()
     const onUpdate = jest.fn(() => false as const)
-    render(
-      <JsonEditor
-        data={{ x: 'hi', y: 'bye' }}
-        setData={noop}
-        onUpdate={onUpdate}
-        showIconTooltips
-      />
-    )
+    render(<JsonEditor data={{ x: 'hi', y: 'bye' }} setData={noop} onUpdate={onUpdate} />)
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
     await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
@@ -2066,14 +2035,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const onUpdate = jest.fn(() => ({ value: 'ignored' }))
-    render(
-      <JsonEditor
-        data={{ x: 'hi', y: 'bye' }}
-        setData={setData}
-        onUpdate={onUpdate}
-        showIconTooltips
-      />
-    )
+    render(<JsonEditor data={{ x: 'hi', y: 'bye' }} setData={setData} onUpdate={onUpdate} />)
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
     await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
@@ -2087,14 +2049,7 @@ describe('JsonEditor — restrictions and callbacks', () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const onUpdate = jest.fn(() => ({ data: { replaced: true } }))
-    render(
-      <JsonEditor
-        data={{ x: 'hi', y: 'bye' }}
-        setData={setData}
-        onUpdate={onUpdate}
-        showIconTooltips
-      />
-    )
+    render(<JsonEditor data={{ x: 'hi', y: 'bye' }} setData={setData} onUpdate={onUpdate} />)
 
     const xRow = screen.getByText('"hi"').closest('.jer-component') as HTMLElement
     await user.click(within(xRow).getByRole('button', { name: 'Delete' }))
