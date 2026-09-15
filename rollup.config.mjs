@@ -9,14 +9,27 @@ import sizes from 'rollup-plugin-sizes'
 import { copyFileSync } from 'fs'
 
 // Emit a standalone copy of the stylesheet alongside the bundle. The CSS is
-// still inlined + injected into the bundle for the zero-config case; this file
-// is reached only via the explicit `json-edit-react/style.css` subpath export,
+// also inlined into the bundle as a string and injected on mount by
+// src/injectStyles.ts for the zero-config case; this file is reached only via
+// the explicit `json-edit-react/style.css` subpath export,
 // for consumers who need to inject the styles themselves (e.g. into a Shadow
 // DOM, where head-injected styles can't cross the boundary). See issue #225.
 const emitStandaloneCss = () => ({
   name: 'emit-standalone-css',
   writeBundle() {
     copyFileSync('src/style.css', 'build/style.css')
+  },
+})
+
+// `src/injectStyles.ts` imports the stylesheet with Vite's `?inline` query, so
+// that consuming `src/` directly (the demo's `local` mode) yields the CSS text
+// instead of a Vite-injected side effect. Rollup has no query convention, so
+// resolve it back to the plain file and let `styles` handle it.
+const stripCssQuery = () => ({
+  name: 'strip-css-query',
+  resolveId(source, importer) {
+    if (!source.endsWith('.css?inline')) return null
+    return this.resolve(source.replace(/\?inline$/, ''), importer, { skipSelf: true })
   },
 })
 
@@ -104,7 +117,21 @@ export default [
     ],
     plugins: [
       del({ targets: 'build/*' }),
-      styles({ minimize: true }),
+      stripCssQuery(),
+      // Inline the stylesheet as a plain string with no injector call: the
+      // function form of `mode: ['inject', fn]` substitutes fn's return value
+      // for the injection statement, so returning '' leaves the CSS module as
+      // just `export default '<minified css>'`. That makes the stylesheet an
+      // ordinary constant which only the editor path references, so a consumer
+      // importing one helper can shake it out; src/injectStyles.ts does the
+      // injection at runtime instead (issue #396).
+      //
+      // `inject.treeshakeable` is NOT the equivalent built-in: it only wires an
+      // `inject()` method onto the default export when CSS-modules support is
+      // on. With `modules` off (correct for a global stylesheet) the default
+      // export stays the raw string and the injector is never called at all —
+      // the styles would silently never load.
+      styles({ minimize: true, mode: ['inject', () => ''] }),
       peerDepsExternal({ includeDependencies: true }),
       typescript({
         module: 'ESNext',
@@ -134,7 +161,6 @@ export default [
   {
     input: 'build/dts/index.d.ts',
     output: [{ file: 'build/index.d.ts', format: 'es' }],
-    external: [/\.css$/],
     plugins: [dts()],
   },
 ]

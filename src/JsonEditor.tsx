@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useEffect,
   useImperativeHandle,
+  useInsertionEffect,
   useMemo,
   useRef,
   useState,
@@ -51,7 +52,7 @@ import {
 import { getTranslateFunction, type LocalisedStrings } from './localisation'
 import { ValueNodeWrapper } from './ValueNodeWrapper'
 
-import './style.css'
+import { injectStyles } from './injectStyles'
 import { getCustomNode } from './CustomNode'
 
 // Module-scoped so the default is a stable reference across renders;
@@ -805,6 +806,14 @@ const Editor: React.FC<
 }
 
 export function JsonEditor<T = JsonData>(props: JsonEditorProps<T>): React.ReactElement {
+  // Insertion effects run in the commit's mutation phase — ahead of every
+  // layout effect, and before the browser can paint the tree being committed —
+  // so the stylesheet is always present the first time the editor's markup is
+  // on screen. `JsonViewer` renders through here, so this covers it too.
+  useInsertionEffect(() => {
+    injectStyles()
+  }, [])
+
   // Shared bridge (load-bearing, by design — not a leak). The §16 perf work
   // put the editing store and collapse state in ancestor providers so nodes
   // can subscribe to slivers via `useSyncExternalStore` without re-rendering

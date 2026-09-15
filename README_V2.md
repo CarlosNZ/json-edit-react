@@ -810,7 +810,7 @@ theme={[githubDarkTheme, { icons: { add: iconFromSvg('<svg…>') } }]}
 
 ### The bundled stylesheet (Shadow DOM)
 
-The component's base stylesheet is bundled in and injected into the document `<head>` automatically, so in the normal case there's nothing to import — styling works out of the box.
+The component's base stylesheet is bundled in and injected into the document `<head>` automatically when the first editor mounts, so in the normal case there's nothing to import — styling works out of the box.
 
 The exception is when the editor renders inside a [Shadow DOM](https://developer.mozilla.org/en-US/docs/Web/API/Web_components/Using_shadow_DOM): styles injected into the document `<head>` don't cross the shadow boundary, so the component renders unstyled. For this case the stylesheet is also published as a standalone file you can import and inject into the shadow root yourself:
 
@@ -819,6 +819,8 @@ import 'json-edit-react/style.css'
 ```
 
 How that import resolves depends on your bundler — most will inline or extract it so you can attach it where you need it (for example via a `<style>` element inside the shadow root, or by adding a constructed stylesheet to `shadowRoot.adoptedStyleSheets`). The stylesheet defines its custom properties on both `:root` and `:host`, so it applies correctly whether it lives in the document or in a shadow root.
+
+The same import covers one other rare case: rendering the exported building blocks (`StringDisplay`, `StringEdit`, `AutogrowTextArea`) with no editor or viewer mounted anywhere on the page. The stylesheet is injected when an editor mounts, so on their own they render unstyled.
 
 <div align="right"><a href="#contents"><img src="https://img.shields.io/badge/↑_Back_to_Contents-555?style=flat" alt="Back to Contents"></a></div>
 

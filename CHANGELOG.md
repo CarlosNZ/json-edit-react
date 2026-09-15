@@ -1,5 +1,10 @@
 # json-edit-react
 
+## 2.0.0-beta.10
+
+- The bundled stylesheet is injected when the first editor mounts rather than when the module loads, so importing a helper on its own no longer pulls the CSS along with it: `import { toPathString }` drops from ~2.5 kB gzip to ~0.5 kB, and `@json-edit-react/utils/filters` from ~4 kB to ~2 kB (#396). Styling is unchanged — the rules are in place before the editor's first paint.
+- `package.json` lists `./build/style.css` under `sideEffects`, so webpack keeps a bare `import 'json-edit-react/style.css'` (the Shadow DOM recipe) instead of dropping it as side-effect-free.
+
 ## 2.0.0-beta.9
 
 - Fix core's tree-shaking (#389). Importing a single utility no longer pulls the whole library: `import { toPathString }` drops from ~15 kB gzip to ~2.5 kB, and the editor's own bundle is unchanged. The build stamps `/*#__PURE__*/` onto the eager `React.memo` / `createContext` calls and the default theme's glyph construction, so bundlers can prove the render path is droppable. Downstream, `@json-edit-react/utils/filters` falls from ~16 kB gzip to ~4 kB with no change to that package. The residual ~2 kB is the stylesheet, which is still injected at import time — making that lazy is tracked separately in #396. No change to import paths or authoring.
