@@ -63,7 +63,7 @@
     "react": ">=18.0.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-terser": "^1.0.0",
     "@rollup/plugin-typescript": "^12.3.0",
@@ -75,10 +75,10 @@
     "@types/node": "^20.19.43",
     "@types/react": "19.3.0",
     "esbuild": "^0.28.2",
-    "eslint": "^9.39.5",
+    "eslint": "^10.10.0",
     "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "globals": "^16.5.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
     "jest": "^30.5.1",
     "jest-environment-jsdom": "^30.5.1",
     "prettier": "3.9.7",
@@ -100,6 +100,11 @@
     "overrides": {
       "csstype": "3.2.3",
       "@types/react": "19.3.0"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "eslint-plugin-react>eslint": "10"
+      }
     }
   },
   "keywords": [
