@@ -242,6 +242,7 @@ pnpm -r build                                   # build all packages
 pnpm --filter json-edit-react build             # build core only
 pnpm --filter @json-edit-react/themes build     # build themes only
 pnpm --filter @json-edit-react/components build # build components only
+pnpm --filter @json-edit-react/utils build      # build utils only
 ```
 
 `-r` is "recursive" — runs the script in every workspace. The root is included because of `include-workspace-root=true` in [../.npmrc](../.npmrc).
@@ -264,6 +265,8 @@ pnpm --filter @json-edit-react/themes compile   # typecheck a specific package
 ```
 
 Each sub-package has its own `tsconfig.json` and its own `pnpm compile` script.
+
+**Build core before typechecking a sub-package.** Sub-packages resolve `json-edit-react` through a symlink to the repo root, whose `types` field points at the gitignored `build/index.d.ts` — so they typecheck against core's last *build*, not its current source. Edit `src/types.ts` without rebuilding and every sub-package reports errors against the old shapes (`UpdateFunctionProps is not generic`, `no exported member 'IconDefinition'`), which look like sub-package bugs and aren't. `pnpm -r build` and `pnpm pack-all` order core first, so they handle it for you; running `compile`, `build` or `pub:*` in a single sub-package does not.
 
 ### Running the demo
 
