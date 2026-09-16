@@ -57,12 +57,19 @@ places: `package.json` `exports` (+ a `typesVersions` fallback for classic
   one module.
 - **`json-edit-react` is a peer dep** at `workspace:^`; **`react`** is a peer dep
   at `>=18.0.0` (matching core — these helpers include hooks).
-- **`sideEffects: false`** so bundlers tree-shake unused helpers. Combined with a
-  single ESM entry (the same "Option B+" approach as `components`), importing one
-  helper must not pull another's code. **Per-helper sub-path exports are the
-  escape hatch** if a heavy helper (e.g. #285's generator) starts leaking into
-  bundles that only import the light ones — add explicit `exports` map entries
-  and matching rollup inputs at that point, not before.
+- **`sideEffects: false`** so bundlers tree-shake unused helpers. It's
+  module-granular, though, and each entry ships as a single bundled file — so on
+  its own it can't drop one helper from an entry a consumer already imports.
+  What does that is the `/*#__PURE__*/` annotations `pureAnnotations` stamps in
+  [rollup.config.mjs](rollup.config.mjs) onto the eager top-level `intern(…)` /
+  `internRef(…)` / `internRefs(…)` calls, preserved through terser. Any new
+  helper whose export is an eager factory call needs its factory in that
+  `pureNames` list, and [scripts/verify-treeshake.mjs](scripts/verify-treeshake.mjs)
+  (run by `build`) is the guard. Issue #406 has the measurements.
+  **Per-helper sub-path exports are the escape hatch** if a heavy helper (e.g.
+  #285's generator) starts leaking into bundles that only import the light ones —
+  add explicit `exports` map entries and matching rollup inputs at that point,
+  not before.
 - **Keep tests current.** Add tests with each helper (the confirm hook's
   deferred-promise lifecycle especially rewards a regression test).
 
@@ -72,7 +79,11 @@ places: `package.json` `exports` (+ a `typesVersions` fallback for classic
 pnpm --filter @json-edit-react/utils build
 ```
 
-Output: `build/index.cjs.js`, `build/index.esm.js`, `build/index.d.ts`.
+Output per entry: `build/index.{cjs,esm}.js` + `build/index.d.ts`, and
+`build/filters.{cjs,esm}.js` + `build/filters.d.ts`. The build then runs
+[scripts/verify-treeshake.mjs](scripts/verify-treeshake.mjs), which bundles a
+single `/filters` predicate against the shipped ESM with esbuild and fails if
+the pure-annotation pipeline has regressed.
 
 ## Adding a helper
 
