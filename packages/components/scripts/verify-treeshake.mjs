@@ -161,7 +161,7 @@ if (missing.length) {
   failures.push(
     `stylesheets missing from the build: ${missing.join(' ')}` +
       `. The CSS is being dropped before it reaches the bundle — check ` +
-      `\`stripCssQuery\` and the \`styles\` plugin's \`mode\` in rollup.config.mjs, ` +
+      `the \`inlineCss\` plugin (scripts/rollup-inline-css.mjs at the repo root), ` +
       `and that the components still import their \`./style.css?inline\`.`
   )
 }
