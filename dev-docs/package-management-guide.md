@@ -484,8 +484,8 @@ Pre-pinned via `pnpm.overrides` in root [../package.json](../package.json):
 ```json
 "pnpm": {
   "overrides": {
-    "csstype": "3.1.3",
-    "@types/react": "19.1.1"
+    "csstype": "3.2.3",
+    "@types/react": "19.3.0"
   }
 }
 ```
