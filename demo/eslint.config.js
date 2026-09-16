@@ -18,7 +18,11 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
+      // The two classic hooks rules, listed explicitly rather than via the
+      // plugin's `recommended` preset, which also enables the React Compiler
+      // rule set. Adopting those is a separate decision.
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
@@ -32,6 +36,13 @@ export default tseslint.config(
     // splitting it out would defeat the purpose. We accept the dev-only loss
     // of Fast Refresh for these files instead.
     files: ['src/examples/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
+  {
+    // The entry module defines its lazy route components inline and exports
+    // nothing, so there is nothing for Fast Refresh to preserve there; a
+    // change to it reloads the page regardless.
+    files: ['src/main.tsx'],
     rules: { 'react-refresh/only-export-components': 'off' },
   }
 )
