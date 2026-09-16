@@ -11,6 +11,7 @@ const PACKAGES = [
   { name: 'json-edit-react', pkgJsonPath: 'package.json' },
   { name: '@json-edit-react/themes', pkgJsonPath: 'packages/themes/package.json' },
   { name: '@json-edit-react/components', pkgJsonPath: 'packages/components/package.json' },
+  { name: '@json-edit-react/utils', pkgJsonPath: 'packages/utils/package.json' },
 ]
 
 const CONSUMERS = ['demo']
