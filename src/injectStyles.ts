@@ -1,7 +1,7 @@
 import css from './style.css?inline'
 
 // The stylesheet is inlined into the bundle as a plain string (see the
-// `styles` plugin config in rollup.config.mjs) and injected from here, rather
+// `inlineCss` plugin in rollup.config.mjs) and injected from here, rather
 // than by a top-level side effect. A consumer's bundler can't drop a
 // side-effecting statement at module scope: the package ships as one bundled
 // file, so `sideEffects: false` is no help and no purity annotation applies to
@@ -22,9 +22,9 @@ import css from './style.css?inline'
 // `?inline` is Vite's convention for "give me the text, don't inject it". A
 // plain `.css` specifier is injected by Vite and exports nothing, which breaks
 // this module when `src/` is consumed directly, as in the demo's `local` mode.
-// Rollup has no such convention, so the build strips the query — see
-// `stripCssQuery` in rollup.config.mjs. The upshot is that the dev harness runs
-// the same injection path as the published bundle.
+// Rollup has no such convention, so the build resolves the query itself — see
+// the `inlineCss` plugin used in rollup.config.mjs. The upshot is that the dev
+// harness runs the same injection path as the published bundle.
 
 const MARKER = 'data-jer-styles'
 

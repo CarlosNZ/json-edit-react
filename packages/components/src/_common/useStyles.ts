@@ -39,8 +39,8 @@ import { useInsertionEffect } from 'react'
 // `?inline` is Vite's convention for "give me the text, don't inject it". A
 // plain `.css` specifier is injected by Vite and exports nothing, which breaks
 // direct consumers of `src/`, such as the demo's `local` mode. Rollup has no
-// such convention, so the build strips the query — see `stripCssQuery` in
-// rollup.config.mjs.
+// such convention, so the build resolves the query itself — see the
+// `inlineCss` plugin used in rollup.config.mjs.
 
 const MARKER = 'data-jer-component-styles'
 

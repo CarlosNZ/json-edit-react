@@ -6,7 +6,7 @@
 // (which is module-granular) can't drop the unused parts of it; only the
 // `/*#__PURE__*/` annotations stamped in rollup.config.mjs enable that
 // within-module DCE. The stylesheet is a second, separate mechanism: the
-// `styles` plugin emits it as a plain string constant rather than an
+// `inlineCss` plugin emits it as a plain string constant rather than an
 // injector call, so it drops with the editor path that references it. If
 // either regresses (the annotation regexes stop matching after a rename,
 // terser stops preserving them, or something gains a top-level side effect),

@@ -1,12 +1,12 @@
 import typescript from '@rollup/plugin-typescript'
 import dts from 'rollup-plugin-dts'
 import peerDepsExternal from 'rollup-plugin-peer-deps-external'
-import styles from 'rollup-plugin-styles'
 import terser from '@rollup/plugin-terser'
 import del from 'rollup-plugin-delete'
 import bundleSize from 'rollup-plugin-bundle-size'
 import sizes from 'rollup-plugin-sizes'
 import { copyFileSync } from 'fs'
+import { inlineCss } from './scripts/rollup-inline-css.mjs'
 
 // Emit a standalone copy of the stylesheet alongside the bundle. The CSS is
 // also inlined into the bundle as a string and injected on mount by
@@ -18,18 +18,6 @@ const emitStandaloneCss = () => ({
   name: 'emit-standalone-css',
   writeBundle() {
     copyFileSync('src/style.css', 'build/style.css')
-  },
-})
-
-// `src/injectStyles.ts` imports the stylesheet with Vite's `?inline` query, so
-// that consuming `src/` directly (the demo's `local` mode) yields the CSS text
-// instead of a Vite-injected side effect. Rollup has no query convention, so
-// resolve it back to the plain file and let `styles` handle it.
-const stripCssQuery = () => ({
-  name: 'strip-css-query',
-  resolveId(source, importer) {
-    if (!source.endsWith('.css?inline')) return null
-    return this.resolve(source.replace(/\?inline$/, ''), importer, { skipSelf: true })
   },
 })
 
@@ -117,21 +105,11 @@ export default [
     ],
     plugins: [
       del({ targets: 'build/*' }),
-      stripCssQuery(),
-      // Inline the stylesheet as a plain string with no injector call: the
-      // function form of `mode: ['inject', fn]` substitutes fn's return value
-      // for the injection statement, so returning '' leaves the CSS module as
-      // just `export default '<minified css>'`. That makes the stylesheet an
-      // ordinary constant which only the editor path references, so a consumer
-      // importing one helper can shake it out; src/injectStyles.ts does the
-      // injection at runtime instead (issue #396).
-      //
-      // `inject.treeshakeable` is NOT the equivalent built-in: it only wires an
-      // `inject()` method onto the default export when CSS-modules support is
-      // on. With `modules` off (correct for a global stylesheet) the default
-      // export stays the raw string and the injector is never called at all —
-      // the styles would silently never load.
-      styles({ minimize: true, mode: ['inject', () => ''] }),
+      // `src/injectStyles.ts` imports the stylesheet as `./style.css?inline`;
+      // this resolves it and emits the minified CSS as a plain string module
+      // with no injector call, so only the editor path references it and a
+      // consumer importing one helper can shake it out (issue #396).
+      inlineCss(),
       peerDepsExternal({ includeDependencies: true }),
       typescript({
         module: 'ESNext',

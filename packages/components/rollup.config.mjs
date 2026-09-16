@@ -1,24 +1,11 @@
 import typescript from '@rollup/plugin-typescript'
 import dts from 'rollup-plugin-dts'
 import peerDepsExternal from 'rollup-plugin-peer-deps-external'
-import styles from 'rollup-plugin-styles'
 import terser from '@rollup/plugin-terser'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import bundleSize from 'rollup-plugin-bundle-size'
 import sizes from 'rollup-plugin-sizes'
-
-// Resolve `./style.css?inline` to the plain file. `?inline` is Vite's
-// convention for importing a stylesheet's text instead of injecting it, which
-// is what lets the demo's `local` mode consume `src/` directly; rollup has no
-// query convention, so the suffix has to come off before the `styles` plugin
-// sees the id. See src/_common/useStyles.ts for why the CSS is a string.
-const stripCssQuery = () => ({
-  name: 'strip-css-query',
-  async resolveId(source, importer) {
-    if (!source.endsWith('.css?inline')) return null
-    return await this.resolve(source.replace(/\?inline$/, ''), importer, { skipSelf: true })
-  },
-})
+import { inlineCss } from '../../scripts/rollup-inline-css.mjs'
 
 // Mark every side-effect-free top-level factory call with a /*#__PURE__*/
 // annotation so consumers' bundlers can tree-shake unused components. Each
@@ -89,26 +76,16 @@ const jsBundle = (input, name) => ({
   external,
   plugins: [
     peerDepsExternal({ includeDependencies: true }),
-    stripCssQuery(),
+    // Each component imports its stylesheet as `./style.css?inline`; this
+    // resolves it and emits the minified CSS as a plain string module with no
+    // injector call. Each stylesheet is then an ordinary constant referenced
+    // only by the component that renders it, so it shakes out with that
+    // component; `useStyles` (src/_common/useStyles.ts) injects it at runtime
+    // (issue #398). Sits ahead of `nodeResolve`, which reads our own
+    // `sideEffects: false` and would drop a plain `import './style.css'`
+    // statement outright, taking every stylesheet out of the published bundles.
+    inlineCss(),
     nodeResolve(),
-    // Inline each stylesheet as a plain string with no injector call: the
-    // function form of `mode: ['inject', fn]` substitutes fn's return value
-    // for the injection statement, so returning '' leaves the CSS module as
-    // just `export default '<minified css>'`. Each stylesheet becomes an
-    // ordinary constant referenced only by the component that renders it, so
-    // it shakes out with that component; `useStyles` injects it at runtime
-    // (issue #398).
-    //
-    // It also sidesteps `nodeResolve`, which reads our own `sideEffects: false`
-    // and would drop a plain `import './style.css'` statement outright, taking
-    // every stylesheet out of the published bundles.
-    //
-    // `inject.treeshakeable` is NOT the equivalent built-in: it only wires an
-    // `inject()` method onto the default export when CSS-modules support is
-    // on. With `modules` off (correct for global stylesheets) the default
-    // export stays the raw string and the injector is never called at all —
-    // the styles would silently never load.
-    styles({ minimize: true, mode: ['inject', () => ''] }),
     typescript({
       module: 'ESNext',
       target: 'es2020',
