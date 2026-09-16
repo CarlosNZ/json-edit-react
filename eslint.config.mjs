@@ -64,7 +64,10 @@ export default tseslint.config(
     },
     rules: {
       ...reactPlugin.configs.recommended.rules,
-      ...reactHooks.configs.recommended.rules,
+      // The two classic hooks rules, listed explicitly rather than via the
+      // plugin's `recommended` preset, which also enables the React Compiler
+      // rule set. Adopting those is a separate decision.
+      'react-hooks/rules-of-hooks': 'error',
       'react/prop-types': 'off',
       // Automatic JSX runtime (tsconfig `jsx: react-jsx`): JSX compiles to
       // `react/jsx-runtime` calls, so React no longer needs to be in scope.
@@ -77,7 +80,14 @@ export default tseslint.config(
     },
     settings: {
       react: {
-        version: 'detect',
+        // Pinned rather than `'detect'`: eslint-plugin-react's detection
+        // calls `context.getFilename()`, which ESLint 10 removed, so it
+        // crashes on the first rule that needs the version. Everything else
+        // in the plugin runs on ESLint 10. Switch back to `'detect'` once a
+        // release with ESLint 10 support ships
+        // (https://github.com/jsx-eslint/eslint-plugin-react/pull/4022) and
+        // drop the matching `peerDependencyRules` entry in package.json.
+        version: '19.3.0',
       },
     },
   },
@@ -97,7 +107,10 @@ export default tseslint.config(
     },
     rules: {
       ...reactPlugin.configs.recommended.rules,
-      ...reactHooks.configs.recommended.rules,
+      // The two classic hooks rules, listed explicitly rather than via the
+      // plugin's `recommended` preset, which also enables the React Compiler
+      // rule set. Adopting those is a separate decision.
+      'react-hooks/rules-of-hooks': 'error',
       'react/prop-types': 'off',
       // Automatic JSX runtime (tsconfig `jsx: react-jsx`): JSX compiles to
       // `react/jsx-runtime` calls, so React no longer needs to be in scope.
@@ -110,7 +123,14 @@ export default tseslint.config(
     },
     settings: {
       react: {
-        version: 'detect',
+        // Pinned rather than `'detect'`: eslint-plugin-react's detection
+        // calls `context.getFilename()`, which ESLint 10 removed, so it
+        // crashes on the first rule that needs the version. Everything else
+        // in the plugin runs on ESLint 10. Switch back to `'detect'` once a
+        // release with ESLint 10 support ships
+        // (https://github.com/jsx-eslint/eslint-plugin-react/pull/4022) and
+        // drop the matching `peerDependencyRules` entry in package.json.
+        version: '19.3.0',
       },
     },
   }

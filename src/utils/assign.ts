@@ -204,7 +204,7 @@ const updateObject = (data: InputObject, property: string, newValue: any, option
 
   if (insertBefore !== undefined || insertAfter !== undefined) {
     const entries = Object.entries(data)
-    let index = Infinity
+    let index: number
     if (typeof insertBefore === 'number') index = insertBefore
     else if (typeof insertAfter === 'number') index = insertAfter
     else index = entries.findIndex(([key]) => key === (insertBefore ?? insertAfter))
