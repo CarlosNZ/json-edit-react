@@ -18,6 +18,9 @@
     "build/**/*"
   ],
   "repository": "https://github.com/CarlosNZ/json-edit-react.git",
+  "publishConfig": {
+    "tag": "v1"
+  },
   "author": "Carl Smith <5456533+CarlosNZ@users.noreply.github.com>",
   "license": "MIT",
   "homepage": "https://carlosnz.github.io/json-edit-react",
@@ -36,7 +39,7 @@
     "prepublishOnly": "yarn build && yarn prepareReadme && python3 scripts/use_npm_readme.py prepare",
     "postpublish": "python3 scripts/use_npm_readme.py restore && node scripts/installLatestPackage.mjs pause &",
     "compile": "tsc --noEmit && ts-prune",
-    "release": "yarn publish",
+    "release": "yarn publish --tag v1",
     "release-demo": "cd demo && yarn deploy"
   },
   "peerDependencies": {

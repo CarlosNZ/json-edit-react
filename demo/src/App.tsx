@@ -357,7 +357,7 @@ function App() {
               A <span style={{ color: '#011C27' }}>React</span> component for editing or viewing
               JSON/object data •{' '}
               <Link
-                href="https://github.com/CarlosNZ/json-edit-react#readme"
+                href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#readme"
                 isExternal
                 color="accent"
               >

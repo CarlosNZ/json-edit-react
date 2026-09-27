@@ -31,7 +31,7 @@ const pkg = fs.readJsonSync(packageFile)
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: 'https://carlosnz.github.io/json-edit-react/',
+  base: '/json-edit-react-v1/',
   resolve: {
     alias: { '@json-edit-react': jsonEditReactPath },
   },

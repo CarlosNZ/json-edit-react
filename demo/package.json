@@ -3,7 +3,7 @@
   "version": "1.25.0",
   "private": true,
   "type": "module",
-  "homepage": "https://carlosnz.github.io/json-edit-react",
+  "homepage": "https://carlosnz.github.io/json-edit-react-v1",
   "scripts": {
     "start": "vite",
     "start:local": "VITE_JRE_SOURCE=local vite",
@@ -13,7 +13,7 @@
     "build": "tsc -b && vite build",
     "build:local": "yarn build --base=/",
     "predeploy": "yarn build",
-    "deploy": "gh-pages -d build",
+    "deploy": "gh-pages -d build --repo https://github.com/CarlosNZ/json-edit-react-v1.git",
     "lint": "eslint .",
     "serve": "vite preview",
     "serve:local": "vite preview --base=/",

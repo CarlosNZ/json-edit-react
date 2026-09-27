@@ -98,7 +98,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           in each one (over and above the modifiable options above). The definitions for all demo
           data displays can be found in the repo{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/demoData/dataDefinitions.tsx"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/demo/src/demoData/dataDefinitions.tsx"
             isExternal
           >
             here
@@ -152,14 +152,14 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           achieved by specifying filter functions for the <span className="code">restrictEdit</span>
           , <span className="code">restrictDelete</span>, <span className="code">restrictAdd</span>{' '}
           and <span className="code">restrictTypeSelection</span> props.{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#readme" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#readme" isExternal>
             Learn more
           </Link>
         </Text>
         <Text>
           Also, notice the ISO date strings are editable by a date picker control, and URL strings
           are active links — these are{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#custom-nodes" isExternal>
             Custom components
           </Link>
           .
@@ -264,7 +264,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         <Text>
           You'll note that the <span className="code">id</span> field is not editable, which would
           be important if this saved back to a database. An additional{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#filter-functions" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#restrictedit-restrictdelete--restrictadd" isExternal>
             <span className="code">restrictEdit</span> function
           </Link>{' '}
           has been included which targets the <span className="code">id</span> field specifically.
@@ -280,14 +280,14 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           (on <span className="code">name</span> and <span className="code">username</span>) and
           displays all fields associated with the matching people. This is achieved by specifying a
           custom{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#searchfiltering" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#searchfiltering" isExternal>
             Search filter function
           </Link>
           .
         </Text>
         <Text>
           Finally, an{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#onchange-function" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#onchange-function" isExternal>
             <span className="code">onChange</span> function
           </Link>{' '}
           has been added to restrict user input in the <span className="code">name</span> field to
@@ -357,7 +357,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           </Link>{' '}
           — it uses a custom{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react?tab=readme-ov-file#update-functions"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#update-functions"
             isExternal
           >
             <span className="code">onUpdate</span>
@@ -373,7 +373,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
           won't be allowed to make any changes that don't comply with the schema. The schema being
           enforced here is{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/demoData/jsonSchema.json"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/demo/src/demoData/jsonSchema.json"
             isExternal
           >
             this one.
@@ -595,7 +595,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         </Text>
         <Text>
           See{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#themes--styles" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#themes--styles" isExternal>
             here
           </Link>{' '}
           for theming information.
@@ -620,7 +620,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       <Flex flexDir="column" gap={2}>
         <Text>
           This data set demonstrates{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#custom-nodes" isExternal>
             Custom Nodes
           </Link>{' '}
           — you can provide your own components to present specialised data in a unique way, or
@@ -629,13 +629,13 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         <Text>
           In this example, compare the raw JSON (edit the data root) with what is presented here.
           (You can also see a custom{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#onerror-function" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#onerror-function" isExternal>
             <span className="code">onError</span>
           </Link>{' '}
           function that displays a Toast notification rather than the standard error message when
           you enter invalid JSON input or violate{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/demo/src/demoData/customNodesSchema.json"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/demo/src/demoData/customNodesSchema.json"
             isExternal
           >
             this JSON schema
@@ -645,14 +645,14 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         <Text>
           You can also see how the property count text changes depending on the data. This is using
           dynamic{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-text" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#custom-text" isExternal>
             Custom Text
           </Link>{' '}
           definitions.
         </Text>
         <Text>
           We are also using a conditional{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#themes--styles" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#themes--styles" isExternal>
             Theme function
           </Link>{' '}
           for the character name (to make it bolder and larger than other strings).
@@ -808,11 +808,11 @@ export const demoDataDefinitions: Record<string, DemoData> = {
       <Flex flexDir="column" gap={2}>
         <Text>
           This dossier demonstrates the{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#customising-keys" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#customising-keys" isExternal>
             <span className="code">customKey</span>
           </Link>{' '}
           property of{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#custom-nodes" isExternal>
             Custom Nodes
           </Link>{' '}
           — a definition can render its own component in place of the property label, for both
@@ -1051,13 +1051,13 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         <Text>
           Here are examples of all the custom components available in the{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/custom-component-library/README.md"
             isExternal
           >
             Custom Component Library
           </Link>
           , which aims to provide ready-to-go{' '}
-          <Link href="https://github.com/CarlosNZ/json-edit-react#custom-nodes" isExternal>
+          <Link href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#custom-nodes" isExternal>
             Custom Nodes
           </Link>{' '}
           for common (yet non-JSON) data types or useful data structures.
@@ -1065,7 +1065,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         <Text>
           See their implementation in the{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/src/App.tsx"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/custom-component-library/src/App.tsx"
             isExternal
           >
             example App
@@ -1075,7 +1075,7 @@ export const demoDataDefinitions: Record<string, DemoData> = {
         <Text>
           If you've made a custom component that could be useful to others, please consider{' '}
           <Link
-            href="https://github.com/CarlosNZ/json-edit-react/blob/main/custom-component-library/README.md#development"
+            href="https://github.com/CarlosNZ/json-edit-react/blob/v1.x/custom-component-library/README.md#development"
             isExternal
           >
             submitting a PR

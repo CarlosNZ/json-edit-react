@@ -39,19 +39,13 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 
 ----
 
-> **📣️ ANNOUNCEMENT**
+> **📣️ YOU'RE READING THE V1 DOCS**
 > 
-> V2 of **json-edit-react** is now available in beta, with significant refactors and performance improvements.
-> ```
-> npm install json-edit-react@beta
-> yarn add json-edit-react@beta
-> pnpm add json-edit-react@beta
-> ```
-> ❗️ If you're upgrading from V1, be sure to read the [migration guide](https://github.com/CarlosNZ/json-edit-react/blob/main/migration-guide.md).
->
-> 📖️ **[FULL DOCS](https://github.com/CarlosNZ/json-edit-react/blob/main/README_V2.md)**
+> **Version 2** of **json-edit-react** is now the current release, with significant refactors and performance improvements.
 > 
-> If you've got any suggestions, please join the discussion [here](https://github.com/CarlosNZ/json-edit-react/discussions/198).
+> 📖️ **[V2 DOCS](https://github.com/CarlosNZ/json-edit-react#readme)** • 🚀️ **[V2 DEMO](https://carlosnz.github.io/json-edit-react/)** • ❗️ **[MIGRATION GUIDE](https://github.com/CarlosNZ/json-edit-react/blob/main/migration-guide.md)**
+> 
+> The V1 demo is [here](https://carlosnz.github.io/json-edit-react-v1/). To stay on V1, install `json-edit-react@v1`.
 
 
 <!-- NPM INTRO -->
