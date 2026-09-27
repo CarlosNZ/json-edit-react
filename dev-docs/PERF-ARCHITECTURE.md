@@ -5,7 +5,7 @@
 the fine-grained rendering correct, so you don't have to reverse-engineer them from
 the code — and so the next person who wants to *simplify* this has a map.
 
-Related: the staged plan and rationale live in [V2-roadmap.md](../V2-roadmap.md) §16. This
+Related: the staged plan and rationale live in the archived [V2 roadmap](archive/V2-roadmap.md) §16. This
 doc is the steady-state contract; the roadmap is the history of how we got here.
 
 ---

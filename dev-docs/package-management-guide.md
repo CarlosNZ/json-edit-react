@@ -438,7 +438,7 @@ yarn add /path/to/json-edit-react/packages/components/json-edit-react-components
 yarn build      # note the dist/assets/*.js sizes; repeat with different imports to compare
 ```
 
-For a more systematic approach, see the **bundle-size test scaffolding** in [../V2-roadmap.md](../V2-roadmap.md) — a planned future side-project that automates this across Vite, CRA, Next.js, Webpack, Parcel, and esbuild consumer projects. `vite build --report` or `source-map-explorer` against `dist/assets/*.js` give per-import breakdowns.
+For a more systematic approach, see the **bundle-size test scaffolding** planned in [#356](https://github.com/CarlosNZ/json-edit-react/issues/356) — a separate-repo side-project that automates this across Vite, CRA, Next.js, Webpack, Parcel, and esbuild consumer projects. `vite build --report` or `source-map-explorer` against `dist/assets/*.js` give per-import breakdowns.
 
 ## Troubleshooting / FAQ
 
