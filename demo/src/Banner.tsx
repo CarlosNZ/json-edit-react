@@ -1,6 +1,6 @@
 import { Alert, AlertIcon, Box, CloseButton, Link, useDisclosure } from '@chakra-ui/react'
 
-const DISMISS_KEY = 'v2_2BannerDismissedAt'
+const DISMISS_KEY = 'v2ReleaseBannerDismissedAt'
 const DISMISS_LIFETIME = 3 * 7 * 24 * 60 * 60 * 1000 // 3 weeks, in ms
 
 // Banner is dismissable, but reappears once the dismissal is older than
@@ -25,24 +25,31 @@ export const Banner = () => {
     <Alert status="info" variant="solid" justifyContent="center">
       <AlertIcon />
       <Box>
-        🎉 <strong>Version 2 is now in beta</strong> with significant refactors and performance
-        improvements —{' '}
-        <Link
-          href="https://github.com/CarlosNZ/json-edit-react/blob/main/README_V2.md"
-          isExternal
-          textDecoration="underline"
-        >
-          read the docs
-        </Link>{' '}
-        and be sure to follow the{' '}
+        🎉 <strong>Version 2 is here!</strong> Upgrading from V1? Be sure to follow the{' '}
         <Link
           href="https://github.com/CarlosNZ/json-edit-react/blob/main/migration-guide.md"
           isExternal
           textDecoration="underline"
         >
-          migration guide{' '}
+          migration guide
         </Link>
-        if upgrading from V1.
+        . Looking for V1? See the{' '}
+        <Link
+          href="https://carlosnz.github.io/json-edit-react-v1/"
+          isExternal
+          textDecoration="underline"
+        >
+          V1 demo
+        </Link>{' '}
+        and{' '}
+        <Link
+          href="https://github.com/CarlosNZ/json-edit-react/tree/v1.x#readme"
+          isExternal
+          textDecoration="underline"
+        >
+          V1 docs
+        </Link>
+        .
       </Box>
       <CloseButton onClick={dismiss} position="absolute" right={2} top={2} />
     </Alert>

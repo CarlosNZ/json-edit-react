@@ -1,5 +1,10 @@
 # @json-edit-react/components
 
+## 1.0.0
+
+- First stable release, alongside `json-edit-react` 2.0.0. See the [README](README.md) for the full component list.
+- `ReactDatePicker` uses `react-datepicker` 9. If you pass a date-fns `locale` through `datePickerProps`, it must come from date-fns v4.
+
 ## 0.9.0-beta.6
 
 ### Patch Changes
@@ -55,7 +60,7 @@
 
   The `editorRef` imperative API is unchanged: `overrideRestrictions` and the `'RESTRICTED'` `startEdit` result keep their names.
 
-  See the [migration guide](../migration-guide.md#11-restrict-props-renamed-to-allow-semantics-inverted) for full mapping tables and recipes.
+  See the [migration guide](../../migration-guide.md#5-restrict-props-renamed-to-allow-semantics-inverted) for full mapping tables and recipes.
 
 - b82f8db: Renamed the `CustomNodeDefinition` fields and props type for consistency, around one distinction: a **node** is a position in the data tree; a **component** is the React function that renders it.
 
@@ -70,7 +75,7 @@
 
   All 12 components in `@json-edit-react/components` use the new field names. Consumers overriding a shipped definition's `customNodeProps` must rename to `componentProps`, and custom-component bodies must rename the props type (`CustomNodeProps` → `CustomComponentProps`), the config prop they destructure (`customNodeProps` → `componentProps`), move any error-reporting call (v1's `onError`) into a `throw`ing `fromStandardType`, rename a key component's `setIsEditingKey` call to `startEditingKey`, rename the key-down handler `handleKeyPress` → `onKeyDown`, and read the node value via `value` / `nodeData.value` instead of `data`.
 
-  See the [migration guide](../migration-guide.md#13-customnodedefinition-field-renames) for the full mapping and before/after examples.
+  See the [migration guide](../../migration-guide.md#11-customnodedefinition-field-renames) for the full mapping and before/after examples.
 
 ### Minor Changes
 

@@ -1,5 +1,9 @@
 # @json-edit-react/themes
 
+## 1.0.0
+
+- First stable release, alongside `json-edit-react` 2.0.0. See the [README](README.md) for the full theme list.
+
 ## 0.9.0-beta.2
 
 ### Patch Changes

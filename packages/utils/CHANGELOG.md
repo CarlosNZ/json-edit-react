@@ -1,5 +1,9 @@
 # @json-edit-react/utils
 
+## 1.0.0
+
+- First stable release, alongside `json-edit-react` 2.0.0. See the [README](README.md) for the available helpers.
+
 ## 0.9.0-beta.3
 
 ### Patch Changes

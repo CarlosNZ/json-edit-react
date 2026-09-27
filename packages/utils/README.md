@@ -21,7 +21,7 @@ pnpm add @json-edit-react/utils
 
 Add **undo**/**redo** to the editor in a couple of lines. `useUndo` wraps your `data`/`setData`, tracks changes, and returns ready-to-wire `undo` / `redo` / `canUndo` / `canRedo` 
 
-Try it out in the [Demo](https://carlosnz.github.io/json-edit-react-v2/).
+Try it out in the [Demo](https://carlosnz.github.io/json-edit-react/).
 
 [Read more →](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/utils/src/undo/README.md)
 
@@ -31,7 +31,7 @@ Gate edits, deletions, or any change behind a confirmation dialog —— this so
 
  `useConfirmOnUpdate` hands you a ready-made `onUpdate` and the dialog state to drive your own modal — You provide the modal UI, we handle the data flow. `useJsonEditorConfirm` is the lower-level primitive for flows a single synchronous confirm can't express (confirming on `await`ed work, multiple confirmations in one update, or actions outside `onUpdate`).
 
-[![▶ Live example: Modal confirmation](https://img.shields.io/badge/▶_Live_example-Modal_confirmation-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/confirm-and-settle)
+[![▶ Live example: Modal confirmation](https://img.shields.io/badge/▶_Live_example-Modal_confirmation-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react/examples/confirm-and-settle)
 
 [Read more →](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/utils/src/confirm-update/README.md)
 
@@ -47,7 +47,7 @@ Run your own validator over the whole document and flag invalid nodes — in sty
 
 Compose the `allow*` props and `searchFilter` from small, named, readable pieces instead of hand-rolled callbacks — `and(not(byKey('id')), byLevel({ min: 2 }))`. Property builders (`byKey`, `byPath`, `byLevel`, `byType`, …), position constants (`root`, `collections`, `primitives`, …), `and` / `or` / `not` combinators, and search bridges, every one inline-safe: each result is interned, so you write them straight on a prop with no `useMemo`.
 
-[![▶ Live example: Filter toolkit](https://img.shields.io/badge/▶_Live_example-Filter_toolkit-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/filter-toolkit)
+[![▶ Live example: Filter toolkit](https://img.shields.io/badge/▶_Live_example-Filter_toolkit-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react/examples/filter-toolkit)
 
 [Read more →](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/utils/src/filters/README.md)
 

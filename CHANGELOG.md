@@ -1,5 +1,9 @@
 # json-edit-react
 
+## 2.0.0
+
+- First stable release of V2, a substantial refactor focused on performance and a more consistent API. Upgrading from V1? Start with the [migration guide](migration-guide.md); full documentation is in the [README](README.md). Pre-built themes, custom components and helper utilities ship separately as [`@json-edit-react/themes`](https://www.npmjs.com/package/@json-edit-react/themes), [`@json-edit-react/components`](https://www.npmjs.com/package/@json-edit-react/components) and [`@json-edit-react/utils`](https://www.npmjs.com/package/@json-edit-react/utils).
+
 ## 2.0.0-beta.10
 
 - The collapse chevron and the string show-more/show-less controls now carry button semantics and translatable accessible names, so screen readers announce and can activate them (#268). Adds the `TOOLTIP_COLLAPSE`, `TOOLTIP_EXPAND` and `SHOW_MORE` [localisation keys](README.md#localisation), and `showIconTooltips` now covers every labelled control rather than just the icon buttons.
@@ -52,7 +56,7 @@
 
   The `editorRef` imperative API is unchanged: `overrideRestrictions` and the `'RESTRICTED'` `startEdit` result keep their names.
 
-  See the [migration guide](../migration-guide.md#11-restrict-props-renamed-to-allow-semantics-inverted) for full mapping tables and recipes.
+  See the [migration guide](migration-guide.md#5-restrict-props-renamed-to-allow-semantics-inverted) for full mapping tables and recipes.
 
 - de1cd5d: The clickable icon controls — the ✓ / ✗ confirm/cancel pair and the edit/copy/delete/add icons — are now real `<button>` elements instead of `<div onClick>`, so assistive tech announces them as actionable and reads an `aria-label` (always present, independent of `showIconTooltips`). Their appearance is unchanged (the default button chrome is reset in the bundled CSS) and they carry `tabIndex={-1}`, so the editor's field-to-field Tab navigation is unaffected. Two new localisation keys (`TOOLTIP_OK`, `TOOLTIP_CANCEL`) provide the confirm/cancel labels.
 
@@ -80,7 +84,7 @@
 
   All 12 components in `@json-edit-react/components` use the new field names. Consumers overriding a shipped definition's `customNodeProps` must rename to `componentProps`, and custom-component bodies must rename the props type (`CustomNodeProps` → `CustomComponentProps`), the config prop they destructure (`customNodeProps` → `componentProps`), move any error-reporting call (v1's `onError`) into a `throw`ing `fromStandardType`, rename a key component's `setIsEditingKey` call to `startEditingKey`, rename the key-down handler `handleKeyPress` → `onKeyDown`, and read the node value via `value` / `nodeData.value` instead of `data`.
 
-  See the [migration guide](../migration-guide.md#13-customnodedefinition-field-renames) for the full mapping and before/after examples.
+  See the [migration guide](migration-guide.md#11-customnodedefinition-field-renames) for the full mapping and before/after examples.
 
 - 1ac80d0: Fine-grained editing re-renders + React 18 requirement.
 
@@ -115,7 +119,7 @@
   - Default of `JsonData` keeps existing untyped code source-compatible. Per-node `value` and `parentData` slots stay wide (they are arbitrary-depth slices, no static type can describe them).
   - **Breaking (json-edit-react v2)** only because the emitted `.d.ts` signatures change. Runtime behaviour is unchanged.
 
-  See the [migration guide](../migration-guide.md#3-jsoneditor-is-now-generic-on-the-data-type) for details and examples.
+  See the [migration guide](migration-guide.md#3-jsoneditor-is-now-generic-on-the-data-type) for details and examples.
 
 - fca0b35: Split custom components into a separate publishable package.
 
@@ -152,7 +156,7 @@
     - The "is a descendant" check is a proper array prefix, not a string substring — so editing `foobar` no longer claims `foo`'s children are editing, and dragging `foo` no longer hides the drop highlight on `foobar`.
   - `toPathString` is still exported, but its encoding changes to `/`-joined `encodeURIComponent` (e.g. `['data', 0, 'name']` → `'data/0/name'`). The result is now provably injective. The optional second `key?: 'key_'` argument is removed — the new identity model encodes value-vs-key mode as a field, not a string prefix. **If you only use `toPathString`'s output as an HTML `name`/`id`, no code change is needed.**
 
-  See the [migration guide](../migration-guide.md#5-topathstring-encoding-changed) for details.
+  See the [migration guide](migration-guide.md#topathstring-encoding-changed) for details.
 
 - a186a61: Theme `styles` gains two row-level themeable elements — `headerRow` (a collection's header line) and `valueRow` (a leaf value's row) — so row height, background, and the like can be themed (e.g. `headerRow: { minHeight: '2em' }`). The `collectionInner` element is removed: its only distinct use — styling the children body apart from the header — is now covered by `headerRow` + `collection`. `collection`, `collectionElement`, and `dropZone` are unchanged.
 - 355b7f8: `JsonEditor` is now strictly controlled. `setData` is required, the controlled/uncontrolled dual mode is gone, and the `viewOnly` shorthand is removed. A new sibling export `JsonViewer` is the canonical read-only entry point.
@@ -162,11 +166,11 @@
   - `viewOnly` prop is removed. For static read-only displays, use `<JsonViewer>`. For dynamic permissions-style toggling on the same mounted component, use `allowEdit={cond}` + `allowAdd={cond}` + `allowDelete={cond}` (and `allowDrag={cond}` if you'd previously enabled drag-and-drop; otherwise the default is already `false`/off).
   - The internal `useData` hook is deleted — `JsonEditor` now reads `data` and `setData` from props directly.
 
-  See the [migration guide](../migration-guide.md#6-setdata-is-required-viewonly-removed-jsonviewer-added) for migration recipes.
+  See the [migration guide](migration-guide.md#4-setdata-is-required-viewonly-removed-jsonviewer-added) for migration recipes.
 
 - ece6d70: Replace the v1 `enableClipboard` prop with `showClipboardButton` (boolean, default `true`) plus the separate `onCopy` observer.
 
-  `enableClipboard` did two unrelated jobs through a `boolean | CopyFunction` overload: toggling the copy button and observing copies. These are now two single-purpose props. `showClipboardButton` is a plain display toggle — it sits in the `show*` family (`showArrayIndexes`, `showStringQuotes`, …), not the `allow*` capability gates, because hiding the copy button can't actually prevent copying (the value is selectable in the DOM); it only controls whether the convenience button renders. The copy callback moves to `onCopy?: OnCopyFunction`, which receives the same flat `NodeData` payload every other observer gets, and `CopyFunction` is removed in favour of `OnCopyFunction`. See the [migration guide](../migration-guide.md#6-enableclipboard-split-into-showclipboardbutton--oncopy).
+  `enableClipboard` did two unrelated jobs through a `boolean | CopyFunction` overload: toggling the copy button and observing copies. These are now two single-purpose props. `showClipboardButton` is a plain display toggle — it sits in the `show*` family (`showArrayIndexes`, `showStringQuotes`, …), not the `allow*` capability gates, because hiding the copy button can't actually prevent copying (the value is selectable in the DOM); it only controls whether the convenience button renders. The copy callback moves to `onCopy?: OnCopyFunction`, which receives the same flat `NodeData` payload every other observer gets, and `CopyFunction` is removed in favour of `OnCopyFunction`. See the [migration guide](migration-guide.md#6-enableclipboard-split-into-showclipboardbutton--oncopy).
 
 - f9458fc: Rework the theming engine: compose multiple style functions and tidy the theme types. The common cases — passing colours, style objects, arrays, and style functions via the `theme` prop — are unchanged.
 
@@ -174,7 +178,7 @@
 
   **Types.** `ThemeStyles` is now `Partial<Record<ThemeableElement, …>>` — inherently optional per key. The compiled style map is partial too, but `getStyles` fills any gap with `{}`, so its public return contract is unchanged.
 
-  Internally the compile step is now a single pure pass with no behaviour change for existing themes. See the [migration guide](../migration-guide.md#14-theming-partial-themestyles-and-function-composition).
+  Internally the compile step is now a single pure pass with no behaviour change for existing themes. See the [migration guide](migration-guide.md#themestyles-is-now-a-partial-type).
 
 - a186a61: Themes now own their icon glyphs. The standalone `icons` prop is removed; supply glyphs via `theme.icons` (keyed `add`/`edit`/`delete`/`copy`/`ok`/`cancel`/`collection`), where each value is an `IconDefinition` (`content` plus optional `viewBox`/`svgProps`/`scale`). User-supplied glyphs are themeable via `currentColor`, just like the built-ins. The expand/collapse key is renamed `chevron` → `collection`. The `IconAdd`…`IconChevron` components, `IconProps`, and `IconReplacements` are no longer exported (the built-in glyphs now live on `defaultTheme.icons`); `IconDefinition`, `ThemeIcons`, and `IconSvg` (the glyph renderer — pass an `IconDefinition`'s parts) are added.
 

@@ -32,10 +32,10 @@ Temporary working doc for the V2.0 cutover. Delete it once the release is done a
 
 **Decide before tagging components `1.0.0`.** Each of these is semver-major to change *after* 1.0:
 
-- [ ] **`react-datepicker` 7 → 9** (#408). `datePickerProps` passes straight through to the library, so moving to 9 *after* 1.0 would mean a components major. **Trialled 2026-09-27 and it's a drop-in.** With `^9.1.0` in a scratch worktree, components builds, type-checks (including the public `datePickerProps` type) and passes both tree-shake guards, and all 750 tests pass. In Chrome, the date-picker example on 7.6.0 and 9.1.0 is pixel-near-identical: same calendar box (±1px), same font and day-cell sizes, same time list. The only visible change is the header border moving above the weekday row. Typed input (`Oct 3, 2025 4:45 PM`) parses and commits identically on both, so the v8 `parseDate` change doesn't bite our default formats. Recommendation: **bump before 1.0**, since there's no rework.
-  - [ ] `packages/components/package.json`: `"react-datepicker": "^9.1.0"`, then `pnpm install`. The saved diff is in the session scratchpad as `react-datepicker-9.patch`, but it's a one-line change plus the lockfile.
-  - [ ] `demo/package.json`: `"react-datepicker": "^9.1.0"`, then `cd demo && yarn install`. The demo's own copy is what `pack` / `build` modes resolve, so bump it too or those modes keep testing 7.
-  - [ ] `packages/components/CHANGELOG.md`: add a line under 1.0.0. Consumers passing date-fns `locale` objects via `datePickerProps` need date-fns v4 locales (react-datepicker 8 moved to date-fns 4).
+- [x] **`react-datepicker` 7 → 9** (#408). `datePickerProps` passes straight through to the library, so moving to 9 *after* 1.0 would mean a components major. **Trialled 2026-09-27 and it's a drop-in.** With `^9.1.0` in a scratch worktree, components builds, type-checks (including the public `datePickerProps` type) and passes both tree-shake guards, and all 750 tests pass. In Chrome, the date-picker example on 7.6.0 and 9.1.0 is pixel-near-identical: same calendar box (±1px), same font and day-cell sizes, same time list. The only visible change is the header border moving above the weekday row. Typed input (`Oct 3, 2025 4:45 PM`) parses and commits identically on both, so the v8 `parseDate` change doesn't bite our default formats. Recommendation: **bump before 1.0**, since there's no rework.
+  - [x] `packages/components/package.json`: `"react-datepicker": "^9.1.0"`, then `pnpm install`. The saved diff is in the session scratchpad as `react-datepicker-9.patch`, but it's a one-line change plus the lockfile.
+  - [x] `demo/package.json`: `"react-datepicker": "^9.1.0"`, then `cd demo && yarn install`. The demo's own copy is what `pack` / `build` modes resolve, so bump it too or those modes keep testing 7.
+  - [x] `packages/components/CHANGELOG.md`: add a line under 1.0.0. Consumers passing date-fns `locale` objects via `datePickerProps` need date-fns v4 locales (react-datepicker 8 moved to date-fns 4).
 - [ ] **`/widgets` entry shape** (#404). The entry has a module-level `import 'react-datepicker/dist/react-datepicker.css'`, so `ReactSelect` / `CodeEditor` users pay for it, and a Node/SSR/Jest consumer without a CSS mapper crashes importing `/widgets`. Splitting into per-widget subpaths while keeping `/widgets` as a barrel is additive, so this doesn't block 1.0. It only matters if you'd rather *drop* `/widgets`.
 
 **Cosmetic, fine to leave for later**
@@ -65,46 +65,46 @@ Temporary working doc for the V2.0 cutover. Delete it once the release is done a
 
 **README swap**
 
-- [ ] `git mv -f README_V2.md README.md` to replace the V1 README. The V1 copy lives on in `v1.x`.
-- [ ] Re-create `README_V2.md` as a short stub: "Moved to [README.md](README.md)". Published beta npm READMEs, old issues and the old V1 demo banner all link to `blob/main/README_V2.md`, so keep the stub for a release cycle or two.
-- [ ] Replace every `carlosnz.github.io/json-edit-react-v2/` URL with `carlosnz.github.io/json-edit-react/`. There are about 50 hits across `README.md`, `packages/components/README.md`, `packages/utils/README.md` and `demo/vite.config.ts` (comment only):
+- [x] `git mv -f README_V2.md README.md` to replace the V1 README. The V1 copy lives on in `v1.x`.
+- [x] Re-create `README_V2.md` as a short stub: "Moved to [README.md](README.md)". Published beta npm READMEs, old issues and the old V1 demo banner all link to `blob/main/README_V2.md`, so keep the stub for a release cycle or two.
+- [x] Replace every `carlosnz.github.io/json-edit-react-v2/` URL with `carlosnz.github.io/json-edit-react/`. There are about 50 hits across `README.md`, `packages/components/README.md`, `packages/utils/README.md` and `demo/vite.config.ts` (comment only):
   ```sh
   git grep -l 'json-edit-react-v2/' -- ':!CHANGELOG.md' \
     | xargs sed -i '' 's#carlosnz.github.io/json-edit-react-v2/#carlosnz.github.io/json-edit-react/#g'
   git grep -n 'json-edit-react-v2'   # should leave only demo/package.json's deploy-v2 scripts
   ```
-- [ ] `README.md` line ~40, the `[!IMPORTANT]` block: remove "which is currently in beta". Point "V1 docs are here" at `https://github.com/CarlosNZ/json-edit-react/tree/v1.x#readme` (it currently links to the repo root, which will be V2), and add the V1 demo link.
-- [ ] `README.md` "Optional Companion Packages" (line ~50): fix `[themes] (#themes)`, where the stray space means it doesn't render as a link. Also fix the **UTILITIES** entry, which links to `npmjs.com/package/@json-edit-react/themes` instead of `/utils`.
-- [ ] `README.md` "Changelog" section (line ~1517): `[V1 changelog](./README.md#changelog)` becomes a self-link after the swap. Point it at `https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#changelog`.
+- [x] `README.md` line ~40, the `[!IMPORTANT]` block: remove "which is currently in beta". Point "V1 docs are here" at `https://github.com/CarlosNZ/json-edit-react/tree/v1.x#readme` (it currently links to the repo root, which will be V2), and add the V1 demo link.
+- [x] `README.md` "Optional Companion Packages" (line ~50): fix `[themes] (#themes)`, where the stray space means it doesn't render as a link. Also fix the **UTILITIES** entry, which links to `npmjs.com/package/@json-edit-react/themes` instead of `/utils`.
+- [x] `README.md` "Changelog" section (line ~1517): `[V1 changelog](./README.md#changelog)` becomes a self-link after the swap. Point it at `https://github.com/CarlosNZ/json-edit-react/blob/v1.x/README.md#changelog`.
 - [ ] Optional: check that `image/screenshot.png` shows the V2 look.
 
 **Migration guide.** There are five anchors that break once `README.md` is V2:
 
-- [ ] `#update-functions` → `#reacting-to-changes` (line ~396)
-- [ ] `#optimistic-updates-and-gating-hold` → `#async-updates--gating--hold` (line ~462)
-- [ ] `#event-callbacks` → `#listening-to-the-lifecycle--oneditevent` (line ~511)
-- [ ] `#imperative-handle-editorref` → `#driving-the-editor--the-editorref-handle` (line ~636)
-- [ ] `#themes--styles` → `#appearance--theming` (line ~734)
+- [x] `#update-functions` → `#reacting-to-changes` (line ~396)
+- [x] `#optimistic-updates-and-gating-hold` → `#async-updates--gating--hold` (line ~462)
+- [x] `#event-callbacks` → `#listening-to-the-lifecycle--oneditevent` (line ~511)
+- [x] `#imperative-handle-editorref` → `#driving-the-editor--the-editorref-handle` (line ~636)
+- [x] `#themes--styles` → `#appearance--theming` (line ~734)
 
 **npm README plumbing (core)**
 
-- [ ] `scripts/stage-package.mjs` (~line 100–108): source `README_V2.md` → `README.md`, and delete the "flip to README.md when v2 ships" comment.
-- [ ] `scripts/build_npm_readme.py` (~line 6, 211–212): change the default `--source` and docstring from `README_V2.md` to `README.md`.
-- [ ] `.README_npm.md`: delete the "Don't forget to replace this link…" comment. Point the FULL DOCUMENTATION link at `https://github.com/CarlosNZ/json-edit-react`.
+- [x] `scripts/stage-package.mjs` (~line 100–108): source `README_V2.md` → `README.md`, and delete the "flip to README.md when v2 ships" comment.
+- [x] `scripts/build_npm_readme.py` (~line 6, 211–212): change the default `--source` and docstring from `README_V2.md` to `README.md`.
+- [x] `.README_npm.md`: delete the "Don't forget to replace this link…" comment. Point the FULL DOCUMENTATION link at `https://github.com/CarlosNZ/json-edit-react`.
 
 **CHANGELOGs** (hand-written: announce and link, keep it brief)
 
-- [ ] `CHANGELOG.md`: add a `## 2.0.0` section at the top. One or two lines: "Stable release of V2 — see the [migration guide](migration-guide.md) for upgrading from V1," plus anything since beta.10.
-- [ ] `CHANGELOG.md`: fix the seven `../migration-guide.md#…` links in the beta.0 entries (the path is wrong at the root; it should be `migration-guide.md`). Several of those anchors also use the old section numbers (for example `#11-restrict-props…` is now `#5-…`). This file ships in the npm tarball.
-- [ ] `packages/components/CHANGELOG.md`: fix the two `../migration-guide.md` links. They should be `../../migration-guide.md`, and the section numbers are stale too.
-- [ ] `packages/{utils,themes,components}/CHANGELOG.md`: add a `## 1.0.0` entry to each ("First stable release" plus anything since the last beta).
+- [x] `CHANGELOG.md`: add a `## 2.0.0` section at the top. One or two lines: "Stable release of V2 — see the [migration guide](migration-guide.md) for upgrading from V1," plus anything since beta.10.
+- [x] `CHANGELOG.md`: fix the seven `../migration-guide.md#…` links in the beta.0 entries (the path is wrong at the root; it should be `migration-guide.md`). Several of those anchors also use the old section numbers (for example `#11-restrict-props…` is now `#5-…`). This file ships in the npm tarball.
+- [x] `packages/components/CHANGELOG.md`: fix the two `../migration-guide.md` links. They should be `../../migration-guide.md`, and the section numbers are stale too.
+- [x] `packages/{utils,themes,components}/CHANGELOG.md`: add a `## 1.0.0` entry to each ("First stable release" plus anything since the last beta).
 
 **Demo (main)**
 
-- [ ] `demo/src/Banner.tsx`: rewrite from "Version 2 is now in beta" to "🎉 **Version 2 is here** — [migration guide] if upgrading · Looking for V1? [V1 demo](https://carlosnz.github.io/json-edit-react-v1/) · [V1 docs](…/tree/v1.x#readme)". Bump `DISMISS_KEY` (for example `v2_releaseBannerDismissedAt`) so everyone sees it once. The `README_V2.md` link in it becomes `README.md`.
-- [ ] `demo/package.json`: remove the `build-v2` / `deploy-v2` scripts. The redirect shim in Phase 5 doesn't need them.
+- [x] `demo/src/Banner.tsx`: rewrite from "Version 2 is now in beta" to "🎉 **Version 2 is here** — [migration guide] if upgrading · Looking for V1? [V1 demo](https://carlosnz.github.io/json-edit-react-v1/) · [V1 docs](…/tree/v1.x#readme)". Bump `DISMISS_KEY` (for example `v2_releaseBannerDismissedAt`) so everyone sees it once. The `README_V2.md` link in it becomes `README.md`.
+- [x] `demo/package.json`: remove the `build-v2` / `deploy-v2` scripts. The redirect shim in Phase 5 doesn't need them.
 
-- [ ] Final sweep: `git grep -nE 'README_V2|json-edit-react-v2|@beta|in beta|currently in beta' -- ':!CHANGELOG.md' ':!dev-docs/'`. Only the `README_V2.md` stub and the historical CHANGELOG entries should remain.
+- [x] Final sweep: `git grep -nE 'README_V2|json-edit-react-v2|@beta|in beta|currently in beta' -- ':!CHANGELOG.md' ':!dev-docs/'`. Only the `README_V2.md` stub and the historical CHANGELOG entries should remain.
 - [ ] Commit the lot. The tree must be clean for `npm version`.
 
 ## Phase 3 — Bump + dress rehearsal

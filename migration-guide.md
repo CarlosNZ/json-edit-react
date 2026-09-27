@@ -393,7 +393,7 @@ The filter, search, and type functions (`FilterFunction`, `SearchFilterFunction`
 
 ## 9. One `onUpdate`; unified return shape; flat `NodeData` payloads
 
-The update callbacks are consolidated into a single result-producer with one consistent payload and return shape. See the [Update Functions](README.md#update-functions) section of the README for the full reference.
+The update callbacks are consolidated into a single result-producer with one consistent payload and return shape. See the [Update Functions](README.md#reacting-to-changes) section of the README for the full reference.
 
 ### `onEdit` / `onAdd` / `onDelete` removed — use one `onUpdate`
 
@@ -459,7 +459,7 @@ Commits are now **optimistic by default**: on submit the editor closes and the d
 + }}
 ```
 
-`hold()` must be called synchronously (before the first `await`). See [Optimistic updates and gating](README.md#optimistic-updates-and-gating-hold) for the full contract.
+`hold()` must be called synchronously (before the first `await`). See [Optimistic updates and gating](README.md#async-updates--gating--hold) for the full contract.
 
 ### Flat `NodeData` payloads (`onUpdate` / `onChange`)
 
@@ -508,7 +508,7 @@ The `DEFAULT_STRING` key (`'New data!'`) is gone — if your `translations` obje
 
 ## 10. Observers reshaped: `onEditEvent` lifecycle stream; flat `onError` / `onCollapse`; `onCopy` error
 
-The observer callbacks move onto the same flat `NodeData` payload as the rest of the API, and `onEditEvent` becomes a full lifecycle stream. See the [Event callbacks](README.md#event-callbacks) section of the README for the full event reference.
+The observer callbacks move onto the same flat `NodeData` payload as the rest of the API, and `onEditEvent` becomes a full lifecycle stream. See the [Event callbacks](README.md#listening-to-the-lifecycle--oneditevent) section of the README for the full event reference.
 
 ### `onEditEvent` — from `(path, isKey)` to a discriminated event stream
 
@@ -633,7 +633,7 @@ If a **collection** custom `component` set `showOnEdit: true`, it was handed the
 
 ## 12. `externalTriggers` prop replaced by the `editorRef` imperative handle
 
-The `externalTriggers` prop — a state-as-RPC object you mutated to trigger collapse/edit actions — is removed. Imperative control now goes through a ref handle passed via the new `editorRef` prop. The `ExternalTriggers` and `EditState` types are removed; `JsonEditorHandle` (and `JsonViewerHandle`) are added. See the [Imperative handle (`editorRef`)](README.md#imperative-handle-editorref) section of the README for the full handle reference.
+The `externalTriggers` prop — a state-as-RPC object you mutated to trigger collapse/edit actions — is removed. Imperative control now goes through a ref handle passed via the new `editorRef` prop. The `ExternalTriggers` and `EditState` types are removed; `JsonEditorHandle` (and `JsonViewerHandle`) are added. See the [Imperative handle (`editorRef`)](README.md#driving-the-editor--the-editorref-handle) section of the README for the full handle reference.
 
 **Why:** props aren't commands. The old pattern required carefully memoising the trigger object to avoid infinite effect loops, and gave no autocomplete for the available actions. A ref handle is idiomatic React, fully typed, and removes that footgun. (`editorRef` is a *plain ref-valued prop*, not the `ref` attribute, so `JsonEditor<T>` stays a generic component with full type inference.)
 
@@ -731,7 +731,7 @@ If you used `toPathString`'s output as an HTML `name` or `id` attribute (e.g. in
 
 ### `ThemeStyles` is now a partial type
 
-The exported `ThemeStyles` type is now `Partial<Record<ThemeableElement, …>>` (every key optional). If you imported it and relied on it being a *total* record, it's now optional-per-key — more permissive, so most code needs no change. See [Themes & Styles](README.md#themes--styles) in the README.
+The exported `ThemeStyles` type is now `Partial<Record<ThemeableElement, …>>` (every key optional). If you imported it and relied on it being a *total* record, it's now optional-per-key — more permissive, so most code needs no change. See [Themes & Styles](README.md#appearance--theming) in the README.
 
 ### Icon controls are now `<button>` elements
 

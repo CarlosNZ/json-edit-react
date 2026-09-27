@@ -113,9 +113,9 @@ const jsonEditReactPath = coreSrcMap[provider].src
 const pkg = fs.readJsonSync(packageFile)
 
 // The deploy subpath. Defaults to the primary site; override with
-// `VITE_BASE_PATH` to build for a different GitHub Pages location (e.g.
-// `/json-edit-react-v2/` for a side-by-side preview repo). The router base in
-// `main.tsx` derives from this via `import.meta.env.BASE_URL`.
+// `VITE_BASE_PATH` to build for a different GitHub Pages location (e.g. a
+// side-by-side preview repo). The router base in `main.tsx` derives from this
+// via `import.meta.env.BASE_URL`.
 const PRIMARY_BASE = '/json-edit-react/'
 const base = process.env.VITE_BASE_PATH ?? PRIMARY_BASE
 

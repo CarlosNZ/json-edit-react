@@ -3,7 +3,7 @@ Generate the short npm-page README from the GitHub README.
 
 Reads the `.README_npm.md` template, replaces `{{BLOCK NAME}}` placeholders with
 the corresponding `<!-- BLOCK NAME -->`-delimited sections from the long source
-README (`README_V2.md`), and writes the result to the path passed via
+README (`README.md`), and writes the result to the path passed via
 `--output`. This lets us reuse intro/usage prose across both READMEs without
 duplicating it.
 
@@ -208,8 +208,8 @@ def main():
     )
     parser.add_argument('--template', default=None,
                         help='Path to the npm README template. Omit for passthrough mode (sub-packages), where --source is used whole.')
-    parser.add_argument('--source', default='README_V2.md',
-                        help='Path to the source README (default: README_V2.md)')
+    parser.add_argument('--source', default='README.md',
+                        help='Path to the source README (default: README.md)')
     parser.add_argument('--output', default='.README_npm_output.md',
                         help='Path to write the generated README (default: .README_npm_output.md)')
     parser.add_argument('--base-url', default='https://github.com/CarlosNZ/json-edit-react',

@@ -4,7 +4,7 @@ Ready-to-use custom node components for **[json-edit-react](https://github.com/C
 
 Almost all have zero external dependencies, and those that do are clearly marked as such below.
 
-Check out the custom components in action in the [Custom Component Library demo page](https://carlosnz.github.io/json-edit-react-v2/?data=customComponentLibrary)
+Check out the custom components in action in the [Custom Component Library demo page](https://carlosnz.github.io/json-edit-react/?data=customComponentLibrary)
 
 > [!IMPORTANT]
 > Requires **json-edit-react** version 2.x
@@ -283,7 +283,7 @@ It guards to value (leaf) nodes, so a `condition` that also matches a collection
 
 An edit-only node that replaces the Type selector with a single plain text input and infers the value's type from what you type. `12.3` becomes a number, `true`/`false` a boolean, `null` the null value, `{"a":1}` or `[1,2,3]` an object or array, and anything that doesn't parse stays a string. It applies to every value (non-collection) node.
 
-[![▶ Live example: Auto-type](https://img.shields.io/badge/▶_Live_example-Auto--type-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react-v2/examples/auto-type)
+[![▶ Live example: Auto-type](https://img.shields.io/badge/▶_Live_example-Auto--type-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react/examples/auto-type)
 
 ```tsx
 autoTypeDefinition()
