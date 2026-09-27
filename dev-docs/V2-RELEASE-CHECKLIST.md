@@ -174,7 +174,7 @@ The edits are prepared, uncommitted, in a **separate worktree at `../json-edit-r
 
 ## Phase 6 — GitHub housekeeping
 
-- [ ] Create a **GitHub Release** for `v2.0.0`, marked Latest. Include highlights, install lines and the migration guide link. Optionally add releases for the three `@json-edit-react/*@1.0.0` tags.
+- [x] Create a **GitHub Release** for `v2.0.0`, marked Latest. Include highlights, install lines and the migration guide link. Optionally add releases for the three `@json-edit-react/*@1.0.0` tags.
 - [ ] **Milestone v2.0**: move the 7 open issues (#2, #189, #195, #268, #283, #404, #405) to **V2.x**, then close the milestone.
   - [ ] Close #189 ("Are you sure" before delete). V2's async `onUpdate` + `useConfirmOnUpdate` in `@json-edit-react/utils` is exactly this; comment with a link to the Modal confirmation example.
   - [ ] Close #117 ("Support promises for callbacks like onDelete"). `onUpdate` is async-aware in V2.
