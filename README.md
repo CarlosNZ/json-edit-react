@@ -41,7 +41,7 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 > 
 > If you're upgrading from V1, be sure to read the [migration guide](https://github.com/CarlosNZ/json-edit-react/blob/main/migration-guide.md).
 > 
-> 🎤️ Got feedback? [Open an issue](https://github.com/CarlosNZ/json-edit-react/issues), or [join the discussion](https://github.com/CarlosNZ/json-edit-react/discussions/198).
+> 🎤️ Got feedback? [Open an issue](https://github.com/CarlosNZ/json-edit-react/issues), or join the conversation in [Discussions](https://github.com/CarlosNZ/json-edit-react/discussions/categories/announcements).
 
 ## Optional Companion Packages  <!-- omit in toc -->
 

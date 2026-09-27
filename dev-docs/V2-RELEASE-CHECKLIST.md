@@ -47,19 +47,21 @@ Temporary working doc for the V2.0 cutover. Delete it once the release is done a
 
 ## Phase 1 — Give V1 its own home (`v1.x` branch)
 
-- [ ] `git checkout v1.x`
-- [ ] **Stop V1 publishes from clobbering `latest`.** In `package.json`, change `"release": "yarn publish"` → `"release": "yarn publish --tag v1"`, and add `"publishConfig": { "tag": "v1" }` as a belt-and-braces guard. Without this, any future `1.30.x` patch would move `latest` back to V1.
-- [ ] **V1 README banner.** Replace the "📣️ ANNOUNCEMENT … now available in beta" block with a notice that says you're reading the V1 docs, V2 is current, and links to the V2 README (`blob/main/README.md`), the [migration guide](https://github.com/CarlosNZ/json-edit-react/blob/main/migration-guide.md), and the V1 demo. Drop the `@beta` install lines.
-- [ ] **V1 demo → `json-edit-react-v1`**:
-  - [ ] `demo/vite.config.ts`: `base: 'https://carlosnz.github.io/json-edit-react/'` → `base: '/json-edit-react-v1/'`
-  - [ ] `demo/package.json`: `"homepage"` → `https://carlosnz.github.io/json-edit-react-v1`; `"deploy"` → `gh-pages -d build --repo https://github.com/CarlosNZ/json-edit-react-v1.git`
-  - [ ] `demo/index.html`: add `<meta name="robots" content="noindex">` so the V1 demo doesn't compete with the main site in search. Leave the `og:*` URLs pointing at the primary site.
-  - [ ] `demo/src/Banner.tsx`: rewrite as "You're viewing the **V1** demo. V2 is out → [V2 demo](https://carlosnz.github.io/json-edit-react/) · [migration guide](…)". Change `DISMISS_KEY` so nobody's earlier dismissal hides it.
-- [ ] Commit, then `git push origin v1.x`
-- [ ] Create the empty public repo: `gh repo create CarlosNZ/json-edit-react-v1 --public --description "V1 demo for json-edit-react (current version: carlosnz.github.io/json-edit-react)"`
-- [ ] `cd demo && yarn install && yarn deploy`
-- [ ] In the new repo's **Settings → Pages**, set Source to the `gh-pages` branch if it isn't picked up automatically. Check that https://carlosnz.github.io/json-edit-react-v1/ loads, that `?data=starWars` works, and that the banner shows.
-- [ ] `git checkout main`
+The edits are prepared, uncommitted, in a **separate worktree at `../json-edit-react-v1.x`** (branch `v1.x`), so your main checkout never has to switch branches. Its root, `custom-component-library/` and `demo/` deps are installed, and the demo builds with the new base: every asset is under `/json-edit-react-v1/`, `noindex` is present, and it uses `json-edit-react@1.30.2` from npm. It also renders with the new banner, with no page errors.
+
+- [x] **Stop V1 publishes from clobbering `latest`.** In `package.json`, `"release": "yarn publish --tag v1"`, plus `"publishConfig": { "tag": "v1" }` as a belt-and-braces guard.
+- [x] **V1 README notice** (inside the `NPM INTRO` block, so it also reaches any future 1.x npm page): "You're reading the V1 docs", with links to the V2 docs, V2 demo, migration guide and V1 demo, plus a `json-edit-react@v1` install hint. The `@beta` install lines are gone.
+- [x] **V1 demo → `json-edit-react-v1`**:
+  - [x] `demo/vite.config.ts`: `base: '/json-edit-react-v1/'`
+  - [x] `demo/package.json`: `homepage` → `…/json-edit-react-v1`; `deploy` → `gh-pages -d build --repo https://github.com/CarlosNZ/json-edit-react-v1.git`
+  - [x] `demo/index.html`: `<meta name="robots" content="noindex">`. The `og:*` URLs still point at the primary site.
+  - [x] `demo/src/Banner.tsx`: "You're viewing the demo for **V1**. **Version 2** is now the current release — try the V2 demo, or read the migration guide". New `DISMISS_KEY` (`v1DemoBannerDismissedAt`).
+  - [x] **Doc links repointed at `v1.x`** (21 links in `App.tsx` + `demoData/dataDefinitions.tsx`). The `#readme` / `#custom-nodes` style anchors would otherwise land on the V2 README, and the `blob/main/custom-component-library/…` and `blob/main/demo/src/demoData/…` files don't exist on `main`. The one `#filter-functions` link now points at `#restrictedit-restrictdelete--restrictadd`, because the V1 README has no Filter Functions heading. The V1 README's *own* `#filter-functions` links are broken in the same way; that's pre-existing, left alone.
+- [x] Review the diff in `../json-edit-react-v1.x`, then commit and `git push origin v1.x`
+- [x] Create the empty public repo: `gh repo create CarlosNZ/json-edit-react-v1 --public --description "V1 demo for json-edit-react (current version: carlosnz.github.io/json-edit-react)"`
+- [x] `cd ../json-edit-react-v1.x/demo && yarn deploy` (builds first via `predeploy`)
+- [x] In the new repo's **Settings → Pages**, set Source to the `gh-pages` branch if it isn't picked up automatically. Check that https://carlosnz.github.io/json-edit-react-v1/ loads, that `?data=starWars` works, and that the banner shows.
+- [x] Afterwards: `git worktree remove ../json-edit-react-v1.x`, or keep it for future V1 patches.
 
 ## Phase 2 — Docs cutover (on `main`, all committed before bumping)
 
@@ -168,7 +170,7 @@ Temporary working doc for the V2.0 cutover. Delete it once the release is done a
   - [ ] Close #189 ("Are you sure" before delete). V2's async `onUpdate` + `useConfirmOnUpdate` in `@json-edit-react/utils` is exactly this; comment with a link to the Modal confirmation example.
   - [ ] Close #117 ("Support promises for callbacks like onDelete"). `onUpdate` is async-aware in V2.
   - [ ] #268: split the remaining roving-tabindex / keyboard-entry work into its own post-v2 issue, then close #268.
-- [ ] Post a **Discussion announcement** (and reply in #198 "Planning for V2", which the README links as the feedback thread). Pin it.
+- [ ] Post a **Discussion announcement** in the **Announcements** category. The README notice (and so the npm page) links to that category, so the V2 thread needs to be its newest post. Pin it, and reply in #198 ("Planning for V2") pointing to it.
 - [ ] DeepWiki: trigger a re-index so it describes V2, not V1.
 
 ## Phase 7 — Post-release cleanup (not tonight)
