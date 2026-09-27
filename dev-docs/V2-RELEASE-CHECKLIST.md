@@ -4,17 +4,17 @@ Temporary working doc for the V2.0 cutover. Delete it once the release is done a
 
 **Target end state**
 
-| | Before | After |
-| --- | --- | --- |
-| `npm i json-edit-react` | `1.30.2` | `2.0.0` |
-| `json-edit-react@beta` | `2.0.0-beta.10` | `2.0.0` (re-pointed) |
-| `json-edit-react@v1` | — | `1.30.2` (new dist-tag) |
-| `@json-edit-react/{utils,themes,components}` | `0.9.0-beta.x` | `1.0.0` |
-| Repo `README.md` | V1 docs + beta banner | V2 docs (from `README_V2.md`) |
-| V1 docs | `README.md` on `main` | `README.md` on the `v1.x` branch |
-| `carlosnz.github.io/json-edit-react/` | V1 demo + "V2 in beta" banner | V2 demo |
-| `carlosnz.github.io/json-edit-react-v1/` | — | V1 demo (new repo `CarlosNZ/json-edit-react-v1`) |
-| `carlosnz.github.io/json-edit-react-v2/` | V2 preview demo | Redirect shim → `/json-edit-react/` (same path + query) |
+|                                              | Before                        | After                                                   |
+| -------------------------------------------- | ----------------------------- | ------------------------------------------------------- |
+| `npm i json-edit-react`                      | `1.30.2`                      | `2.0.0`                                                 |
+| `json-edit-react@beta`                       | `2.0.0-beta.10`               | `2.0.0` (re-pointed)                                    |
+| `json-edit-react@v1-latest`                  | —                             | `1.30.2` (dist-tag; `@v1` also works, as a range)       |
+| `@json-edit-react/{utils,themes,components}` | `0.9.0-beta.x`                | `1.0.0`                                                 |
+| Repo `README.md`                             | V1 docs + beta banner         | V2 docs (from `README_V2.md`)                           |
+| V1 docs                                      | `README.md` on `main`         | `README.md` on the `v1.x` branch                        |
+| `carlosnz.github.io/json-edit-react/`        | V1 demo + "V2 in beta" banner | V2 demo                                                 |
+| `carlosnz.github.io/json-edit-react-v1/`     | —                             | V1 demo (new repo `CarlosNZ/json-edit-react-v1`)        |
+| `carlosnz.github.io/json-edit-react-v2/`     | V2 preview demo               | Redirect shim → `/json-edit-react/` (same path + query) |
 
 **Why this order.** The npm READMEs are frozen at publish time, so the docs changes land *before* any publish. Core publishes *before* the sub-packages this time, the opposite of the "ship everything together" playbook. The sub-packages' `1.0.0` will freeze a `^2.0.0` peer range, and if they went first there'd be a window where `npm i @json-edit-react/themes` can't resolve a core that satisfies it. Going the other way, core `2.0.0` still satisfies the old sub-package betas (`^2.0.0-beta.x` includes `2.0.0`), so there's no broken window. The V1 demo goes up first so the V2 banner's "looking for V1?" link is never dead.
 
@@ -49,7 +49,7 @@ Temporary working doc for the V2.0 cutover. Delete it once the release is done a
 
 The edits are prepared, uncommitted, in a **separate worktree at `../json-edit-react-v1.x`** (branch `v1.x`), so your main checkout never has to switch branches. Its root, `custom-component-library/` and `demo/` deps are installed, and the demo builds with the new base: every asset is under `/json-edit-react-v1/`, `noindex` is present, and it uses `json-edit-react@1.30.2` from npm. It also renders with the new banner, with no page errors.
 
-- [x] **Stop V1 publishes from clobbering `latest`.** In `package.json`, `"release": "yarn publish --tag v1"`, plus `"publishConfig": { "tag": "v1" }` as a belt-and-braces guard.
+- [x] **Stop V1 publishes from clobbering `latest`.** In `package.json`, `"release": "yarn publish --tag v1"`, plus `"publishConfig": { "tag": "v1" }` as a belt-and-braces guard. **Fix needed:** npm rejects `v1` as a dist-tag because it's a valid semver range, so change both to `v1-latest` on `v1.x`.
 - [x] **V1 README notice** (inside the `NPM INTRO` block, so it also reaches any future 1.x npm page): "You're reading the V1 docs", with links to the V2 docs, V2 demo, migration guide and V1 demo, plus a `json-edit-react@v1` install hint. The `@beta` install lines are gone.
 - [x] **V1 demo → `json-edit-react-v1`**:
   - [x] `demo/vite.config.ts`: `base: '/json-edit-react-v1/'`
@@ -111,27 +111,36 @@ The edits are prepared, uncommitted, in a **separate worktree at `../json-edit-r
 
 ## Phase 3 — Bump + dress rehearsal
 
-- [ ] `npm version 2.0.0`: bumps core first (Rule 2), then commits and tags `v2.0.0`.
-- [ ] Bump the three sub-packages. Each makes its own commit and scoped tag:
+- [x] `npm version 2.0.0`: bumps core first (Rule 2), then commits and tags `v2.0.0`.
+- [x] Bump the three sub-packages. Each makes its own commit and scoped tag:
   ```sh
   (cd packages/utils      && npm version 1.0.0 --tag-version-prefix=@json-edit-react/utils@)
   (cd packages/themes     && npm version 1.0.0 --tag-version-prefix=@json-edit-react/themes@)
   (cd packages/components && npm version 1.0.0 --tag-version-prefix=@json-edit-react/components@)
   ```
-- [ ] `pnpm pack-all`, then check each `pack-output/<name>/package/package.json`:
-  - [ ] the peer dep reads `"json-edit-react": "^2.0.0"`, not `^2.0.0-beta.10`
-  - [ ] the READMEs are in npm form (bold-label blockquotes, not `[!NOTE]`) and link to `/json-edit-react/`, not `-v2`
-- [ ] `pnpm preview-publish` (core): check the staged `build_package/README.md` intro, the FULL DOCUMENTATION link, and `tar -tzf json-edit-react-2.0.0.tgz` for a clean file list.
-- [ ] `pnpm demo:pack`: click through a handful of main-app data sets and `/examples/*` pages in Chrome, and do one drag-and-drop pass in Firefox (manual, per the DnD guard notes).
+- [x] `pnpm pack-all`, then check the READMEs in each `pack-output/<name>/package/`:
+  - [ ] npm form (bold-label blockquotes, not `[!NOTE]`), linking to `/json-edit-react/`, not `-v2`
+  - [ ] **Don't check peer deps there.** `pack-all` strips `peerDependencies` and `devDependencies` from the extracted copies so it can `npm install` runtime deps for the demo.
+- [X] Check the **real** peer ranges from each sub-package's tarball. Each should read `"json-edit-react": "^2.0.0"` (not `workspace:^` or `^2.0.0-beta.10`):
+  ```sh
+  for p in utils themes components; do
+    (cd packages/$p && pnpm preview-publish > /dev/null \
+      && tar -xzOf json-edit-react-$p-1.0.0.tgz package/package.json \
+         | grep -A3 '"peerDependencies"' \
+      && rm json-edit-react-$p-1.0.0.tgz)
+  done
+  ```
+- [x] `pnpm preview-publish` (core): check the staged `build_package/README.md` intro, the FULL DOCUMENTATION link, and `tar -tzf json-edit-react-2.0.0.tgz` for a clean file list.
+- [x] `pnpm demo:pack`: click through a handful of main-app data sets and `/examples/*` pages in Chrome, and do one drag-and-drop pass in Firefox (manual, per the DnD guard notes).
 
 ## Phase 4 — Publish
 
-- [ ] `pnpm pub:core:latest`: moves `latest` to `2.0.0`.
-- [ ] `npm dist-tag add json-edit-react@2.0.0 beta`: re-points `@beta` so anyone following old install instructions gets the stable release rather than `beta.10`.
-- [ ] `npm dist-tag add json-edit-react@1.30.2 v1`: gives V1 users a stable handle (`npm i json-edit-react@v1`).
+- [x] `pnpm pub:core:latest`: moves `latest` to `2.0.0`.
+- [x] `npm dist-tag add json-edit-react@2.0.0 beta`: re-points `@beta` so anyone following old install instructions gets the stable release rather than `beta.10`.
+- [x] Optional: `npm dist-tag add json-edit-react@1.30.2 v1-latest`. npm rejects `v1` as a tag name (it's a semver range), but `npm i json-edit-react@v1` already resolves to `1.30.2` as a range, so this tag only matters as the target for future V1 patches, which create it anyway.
 - [ ] `pnpm pub:utils && pnpm pub:themes && pnpm pub:components`
 - [ ] `git push --follow-tags`: pushes `main` plus all four tags.
-- [ ] `pnpm run versions`, then `npm dist-tag ls json-edit-react`, which should show `latest: 2.0.0, beta: 2.0.0, v1: 1.30.2`.
+- [ ] `pnpm run versions`, then `npm dist-tag ls json-edit-react`, which should show `latest: 2.0.0, beta: 2.0.0` (plus `v1-latest: 1.30.2` if you added it).
 - [ ] Co-install smoke test (catches peer-range mistakes):
   ```sh
   cd "$(mktemp -d)" && npm init -y >/dev/null
@@ -175,7 +184,7 @@ The edits are prepared, uncommitted, in a **separate worktree at `../json-edit-r
 
 ## Phase 7 — Post-release cleanup (not tonight)
 
-- [ ] `CLAUDE.md` + `dev-docs/package-management-guide.md` + `dev-docs/publishing-cheat-sheet.md`: rewrite the dist-tag rules for the new steady state. Core stable releases now go to `latest`, the "`latest` must stay `1.30.2`" rule is gone, `pub:core:beta` is for future prereleases only, and V1 patches ship from `v1.x` with `--tag v1`. Delete the "V2 release plan" / "Graduate to stable" sections.
+- [ ] `CLAUDE.md` + `dev-docs/package-management-guide.md` + `dev-docs/publishing-cheat-sheet.md`: rewrite the dist-tag rules for the new steady state. Core stable releases now go to `latest`, the "`latest` must stay `1.30.2`" rule is gone, `pub:core:beta` is for future prereleases only, and V1 patches ship from `v1.x` with `--tag v1-latest`. Delete the "V2 release plan" / "Graduate to stable" sections.
 - [ ] Remove `V2-roadmap.md` (or archive it) and this checklist.
 - [ ] `To-do.md`: components + utils docs polish (example links, back-to-top links, utils TOC).
 - [ ] #408 follow-ups, notably `react-datepicker` 7 → 9 in `@json-edit-react/components` (a runtime dep, so it reaches consumers).
