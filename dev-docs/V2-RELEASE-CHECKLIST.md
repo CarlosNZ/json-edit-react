@@ -36,7 +36,7 @@ Temporary working doc for the V2.0 cutover. Delete it once the release is done a
   - [x] `packages/components/package.json`: `"react-datepicker": "^9.1.0"`, then `pnpm install`. The saved diff is in the session scratchpad as `react-datepicker-9.patch`, but it's a one-line change plus the lockfile.
   - [x] `demo/package.json`: `"react-datepicker": "^9.1.0"`, then `cd demo && yarn install`. The demo's own copy is what `pack` / `build` modes resolve, so bump it too or those modes keep testing 7.
   - [x] `packages/components/CHANGELOG.md`: add a line under 1.0.0. Consumers passing date-fns `locale` objects via `datePickerProps` need date-fns v4 locales (react-datepicker 8 moved to date-fns 4).
-- [ ] **`/widgets` entry shape** (#404). The entry has a module-level `import 'react-datepicker/dist/react-datepicker.css'`, so `ReactSelect` / `CodeEditor` users pay for it, and a Node/SSR/Jest consumer without a CSS mapper crashes importing `/widgets`. Splitting into per-widget subpaths while keeping `/widgets` as a barrel is additive, so this doesn't block 1.0. It only matters if you'd rather *drop* `/widgets`.
+- [x] **`/widgets` entry shape** (#404). **Decided: ship 1.0 with `/widgets` unchanged (option A).** It costs ~3.3 kB gzip of unused react-datepicker CSS for `/widgets` users who don't use the date picker. The follow-up is non-breaking, so it can be a 1.x minor: try fixing it inside `ReactDatePicker` first (option D), and fall back to per-widget subpaths alongside the barrel (option C). Triage is in [this #404 comment](https://github.com/CarlosNZ/json-edit-react/issues/404#issuecomment-5854450862).
 
 **Cosmetic, fine to leave for later**
 
@@ -177,5 +177,5 @@ Temporary working doc for the V2.0 cutover. Delete it once the release is done a
 - [ ] Remove `V2-roadmap.md` (or archive it) and this checklist.
 - [ ] `To-do.md`: components + utils docs polish (example links, back-to-top links, utils TOC).
 - [ ] #408 follow-ups, notably `react-datepicker` 7 → 9 in `@json-edit-react/components` (a runtime dep, so it reaches consumers).
-- [ ] Decide #404 (per-widget subpaths). Adding subpaths while keeping `/widgets` as a barrel is non-breaking, so it can be a 1.x minor.
+- [ ] #404 follow-up: try option D (lazy-load the library CSS in `ReactDatePicker`), falling back to C (per-widget subpaths alongside `/widgets`). Both can ship as a 1.x minor.
 - [ ] Prune the stale local `claude/*` branches.
