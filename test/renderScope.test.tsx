@@ -158,8 +158,7 @@ describe('Stage B — lazy jsonStringify', () => {
     expect(onError).toHaveBeenCalledTimes(1)
     const [{ error, errorValue }] = onError.mock.calls[0]
     expect(error.code).toBe('INVALID_JSON')
-    // The payload is the exact text that failed to parse — resolved once and
-    // shared with the parse attempt, never the raw (possibly null) buffer.
+    // The payload is the exact text that failed to parse, as typed.
     expect(errorValue).toBe(badJson)
   })
 

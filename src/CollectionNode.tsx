@@ -269,19 +269,20 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // moment; a parse failure returns first, so it never runs and the switch is
   // blocked.
   const handleEdit = (onCommit?: unknown) => {
-    // Parse exactly the text shown: `editBufferValue` reuses the string the
-    // memo already serialised, so the parsed input and the INVALID_JSON payload
-    // both match the textarea. The `?? jsonStringify(data)` is a type guard.
-    const textToParse = editBufferValue ?? jsonStringify(data)
-    let value: CollectionData
-    try {
-      value = jsonParse(textToParse) as CollectionData
-    } catch {
-      onError(
-        { code: 'INVALID_JSON', message: translate('ERROR_INVALID_JSON', nodeData) },
-        textToParse
-      )
-      return
+    // An untouched buffer commits `data` itself, which the engine sees as
+    // unchanged and closes as a no-op. Parsing its serialisation would build a
+    // new object, which counts as a real edit.
+    let value: CollectionData = data
+    if (stringifiedValue !== null) {
+      try {
+        value = jsonParse(stringifiedValue) as CollectionData
+      } catch {
+        onError(
+          { code: 'INVALID_JSON', message: translate('ERROR_INVALID_JSON', nodeData) },
+          stringifiedValue
+        )
+        return
+      }
     }
     setError(null)
     // `onCommit` is a real callback only from commit-on-displace or Tab. The
