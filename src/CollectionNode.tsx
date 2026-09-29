@@ -22,7 +22,7 @@ import {
   useReferenceChanged,
   useNodeVisible,
 } from './contexts'
-import { isDescendantOf } from './utils/pathTools'
+import { isDescendantOf, pathsEqual } from './utils/pathTools'
 import { areNodePropsEqual } from './utils/memoNode'
 import { useCollapseTransition, useCommon, useDragNDrop } from './hooks'
 
@@ -30,7 +30,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const { getStyles } = useTheme()
   // Actions and imperative reads from the stable store, with no subscription,
   // so editing transitions elsewhere don't re-render this node.
-  const { open, cancel, submit, areChildrenBeingEdited } = useEditingStore()
+  const { open, cancel, submit, areChildrenBeingEdited, getSnapshot } = useEditingStore()
   const { setCollapseState } = useCollapse()
   const {
     mainContainerRef,
@@ -302,6 +302,14 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       },
     }).then((outcome) => {
       if (outcome?.status === 'error') onError(outcome.error, value as CollectionData)
+      // A rejected or cancelled commit leaves `data` unchanged, so drop the
+      // typed JSON, as a value node reverts its buffer. Skipped once the user
+      // has reopened this node, so a late settlement can't clobber a new edit.
+      if (outcome?.status === 'error' || outcome?.status === 'cancel') {
+        const active = getSnapshot().active
+        const reopened = active?.phase === 'editing' && pathsEqual(active.path, path)
+        if (!reopened) clearEditBuffer()
+      }
     })
   }
 

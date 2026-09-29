@@ -433,6 +433,46 @@ describe('CustomNode — collection composes the raw-JSON editor via originalNod
     expect(setData).not.toHaveBeenCalled()
   })
 
+  test('a rejected JSON commit is not re-submitted when a later own-mode session is displaced', async () => {
+    // Its own mode (the child rows) or "edit as JSON", chosen per session.
+    const TwoMode = ({ children, isEditing, setIsEditing, originalNode }: CustomComponentProps) => {
+      const [json, setJson] = useState(false)
+      const openIn = (mode: boolean) => () => {
+        setJson(mode)
+        setIsEditing(true)
+      }
+      return (
+        <div>
+          <span data-testid="open-own" onDoubleClick={openIn(false)} />
+          <span data-testid="open-json" onDoubleClick={openIn(true)} />
+          {isEditing && json ? originalNode : children}
+        </div>
+      )
+    }
+    const user = userEvent.setup()
+    const onUpdate = jest.fn(() => ({ error: 'Rejected' }))
+    const { container } = render(
+      <JsonEditor
+        data={{ group: { a: 'alpha' }, other: 'plain' }}
+        setData={noop}
+        onUpdate={onUpdate}
+        customNodeDefinitions={[jsonDef({ component: TwoMode })]}
+      />
+    )
+    await user.dblClick(screen.getByTestId('open-json'))
+    fireEvent.change(textArea(container)!, { target: { value: '{ "a": "rejected" }' } })
+    await user.click(screen.getByRole('button', { name: 'OK' }))
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+
+    await user.dblClick(screen.getByTestId('open-own'))
+    await user.dblClick(screen.getByText('"plain"'))
+
+    expect(onUpdate).toHaveBeenCalledTimes(1)
+    const inputs = screen.getAllByRole('textbox')
+    expect(inputs).toHaveLength(1)
+    expect((inputs[0] as HTMLTextAreaElement).value).toBe('plain')
+  })
+
   describe("Tab in the component's own textarea (wired to `onKeyDown`)", () => {
     // A component with its own textarea, wired to the `onKeyDown` it receives,
     // optionally mounting `originalNode` beside it.
