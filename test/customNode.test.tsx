@@ -272,6 +272,161 @@ describe('CustomNode — collection editor keeps live children (#384)', () => {
   })
 })
 
+describe('CustomNode — collection composes the raw-JSON editor via originalNode (#411)', () => {
+  // A collection component offering "edit as JSON": in its edit session it
+  // renders `originalNode` (the built-in raw-JSON editor) in place of the rows.
+  const JsonCapable = ({
+    children,
+    isEditing,
+    setIsEditing,
+    originalNode,
+  }: CustomComponentProps) => (
+    <div>
+      <span data-testid="open" onDoubleClick={() => setIsEditing(true)}>
+        {isEditing ? 'EDITING' : 'VIEW'}
+      </span>
+      {isEditing && originalNode ? originalNode : children}
+    </div>
+  )
+
+  const jsonDef = (overrides: Partial<CustomNodeDefinition> = {}): CustomNodeDefinition => ({
+    condition: ({ key }) => key === 'group',
+    component: JsonCapable,
+    showOnEdit: true,
+    passOriginalNode: true,
+    ...overrides,
+  })
+
+  const textArea = (container: HTMLElement) =>
+    container.querySelector('.jer-collection-text-area') as HTMLTextAreaElement | null
+
+  test('renders the JSON editor while editing, and ✓ commits the parsed text', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor
+        data={{ group: { a: 'alpha' } }}
+        setData={setData}
+        customNodeDefinitions={[jsonDef()]}
+      />
+    )
+    expect(textArea(container)).toBeNull()
+
+    await user.dblClick(screen.getByTestId('open'))
+    const input = textArea(container)
+    expect(input).not.toBeNull()
+    expect(JSON.parse(input!.value)).toEqual({ a: 'alpha' })
+
+    fireEvent.change(input!, { target: { value: '{ "a": "changed" }' } })
+    await user.click(screen.getByRole('button', { name: 'OK' }))
+
+    await waitFor(() => expect(setData).toHaveBeenCalledWith({ group: { a: 'changed' } }))
+  })
+
+  test('opening another node commits the typed JSON (commit on displace)', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor
+        data={{ group: { a: 'alpha' }, other: 'plain' }}
+        setData={setData}
+        customNodeDefinitions={[jsonDef()]}
+      />
+    )
+    await user.dblClick(screen.getByTestId('open'))
+    fireEvent.change(textArea(container)!, { target: { value: '{ "a": "typed" }' } })
+
+    await user.dblClick(screen.getByText('"plain"'))
+
+    await waitFor(() =>
+      expect(setData).toHaveBeenCalledWith({ group: { a: 'typed' }, other: 'plain' })
+    )
+  })
+
+  test('invalid JSON reports INVALID_JSON and keeps the editor open', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onError = jest.fn()
+    const { container } = render(
+      <JsonEditor
+        data={{ group: { a: 'alpha' } }}
+        setData={setData}
+        onError={onError}
+        customNodeDefinitions={[jsonDef()]}
+      />
+    )
+    await user.dblClick(screen.getByTestId('open'))
+    fireEvent.change(textArea(container)!, { target: { value: '{ not valid json' } })
+    await user.click(screen.getByRole('button', { name: 'OK' }))
+
+    expect(onError).toHaveBeenCalledTimes(1)
+    expect(onError.mock.calls[0][0].error.code).toBe('INVALID_JSON')
+    expect(setData).not.toHaveBeenCalled()
+    expect(textArea(container)).not.toBeNull()
+  })
+
+  test('Tab inside the composed editor inserts a literal tab', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <JsonEditor
+        data={{ group: { a: 'alpha' } }}
+        setData={noop}
+        customNodeDefinitions={[jsonDef()]}
+      />
+    )
+    await user.dblClick(screen.getByTestId('open'))
+    const input = textArea(container)!
+    const before = input.value
+    input.setSelectionRange(0, 0)
+
+    fireEvent.keyDown(input, { key: 'Tab' })
+
+    expect(textArea(container)!.value).toBe(`\t${before}`)
+  })
+
+  test('a host TextEditor replaces the textarea inside the composed editor', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor
+        data={{ group: { a: 'alpha' } }}
+        setData={setData}
+        customNodeDefinitions={[jsonDef()]}
+        TextEditor={({ value, onChange, onKeyDown }) => (
+          <input
+            data-testid="host-editor"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={onKeyDown}
+          />
+        )}
+      />
+    )
+    await user.dblClick(screen.getByTestId('open'))
+    expect(textArea(container)).toBeNull()
+
+    fireEvent.change(screen.getByTestId('host-editor'), { target: { value: '{ "a": 1 }' } })
+    await user.click(screen.getByRole('button', { name: 'OK' }))
+
+    await waitFor(() => expect(setData).toHaveBeenCalledWith({ group: { a: 1 } }))
+  })
+
+  test('without passOriginalNode, originalNode is not passed while editing', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <JsonEditor
+        data={{ group: { a: 'alpha' } }}
+        setData={noop}
+        customNodeDefinitions={[jsonDef({ passOriginalNode: false })]}
+      />
+    )
+    await user.dblClick(screen.getByTestId('open'))
+    expect(screen.getByText('EDITING')).toBeInTheDocument()
+    expect(screen.getByText('"alpha"')).toBeInTheDocument()
+    expect(textArea(container)).toBeNull()
+  })
+})
+
 describe('CustomNode — chrome flags', () => {
   test('showKey default true → the key is rendered alongside the custom component', () => {
     render(

@@ -188,6 +188,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     showOnEdit,
     showOnView,
     showCollectionWrapper = true,
+    passOriginalNode,
   } = customNodeData
 
   // "Is an edit happening anywhere in my subtree", as a boolean, so this node
@@ -382,11 +383,53 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   // A custom component with `showOnEdit` owns this node's editor, so it
   // receives the live child rows as `children` in edit mode as well as view
-  // mode, never the built-in JSON textarea. The textarea renders only for
-  // standard collection editing, and its `editBufferValue`/`handleEdit`
-  // plumbing goes unused for these nodes.
+  // mode, not the built-in JSON textarea in their place. With
+  // `passOriginalNode` it also receives that editor as `originalNode`, bound to
+  // this node's edit buffer and `handleEdit`, to render as it chooses.
   const customOwnsEdit = !!CustomComponent && showOnEdit
   const showChildRows = !isEditing || customOwnsEdit
+
+  // The built-in raw-JSON editor. A getter, so it's only built where it
+  // renders: in place of the child rows for standard editing, or as a
+  // `passOriginalNode` custom component's `originalNode`.
+  const getTextEdit = () => (
+    // The -custom variant keeps a custom TextEditor full width, rather than
+    // fitting content like the default textarea
+    <div className={`jer-collection-text-edit${TextEditor ? '-custom' : ''}`}>
+      {TextEditor ? (
+        <TextEditor
+          value={editBufferValue ?? ''}
+          onChange={setStringifiedValue}
+          onKeyDown={(e) =>
+            handleKeyboard(e, {
+              objectConfirm: handleEdit,
+              cancel: handleCancel,
+            })
+          }
+        />
+      ) : (
+        <AutogrowTextArea
+          textAreaRef={textAreaRef}
+          className="jer-collection-text-area"
+          name={pathString}
+          value={editBufferValue ?? ''}
+          setValue={setEditBuffer}
+          onKeyDown={onKeyDownEdit}
+          styles={getStyles('input', nodeData)}
+        />
+      )}
+      <div className="jer-collection-input-button-row">
+        <InputButtons
+          onOk={handleEdit}
+          onCancel={handleCancel}
+          nodeData={nodeData}
+          translate={translate}
+          showIconTooltips={showIconTooltips}
+          editConfirmRef={editConfirmRef}
+        />
+      </div>
+    </div>
+  )
 
   const CollectionChildren = !hasBeenOpened.current ? null : showChildRows ? (
     keyValueArray.map(([key, value], index) => {
@@ -437,42 +480,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       )
     })
   ) : (
-    // The -custom variant keeps a custom TextEditor full width, rather than
-    // fitting content like the default textarea
-    <div className={`jer-collection-text-edit${TextEditor ? '-custom' : ''}`}>
-      {TextEditor ? (
-        <TextEditor
-          value={editBufferValue ?? ''}
-          onChange={setStringifiedValue}
-          onKeyDown={(e) =>
-            handleKeyboard(e, {
-              objectConfirm: handleEdit,
-              cancel: handleCancel,
-            })
-          }
-        />
-      ) : (
-        <AutogrowTextArea
-          textAreaRef={textAreaRef}
-          className="jer-collection-text-area"
-          name={pathString}
-          value={editBufferValue ?? ''}
-          setValue={setEditBuffer}
-          onKeyDown={onKeyDownEdit}
-          styles={getStyles('input', nodeData)}
-        />
-      )}
-      <div className="jer-collection-input-button-row">
-        <InputButtons
-          onOk={handleEdit}
-          onCancel={handleCancel}
-          nodeData={nodeData}
-          translate={translate}
-          showIconTooltips={showIconTooltips}
-          editConfirmRef={editConfirmRef}
-        />
-      </div>
-    </div>
+    <>{getTextEdit()}</>
   )
 
   // With the collection wrapper (expand icon, brackets, etc.) hidden there's no
@@ -523,7 +531,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   })
 
   const CollectionContents = showCustomNodeContents ? (
-    <CustomComponent componentProps={componentProps} {...getCustomNodeAllProps()}>
+    <CustomComponent
+      componentProps={componentProps}
+      {...getCustomNodeAllProps()}
+      originalNode={passOriginalNode && isEditing ? getTextEdit() : undefined}
+    >
       {CollectionChildren}
     </CustomComponent>
   ) : (

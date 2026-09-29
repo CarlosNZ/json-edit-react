@@ -42,8 +42,9 @@ export interface RenderSpy {
 
 /**
  * Build sentinel definitions for a set of labelled target paths. The sentinel
- * renders `originalNode` (value nodes) or `children` (collection nodes), so
- * the editor behaves identically — only a counter is added.
+ * renders `originalNode` (value nodes, or a collection's JSON editor while
+ * editing) or `children` (collection nodes), so the editor behaves identically
+ * — only a counter is added.
  */
 export const makeRenderSpy = (targets: Record<string, CollectionKey[]>): RenderSpy => {
   const counts: Record<string, number> = {}

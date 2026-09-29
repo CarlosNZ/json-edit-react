@@ -26,6 +26,13 @@ import { useEditorDefaults } from '@example-resources'
 // session. `showCollectionWrapper: false` drops the array's
 // brackets/chevron so the header stands in for them.
 //
+// "Edit as JSON" is the fallback editor. `passOriginalNode:
+// true` hands the component the built-in raw-JSON editor as
+// `originalNode` while editing, bound to the node's own edit
+// session: parsing, errors, keyboard and commit-on-displace all
+// work as usual. The component picks the mode before opening its
+// session, then renders `originalNode` in place of the rows.
+//
 // Editing is constrained with the filter-function toolkit
 // (`@json-edit-react/utils/filters`): `byPath('tracks.*')` matches
 // whole track items (not their fields, the playlist title, or the
@@ -84,7 +91,9 @@ const TrackList = ({
   handleCancel,
   getStyles,
   nodeData,
+  originalNode,
 }: CustomComponentProps) => {
+  const [jsonMode, setJsonMode] = useState(false)
   const tracks = (value ?? []) as unknown as Track[]
   const accent = getStyles('number', nodeData).color ?? '#268bd2'
   const total = formatDuration(
@@ -136,7 +145,7 @@ const TrackList = ({
         <span style={{ fontFamily: 'sans-serif', fontWeight: 700, color: accent }}>
           🎵 {tracks.length} tracks · {total}
         </span>
-        {isEditing ? (
+        {isEditing && jsonMode ? null : isEditing ? (
           <div style={{ display: 'flex', gap: '0.4em' }}>
             <button style={button} onClick={() => reorder(shuffle(tracks))}>
               Shuffle
@@ -159,13 +168,28 @@ const TrackList = ({
             <button style={button} onClick={addTrack}>
               + Add track
             </button>
-            <button style={button} onClick={() => setIsEditing(true)}>
+            <button
+              style={button}
+              onClick={() => {
+                setJsonMode(false)
+                setIsEditing(true)
+              }}
+            >
               Reorder…
+            </button>
+            <button
+              style={button}
+              onClick={() => {
+                setJsonMode(true)
+                setIsEditing(true)
+              }}
+            >
+              Edit as JSON
             </button>
           </div>
         )}
       </div>
-      {children}
+      {isEditing && jsonMode ? originalNode : children}
     </div>
   )
 }
@@ -183,6 +207,7 @@ const customNodeDefinitions: CustomNodeDefinition[] = [
     showOnView: true,
     showOnEdit: true, // the node owns its editor (header + live rows)
     showCollectionWrapper: false, // drop the array's brackets/chevron
+    passOriginalNode: true, // pass the JSON editor as `originalNode`
   },
 ]
 

@@ -1038,7 +1038,8 @@ Custom nodes are provided in the `customNodeDefinitions` prop, as an array of ob
   editOnTypeSwitch      // boolean (optional), default false -- switching to this type opens
                         // it for editing instead of committing defaultValue instantly
   passOriginalNode      // boolean (optional), default false -- if `true`, makes the original
-                        // node available for rendering within the custom node
+                        // node available for rendering within the custom node (for a
+                        // collection, its raw-JSON editor while editing)
   
   // Only affects Collection nodes:
   showCollectionWrapper // boolean (optional), default true
@@ -1168,6 +1169,7 @@ The collection-specific details:
 
 - `showCollectionWrapper: false` is the full-replacement escape hatch — no chevron, brackets, or built-in collapse, so you're responsible for completely rendering the data within.
 - With `showOnEdit: true` your `component` owns the node's editor, so it keeps receiving the live child rows as `children` _while editing_ too (the same as in view) rather than the built-in JSON textarea. It supplies its own commit affordance — `setIsEditing` to open the session, `handleEdit` / `handleCancel` to close it — and edits the collection through `setValue`. This lets a node compose an editable header or toolbar above rows that stay visible and interactive throughout the edit.
+- Add `passOriginalNode: true` and a `showOnEdit` collection component also receives the built-in raw-JSON editor as `originalNode` while editing (it's `undefined` otherwise). The editor is bound to the node's own edit session — parsing, invalid-JSON errors, keyboard controls, a custom [`TextEditor`](#replacing-the-textcode-editor--texteditor-codeeditor) and commit-on-displace all work as usual — so rendering it in place of `children` gives your component an "edit as JSON" fallback beside its own editor. Pick the mode before calling `setIsEditing`, so the session doesn't switch editors mid-way.
 
 See the different "wrapper" and "inner" component elements in use:  
 [![▶ Live example: Custom collection nodes](https://img.shields.io/badge/▶_Live_example-Custom_collection_nodes-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react/examples/custom-collection-nodes)
@@ -1175,7 +1177,7 @@ See the different "wrapper" and "inner" component elements in use:
 A "full-takeover" example:  
 [![▶ Live example: Student ID cards](https://img.shields.io/badge/▶_Live_example-Student_ID_cards-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react/examples/student-cards)
 
-A `showOnEdit` collection whose header/toolbar stays live above editable rows:  
+A `showOnEdit` collection whose header/toolbar stays live above editable rows, with an "Edit as JSON" fallback:  
 [![▶ Live example: Playlist](https://img.shields.io/badge/▶_Live_example-Playlist-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react/examples/playlist)
 
 ### Displaying a collection as a value
