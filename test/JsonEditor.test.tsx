@@ -9,6 +9,7 @@ import {
   type JsonViewerHandle,
   type EditEvent,
   type UpdateFunction,
+  type UpdateResult,
   type OnChangeFunction,
   type JsonData,
 } from '../src/types'
@@ -1550,6 +1551,54 @@ describe('JsonEditor — commit-on-displace (clicking another node while editing
     expect(setData).not.toHaveBeenCalled()
     const seq = onEditEvent.mock.calls.map(([e]) => e.event)
     expect(seq).toEqual(['startAdd', 'cancelAdd', 'startEdit'])
+  })
+})
+
+describe('JsonEditor — a rejected collection edit resets its JSON buffer', () => {
+  // Like a value node's buffer: a rejected commit leaves `data` unchanged, so
+  // the typed JSON is dropped — unless the node has since been reopened.
+  const openObj = async (user: ReturnType<typeof userEvent.setup>) => {
+    const objComponent = screen.getByText('obj').closest('.jer-component') as HTMLElement
+    await user.click(within(objComponent).getAllByRole('button', { name: 'Edit' })[0])
+  }
+  const textArea = (container: HTMLElement) =>
+    container.querySelector('textarea.jer-collection-text-area') as HTMLTextAreaElement
+
+  test('after a SYNC reject, reopening shows the current data, not the rejected text', async () => {
+    const user = userEvent.setup()
+    const { container } = render(
+      <JsonEditor
+        data={{ obj: { x: 1 } }}
+        setData={noop}
+        onUpdate={() => ({ error: 'Rejected' })}
+      />
+    )
+    await openObj(user)
+    fireEvent.change(textArea(container), { target: { value: '{ "x": 2 }' } })
+    await user.click(screen.getByRole('button', { name: 'OK' }))
+    expect(textArea(container)).toBeNull()
+
+    await openObj(user)
+    expect(JSON.parse(textArea(container).value)).toEqual({ x: 1 })
+  })
+
+  test('an ASYNC reject settling after the node is reopened keeps the new text', async () => {
+    const user = userEvent.setup()
+    const deferred = makeDeferred<UpdateResult>()
+    const { container } = render(
+      <JsonEditor data={{ obj: { x: 1 } }} setData={noop} onUpdate={() => deferred.promise} />
+    )
+    await openObj(user)
+    fireEvent.change(textArea(container), { target: { value: '{ "x": 2 }' } })
+    await user.click(screen.getByRole('button', { name: 'OK' }))
+
+    await openObj(user)
+    fireEvent.change(textArea(container), { target: { value: '{ "x": 3 }' } })
+    await act(async () => {
+      deferred.resolve({ error: 'Rejected' })
+    })
+
+    expect(textArea(container).value).toBe('{ "x": 3 }')
   })
 })
 
