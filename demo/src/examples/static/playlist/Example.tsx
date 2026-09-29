@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   JsonEditor,
   type CustomComponentProps,
@@ -31,7 +31,10 @@ import { useEditorDefaults } from '@example-resources'
 // `originalNode` while editing, bound to the node's own edit
 // session: parsing, errors, keyboard and commit-on-displace all
 // work as usual. The component picks the mode before opening its
-// session, then renders `originalNode` in place of the rows.
+// session, then renders `originalNode` in place of the rows. JER
+// can open the session without the header buttons too (its ✎
+// edit button, `editorRef.startEdit`), so the mode resets to the
+// toolbar whenever a session ends.
 //
 // Editing is constrained with the filter-function toolkit
 // (`@json-edit-react/utils/filters`): `byPath('tracks.*')` matches
@@ -94,6 +97,11 @@ const TrackList = ({
   originalNode,
 }: CustomComponentProps) => {
   const [jsonMode, setJsonMode] = useState(false)
+  // A session can open without the header buttons, so drop back
+  // to the toolbar whenever one ends.
+  useEffect(() => {
+    if (!isEditing) setJsonMode(false)
+  }, [isEditing])
   const tracks = (value ?? []) as unknown as Track[]
   const accent = getStyles('number', nodeData).color ?? '#268bd2'
   const total = formatDuration(
@@ -145,36 +153,32 @@ const TrackList = ({
         <span style={{ fontFamily: 'sans-serif', fontWeight: 700, color: accent }}>
           🎵 {tracks.length} tracks · {total}
         </span>
-        {isEditing && jsonMode ? null : isEditing ? (
-          <div style={{ display: 'flex', gap: '0.4em' }}>
-            <button style={button} onClick={() => reorder(shuffle(tracks))}>
-              Shuffle
-            </button>
-            <button
-              style={button}
-              onClick={() => reorder([...tracks].sort((a, b) => a.seconds - b.seconds))}
-            >
-              Sort by length
-            </button>
-            <button style={button} onClick={() => reorder([...tracks].reverse())}>
-              Reverse
-            </button>
-            <button style={{ ...button, fontWeight: 700 }} onClick={handleCancel}>
-              Done
-            </button>
-          </div>
+        {isEditing ? (
+          jsonMode ? null : (
+            <div style={{ display: 'flex', gap: '0.4em' }}>
+              <button style={button} onClick={() => reorder(shuffle(tracks))}>
+                Shuffle
+              </button>
+              <button
+                style={button}
+                onClick={() => reorder([...tracks].sort((a, b) => a.seconds - b.seconds))}
+              >
+                Sort by length
+              </button>
+              <button style={button} onClick={() => reorder([...tracks].reverse())}>
+                Reverse
+              </button>
+              <button style={{ ...button, fontWeight: 700 }} onClick={handleCancel}>
+                Done
+              </button>
+            </div>
+          )
         ) : (
           <div style={{ display: 'flex', gap: '0.4em' }}>
             <button style={button} onClick={addTrack}>
               + Add track
             </button>
-            <button
-              style={button}
-              onClick={() => {
-                setJsonMode(false)
-                setIsEditing(true)
-              }}
-            >
+            <button style={button} onClick={() => setIsEditing(true)}>
               Reorder…
             </button>
             <button
