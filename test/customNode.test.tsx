@@ -411,6 +411,28 @@ describe('CustomNode — collection composes the raw-JSON editor via originalNod
     await waitFor(() => expect(setData).toHaveBeenCalledWith({ group: { a: 1 } }))
   })
 
+  test("displacing the component's own (untouched) session commits nothing", async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn()
+    render(
+      <JsonEditor
+        data={{ group: { a: 'alpha' }, other: 'plain' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        customNodeDefinitions={[jsonDef({ passOriginalNode: false })]}
+      />
+    )
+    await user.dblClick(screen.getByTestId('open'))
+    expect(screen.getByText('EDITING')).toBeInTheDocument()
+
+    await user.dblClick(screen.getByText('"plain"'))
+
+    expect(screen.getByText('VIEW')).toBeInTheDocument()
+    expect(onUpdate).not.toHaveBeenCalled()
+    expect(setData).not.toHaveBeenCalled()
+  })
+
   test('without passOriginalNode, originalNode is not passed while editing', async () => {
     const user = userEvent.setup()
     const { container } = render(

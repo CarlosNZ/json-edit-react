@@ -1384,6 +1384,51 @@ describe('JsonEditor — commit-on-displace (clicking another node while editing
     expect((inputs[0] as HTMLTextAreaElement).value).toBe('two')
   })
 
+  test('displacing an UNTOUCHED collection edit commits quietly (no onUpdate/setData) and opens the new node', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn()
+    const onEditEvent = jest.fn<void, [EditEvent]>()
+    render(
+      <JsonEditor
+        data={{ obj: { x: 1 }, other: 'val' }}
+        setData={setData}
+        onUpdate={onUpdate}
+        onEditEvent={onEditEvent}
+      />
+    )
+
+    const objComponent = screen.getByText('obj').closest('.jer-component') as HTMLElement
+    await user.click(within(objComponent).getAllByRole('button', { name: 'Edit' })[0])
+    // No change to the raw-JSON buffer, then displace.
+    await user.dblClick(screen.getByText('"val"'))
+
+    expect(onUpdate).not.toHaveBeenCalled()
+    expect(setData).not.toHaveBeenCalled()
+    const seq = onEditEvent.mock.calls.map(([e]) => e.event)
+    expect(seq).toEqual(['startEdit', 'submitEdit', 'commitEdit', 'startEdit'])
+    const inputs = screen.getAllByRole('textbox')
+    expect(inputs).toHaveLength(1)
+    expect((inputs[0] as HTMLTextAreaElement).value).toBe('val')
+  })
+
+  test('confirming an UNTOUCHED collection edit closes it without onUpdate/setData', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn()
+    const { container } = render(
+      <JsonEditor data={{ obj: { x: 1 } }} setData={setData} onUpdate={onUpdate} />
+    )
+
+    const objComponent = screen.getByText('obj').closest('.jer-component') as HTMLElement
+    await user.click(within(objComponent).getAllByRole('button', { name: 'Edit' })[0])
+    await user.click(screen.getByRole('button', { name: 'OK' }))
+
+    expect(onUpdate).not.toHaveBeenCalled()
+    expect(setData).not.toHaveBeenCalled()
+    expect(container.querySelector('.jer-collection-text-area')).toBeNull()
+  })
+
   test('displacing a collection edit with INVALID JSON is blocked: editor stays open with its error, new node not opened', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()

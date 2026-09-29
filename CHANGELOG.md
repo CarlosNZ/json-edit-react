@@ -3,6 +3,7 @@
 ## 2.0.1
 
 - A custom collection component with `showOnEdit` and `passOriginalNode` receives the built-in raw-JSON editor as `originalNode` while editing, so it can offer "edit as JSON" beside its own editor — see [Collection nodes](README.md#collection-nodes) (#411).
+- Closing a collection's edit session without changing anything (✓, or opening another node) is a no-op, as it already is for values: no `onUpdate` and no `setData`. This includes a custom collection component's own `showOnEdit` session.
 
 ## 2.0.0
 
