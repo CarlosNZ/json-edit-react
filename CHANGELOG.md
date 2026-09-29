@@ -1,5 +1,9 @@
 # json-edit-react
 
+## 2.0.1
+
+- A custom collection component with `showOnEdit` and `passOriginalNode` receives the built-in raw-JSON editor as `originalNode` while editing, so it can offer "edit as JSON" beside its own editor — see [Collection nodes](README.md#collection-nodes) (#411).
+
 ## 2.0.0
 
 - First stable release of V2, a substantial refactor focused on performance and a more consistent API. Upgrading from V1? Start with the [migration guide](migration-guide.md); full documentation is in the [README](README.md). Pre-built themes, custom components and helper utilities ship separately as [`@json-edit-react/themes`](https://www.npmjs.com/package/@json-edit-react/themes), [`@json-edit-react/components`](https://www.npmjs.com/package/@json-edit-react/components) and [`@json-edit-react/utils`](https://www.npmjs.com/package/@json-edit-react/utils).

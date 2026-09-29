@@ -601,7 +601,8 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
   showEditTools?: boolean // default true
   // Opt-in (default false) because it makes the editor build the original
   // node's JSX up-front to pass as `originalNode`/`originalNodeKey` — wasted
-  // work for custom nodes that fully replace the rendering.
+  // work for custom nodes that fully replace the rendering. For a collection
+  // node, `originalNode` is its raw-JSON editor while editing (else undefined).
   passOriginalNode?: boolean // default false
 
   // For collection nodes only:
