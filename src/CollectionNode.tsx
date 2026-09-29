@@ -223,8 +223,10 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   const onKeyDownEdit = (e: React.KeyboardEvent) => {
     // Normal "Tab" key behaviour in the TextArea. Defined here rather than in
     // `handleKeyboard`, which would override the normal Tab key with the
-    // custom "Tab" key value.
-    if (e.key === 'Tab' && !e.getModifierState('Shift')) {
+    // custom "Tab" key value. Only for this node's own textarea: a custom
+    // component may wire `onKeyDown` to an input of its own, whose Tab is left
+    // to the browser.
+    if (e.key === 'Tab' && !e.getModifierState('Shift') && e.target === textAreaRef.current) {
       e.preventDefault()
       const newValue = insertCharInTextArea(
         textAreaRef as React.MutableRefObject<HTMLTextAreaElement>,

@@ -433,6 +433,72 @@ describe('CustomNode — collection composes the raw-JSON editor via originalNod
     expect(setData).not.toHaveBeenCalled()
   })
 
+  describe("Tab in the component's own textarea (wired to `onKeyDown`)", () => {
+    // A component with its own textarea, wired to the `onKeyDown` it receives,
+    // optionally mounting `originalNode` beside it.
+    const OwnTextArea = ({
+      isEditing,
+      setIsEditing,
+      onKeyDown,
+      originalNode,
+    }: CustomComponentProps) => (
+      <div>
+        <span data-testid="open" onDoubleClick={() => setIsEditing(true)} />
+        {isEditing && <textarea data-testid="own" defaultValue="mine" onKeyDown={onKeyDown} />}
+        {isEditing && originalNode}
+      </div>
+    )
+
+    // React reports an event-handler throw as a window `error` event rather
+    // than failing the test, so collect them.
+    const collectErrors = () => {
+      const errors: unknown[] = []
+      const listener = (e: ErrorEvent) => {
+        errors.push(e.error)
+        e.preventDefault()
+      }
+      window.addEventListener('error', listener)
+      return { errors, stop: () => window.removeEventListener('error', listener) }
+    }
+
+    test('without originalNode mounted, Tab is left to the browser (no crash)', async () => {
+      const user = userEvent.setup()
+      render(
+        <JsonEditor
+          data={{ group: { a: 'alpha' } }}
+          setData={noop}
+          customNodeDefinitions={[jsonDef({ component: OwnTextArea, passOriginalNode: false })]}
+        />
+      )
+      await user.dblClick(screen.getByTestId('open'))
+
+      const { errors, stop } = collectErrors()
+      const notPrevented = fireEvent.keyDown(screen.getByTestId('own'), { key: 'Tab' })
+      stop()
+
+      expect(errors).toEqual([])
+      expect(notPrevented).toBe(true)
+    })
+
+    test('with originalNode mounted, Tab leaves the JSON textarea untouched', async () => {
+      const user = userEvent.setup()
+      const { container } = render(
+        <JsonEditor
+          data={{ group: { a: 'alpha' } }}
+          setData={noop}
+          customNodeDefinitions={[jsonDef({ component: OwnTextArea })]}
+        />
+      )
+      await user.dblClick(screen.getByTestId('open'))
+      const before = textArea(container)!.value
+
+      const notPrevented = fireEvent.keyDown(screen.getByTestId('own'), { key: 'Tab' })
+
+      expect(notPrevented).toBe(true)
+      expect(textArea(container)!.value).toBe(before)
+    })
+  })
+
   test('without passOriginalNode, originalNode is not passed while editing', async () => {
     const user = userEvent.setup()
     const { container } = render(
