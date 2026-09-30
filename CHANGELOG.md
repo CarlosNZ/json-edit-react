@@ -1,5 +1,9 @@
 # json-edit-react
 
+## 2.0.2
+
+- A collection row whose definition sets `showCollectionWrapper: false` is never collapsed, so its rows show from the first render even when the `collapse` prop matches it, and neither "Collapse All" nor a click zone can hide them (#415).
+
 ## 2.0.1
 
 - A custom collection component with `showOnEdit` and `passOriginalNode` receives the built-in raw-JSON editor as `originalNode` while editing, so it can offer "edit as JSON" beside its own editor — see [Collection nodes](README.md#collection-nodes) (#411). A collection definition that already sets `passOriginalNode` with `showOnEdit` and renders `originalNode ?? children` now shows the JSON editor while editing; render `children` explicitly to keep the rows.

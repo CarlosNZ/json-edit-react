@@ -70,7 +70,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // than eagerly serialising every collection's whole subtree on mount.
   const [stringifiedValue, setStringifiedValue] = useState<string | null>(null)
 
-  const startCollapsed = collapseFilter(incomingNodeData)
+  // A row without the collection wrapper has no chevron to open it, so nothing
+  // collapses it: not the collapse filter, a broadcast or a click zone (see
+  // `isCollapsed` below)
+  const { showCollectionWrapper = true } = customNodeData
+  const startCollapsed = showCollectionWrapper && collapseFilter(incomingNodeData)
 
   const { contentRef, isAnimating, maxHeight, collapsed, animateCollapse, cssTransitionValue } =
     useCollapseTransition(
@@ -115,7 +119,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // doc.
   const collapseFilterChanged = useReferenceChanged(collapseFilter)
   useEffect(() => {
-    const shouldBeCollapsed = collapseFilter(nodeData) && !isEditing
+    const shouldBeCollapsed = showCollectionWrapper && collapseFilter(nodeData) && !isEditing
     hasBeenOpened.current = !shouldBeCollapsed
     animateCollapse(shouldBeCollapsed)
     if (collapseFilterChanged) setCollapseState(null)
@@ -126,7 +130,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   }, [collapseFilter])
 
   // Apply broadcast commands targeting this node. See CollapseProvider.
-  useAppliedBroadcast(path, hasBeenOpened, animateCollapse)
+  useAppliedBroadcast(path, hasBeenOpened, showCollectionWrapper ? animateCollapse : NOOP)
 
   // For JSON-editing TextArea
   const textAreaRef = useRef<HTMLTextAreaElement>(null)
@@ -187,7 +191,6 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     showEditTools = true,
     showOnEdit,
     showOnView,
-    showCollectionWrapper = true,
     passOriginalNode,
   } = customNodeData
 
@@ -198,8 +201,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     (s) => s.active !== null && isDescendantOf(s.active.path, path)
   )
 
-  // For when children are accessed via Tab
-  if (childrenEditing && collapsed) animateCollapse(false)
+  // For when children are accessed via Tab, or a collapsed row's definition
+  // drops the collection wrapper
+  if ((childrenEditing || !showCollectionWrapper) && collapsed) animateCollapse(false)
 
   // Early return if this node is filtered out. Root (level 0) is always kept:
   // the editor's outer container still renders when nothing matches, so the
@@ -243,6 +247,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
 
   const handleCollapse = (e: React.MouseEvent) => {
     e.stopPropagation()
+    if (!showCollectionWrapper) return
     const modifier = getModifier(e)
     if (modifier && keyboardControls.collapseModifier.includes(modifier)) {
       hasBeenOpened.current = true
@@ -616,14 +621,16 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       {...dragSourceProps}
       {...getDropTargetProps('above')}
     >
-      <div
-        className="jer-clickzone"
-        style={{
-          width: `${indent / 2 + 1}em`,
-          zIndex: 10 + nodeData.level * 2,
-        }}
-        onClick={collapseClickZones.includes('left') ? handleCollapse : undefined}
-      />
+      {showCollectionWrapper && (
+        <div
+          className="jer-clickzone"
+          style={{
+            width: `${indent / 2 + 1}em`,
+            zIndex: 10 + nodeData.level * 2,
+          }}
+          onClick={collapseClickZones.includes('left') ? handleCollapse : undefined}
+        />
+      )}
       {!isEditing && BottomDropTarget}
       <DropTargetPadding position="above" nodeData={nodeData} />
       {showCollectionWrapper ? (
