@@ -1651,6 +1651,98 @@ describe('CustomNode — collection flags', () => {
     expect(withoutWrapper).toBe(withWrapper - 1)
   })
 
+  describe('a wrapperless row ignores the collapse filter (#415)', () => {
+    const data = { outer: { inner: { name: 'Ada' } } }
+    const defs: CustomNodeDefinition[] = [
+      { condition: ({ key }) => key === 'inner', showCollectionWrapper: false, showKey: false },
+    ]
+
+    test.each([2, false] as const)('its rows render at mount with collapse=%s', (collapse) => {
+      render(
+        <JsonEditor data={data} setData={noop} collapse={collapse} customNodeDefinitions={defs} />
+      )
+      expect(screen.getByText('"Ada"')).toBeInTheDocument()
+    })
+
+    test('a custom component receives its rows as children on first render', () => {
+      const withComponent: CustomNodeDefinition[] = [
+        {
+          ...defs[0],
+          component: ({ children }) => <div data-testid="wrapperless">{children}</div>,
+        },
+      ]
+      render(
+        <JsonEditor data={data} setData={noop} collapse={2} customNodeDefinitions={withComponent} />
+      )
+      expect(within(screen.getByTestId('wrapperless')).getByText('"Ada"')).toBeInTheDocument()
+    })
+
+    test('its rows stay rendered when the collapse prop changes to match it', () => {
+      const { rerender } = render(
+        <JsonEditor data={data} setData={noop} collapse={false} customNodeDefinitions={defs} />
+      )
+      rerender(<JsonEditor data={data} setData={noop} collapse={2} customNodeDefinitions={defs} />)
+      expect(screen.getByText('"Ada"')).toBeInTheDocument()
+    })
+  })
+
+  describe('a wrapperless row never collapses', () => {
+    const data = { outer: { inner: { name: 'Ada' } } }
+    const defs: CustomNodeDefinition[] = [
+      {
+        condition: ({ key }) => key === 'inner',
+        showCollectionWrapper: false,
+        showKey: false,
+        component: ({ children }) => <div data-testid="wrapperless">{children}</div>,
+      },
+    ]
+    // The wrapperless row's own collapsible container
+    const innerOf = () =>
+      screen.getByTestId('wrapperless').closest('.jer-collection-inner') as HTMLElement
+
+    beforeEach(() => jest.useFakeTimers())
+    afterEach(() => jest.useRealTimers())
+
+    test('a collapse-all from its parent leaves it open once the parent reopens', () => {
+      const { container } = render(
+        <JsonEditor data={data} setData={noop} customNodeDefinitions={defs} />
+      )
+      // Root and `outer` have chevrons; the wrapperless `inner` has none
+      const outerChevron = () => container.querySelectorAll('.jer-collapse-icon')[1]
+      fireEvent.click(outerChevron(), { altKey: true })
+      act(() => jest.runAllTimers())
+      fireEvent.click(outerChevron())
+      act(() => jest.runAllTimers())
+      expect(innerOf().style.maxHeight).not.toBe('0')
+    })
+
+    test('a click in its left click zone neither collapses it nor fires onCollapse', () => {
+      const onCollapse = jest.fn()
+      render(
+        <JsonEditor
+          data={data}
+          setData={noop}
+          customNodeDefinitions={defs}
+          onCollapse={onCollapse}
+        />
+      )
+      const row = screen.getByTestId('wrapperless').closest('.jer-collection-component')!
+      fireEvent.click(row.querySelector(':scope > .jer-clickzone')!)
+      act(() => jest.runAllTimers())
+      expect(onCollapse).not.toHaveBeenCalled()
+      expect(innerOf().style.maxHeight).not.toBe('0')
+    })
+
+    test('a collapsed row that loses its wrapper reopens', () => {
+      const { rerender } = render(<JsonEditor data={data} setData={noop} collapse={2} />)
+      expect(screen.queryByText('"Ada"')).toBeNull()
+      rerender(<JsonEditor data={data} setData={noop} collapse={2} customNodeDefinitions={defs} />)
+      act(() => jest.runAllTimers())
+      expect(screen.getByText('"Ada"')).toBeInTheDocument()
+      expect(innerOf().style.maxHeight).not.toBe('0')
+    })
+  })
+
   test('renderCollectionAsValue renders an object through the value slot (no children recursed)', () => {
     const defs: CustomNodeDefinition[] = [
       {
