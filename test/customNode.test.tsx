@@ -10,7 +10,7 @@
  * `data-testid` markers so each prop's effect is directly assertable.
  */
 
-import { useState } from 'react'
+import { createRef, useState } from 'react'
 import { act, render, screen, waitFor, within, cleanup, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor } from '../src/JsonEditor'
@@ -19,6 +19,7 @@ import {
   type CustomComponentProps,
   type CustomKeyProps,
   type CustomWrapperProps,
+  type JsonEditorHandle,
   type UpdateFunction,
 } from '../src/types'
 
@@ -1651,6 +1652,12 @@ describe('CustomNode — collection flags', () => {
     expect(withoutWrapper).toBe(withWrapper - 1)
   })
 
+  // The max-height of the wrapperless row holding "Ada": empty while the row is
+  // open and not animating. Collapsing or reopening it sets one at once, so a
+  // check before any timer runs also catches a collapse that later reverses.
+  const adaRowMaxHeight = () =>
+    screen.getByText('"Ada"').closest<HTMLElement>('.jer-collection-inner')!.style.maxHeight
+
   describe('a wrapperless row ignores the collapse filter (#415)', () => {
     const data = { outer: { inner: { name: 'Ada' } } }
     const defs: CustomNodeDefinition[] = [
@@ -1662,6 +1669,7 @@ describe('CustomNode — collection flags', () => {
         <JsonEditor data={data} setData={noop} collapse={collapse} customNodeDefinitions={defs} />
       )
       expect(screen.getByText('"Ada"')).toBeInTheDocument()
+      expect(adaRowMaxHeight()).toBe('')
     })
 
     test('a custom component receives its rows as children on first render', () => {
@@ -1683,6 +1691,7 @@ describe('CustomNode — collection flags', () => {
       )
       rerender(<JsonEditor data={data} setData={noop} collapse={2} customNodeDefinitions={defs} />)
       expect(screen.getByText('"Ada"')).toBeInTheDocument()
+      expect(adaRowMaxHeight()).toBe('')
     })
   })
 
@@ -1696,41 +1705,43 @@ describe('CustomNode — collection flags', () => {
         component: ({ children }) => <div data-testid="wrapperless">{children}</div>,
       },
     ]
-    // The wrapperless row's own collapsible container
-    const innerOf = () =>
-      screen.getByTestId('wrapperless').closest('.jer-collection-inner') as HTMLElement
-
     beforeEach(() => jest.useFakeTimers())
     afterEach(() => jest.useRealTimers())
 
-    test('a collapse-all from its parent leaves it open once the parent reopens', () => {
+    test('a collapse broadcast that includes it collapses its descendants but not it', () => {
+      const ref = createRef<JsonEditorHandle>()
       const { container } = render(
-        <JsonEditor data={data} setData={noop} customNodeDefinitions={defs} />
+        <JsonEditor
+          data={{ outer: { inner: { name: 'Ada', tags: ['x'] } } }}
+          setData={noop}
+          customNodeDefinitions={defs}
+          editorRef={ref}
+        />
       )
-      // Root and `outer` have chevrons; the wrapperless `inner` has none
-      const outerChevron = () => container.querySelectorAll('.jer-collapse-icon')[1]
-      fireEvent.click(outerChevron(), { altKey: true })
-      act(() => jest.runAllTimers())
-      fireEvent.click(outerChevron())
-      act(() => jest.runAllTimers())
-      expect(innerOf().style.maxHeight).not.toBe('0')
+      act(() =>
+        ref.current!.collapse({ collapsed: true, path: ['outer', 'inner'], includeChildren: true })
+      )
+      expect(adaRowMaxHeight()).toBe('')
+      // Root, `outer` and `tags` have chevrons; wrapperless `inner` has none
+      expect(container.querySelectorAll('.jer-collapse-icon')[2]).toHaveClass('jer-rotate-90')
     })
 
-    test('a click in its left click zone neither collapses it nor fires onCollapse', () => {
+    test('no left zone, and a key click neither collapses it nor fires onCollapse', () => {
       const onCollapse = jest.fn()
       render(
         <JsonEditor
           data={data}
           setData={noop}
-          customNodeDefinitions={defs}
+          customNodeDefinitions={[{ ...defs[0], showKey: true }]}
+          collapseClickZones={['left', 'property']}
           onCollapse={onCollapse}
         />
       )
       const row = screen.getByTestId('wrapperless').closest('.jer-collection-component')!
-      fireEvent.click(row.querySelector(':scope > .jer-clickzone')!)
-      act(() => jest.runAllTimers())
+      expect(row.querySelector(':scope > .jer-clickzone')).toBeNull()
+      fireEvent.click(row.querySelector(':scope > .jer-collection-header-row .jer-key-text')!)
       expect(onCollapse).not.toHaveBeenCalled()
-      expect(innerOf().style.maxHeight).not.toBe('0')
+      expect(adaRowMaxHeight()).toBe('')
     })
 
     test('a collapsed row that loses its wrapper reopens', () => {
@@ -1739,7 +1750,7 @@ describe('CustomNode — collection flags', () => {
       rerender(<JsonEditor data={data} setData={noop} collapse={2} customNodeDefinitions={defs} />)
       act(() => jest.runAllTimers())
       expect(screen.getByText('"Ada"')).toBeInTheDocument()
-      expect(innerOf().style.maxHeight).not.toBe('0')
+      expect(adaRowMaxHeight()).toBe('')
     })
   })
 
