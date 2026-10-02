@@ -2877,10 +2877,10 @@ jsesc@^3.0.2:
   resolved "https://registry.yarnpkg.com/jsesc/-/jsesc-3.1.0.tgz#74d335a234f67ed19907fdadfac7ccf9d409825d"
   integrity sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==
 
-json-edit-react@2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-2.0.2.tgz#905200c3f3025b6300e0606a4bec9a385f73270e"
-  integrity sha512-UU1PX5DEtCrWq4iEvIx63AIakKBI7kLSDEz3wZ9UH5wsqlP64kqQQ1Upo6zzFUunfxpOpgs7H5c19Ktx/i+uSA==
+json-edit-react@2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/json-edit-react/-/json-edit-react-2.0.3.tgz#6068b25d3b2d7f4d3928c2c2b4d6fb44e31aae6e"
+  integrity sha512-vxgY2OcMOxoCmhxb2FsnIAjkCUni2g+58nNoobGaW4lLIAZDrCFJwZ9WIxPOms8LLujDmD7w0KYnbf430JtBQw==
 
 json-parse-even-better-errors@^2.3.0:
   version "2.3.1"
