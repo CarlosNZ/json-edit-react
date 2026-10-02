@@ -1,5 +1,9 @@
 # json-edit-react
 
+## 2.0.3
+
+- The new-key input and the key-rename input match the string editor's text size, padding and height, so the new-key text is no longer oversized and opening a rename no longer shifts the rows below it.
+
 ## 2.0.2
 
 - A collection row whose definition sets `showCollectionWrapper: false` is never collapsed, so its rows show from the first render even when the `collapse` prop matches it, and neither "Collapse All" nor a click zone can hide them (#415).

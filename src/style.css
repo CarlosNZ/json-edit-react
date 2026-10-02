@@ -309,7 +309,7 @@ select:focus + .focus {
   box-sizing: content-box;
   resize: none;
   margin: 0;
-  height: 1.4em;
+  height: 1.2em;
   padding-left: 0.5em;
   padding-right: 0.5em;
   padding-top: 0.25em;
@@ -345,11 +345,8 @@ select:focus + .focus {
   white-space: pre-wrap;
 }
 
-.jer-key-edit {
-  padding: 0 0.3em;
-  font-size: inherit;
-  font-size: 0.9em;
-}
+/* .jer-key-edit {
+} */
 
 /* .jer-value-array {
 } */

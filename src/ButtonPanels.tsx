@@ -279,7 +279,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
             />
           ) : (
             <input
-              className="jer-input-new-key"
+              className="jer-input-text jer-input-new-key"
               type="text"
               name="new-object-key"
               value={newKey}
