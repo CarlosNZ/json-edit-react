@@ -808,17 +808,32 @@ describe('JsonEditor — structural mutations', () => {
     )
 
     await user.click(screen.getByTitle('Add'))
-    // A new-key input appears; it's pre-populated with a default placeholder
-    // key
+    // A new-key input appears empty, with `KEY_NEW` as its placeholder
     const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
-    expect(newKeyInput).toBeInTheDocument()
-    await user.clear(newKeyInput)
+    expect(newKeyInput).toHaveValue('')
+    expect(newKeyInput).toHaveAttribute('placeholder', 'Enter new key')
     await user.type(newKeyInput, 'fresh{Enter}')
 
     expect(setData).toHaveBeenCalledTimes(1)
     // New property takes the default value (null) — that's the editor's
     // contract for fresh keys
     expect(setData).toHaveBeenCalledWith({ existing: 'value', fresh: null })
+  })
+
+  test('adding a property to an object: confirming with no key typed does nothing', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const { container } = render(
+      <JsonEditor data={{ existing: 'value' }} setData={setData} showIconTooltips />
+    )
+
+    await user.click(screen.getByTitle('Add'))
+    const newKeyInput = container.querySelector('input.jer-input-new-key') as HTMLInputElement
+    await user.type(newKeyInput, '{Enter}')
+    await user.click(screen.getByTitle('OK'))
+
+    expect(setData).not.toHaveBeenCalled()
+    expect(container.querySelector('input.jer-input-new-key')).toBeInTheDocument()
   })
 
   test('renaming a key preserves insertion order', async () => {

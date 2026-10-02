@@ -3,6 +3,7 @@
 ## 2.0.3
 
 - The new-key input and the key-rename input match the string editor's text size, padding and height, so the new-key text is no longer oversized and opening a rename no longer shifts the rows below it.
+- The new-key input starts empty, showing `KEY_NEW` as its placeholder rather than holding it as a selected value, so confirming straight away no longer adds a key called "Enter new key". Confirming with no key typed does nothing.
 
 ## 2.0.2
 

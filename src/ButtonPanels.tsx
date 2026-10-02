@@ -66,8 +66,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   // Aliased, since `startEdit` is also an EditButtons prop (the value-edit
   // icon).
   const { open, cancel } = useEditingStore()
-  const NEW_KEY_PROMPT = translate('KEY_NEW', nodeData)
-  const [newKey, setNewKey] = useState(NEW_KEY_PROMPT)
+  const [newKey, setNewKey] = useState('')
 
   // The new-key options list, or `true` for a free-text add. Open/close is
   // driven by the store, so this only carries the options *content*, which the
@@ -92,7 +91,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   useIsomorphicLayoutEffect(() => {
     if (!isAddingHere) {
       setAddingKeyState(false)
-      setNewKey(NEW_KEY_PROMPT)
+      setNewKey('')
       return
     }
     // Don't offer keys that already exist. Reading the node's OWN subtree by
@@ -102,7 +101,6 @@ export const EditButtons: React.FC<EditButtonProps> = ({
     const options = getNewKeyOptions
       ? getNewKeyOptions(nodeData)?.filter((key) => !existingKeys.includes(key))
       : null
-    if (options) setNewKey('')
     setAddingKeyState(options ?? true)
     // Fires only on the open/close transition: the reads inside are captured
     // at that moment rather than re-subscribed.
@@ -116,8 +114,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   // fires the `commitAdd` or error observer.
   const commitAdd = () => {
     if (!handleAdd) return
-    // An options list with nothing chosen yet is a silent no-op.
-    if (hasKeyOptionsList && !newKey) return
+    // Nothing typed, or no option chosen yet, is a silent no-op.
+    if (!newKey) return
     handleAdd(type === 'array' ? '' : newKey)
   }
 
@@ -283,9 +281,9 @@ export const EditButtons: React.FC<EditButtonProps> = ({
               type="text"
               name="new-object-key"
               value={newKey}
+              placeholder={translate('KEY_NEW', nodeData)}
               onChange={(e) => setNewKey(e.target.value)}
               autoFocus
-              onFocus={(e) => e.target.select()}
               onKeyDown={handleKeyPress}
               style={getStyles('input', nodeData)}
             />
