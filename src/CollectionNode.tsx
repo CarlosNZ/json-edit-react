@@ -717,7 +717,9 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
           // Prevent collapse if this node or any children are being edited
           maxHeight: childrenEditing ? undefined : maxHeight,
           ...getStyles('collectionInner', nodeData),
-          transition: cssTransitionValue,
+          // Only the collapse is animated, so a theme's `collectionInner`
+          // styles apply at once
+          transition: `max-height ${cssTransitionValue}`,
         }}
         ref={contentRef}
       >

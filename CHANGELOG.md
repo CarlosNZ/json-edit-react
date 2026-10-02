@@ -4,6 +4,7 @@
 
 - The new-key input and the key-rename input match the string editor's text size, padding and height, so the new-key text is no longer oversized and opening a rename no longer shifts the rows below it.
 - The new-key input starts empty, showing `KEY_NEW` as its placeholder rather than holding it as a selected value, so confirming straight away no longer adds a key called "Enter new key". Confirming with no key typed does nothing (#420).
+- A collection's inner block animates only its `max-height` as it collapses or opens, so a theme's `collectionInner` styles (margin, padding, border) apply at once instead of animating over `collapseAnimationTime`.
 
 ## 2.0.2
 

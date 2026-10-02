@@ -417,6 +417,14 @@ describe('JsonEditor — rootName and initial collapse state', () => {
     expect(chevrons).toHaveLength(4)
     chevrons.forEach((c) => expect(c).not.toHaveClass('jer-rotate-90'))
   })
+
+  test("the collection's inner block transitions only max-height", () => {
+    const { container } = render(
+      <JsonEditor data={{ child: 'hi' }} setData={noop} collapseAnimationTime={500} />
+    )
+    const inner = container.querySelector('.jer-collection-inner') as HTMLElement
+    expect(inner.style.transition).toBe('max-height 0.5s')
+  })
 })
 
 describe('JsonEditor — edit flow', () => {
