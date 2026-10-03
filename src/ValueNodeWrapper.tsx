@@ -31,7 +31,7 @@ import {
 } from './contexts'
 import { buildCustomNodeData, type CustomNodeData } from './CustomNode'
 import { pathsEqual } from './utils/pathTools'
-import { isJsEvent, matchEnumType, NOOP } from './utils/misc'
+import { isCollection, isJsEvent, matchEnumType, NOOP } from './utils/misc'
 import { useCommon, useDragNDrop } from './hooks'
 import { KeyDisplay } from './KeyDisplay'
 import { areNodePropsEqual } from './utils/memoNode'
@@ -364,7 +364,20 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
     // A deferred to-custom switch commits here, launching its possibly
     // collection-valued result expanded, as the instant-commit branch does.
     if (switchedToDefinition) setCollapseState({ path, collapsed: false, includeChildren: false })
-    submit({ op: 'edit', path, value: newValue, onCommit }).then(settleEdit(newValue))
+    // An explicit value that turns this node into a collection (a custom button
+    // or component committing an object) launches it expanded too (#217). Sent
+    // at the commit moment, so a rejected edit leaves no pending broadcast to
+    // open a collection that reaches this path later.
+    const opensCollection = explicit && isCollection(newValue) && !isCollection(data)
+    submit({
+      op: 'edit',
+      path,
+      value: newValue,
+      onCommit: () => {
+        if (opensCollection) setCollapseState({ path, collapsed: false, includeChildren: false })
+        onCommit?.()
+      },
+    }).then(settleEdit(newValue))
   }
 
   // Point the commit-on-displace ref at the LIVE `handleEdit`, which closes
@@ -372,10 +385,11 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // time would commit the stale initial buffer.
   handleEditRef.current = handleEdit
 
-  // A custom button's `handleEdit`: an explicit value commits as-is, settling
-  // through `settleEdit` like any edit of this node. Wrapped so the button's
-  // value is the only argument `handleEdit` sees.
-  const handleEditFromButton = (newValue: JsonData) => handleEdit(newValue)
+  // Commits a whole new value at this node, for a custom button's `handleEdit`:
+  // an explicit value commits as-is, settling through `settleEdit` like any
+  // edit of this node. Wrapped so the value is the only argument `handleEdit`
+  // sees.
+  const commitValue = (newValue: JsonData) => handleEdit(newValue)
 
   const handleCancel = () => {
     // Revert the buffer locally, then drive the store cancel, which runs the
@@ -551,7 +565,7 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
                 onCopy={onCopy}
                 translate={translate}
                 customButtons={props.customButtons}
-                handleEdit={handleEditFromButton}
+                handleEdit={commitValue}
                 canEdit={canEdit}
                 nodeData={nodeData}
                 handleKeyboard={handleKeyboard}

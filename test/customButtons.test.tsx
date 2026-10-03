@@ -362,6 +362,47 @@ describe('customButtons — handleEdit', () => {
   })
 })
 
+describe('customButtons — a value turned into a collection', () => {
+  const wrapButton = committingButton(({ value }) => ({ inner: value as string }), 'Wrap')
+
+  test('opens the new collection, as a type switch does', async () => {
+    const user = userEvent.setup()
+    render(<Harness initialData={{ ref: 'abc' }} collapse={1} customButtons={[wrapButton]} />)
+
+    await user.click(within(rowFor('ref')).getByRole('button', { name: 'Wrap' }))
+
+    expect(screen.getByText('inner')).toBeInTheDocument()
+  })
+
+  test('a rejected edit leaves nothing to open a later collection at that path', async () => {
+    const user = userEvent.setup()
+    const Controlled = () => {
+      const [data, setData] = useState<JsonData>({ ref: 'abc' })
+      return (
+        <>
+          <button type="button" onClick={() => setData({ ref: { inner: 'x' } })}>
+            Replace data
+          </button>
+          <JsonEditor
+            data={data}
+            setData={(d) => setData(d as JsonData)}
+            onUpdate={() => ({ error: 'Not allowed' })}
+            collapse={1}
+            customButtons={[wrapButton]}
+          />
+        </>
+      )
+    }
+    render(<Controlled />)
+
+    await user.click(within(rowFor('ref')).getByRole('button', { name: 'Wrap' }))
+    await user.click(screen.getByRole('button', { name: 'Replace data' }))
+
+    // The consumer's own `setData` follows the `collapse` prop.
+    expect(screen.queryByText('inner')).toBeNull()
+  })
+})
+
 // Jest stubs the stylesheet import, so these load the real one: hiding an
 // empty wrapper is the stylesheet's job.
 describe('customButtons — an Element that renders nothing', () => {

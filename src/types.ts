@@ -544,7 +544,7 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   setValue: (value: JsonData) => void
   // Commits the edit: `handleEdit(value)` commits that value as-is, and
   // `handleEdit()` commits the node's edit buffer.
-  handleEdit: (value?: unknown) => void
+  handleEdit: (value?: JsonData) => void
   handleCancel: () => void
   onKeyDown: (e: React.KeyboardEvent) => void
   isEditing: boolean
