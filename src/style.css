@@ -410,6 +410,13 @@ button.jer-string-expansion {
   opacity: 0;
 }
 
+/* A custom button whose `Element` renders nothing leaves its wrapper empty.
+   `display: none` drops it from the flex gap and from the accessibility tree,
+   so a hidden button can't be pressed. */
+.jer-custom-button:empty {
+  display: none;
+}
+
 .jer-confirm-buttons {
   gap: 0.2em;
   margin-left: 0.4em;

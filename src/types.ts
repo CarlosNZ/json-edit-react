@@ -535,11 +535,16 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   value: JsonData
   componentProps?: T
   parentData: CollectionData | null
-  // Writes into the node's edit buffer. Accepts any `JsonData` so
-  // `renderCollectionAsValue` components can buffer object values; primitive
-  // editors just pass strings/numbers/booleans.
+  // On a value node (including `renderCollectionAsValue`), writes into the
+  // node's edit buffer; accepts any `JsonData` so those components can buffer
+  // object values. On a collection node, commits the value, the same as
+  // `handleEdit(value)`.
+  // TO-DO (v3): make it buffer-only on collection nodes too, so `handleEdit`
+  // is the one commit call everywhere.
   setValue: (value: JsonData) => void
-  handleEdit: (value?: unknown) => void
+  // Commits the edit: `handleEdit(value)` commits that value as-is, and
+  // `handleEdit()` commits the node's edit buffer.
+  handleEdit: (value?: JsonData) => void
   handleCancel: () => void
   onKeyDown: (e: React.KeyboardEvent) => void
   isEditing: boolean
@@ -637,9 +642,26 @@ export interface CustomNodeDefinition<T = Record<string, unknown>, U = Record<st
 
 export type CustomTextDefinitions = Partial<{ [key in keyof LocalisedStrings]: CustomTextFunction }>
 
+// Commits a new value at the button's row through the same pipeline as an
+// edit: `onUpdate`, the `onEditEvent` stream, and the row's inline error and
+// `onError` on rejection. Not gated by `allowEdit` — the button decides, using
+// `canEdit` if it wants to.
+type CustomButtonHandleEdit = (value: JsonData) => void
+
+export interface CustomButtonElementProps {
+  nodeData: NodeData
+  // Whether `allowEdit` permits editing this row.
+  canEdit: boolean
+  handleEdit: CustomButtonHandleEdit
+}
+
 export interface CustomButtonDefinition {
-  Element: React.FC<{ nodeData: NodeData }>
-  onClick: (nodeData: NodeData, e: React.MouseEvent) => void
+  Element: React.FC<CustomButtonElementProps>
+  onClick?: (
+    nodeData: NodeData,
+    e: React.MouseEvent,
+    context: { handleEdit: CustomButtonHandleEdit; canEdit: boolean }
+  ) => void
   // Accessible name for the button. Supplying it renders the wrapper as a real
   // <button aria-label={label}>, matching the built-in icon controls — and, as
   // with those, it doubles as the hover tooltip when `showIconTooltips` is on.

@@ -1,5 +1,11 @@
 # json-edit-react
 
+## 2.0.4
+
+- A custom button can change its node's value through `handleEdit` (passed with `canEdit` to both `onClick` and `Element`), which goes through `onUpdate` and `onEditEvent` like any edit — see [Custom buttons](README.md#custom-buttons) (#418).
+- A custom button whose `Element` returns `null` is hidden entirely, so it leaves no gap between the edit icons and assistive tech can't press it (#418).
+- A custom collection component can commit a new value with `handleEdit(value)`, as a value component does — see [What your component receives](README.md#what-your-component-receives) (#418).
+
 ## 2.0.3
 
 - The new-key input and the key-rename input match the string editor's text size, padding and height, so the new-key text is no longer oversized and opening a rename no longer shifts the rows below it.

@@ -27,6 +27,10 @@ interface EditButtonProps {
   nodeData: NodeData
   translate: TranslateFunction
   customButtons: CustomButtonDefinition[]
+  // Handed to each custom button: `handleEdit` commits at this row through the
+  // node's own commit path, so a rejection reports on the row.
+  handleEdit: (value: JsonData) => void
+  canEdit: boolean
   keyboardControls: KeyboardControlsFull
   handleKeyboard: (
     e: React.KeyboardEvent,
@@ -43,7 +47,7 @@ interface EditButtonProps {
   Select: React.ComponentType<SelectProps>
 }
 
-export const EditButtons: React.FC<EditButtonProps> = ({
+export const EditButtons = ({
   startEdit,
   handleDelete,
   handleAdd,
@@ -51,6 +55,8 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   onCopy,
   type,
   customButtons,
+  handleEdit,
+  canEdit,
   nodeData,
   translate,
   keyboardControls,
@@ -60,7 +66,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   jsonStringify,
   showIconTooltips,
   Select,
-}) => {
+}: EditButtonProps) => {
   const { getStyles } = useTheme()
   // Actions only — no subscription beyond the `isAddingHere` selector below.
   // Aliased, since `startEdit` is also an EditButtons prop (the value-edit
@@ -239,22 +245,25 @@ export const EditButtons: React.FC<EditButtonProps> = ({
         // A `label` opts the wrapper into real button semantics, matching the
         // built-in icon controls. Without one it stays a <div>: `Element` is
         // consumer-owned and may itself be interactive, and a <button> wrapper
-        // would then nest interactive content.
-        const handleClick = (e: React.MouseEvent) => onClick && onClick(nodeData, e)
+        // would then nest interactive content. Either way the wrapper carries
+        // `jer-custom-button`, which the stylesheet hides while it's empty, so
+        // an `Element` returning `null` leaves nothing to press or space out.
+        const handleClick = (e: React.MouseEvent) => onClick?.(nodeData, e, { handleEdit, canEdit })
         return label ? (
           <button
             key={i}
             type="button"
+            className="jer-custom-button"
             tabIndex={-1}
             onClick={handleClick}
             aria-label={label}
             title={showIconTooltips ? label : ''}
           >
-            <Element nodeData={nodeData} />
+            <Element nodeData={nodeData} canEdit={canEdit} handleEdit={handleEdit} />
           </button>
         ) : (
-          <div key={i} onClick={handleClick}>
-            <Element nodeData={nodeData} />
+          <div key={i} className="jer-custom-button" onClick={handleClick}>
+            <Element nodeData={nodeData} canEdit={canEdit} handleEdit={handleEdit} />
           </div>
         )
       })}
@@ -303,7 +312,7 @@ export const EditButtons: React.FC<EditButtonProps> = ({
   )
 }
 
-export const InputButtons: React.FC<{
+interface InputButtonProps {
   onOk: () => void
   onCancel: () => void
   nodeData: NodeData
@@ -311,7 +320,9 @@ export const InputButtons: React.FC<{
   showIconTooltips: boolean
   editConfirmRef: React.RefObject<HTMLButtonElement | null>
   hideOk?: boolean
-}> = ({
+}
+
+export const InputButtons = ({
   onOk,
   onCancel,
   nodeData,
@@ -319,7 +330,7 @@ export const InputButtons: React.FC<{
   showIconTooltips,
   editConfirmRef,
   hideOk = false,
-}) => {
+}: InputButtonProps) => {
   // tabIndex={-1}: the field itself commits/cancels via Enter/Escape
   // (`keyboardControls`), so these are pointer affordances — kept out of the
   // Tab order, but real <button>s for screen-reader semantics. `aria-label` is

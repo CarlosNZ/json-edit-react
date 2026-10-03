@@ -298,10 +298,10 @@ const allExamples: Record<string, ExampleDef> = {
     title: 'Playlist',
     blurb:
       'A custom **collection** node that owns its editor (`showOnEdit: true`) keeps the live child rows as its `children` *while editing*, just as in view — so it can place an editable header or toolbar **above** the rows and keep them interactive the whole time, instead of being handed the built-in JSON textarea.\n\n' +
-      "Here `tracks` is the custom node: its header shows the track count and total runtime, and **Reorder…** opens the node's own edit session, swapping the header for a Shuffle / Sort / Reverse toolbar — each commits a reordered array through `setValue`, no special editor prop required.\n\n" +
+      "Here `tracks` is the custom node: its header shows the track count and total runtime, and **Reorder…** opens the node's own edit session, swapping the header for a Shuffle / Sort / Reverse toolbar — each commits a reordered array with `handleEdit(newValue)`, no special editor prop required.\n\n" +
       'Try it while the toolbar is open: the track rows stay fully editable. Change a title or `seconds` inline and, because there is a single active edit session, doing so simply displaces the header’s session.\n\n' +
       '**Edit as JSON** is the fallback: with `passOriginalNode: true` the component receives the built-in raw-JSON editor as `originalNode` while editing, and renders it in place of the rows. It’s bound to the node’s own edit session, so parsing, invalid-JSON errors, keyboard controls and commit-on-displace all work as usual.\n\n' +
-      "Editing is fenced with the filter-function toolkit (`@json-edit-react/utils/filters`): `byPath('tracks.*')` allows only whole tracks to be **deleted** and **dragged** — never their fields, the playlist title, or the list itself — and type changes are off everywhere. Adding is disabled (`allowAdd: false`), so the header’s **Add track** button — a `setValue` edit — is the only way to add one.\n\n" +
+      "Editing is fenced with the filter-function toolkit (`@json-edit-react/utils/filters`): `byPath('tracks.*')` allows only whole tracks to be **deleted** and **dragged** — never their fields, the playlist title, or the list itself — and type changes are off everywhere. Adding is disabled (`allowAdd: false`), so the header’s **Add track** button — a `handleEdit` edit — is the only way to add one.\n\n" +
       'That `allowAdd: false` also confines the drag-and-drop: moving a track into a *different* collection is a relocate, which needs add-permission at the destination — so tracks reorder within the list but can’t be dragged out onto the title or into another track.',
     load: () => import('./static/playlist/Example'),
     code: () => import('./static/playlist/Example.tsx?raw'),
@@ -346,7 +346,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Custom buttons',
     blurb:
-      'Add your own action buttons alongside the built-in Copy / Edit / Delete. Each button\'s `Element` receives the node\'s `nodeData` and can render conditionally, while `onClick` runs any handler — here, an "open link" button on URLs and a "duplicate" button on array items.',
+      'Add your own action buttons alongside the built-in Copy / Edit / Delete. Each button\'s `Element` receives the node\'s `nodeData` and can render conditionally, while `onClick` runs any handler, and can commit a new value at its node with `handleEdit`, which goes through `onUpdate` like any edit. Here: an "open link" button on URLs, a "read" toggle on articles (watch the `onUpdate` toasts), and a "duplicate" button on array items.',
     load: () => import('./static/custom-buttons/Example'),
     code: () => import('./static/custom-buttons/Example.tsx?raw'),
   },

@@ -6,11 +6,12 @@ import {
   type CollectionNodeProps,
   type NodeData,
   type CollectionData,
+  type JsonData,
   type ValueData,
 } from './types'
 import { Icon } from './Icons'
 import { getModifier, insertCharInTextArea } from './utils/keyboard'
-import { isCollection, NOOP } from './utils/misc'
+import { isCollection, isJsEvent, NOOP } from './utils/misc'
 import { AutogrowTextArea } from './AutogrowTextArea'
 import { KeyDisplay } from './KeyDisplay'
 import {
@@ -212,7 +213,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // Holds the latest `handleEdit` for the store's commit-on-displace callback.
   // Declared ABOVE the early-return so the hook runs on every render, and
   // assigned once `handleEdit` exists below.
-  const handleEditRef = useRef<(onCommit?: unknown) => void>(NOOP)
+  const handleEditRef = useRef<(inputValue?: unknown, onCommit?: () => void) => void>(NOOP)
   if (!isVisible && !childrenEditing) return null
 
   // `visibleSize` is a number on tracked collections while a filter is active,
@@ -270,17 +271,22 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     }
   }
 
-  // Commits the raw-JSON edit of this collection through the store's commit
-  // engine. A parse failure keeps the session open and fires only the error.
-  // `onCommit` lets a commit-on-displace open the next node at the commit
-  // moment; a parse failure returns first, so it never runs and the switch is
-  // blocked.
-  const handleEdit = (onCommit?: unknown) => {
+  // Commits this collection's edit through the store's commit engine. An
+  // explicitly-passed value (a custom component or button supplying its own)
+  // commits as-is; otherwise the raw-JSON buffer does, and a parse failure
+  // keeps the session open and fires only the error. `onCommit` lets a
+  // commit-on-displace open the next node at the commit moment; a parse
+  // failure returns first, so it never runs and the switch is blocked.
+  const handleEdit = (inputValue?: unknown, onCommit?: () => void) => {
+    // The ✓/OK button (`onOk={handleEdit}`) passes a click event, which is
+    // ignored.
+    const explicit = inputValue !== undefined && !isJsEvent(inputValue)
     // An untouched buffer commits `data` itself, which the engine sees as
     // unchanged and closes as a no-op. Parsing its serialisation would build a
     // new object, which counts as a real edit.
-    let value: CollectionData = data
-    if (stringifiedValue !== null) {
+    let value: JsonData = data
+    if (explicit) value = inputValue as JsonData
+    else if (stringifiedValue !== null) {
       try {
         value = jsonParse(stringifiedValue) as CollectionData
       } catch {
@@ -292,21 +298,18 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       }
     }
     setError(null)
-    // `onCommit` is a real callback only from commit-on-displace or Tab. The
-    // ✓/OK button (`onOk={handleEdit}`) passes a click event, which is ignored.
-    const advance = typeof onCommit === 'function' ? (onCommit as () => void) : undefined
     // The buffer clears at the commit moment, so a `hold()` keeps the typed
-    // JSON visible until then; `advance` then opens any displace/Tab target.
+    // JSON visible until then; `onCommit` then opens any displace/Tab target.
     submit({
       op: 'edit',
       path,
       value,
       onCommit: () => {
         clearEditBuffer()
-        advance?.()
+        onCommit?.()
       },
     }).then((outcome) => {
-      if (outcome?.status === 'error') onError(outcome.error, value as CollectionData)
+      if (outcome?.status === 'error') onError(outcome.error, value)
       // A rejected or cancelled commit leaves `data` unchanged, so drop the
       // typed JSON, as a value node reverts its buffer. Skipped once the user
       // has reopened this node, so a late settlement can't clobber a new edit.
@@ -321,6 +324,11 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // Point the commit-on-displace ref at the LIVE `handleEdit`: it closes over
   // the current edit buffer, so a frozen closure would commit the stale one.
   handleEditRef.current = handleEdit
+
+  // Commits a whole new value at this row: a custom button's `handleEdit` and a
+  // custom component's `setValue`. Wrapped so the value is the only argument
+  // `handleEdit` sees.
+  const commitValue = (newValue: JsonData) => handleEdit(newValue)
 
   // Commits an add and fires `commitAdd` (or the error observer).
   const handleAdd = (key: string) => {
@@ -523,7 +531,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
     value: data,
     parentData,
     nodeData,
-    setValue: (val: unknown) => submit({ op: 'edit', path, value: val }),
+    setValue: commitValue,
     handleEdit,
     handleCancel,
     onKeyDown: onKeyDownEdit,
@@ -536,7 +544,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       ? () =>
           open(path, {
             cancelOp: clearEditBuffer,
-            commitOp: (onCommit) => handleEditRef.current(onCommit),
+            commitOp: (onCommit) => handleEditRef.current(undefined, onCommit),
           })
       : NOOP,
     getStyles,
@@ -566,7 +574,7 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
               hasBeenOpened.current = true
               open(path, {
                 cancelOp: clearEditBuffer,
-                commitOp: (onCommit) => handleEditRef.current(onCommit),
+                commitOp: (onCommit) => handleEditRef.current(undefined, onCommit),
               })
             }
           : undefined
@@ -579,6 +587,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       nodeData={nodeData}
       translate={translate}
       customButtons={props.customButtons}
+      handleEdit={commitValue}
+      canEdit={canEdit}
       keyboardControls={keyboardControls}
       handleKeyboard={handleKeyboard}
       getNewKeyOptions={getNewKeyOptions}

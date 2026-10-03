@@ -17,8 +17,8 @@ import { useEditorDefaults } from '@example-resources'
 // Here `tracks` is the custom node. Its header shows the track
 // count and total runtime; clicking "Reorder…" opens the node's
 // own edit session, swapping the header for a toolbar (Shuffle /
-// Sort / Reverse). Each action commits a reordered array through
-// `setValue` — no special editor prop is needed.
+// Sort / Reverse). Each action commits a reordered array with
+// `handleEdit(newValue)` — no special editor prop is needed.
 //
 // While that toolbar is open the track rows stay fully editable:
 // edit a track's title or seconds inline, and (because there's a
@@ -41,8 +41,8 @@ import { useEditorDefaults } from '@example-resources'
 // whole track items (not their fields, the playlist title, or the
 // array itself), so only whole tracks can be deleted and dragged.
 // Adds are off everywhere (`allowAdd: false`), so the header's
-// "Add track" button — a `setValue` edit, not an add op — is the
-// only way to add one. Type changes are off too.
+// "Add track" button — a `handleEdit` edit, not an add op — is
+// the only way to add one. Type changes are off too.
 //
 // Drag-and-drop is confined to the list for free: a drop into a
 // different collection is a relocate, which needs delete on the
@@ -90,7 +90,7 @@ const TrackList = ({
   children,
   isEditing,
   setIsEditing,
-  setValue,
+  handleEdit,
   handleCancel,
   getStyles,
   nodeData,
@@ -113,13 +113,13 @@ const TrackList = ({
   // "Done" (or until an edit starts elsewhere, which displaces it
   // via the single active session).
   const reorder = (next: Track[]) => {
-    setValue(next as unknown as JsonData)
+    handleEdit(next as unknown as JsonData)
     setIsEditing(true)
   }
 
   // Append a fresh track to the end of the list.
   const addTrack = () =>
-    setValue([...tracks, { title: 'New track', artist: '', seconds: 0 }] as unknown as JsonData)
+    handleEdit([...tracks, { title: 'New track', artist: '', seconds: 0 }] as unknown as JsonData)
 
   const button = {
     background: PANEL,
