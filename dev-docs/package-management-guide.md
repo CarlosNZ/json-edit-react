@@ -14,6 +14,19 @@ Per package, two steps: **bump the version, then publish.** pnpm doesn't prompt 
 
 > Stable releases publish to `latest`, prereleases to `beta`, and the dist-tag is baked into the script name (`pub:<pkg>` vs `pub:<pkg>:beta`). Full rationale: [Dist-tag rules](#dist-tag-rules).
 
+## One command: `pnpm release`
+
+[../scripts/release.mjs](../scripts/release.mjs) runs a whole single-package release interactively, and is the easiest way to ship one package:
+
+```sh
+pnpm release --dry-run                    # everything except the commit, tag and real publish
+pnpm release                              # asks: which package? which version? then confirms
+pnpm release themes                       # skip the package question
+git push --follow-tags                    # it never pushes
+```
+
+It needs a clean tree, logs in to npm through the browser if the session has lapsed, and suggests the next versions (patch / minor / major, and a `beta.0` of each; a beta ticks to the next `beta.N`). It refuses unless the package's `CHANGELOG.md` has a `## X.Y.Z` heading for the version (a beta also passes on `## X.Y.Z-beta.N`), and for a sub-package it shows the peer range on core that will ship. Then it bumps `package.json`, runs lint / tests / typecheck / build (for a sub-package, core is built first, since sub-packages typecheck against core's `build/`), makes the version commit and annotated tag exactly as `bump:*` does, and publishes under `latest` or `beta` through the same commands as `pub:*`. If a check fails before the commit, `package.json` is put back; if the publish fails after it, it prints how to retry or undo. After a stable release it reminds you to move `beta` up if it's been left behind. The step-by-step scripts below remain for anything it doesn't cover, such as the [everything-together](#ship-everything-together-a-compat-break) ordering.
+
 ## Which scenario?
 
 | You want to… | Section |
@@ -342,6 +355,7 @@ Releases are **manual and ship-as-you-go** — implement, document (including th
 | Script | Does |
 | --- | --- |
 | `pnpm run versions` | one-glance: local (next publish) vs what's on npm, all four packages |
+| `pnpm release [<pkg>] [--dry-run]` | the interactive one-command release of a single package ([One command](#one-command-pnpm-release)) |
 | `pnpm bump:core <type>` | `npm version <type>` for core (`patch` / `minor` / `major` / `<exact>` / `pre*`), then commit + tag `v<version>` |
 | `pnpm bump:core:beta` | tick core's prerelease number (`2.0.1-beta.0` → `2.0.1-beta.1`), then commit + tag |
 | `pnpm bump:<sub> <type>` | same for `utils` / `themes` / `components`, via [../scripts/bump-package.mjs](../scripts/bump-package.mjs) (scoped tag, e.g. `@json-edit-react/themes@1.0.1`) |

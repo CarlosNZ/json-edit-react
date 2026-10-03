@@ -62,6 +62,7 @@
     "pub:themes:beta": "cd packages/themes     && node ../../scripts/with-npm-readme.mjs . -- pnpm publish --access public --no-git-checks --tag beta",
     "pub:components": "cd packages/components && node ../../scripts/with-npm-readme.mjs . -- pnpm publish --access public --no-git-checks",
     "pub:components:beta": "cd packages/components && node ../../scripts/with-npm-readme.mjs . -- pnpm publish --access public --no-git-checks --tag beta",
+    "release": "node scripts/release.mjs",
     "versions": "node scripts/versions.mjs",
     "release-demo": "cd demo && yarn deploy",
     "sync-demos": "node scripts/installLatestPackage.mjs"

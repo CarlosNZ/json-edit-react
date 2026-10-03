@@ -19,6 +19,8 @@ Releases are **manual and ship-as-you-go**. Every release is the same two steps:
 
 V1 is maintained separately on the `v1.x` branch and publishes to `v1-latest` — see [Ship a V1 patch](package-management-guide.md#ship-a-v1-patch).
 
+**Or in one go:** `pnpm release` asks which package and which version, checks the CHANGELOG, then bumps, runs the checks, commits + tags and publishes under the right dist-tag (`pnpm release --dry-run` first to rehearse; `git push --follow-tags` afterwards). See [One command](package-management-guide.md#one-command-pnpm-release).
+
 `pnpm run versions` prints local-vs-npm for all four. Run it before and after every release — it's the before/after snapshot that tells you whether anything actually shipped.
 
 ---
