@@ -346,7 +346,7 @@ const allExamples: Record<string, ExampleDef> = {
     kind: 'static',
     title: 'Custom buttons',
     blurb:
-      'Add your own action buttons alongside the built-in Copy / Edit / Delete. Each button\'s `Element` receives the node\'s `nodeData` and can render conditionally, while `onClick` runs any handler — here, an "open link" button on URLs and a "duplicate" button on array items.',
+      'Add your own action buttons alongside the built-in Copy / Edit / Delete. Each button\'s `Element` receives the node\'s `nodeData` and can render conditionally, while `onClick` runs any handler, and can commit a new value at its node with `handleEdit`, which goes through `onUpdate` like any edit. Here: an "open link" button on URLs, a "read" toggle on articles (watch the `onUpdate` toasts), and a "duplicate" button on array items.',
     load: () => import('./static/custom-buttons/Example'),
     code: () => import('./static/custom-buttons/Example.tsx?raw'),
   },

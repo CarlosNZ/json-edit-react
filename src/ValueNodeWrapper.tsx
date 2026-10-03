@@ -372,6 +372,11 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
   // time would commit the stale initial buffer.
   handleEditRef.current = handleEdit
 
+  // A custom button's `handleEdit`: an explicit value commits as-is, settling
+  // through `settleEdit` like any edit of this node. Wrapped so the button's
+  // value is the only argument `handleEdit` sees.
+  const handleEditFromButton = (newValue: JsonData) => handleEdit(newValue)
+
   const handleCancel = () => {
     // Revert the buffer locally, then drive the store cancel, which runs the
     // idempotent `revertToData` again as its `cancelOp`. The local revert
@@ -546,6 +551,8 @@ const ValueNodeWrapperBase: React.FC<ValueNodeProps> = (props) => {
                 onCopy={onCopy}
                 translate={translate}
                 customButtons={props.customButtons}
+                handleEdit={handleEditFromButton}
+                canEdit={canEdit}
                 nodeData={nodeData}
                 handleKeyboard={handleKeyboard}
                 keyboardControls={keyboardControls}

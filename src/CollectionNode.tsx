@@ -6,6 +6,7 @@ import {
   type CollectionNodeProps,
   type NodeData,
   type CollectionData,
+  type JsonData,
   type ValueData,
 } from './types'
 import { Icon } from './Icons'
@@ -322,6 +323,15 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
   // the current edit buffer, so a frozen closure would commit the stale one.
   handleEditRef.current = handleEdit
 
+  // A custom button's `handleEdit`: commits a whole new value at this row, with
+  // no edit session or buffer involved, reporting a rejection on this node.
+  const handleEditFromButton = (newValue: JsonData) => {
+    setError(null)
+    submit({ op: 'edit', path, value: newValue }).then((outcome) => {
+      if (outcome?.status === 'error') onError(outcome.error, newValue)
+    })
+  }
+
   // Commits an add and fires `commitAdd` (or the error observer).
   const handleAdd = (key: string) => {
     // A user action clears any pending collapse broadcast, so the new node
@@ -579,6 +589,8 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       nodeData={nodeData}
       translate={translate}
       customButtons={props.customButtons}
+      handleEdit={handleEditFromButton}
+      canEdit={canEdit}
       keyboardControls={keyboardControls}
       handleKeyboard={handleKeyboard}
       getNewKeyOptions={getNewKeyOptions}

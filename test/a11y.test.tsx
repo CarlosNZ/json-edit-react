@@ -213,7 +213,9 @@ describe('customButtons', () => {
     expect(button).toHaveAttribute('tabindex', '-1')
 
     await user.click(button)
-    expect(onClick).toHaveBeenCalledWith(expect.objectContaining({ path: [] }), expect.anything())
+    expect(onClick).toHaveBeenCalledWith(expect.objectContaining({ path: [] }), expect.anything(), {
+      handleEdit: expect.any(Function),
+    })
   })
 
   it('leaves the wrapper a plain <div> when `label` is omitted', () => {

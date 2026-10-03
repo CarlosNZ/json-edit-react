@@ -1281,8 +1281,16 @@ In addition to the "Copy", "Edit" and "Delete" buttons that appear by each value
 ```ts
 customButtons = [
   {
-    Element: React.FC<{ nodeData: NodeData }>,
-    onClick?: (nodeData: NodeData, e: React.MouseEvent) => void,
+    Element: React.FC<{
+      nodeData: NodeData
+      canEdit: boolean
+      handleEdit: (value: JsonData) => void
+    }>,
+    onClick?: (
+      nodeData: NodeData,
+      e: React.MouseEvent,
+      actions: { handleEdit: (value: JsonData) => void }
+    ) => void,
     label?: string
   }
 ]
@@ -1294,6 +1302,22 @@ customButtons = [
 > Unlike [custom node definitions](#custom-nodes--components), custom buttons don't have a `condition` property. However, you can still make them conditional as they have full access to each node's `nodeData` — just return `null` from the component when they shouldn't appear.
 
 The optional `label` is the button's **accessible name**. Supply it and the wrapper around your `Element` becomes a real `<button aria-label={label}>`, so assistive tech announces it the same way it announces the built-in Copy/Edit/Delete controls — and, when [`showIconTooltips`](#props-reference) is enabled, it shows as the hover tooltip too. Leave it out when your `Element` is already interactive (it renders its own `<button>` or `<a>`) — the wrapper then stays a plain `<div>`, so the two don't nest and your own element supplies the accessible name.
+
+To change the node's value from a button, call `handleEdit` — the third argument to `onClick`, or a prop on `Element` if it handles its own clicks. It commits the new value at that node the same way an edit does: through [`onUpdate`](#onupdate--accept-reject-transform), which can reject or transform it, and the [`onEditEvent`](#listening-to-the-lifecycle--oneditevent) stream, with a rejection shown as the node's inline error and passed to [`onError`](#onerror). The new value can be any type, so a string can become an object, for instance. Use it rather than your own `setData`, which skips all of that.
+
+```tsx
+const uppercaseButton: CustomButtonDefinition = {
+  Element: ({ nodeData, canEdit }) =>
+    canEdit && typeof nodeData.value === 'string' ? <UppercaseIcon /> : null,
+  label: 'Uppercase',
+  onClick: ({ value }, _e, { handleEdit }) =>
+    handleEdit((value as string).toUpperCase()),
+}
+```
+
+`handleEdit` isn't restricted by [`allowEdit`](#permissions--allowedit--allowdelete--allowadd), so your button decides when to use it. `Element` receives `canEdit`, which says whether `allowEdit` permits editing the node, so a button that edits can return `null` where it's `false`, as above.
+
+`handleEdit` replaces only the button's own node. For a change elsewhere in the data, such as inserting a sibling, update your data with `setData` as usual.
 
 
 [![▶ Live example: Custom buttons](https://img.shields.io/badge/▶_Live_example-Custom_buttons-2ea44f?style=for-the-badge)](https://carlosnz.github.io/json-edit-react/examples/custom-buttons)

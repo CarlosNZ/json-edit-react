@@ -2,11 +2,14 @@ import { useMemo, useState } from 'react'
 import {
   JsonEditor,
   assign,
+  toPathString,
   type AssignInput,
   type CustomButtonDefinition,
+  type CustomButtonElementProps,
   type NodeData,
+  type UpdateFunction,
 } from '@json-edit-react'
-import { useEditorDefaults } from '@example-resources'
+import { useEditorDefaults, useToast } from '@example-resources'
 
 const initialData = {
   title: 'Weekend reading list',
@@ -58,6 +61,38 @@ const OpenLinkButton = ({ nodeData }: { nodeData: NodeData }) => {
   )
 }
 
+const isArticle = (value: unknown): value is { read: boolean } =>
+  typeof value === 'object' &&
+  value !== null &&
+  typeof (value as { read?: unknown }).read === 'boolean'
+
+// Shown on each article (any object with a boolean `read`).
+// Besides `nodeData`, an `Element` receives `canEdit` — whether
+// `allowEdit` permits editing this node — so a button that
+// changes data can hide itself on read-only nodes.
+const ReadToggleButton = ({ nodeData, canEdit }: CustomButtonElementProps) => {
+  const { value } = nodeData
+  if (!canEdit || !isArticle(value)) return null
+  // A filled check when read, an empty circle when not.
+  return (
+    <svg
+      className="jer-icon"
+      viewBox="0 0 24 24"
+      width="1.3em"
+      height="1.3em"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <title>{value.read ? 'Mark as unread' : 'Mark as read'}</title>
+      <circle cx="12" cy="12" r="9" />
+      {value.read && <polyline points="8 12.5 11 15.5 16 9.5" />}
+    </svg>
+  )
+}
+
 // Shown on any array element (its key is its numeric index).
 // Lets you clone a whole article object, or a single tag
 // string, with one click.
@@ -88,6 +123,20 @@ const DuplicateButton = ({ nodeData }: { nodeData: NodeData }) => {
 
 export default function CustomButtons() {
   const [data, setData] = useState(initialData)
+  const toast = useToast()
+
+  // Accepts every change, and announces it so you can see
+  // which changes pass through `onUpdate`: inline edits and
+  // the read toggle's `handleEdit` do; Duplicate's `setData`
+  // doesn't.
+  const onUpdate: UpdateFunction<typeof initialData> = ({ event, path }) => {
+    toast({
+      title: `onUpdate: ${event}`,
+      description: toPathString(path) || 'root',
+      status: 'info',
+      duration: 3000,
+    })
+  }
 
   // `setData` is referentially stable, so the array is built
   // once. Custom buttons feed into every node's props, so a
@@ -108,8 +157,23 @@ export default function CustomButtons() {
         },
       },
       {
+        Element: ReadToggleButton,
+        label: 'Toggle read',
+        // `handleEdit` commits a new value at this button's
+        // own node, the same way an edit does: through
+        // `onUpdate` (which can reject it) and `onEditEvent`.
+        // Here the node is the whole article object.
+        onClick: (nodeData, _e, { handleEdit }) => {
+          const article = nodeData.value as { read: boolean }
+          handleEdit({ ...article, read: !article.read })
+        },
+      },
+      {
         Element: DuplicateButton,
         label: 'Duplicate this item',
+        // Duplicating inserts into the *parent* array, which
+        // `handleEdit` can't do — it only replaces this node —
+        // so this writes with `setData`, skipping `onUpdate`.
         onClick: (nodeData) => {
           const index = nodeData.key as number
           // `assign` is json-edit-react's own immutable
@@ -134,6 +198,7 @@ export default function CustomButtons() {
       setData={setData}
       {...useEditorDefaults()}
       rootName="readingList"
+      onUpdate={onUpdate}
       customButtons={customButtons}
       collapse={4}
     />

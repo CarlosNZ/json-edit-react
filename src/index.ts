@@ -45,6 +45,7 @@ export {
   type CustomWrapperProps,
   type CustomNodeDefinition,
   type CustomButtonDefinition,
+  type CustomButtonElementProps,
   type CustomKeyProps,
   type CustomTextDefinitions,
   type CustomTextFunction,
