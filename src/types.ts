@@ -535,10 +535,15 @@ export interface CustomComponentProps<T = Record<string, unknown>> extends Omit<
   value: JsonData
   componentProps?: T
   parentData: CollectionData | null
-  // Writes into the node's edit buffer. Accepts any `JsonData` so
-  // `renderCollectionAsValue` components can buffer object values; primitive
-  // editors just pass strings/numbers/booleans.
+  // On a value node (including `renderCollectionAsValue`), writes into the
+  // node's edit buffer; accepts any `JsonData` so those components can buffer
+  // object values. On a collection node, commits the value, the same as
+  // `handleEdit(value)`.
+  // TO-DO (v3): make it buffer-only on collection nodes too, so `handleEdit`
+  // is the one commit call everywhere.
   setValue: (value: JsonData) => void
+  // Commits the edit: `handleEdit(value)` commits that value as-is, and
+  // `handleEdit()` commits the node's edit buffer.
   handleEdit: (value?: unknown) => void
   handleCancel: () => void
   onKeyDown: (e: React.KeyboardEvent) => void

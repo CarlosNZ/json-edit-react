@@ -3,6 +3,7 @@
 ## 2.0.4
 
 - A custom button can change its node's value through `handleEdit` (passed to `onClick`, and to `Element` with `canEdit`), which goes through `onUpdate` and `onEditEvent` like any edit — see [Custom buttons](README.md#custom-buttons) (#418).
+- A custom collection component can commit a new value with `handleEdit(value)`, as a value component does, and a rejected `setValue` on a collection now shows its inline error and reaches `onError` — see [What your component receives](README.md#what-your-component-receives) (#418).
 
 ## 2.0.3
 

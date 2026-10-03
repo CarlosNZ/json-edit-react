@@ -1891,3 +1891,104 @@ describe('CustomNode — isPending (optimistic settlement)', () => {
     expect(screen.getByText('world')).toBeInTheDocument()
   })
 })
+
+describe('CustomNode — a collection component commits a value (#418)', () => {
+  // Commits `{ ...value, added: true }` through either prop, and opens its own
+  // edit session on double-click, so both view-mode and in-session commits are
+  // exercisable.
+  const Committer = ({
+    children,
+    value,
+    isEditing,
+    setIsEditing,
+    handleEdit,
+    setValue,
+  }: CustomComponentProps) => (
+    <div>
+      <span data-testid="state" onDoubleClick={() => setIsEditing(true)}>
+        {isEditing ? 'EDITING' : 'VIEW'}
+      </span>
+      <button type="button" onClick={() => handleEdit({ ...(value as object), added: true })}>
+        via handleEdit
+      </button>
+      <button type="button" onClick={() => setValue({ ...(value as object), added: true })}>
+        via setValue
+      </button>
+      {children}
+    </div>
+  )
+
+  const defs: CustomNodeDefinition[] = [
+    { condition: ({ key }) => key === 'group', component: Committer, showOnEdit: true },
+  ]
+
+  test.each(['via handleEdit', 'via setValue'])('%s commits through onUpdate', async (name) => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    const onUpdate = jest.fn(() => true as const)
+    render(
+      <JsonEditor
+        data={{ group: { a: 1 } }}
+        setData={setData}
+        onUpdate={onUpdate}
+        customNodeDefinitions={defs}
+      />
+    )
+
+    await user.click(screen.getByRole('button', { name }))
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event: 'edit',
+        path: ['group'],
+        newValue: { a: 1, added: true },
+      }),
+      expect.anything()
+    )
+    expect(setData).toHaveBeenCalledWith({ group: { a: 1, added: true } })
+  })
+
+  test('handleEdit(value) inside its own edit session commits and closes it', async () => {
+    const user = userEvent.setup()
+    const setData = jest.fn()
+    render(<JsonEditor data={{ group: { a: 1 } }} setData={setData} customNodeDefinitions={defs} />)
+
+    await user.dblClick(screen.getByTestId('state'))
+    expect(screen.getByText('EDITING')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'via handleEdit' }))
+
+    expect(setData).toHaveBeenCalledWith({ group: { a: 1, added: true } })
+    expect(screen.getByText('VIEW')).toBeInTheDocument()
+  })
+
+  test.each(['via handleEdit', 'via setValue'])(
+    '%s rejected by onUpdate leaves data unchanged and reports the error',
+    async (name) => {
+      const user = userEvent.setup()
+      const setData = jest.fn()
+      const onError = jest.fn()
+      const { container } = render(
+        <JsonEditor
+          data={{ group: { a: 1 } }}
+          setData={setData}
+          onUpdate={() => ({ error: 'Not allowed' })}
+          onError={onError}
+          customNodeDefinitions={defs}
+        />
+      )
+
+      await user.click(screen.getByRole('button', { name }))
+
+      expect(setData).not.toHaveBeenCalled()
+      expect(container.querySelector('.jer-error-slug')).toHaveTextContent('Not allowed')
+      expect(onError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          path: ['group'],
+          error: expect.objectContaining({ code: 'UPDATE_ERROR', message: 'Not allowed' }),
+          errorValue: { a: 1, added: true },
+        })
+      )
+    }
+  )
+})
