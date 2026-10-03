@@ -660,7 +660,7 @@ export interface CustomButtonDefinition {
   onClick?: (
     nodeData: NodeData,
     e: React.MouseEvent,
-    actions: { handleEdit: CustomButtonHandleEdit }
+    context: { handleEdit: CustomButtonHandleEdit; canEdit: boolean }
   ) => void
   // Accessible name for the button. Supplying it renders the wrapper as a real
   // <button aria-label={label}>, matching the built-in icon controls — and, as

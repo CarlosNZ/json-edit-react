@@ -215,6 +215,7 @@ describe('customButtons', () => {
     await user.click(button)
     expect(onClick).toHaveBeenCalledWith(expect.objectContaining({ path: [] }), expect.anything(), {
       handleEdit: expect.any(Function),
+      canEdit: true,
     })
   })
 

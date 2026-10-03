@@ -7,6 +7,8 @@
  * stream, and the node's own error reporting on rejection.
  */
 
+import { readFileSync } from 'fs'
+import { join } from 'path'
 import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { useState } from 'react'
@@ -270,17 +272,21 @@ describe('customButtons — handleEdit', () => {
     )
   })
 
-  test('is not gated by allowEdit, and passes canEdit to the Element', async () => {
+  test('is not gated by allowEdit, and passes canEdit to Element and onClick', async () => {
     const user = userEvent.setup()
     const setData = jest.fn()
     const seen: Record<string, boolean> = {}
+    const clicked: Record<string, boolean> = {}
     const button: CustomButtonDefinition = {
       Element: ({ nodeData, canEdit }) => {
         seen[String(nodeData.key)] = canEdit
         return <Glyph />
       },
       label: 'Transform',
-      onClick: (_nodeData, _e, { handleEdit }) => handleEdit('changed'),
+      onClick: (nodeData, _e, { handleEdit, canEdit }) => {
+        clicked[String(nodeData.key)] = canEdit
+        handleEdit('changed')
+      },
     }
     render(
       <Harness
@@ -294,8 +300,10 @@ describe('customButtons — handleEdit', () => {
     expect(seen).toMatchObject({ open: true, locked: false })
 
     // The consumer's own code decides; the editor doesn't block the commit.
+    await user.click(within(rowFor('open')).getByRole('button', { name: 'Transform' }))
     await user.click(within(rowFor('locked')).getByRole('button', { name: 'Transform' }))
-    expect(setData).toHaveBeenCalledWith({ open: 'a', locked: 'changed' })
+    expect(clicked).toEqual({ open: true, locked: false })
+    expect(setData).toHaveBeenLastCalledWith({ open: 'changed', locked: 'changed' })
   })
 
   test('an Element with its own button commits through its handleEdit prop', async () => {
@@ -347,9 +355,53 @@ describe('customButtons — handleEdit', () => {
     expect(onClick).toHaveBeenCalledWith(
       expect.objectContaining({ path: ['a'] }),
       expect.anything(),
-      { handleEdit: expect.any(Function) }
+      { handleEdit: expect.any(Function), canEdit: true }
     )
     expect(onUpdate).not.toHaveBeenCalled()
     expect(setData).not.toHaveBeenCalled()
+  })
+})
+
+// Jest stubs the stylesheet import, so these load the real one: hiding an
+// empty wrapper is the stylesheet's job.
+describe('customButtons — an Element that renders nothing', () => {
+  let style: HTMLStyleElement
+  beforeAll(() => {
+    style = document.createElement('style')
+    style.textContent = readFileSync(join(__dirname, '../src/style.css'), 'utf8')
+    document.head.appendChild(style)
+  })
+  afterAll(() => style.remove())
+
+  // Renders only on the `shown` row.
+  const OnlyShown = ({ nodeData }: { nodeData: NodeData }) =>
+    nodeData.key === 'shown' ? <span>★</span> : null
+
+  test('hides a labelled wrapper, so assistive tech can’t press it', () => {
+    render(
+      <JsonEditor
+        data={{ shown: 1, hidden: 2 }}
+        setData={() => {}}
+        customButtons={[{ Element: OnlyShown, label: 'Mark', onClick: () => {} }]}
+      />
+    )
+
+    expect(within(rowFor('shown')).getByRole('button', { name: 'Mark' })).toBeInTheDocument()
+    expect(within(rowFor('hidden')).queryByRole('button', { name: 'Mark' })).toBeNull()
+  })
+
+  test('hides an unlabelled wrapper too', () => {
+    render(
+      <JsonEditor
+        data={{ shown: 1, hidden: 2 }}
+        setData={() => {}}
+        customButtons={[{ Element: OnlyShown, onClick: () => {} }]}
+      />
+    )
+
+    const wrappers = (key: string) =>
+      Array.from(rowFor(key).querySelectorAll<HTMLElement>('.jer-edit-buttons > div'))
+    expect(wrappers('shown').map((el) => getComputedStyle(el).display)).toEqual(['block'])
+    expect(wrappers('hidden').map((el) => getComputedStyle(el).display)).toEqual(['none'])
   })
 })

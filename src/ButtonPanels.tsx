@@ -245,12 +245,15 @@ export const EditButtons = ({
         // A `label` opts the wrapper into real button semantics, matching the
         // built-in icon controls. Without one it stays a <div>: `Element` is
         // consumer-owned and may itself be interactive, and a <button> wrapper
-        // would then nest interactive content.
-        const handleClick = (e: React.MouseEvent) => onClick?.(nodeData, e, { handleEdit })
+        // would then nest interactive content. Either way the wrapper carries
+        // `jer-custom-button`, which the stylesheet hides while it's empty, so
+        // an `Element` returning `null` leaves nothing to press or space out.
+        const handleClick = (e: React.MouseEvent) => onClick?.(nodeData, e, { handleEdit, canEdit })
         return label ? (
           <button
             key={i}
             type="button"
+            className="jer-custom-button"
             tabIndex={-1}
             onClick={handleClick}
             aria-label={label}
@@ -259,7 +262,7 @@ export const EditButtons = ({
             <Element nodeData={nodeData} canEdit={canEdit} handleEdit={handleEdit} />
           </button>
         ) : (
-          <div key={i} onClick={handleClick}>
+          <div key={i} className="jer-custom-button" onClick={handleClick}>
             <Element nodeData={nodeData} canEdit={canEdit} handleEdit={handleEdit} />
           </div>
         )

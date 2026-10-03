@@ -1290,7 +1290,7 @@ customButtons = [
     onClick?: (
       nodeData: NodeData,
       e: React.MouseEvent,
-      actions: { handleEdit: (value: JsonData) => void }
+      context: { handleEdit: (value: JsonData) => void; canEdit: boolean }
     ) => void,
     label?: string
   }
@@ -1300,7 +1300,7 @@ customButtons = [
 > The `onClick` is *optional* -- don't provide it if you have your own `onClick` handler within your button component.
 
 > [!NOTE]
-> Unlike [custom node definitions](#custom-nodes--components), custom buttons don't have a `condition` property. However, you can still make them conditional as they have full access to each node's `nodeData` — just return `null` from the component when they shouldn't appear.
+> Unlike [custom node definitions](#custom-nodes--components), custom buttons don't have a `condition` property. However, you can still make them conditional as they have full access to each node's `nodeData` — just return `null` from the component when they shouldn't appear. The button is then removed entirely, so it takes no space and can't be pressed.
 
 The optional `label` is the button's **accessible name**. Supply it and the wrapper around your `Element` becomes a real `<button aria-label={label}>`, so assistive tech announces it the same way it announces the built-in Copy/Edit/Delete controls — and, when [`showIconTooltips`](#props-reference) is enabled, it shows as the hover tooltip too. Leave it out when your `Element` is already interactive (it renders its own `<button>` or `<a>`) — the wrapper then stays a plain `<div>`, so the two don't nest and your own element supplies the accessible name.
 
@@ -1316,7 +1316,7 @@ const uppercaseButton: CustomButtonDefinition = {
 }
 ```
 
-`handleEdit` isn't restricted by [`allowEdit`](#permissions--allowedit--allowdelete--allowadd), so your button decides when to use it. `Element` receives `canEdit`, which says whether `allowEdit` permits editing the node, so a button that edits can return `null` where it's `false`, as above.
+`handleEdit` isn't restricted by [`allowEdit`](#permissions--allowedit--allowdelete--allowadd), so your button decides when to use it. `Element` and `onClick` both receive `canEdit`, which says whether `allowEdit` permits editing the node, so a button that edits can return `null` where it's `false`, as above.
 
 `handleEdit` replaces only the button's own node. For a change elsewhere in the data, such as inserting a sibling, update your data with `setData` as usual.
 
