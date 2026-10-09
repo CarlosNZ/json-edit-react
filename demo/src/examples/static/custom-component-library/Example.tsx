@@ -20,6 +20,7 @@ import {
   colorPickerDefinition,
   markdownDefinition,
   numberFormatterDefinition,
+  chipsDefinition,
 } from '@json-edit-react/components'
 import { ReactDatePicker } from '@json-edit-react/components/widgets'
 import { byKey } from '@json-edit-react/utils/filters'
@@ -33,7 +34,7 @@ import { SearchBox, useEditorDefaults } from '@example-resources'
 // an "enhanced" link, date/time editors, a UNIX-timestamp
 // editor, Markdown, an image, a colour picker, the
 // non-JSON types (`undefined`, `NaN`, `Symbol`, `BigInt`),
-// and locale-aware number formatting.
+// locale-aware number formatting, and tag-style chips.
 
 export { initialData, type CustomComponentLibraryData }
 
@@ -133,6 +134,21 @@ export const customNodeDefinitions = (currentData: JsonData) => {
     symbolDefinition(),
     bigIntDefinition(),
     colorPickerDefinition(),
+    // Definitions match first-come, so the targeted Chips
+    // (new chips picked from `options`, in a custom colour)
+    // goes ahead of the default one, which takes every
+    // other array of strings. It's kept out of the Type
+    // selector, which would otherwise list "Chips" twice.
+    chipsDefinition({
+      condition: byKey('Pick from options'),
+      showInTypeSelector: false,
+      componentProps: {
+        options: ['Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune'],
+        color: '#fbcfe8',
+        textColor: '#831843',
+      },
+    }),
+    chipsDefinition(),
     // "Number Formatting": one NumberFormatter per field,
     // all sharing the `locale` picked above. It's
     // display-only, so editing any of them shows the raw
