@@ -41,6 +41,7 @@ Each component ships a React component plus a definition factory that produces a
 | `ErrorIndicator` | Wraps a node with a glyph (default ⚠️) to flag the nodes you target via `condition` — e.g. validation errors ([details](#errorindicator--flag-nodes-with-a-glyph)) | —                                          |
 | `AutoType`       | Edit-only text input on every value node that infers the type from what you type — `12.3` → number, `true` → boolean, `{…}`/`[…]` → object/array, otherwise a string ([details](#autotype--type-follows-the-input)) | —                                          |
 | `NumberFormatter` | Numbers formatted via `Intl.NumberFormat` (thousands separators, currency, percent, …), edited as the raw number ([details](#numberformatter--locale-aware-number-formatting)) | —                                          |
+| `Chips`          | Arrays of strings shown as removable chips, with an inline add — free text, or picked from a fixed list ([details](#chips--tags-and-labels)) | —                                          |
 
 ### Editor slot widgets
 
@@ -337,6 +338,30 @@ numberFormatterDefinition({
 ```
 
 Because it's display-only, the value your data holds never changes: a `percent` style shows `0.5` as "50%" and a `currency` style rounds the *display* to the currency's fraction digits, but the underlying number keeps its full precision. A malformed `options` (for example `style: 'currency'` with no `currency` code) throws when the formatter is built — deliberately loud, so the misconfiguration surfaces in development rather than silently showing a raw number.
+
+### `Chips` — tags and labels
+
+Renders an array of strings as a row of chips — handy for `tags`, `labels`, `aliases` and the like, which are clunky to edit one element at a time. Hover a chip and click its × to remove it; click + to type a new one (Enter adds it and keeps the input open for the next; Esc or an empty Enter closes it). Each change commits straight away. Inside the node's edit session (the edit button, or switching a node to "Chips" in the Type selector) the same controls edit a draft, which ✓ commits and Esc cancels.
+
+```jsx
+import { chipsDefinition } from '@json-edit-react/components'
+import { byKey } from '@json-edit-react/utils'
+
+chipsDefinition({
+  condition: byKey('tags'),
+  componentProps: {
+    color: '#fbcfe8', // chip background (default sky blue)
+    textColor: '#831843', // chip text (default dark blue)
+    options: ['draft', 'review', 'published'],
+  },
+})
+```
+
+With `options`, new chips are picked from a dropdown of the options not already present (rendered with the editor's `Select`, so it follows a custom `Select` prop), instead of typed as free text. Adding a chip that's already present does nothing.
+
+The guard matches any array whose elements are all strings — **including empty arrays**, so that removing the last chip leaves an empty list you can still add to. That means every empty array in the tree renders as Chips too, so narrow it with a `condition` if your data has other arrays. Switching a string to "Chips" in the Type selector splits it on commas; switching away joins the chips with `, `.
+
+**Saving to JSON:** the value is a plain array of strings, so there's nothing special to serialise.
 
 ## Tree-shaking
 

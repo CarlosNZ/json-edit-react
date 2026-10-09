@@ -22,6 +22,7 @@ export const initialData = {
   - Symbol
   - Image
   - ColorPicker
+  - Chips
 
   Click [here](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/README.md) for more info
   `,
@@ -76,6 +77,10 @@ export const initialData = {
     },
   },
   'Color Picker': '#ff69B4', // Hot Pink
+  Chips: {
+    Tags: ['json', 'react', 'editor'],
+    'Pick from options': ['Mercury', 'Venus'],
+  },
 }
 
 export type CustomComponentLibraryData = typeof initialData
