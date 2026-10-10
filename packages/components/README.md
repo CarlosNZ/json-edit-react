@@ -341,7 +341,7 @@ Because it's display-only, the value your data holds never changes: a `percent` 
 
 ### `Chips` — tags and labels
 
-Renders an array of strings as a row of chips — handy for `tags`, `labels`, `aliases` and the like, which are clunky to edit one element at a time. Hover a chip and click its × to remove it; click + to type a new one (Enter adds it and keeps the input open for the next; Esc or an empty Enter closes it). Each change commits straight away. Inside the node's edit session, opened by the edit button, the same controls edit a draft, which ✓ commits and Esc cancels.
+Renders an array of strings as a row of chips — handy for `tags`, `labels`, `aliases` and the like, which are clunky to edit one element at a time. Hover a chip and click its × to remove it; click + to type a new one (Enter adds it and keeps the input open for the next; Esc or an empty Enter closes it). Each change commits straight away. The edit button opens the usual edit session for the Type selector, and the chips are read-only while it's open.
 
 ```jsx
 import { chipsDefinition } from '@json-edit-react/components'

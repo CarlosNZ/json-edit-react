@@ -91,13 +91,15 @@ describe('Chips — string arrays as removable chips', () => {
     expect(screen.queryByRole('button', { name: 'OK' })).not.toBeInTheDocument()
   })
 
-  test('the edit button keeps the session open, for the Type selector', async () => {
+  test('the edit button opens a session for the Type selector, with the chips read-only', async () => {
     const onData = jest.fn()
     render(<Harness initial={{ tags: ['red'] }} defs={[chipsDefinition()]} onData={onData} />)
     const row = screen.getByText('red').closest('.jer-component') as HTMLElement
     await userEvent.click(within(row).getByRole('button', { name: 'Edit' }))
     expect(within(row).getByRole('combobox')).toBeInTheDocument()
     expect(within(row).getByRole('button', { name: 'OK' })).toBeInTheDocument()
+    expect(within(row).queryByRole('button', { name: 'Remove red' })).not.toBeInTheDocument()
+    expect(within(row).queryByRole('button', { name: 'Add chip' })).not.toBeInTheDocument()
     expect(onData).not.toHaveBeenCalled()
   })
 
