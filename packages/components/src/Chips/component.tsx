@@ -3,10 +3,10 @@
  * Hovering a chip reveals an "×" to remove it, and a "+" button adds one: as
  * free text, or, when `componentProps.options` is set, picked from that list.
  *
- * Outside an edit session each change commits on its own, via
- * `handleEdit(value)`. Inside one, opened by the edit button, the same controls
- * write to the edit buffer, which ✓ commits. A type switch to Chips commits as
- * soon as it renders instead, since the chips are edited in place.
+ * Each change commits on its own, via `handleEdit(value)`, so the chips need
+ * no edit session. The one the edit button opens is for the Type selector, so
+ * the chips are read-only while it's open. A type switch to Chips commits as
+ * soon as it renders.
  */
 
 import React, { useEffect, useRef, useState } from 'react'
@@ -27,8 +27,7 @@ export interface ChipsCustomProps {
 
 export const Chips = (props: CustomComponentProps<ChipsCustomProps>) => {
   useStyles('jer-chips', css)
-  const { value, setValue, handleEdit, isEditing, canEdit, Select, nodeData, componentProps } =
-    props
+  const { value, handleEdit, isEditing, canEdit, Select, nodeData, componentProps } = props
   const { color = '#bae6fd', textColor = '#0c4a6e', options } = componentProps ?? {}
 
   const [isAdding, setIsAdding] = useState(false)
@@ -48,16 +47,17 @@ export const Chips = (props: CustomComponentProps<ChipsCustomProps>) => {
 
   const chips = Array.isArray(value) ? value.map(String) : []
 
-  const update = (newChips: string[]) => (isEditing ? setValue(newChips) : handleEdit(newChips))
+  // Read-only during an edit session, as well as on a node `allowEdit` blocks.
+  const isEditable = canEdit && !isEditing
 
   const addChip = (chip: string) => {
     const text = chip.trim()
-    if (text && !chips.includes(text)) update([...chips, text])
+    if (text && !chips.includes(text)) handleEdit([...chips, text])
   }
 
   // With `options`, only the ones not already present can be added.
   const available = options?.filter((option) => !chips.includes(option))
-  const canAdd = canEdit && (!available || available.length > 0)
+  const canAdd = isEditable && (!available || available.length > 0)
 
   return (
     <div
@@ -67,12 +67,12 @@ export const Chips = (props: CustomComponentProps<ChipsCustomProps>) => {
       {chips.map((chip, index) => (
         <span key={index} className="jer-chip">
           {chip}
-          {canEdit && (
+          {isEditable && (
             <button
               type="button"
               className="jer-chip-remove"
               aria-label={`Remove ${chip}`}
-              onClick={() => update(chips.filter((_, i) => i !== index))}
+              onClick={() => handleEdit(chips.filter((_, i) => i !== index))}
             >
               <svg viewBox="0 0 10 10" width="0.6em" height="0.6em">
                 <path
