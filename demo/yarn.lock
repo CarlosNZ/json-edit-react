@@ -1141,10 +1141,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@json-edit-react/components@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@json-edit-react/components/-/components-1.0.0.tgz#5cecefd8ce1ef313a146822d247722a89e6242c9"
-  integrity sha512-b40LtLz5U38Gk9WGPXbr5IpQceJqcDNM5/aBQydlU1DKFD4i9KFIQHsD+LN7JHKwwMJUzruqQy6MUd8Jaz4RJQ==
+"@json-edit-react/components@1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@json-edit-react/components/-/components-1.1.0.tgz#5caf9cf1003b5cf97da73a508cfc304731fbace5"
+  integrity sha512-7ISd5dTPvVGMZ1VBThyiyt6fSyqoTXBV3pqhD6H65Qid5/npoKL5DC72uuzXyutY8b58J2hqEHhPPorAnY4+Qw==
   dependencies:
     "@codemirror/lang-json" "^6.0.1"
     "@uiw/codemirror-theme-console" "^4.23.13"
