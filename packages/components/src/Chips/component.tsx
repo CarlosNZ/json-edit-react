@@ -4,14 +4,16 @@
  * free text, or, when `componentProps.options` is set, picked from that list.
  *
  * Outside an edit session each change commits on its own, via
- * `handleEdit(value)`. Inside one (the edit button, or a type switch to Chips)
- * the same controls write to the edit buffer, which ✓ commits.
+ * `handleEdit(value)`. Inside one, opened by the edit button, the same controls
+ * write to the edit buffer, which ✓ commits. A type switch to Chips commits as
+ * soon as it renders instead, since the chips are edited in place.
  */
 
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { type CustomComponentProps } from 'json-edit-react'
 import css from './style.css?inline'
 import { useStyles } from '../_common/useStyles'
+import { isStringArray } from './isStringArray'
 
 export interface ChipsCustomProps {
   // Chip background. Default sky blue.
@@ -25,10 +27,24 @@ export interface ChipsCustomProps {
 
 export const Chips = (props: CustomComponentProps<ChipsCustomProps>) => {
   useStyles('jer-chips', css)
-  const { value, setValue, handleEdit, isEditing, canEdit, Select, componentProps } = props
+  const { value, setValue, handleEdit, isEditing, canEdit, Select, nodeData, componentProps } =
+    props
   const { color = '#bae6fd', textColor = '#0c4a6e', options } = componentProps ?? {}
 
   const [isAdding, setIsAdding] = useState(false)
+
+  // An edit session whose committed value isn't yet a string array is a type
+  // switch to Chips, already converted into the buffer. With nothing left to
+  // confirm, it commits straight away. A session opened from the edit button
+  // stays open, as it's where the Type selector lives. The ref stops a second
+  // commit when Strict Mode runs the effect twice.
+  const switchCommitted = useRef(false)
+  useEffect(() => {
+    if (!isEditing || isStringArray(nodeData.value) || switchCommitted.current) return
+    switchCommitted.current = true
+    handleEdit()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditing])
 
   const chips = Array.isArray(value) ? value.map(String) : []
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { JsonEditor, type CustomNodeDefinition, type JsonData } from 'json-edit-react'
 import { chipsDefinition } from '../src/Chips'
@@ -80,6 +80,25 @@ describe('Chips — string arrays as removable chips', () => {
     expect(screen.queryByRole('option', { name: 'red' })).not.toBeInTheDocument()
     await userEvent.selectOptions(select, 'blue')
     expect(onData).toHaveBeenLastCalledWith({ tags: ['red', 'blue'] })
+  })
+
+  test('a type switch to Chips commits straight away, with no edit session left open', async () => {
+    const onData = jest.fn()
+    render(<Harness initial={{ tags: 'red, green' }} defs={[chipsDefinition()]} onData={onData} />)
+    await userEvent.dblClick(screen.getByText('"red, green"'))
+    await userEvent.selectOptions(screen.getByRole('combobox'), 'Chips')
+    expect(onData).toHaveBeenLastCalledWith({ tags: ['red', 'green'] })
+    expect(screen.queryByRole('button', { name: 'OK' })).not.toBeInTheDocument()
+  })
+
+  test('the edit button keeps the session open, for the Type selector', async () => {
+    const onData = jest.fn()
+    render(<Harness initial={{ tags: ['red'] }} defs={[chipsDefinition()]} onData={onData} />)
+    const row = screen.getByText('red').closest('.jer-component') as HTMLElement
+    await userEvent.click(within(row).getByRole('button', { name: 'Edit' }))
+    expect(within(row).getByRole('combobox')).toBeInTheDocument()
+    expect(within(row).getByRole('button', { name: 'OK' })).toBeInTheDocument()
+    expect(onData).not.toHaveBeenCalled()
   })
 
   test('hides the add and remove controls on a read-only node', () => {
