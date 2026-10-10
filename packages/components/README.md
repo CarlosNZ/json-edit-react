@@ -341,7 +341,7 @@ Because it's display-only, the value your data holds never changes: a `percent` 
 
 ### `Chips` — tags and labels
 
-Renders an array of strings as a row of chips — handy for `tags`, `labels`, `aliases` and the like, which are clunky to edit one element at a time. Hover a chip and click its × to remove it; click + to type a new one (Enter adds it and keeps the input open for the next; Esc or an empty Enter closes it). Each change commits straight away. Inside the node's edit session (the edit button, or switching a node to "Chips" in the Type selector) the same controls edit a draft, which ✓ commits and Esc cancels.
+Renders an array of strings as a row of chips — handy for `tags`, `labels`, `aliases` and the like, which are clunky to edit one element at a time. Hover a chip and click its × to remove it; click + to type a new one (Enter adds it and keeps the input open for the next; Esc or an empty Enter closes it). Each change commits straight away. Inside the node's edit session, opened by the edit button, the same controls edit a draft, which ✓ commits and Esc cancels.
 
 ```jsx
 import { chipsDefinition } from '@json-edit-react/components'
@@ -359,7 +359,7 @@ chipsDefinition({
 
 With `options`, new chips are picked from a dropdown of the options not already present (rendered with the editor's `Select`, so it follows a custom `Select` prop), instead of typed as free text. Adding a chip that's already present does nothing.
 
-The guard matches any array whose elements are all strings — **including empty arrays**, so that removing the last chip leaves an empty list you can still add to. That means every empty array in the tree renders as Chips too, so narrow it with a `condition` if your data has other arrays. Switching a string to "Chips" in the Type selector splits it on commas; switching away joins the chips with `, `.
+The guard matches any array whose elements are all strings — **including empty arrays**, so that removing the last chip leaves an empty list you can still add to. That means every empty array in the tree renders as Chips too, so narrow it with a `condition` if your data has other arrays. Switching a string to "Chips" in the Type selector splits it on commas and saves straight away; switching away joins the chips with `, `.
 
 **Saving to JSON:** the value is a plain array of strings, so there's nothing special to serialise.
 
