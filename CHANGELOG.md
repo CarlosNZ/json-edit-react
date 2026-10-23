@@ -1,5 +1,9 @@
 # json-edit-react
 
+## 2.0.5
+
+- The edit icons, the collapse chevron and custom buttons show the hand cursor on hover in every host page, not only ones whose own stylesheet resets `<button>` cursors, and the gaps between icons show the normal arrow (#425).
+
 ## 2.0.4
 
 - A custom button can change its node's value through `handleEdit` (passed with `canEdit` to both `onClick` and `Element`), which goes through `onUpdate` and `onEditEvent` like any edit — see [Custom buttons](README.md#custom-buttons) (#418).
