@@ -19,7 +19,7 @@ Releases are **manual and ship-as-you-go**. Every release is the same two steps:
 
 V1 is maintained separately on the `v1.x` branch and publishes to `v1-latest` — see [Ship a V1 patch](package-management-guide.md#ship-a-v1-patch).
 
-**Or in one go:** `pnpm release` asks which package and which version, checks the CHANGELOG, then bumps, runs the checks, commits + tags and publishes under the right dist-tag (`pnpm release --dry-run` first to rehearse; `git push --follow-tags` afterwards). See [One command](package-management-guide.md#one-command-pnpm-release).
+**Or in one go:** `pnpm release` asks which package and which version, checks the CHANGELOG, then bumps, runs the checks, commits + tags, publishes under the right dist-tag and pushes the version commit and tag (`pnpm release --dry-run` first to rehearse). See [One command](package-management-guide.md#one-command-pnpm-release).
 
 `pnpm run versions` prints local-vs-npm for all four. Run it before and after every release — it's the before/after snapshot that tells you whether anything actually shipped.
 
@@ -31,7 +31,7 @@ V1 is maintained separately on the `v1.x` branch and publishes to `v1-latest` �
 2. **Commit everything.** The bump scripts refuse to run on a dirty tree, and for sub-packages the README wrapper restores via `git checkout`, so an uncommitted README edit gets clobbered.
 3. **Preview the tarball.** There is no undo on npm beyond a 72-hour `unpublish`.
 
-Each `bump:*` makes its own version commit **and** an annotated tag — `v<version>` for core, scoped `@json-edit-react/<name>@<version>` for sub-packages (plain `v…` tags would collide across packages). Tags stay local until you `git push --follow-tags`.
+Each `bump:*` makes its own version commit **and** an annotated tag — `v<version>` for core, scoped `@json-edit-react/<name>@<version>` for sub-packages (plain `v…` tags would collide across packages). Tags stay local until you `git push --follow-tags` (`pnpm release` pushes for you).
 
 ---
 

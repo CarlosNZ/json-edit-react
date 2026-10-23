@@ -22,10 +22,9 @@ Per package, two steps: **bump the version, then publish.** pnpm doesn't prompt 
 pnpm release --dry-run                    # everything except the commit, tag and real publish
 pnpm release                              # asks: which package? which version? then confirms
 pnpm release themes                       # skip the package question
-git push --follow-tags                    # it never pushes
 ```
 
-It needs a clean tree, logs in to npm through the browser if the session has lapsed, and suggests the next versions (patch / minor / major, and a `beta.0` of each; a beta ticks to the next `beta.N`). It refuses unless the package's `CHANGELOG.md` has a `## X.Y.Z` heading for the version (a beta also passes on `## X.Y.Z-beta.N`), and for a sub-package it shows the peer range on core that will ship. Then it bumps `package.json`, runs lint / tests / typecheck / build (for a sub-package, core is built first, since sub-packages typecheck against core's `build/`), makes the version commit and annotated tag exactly as `bump:*` does, and publishes under `latest` or `beta` through the same commands as `pub:*`. If a check fails before the commit, `package.json` is put back; if the publish fails after it, it prints how to retry or undo. After a stable release it reminds you to move `beta` up if it's been left behind. The step-by-step scripts below remain for anything it doesn't cover, such as the [everything-together](#ship-everything-together-a-compat-break) ordering.
+It needs a clean tree, logs in to npm through the browser if the session has lapsed, and suggests the next versions (patch / minor / major, and a `beta.0` of each; a beta ticks to the next `beta.N`). It refuses unless the package's `CHANGELOG.md` has a `## X.Y.Z` heading for the version (a beta also passes on `## X.Y.Z-beta.N`), and for a sub-package it shows the peer range on core that will ship. Then it bumps `package.json`, runs lint / tests / typecheck / build (for a sub-package, core is built first, since sub-packages typecheck against core's `build/`), makes the version commit and annotated tag exactly as `bump:*` does, publishes under `latest` or `beta` through the same commands as `pub:*`, and pushes the version commit and tag with `git push --follow-tags`. If a check fails before the commit, `package.json` is put back; if the publish fails after it, it prints how to retry or undo; if the push fails, the package is already published and it prints the push to run by hand. After a stable release it reminds you to move `beta` up if it's been left behind. The step-by-step scripts below remain for anything it doesn't cover, such as the [everything-together](#ship-everything-together-a-compat-break) ordering.
 
 ## Which scenario?
 
@@ -161,7 +160,7 @@ npm ls json-edit-react @json-edit-react/utils @json-edit-react/themes @json-edit
 - **`pnpm run versions` before and after** every release is your before/after snapshot. If "after" doesn't show the number you bumped to, something didn't publish.
 - **Preview is mandatory, not optional.** There's no undo on npm (only an `unpublish` within 72 hours — a hassle). Inspect a real tarball before `pub:*`.
 - **The dist-tag lives in the script name.** `pub:<pkg>` / `pub:core:latest` → `latest`; `pub:<pkg>:beta` / `pub:core:beta` → `beta`. Publishing a prerelease with the plain script makes it the default install.
-- **`bump:*` needs a clean tree and makes a commit + tag.** Commit your CHANGELOG/work first; the bump then lands a version commit + annotated tag (core `v<version>` via `npm version`, sub-packages scoped `@json-edit-react/<name>@<version>` via [../scripts/bump-package.mjs](../scripts/bump-package.mjs)). Tags stay local — push with `git push --follow-tags`. Don't run `npm version` directly inside `packages/<name>`: away from the repo root it edits `package.json` but makes no commit or tag.
+- **`bump:*` needs a clean tree and makes a commit + tag.** Commit your CHANGELOG/work first; the bump then lands a version commit + annotated tag (core `v<version>` via `npm version`, sub-packages scoped `@json-edit-react/<name>@<version>` via [../scripts/bump-package.mjs](../scripts/bump-package.mjs)). Tags stay local — push with `git push --follow-tags` (`pnpm release` pushes for you). Don't run `npm version` directly inside `packages/<name>`: away from the repo root it edits `package.json` but makes no commit or tag.
 - **`pnpm -C <dir> publish` is broken** on pnpm 10.8.x (leaks the dir + command word into npm → `EUSAGE`). The `pub:<sub>` scripts use the `(cd <dir> && pnpm publish …)` subshell form. `-C`/`--filter` are fine for `build` and `pack`.
 - **The README wrapper needs each target README committed and clean** — it restores via `git checkout`, so an uncommitted edit gets clobbered.
 - **A README-only change still needs a new published version** — npm has no in-place README edit. Bump a patch and re-publish.
@@ -382,7 +381,7 @@ Every `bump:*` tags its release, annotated; core's `v…` tags go back ~140 rele
 - **Sub-packages** → scoped (e.g. `@json-edit-react/themes@1.0.1`), so the four packages' tags never collide. The first sub-package tags are the `1.0.0` releases; the `0.9.0-beta.x` line was never tagged.
 - **V1** → `v1.x.y`, made by `yarn publish` on the `v1.x` branch.
 
-Tags are created **locally** — nothing is pushed automatically. Push the release commit and its tag together with `git push --follow-tags`. Since the bumps won't run on a dirty tree, commit your work (including the CHANGELOG entry) *before* bumping; the bump lands as its own version commit on top.
+The `bump:*` scripts create tags **locally** and push nothing. Push the release commit and its tag together with `git push --follow-tags` (`pnpm release` does this itself, after the publish). Since the bumps won't run on a dirty tree, commit your work (including the CHANGELOG entry) *before* bumping; the bump lands as its own version commit on top.
 
 ### Dist-tag rules
 
