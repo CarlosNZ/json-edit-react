@@ -1,0 +1,23 @@
+import{j as i}from"./chakra-BWJEeLAN.js";import{a as s}from"./vendor-Bv6RL_Bi.js";import{JsonEditor as d}from"./jsonEditReact-BxlaQACC.js";import{u,i as o,k as h,_ as g,s as m,F as S,v as D,E as w,m as b,I as f,U as k,Z as y,J as x,Y as N,h as P,z as c,S as a,B as p}from"./index-CKiHrxM2.js";import{S as T}from"./SearchBox-DkeLTdzu.js";import"./json-DTg2Cl9u.js";import"./icons-DMM-fQ09.js";const E={Intro:`# json-edit-react
+  
+  ## Custom Component library
+  
+  ### Components available:
+  - Hyperlink
+  - "Enhanced" link
+  - DatePicker
+  - DateObject
+  - UNIX Timestamp
+  - NumberFormatter
+  - Undefined
+  - Markdown
+  - BigInt
+  - BooleanToggle
+  - NaN
+  - Symbol
+  - Image
+  - ColorPicker
+  - Chips
+
+  Click [here](https://github.com/CarlosNZ/json-edit-react/blob/main/packages/components/README.md) for more info
+  `,"Active Links":{Url:"https://carlosnz.github.io/json-edit-react/","Long URL":"https://www.google.com/maps/place/Sky+Tower/@-36.8465603,174.7609398,818m/data=!3m1!1e3!4m6!3m5!1s0x6d0d47f06d4bdc25:0x2d1b5c380ad9387!8m2!3d-36.848448!4d174.762191!16zL20vMDFuNXM2?entry=ttu&g_ep=EgoyMDI1MDQwOS4wIKXMDSoASAFQAw%3D%3D","Enhanced Link":{text:"This link displays custom text — try editing me!",url:"https://github.com/CarlosNZ/json-edit-react/tree/main/packages/components"}},"Simple boolean toggle":!1,"Date & Time":{"Date Picker":new Date().toISOString(),"Date Object":new Date,"Show Time in Date?":!0,"Unix Timestamp (seconds)":Math.floor(Date.now()/1e3),"Unix Timestamp (ms)":Date.now(),"Show Unix as raw number?":!0},"Number Formatting":{locale:"en-US",millions:1234989,currency:1789.89,percent:.8756,units:2789.88,compact:12e5,rounded:1.3333333},"Non-JSON types":{Undefined:void 0,"Not a Number":NaN,Symbol1:Symbol("First one"),Symbol2:Symbol("Second one"),BigInt:1234567890123456789012345678901234567890n},Markdown:"Uses [react-markdown](https://www.npmjs.com/package/react-markdown) to render **Markdown** *text content*. ",Images:{JPG:"https://film-grab.com/wp-content/uploads/2014/07/51.jpg",PNG:"https://github.com/CarlosNZ/json-edit-react/blob/main/image/logo192.png?raw=true",GIF:"https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdnV0aHB0c2xiMHFmdGY3Z2NkenBkb3Rmd3hvdTlkaTlkNGYxOXFtOSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/9E7kUhnT9eDok/giphy.gif","Image properties":{maxWidth:200,maxHeight:100}},"Color Picker":"#ff69B4",Chips:{Tags:["json","react","editor"],"Pick from options":["Mercury","Venus"]}},U={enum:"Locale",values:["en-US","en-GB","de-DE","fr-FR","es-ES","it-IT","ja-JP","zh-CN","hi-IN","ar-EG","ru-RU","pt-BR"],matchPriority:1},I={"en-US":"USD","en-GB":"GBP","de-DE":"EUR","fr-FR":"EUR","es-ES":"EUR","it-IT":"EUR","ja-JP":"JPY","zh-CN":"CNY","hi-IN":"INR","ar-EG":"EGP","ru-RU":"RUB","pt-BR":"BRL"},j=n=>o("locale")(n)?[U]:!0,C=n=>{const t=n,e=t?.["Number Formatting"]?.locale??"en-US",r=I[e]??"USD";return[h({componentProps:{showTime:t?.["Date & Time"]?.["Show Time in Date?"]??!1}}),g({componentProps:{showTime:t?.["Date & Time"]?.["Show Time in Date?"]??!1,DatePicker:m}}),S({componentProps:{DatePicker:m,showTime:t?.["Date & Time"]?.["Show Time in Date?"]??!1,displayAs:t?.["Date & Time"]?.["Show Unix as raw number?"]??!0?"number":"date"}}),D({componentProps:{imageStyles:{maxHeight:t?.Images?.["Image properties"]?.maxHeight,maxWidth:t?.Images?.["Image properties"]?.maxWidth}}}),w(),b(),f(),k(),y(),x(),N(),P(),c({condition:o("Pick from options"),showInTypeSelector:!1,componentProps:{options:["Mercury","Venus","Earth","Mars","Jupiter","Saturn","Uranus","Neptune"],color:"#fbcfe8",textColor:"#831843"}}),c(),a({condition:o("millions"),componentProps:{locale:e}}),a({condition:o("currency"),componentProps:{locale:e,options:{style:"currency",currency:r}}}),a({condition:o("percent"),componentProps:{locale:e,options:{style:"percent",maximumFractionDigits:2}}}),a({condition:o("units"),componentProps:{locale:e,options:{style:"unit",unit:"kilometer"}}}),a({condition:o("compact"),componentProps:{locale:e,options:{notation:"compact"}}}),a({condition:o("rounded"),componentProps:{locale:e,options:{maximumFractionDigits:2}}}),p({condition:o("Markdown")}),p({condition:o("Intro"),showKey:!1,componentProps:{components:{a:({_:R,...l})=>i.jsx("a",{...l,target:"_blank",rel:"noopener noreferrer"})}}})]};function Y(){const[n,t]=s.useState(E),[e,r]=s.useState("");return i.jsxs("div",{style:{position:"relative"},children:[i.jsx(T,{value:e,onChange:r,placeholder:"Search"}),i.jsx(d,{data:n,setData:t,...u(),rootName:"components",collapse:3,customNodeDefinitions:C(n),allowTypeSelection:j,searchText:e})]})}export{j as allowTypeSelection,C as customNodeDefinitions,Y as default,E as initialData};
