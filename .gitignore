@@ -56,3 +56,6 @@ pack-output/
 # Python bytecode cache (produced when scripts/build_npm_readme.py is imported)
 __pycache__/
 *.pyc
+
+# Playwright MCP session output (page snapshots, console logs)
+.playwright-mcp/
