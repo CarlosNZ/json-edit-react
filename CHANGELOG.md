@@ -1,5 +1,9 @@
 # json-edit-react
 
+## 2.0.6
+
+- Leaving `'left'` out of `collapseClickZones` removes the left click zone, so it no longer blocks clicks on the content beneath it (#417).
+
 ## 2.0.5
 
 - The edit icons, the collapse chevron and custom buttons show the hand cursor on hover in every host page, not only ones whose own stylesheet resets `<button>` cursors, and the gaps between icons show the normal arrow (#425).

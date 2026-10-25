@@ -1,0 +1,68 @@
+name: PR Bundle Size Comment
+
+# Posts the report produced by pr-bundle-size.yml. That workflow runs on
+# `pull_request`, whose token is read-only for PRs from forks, so it uploads
+# the report as an artifact and this one, running in the base repo's context,
+# posts it. Nothing from the PR is checked out or executed here; the artifact
+# is treated as untrusted data.
+#
+# workflow_run only fires for the copy of this file on the default branch.
+
+on:
+  workflow_run:
+    workflows: [PR Bundle Size]
+    types: [completed]
+
+permissions:
+  actions: read
+  pull-requests: write
+
+jobs:
+  comment:
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      # No artifact means the size job was skipped (no package changes).
+      - name: Download report
+        id: download
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          if gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name pr-bundle-size --dir report; then
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No size report for this run"
+          fi
+
+      # The PR number comes from the artifact, so check it names a PR whose
+      # head is the commit that was measured. A mismatch also happens when the
+      # PR has been pushed to since; the newer run posts its own report.
+      - name: Resolve PR number
+        id: pr
+        if: steps.download.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          number=$(head -n 1 report/pr-number)
+          if ! [[ "$number" =~ ^[0-9]+$ ]]; then
+            echo "::error::Invalid PR number in artifact"
+            exit 1
+          fi
+          pr_sha=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$number" --jq .head.sha)
+          if [[ "$pr_sha" != "$HEAD_SHA" ]]; then
+            echo "::notice::PR #$number head is $pr_sha, report is for $HEAD_SHA; skipping"
+            exit 0
+          fi
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+
+      - name: Post sticky comment
+        if: steps.pr.outputs.number != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-bundle-size
+          number: ${{ steps.pr.outputs.number }}
+          path: report/comment.md
