@@ -9,9 +9,11 @@ concurrency:
   group: pr-bundle-size-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+# Read-only: fork PRs get a read-only token regardless, and this workflow
+# builds untrusted PR code. The comment is posted by pr-bundle-size-comment.yml
+# (workflow_run), which has write access but never runs PR code.
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   detect:
@@ -129,8 +131,17 @@ jobs:
       - name: Format comment
         run: node pr/scripts/format-size-diff.mjs base-sizes.json pr-sizes.json > comment.md
 
-      - name: Post sticky comment
-        uses: marocchino/sticky-pull-request-comment@v2
+      - name: Add report to job summary
+        run: cat comment.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save PR number
+        run: echo "${{ github.event.pull_request.number }}" > pr-number
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
         with:
-          header: pr-bundle-size
-          path: comment.md
+          name: pr-bundle-size
+          path: |
+            comment.md
+            pr-number
+          retention-days: 5
