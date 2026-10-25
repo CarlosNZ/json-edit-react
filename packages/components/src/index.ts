@@ -14,6 +14,7 @@ export * from './ColorPicker'
 export * from './ErrorIndicator'
 export * from './AutoType'
 export * from './NumberFormatter'
+export * from './Chips'
 
 // The definition factories' override surface. The factory builder itself,
 // `createDefinitionFactory`, stays internal.

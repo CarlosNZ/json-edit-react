@@ -1,0 +1,65 @@
+/* Chip colours come from `--jer-chip-color` / `--jer-chip-text`, set inline
+   from `componentProps`. */
+.jer-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.jer-chip {
+  position: relative;
+  font-size: 0.8em;
+  font-weight: 600;
+  padding: 0.3em 0.6em;
+  border-radius: 0.4em;
+  background: var(--jer-chip-color);
+  color: var(--jer-chip-text);
+  user-select: none;
+}
+
+/* Overlaid on the chip's corner, so revealing it doesn't shift the row. */
+.jer-chip-remove {
+  position: absolute;
+  top: -0.5em;
+  right: -0.5em;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.3em;
+  height: 1.3em;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--jer-chip-text);
+  color: var(--jer-chip-color);
+  cursor: pointer;
+}
+
+.jer-chip:hover .jer-chip-remove {
+  display: inline-flex;
+}
+
+.jer-chip-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  padding: 0.35em 0.5em;
+  border: 1px dashed var(--jer-chip-text);
+  border-radius: 0.4em;
+  background: none;
+  color: var(--jer-chip-text);
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.jer-chip-add:hover {
+  opacity: 1;
+}
+
+.jer-chip-input {
+  font: inherit;
+  font-size: 0.8em;
+  width: 8em;
+}

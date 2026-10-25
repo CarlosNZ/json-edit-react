@@ -21,9 +21,11 @@
  *  8. Publishes under the dist-tag, through the same paths as the `pub:*`
  *     scripts: core from the `build_package/` staging dir, a sub-package from
  *     its own dir with its README swapped for the npm form.
+ *  9. Pushes the version commit and its tag (`git push --follow-tags`). The
+ *     package is already published by then, so a failed push ends with the
+ *     command to run by hand rather than an error.
  *
- * Nothing is pushed; the last lines printed are the push command and the
- * follow-ups.
+ * The last lines printed are the follow-ups.
  *
  * A sub-package's published peer range on core is frozen from core's
  * `version` at pack time, so when a release needs a new core, release core
@@ -369,9 +371,13 @@ const main = async () => {
     console.log(`\nDry run of ${name}@${version} complete; ${packageJson} restored.`)
     return
   }
-  console.log(
-    `\nPublished ${name}@${version} under "${distTag(next)}". Push with:\n  git push --follow-tags`
-  )
+  console.log(`\nPublished ${name}@${version} under "${distTag(next)}".`)
+  // The publish can't be undone, so a failed push is reported rather than
+  // thrown: the release is complete and only the push is left to do by hand.
+  step('git push --follow-tags')
+  const pushed = spawnSync('git', ['push', '--follow-tags'], { stdio: 'inherit' }).status === 0
+  if (!pushed)
+    console.log(`\nThe push failed. Push the commit and tag ${tag} with:\n  git push --follow-tags`)
   // `beta` left behind `latest` would make `@beta` install an older version
   const beta = next.pre ? null : publishedUnder(name, 'beta')
   if (beta && compare(beta, next) < 0)

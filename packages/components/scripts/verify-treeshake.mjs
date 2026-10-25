@@ -43,8 +43,8 @@ const widgetsEsm = path.join(pkgRoot, 'build', 'widgets.esm.js')
 // stylesheet would be an input-stage failure that hits both, the check costs
 // a `readFileSync` and this is the list of files that actually publish.
 const BUNDLES = {
-  'index.esm.js': ['loader', 'unix', 'errorIndicator'],
-  'index.cjs.js': ['loader', 'unix', 'errorIndicator'],
+  'index.esm.js': ['loader', 'unix', 'errorIndicator', 'chips'],
+  'index.cjs.js': ['loader', 'unix', 'errorIndicator', 'chips'],
   'widgets.esm.js': ['loader', 'datePicker', 'datePickerLib'],
   'widgets.cjs.js': ['loader', 'datePicker', 'datePickerLib'],
 }
@@ -73,6 +73,7 @@ const STYLES = {
   loader: '.jer-simple-loader{',
   unix: '.jer-unix-badge{',
   errorIndicator: '.jer-error-indicator-wrapper{',
+  chips: '.jer-chips{',
   datePicker: '.react-datepicker-popper{',
   datePickerLib: 'react-datepicker/dist/react-datepicker.css',
 }
@@ -82,6 +83,7 @@ const STYLE_SOURCES = {
   loader: 'src/_common/style.css',
   unix: 'src/UnixTimestamp/style.css',
   errorIndicator: 'src/ErrorIndicator/style.css',
+  chips: 'src/Chips/style.css',
   datePicker: 'src/widgets/ReactDatePicker/style.css',
 }
 

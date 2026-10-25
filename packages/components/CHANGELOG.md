@@ -1,5 +1,9 @@
 # @json-edit-react/components
 
+## 1.1.0
+
+- Add a `Chips` component: arrays of strings shown as removable chips, with an inline add from free text or a fixed list of options. See the [README](README.md#chips--tags-and-labels).
+
 ## 1.0.0
 
 - First stable release, alongside `json-edit-react` 2.0.0. See the [README](README.md) for the full component list.
