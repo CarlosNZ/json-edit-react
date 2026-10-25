@@ -631,14 +631,14 @@ const CollectionNodeBase: React.FC<CollectionNodeProps> = (props) => {
       {...dragSourceProps}
       {...getDropTargetProps('above')}
     >
-      {showCollectionWrapper && (
+      {showCollectionWrapper && collapseClickZones.includes('left') && (
         <div
           className="jer-clickzone"
           style={{
             width: `${indent / 2 + 1}em`,
             zIndex: 10 + nodeData.level * 2,
           }}
-          onClick={collapseClickZones.includes('left') ? handleCollapse : undefined}
+          onClick={handleCollapse}
         />
       )}
       {!isEditing && BottomDropTarget}
