@@ -13,7 +13,9 @@ A highly-configurable [React](https://github.com/facebook/react) component for e
 ![GitHub License](https://img.shields.io/github/license/carlosnz/json-edit-react)
 ![NPM Downloads](https://img.shields.io/npm/dm/json-edit-react)
 
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/CarlosNZ/json-edit-react)
+<!-- DeepWiki badge: https://deepwiki.com/badge.svg -->
+<!-- I'm self-hosting it cos deepwiki.com is returning 429 from non-browsers 🤔 -->
+[![Ask DeepWiki](https://raw.githubusercontent.com/CarlosNZ/json-edit-react/refs/heads/main/image/deepwiki_badge.svg)](https://deepwiki.com/CarlosNZ/json-edit-react)
 [![Discuss on GitHub](https://img.shields.io/badge/Discussions-Join%20the%20conversation-blue?logo=github)](https://github.com/CarlosNZ/json-edit-react/discussions)
 [![Sponsor](https://img.shields.io/badge/Sponsor-♥-pink.svg)](https://github.com/sponsors/CarlosNZ)
 
@@ -482,9 +484,9 @@ The `allowDrag` property controls which items (if any) can be dragged into new p
 - The `allowDrag` filter applies to the *source* node (the one being dragged) — it controls whether a node can be **picked up** at all.
 - What a drop is allowed to do then depends on where it lands, and reuses your existing permission filters — so if you've configured restrictive editing constraints with Filter functions, they can't be circumvented via drag-n-drop:
 
-| Drop | Is a… | Requires |
-| --- | --- | --- |
-| Within the same collection | **reorder** | `allowEdit` on that collection |
+| Drop                          | Is a…        | Requires                                                                     |
+| ----------------------------- | ------------ | ---------------------------------------------------------------------------- |
+| Within the same collection    | **reorder**  | `allowEdit` on that collection                                               |
 | Into a *different* collection | **relocate** | `allowDelete` on the source **and** `allowAdd` on the destination collection |
 
 A relocate is a delete-then-add across collections, so it needs both halves; a reorder changes nothing's membership, so it needs neither — only that the collection itself is editable.
